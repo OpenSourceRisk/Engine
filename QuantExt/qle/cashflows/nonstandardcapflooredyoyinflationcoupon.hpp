@@ -103,8 +103,10 @@ public:
 
     //! \name Observer interface
     //@{
-    void update() override;
+    void deepUpdate() override;
     //@}
+
+    void alwaysForwardNotifications() override;
 
     //! \name Visitability
     //@{

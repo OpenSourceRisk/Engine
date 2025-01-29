@@ -266,6 +266,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
             QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
+            QL_REQUIRE(!data_->aValues().empty(), "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
             aTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
             alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
         } else {
@@ -645,25 +646,30 @@ void LgmBuilder::buildSwaptionBasket() const {
             averagingMethod = on->averagingMethod();
         }
 
-        Real dummyQuote = svts_->volatilityType() == Normal ? 0.0020 : 0.10;
-        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(dummyQuote);
+        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(0);
         Handle<Quote> vol = Handle<Quote>(volQuote);
         QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
 
         if (expiryDateBased && termDateBased) {
+            double v = svts_->volatility(expiryDb, termT, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryDb, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (expiryDateBased && !termDateBased) {
+            double v = svts_->volatility(expiryDb, termPb, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryDb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && termDateBased) {
+            double v = svts_->volatility(expiryPb, termT, strikeValue);
+            volQuote->setValue(v);
             Date expiry = svts_->optionDateFromTenor(expiryPb);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termT) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
@@ -671,6 +677,8 @@ void LgmBuilder::buildSwaptionBasket() const {
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && !termDateBased) {
+            double v = svts_->volatility(expiryPb, termPb, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryPb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
@@ -687,8 +695,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             swaptionBasket_.push_back(helper);
             swaptionStrike_.push_back(updatedStrike);
             expiryTimes.push_back(calibrationDiscountCurve_->timeFromReference(expiryDate));
-            Date matDate = helper->underlyingSwap() ? helper->underlyingSwap()->maturityDate()
-                                                    : helper->underlyingOvernightIndexedSwap()->maturityDate();
+            Date matDate = helper->underlying()->maturityDate();
             maturityTimes.push_back(calibrationDiscountCurve_->timeFromReference(matDate));
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;

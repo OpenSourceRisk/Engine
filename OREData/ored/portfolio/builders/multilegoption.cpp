@@ -16,12 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
-#include <ored/model/irlgmdata.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/multilegoption.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -284,21 +285,21 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
                                                          << fixingDates.size() << ") must match indexes size ("
                                                          << indexes.size() << ")");
 
-    // base ccy is the base ccy of the external cam by definition
-    // but in case we only have one currency, we don't need this
+    // get projected model
+
     bool needBaseCcy = currencies.size() > 1;
 
-    std::set<std::pair<CrossAssetModel::AssetType,Size>> selectedComponents;
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) ||
-            std::find(currencies.begin(), currencies.end(), cam_->irlgm1f(i)->currency()) != currencies.end()) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 0) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i-1));
-            }
-        }
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
     }
-
+    for (auto const& c : currencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+    }
     std::vector<Size> externalModelIndices;
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
@@ -323,6 +324,25 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engineImpl(
+    const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
+    const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
+
+    std::vector<std::string> ccys;
+    std::transform(currencies.begin(), currencies.end(), std::back_inserter(ccys),
+                   [](const Currency& c) { return c.code(); });
+
+    DLOG("Building multi leg option engine for ccys " << boost::join(ccys, ",") << " (from externally given CAM)");
+
+    QL_REQUIRE(!currencies.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
+    QL_REQUIRE(fixingDates.size() == indexes.size(), "CamMcMultiLegOptionEngineBuilder: fixing dates size ("
+                                                         << fixingDates.size() << ") must match indexes size ("
+                                                         << indexes.size() << ")");
+
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(ccys, modelCg_, simulationDates_);
 }
 
 } // namespace data

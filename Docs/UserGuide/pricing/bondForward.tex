@@ -1,0 +1,102 @@
+\subsubsection{Forward Bond} \label{forwardBond}
+
+
+A forward bond is a derivative contract entered at time $t$ with the agreement to purchase at time $T_f$ an underlying bond contract whose maturity is $T$. Clearly at inception $t\leq T_f\leq T$. $P(t_1,t_2)$, $t_1\leq t_2$ is a discount factor from $t_2$ to $t_1$. For the purpose of this description notional is set to $1$.
+
+\begin{enumerate}
+\item Default-free forward bond in multi-curve framework:
+
+\begin{enumerate}
+	\item If $t<T_f$ forward contract is derivative. Hence the OIS curve is used for discounting of the derivative product.
+	\item If $t>T_f$ ordinary bond is hold but the buyer of the bond. Hence the BondReferenceYield (BRY) curve is used for discounting. A \emph{LiquiditySpread} / \emph{ValuationSpread} can be applied on top of the BRY curve.
+	\item  For compounding a compounding curve (COM) is used and discounting is done via the Bond Reference Yield Curve (BRY)
+\end{enumerate}
+\textbf{Forward bond valuation:}
+\begin{itemize}
+	\item Today's price of \emph{restricted} bond, with cashflows only counted for $t_i>T_f$:
+	$$V(t)=\sum_{ T_f<t_i<T}c_{t_i}{P_{BRY}}(t,t_i)+P_{BRY}(t,T).$$
+	The sum is over cashflows that occur after the date of entry into a forward contract. It reflects the coupons of the restricted bond. The term $P_{BRY}(t,T)$ reflects the redemption payment, $c_{t_i}$ reflects a coupon payment at time $t_i$.
+	\item Cash value at maturity of forward (in return to bond):
+	$$Cash(T_f)=V(t)*P_{COM}(t,T_f)^{-1}$$
+	Notice that this value is compounded  according to a $COM$ curve with respective discount factor $P_{COM}(t,T_f)$.
+	\item Let $K$ be the agreed price of the bond (to be paid at $T_f$). This price can be given either as a \emph{dirty} or \emph{clean} price. The difference between dirty and clean price is taken account of by appropriate subtraction of an accrual factor in case of the clean price.\\
+	Value of forward contract at $t$:
+	$$F(t,T_f)=\left(Cash(T_f)-K\right)*P_{OIS}(t,T)$$
+	$P_{OIS}(t,T)$ is used here for discounting as risk of the derivative (forward bond) is assumed to be covered.
+	\item In praxis both $P_{COM}$ and $P_{BRY}$ will often be chosen as RePo curve.
+\end{itemize}
+
+\item Forward on default-able bond:
+
+The basic pricing is as described under point \emph{1)} but now we account for the fact that at $T_f$ a bond is delivered that \emph{might default}. Default might occur before or after maturity $T_f$ of the forward. In the first case a defaulted bond would be delivered at $T_f$.\\
+
+\textbf{Forward on default-able bond valuation proposal:}
+%
+%
+\begin{enumerate}
+	\item Conditioned on the assumption that no default event occurs before forward maturity:
+	\begin{itemize}
+		\item Today's price of \emph{restricted} default-able bond, with cashflows only counted for $t_i>T_f$:
+		$$V(t)=\sum_{ T_f<t_i<T}c_{t_i}{\bar{P}_{BRY}}(t,t_i)+\bar{P}_{BRY}(t,T)+R(T_f,T)$$
+		\begin{itemize}
+			\item $R$ reflects face-value recovery between $T_f$ and $T$: $$R(T_f,T)=R\int_{T_f}^T\rho(s){P}_{BRY}(T_f,s)*Spread\ d s,$$ where $\rho$ is the time-density of default conditioned on the event that no default occurs before $T_f$.
+			\item $\bar{P}_{BRY}=P_{BRY}*Spread*CondSurvivalProb$ accounts for potential default 
+			\item Conditional survival probabilities are given by $$CondSurvivalProb(t,t_i)=S(t,t_i)/S(t,T_f)$$
+			\item $S(t_1,t_2)$ being the survival probability between $t_1$ and $t_2$.
+			\item $BRY$: base reference curve, $COM$: compounding curve
+		\end{itemize}
+		\item As before we set
+		 \begin{align*}
+		Cash(T_f):=\frac{V(t)}{{P}_{COM}(t,T_f)}
+		\end{align*}
+	\end{itemize}
+	
+	\item Taking account of possible default before $T_f$. If default occurs before $T_f$ we receive a defaulted bond. In other words we only receive recovery value, but we will have to still pay $K$. The NPV of the derivative under face value recovery is therefore
+	\begin{align*}
+	F(t,T_f)=&\int_{t}^{T_f}(RN-K)*P_{OIS}(t,s)\rho(s)d s\\
+	&+ (Cash(T_f)-K)*S(t,T_f)*P_{OIS}(t,T_f)
+	\end{align*}
+	Notice that now the $OIS$ curve is used for discounting as we value a derivative.
+	
+\end{enumerate}
+
+\end{enumerate}
+
+The cashflow reports provides the relevant future cashflows of the underlying bond with the corresponding discount factors from the BRY and 
+the forward cashflows at expiry date with the discount factor from the OIS curve.
+The sum of the present values of the foward cashflows is equal to the Forward NPV.
+
+The additional results provided together with the cashflows and NPV are described in table
+\ref{tab:additional_results_bond_forward}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|p{5cm}|p{10cm}|}
+  \hline
+  Result Label & Description \\
+  \hline
+  bondCashflow & The amounts of the future cashflows of the underlying bond, not discounted as a vector.\\
+  \hline
+  bondCashflowPayDates & The corresponding payment dates of the underlying bond cashflows. \\
+  \hline
+  bondCashflowSurvivalProbabilities & The survival probabilities corresponding to the underlying bond cashflows. \\
+  \hline
+  bondCashflowDiscountFactors & The discount factors from the BRY corresponding to the underlying bond cashflows. \\
+  \hline
+  bondRecovery & The expected recovery from the underlying bond in case of a default. \\
+  \hline
+  forwardBondCashflow & The amounts of the contract Value $F(t,T_f)=\left(Cash(T_f)-K\right)$ and premium payments\\
+  \hline
+  forwardBondCashflowPayDates & The corresponding payment dates of the forward cashflows. \\
+  \hline
+  forwardBondCashflowSurvivalProbabilities & The survival probabilities corresponding to the forward cashflows. \\
+  \hline
+  forwardBondCashflowDiscountFactors & The discount factors from the OIS corresponding to the forward cashflows. \\
+  \hline
+  forwardBondRecovery & The expected payoff of the forward in case of a default before $T_f$. \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Additional Results Bond Forward}
+\label{tab:additional_results_bond_forward}
+\end{table}

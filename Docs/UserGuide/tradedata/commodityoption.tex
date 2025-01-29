@@ -1,6 +1,11 @@
 \subsubsection{Commodity Option}
 \label{ss:input_commodity_option}
 
+A European Commodity Option gives the buyer the right, but not the obligation, 
+to buy a set amount of a commodity, at a predetermined price (the strike), at the 
+end of the contract. For this right the buyer pays a premium to the seller. 
+Settlement can be either cash or physical delivery.
+
 The \lstinline!CommodityOptionData! node is the trade data container for the \emph{CommodityOption} trade type.  Vanilla commodity 
 options are supported. The exercise style may be \emph{European} or \emph{American}. The \lstinline!CommodityOptionData! node includes exactly 
 one \lstinline!OptionData! trade component sub-node plus elements specific to the commodity option. The structure of 

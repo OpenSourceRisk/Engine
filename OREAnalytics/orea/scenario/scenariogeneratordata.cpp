@@ -37,8 +37,7 @@ namespace ore {
 namespace analytics {
 
 void ScenarioGeneratorData::clear() {
-    if (grid_)
-        grid_->truncate(0);
+    grid_ = QuantLib::ext::make_shared<DateGrid>();
 }
 
 void ScenarioGeneratorData::setGrid(QuantLib::ext::shared_ptr<DateGrid> grid) { 

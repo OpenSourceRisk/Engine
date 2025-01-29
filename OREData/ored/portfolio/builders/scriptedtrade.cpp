@@ -358,9 +358,10 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                  << generateAdditionalResults << "), both of which do not support external devices at the moment.");
         }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, ast_, context, mcParams_, indicatorSmoothingForValues_,
-            indicatorSmoothingForDerivatives_, script.code(), interactive_, generateAdditionalResults,
-            includePastCashflows_, useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
+            script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()), ast_,
+            context, mcParams_, indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(),
+            interactive_, generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
+            useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -1096,11 +1097,9 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
-                    QL_DEPRECATED_DISABLE_WARNING
-                    // This will be removed in a later release and all inf indices are then flat
-                    if (info.inf()->interpolated())
+                    // Allow interpolation of indices for convencience (avoid interpolation logic in script)
+                    if (info.infIsInterpolated())
                         simulationDates_.insert(d + lag);
-                    QL_DEPRECATED_ENABLE_WARNING
                 }
             } else {
                 // for all other indices we just take the original dates

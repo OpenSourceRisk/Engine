@@ -187,6 +187,7 @@ public:
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
     //! Return list of netting set IDs in the portfolio
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
@@ -245,6 +246,10 @@ public:
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
   
+    //! Return the time-averaged pathwise positive and negative exposures before and after collateral
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+    timeAveragedNettedExposure() const;
+
     //! Return Netting Set CVA Hazard Rate Sensitivity vector
     vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitivity vector
@@ -311,6 +316,7 @@ public:
     const QuantLib::ext::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
     const QuantLib::ext::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
+
     //! Return the dynamic initial margin cube (regression approach)
     //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets

@@ -1,13 +1,32 @@
 \subsubsection{Cross Currency Swap}
 \label{ss:cross_currency_swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A cross-currency swap ({\bf CCS}) has two legs in two different supported currencies. The 
+legs can be Floating vs. Floating (Cross Curreny Basis Swap {\bf CCBS}),
+Fixed vs. Floating, or Fixed vs. Fixed. 
+\begin{itemize}
+\item Typically has notional exchanges at the beginning and the end of the swap, 
+set to reflect the prevailing FX spot rate.  
+\item May be rebalancing, having FX resets, i.e. notional adjustments on one of 
+the legs at each fixing date to compensate the FX rate move since last fixing.
+\end{itemize}
+Note that the fixed principal exchanges in physically-settled 
+cross-currency swaps (including FX resettable trades) are exempted from Initial 
+Margin calculation. This exemption is applied for 
+SIMM$^{TM}$ calculations, as well as for the P\&L calculations used in all 
+backtesting and benchmarking analytics. 
+
+{\bf Input}}\fi
+
 A Cross Currency Swap can be represented with either trade type \emph{Swap} or \emph{CrossCurrencySwap}. In the case of \emph{Swap}, it is set up using a {\tt SwapData} container. For \emph{CrossCurrencySwap}, we use {\tt CrossCurrencySwapData} with the same {\tt LegData} sub-nodes within the container, and it is required for this trade type to have: 
 \begin{itemize}
  \item Two legs, each of type \emph{Fixed} or \emph{Floating}, i.e. \emph{Fixed}-\emph{Fixed}, \emph{Floating}-\emph{Floating}, \emph{Fixed}-\emph{Floating}, or \emph{Floating}-\emph{Fixed} combinations are allowed. 
 \item  Optionally additional legs of type \emph{Cashflow}.
 \end{itemize}
 
-Rebalancing\\
+{\bf Rebalancing}\\
 A Cross Currency Swap can be rebalancing, meaning the notional amount on one leg resets to the equivalent of a fixed amount in another currency (called ForeignCurrency, and is typically the currency of the other leg) at each period. This is represented using an \lstinline!FXReset! node on the resetting/rebalancing leg, within the \lstinline!Notionals! node. 
 
 Note that for rebalancing Cross Currency Swaps, the Notional in leg currency on the rebalancing leg is optional. If set, it is used as starting notional, and causes the first period (if forward starting)  to be considered as "on-the-run" for purposes of SIMM exemptions as the fx rate for the notional is considered to have been fixed from the inception of the trade. If no notional on the rebalancing leg is set, the starting notional will be based on a projected fx rate (i.e. not "on-the-run") until the actual fixing date.
@@ -127,7 +146,7 @@ Listing \ref{lst:crosscurrencyswapnonreset} shows an example of a non-rebalancin
 \label{lst:crosscurrencyswapreset}
 \end{listing}
 
-Non-Deliverable\\
+{\bf Non-Deliverable}\\
 Note that Cross Currency Swaps having legs in non-deliverable currencies with payment in a deliverable currency are supported by using the Indexings node (\ref{ss:indexings}), setting Settlement  to \emph{Cash} and setting the Currency to the deliverable currency, while keeping the Notional expressed in the non-deliverable currency amount. 
 
 The Indexings node includes a mandatory fx Index field defining the deliverable and non-deliverable currency pair, and an optional InitialNotionalFixing field for the contractual fx rate to be applied to the initial notional exchange. Notice that the InitialNotionalFixing rate has to be expressed as amount in deliverable or payment currency per unit of non-deliverable currency, and if omitted defaults to a projected (if in the future) or an fx fixing from market data (if in the past).  The Indexing node can also include optional FixingCalendar, IsInArrears and FixingDays fields to determine the date(s) of the fx fixing(s).

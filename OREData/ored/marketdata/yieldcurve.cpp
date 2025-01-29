@@ -1132,7 +1132,6 @@ void YieldCurve::buildDiscountCurve() {
     auto discountQuoteIDs = discountCurveSegment->quotes();
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    QuantLib::ext::shared_ptr<Convention> convention;
 
     vector<string> quotes;
     quotes.reserve(discountQuoteIDs.size()); // Reserve space for efficiency
@@ -1143,28 +1142,22 @@ void YieldCurve::buildDiscountCurve() {
                    });
 
     auto wildcard = getUniqueWildcard(quotes);
-
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> marketData;
     if (wildcard) {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
-        std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
-        Wildcard w(ss.str());
-        marketData = loader_.get(w, asofDate_);
+        for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
+            boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
+            if (marketQuote)
+                marketData.insert(marketQuote);
+        }
     }
 
+    int multipleQuotes = 0;
     for (const auto& marketQuote : marketData) {
         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                    "Market quote not of type Discount.");
+                   "Market quote not of type Discount.");
         QuantLib::ext::shared_ptr<DiscountQuote> discountQuote = QuantLib::ext::dynamic_pointer_cast<DiscountQuote>(marketQuote);
-
-        // filtering
-        if (!wildcard) {
-            vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
-            if (it == quotes.end())
-                continue;
-        }
 
         if (discountQuote->date() != Date()) {
 
@@ -1172,8 +1165,7 @@ void YieldCurve::buildDiscountCurve() {
 
         } else if (discountQuote->tenor() != Period()) {
 
-            if (!convention)
-                convention = conventions->get(discountCurveSegment->conventionsID());
+            QuantLib::ext::shared_ptr<Convention> convention = conventions->get(discountCurveSegment->conventionsID());
             QuantLib::ext::shared_ptr<ZeroRateConvention> zeroConvention =
                 QuantLib::ext::dynamic_pointer_cast<ZeroRateConvention>(convention);
             QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
@@ -1182,7 +1174,12 @@ void YieldCurve::buildDiscountCurve() {
             BusinessDayConvention rollConvention = zeroConvention->rollConvention();
             Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
             DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
-                                                            << io::iso_date(date));
+                                                           << io::iso_date(date));
+
+            //check if date already included
+            if(data.find(date) != data.end())
+                multipleQuotes++;
+
             data[date] = discountQuote->quote()->value();
 
         } else {
@@ -1194,9 +1191,9 @@ void YieldCurve::buildDiscountCurve() {
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
     if (!wildcard) {
-        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
-                                                          << quotes.size()
-                                                          << " quotes given in config " << curveConfig_->curveID());
+        QL_REQUIRE(data.size() == quotes.size() - multipleQuotes,
+                   "Found " << data.size() + multipleQuotes << " quotes, but " << quotes.size()
+                            << " quotes given in config " << curveConfig_->curveID());
     }
 
     if (data.begin()->first > asofDate_) {
@@ -1493,7 +1490,7 @@ void YieldCurve::buildFittedBondCurve() {
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
                 Real inflationFactor = res.inflationFactor();
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationFactor,
+                Real marketYield = qlInstr->yield({rescaledBondQuote->value() * inflationFactor, QuantLib::Bond::Price::Clean},
                                                   ActualActual(ActualActual::ISDA),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
@@ -1625,7 +1622,8 @@ void YieldCurve::buildFittedBondCurve() {
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
         modelPrices.push_back(bonds[i]->cleanPrice() / 100.0);
-        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
+        modelYields.push_back(bonds[i]->yield({bonds[i]->cleanPrice(), QuantLib::Bond::Price::Clean},
+                                              ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
         DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
                      << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
     }
@@ -1722,7 +1720,7 @@ void YieldCurve::buildBondYieldShiftedCurve() {
         if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
 
             Date thisMaturity = qlInstr->maturityDate();
-            bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
+            bondYield = qlInstr->yield({rescaledBondQuote->value() * inflationQuoteFactor, QuantLib::Bond::Price::Clean},
                                                       ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
 
             thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)

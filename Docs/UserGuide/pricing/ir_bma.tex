@@ -1,0 +1,20 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection{BMA Swap}
+\label{pricing:ir_bma}
+
+A BMA Swap leg pays the un-compounded arithmetic average of weekly BMA Index fixings 
+monthly. The present value of a BMA Swap leg can be expressed as follows:
+$$
+\NPV= N \,\sum_{i=1}^n (f_i + s_i)\, \delta_i \,P(t_i)
+$$
+Where:
+\begin{itemize}
+\item $N$: notional amount, typically constant, hence we have taken the notional 
+outside the sum above 
+\item $f_i$: the forward projected BMA rate for period $i$ from $t_{i-1}$ to $t_i$, 
+composed of the arithmetic average of projected weekly BMA fixings (where the 
+current week is already fixed for the current period)
+\item $s_i$: spread for period $i$
+\item $\delta_i$: the daycount fraction in years for the period from $t_{i-1}$ to $t_i$
+\item $P(t_i)$: the discount factor for maturity $t_i$
+\end{itemize}

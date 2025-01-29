@@ -95,6 +95,9 @@ public:
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false);
 
+    //! Destructor
+    virtual ~McMultiLegBaseEngine() {}
+
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
@@ -153,6 +156,16 @@ public:
             amountCalculator;
     };
 
+    // overwrite function to transform values going into regression
+    // current usage in the fwd bond case
+    virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                                                      const std::set<Real>& exerciseXvaTimes,
+                                                      const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
+        return pathValueUndDirty;
+    };
+
+    virtual bool useOverwritePathValueUndDirty() const { return false; };
+
     // class representing a regression model for a certain observation (= xva, exercise) time
     class RegressionModel {
     public:
@@ -167,6 +180,8 @@ public:
         // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
         RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
                              const std::set<Real>& pathTimes) const;
+        // is this model initialized and trained?
+        bool isTrained() const { return isTrained_; }
 
     private:
         Real observationTime_ = Null<Real>();
@@ -197,6 +212,7 @@ public:
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelRebate,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
@@ -219,6 +235,7 @@ public:
         std::set<Real> xvaTimes_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelRebate_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
         Real resultValue_;
@@ -249,7 +266,7 @@ public:
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                          std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto,
+                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;

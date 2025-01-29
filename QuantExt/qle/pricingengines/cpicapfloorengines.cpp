@@ -65,10 +65,7 @@ void InterpolatingCPICapFloorEngine::calculate() const {
     Real baseFixing = zii->fixing(baseDate);
     Date adjustedMaturity = arguments_.payDate - arguments_.observationLag;
     
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = arguments_.observationInterpolation == CPI::Linear ||
-                          (arguments_.observationInterpolation == CPI::AsIndex && zii->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = arguments_.observationInterpolation == CPI::Linear;
     
     if (isInterpolated) {
         std::pair<Date, Date> ipm = inflationPeriod(adjustedMaturity, zii->frequency());

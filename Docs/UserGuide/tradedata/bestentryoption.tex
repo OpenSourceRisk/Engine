@@ -1,6 +1,26 @@
 \subsubsection{Best Entry Option}
 \label{input:bestentryoption}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+The Best Entry Option is an option on a single underlying that has a payoff contingent on the `best entry' of the underlying index into a specified region on a set of specified `strike observation dates', which is determined by a single barrier.
+
+On the option expiry date, if the value of the underlying index (denoted `$Index_{Final}$') is greater than or equal to the strike price $K$, the payoff of the option is given by:
+\begin{align*}
+	\text{Notional} \times \text{Multiplier} \times \text{min}\left(\text{Cap}, \text{max}\left(0, \frac{Index_{Final} - Index_{Initial}}{Index_{Inital}}\right)\right).
+\end{align*}
+If $Index_{Final}$ is less than $K$, the payoff is given by
+\begin{align*}
+	-\text{Notional} \times \frac{K - Index_{Final}}{Index_{Initial}}.
+\end{align*}
+Here, $Index_{Initial}$ is defined as
+\begin{itemize}
+	\item{The level of the underlying index on a pre-determined `strike date', if the level of the index on any of the strike observation dates is \emph{not} lower than the barrier level,}
+	\item{The maximum between the `reset minimum value' and the lowest index level on a strike observation date, if the level of the index does indeed hit the barrier level at least once.}
+\end{itemize}
+
+{\bf Input}}\fi
+
 Best Entry Options are defined using one of the trade types \emph{FxBestEntryOption}, \emph{EquityBestEntryOption},
 \emph{CommodityBestEntryOption} depending on the underlying asset class and an associated node FxBestEntryOptionData,
 EquityBestEntryOptionData, CommodityBestEntryOptionData. Listing \ref{lst:bestentryoption_data} shows an

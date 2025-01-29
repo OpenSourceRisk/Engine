@@ -21,6 +21,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sacvasensitivityloader.hpp>
 #include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
@@ -34,16 +35,16 @@
 namespace ore {
 namespace analytics {
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p) {
+void scaleUpPortfolio(QuantLib::ext::shared_ptr<ore::data::Portfolio>& p) {
     if (auto param_N = getenv("PORTFOLIO_SCALE_UP")) {
         LOG("Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N << " from environment variables.");
         std::cerr << "\n\n*** Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N
                   << " from environment variables.\n\n"
                   << std::endl;
         std::string pfxml = p->toXMLString();
-        p = QuantLib::ext::make_shared<Portfolio>();
+        p = QuantLib::ext::make_shared<ore::data::Portfolio>();
         for (Size i = 0; i < atoi(param_N); ++i) {
-            auto tmp = QuantLib::ext::make_shared<Portfolio>();
+            auto tmp = QuantLib::ext::make_shared<ore::data::Portfolio>();
             tmp->fromXMLString(pfxml);
             for (auto const& [id, t] : tmp->trades()) {
                 t->id() += "_" + std::to_string(i + 1);
@@ -105,11 +106,13 @@ void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
 void InputParameters::setConventions(const std::string& xml) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromXMLString(xml);
+    InstrumentConventions::instance().setConventions(conventions_);
 }
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromFile(fileName);
+    InstrumentConventions::instance().setConventions(conventions_);
 }
 
 void InputParameters::setCurveConfigs(const std::string& xml) {
@@ -142,6 +145,16 @@ void InputParameters::setCurrencyConfig(const std::string& xml) {
 void InputParameters::setCurrencyConfigFromFile(const std::string& fileName) {
     currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
     currencyConfig_->fromFile(fileName);
+}
+
+void InputParameters::setCounterpartyManager(const std::string& xml) {
+    counterpartyManager_ = QuantLib::ext::make_shared<CounterpartyManager>();
+    counterpartyManager_->fromXMLString(xml);
+}
+
+void InputParameters::setCounterpartyManagerFromFile(const std::string& fileName) {
+    counterpartyManager_ = QuantLib::ext::make_shared<CounterpartyManager>();
+    counterpartyManager_->fromFile(fileName);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
@@ -290,12 +303,12 @@ void InputParameters::setStressScenarioDataFromFile(const std::string& fileName)
 }
 
 void InputParameters::setStressSensitivityScenarioData(const std::string& xml) {
-    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     stressSensitivityScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setStressSensitivityScenarioDataFromFile(const std::string& fileName) {
-    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     stressSensitivityScenarioData_->fromFile(fileName);
 }
 
@@ -390,12 +403,12 @@ void InputParameters::setXvaStressScenarioDataFromFile(const std::string& fileNa
 }
 
 void InputParameters::setXvaStressSensitivityScenarioData(const std::string& xml) {
-    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaStressSensitivityScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName) {
-    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaStressSensitivityScenarioData_->fromFile(fileName);
 }
 
@@ -408,11 +421,11 @@ void InputParameters::setXvaSensiSimMarketParamsFromFile(const std::string& file
     xvaSensiSimMarketParams_->fromFile(fileName);
 }
 void InputParameters::setXvaSensiScenarioData(const std::string& xml) {
-    xvaSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaSensiScenarioData_->fromXMLString(xml);
 }
 void InputParameters::setXvaSensiScenarioDataFromFile(const std::string& fileName) {
-    xvaSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaSensiScenarioData_->fromFile(fileName);
 }
 void InputParameters::setXvaSensiPricingEngine(const std::string& xml) {
@@ -422,6 +435,68 @@ void InputParameters::setXvaSensiPricingEngine(const std::string& xml) {
 void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileName) {
     xvaSensiPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     xvaSensiPricingEngine_->fromFile(fileName);
+}
+
+// SA-CVA
+
+void InputParameters::setSaCvaNetSensitivitiesFromFile(const std::string& fileName) {
+    SaCvaSensitivityLoader cvaLoader;
+    cvaLoader.load(fileName, '\n', ',');
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
+
+    LOG("InputParameters::setSaCvaNetSensitivitiesFromFile: " << saCvaNetSensitivities_.size() << " records");
+}
+
+void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
+    // FIXME:
+    // I would prefer to use the SensitivityFileStream here for reading SensitivityRecords, but the XVA sensitivity
+    // file format has an extra column (nettingSetId), to cover both trade-level and nettingSet-level sensitivites.
+    // Is that really necessary?
+    // If we could reuse the SensitivityFileStream here we could pass the SensitivityRecords to the
+    // SaCvaSensitivityLoader to map to CvaSensitivityRecords, very similar to the
+    // SaCvaSensitivityLoader::loadFromRawSensis method that uses a ParSensitivityCubeStream.
+
+    cvaSensitivities_.clear();
+
+    std::ifstream iss(fileName);
+    std::string line;
+
+    while (std::getline(iss, line)) {
+        vector<string> tokens;
+        boost::trim(line);
+        boost::split(tokens, line, boost::is_any_of(",;\t"));
+
+        // We expect the format of XVA Sensitivity analytic reports with 11 columns:
+        // #NettingSetId,TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base XVA,Delta,Gamma
+        QL_REQUIRE(tokens.size() == 11,
+                   "11 tokens expected in CVA Sensitivities, found " << tokens.size() << " in: " << to_string(tokens));
+
+        // Skip header, comments and lines with a non-empty tradeId column, since we want nettingSet-level sensi only
+        if (tokens[0] == "NettingSetId" || line[0] == '#' || tokens[1] != "")
+            continue;
+
+        // We expect par sensitivities
+        bool isPar = parseBool(tokens[2]);
+        QL_REQUIRE(isPar == true, "CVA par sensitivity expected as input into SA-CVA");
+
+        CvaSensitivityRecord r;
+        r.nettingSetId = tokens[0];
+        // RiskFactorKey needs translation into CvaRiskFactorKey
+        r.key = mapRiskFactorKeyToCvaRiskFactorKey(tokens[3]);
+        // shiftType is not in the sensitivity report.
+	// FIXME: Since it is not used in the sacvasensitivityloader- can we remove it from the CvaSensitivityRecord?
+	//r.shiftType = parseShiftType(tokens[2]);
+        r.shiftSize = parseReal(tokens[4]);
+        r.currency = tokens[7];
+        r.baseCva = parseReal(tokens[8]);
+        r.delta = parseReal(tokens[9]);
+
+        cvaSensitivities_.push_back(r);
+    }
+
+    SaCvaSensitivityLoader cvaLoader;
+    cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
 }
 
 // XVA Explain
@@ -437,12 +512,12 @@ void InputParameters::setXvaExplainSimMarketParamsFromFile(const std::string& fi
 }
 
 void InputParameters::setXvaExplainSensitivityScenarioData(const std::string& xml) {
-    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaExplainSensitivityScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::string& fileName) {
-    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaExplainSensitivityScenarioData_->fromFile(fileName);
 }
 
@@ -668,7 +743,6 @@ void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
 void InputParameters::setSimmBucketMapper(const std::string& xml) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
-    //QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>();
     QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromXMLString(xml);
 }
@@ -710,6 +784,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
     netCubeFileName_ = params->get("xva", "netCubeOutputFile", false);
+    timeAveragedNettedExposureFileName_ = params->get("xva", "timeAveragedNettedExposureOutputFile", false);
     dimEvolutionFileName_ = params->get("xva", "dimEvolutionFile", false);    
     std::string tmp = params->get("xva", "dimRegressionFiles", false);
     if (tmp != "")
@@ -748,6 +823,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["scenario"] = !scenarioOutputName_.empty() ? scenarioOutputName_ : scenarioDumpFileName_;
     fileNameMap_["rawcube"] = rawCubeFileName_;
     fileNameMap_["netcube"] = netCubeFileName_;
+    fileNameMap_["timeAveragedNettedExposure"] = timeAveragedNettedExposureFileName_;
     fileNameMap_["dim_evolution"] = dimEvolutionFileName_;
     fileNameMap_["sensitivity"] = sensitivityFileName_;
     fileNameMap_["sensitivity_scenario"] = sensitivityScenarioFileName_;
@@ -852,12 +928,12 @@ void InputParameters::setParStressScenarioDataFromFile(const std::string& fileNa
 }
 
 void InputParameters::setParStressSensitivityScenarioData(const std::string& xml) {
-    parStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     parStressSensitivityScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setParStressSensitivityScenarioDataFromFile(const std::string& fileName) {
-    parStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     parStressSensitivityScenarioData_->fromFile(fileName);
 }
 
@@ -892,12 +968,12 @@ void InputParameters::setZeroToParShiftScenarioDataFromFile(const std::string& f
 }
 
 void InputParameters::setZeroToParShiftSensitivityScenarioData(const std::string& xml) {
-    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     zeroToParShiftSensitivityScenarioData_->fromXMLString(xml);
 }
 
 void InputParameters::setZeroToParShiftSensitivityScenarioDataFromFile(const std::string& fileName) {
-    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     zeroToParShiftSensitivityScenarioData_->fromFile(fileName);
 }
 

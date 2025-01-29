@@ -309,21 +309,22 @@ void MultiThreadedValuationEngine::buildCube(
 
         auto job = [this,
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
-                    &jobs,
                     &cpuIds,
 #endif
-                    obsMode, dryRun, &calculators, errorPolicy,&cptyCalculators, mporStickyDate, &portfoliosAsString,
+                    obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate, &portfoliosAsString,
                     &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
 
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
+            pthread_t self = pthread_self();
             cpu_set_t cpuset;
             CPU_ZERO(&cpuset);
             CPU_SET(cpuIds[id], &cpuset);
-            if (int rc = pthread_setaffinity_np(jobs[id].native_handle(), sizeof(cpu_set_t), &cpuset)) {
-                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
-                                                                    << ": got return code " << rc);
+            if (int rc = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpuset)) {
+                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread "
+                     << id << " to cpu id " << cpuIds[id] << ": got return code " << rc);
             } else {
-                WLOG("[MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]);
+                WLOG("[MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
+                                                                         << ", running on cpu " << sched_getcpu());
             }
 #endif
 

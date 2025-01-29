@@ -1,5 +1,64 @@
 \subsubsection{Worst Of Basket Swaps}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A worst of basket swap is a swap transaction written on a basket of $n$ underlyings. The
+buyer receives an initial fixed amount from the seller and then pays a floating rate over 
+the life of the contract and in turn receives coupons based on an equity notional
+amount, subject to a coupon trigger event.
+
+If a knock-out event occurs for any given determination date, then the contract is deemed
+to have terminated at the corresponding settlement date, and all payments will cease
+thereafter, and no final equity amount will be paid out (or shares delivered). If no
+knock-out events are triggered, and a knock-in event occurs at the final determination
+date, then a final equity amount will be delivered to the buyer.
+
+In the case of a physical settlement, the seller will deliver a number of
+shares of one of the underlying assets to the buyer at the final settlement date for the
+cost of an agreed strike price. For a cash settlement, the net difference between the
+strike price and the price at the determination date is paid, although the settlement type
+does not affect pricing.
+
+We denote the determination dates as $t_1^d, \ldots, t_m^d$, its corresponding settlement
+dates as $t_1^s, \ldots, t_m^s$ and its corresponding fixing dates as $t_1^f, \ldots, t_m^f$.
+Note that $t_1^d$ is the effective/start date of the contract, and $t_1^s$ is when the initial
+fixed amount is paid.
+
+At every settlement date $t_i^s$, $i=2, \ldots, m$,
+
+\begin{align*}
+  \text{Floating Amount} &= Q \cdot \phi \cdot \tau_i \cdot X(t_{i-1}^f) \\
+  \text{Coupon Amount} &= Q \cdot \delta \cdot c \cdot N
+\end{align*}
+
+where
+
+\begin{itemize}
+  \item $Q$ is the equity notional amount,
+  \item $\phi = \pm 1$ distinguishes between long $(+1)$ and short $(-1)$,
+  \item $\tau_i = t^d_{i} - t^d_{i-1}$ is the accrual fraction for the $(i-1)^{\rm th}$ period,
+  \item $X(t_{i-1}^f)$ denotes the floating rate fixing for the $(i-1)^{\rm th}$ payment,
+  \item $\delta = 1$ if a coupon trigger event occurs on $t^d_i$, zero otherwise,
+  \item $c$ is the fixed coupon rate,
+  \item $N$ is the number of periods until the next coupon trigger event
+  (for accumulating coupons). For example, if payments were not made for $t_2^s$ and
+  $t_3^s$ because a coupon trigger did not occur (on $t^d_2$ and $t^d_3$), but a coupon trigger did occurr at
+  $t_4^d$, then $N = 3$ for $t_4^s$. If the coupon amounts are specified as non-accumulating, then $N=1$
+  for the life of the contract,
+\end{itemize}
+
+However, if a knock-out event was triggered for (at least) one of $t_1^d, t_2^d, \ldots
+t_{i-1}^d$, then the Floating and Coupon amounts for $t_i^s, t_{i+1}^s, t_{i+2}^s, \ldots, t_m^s$ are all zero.
+
+For instruments with accruing coupons, instead of a single observation (date) for 
+a fixed coupon trigger event in a coupon period, the fixed trigger criteria is observed
+on a regular basis, and then the fixed coupon is scaled in proportion to the number of
+days in the period over which the fixed coupon trigger event was observed. For example, if
+the fixed trigger event occurred for 15 days out of 30 days in the coupon period, then
+$\delta = 0.5$.
+
+{\bf Input}}\fi
+
 The FxWorstOfBasketSwap, EquityWorstOfBasketSwap, and CommodityWorstOfBasketSwap trade types
 have trade data containers (respectively):
 \begin{itemize}

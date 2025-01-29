@@ -1503,6 +1503,15 @@
           "TimeStep",
           "NettingSet"
         ],
+        "use_cols": [
+          "AverageDIM",
+          "AverageFLOW"
+        ],
+        "optional_cols": [
+          "ZeroOrderDIM",
+          "SimpleDIM"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -1531,6 +1540,24 @@
               "SimpleDIM"
             ],
             "abs_tol": 1e-06,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "timeaveragedexposure.csv": {
+        "keys": [
+          "NettingSetId",
+          "Sample"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PosExpNoColl",
+              "NegExpNoColl",
+              "PosExpWithColl",
+              "NegExpWithColl"
+            ],
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1712,7 +1739,26 @@
             "names": [
               "data/discountFactor",
               "data/time",
-              "data/zeroRate"
+              "data/zeroRate",
+              "data/cpi"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-09
+          }
+        ]
+      },
+      "inflationCurves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "data/time",
+              "data/zeroRate",
+              "data/cpi"
             ],
             "abs_tol": 1e-15,
             "rel_tol": 1e-09

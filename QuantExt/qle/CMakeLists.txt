@@ -284,7 +284,6 @@ pricingengines/discountingfxforwardenginedeltagamma.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
-pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -508,6 +507,7 @@ currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+gitversion.hpp
 indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -828,7 +828,6 @@ pricingengines/discountingfxforwardenginedeltagamma.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
-pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
@@ -940,8 +939,6 @@ termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
-termstructures/inflation/inflationtraits.hpp
-termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp

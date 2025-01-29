@@ -1,4 +1,30 @@
 \subsubsection{Double Digital Option}
+\label{sec:doubledigitaloption}
+
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A double digital option is a binary option that pays out a fixed amount if the spots of two FX, Equtiy, Commodity
+underlyings are simultaneously in the money w.r.t. given strikes and option types at the option expiry. As an example
+consider the following term sheet data:
+
+\begin{itemize}
+\item Expiry: 2021-09-01
+\item Settlement: 2021-09-03
+\item Binary Payout: 12000000
+\item BinaryLevel1: 1.1
+\item BinaryLevel2: 0.007
+\item Type1: Call
+\item Type2: Put
+\item Position: Long
+\item Underlying1: FX-ECB-EUR-USD
+\item Underlying2: FX-ECB-JPY-USD
+\item PayCcy: USD
+\end{itemize}
+
+This trade pays $12000000$ USD to the option holder on the settlement date 2021-09-03 if the EUR-USD FX spot rate is
+above $1.1$ {\em and} the JPY-USD FX spot rate is below $0.007$ on the expiry date 2021-09-01.
+
+{\bf Input}}\fi
 
 The \verb+DoubleDigitalOptionData+ node is the trade data container for the DoubleDigitalOption trade type, listing
 \ref{lst:doubledigitaloption_data} shows the structure of an example with two underlying FX rates. Equity, Commodity and IR underlyings are also supported in arbitrary combinations. 

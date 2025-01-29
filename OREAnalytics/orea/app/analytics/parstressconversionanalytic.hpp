@@ -29,11 +29,13 @@ class ParStressConversionAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PARSTRESSCONVERSION";
 
-    ParStressConversionAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ParStressConversionAnalyticImpl(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
@@ -41,7 +43,12 @@ public:
 
 class ParStressConversionAnalytic : public Analytic {
 public:
-    ParStressConversionAnalytic(const boost::shared_ptr<InputParameters>& inputs);
+    ParStressConversionAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<ParStressConversionAnalyticImpl>(inputs), {"PARSTRESSCONVERSION"}, inputs, false,
+                   false, false, false) {}
 };
 
 } // namespace analytics

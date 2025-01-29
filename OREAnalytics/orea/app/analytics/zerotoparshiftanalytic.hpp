@@ -30,11 +30,11 @@ class ZeroToParShiftAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "ZEROTOPARSHIFT";
 
-    ZeroToParShiftAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ZeroToParShiftAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
@@ -42,7 +42,12 @@ public:
 
 class ZeroToParShiftAnalytic : public Analytic {
 public:
-    ZeroToParShiftAnalytic(const boost::shared_ptr<InputParameters>& inputs);
+    ZeroToParShiftAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<ZeroToParShiftAnalyticImpl>(inputs), {"ZEROTOPARSHIFT"}, inputs, false, false,
+                   false, false) {}
 };
 
 } // namespace analytics

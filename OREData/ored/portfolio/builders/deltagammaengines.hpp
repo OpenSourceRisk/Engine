@@ -33,6 +33,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/log.hpp>
@@ -189,5 +190,21 @@ protected:
     }
 };
 
+//! European Swaption Engine Builder
+/*! This builder uses QuantExt::BlackStyleSwaptionEngineDeltaGamma
+    \ingroup portfolio
+ */
+class EuropeanSwaptionEngineBuilderDeltaGamma : public SwaptionEngineBuilder {
+public:
+    EuropeanSwaptionEngineBuilderDeltaGamma()
+        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngineDeltaGamma", {"EuropeanSwaption"}) {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
+                                                const Date& maturity, const std::vector<Real>& strikes,
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
+};
+  
 } // namespace data
 } // namespace ore

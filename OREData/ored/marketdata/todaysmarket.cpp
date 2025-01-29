@@ -180,7 +180,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             timer.start();
             Graph& g = dependencies_[configuration.first];
-            IndexMap index =boost::get(boost::vertex_index, g);
+            IndexMap index = boost::get(boost::vertex_index, g);
             std::vector<Vertex> order;
             try {
                 boost::topological_sort(g, std::back_inserter(order));

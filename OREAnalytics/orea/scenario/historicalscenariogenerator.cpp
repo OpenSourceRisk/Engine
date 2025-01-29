@@ -213,8 +213,8 @@ void HistoricalScenarioGenerator::setDates() {
 }
 
 HistoricalScenarioGenerator::HistoricalScenarioGenerator(
-    const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
-    const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+    const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+    const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
     const ReturnConfiguration& returnConfiguration,
     const std::string& labelPrefix, const bool generateDifferenceScenarios)
