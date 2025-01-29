@@ -35,17 +35,47 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+void populateFromBondFutureReferenceData(std::string& contractMonths, std::string& deliverableGrade,
+                                         std::string& lastTrading, std::string& lastDelivery,
+                                         std::vector<std::string>& secList,
+                                         const QuantLib::ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
+    DLOG("populating data bondfuture from reference data");
+    // checked before
+    // QL_REQUIRE(bondFutureRefData, "populateFromBondFutureReferenceData(): empty bondfuture reference datum given");
+    if (contractMonths.empty()) {
+        contractMonths = bondFutureRefData->bondFutureData().contractMonths;
+        TLOG("overwrite contractMonths with '" << contractMonths << "'");
+    }
+    if (deliverableGrade.empty()) {
+        deliverableGrade = bondFutureRefData->bondFutureData().deliverableGrade;
+        TLOG("overwrite deliverableGrade with '" << deliverableGrade << "'");
+    }
+    if (lastTrading.empty()) {
+        lastTrading = bondFutureRefData->bondFutureData().lastTrading;
+        TLOG("overwrite lastTrading with '" << lastTrading << "'");
+    }
+    if (lastDelivery.empty()) {
+        lastDelivery = bondFutureRefData->bondFutureData().lastDelivery;
+        TLOG("overwrite lastDelivery with '" << lastDelivery << "'");
+    }
+    if (secList.empty()) {
+        secList = bondFutureRefData->bondFutureData().secList;
+        TLOG("overwrite secList ");
+    }
+    DLOG("populating bondfuture data from reference data done.");
+}
+
 FutureType selectTypeUS(std::string value) {
 
-    //                      Deliverable Maturities	    CME Globex  Bloomberg
-    // 2-Year T-Note	        1 3/4 to 2 years	        ZT          TU
-    // 3-Year T-Note         9/12 to 3 years	            Z3N         3Y
-    // 5-Year T-Note	        4 1/6 to 5 1/4 years	    ZF          FV
-    // 10-Year T-Note	    6 1/2 to 8 years	        ZN          TY
-    // Ultra 10-Year T-Note	9 5/12 to 10 Years	        TN          UXY
-    // T-Bond	            15 years up to 25 years	    ZB          US
-    // 20-Year T-Bond	    19 2/12 to 19 11/12 years	TWE         TWE
-    // Ultra T-Bond	        25 years to 30 years	    UB          WN
+    //                       Deliverable Maturities	    CME Globex  Bloomberg
+    // 2-Year T-Note         1 3/4 to 2 years	        ZT          TU
+    // 3-Year T-Note         9/12 to 3 years	        Z3N         3Y
+    // 5-Year T-Note         4 1/6 to 5 1/4 years	    ZF          FV
+    // 10-Year T-Note        6 1/2 to 8 years	        ZN          TY
+    // Ultra 10-Year T-Note	 9 5/12 to 10 Years	        TN          UXY
+    // T-Bond                15 years up to 25 years	ZB          US
+    // 20-Year T-Bond        19 2/12 to 19 11/12 years	TWE         TWE
+    // Ultra T-Bond	         25 years to 30 years	    UB          WN
     // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
 
     boost::to_upper(value);
@@ -182,7 +212,8 @@ void BondFuture::fromXML(XMLNode* node) {
 
     secList_.clear();
     XMLUtils::checkNode(bondFutureNode, "DeliveryBasket");
-    for (XMLNode* child = XMLUtils::getChildNode(node, "SecurityId"); child; child = XMLUtils::getNextSibling(child)) {
+    for (XMLNode* child = XMLUtils::getChildNode(bondFutureNode, "SecurityId"); child;
+         child = XMLUtils::getNextSibling(child)) {
         secList_.push_back(XMLUtils::getChildValue(child, "SecurityId", true));
     }
 
@@ -193,6 +224,23 @@ void BondFuture::fromXML(XMLNode* node) {
     //thirdt tier information
     lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false, "");
     lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false, "");
+}
+
+void BondFuture::populateFromBondFutureReferenceData(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+    QL_REQUIRE(!contractName_.empty(), "BondFuture::populateFromBondReferenceData(): no contract name given");
+
+    if (!referenceData || !referenceData->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
+        DLOG("could not get BondFutureReferenceDatum for name " << contractName_ << " leave data in trade unchanged");
+
+    } else {
+        auto bondFutureRefData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));
+        QL_REQUIRE(bondFutureRefData, "could not cast to BondReferenceDatum, this is unexpected");
+        DLOG("Got BondFutureReferenceDatum for name " << contractName_ << " overwrite empty elements in trade");
+        ore::data::populateFromBondFutureReferenceData(contractMonths_, deliverableGrade_, lastTrading_, lastDelivery_,
+                                                       secList_, bondFutureRefData);
+    }
 }
 
 } // namespace data

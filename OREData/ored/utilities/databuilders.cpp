@@ -253,6 +253,7 @@ void dataBuilders() {
     ORE_REGISTER_CALIBRATION_INSTRUMENT("YoYSwap", YoYSwap, false)
 
     ORE_REGISTER_REFERENCE_DATUM("Bond", BondReferenceDatum, false)
+    ORE_REGISTER_REFERENCE_DATUM("BondFuture", BondFutureReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CreditIndex", CreditIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("EquityIndex", EquityIndexReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CurrencyHedgedEquityIndex", CurrencyHedgedEquityIndexReferenceDatum, false)

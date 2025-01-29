@@ -109,6 +109,45 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
     return node;
 }
 
+void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
+    QL_REQUIRE(node, "BondFutureReferenceDatum::BondFutureData::fromXML(): no node given");
+    secList.clear();
+    XMLUtils::checkNode(node, "DeliveryBasket");
+    for (XMLNode* child = XMLUtils::getChildNode(node, "SecurityId"); child; child = XMLUtils::getNextSibling(child)) {
+        secList.push_back(XMLUtils::getChildValue(child, "SecurityId", true));
+    }
+    contractMonths = XMLUtils::getChildValue(node, "ContractMonths", false, "");
+    deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false, "");
+    lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false, "");
+    lastDelivery = XMLUtils::getChildValue(node, "LastDeliveryDate", false, "");
+}
+
+XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("BondFutureData");
+    XMLUtils::addChild(doc, node, "ContractMonths", contractMonths);
+    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);
+    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
+    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
+    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
+    for (auto& sec : secList) {
+        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
+    }
+    return node;
+}
+
+void BondFutureReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    bondFutureData_.fromXML(XMLUtils::getChildNode(node, "BondFutureReferenceData"));
+}
+
+XMLNode* BondFutureReferenceDatum::toXML(XMLDocument& doc) const {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* dataNode = bondFutureData_.toXML(doc);
+    XMLUtils::setNodeName(doc, dataNode, "BondFutureReferenceData");
+    XMLUtils::appendNode(node, dataNode);
+    return node;
+}
+
 CreditIndexConstituent::CreditIndexConstituent()
     : weight_(Null<Real>()), priorWeight_(Null<Real>()), recovery_(Null<Real>()) {}
 

@@ -22,8 +22,9 @@
  */
 #pragma once
 
-#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+
 namespace ore {
 namespace data {
 
@@ -54,6 +55,8 @@ public:
 protected:
 
     BondData identifyCtdBond(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
+
+    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
 private:
 

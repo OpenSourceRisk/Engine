@@ -133,6 +133,35 @@ private:
     BondData bondData_;
 };
 
+class BondFutureReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "BondFuture";
+
+    struct BondFutureData : XMLSerializable {
+        std::vector<std::string> secList;
+        std::string contractMonths;
+        std::string deliverableGrade; // futureType differentiating the underlying
+        std::string lastTrading;      // expiry
+        std::string lastDelivery;     // settlement date
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+    };
+
+    BondFutureReferenceDatum() { setType(TYPE); }
+
+    BondFutureReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    BondFutureReferenceDatum(const string& id, const QuantLib::Date& validFrom) : ReferenceDatum(TYPE, id, validFrom) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const BondFutureData& bondFutureData() const { return bondFutureData_; }
+
+private:
+    BondFutureData bondFutureData_;
+};
+
 /*! Hold reference data on a constituent of a credit index.
 
     Gives the name and the weight of the credit index constituent. A weight of zero indicates that there has been a
