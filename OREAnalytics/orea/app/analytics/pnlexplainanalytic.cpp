@@ -42,7 +42,7 @@ void PnlExplainAnalyticImpl::setUpConfigurations() {
 
 void PnlExplainAnalyticImpl::buildDependencies() {
     auto sensiAnalytic =
-        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
     if (sensiAnalytic.second)
         addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
 
@@ -68,6 +68,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
     auto pnlAnalytic = dependentAnalytic(pnlLookupKey);
+    pnlAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    pnlAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     pnlAnalytic->runAnalytic(loader);
     auto pnlReport = pnlAnalytic->reports().at("PNL").at("pnl");
 
@@ -88,6 +90,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         sensireport = sensiAnalytic->reports().at("SENSITIVITY").at("sensitivity");
     }
 
+    analytic()->reports()[label_]["sensitivity"] = sensireport;
     QuantLib::ext::shared_ptr<SensitivityStream> ss = ext::make_shared<SensitivityReportStream>(sensireport);
     ss = QuantLib::ext::make_shared<FilteredSensitivityStream>(ss, 1e-6);
 

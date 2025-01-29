@@ -41,7 +41,7 @@ void PnlAnalyticImpl::setUpConfigurations() {
 }
 
 void PnlAnalyticImpl::buildDependencies() {
-    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager());
+    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager(), false);
     if (mporAnalytic.second) {
         mporAnalytic.second->configurations().curveConfig = inputs_->curveConfigs().get("mpor");
         auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
