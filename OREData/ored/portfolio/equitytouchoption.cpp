@@ -178,6 +178,17 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     additionalData_["payoffCurrency"] = payoffCurrency_;
 }
 
+Real EquityTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        strike = barrier().levels().at(0).value();
+    } catch (...) {
+    }
+
+    return strike;
+}
+
 bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
     switch (type) {
     case Barrier::DownIn:
@@ -239,6 +250,11 @@ XMLNode* EquityTouchOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, eqNode, "Calendar", calendar_);
 
     return node;
+}
+
+map<AssetClass, set<string>> EquityTouchOption::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, set<string>({equityName()})}};
 }
 
 } // namespace data

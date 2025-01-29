@@ -285,6 +285,11 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
     BarrierOption::build(ef);
 }
 
+map<AssetClass, set<string>> EquityOptionWithBarrier::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, set<string>({equityName()})}};
+}
+
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {
     XMLNode* tmp = XMLUtils::getChildNode(node, "Underlying");
     if (!tmp)

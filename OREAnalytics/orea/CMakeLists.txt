@@ -93,7 +93,9 @@ engine/parstressconverter.cpp
 engine/parstressscenarioconverter.cpp
 engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
-engine/saccr.cpp
+engine/saccrcalculator.cpp
+engine/saccrcrifgenerator.cpp
+engine/saccrtradedata.cpp
 engine/sacvasensitivityloader.cpp
 engine/sacvasensitivityrecord.cpp
 engine/sensitivityaggregator.cpp
@@ -296,7 +298,9 @@ engine/parstressscenarioconverter.hpp
 engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
-engine/saccr.hpp
+engine/saccrcalculator.hpp
+engine/saccrcrifgenerator.hpp
+engine/saccrtradedata.hpp
 engine/sacvasensitivityloader.hpp
 engine/sacvasensitivityrecord.hpp
 engine/sensitivityaggregator.hpp

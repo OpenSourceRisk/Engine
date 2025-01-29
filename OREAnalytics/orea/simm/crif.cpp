@@ -25,6 +25,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/assign.hpp>
+#include <boost/bimap.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/crif.hpp>
@@ -46,6 +48,20 @@ using std::make_pair;
 auto isSimmParameter = [](const SlimCrifRecord& x) { return x.isSimmParameter(); };
 auto isNotSimmParameter = std::not_fn(isSimmParameter);
 
+// Following bimaps ease the conversion from enum to string and back
+// It also puts in one place a mapping from string to enum value
+
+// custom comparator for bimaps
+struct string_cmp {
+    bool operator()(const string& lhs, const string& rhs) const {
+        return ((boost::to_lower_copy(lhs)) < (boost::to_lower_copy(rhs)));
+    }
+};
+
+// Ease the notation below
+template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
+
+
 SlimCrifRecord::SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif) {
     crif_ = crif;
 }
@@ -63,6 +79,8 @@ void Crif::addRecord(const SlimCrifRecord& record, bool aggregateDifferentAmount
 
     if (newCrifRecord.type() == CrifRecord::RecordType::FRTB) {
         addFrtbCrifRecord(newCrifRecord, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
+    } else if (newCrifRecord.type() == CrifRecord::RecordType::SACCR) {
+        addSaccrCrifRecord(newCrifRecord);
     } else if (newCrifRecord.type() == CrifRecord::RecordType::SIMM && !newCrifRecord.isSimmParameter()) {
         addSimmCrifRecord(newCrifRecord, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
     } else {
@@ -77,18 +95,32 @@ void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurr
 
 void Crif::addFrtbCrifRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies,
                              bool sortFxVolQualifer) {
-    QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Frtb, "Can not add a FRTB crif record to a SIMM Crif");
+    QL_REQUIRE((record.type() == CrifRecord::RecordType::Generic || record.type() == CrifRecord::RecordType::FRTB) &&
+                   (type_ == CrifType::Empty || type_ == CrifType::FRTB),
+               "Can not add a FRTB crif record to a " << ore::data::to_string(type_) << " Crif");
     if (type_ == CrifType::Empty) {
-        type_ = CrifType::Frtb;
+        type_ = CrifType::FRTB;
     }
     insertCrifRecord(record, aggregateDifferentAmountCurrencies);
 }
 
+void Crif::addSaccrCrifRecord(const SlimCrifRecord& record) {
+    QL_REQUIRE((record.type() == CrifRecord::RecordType::Generic || record.type() == CrifRecord::RecordType::SACCR) &&
+                   (type_ == CrifType::Empty || type_ == CrifType::SACCR),
+               "Can not add a Saccr crif record to a " << ore::data::to_string(type_) << " Crif");
+    if (type_ == CrifType::Empty) {
+        type_ = CrifType::SACCR;
+    }
+    insertCrifRecord(record);
+}
+
 void Crif::addSimmCrifRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies,
                              bool sortFxVolQualifer) {
-    QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Simm, "Can not add a Simm crif record to a Frtb Crif");
+    QL_REQUIRE((record.type() == CrifRecord::RecordType::Generic || record.type() == CrifRecord::RecordType::SIMM) &&
+                   (type_ == CrifType::Empty || type_ == CrifType::SIMM),
+               "Can not add a Simm crif record to a " << ore::data::to_string(type_) << " Crif");
     if (type_ == CrifType::Empty) {
-        type_ = CrifType::Simm;
+        type_ = CrifType::SIMM;
     }
     auto recordToAdd = record;
     if (sortFxVolQualifer && recordToAdd.riskType() == CrifRecord::RiskType::FXVol) {
@@ -543,6 +575,36 @@ const string& Crif::getBbRw(int idx) const {
     return bbRwIndex_.left.at(idx);
 }
 
+const string& Crif::getCounterpartyName(int idx) const {
+    QL_REQUIRE(counterpartyNameIndex_.left.find(idx) != counterpartyNameIndex_.left.end(),
+               "Crif::getCounterpartyName() : could not find int index " << idx);
+    return counterpartyNameIndex_.left.at(idx);
+}
+
+const string& Crif::getCounterpartyId(int idx) const {
+    QL_REQUIRE(counterpartyIdIndex_.left.find(idx) != counterpartyIdIndex_.left.end(),
+               "Crif::getCounterpartyId() : could not find int index " << idx);
+    return counterpartyIdIndex_.left.at(idx);
+}
+
+const string& Crif::getNettingSetNumber(int idx) const {
+    QL_REQUIRE(nettingSetNumberIndex_.left.find(idx) != nettingSetNumberIndex_.left.end(),
+               "Crif::getNettingSetNumber() : could not find int index " << idx);
+    return nettingSetNumberIndex_.left.at(idx);
+}
+
+const string& Crif::getHedgingSet(int idx) const {
+    QL_REQUIRE(hedgingSetIndex_.left.find(idx) != hedgingSetIndex_.left.end(),
+               "Crif::getHedgingSet() : could not find int index " << idx);
+    return hedgingSetIndex_.left.at(idx);
+}
+
+const QuantLib::Date& Crif::getValuationDate(int idx) const {
+    QL_REQUIRE(valuationDateIndex_.left.find(idx) != valuationDateIndex_.left.end(),
+               "Crif::getValuationDate() : could not find int index " << idx);
+    return valuationDateIndex_.left.at(idx);
+}
+
 int Crif::updateTradeIdIndex(const string& value) {
     auto it = tradeIdIndex_.right.find(value);
     if (it != tradeIdIndex_.right.end()) {
@@ -704,6 +766,61 @@ int Crif::updateBbRwIndex(const std::string& value) {
     }
 }
 
+int Crif::updateCounterpartyNameIndex(const std::string& value) {
+    auto it = counterpartyNameIndex_.right.find(value);
+    if (it != counterpartyNameIndex_.right.end()) {
+        return it->second;
+    } else {
+        int key = counterpartyNameIndex_.empty() ? 0 : (counterpartyNameIndex_.left.rbegin()->first + 1);
+        counterpartyNameIndex_.insert({key, value});
+        return key;
+    }
+}
+
+int Crif::updateCounterpartyIdIndex(const std::string& value) {
+    auto it = counterpartyIdIndex_.right.find(value);
+    if (it != counterpartyIdIndex_.right.end()) {
+        return it->second;
+    } else {
+        int key = counterpartyIdIndex_.empty() ? 0 : (counterpartyIdIndex_.left.rbegin()->first + 1);
+        counterpartyIdIndex_.insert({key, value});
+        return key;
+    }
+}
+
+int Crif::updateNettingSetNumberIndex(const std::string& value) {
+    auto it = nettingSetNumberIndex_.right.find(value);
+    if (it != nettingSetNumberIndex_.right.end()) {
+        return it->second;
+    } else {
+        int key = nettingSetNumberIndex_.empty() ? 0 : (nettingSetNumberIndex_.left.rbegin()->first + 1);
+        nettingSetNumberIndex_.insert({key, value});
+        return key;
+    }
+}
+
+int Crif::updateHedgingSetIndex(const std::string& value) {
+    auto it = hedgingSetIndex_.right.find(value);
+    if (it != hedgingSetIndex_.right.end()) {
+        return it->second;
+    } else {
+        int key = hedgingSetIndex_.empty() ? 0 : (hedgingSetIndex_.left.rbegin()->first + 1);
+        hedgingSetIndex_.insert({key, value});
+        return key;
+    }
+}
+
+int Crif::updateValuationDateIndex(const QuantLib::Date& value) {
+    auto it = valuationDateIndex_.right.find(value);
+    if (it != valuationDateIndex_.right.end()) {
+        return it->second;
+    } else {
+        int key = valuationDateIndex_.empty() ? 0 : (valuationDateIndex_.left.rbegin()->first + 1);
+        valuationDateIndex_.insert({key, value});
+        return key;
+    }
+}
+
 void SlimCrifRecord::updateFromCrifRecord(const CrifRecord& cr) {
     QL_REQUIRE(crif_.lock(), "SlimCrifRecord::updateFromCrifRecord() : Must have a Crif pointer before updating from a CrifRecord");
 
@@ -729,55 +846,68 @@ void SlimCrifRecord::updateFromCrifRecord(const CrifRecord& cr) {
     amountResultCcy_ = cr.amountResultCcy;
     additionalFields_ = cr.additionalFields;
 
-    if (type() == CrifRecord::RecordType::FRTB) {
+    if (cr.type() == CrifRecord::RecordType::FRTB) {
         setLabel3(cr.label3);
         setCreditQuality(cr.creditQuality);
         setLongShortInd(cr.longShortInd);
         setCoveredBondInd(cr.coveredBondInd);
         setTrancheThickness(cr.trancheThickness);
         setBbRw(cr.bb_rw);
+    } else if (cr.type() == CrifRecord::RecordType::SACCR) {
+        setCounterpartyName(cr.counterpartyName);
+        setCounterpartyId(cr.counterpartyId);
+        setNettingSetNumber(cr.nettingSetNumber);
+        setHedgingSet(cr.hedgingSet);
+        setValuationDate(cr.valuationDate);
+
+        capitalModel_ = cr.capitalModel;
+        regulation_ = cr.regulation;
+        saccrLabel1_ = cr.saccrLabel1;
+        saccrLabel2_ = cr.saccrLabel2;
+        saccrLabel3_ = cr.saccrLabel3;
+        saccrEndDate_ = cr.saccrEndDate;
     }
 }
 
-void SlimCrifRecord::updateFromSlimCrifRecord(const SlimCrifRecord& cr) {
-    // Update all fields whose
-    setTradeId(cr.getTradeId());
-    setTradeType(cr.getTradeType());
-    setNettingSetDetails(cr.getNettingSetDetails());
-    setQualifier(cr.getQualifier());
-    setBucket(cr.getBucket());
-    setLabel1(cr.getLabel1());
-    setLabel2(cr.getLabel2());
-    setResultCurrency(cr.getResultCurrency());
-    setEndDate(cr.getEndDate());
-    setCurrency(cr.getCurrency());
-
-    productClass_ = cr.productClass();
-    riskType_ = cr.riskType();
-    imModel_ = cr.imModel();
-    collectRegulations_ = cr.collectRegulations();
-    postRegulations_ = cr.postRegulations();
-    amount_ = cr.amount();
-    amountUsd_ = cr.amountUsd();
-    amountResultCcy_ = cr.amountResultCurrency();
-    additionalFields_ = cr.additionalFields();
-
-    if (type() == CrifRecord::RecordType::FRTB) {
-        setLabel3(cr.getLabel3());
-        setCreditQuality(cr.getCreditQuality());
-        setLongShortInd(cr.getLongShortInd());
-        setCoveredBondInd(cr.getCoveredBondInd());
-        setTrancheThickness(cr.getTrancheThickness());
-        setBbRw(cr.getBbRw());
-    }
-}
+//void SlimCrifRecord::updateFromSlimCrifRecord(const SlimCrifRecord& cr) {
+//    // Update all fields whose
+//    setTradeId(cr.getTradeId());
+//    setTradeType(cr.getTradeType());
+//    setNettingSetDetails(cr.getNettingSetDetails());
+//    setQualifier(cr.getQualifier());
+//    setBucket(cr.getBucket());
+//    setLabel1(cr.getLabel1());
+//    setLabel2(cr.getLabel2());
+//    setResultCurrency(cr.getResultCurrency());
+//    setEndDate(cr.getEndDate());
+//    setCurrency(cr.getCurrency());
+//
+//    productClass_ = cr.productClass();
+//    riskType_ = cr.riskType();
+//    imModel_ = cr.imModel();
+//    collectRegulations_ = cr.collectRegulations();
+//    postRegulations_ = cr.postRegulations();
+//    amount_ = cr.amount();
+//    amountUsd_ = cr.amountUsd();
+//    amountResultCcy_ = cr.amountResultCurrency();
+//    additionalFields_ = cr.additionalFields();
+//
+//    if (type() == CrifRecord::RecordType::FRTB) {
+//        setLabel3(cr.getLabel3());
+//        setCreditQuality(cr.getCreditQuality());
+//        setLongShortInd(cr.getLongShortInd());
+//        setCoveredBondInd(cr.getCoveredBondInd());
+//        setTrancheThickness(cr.getTrancheThickness());
+//        setBbRw(cr.getBbRw());
+//    }
+//}
 
 SlimCrifRecord::SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif, const CrifRecord& cr) : SlimCrifRecord(crif) {
     updateFromCrifRecord(cr);
 }
 
 SlimCrifRecord::SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif, const SlimCrifRecord& cr) : SlimCrifRecord(crif) {
-    updateFromSlimCrifRecord(cr);
+    updateFromCrifRecord(cr.toCrifRecord());
 }
 
 CrifRecord::RecordType SlimCrifRecord::type() const {
@@ -790,7 +920,6 @@ CrifRecord::RecordType SlimCrifRecord::type() const {
     case CrifRecord::RiskType::CreditVolNonQ:
     case CrifRecord::RiskType::Equity:
     case CrifRecord::RiskType::EquityVol:
-    case CrifRecord::RiskType::FX:
     case CrifRecord::RiskType::FXVol:
     case CrifRecord::RiskType::Inflation:
     case CrifRecord::RiskType::IRCurve:
@@ -802,8 +931,19 @@ CrifRecord::RecordType SlimCrifRecord::type() const {
     case CrifRecord::RiskType::AddOnNotionalFactor:
     case CrifRecord::RiskType::Notional:
     case CrifRecord::RiskType::AddOnFixedAmount:
-    case CrifRecord::RiskType::PV:
         return CrifRecord::RecordType::SIMM;
+    case CrifRecord::RiskType::PV:
+        if (capitalModel() == CrifRecord::CapitalModel::SACCR)
+            return CrifRecord::RecordType::SACCR;
+        else if (imModel() == CrifRecord::IMModel::Schedule)
+            return CrifRecord::RecordType::SIMM;
+        else
+            QL_FAIL("Cannot determine CrifRecord::type() for RiskType::PV");
+    case CrifRecord::RiskType::FX:
+        if (capitalModel() == CrifRecord::CapitalModel::SACCR)
+            return CrifRecord::RecordType::SACCR;
+        else
+            return CrifRecord::RecordType::SIMM;
     case CrifRecord::RiskType::GIRR_DELTA:
     case CrifRecord::RiskType::GIRR_VEGA:
     case CrifRecord::RiskType::GIRR_CURV:
@@ -831,6 +971,14 @@ CrifRecord::RecordType SlimCrifRecord::type() const {
     case CrifRecord::RiskType::RRAO_1_PERCENT:
     case CrifRecord::RiskType::RRAO_01_PERCENT:
         return CrifRecord::RecordType::FRTB;
+    case CrifRecord::RiskType::CO:
+    case CrifRecord::RiskType::COLL:
+    case CrifRecord::RiskType::CR_IX:
+    case CrifRecord::RiskType::CR_SN:
+    case CrifRecord::RiskType::EQ_IX:
+    case CrifRecord::RiskType::EQ_SN:
+    case CrifRecord::RiskType::IR:
+        return CrifRecord::RecordType::SACCR;
     case CrifRecord::RiskType::All:
     case CrifRecord::RiskType::Empty:
         return CrifRecord::RecordType::Generic;
@@ -860,6 +1008,12 @@ const string& SlimCrifRecord::getTrancheThickness() const {
     return crif_.lock()->getTrancheThickness(trancheThickness_);
 }
 const string& SlimCrifRecord::getBbRw() const { return crif_.lock()->getBbRw(bb_rw_); }
+
+const string& SlimCrifRecord::getCounterpartyName() const { return crif_.lock()->getCounterpartyName(counterpartyName_); }
+const string& SlimCrifRecord::getCounterpartyId() const { return crif_.lock()->getCounterpartyId(counterpartyId_); }
+const string& SlimCrifRecord::getNettingSetNumber() const { return crif_.lock()->getNettingSetNumber(nettingSetNumber_); }
+const string& SlimCrifRecord::getHedgingSet() const { return crif_.lock()->getHedgingSet(hedgingSet_); }
+const QuantLib::Date& SlimCrifRecord::getValuationDate() const { return crif_.lock()->getValuationDate(valuationDate_); }
 
 void SlimCrifRecord::setCrif(const QuantLib::ext::weak_ptr<Crif>& crif) {
     auto crifRecord = toCrifRecord();
@@ -911,6 +1065,36 @@ void SlimCrifRecord::setTrancheThickness(const string& value) {
 
 void SlimCrifRecord::setBbRw(const string& value) { bb_rw_ = crif_.lock()->updateBbRwIndex(value); }
 
+void SlimCrifRecord::setCounterpartyName(const string& value) {
+    counterpartyName_ = crif_.lock()->updateCounterpartyNameIndex(value);
+}
+void SlimCrifRecord::setCounterpartyId(const string& value) {
+    counterpartyId_ = crif_.lock()->updateCounterpartyIdIndex(value);
+}
+void SlimCrifRecord::setNettingSetNumber(const string& value) {
+    nettingSetNumber_ = crif_.lock()->updateNettingSetNumberIndex(value);
+}
+void SlimCrifRecord::setHedgingSet(const string& value) { hedgingSet_ = crif_.lock()->updateHedgingSetIndex(value); }
+
+void SlimCrifRecord::setValuationDate(const QuantLib::Date& value) {
+    valuationDate_ = crif_.lock()->updateValuationDateIndex(value);
+}
+
+// clang-format off
+const bm<Crif::CrifType> crifTypeMap =
+    boost::assign::list_of<bm<Crif::CrifType>::value_type>(
+        Crif::CrifType::FRTB, "FRTB")(
+        Crif::CrifType::SIMM, "SIMM")(
+        Crif::CrifType::SACCR, "SACCR")(
+        Crif::CrifType::Empty, "");
+// clang-format on
+
+ostream& operator<<(ostream& out, const Crif::CrifType& ct) {
+    QL_REQUIRE(crifTypeMap.left.count(ct) > 0,
+               "CRIF type (" << static_cast<int>(ct) << ") not a valid Crif::CrifType");
+    return out << crifTypeMap.left.at(ct);
+}
+
 ostream& operator<<(ostream& out, const SlimCrifRecord& cr) {
     const NettingSetDetails& n = cr.getNettingSetDetails();
     if (n.empty()) {
@@ -948,6 +1132,19 @@ CrifRecord SlimCrifRecord::toCrifRecord() const {
         cr.coveredBondInd = getCoveredBondInd();
         cr.trancheThickness = getTrancheThickness();
         cr.bb_rw = getBbRw();
+    } else if (type() == CrifRecord::RecordType::SACCR) {
+        cr.counterpartyName = getCounterpartyName();
+        cr.counterpartyId = getCounterpartyId();
+        cr.nettingSetNumber = getNettingSetNumber();
+        cr.hedgingSet = getHedgingSet();
+        cr.valuationDate = getValuationDate();
+
+        cr.capitalModel = capitalModel_;
+        cr.regulation = regulation_;
+        cr.saccrLabel1 = saccrLabel1_;
+        cr.saccrLabel2 = saccrLabel2_;
+        cr.saccrLabel3 = saccrLabel3_;
+        cr.saccrEndDate = saccrEndDate_;
     }
 
     cr.resultCurrency = getResultCurrency();

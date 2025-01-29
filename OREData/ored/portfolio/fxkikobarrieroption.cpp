@@ -83,9 +83,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     Currency soldCcy = parseCurrency(soldCurrency_);
 
     // Payoff
-    Real strike = soldAmount_ / boughtAmount_;
     Option::Type type = parseOptionType(option_.callPut());
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike()));
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());

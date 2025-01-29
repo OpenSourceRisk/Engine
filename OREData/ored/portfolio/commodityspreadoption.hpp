@@ -87,7 +87,8 @@ public:
 
     //! \name Inspectors
     //@{
-    std::vector<std::string> const& fxIndex() const { return fxIndex_; }
+    const CommoditySpreadOptionData& csoData() const { return csoData_; }
+    const std::vector<std::string>& fxIndex() const { return fxIndex_; }
     const ore::data::OptionData& option() const { return csoData_.optionData(); }
     QuantLib::Real strike() const { return csoData_.strike(); }
 

@@ -26,7 +26,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <string>
-#include <variant>
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -47,7 +46,15 @@ struct CrifRecord {
     enum class RecordType {
         SIMM,
         FRTB,
+        SACCR,
         Generic
+    };
+
+    enum class CapitalModel : unsigned char {
+        Empty,
+        SACCR,
+        SACVA,
+        FRTB
     };
 
      /*! Risk types plus an All type for convenience
@@ -67,7 +74,7 @@ struct CrifRecord {
         CreditVolNonQ,
         Equity,
         EquityVol,
-        FX,
+        FX, // SIMM, SA-CCR
         FXVol,
         Inflation,
         IRCurve,
@@ -79,7 +86,7 @@ struct CrifRecord {
         AddOnNotionalFactor,
         Notional,
         AddOnFixedAmount,
-        PV, // IM Schedule
+        PV, // IM Schedule, SA-CCR
         // FRTB Risk Types
         GIRR_DELTA,
         GIRR_VEGA,
@@ -107,6 +114,38 @@ struct CrifRecord {
         DRC_SC,
         RRAO_1_PERCENT,
         RRAO_01_PERCENT,
+        // SA-CCR Risk Types
+        CO,
+        COLL,
+        CR_IX,
+        CR_SN,
+        EQ_IX,
+        EQ_SN,
+        IR,
+
+        //Notional_IR_CCR,
+        //Notional_FX_CCR,
+        //Notional_CR_CCR,
+        //Notional_EQ_CCR,
+        //Notional_CO_CCR,
+        //Notional_IR_CCR_Adjusted,
+        //Notional_FX_CCR_Adjusted,
+        //Notional_CR_CCR_Adjusted,
+        //Notional_EQ_CCR_Adjusted,
+        //Notional_CO_CCR_Adjusted,
+        //Notional_IR_CCR_Effective,
+        //Notional_FX_CCR_Effective,
+        //Notional_CR_CCR_Effective,
+        //Notional_EQ_CCR_Effective,
+        //Notional_CO_CCR_Effective,
+        //Margin_Threshold,
+        //Margin_MinTransferAmount,
+        //Collateral_Parameters,
+        //MarketValue_VM_PreHC,
+        //MarketValue_VM_PostHC,
+        //MarketValue_IM_PreHC,
+        //MarketValue_IM_PostHC,
+
         // All type for aggreggation purposes
         All
     };
@@ -163,6 +202,13 @@ struct CrifRecord {
         Invalid
     };
 
+    enum class SaccrRegulation : unsigned char {
+        Basel,
+        CRR2,
+        Unspecified,
+        Invalid
+    };
+
     //! There are two entries for curvature risk in frtb, a up and down shift
     enum class CurvatureScenario { Empty, Up, Down };
 
@@ -171,7 +217,7 @@ struct CrifRecord {
     std::string tradeType;
     NettingSetDetails nettingSetDetails;
     ProductClass productClass = ProductClass::Empty;
-    RiskType riskType = RiskType::Notional;
+    RiskType riskType = RiskType::Empty;
     std::string qualifier;
     std::string bucket;
     std::string label1;
@@ -186,6 +232,7 @@ struct CrifRecord {
 
     // optional data
     mutable IMModel imModel = IMModel::Empty;
+    CapitalModel capitalModel = CapitalModel::Empty; // for capital, "SA-CCR", "SA-CVA", "FRTB-SA", etc.
     mutable std::set<Regulation> collectRegulations;
     mutable std::set<Regulation> postRegulations;
     std::string endDate;
@@ -197,6 +244,19 @@ struct CrifRecord {
     std::string coveredBondInd;
     std::string trancheThickness;
     std::string bb_rw;
+
+    // saccr fields
+    std::string counterpartyName;
+    std::string counterpartyId;
+    std::string nettingSetNumber;
+    std::string hedgingSet, hedgingSubset;
+    QuantLib::Date valuationDate;
+    SaccrRegulation regulation = SaccrRegulation::Unspecified;
+    // We need these fields for numerical values (and using std::variant seems like too much work than it is worth it for now)
+    boost::variant<QuantLib::Real, std::string, QuantLib::Size> saccrLabel1 = "";
+    boost::variant<QuantLib::Real, std::string> saccrLabel2 = "";
+    QuantLib::Real saccrLabel3 = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real saccrEndDate = QuantLib::Null<QuantLib::Real>();
 
     // additional data
     std::map<std::string, std::variant<std::string, double, bool>> additionalFields;
@@ -213,9 +273,17 @@ struct CrifRecord {
         : tradeId(tradeId), tradeType(tradeType), nettingSetDetails(nettingSetDetails), productClass(productClass),
           riskType(riskType), qualifier(qualifier), bucket(bucket), label1(label1), label2(label2),
           amountCurrency(amountCurrency), amount(amount), amountUsd(amountUsd), imModel(imModel),
+          capitalModel(CapitalModel::Empty),
           collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate) {
         additionalFields.insert(extraFields.begin(), extraFields.end());
     }
+
+    // SA-CCR record constructor for convenience
+    CrifRecord(const std::string& tradeId, const std::string& tradeType, const NettingSetDetails& nettingSetDetails,
+               const std::string& counterpartyId, const CapitalModel& capitalModel, const SaccrRegulation& regulation,
+               const QuantLib::Date& valuationDate)
+        : tradeId(tradeId), tradeType(tradeType), nettingSetDetails(nettingSetDetails), capitalModel(capitalModel),
+          counterpartyId(counterpartyId), valuationDate(valuationDate), regulation(regulation) {}
 
     RecordType type() const;
 
@@ -316,12 +384,19 @@ struct CrifRecord {
                             cr.bucket, cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
                             cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
                             cr.postRegulations);
+        } else if (type() == RecordType::SACCR || cr.type() == RecordType::SACCR) {
+            return std::tie(tradeId, nettingSetDetails, counterpartyName, counterpartyId, nettingSetNumber, riskType,
+                            hedgingSet, hedgingSubset, qualifier, bucket, amountCurrency, valuationDate) <
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.counterpartyName, cr.counterpartyId,
+                            cr.nettingSetNumber, cr.riskType, cr.hedgingSet, hedgingSubset, cr.qualifier, cr.bucket,
+                            cr.amountCurrency, cr.valuationDate);
         } else {
             return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
                             label2, amountCurrency, collectRegulations,
-                            postRegulations) < std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
-                                                        cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
-                                                        cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+                            postRegulations) <
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
+                            cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
+                            cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
         }
     }
 
@@ -335,27 +410,18 @@ struct CrifRecord {
                             cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
                             cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw,
                             cr2.collectRegulations, cr2.postRegulations);
+        } else if (cr1.type() == RecordType::SACCR || cr2.type() == RecordType::SACCR) {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.counterpartyName, cr1.counterpartyId,
+                            cr1.nettingSetNumber, cr1.riskType, cr1.hedgingSet, cr1.hedgingSubset, cr1.qualifier, cr1.bucket,
+                            cr1.valuationDate) <
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.counterpartyName, cr2.counterpartyId,
+                            cr2.nettingSetNumber, cr2.riskType, cr2.hedgingSet, cr2.hedgingSubset, cr2.qualifier, cr2.bucket,
+                            cr2.valuationDate);
         } else {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) <
                    std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
                             cr2.bucket, cr2.label1, cr2.label2, cr2.collectRegulations, cr2.postRegulations);
-        }
-    }
-
-    inline static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
-        if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
-            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
-                            cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
-                            cr1.longShortInd, cr1.coveredBondInd, cr1.trancheThickness, cr1.bb_rw) <
-                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
-                            cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
-                            cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw);
-        } else {
-            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
-                            cr1.bucket, cr1.label1,
-                            cr1.label2) < std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass,
-                                                   cr2.riskType, cr2.qualifier, cr2.bucket, cr2.label1, cr2.label2);
         }
     }
 
@@ -368,12 +434,20 @@ struct CrifRecord {
                             cr.bucket, cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
                             cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
                             cr.postRegulations);
+        } else if (type() == RecordType::SACCR || cr.type() == RecordType::SACCR) {
+            return std::tie(tradeId, nettingSetDetails, counterpartyName, counterpartyId,
+                            nettingSetNumber, riskType, hedgingSet, hedgingSubset, qualifier, bucket,
+                            amountCurrency, valuationDate) ==
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.counterpartyName, cr.counterpartyId,
+                            cr.nettingSetNumber, cr.riskType, cr.hedgingSet, cr.hedgingSubset, cr.qualifier, cr.bucket,
+                            cr.amountCurrency, cr.valuationDate);
         } else {
             return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
                             label2, amountCurrency, collectRegulations,
-                            postRegulations) == std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
-                                                         cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
-                                                         cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+                            postRegulations) ==
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
+                            cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
+                            cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
         }
     }
     inline static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
@@ -386,6 +460,13 @@ struct CrifRecord {
                             cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
                             cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw,
                             cr2.collectRegulations, cr2.postRegulations);
+        } else if (cr1.type() == RecordType::SACCR || cr2.type() == RecordType::SACCR) {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.counterpartyName, cr1.counterpartyId,
+                            cr1.nettingSetNumber, cr1.riskType, cr1.hedgingSet, cr1.hedgingSubset, cr1.qualifier, cr1.bucket,
+                            cr1.valuationDate) ==
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.counterpartyName, cr2.counterpartyId,
+                            cr2.nettingSetNumber, cr2.riskType, cr2.hedgingSet, cr2.hedgingSubset, cr2.qualifier, cr2.bucket,
+                            cr2.valuationDate);
         } else {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.collectRegulations, cr1.postRegulations) ==
@@ -406,11 +487,17 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::IMModel& model);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::CapitalModel& capitalModel);
+
 std::ostream& operator<<(std::ostream& out, const CrifRecord::Regulation& regulation);
+
+std::ostream& operator<<(std::ostream& out, const CrifRecord::SaccrRegulation& saccrRegulation);
 
 std::ostream& operator<<(std::ostream& out, const std::set<CrifRecord::Regulation>& regulation);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario);
+
+std::ostream& operator<<(std::ostream& out, const CrifRecord::RecordType& recordType);
 
 CrifRecord::RiskType parseRiskType(const std::string& rt);
 
@@ -445,8 +532,6 @@ std::set<CrifRecord::Regulation> filterRegulations(const std::set<CrifRecord::Re
 CrifRecord::Regulation getWinningRegulation(const std::set<CrifRecord::Regulation>& winningRegulations);
 
 std::string regulationsToString(const std::set<CrifRecord::Regulation>& regs);
-
-std::vector<CrifRecord::Regulation> standardRegulations();
 
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.

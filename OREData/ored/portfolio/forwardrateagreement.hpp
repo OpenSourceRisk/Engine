@@ -47,7 +47,13 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     const string& index() const { return index_; }
 
+    const std::string& longShort() const { return longShort_;}
+
     const std::map<std::string,boost::any>& additionalData() const override;
+
+    //! Add underlying index names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
     string longShort_;

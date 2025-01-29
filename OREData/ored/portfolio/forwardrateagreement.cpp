@@ -137,5 +137,27 @@ XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, fNode, "Notional", amount_);
     return node;
 }
+
+map<AssetClass, set<string>>
+ForwardRateAgreement::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    map<AssetClass, set<string>> result;
+    if (!instrument_)
+        return result;
+
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    if (!swap)
+        return result;
+    if (swap->numberOfLegs() != 1 || swap->leg(0).size() != 1)
+        return result;
+    
+    const auto& cf = swap->leg(0)[0];
+    if (auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf))
+        result[AssetClass::IR].insert(oncpn->index()->name());
+    else if (auto iborcpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf))
+        result[AssetClass::IR].insert(iborcpn->index()->name());
+
+    return result;
+}
 } // namespace data
 } // namespace ore

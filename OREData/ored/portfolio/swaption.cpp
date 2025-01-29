@@ -557,6 +557,8 @@ XMLNode* Swaption::toXML(XMLDocument& doc) const {
 map<AssetClass, set<string>>
 Swaption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     map<AssetClass, set<string>> result;
+    if (underlying_)
+        result = underlying_->underlyingIndices();
     if (auto s = envelope().additionalField("security_spread", false); !s.empty())
         result[AssetClass::BOND] = {s};
     return result;

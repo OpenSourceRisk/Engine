@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/trade.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmconfiguration.hpp>
@@ -32,6 +33,8 @@
 
 namespace ore {
 namespace analytics {
+
+CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
 
 std::vector<std::string> loadFactorList(const std::string& inputFileName, const char delim = '\n');
 

@@ -26,31 +26,10 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-BaCvaCalculator::BaCvaCalculator(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                                 const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
-                                 const QuantLib::ext::shared_ptr<CounterpartyManager>& counterpartyManager,
-                                 const QuantLib::ext::shared_ptr<Market>& market, const string& calculationCcy,
-                                 const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
-                                 const QuantLib::ext::shared_ptr<CollateralBalances>& calculatedCollateralBalances,
-                                 const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& nameMapper,
-                                 const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper,
-                                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager,
-                                 Real rho, Real alpha, Real discount)
-    : rho_(rho), alpha_(alpha), discount_(discount) {
-
-    calculationCcy_ = calculationCcy;
-
-    // calculate the saccr - the exposure at default in BA-CVA calculation
-    saccr_ = QuantLib::ext::make_shared<SACCR>(portfolio, nettingSetManager, counterpartyManager, market,
-                                               calculationCcy_, collateralBalances, calculatedCollateralBalances,
-                                               nameMapper, bucketMapper, refDataManager);
-
-    calculate();
-};
-
-BaCvaCalculator::BaCvaCalculator(const QuantLib::ext::shared_ptr<SACCR>& saccr, const std::string& calculationCcy,
-                                 QuantLib::Real rho, QuantLib::Real alpha)
-    : saccr_(saccr), rho_(rho), alpha_(alpha) {
+BaCvaCalculator::BaCvaCalculator(const QuantLib::ext::shared_ptr<SaccrCalculator>& saccrCalculator,
+                                 const QuantLib::ext::shared_ptr<SaccrTradeData>& saccrTradeData,
+                                 const std::string& calculationCcy, QuantLib::Real rho, QuantLib::Real alpha)
+    : saccrCalculator_(saccrCalculator), saccrTradeData_(saccrTradeData), rho_(rho), alpha_(alpha) {
 
     calculationCcy_ = calculationCcy;
 
@@ -64,16 +43,16 @@ void BaCvaCalculator::calculate() {
     // calculate the effective maturity of the portfolio
     calculateEffectiveMaturity();
 
-    auto allCounterpartyNettingSets = saccr_->portfolio()->counterpartyNettingSets();
+    auto allCounterpartyNettingSets = saccrTradeData_->portfolio()->counterpartyNettingSets();
     // loop each counterparty
     for (auto it = allCounterpartyNettingSets.begin(); it != allCounterpartyNettingSets.end(); it++) {
 
         Real sCva = 0.0;
 
         // look up risk weight
-        QL_REQUIRE(saccr_->counterpartyManager()->has(it->first),
+        QL_REQUIRE(saccrTradeData_->counterpartyManager()->has(it->first),
                    "counterparty ID " << it->first << " missing in counterparty manager for BA-CVA calculation");
-        QuantLib::ext::shared_ptr<CounterpartyInformation> cp = saccr_->counterpartyManager()->get(it->first);
+        QuantLib::ext::shared_ptr<CounterpartyInformation> cp = saccrTradeData_->counterpartyManager()->get(it->first);
 
         // skip clearing counterparties
         if (cp->isClearingCP())
@@ -88,7 +67,7 @@ void BaCvaCalculator::calculate() {
         // loop over each netting set for the counterparty
         for (auto n : it->second) {
             // EAD is the SA-CCR number - assume non IMM bank
-            Real ead = saccr_->EAD(n);
+            Real ead = EAD(n);
 
             // Get the effective maturity for this netting set
             Real effMaturity = effectiveMaturity(n);
@@ -171,7 +150,7 @@ void BaCvaCalculator::calculateEffectiveMaturity() {
     DayCounter dayCounter = ActualActual(ActualActual::ISDA); // use generic daycounter of ActualActual
 
     map<string, Real> matNumerator, matDenominator;
-    QuantLib::ext::shared_ptr<Portfolio> portfolio = saccr_->portfolio();
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = saccrTradeData_->portfolio();
 
     // get the netting set
     map<string, string> nettingSetMap = portfolio->nettingSetMap();
@@ -215,7 +194,7 @@ void BaCvaCalculator::calculateEffectiveMaturity() {
                                 // look up FX rate in market it different from calculation ccy
                                 Real fxRate = 1.0;
                                 if (calculationCcy_ != ccy) {
-                                    fxRate = saccr_->market()->fxRate(ccy + calculationCcy_)->value();
+                                    fxRate = saccrTradeData_->market()->fxRate(ccy + calculationCcy_)->value();
                                 }
 
                                 // Check amount
@@ -273,7 +252,7 @@ void BaCvaCalculator::calculateEffectiveMaturity() {
 
                 Real fxRate = 1.0;
                 if (calculationCcy_ != currency) {
-                    fxRate = saccr_->market()->fxRate(currency + calculationCcy_)->value();
+                    fxRate = saccrTradeData_->market()->fxRate(currency + calculationCcy_)->value();
                 }
 
                 auto itr = matNumerator.find(nettingSet);

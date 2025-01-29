@@ -19,6 +19,9 @@
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/engine/saccrtradedata.hpp>
+#include <orea/engine/saccrcrifgenerator.hpp>
+#include <orea/engine/saccrcalculator.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -48,7 +51,7 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     auto saccrAnalytic = static_cast<SaCcrAnalytic*>(analytic());
     QL_REQUIRE(saccrAnalytic, "Analytic must be of type SaCcrAnalytic");
 
-    std::map<SACCR::ReportType, QuantLib::ext::shared_ptr<Report>> saccrReports;
+    std::map<SaccrCalculator::ReportType, QuantLib::ext::shared_ptr<Report>> saccrReports;
 
     auto calculatedCollateralBalances = QuantLib::ext::make_shared<CollateralBalances>();
 
@@ -94,25 +97,54 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
                                                                    : QuantLib::ext::make_shared<CounterpartyManager>();
 
     QuantLib::ext::shared_ptr<InMemoryReport> saCcrReport = QuantLib::ext::make_shared<InMemoryReport>();
-    QuantLib::ext::shared_ptr<InMemoryReport> saCcrDetailReport = QuantLib::ext::make_shared<InMemoryReport>();
 
-    saccrReports[SACCR::ReportType::Summary] = saCcrReport;
-    saccrReports[SACCR::ReportType::Detail] = saCcrDetailReport;
+    saccrReports[SaccrCalculator::ReportType::Summary] = saCcrReport;
+
+    analytic()->startTimer("Build SA-CCR trade data");
+    auto saccrTradeData = QuantLib::ext::make_shared<SaccrTradeData>(
+        analytic()->market(), inputs_->simmNameMapper(), inputs_->simmBucketMapper(),
+        inputs_->refDataManager(), inputs_->baseCurrency(), inputs_->reportNaString(), nettingSetManager,
+        counterpartyManager, collateralBalances, calculatedCollateralBalances);
+    saccrTradeData->initialise(analytic()->portfolio());
+    analytic()->stopTimer("Build SA-CCR trade data");
+    saccrAnalytic->setSaccrTradeData(saccrTradeData);
+
+    // Create capital CRIF
+    analytic()->startTimer("Capital CRIF generation");
+    auto saccrCrifGenerator = QuantLib::ext::make_shared<SaccrCrifGenerator>(saccrTradeData);
+    auto saccrCrif = saccrCrifGenerator->generateCrif();
+
+    auto crifReport = QuantLib::ext::make_shared<InMemoryReport>();
+    path crifReportPath = inputs_->resultsPath() / "capital_crif.csv";
+    ReportWriter(inputs_->reportNaString())
+        .writeCapitalCrifReport(*crifReport, saccrCrif, inputs_->baseCurrency(), inputs_->csvQuoteChar());
+    crifReport->toFile(crifReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString());
+    analytic()->stopTimer("Capital CRIF generation");
+
+    QuantLib::ext::shared_ptr<InMemoryReport> saccrDetailReport = QuantLib::ext::make_shared<InMemoryReport>();
+    ReportWriter(inputs_->reportNaString()).writeSaccrTradeDetailReport(*saccrDetailReport, saccrTradeData);
+    if (saccrAnalytic->getWriteIntermediateReports()) {
+        path saccrDetailPath = inputs_->resultsPath() / "saccrdetail.csv";
+        saccrDetailReport->toFile(saccrDetailPath.string(), ',', false, inputs_->csvQuoteChar(),
+                                  inputs_->reportNaString());
+    }
 
     // Main SA-CCR calculation
-    auto saccr = QuantLib::ext::make_shared<SACCR>(
-        analytic()->portfolio(), nettingSetManager, counterpartyManager, analytic()->market(),
-        inputs_->baseCurrency(), collateralBalances, calculatedCollateralBalances, inputs_->simmNameMapper(),
-        inputs_->simmBucketMapper(), inputs_->refDataManager(), saccrReports);
-    saccrAnalytic->setSaccr(saccr);
+    analytic()->startTimer("SA-CCR calculation");
+    auto saccrCalculator = QuantLib::ext::make_shared<SaccrCalculator>(
+        saccrCrif, saccrTradeData, inputs_->baseCurrency(), nettingSetManager, counterpartyManager,
+        analytic()->market(), saccrReports);
+    analytic()->stopTimer("SA-CCR calculation");
+    saccrAnalytic->setSaccrCalculator(saccrCalculator);
 
-    // Write out the collateral balances that were (ultimately) used
-    path p = inputs_->resultsPath() / "collateralbalances.xml";
-    LOG("Saving collateral balances to file: " << p.string());
-    collateralBalances->toFile(p.string());
+    // Write out SA-CCR summary and detailed reports
+    if (saccrAnalytic->getWriteIntermediateReports()) {
+        path saCcrPath = inputs_->resultsPath() / "saccr.csv";
+        saCcrReport->toFile(saCcrPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString());
+    }
 
     analytic()->reports()[label()]["saccr"] = saCcrReport;
-    analytic()->reports()[label()]["saccr_detail"] = saCcrDetailReport;    
+    analytic()->reports()[label()]["saccr_detail"] = saccrDetailReport;
 }
 
 }

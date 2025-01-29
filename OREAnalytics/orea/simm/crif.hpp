@@ -36,7 +36,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <string>
-#include <variant>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace analytics {
@@ -52,7 +52,7 @@ public:
     SlimCrifRecord(const QuantLib::ext::weak_ptr<Crif>& crif, const SlimCrifRecord& cr);
 
     void updateFromCrifRecord(const CrifRecord& record);
-    void updateFromSlimCrifRecord(const SlimCrifRecord& record);
+    //void updateFromSlimCrifRecord(const SlimCrifRecord& record);
 
     CrifRecord::RecordType type() const;
 
@@ -70,12 +70,20 @@ public:
     const std::string& getEndDate() const;
     const std::string& getCurrency() const;
 
+    // FRTB
     const std::string& getLabel3() const;
     const std::string& getCreditQuality() const;
     const std::string& getLongShortInd() const;
     const std::string& getCoveredBondInd() const;
     const std::string& getTrancheThickness() const;
     const std::string& getBbRw() const;
+
+    // SACCR
+    const std::string& getCounterpartyName() const;
+    const std::string& getCounterpartyId() const;
+    const std::string& getNettingSetNumber() const;
+    const std::string& getHedgingSet() const;
+    const QuantLib::Date& getValuationDate() const;
 
     // Members whose values do not need to be managed by a Crif instance
     const std::set<CrifRecord::Regulation>& collectRegulations() const { return collectRegulations_; }
@@ -86,6 +94,8 @@ public:
     // QuantLib::Real amountUsd() const { return amountUsd_; }
     // QuantLib::Real amountResultCurrency() const { return amountResultCcy_; }
     const CrifRecord::IMModel& imModel() const { return imModel_; }
+    const CrifRecord::CapitalModel& capitalModel() const { return capitalModel_; }
+    const CrifRecord::SaccrRegulation& regulation() const { return regulation_; }
 
     QuantLib::Real& amount() { return amount_; }
     QuantLib::Real& amountUsd() { return amountUsd_; }
@@ -98,6 +108,11 @@ public:
     const std::map<std::string, std::variant<std::string, double, bool>>& additionalFields() const {
         return additionalFields_;
     }
+
+    boost::variant<QuantLib::Real, std::string, QuantLib::Size> saccrLabel1() const { return saccrLabel1_; }
+    boost::variant<QuantLib::Real, std::string> saccrLabel2() const { return saccrLabel2_; }
+    QuantLib::Real saccrLabel3() const { return saccrLabel3_; }
+    QuantLib::Real saccrEndDate() const { return saccrEndDate_; }
 
     void setCollectRegulations(const std::set<CrifRecord::Regulation>& value) { collectRegulations_ = value; }
     void setPostRegulations(const std::set<CrifRecord::Regulation>& value) { postRegulations_ = value; }
@@ -123,6 +138,12 @@ public:
     void setCoveredBondInd(const std::string& value);
     void setTrancheThickness(const std::string& value);
     void setBbRw(const std::string& value);
+
+    void setCounterpartyName(const std::string& value);
+    void setCounterpartyId(const std::string& value);
+    void setNettingSetNumber(const std::string& value);
+    void setHedgingSet(const std::string& value);
+    void setValuationDate(const QuantLib::Date& value);
 
     bool hasAmountCcy() const { return !getCurrency().empty(); }
     bool hasAmount() const { return amount_ != QuantLib::Null<QuantLib::Real>(); }
@@ -215,24 +236,26 @@ public:
 
     //! Define how CRIF records are compared
     bool operator<(const SlimCrifRecord& cr) const {
-        if (type() == CrifRecord::CrifRecord::RecordType::FRTB || cr.type() == CrifRecord::RecordType::FRTB) {
-            return std::tie(tradeId(), nettingSetDetails(), productClass(), riskType(), qualifier(),
-                            bucket(), label1(), label2(), label3(), endDate(), creditQuality(),
-                            longShortInd(), coveredBondInd(), trancheThickness(), bbRw(), currency(),
-                            collectRegulations(), postRegulations()) <
-                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.productClass(), cr.riskType(),
-                            cr.qualifier(), cr.bucket(), cr.label1(), cr.label2(), cr.label3(),
-                            cr.endDate(), cr.creditQuality(), cr.longShortInd(), cr.coveredBondInd(),
-                            cr.trancheThickness(), cr.bbRw(), cr.currency(), cr.collectRegulations(),
-                            cr.postRegulations());
-        } else {
-            return std::tie(tradeId(), nettingSetDetails(), productClass(), riskType(), qualifier(),
-                            bucket(), label1(), label2(), currency(), collectRegulations(),
-                            postRegulations()) <
-                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.productClass(),
-                            cr.riskType(), cr.qualifier(), cr.bucket(),
-                            cr.label1(), cr.label2(), cr.currency(),
+        if (type() == CrifRecord::RecordType::FRTB || cr.type() == CrifRecord::RecordType::FRTB) {
+            return std::tie(tradeId(), nettingSetDetails(), productClass(), riskType(), qualifier(), bucket(), label1(),
+                            label2(), label3(), endDate(), creditQuality(), longShortInd(), coveredBondInd(),
+                            trancheThickness(), bbRw(), currency(), collectRegulations(), postRegulations()) <
+                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.productClass(), cr.riskType(), cr.qualifier(),
+                            cr.bucket(), cr.label1(), cr.label2(), cr.label3(), cr.endDate(), cr.creditQuality(),
+                            cr.longShortInd(), cr.coveredBondInd(), cr.trancheThickness(), cr.bbRw(), cr.currency(),
                             cr.collectRegulations(), cr.postRegulations());
+        } else if (type() == CrifRecord::RecordType::SACCR || cr.type() == CrifRecord::RecordType::SACCR) {
+            return std::tie(tradeId(), nettingSetDetails(), counterpartyName(), counterpartyId(), nettingSetNumber(),
+                            riskType(), hedgingSet(), qualifier(), bucket(), currency(), valuationDate()) <
+                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.counterpartyName(), cr.counterpartyId(),
+                            cr.nettingSetNumber(), cr.riskType(), cr.hedgingSet(), cr.qualifier(), cr.bucket(),
+                            cr.currency(), cr.valuationDate());
+        } else {
+            return std::tie(tradeId(), nettingSetDetails(), productClass(), riskType(), qualifier(), bucket(), label1(),
+                            label2(), currency(), collectRegulations(), postRegulations()) <
+                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.productClass(), cr.riskType(), cr.qualifier(),
+                            cr.bucket(), cr.label1(), cr.label2(), cr.currency(), cr.collectRegulations(),
+                            cr.postRegulations());
         }
     }
 
@@ -246,6 +269,12 @@ public:
                             cr2.qualifier(), cr2.bucket(), cr2.label1(), cr2.label2(), cr2.label3(),
                             cr2.endDate(), cr2.creditQuality(), cr2.longShortInd(), cr2.coveredBondInd(),
                             cr2.trancheThickness(), cr2.bbRw(), cr2.collectRegulations(), cr2.postRegulations());
+        } else if (cr1.type() == CrifRecord::RecordType::SACCR || cr2.type() == CrifRecord::RecordType::SACCR) {
+            return std::tie(cr1.tradeId(), cr1.nettingSetDetails(), cr1.counterpartyName(), cr1.counterpartyId(), cr1.nettingSetNumber(),
+                            cr1.riskType(), cr1.hedgingSet(), cr1.qualifier(), cr1.bucket(), cr1.valuationDate()) <
+                   std::tie(cr2.tradeId(), cr2.nettingSetDetails(), cr2.counterpartyName(), cr2.counterpartyId(),
+                            cr2.nettingSetNumber(), cr2.riskType(), cr2.hedgingSet(), cr2.qualifier(), cr2.bucket(),
+                            cr2.valuationDate());
         } else {
             return std::tie(cr1.tradeId(), cr1.nettingSetDetails(), cr1.productClass(), cr1.riskType(),
                             cr1.qualifier(), cr1.bucket(), cr1.label1(), cr1.label2(),
@@ -267,6 +296,12 @@ public:
                             cr.endDate(), cr.creditQuality(), cr.longShortInd(), cr.coveredBondInd(),
                             cr.trancheThickness(), cr.bbRw(), cr.currency(), cr.collectRegulations(),
                             cr.postRegulations());
+        } else if (type() == CrifRecord::RecordType::SACCR || cr.type() == CrifRecord::RecordType::SACCR) {
+            return std::tie(tradeId(), nettingSetDetails(), counterpartyName(), counterpartyId(), nettingSetNumber(),
+                            riskType(), hedgingSet(), qualifier(), bucket(), currency(), valuationDate()) ==
+                   std::tie(cr.tradeId(), cr.nettingSetDetails(), cr.counterpartyName(), cr.counterpartyId(),
+                            cr.nettingSetNumber(), cr.riskType(), cr.hedgingSet(), cr.qualifier(), cr.bucket(),
+                            cr.currency(), cr.valuationDate());
         } else {
             return std::tie(tradeId(), nettingSetDetails(), productClass(), riskType(), qualifier(),
                             bucket(), label1(), label2(), currency(), collectRegulations(),
@@ -287,6 +322,12 @@ public:
                             cr2.qualifier(), cr2.bucket(), cr2.label1(), cr2.label2(), cr2.label3(),
                             cr2.endDate(), cr2.creditQuality(), cr2.longShortInd(), cr2.coveredBondInd(),
                             cr2.trancheThickness(), cr2.bbRw(), cr2.collectRegulations(), cr2.postRegulations());
+        } else if (cr1.type() == CrifRecord::RecordType::SACCR || cr2.type() == CrifRecord::RecordType::SACCR) {
+            return std::tie(cr1.tradeId(), cr1.nettingSetDetails(), cr1.counterpartyName(), cr1.counterpartyId(), cr1.nettingSetNumber(),
+                            cr1.riskType(), cr1.hedgingSet(), cr1.qualifier(), cr1.bucket(), cr1.valuationDate()) ==
+                   std::tie(cr2.tradeId(), cr2.nettingSetDetails(), cr2.counterpartyName(), cr2.counterpartyId(),
+                            cr2.nettingSetNumber(), cr2.riskType(), cr2.hedgingSet(), cr2.qualifier(), cr2.bucket(),
+                            cr2.valuationDate());
         } else {
             return std::tie(cr1.tradeId(), cr1.nettingSetDetails(), cr1.productClass(), cr1.riskType(),
                             cr1.qualifier(), cr1.bucket(), cr1.label1(), cr1.label2(),
@@ -315,6 +356,12 @@ public:
     const int& coveredBondInd() const { return coveredBondInd_; }
     const int& trancheThickness() const { return trancheThickness_; }
     const int& bbRw() const { return bb_rw_; }
+
+    const int& counterpartyName() const { return counterpartyName_; }
+    const int& counterpartyId() const { return counterpartyId_; }
+    const int& nettingSetNumber() const { return nettingSetNumber_; }
+    const int& hedgingSet() const { return hedgingSet_; }
+    const int& valuationDate() const { return valuationDate_; }
 
     static std::vector<std::set<std::string>> additionalHeaders;
 
@@ -351,6 +398,19 @@ private:
     int coveredBondInd_;
     int trancheThickness_;
     int bb_rw_;
+
+    // SA-CCR fields
+    CrifRecord::CapitalModel capitalModel_;
+    int counterpartyName_;
+    int counterpartyId_;
+    int nettingSetNumber_;
+    int hedgingSet_;
+    int valuationDate_;
+    CrifRecord::SaccrRegulation regulation_;
+    boost::variant<QuantLib::Real, std::string, QuantLib::Size> saccrLabel1_;
+    boost::variant<QuantLib::Real, std::string> saccrLabel2_;
+    QuantLib::Real saccrLabel3_ = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real saccrEndDate_ = QuantLib::Null<QuantLib::Real>();
 
     // additional data
     std::map<std::string, std::variant<std::string, double, bool>> additionalFields_;
@@ -431,7 +491,7 @@ std::ostream& operator<<(std::ostream& out, const SlimCrifRecord& cr);
 */
 class Crif : public QuantLib::ext::enable_shared_from_this<Crif> {
 public:
-    enum class CrifType { Empty, Frtb, Simm };
+    enum class CrifType { FRTB, SIMM, SACCR, Empty };
     Crif() = default;
 
     CrifType type() const { return type_; }
@@ -550,6 +610,12 @@ public:
     const std::string& getTrancheThickness(int idx) const;
     const std::string& getBbRw(int idx) const;
 
+    const std::string& getCounterpartyName(int idx) const;
+    const std::string& getCounterpartyId(int idx) const;
+    const std::string& getNettingSetNumber(int idx) const;
+    const std::string& getHedgingSet(int idx) const;
+    const QuantLib::Date& getValuationDate(int idx) const;
+
     int updateTradeIdIndex(const std::string& value);
     int updateTradeTypeIndex(const std::string& value);
     int updateNettingSetDetailsIndex(const ore::data::NettingSetDetails& value);
@@ -567,10 +633,17 @@ public:
     int updateTrancheThicknessIndex(const std::string& value);
     int updateBbRwIndex(const std::string& value);
 
+    int updateCounterpartyNameIndex(const std::string& value);
+    int updateCounterpartyIdIndex(const std::string& value);
+    int updateNettingSetNumberIndex(const std::string& value);
+    int updateHedgingSetIndex(const std::string& value);
+    int updateValuationDateIndex(const QuantLib::Date& value);
+
 private:
     void insertCrifRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
     void addFrtbCrifRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
                            bool sortFxVolQualifer = true);
+    void addSaccrCrifRecord(const SlimCrifRecord& record);
     void addSimmCrifRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
                            bool sortFxVolQualifer = true);
     void addSimmParameterRecord(const SlimCrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
@@ -578,8 +651,10 @@ private:
                                     const SlimCrifRecord& record);
 
     boost::bimap<int, std::string> tradeIdIndex_, tradeTypeIndex_, qualifierIndex_, bucketIndex_, label1Index_,
-        label2Index_, currencyIndex_, resultCurrencyIndex_, endDateIndex_, label3Index_, creditQualityIndex_, longShortIndIndex_,
-        coveredBondIndIndex_, trancheThicknessIndex_, bbRwIndex_;
+        label2Index_, currencyIndex_, resultCurrencyIndex_, endDateIndex_, label3Index_, creditQualityIndex_,
+        longShortIndIndex_, coveredBondIndIndex_, trancheThicknessIndex_, bbRwIndex_, counterpartyNameIndex_,
+        counterpartyIdIndex_, nettingSetNumberIndex_, hedgingSetIndex_;
+    boost::bimap<int, QuantLib::Date> valuationDateIndex_;
     boost::bimap<int, ore::data::NettingSetDetails> nettingSetDetailsIndex_;
 
     CrifType type_ = CrifType::Empty;

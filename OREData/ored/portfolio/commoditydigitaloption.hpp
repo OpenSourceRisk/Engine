@@ -65,6 +65,9 @@ public:
     //@{
     const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const OptionData& option() const { return optionData_; }
+    const std::string& commodityName() const { return name_; }
+    Real strike() { return strike_; }
     //@}
 
 private:

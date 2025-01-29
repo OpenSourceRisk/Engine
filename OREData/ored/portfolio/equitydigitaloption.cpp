@@ -131,5 +131,10 @@ XMLNode* EquityDigitalOption::toXML(XMLDocument& doc) const {
 
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>>
+EquityDigitalOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
+}
 } // namespace data
 } // namespace oreplus

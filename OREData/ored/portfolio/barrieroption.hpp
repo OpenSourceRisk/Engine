@@ -166,6 +166,11 @@ public:
     //@}
 
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
+
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;

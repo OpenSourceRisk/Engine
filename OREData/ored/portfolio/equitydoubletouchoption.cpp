@@ -216,5 +216,10 @@ XMLNode* EquityDoubleTouchOption::toXML(XMLDocument& doc) const {
     return node;
 }
 
+map<AssetClass, set<string>> EquityDoubleTouchOption::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, set<string>({equityName()})}};
+}
+
 } // namespace data
 } // namespace oreplus

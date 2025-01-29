@@ -241,6 +241,12 @@ public:
 
     virtual void writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis, ore::data::Report& reportOut);
 
+    void writeSaccrTradeDetailReport(ore::data::Report& report,
+                                     const QuantLib::ext::shared_ptr<ore::analytics::SaccrTradeData>& tradeData) const;
+
+    void writeCapitalCrifReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
+                                const std::string& baseCurrency, const char& csvQuoteChar = '\0') const;
+
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,

@@ -26,6 +26,7 @@ namespace ore {
 namespace analytics {
 
 typedef CrifRecord::Regulation Regulation;
+typedef CrifRecord::SaccrRegulation SaccrRegulation;
 typedef CrifRecord::RiskType RiskType;
 
 using std::ostream;
@@ -95,6 +96,15 @@ const bm<RiskType> riskTypeMap = boost::assign::list_of<bm<RiskType>::value_type
     (RiskType::DRC_SC, "DRC_SC")
     (RiskType::RRAO_1_PERCENT, "RRAO_1_PERCENT")
     (RiskType::RRAO_01_PERCENT, "RRAO_01_PERCENT")
+    // clang-format off
+    (RiskType::CO, "CO")
+    (RiskType::COLL, "COLL")
+    (RiskType::CR_IX, "CR_IX")
+    (RiskType::CR_SN, "CR_SN")
+    (RiskType::EQ_IX, "EQ_IX")
+    (RiskType::EQ_SN, "EQ_SN")
+    (RiskType::IR, "IR")
+    // clang-format on
     (RiskType::Empty, "")
     (RiskType::All, "All");
 
@@ -111,6 +121,10 @@ const bm<CrifRecord::IMModel> imModelMap = boost::assign::list_of<bm<CrifRecord:
     CrifRecord::IMModel::SIMM_R, "SIMM-R")(CrifRecord::IMModel::SIMM_P, "SIMM-P")(
     CrifRecord::IMModel::Empty, "");
 
+const bm<CrifRecord::CapitalModel> modelMap = boost::assign::list_of<bm<CrifRecord::CapitalModel>::value_type>(
+    CrifRecord::CapitalModel::SACCR, "SA-CCR")(CrifRecord::CapitalModel::SACVA, "SA-CVA")(
+    CrifRecord::CapitalModel::FRTB, "FRTB-SA")(CrifRecord::CapitalModel::Empty, "");
+
 const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::value_type>(
     Regulation::APRA, "APRA")(Regulation::CFTC, "CFTC")(
     Regulation::ESA, "ESA")(Regulation::FINMA, "FINMA")(
@@ -126,6 +140,12 @@ const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::val
     Regulation::Excluded, "Excluded")(Regulation::Invalid, "Invalid");
 // clang-format on
 
+const bm<SaccrRegulation> saccrRegulationsMap = boost::assign::list_of<bm<SaccrRegulation>::value_type>(
+    SaccrRegulation::Basel, "Basel")(
+    SaccrRegulation::CRR2, "CRR2")(
+    SaccrRegulation::Unspecified, "Unspecified")(
+    SaccrRegulation::Invalid, "Invalid");
+
 ostream& operator<<(ostream& out, const RiskType& rt) {
     QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
                "Risk type (" << static_cast<int>(rt) << ") not a valid CrifRecord::RiskType");
@@ -138,8 +158,15 @@ ostream& operator<<(ostream& out, const CrifRecord::ProductClass& pc) {
     return out << productClassMap.left.at(pc);
 }
 
+ostream& operator<<(ostream& out, const CrifRecord::CapitalModel& capitalModel) {
+    QL_REQUIRE(modelMap.left.count(capitalModel) > 0,
+               "Capital model (" << static_cast<unsigned char>(capitalModel) << ") not a valid CrifRecord::CapitalModel");
+    return out << modelMap.left.at(capitalModel);
+}
+
 ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
-    QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid CrifRecord::IMModel");
+    QL_REQUIRE(imModelMap.left.count(model) > 0,
+               "IM model (" << static_cast<int>(model) << ") not a valid CrifRecord::IMModel");
     if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R ||
         model == CrifRecord::IMModel::SIMM)
         return out << "SIMM";
@@ -148,8 +175,16 @@ ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
 }
 
 ostream& operator<<(ostream& out, const Regulation& regulation) {
-    QL_REQUIRE(regulationsMap.left.count(regulation) > 0, "Product class not a valid Regulation");
+    QL_REQUIRE(regulationsMap.left.count(regulation) > 0,
+               "SIMM regulation (" << static_cast<int>(regulation) << ") not a valid CrifRecord::Regulation");
     return out << regulationsMap.left.at(regulation);
+}
+
+ostream& operator<<(ostream& out, const SaccrRegulation& saccrRegulation) {
+    QL_REQUIRE(saccrRegulationsMap.left.count(saccrRegulation) > 0, "SA-CCR regulation ("
+                                                                   << static_cast<unsigned char>(saccrRegulation)
+                                                                   << ") not a valid CrifRecord::SaccrRegulation");
+    return out << saccrRegulationsMap.left.at(saccrRegulation);
 }
 
 CrifRecord::IMModel parseIMModel(const string& model) {
@@ -267,6 +302,27 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario&
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::RecordType& recordType) {
+    switch (recordType) {
+    case CrifRecord::RecordType::SIMM:
+            out << "SIMM";
+            break;
+    case CrifRecord::RecordType::FRTB:
+            out << "FRTB-SA";
+            break;
+    case CrifRecord::RecordType::SACCR:
+            out << "SA-CCR";
+            break;
+    case CrifRecord::RecordType::Generic:
+            out << "Generic";
+            break;
+    default:
+            out << "";
+            break;
+    }
+    return out;
+}
+
 CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario) {
     if (scenario == "CurvatureDown") {
         return CrifRecord::CurvatureScenario::Down;
@@ -313,7 +369,6 @@ CrifRecord::RecordType CrifRecord::type() const {
     case RiskType::CreditVolNonQ:
     case RiskType::Equity:
     case RiskType::EquityVol:
-    case RiskType::FX:
     case RiskType::FXVol:
     case RiskType::Inflation:
     case RiskType::IRCurve:
@@ -325,8 +380,19 @@ CrifRecord::RecordType CrifRecord::type() const {
     case RiskType::AddOnNotionalFactor:
     case RiskType::Notional:
     case RiskType::AddOnFixedAmount:
-    case RiskType::PV:
         return RecordType::SIMM;
+    case RiskType::PV:
+        if (capitalModel == CapitalModel::SACCR)
+            return RecordType::SACCR;
+        else if (imModel == IMModel::Schedule)
+            return RecordType::SIMM;
+        else
+            QL_FAIL("Cannot determine CrifRecord::type() for RiskType::PV");
+    case RiskType::FX:
+        if (capitalModel == CapitalModel::SACCR)
+            return RecordType::SACCR;
+        else
+            return RecordType::SIMM;
     case RiskType::GIRR_DELTA:
     case RiskType::GIRR_VEGA:
     case RiskType::GIRR_CURV:
@@ -354,20 +420,20 @@ CrifRecord::RecordType CrifRecord::type() const {
     case RiskType::RRAO_1_PERCENT:
     case RiskType::RRAO_01_PERCENT:
         return RecordType::FRTB;
-    case RiskType::All:
+    case RiskType::CO:
+    case RiskType::COLL:
+    case RiskType::CR_IX:
+    case RiskType::CR_SN:
+    case RiskType::EQ_IX:
+    case RiskType::EQ_SN:
+    case RiskType::IR:
+        return RecordType::SACCR;
+    case RiskType ::All:
     case RiskType::Empty:
         return RecordType::Generic;
     default:
-        QL_FAIL("CrifRecord::Type(): Unexpected CrifRecord::RiskType " << riskType);
+        QL_FAIL("CrifRecord::type(): Unexpected CrifRecord::RiskType " << riskType);
     }
-}
-
-vector<Regulation> standardRegulations() {
-    return vector<Regulation>({Regulation::APRA,       Regulation::CFTC,   Regulation::ESA,   Regulation::FINMA,
-                               Regulation::KFSC,       Regulation::HKMA,   Regulation::JFSA,  Regulation::MAS,
-                               Regulation::OSFI,       Regulation::RBI,    Regulation::SEC,   Regulation::SEC_unseg,
-                               Regulation::USPR,       Regulation::NONREG, Regulation::BACEN, Regulation::SANT,
-                               Regulation::SFC,        Regulation::UK,     Regulation::AMFQ});
 }
 
 } // namespace analytics

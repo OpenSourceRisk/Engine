@@ -253,6 +253,17 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // maturity_ is set in buildBarrierOptionWrapperInstr()
 }
 
+Real FxTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        strike = barrier().levels().at(0).value();
+    } catch (...) {
+    }
+
+    return strike;
+}
+
 bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
     switch (type) {
     case Barrier::DownIn:

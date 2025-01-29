@@ -191,6 +191,21 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
 }
 
+Real FxDoubleTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        auto underlying = QuantLib::ext::dynamic_pointer_cast<ore::data::DoubleBarrierOptionWrapper>(instrument_);
+        auto dBarOpt = QuantLib::ext::dynamic_pointer_cast<QuantLib::DoubleBarrierOption>(underlying->qlInstrument());
+        auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(dBarOpt->payoff());
+        strike = payoff->strike();
+    } catch (...){
+        
+    }
+
+    return strike;
+}
+
 bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
     switch (type) {
     case Barrier::DownIn:

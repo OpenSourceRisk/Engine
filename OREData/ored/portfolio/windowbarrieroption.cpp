@@ -31,7 +31,8 @@ namespace data {
 static const std::string window_barrier_script =
     "REQUIRE BarrierType == 1 OR BarrierType == 2 OR BarrierType == 3 OR BarrierType == 4;\n"
     "\n"
-    "NUMBER i, Payoff, TriggerProbability, ExerciseProbability, isUp, currentNotional;\n"
+    "NUMBER Payoff, TriggerProbability, ExerciseProbability, currentNotional, forwardPrice,\n"
+    "       saccrNotional;\n"
     "\n"
     "IF BarrierType == 1 OR BarrierType == 3 THEN\n"
     "  TriggerProbability = BELOWPROB(Underlying, StartDate, EndDate, BarrierLevel);\n"
@@ -39,7 +40,8 @@ static const std::string window_barrier_script =
     "  TriggerProbability = ABOVEPROB(Underlying, StartDate, EndDate, BarrierLevel);\n"
     "END;\n"
     "\n"
-    "Payoff = Quantity * PutCall * (Underlying(Expiry) - Strike);\n"
+    "forwardPrice = Underlying(Expiry);\n"
+    "Payoff = Quantity * PutCall * (forwardPrice - Strike);\n"
     "IF Payoff > 0.0 THEN\n"
     "  IF BarrierType == 1 OR BarrierType == 2 THEN\n"
     "    Option = PAY(Payoff * TriggerProbability, Expiry, Settlement, PayCcy);\n"
@@ -51,7 +53,13 @@ static const std::string window_barrier_script =
     "END;\n"
     "\n"
     "Option = LongShort * Option;\n"
-    "currentNotional = Quantity * Strike;\n";
+    "currentNotional = Quantity * Strike;\n"
+    "saccrNotional = forwardPrice * Quantity;\n"
+    "IF BarrierType == 1 OR BarrierType == 2 THEN\n"
+    "  saccrNotional = saccrNotional * TriggerProbability;"
+    "ELSE\n"
+    "  saccrNotional = saccrNotional * (1 - TriggerProbability);\n"
+    "END;\n";
 
 // clang-format on
 
@@ -114,6 +122,8 @@ void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     script_[""] = ScriptedTradeScriptData(
         window_barrier_script, "Option",
         {{"currentNotional", "currentNotional"},
+         {"saccrNotional", "saccrNotional"},
+         {"forwardPrice", "forwardPrice"},
          {"notionalCurrency", "PayCcy"},
          {"TriggerProbability", "TriggerProbability"},
          {"ExerciseProbability", "ExerciseProbability"}},

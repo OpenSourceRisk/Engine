@@ -837,5 +837,24 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) const {
     return node;
 }
 
+map<AssetClass, set<string>> CapFloor::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    
+    map<AssetClass, set<string>> indices;
+    if (!legs_.empty()) {
+        auto leg = legs_.at(0);
+        if (!leg.empty()) {
+            auto coupon = leg.at(0);
+            if (auto floatingCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(coupon)) {
+                indices[AssetClass::IR].insert(floatingCpn->index()->name());
+            } else if (auto infCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(coupon)) {
+                indices[AssetClass::IR].insert(infCpn->index()->name());
+            }
+        }
+    }
+
+    return indices;
+}
+
 } // namespace data
 } // namespace ore

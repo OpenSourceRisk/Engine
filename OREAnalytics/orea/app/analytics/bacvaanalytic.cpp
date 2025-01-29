@@ -49,8 +49,8 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     QL_REQUIRE(inputs_->nettingSetManager() != nullptr, "No netting set configuration provided for BA-CVA calculation");
 
     // build BA-CVA calculator
-    QuantLib::ext::shared_ptr<BaCvaCalculator> baCvaCalculator =
-        QuantLib::ext::make_shared<BaCvaCalculator>(saccrAnalytic->saccr(), inputs_->baseCurrency());
+    QuantLib::ext::shared_ptr<BaCvaCalculator> baCvaCalculator = QuantLib::ext::make_shared<BaCvaCalculator>(
+        saccrAnalytic->saccrCalculator(), saccrAnalytic->saccrTradeData(), inputs_->baseCurrency());
     analytic()->addTimer("BaCvaCalculator", baCvaCalculator->timer());
 
     // generate report

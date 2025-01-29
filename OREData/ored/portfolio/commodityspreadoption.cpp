@@ -330,7 +330,6 @@ CommoditySpreadOption::underlyingIndices(const QuantLib::ext::shared_ptr<Referen
     return result;
 }
 
-
 void CommoditySpreadOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* csoNode = XMLUtils::getChildNode(node, "CommoditySpreadOptionData");

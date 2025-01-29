@@ -51,6 +51,7 @@ public:
     //@{
     const ore::data::OptionData& option() { return option_; }
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
+    const std::string& name() const { return name_; }
     //@}
 
     //! \name Serialisation

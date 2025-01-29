@@ -19,7 +19,8 @@
 #pragma once
 #include <ored/utilities/timer.hpp>
 #include <orea/engine/cvacalculator.hpp>
-#include <orea/engine/saccr.hpp>
+#include <orea/engine/saccrtradedata.hpp>
+#include <orea/engine/saccrcalculator.hpp>
 
 namespace ore {
 namespace analytics {
@@ -37,14 +38,16 @@ public:
                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
         QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4, QuantLib::Real discount = 0.65);
 
-    BaCvaCalculator(const QuantLib::ext::shared_ptr<SACCR>& saccr, const std::string& calculationCcy, QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4);
+    BaCvaCalculator(const QuantLib::ext::shared_ptr<SaccrCalculator>& saccrCalculator,
+                    const QuantLib::ext::shared_ptr<SaccrTradeData>& saccrTradeData, const std::string& calculationCcy,
+                    QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4);
 
     virtual void calculate() override;
 
     QuantLib::Real effectiveMaturity(std::string nettingSet);
     QuantLib::Real discountFactor(std::string nettingSet);
     QuantLib::Real counterpartySCVA(std::string counterparty);
-    QuantLib::Real EAD(std::string nettingSet) { return saccr_->EAD(nettingSet); }
+    QuantLib::Real EAD(std::string nettingSet) { return saccrCalculator_->EAD(nettingSet); }
     map<string, set<string>> counterpartyNettingSets() { return counterpartyNettingSets_; }
     QuantLib::Real riskWeight(std::string counterparty);
     const ore::data::Timer& timer() const { return timer_; }
@@ -53,7 +56,8 @@ protected:
     void calculateEffectiveMaturity();
 
 private:
-    QuantLib::ext::shared_ptr<SACCR> saccr_;
+    QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator_;
+    QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData_;
     
     QuantLib::Real rho_ = 0.5;
     QuantLib::Real alpha_ = 1.4;

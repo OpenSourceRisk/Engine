@@ -46,6 +46,10 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
@@ -56,6 +60,7 @@ public:
     const string& startDate() const { return startDate_; }
     const string& calendar() const { return calendar_; }
     const string& eqIndex() const { return eqIndex_; }
+    Real strike() const;
     //@}
 
     //! \name Serialisation
