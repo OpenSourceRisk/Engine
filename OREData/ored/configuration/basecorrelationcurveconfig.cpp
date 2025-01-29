@@ -48,7 +48,7 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     boost::optional<DateGeneration::Rule> rule,
     bool adjustForLosses,
     const std::vector<MarketDatum::QuoteType>& quoteTypes,
-    double indexSpread, const std::string& currency)
+    double indexSpread, const std::string& currency, const bool calibrateConstituentsToIndexSpread)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
       terms_(terms),
@@ -64,11 +64,36 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       adjustForLosses_(adjustForLosses),
       quoteTypes_(quoteTypes),
       indexSpread_(indexSpread),
-      currency_(currency) {
+      currency_(currency),
+      calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread){
     QL_REQUIRE(!quoteTypes_.empty(), "Required at least one valid quote type");
     for (const auto& quoteType : quoteTypes) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE,
-            "Invalid quote type" << quoteType << " in BaseCorrelationCurveConfig");
+                   "Invalid quote type" << quoteType << " in BaseCorrelationCurveConfig");
+    }
+}
+
+void addPriceQuotes(vector<string>& quotes, const std::string& base, const std::string& term, const std::vector<string>& detachmentPoints)  {
+    std::vector<string> attachmentPoints;
+    if (detachmentPoints.size() == 1 &&  detachmentPoints.front() == "*") {
+        attachmentPoints.push_back("*");
+    } else {
+        attachmentPoints.push_back("0");
+        for (size_t i=1; i<detachmentPoints.size(); ++i) {
+            attachmentPoints.push_back(detachmentPoints[i-1]);
+        }
+    }
+    for (size_t i = 0; i<detachmentPoints.size(); ++i) {
+        const auto& ap = attachmentPoints[i];
+        const auto& dp = detachmentPoints[i];
+        quotes.push_back(base + term + "/" + ap + "/" + dp);
+    }
+}
+
+void addBaseCorrelationQuotes(vector<string>& quotes, const std::string& base, const std::string& term, const std::vector<string>& detachmentPoints)  {
+    for (size_t i = 0; i<detachmentPoints.size(); ++i) {
+        const auto& dp = detachmentPoints[i];
+        quotes.push_back(base + term + "/" + dp);
     }
 }
 
@@ -77,8 +102,10 @@ const vector<string>& BaseCorrelationCurveConfig::quotes() {
         for (const auto& quoteType : quoteTypes_) {
             string base = "INDEX_CDS_TRANCHE/" + to_string(quoteType) + "/" + quoteName_ + "/";
             for (auto t : terms_) {
-                for (auto dp : detachmentPoints_) {
-                    quotes_.push_back(base + t + "/" + dp);
+                if (quoteType == MarketDatum::QuoteType::BASE_CORRELATION) {
+                    addBaseCorrelationQuotes(quotes_, base, t, detachmentPoints_);
+                } else if (quoteType == MarketDatum::QuoteType::PRICE) {
+                    addPriceQuotes(quotes_, base, t, detachmentPoints_);
                 }
             }
         }
@@ -135,6 +162,10 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     adjustForLosses_ = true;
     if (auto n = XMLUtils::getChildNode(node, "AdjustForLosses"))
         adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
+
+    calibrateConstituentsToIndexSpread_ =
+        XMLUtils::getChildValueAsBool(node, "CalibrateConstituentsToIndexSpread", false, false);
+
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
@@ -174,6 +205,8 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     if (!currency_.empty()){
         XMLUtils::addChild(doc, node, "Currency", currency_);
     }
+
+    XMLUtils::addChild(doc, node, "CalibrateConstituentsToIndexSpread", calibrateConstituentsToIndexSpread_);
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
 

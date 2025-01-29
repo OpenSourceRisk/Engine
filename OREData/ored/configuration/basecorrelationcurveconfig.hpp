@@ -64,7 +64,8 @@ public:
         boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
         bool adjustForLosses = true,
         const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
-        const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "");
+        const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
+        bool calibrateConstituentsToIndexSpread = false);
     //@}
 
     //! \name Serialisation
@@ -91,11 +92,13 @@ public:
     const std::vector<MarketDatum::QuoteType>& quoteTypes() const { return quoteTypes_; }
     const double indexSpread() const { return indexSpread_; }
     const std::string currency() const { return currency_; }
+    const bool calibrateConstituentsToIndexSpread() const { return calibrateConstituentsToIndexSpread_; }
+
     //@}
 
     //! \name Setters
     //@{
-    vector<string>& terms() { return terms_; }
+    vector<string>& terms() { return terms_;}
     vector<string>& detachmentPoints() { return detachmentPoints_; }
     Size& settlementDays() { return settlementDays_; }
     Calendar& calendar() { return calendar_; }
@@ -121,6 +124,7 @@ private:
     std::vector<MarketDatum::QuoteType> quoteTypes_;
     double indexSpread_;
     std::string currency_;
+    bool calibrateConstituentsToIndexSpread_;
 };
 } // namespace data
 } // namespace ore

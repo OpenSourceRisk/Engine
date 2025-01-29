@@ -682,10 +682,10 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         bool validType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
         QL_REQUIRE(validType, "Invalid quote type for " << datumName);
         WLOG("Deprecated MarketDatum::InstrumentType::CDS_INDEX, "
-             "please use INDEX_CDS_TRANCHE/BASE_CORRELATION/IndexName/Term/Attach/DetachPoint "
+             "please use INDEX_CDS_TRANCHE/BASE_CORRELATION/IndexName/Term/DetachPoint "
              "or INDEX_CDS_TRANCHE/PRICE/IndexName/Term/AttachPoint/DetachPoint instead");
         MarketDatum::InstrumentType newType = MarketDatum::InstrumentType::INDEX_CDS_TRANCHE;
-        std::string newDatumName = to_string(newType) + "/" + tokens[1] + "/" + tokens[2] + "/" + tokens[3] + "/0/" + tokens[4];
+        std::string newDatumName = to_string(newType) + "/" + tokens[1] + "/" + tokens[2] + "/" + tokens[3] + "/" + tokens[4];
         const string& cdsIndexName = tokens[2];
         Period term = parsePeriod(tokens[3]);
         Real detachmentPoint = parseReal(tokens[4]);

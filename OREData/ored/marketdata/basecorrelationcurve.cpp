@@ -466,39 +466,43 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
     for (const auto& term : terms) {
 
-        Handle<DefaultProbabilityTermStructure> indexCurve;
-        Handle<Quote> indexRecovery;
-        Handle<YieldTermStructure> discountCurve;
-        std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
-        auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
-        auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
-        QL_REQUIRE(indexCreditCurve != nullptr,
-                   "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
-        discountCurve = indexCreditCurve->rateCurve();
-        indexCurve = indexCreditCurve->curve();
-        indexRecovery = indexCreditCurve->recovery();
 
-        auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
-            config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
+            Handle<DefaultProbabilityTermStructure> indexCurve;
+            Handle<Quote> indexRecovery;
+            Handle<YieldTermStructure> discountCurve;
+            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
+            auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
+            auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
+            QL_REQUIRE(indexCreditCurve != nullptr,
+                       "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
+            discountCurve = indexCreditCurve->rateCurve();
+            indexCurve = indexCreditCurve->curve();
+            indexRecovery = indexCreditCurve->recovery();
+        if (config.calibrateConstituentsToIndexSpread()) {
+            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
+                config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
 
-        auto pool = QuantLib::ext::make_shared<Pool>();
 
-        auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames,
-                                                                     basketData.remainingWeights, dpts, recoveryRates);
 
-        DLOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
-        DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
-        for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
-            DLOG(io::iso_date(calibrationResults.cdsMaturity[i])
-                << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
-                << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
-                << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
+            auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames,
+                                                                         basketData.remainingWeights, dpts, recoveryRates);
+
+            DLOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
+            DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+            for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
+                DLOG(io::iso_date(calibrationResults.cdsMaturity[i])
+                    << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
+                    << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
+                    << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
+            }
+            if (calibrationResults.success) {
+                dpts = calibrationResults.curves;
+            }
         }
-
+        auto pool = QuantLib::ext::make_shared<Pool>();
         for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
             std::string name = basketData.remainingNames[i];
-            Handle<DefaultProbabilityTermStructure> curve =
-                calibrationResults.success ? calibrationResults.curves[i] : dpts[i];
+            Handle<DefaultProbabilityTermStructure> curve = dpts[i];
             DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
             std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, curve);
             vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);

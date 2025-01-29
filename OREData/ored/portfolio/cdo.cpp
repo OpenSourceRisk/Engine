@@ -412,15 +412,15 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 LOG("Calibrate curve");
                 auto result = curveCalibration->calibratedCurves(creditCurves, basketNotionals, dpts, recoveryRates);
                 if (result.success){
-                    LOG("Credit Curve " << creditCurves.front());
+                    DLOG("Credit Curve " << creditCurves.front());
                     auto uncalibratedCurve = dpts.front();
                     auto calibratedCurve = result.curves.front();
                     dpts = std::move(result.curves);
 
-                    LOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
-                    LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+                    DLOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
+                    DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
                     for (size_t i = 0; i < result.cdsMaturity.size(); ++i) {
-                        LOG(io::iso_date(result.cdsMaturity[i])
+                       DLOG(io::iso_date(result.cdsMaturity[i])
                             << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
                             << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
                             << result.marketNpv[i] - result.impliedNpv[i]);
@@ -432,16 +432,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                         times.insert(uncalibratedCurve->timeFromReference(maturity));
                         times.insert(uncalibratedCurve->timeFromReference(maturity+1));
                         
-                    }
-                    
-                    for (const auto& time : times) {
-                        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->survivalProbability(time, true)
-                                     << " Calibrated: " << calibratedCurve->survivalProbability(time, true));
-                        auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
-                        auto hazardRateCalibrated = calibratedCurve->hazardRate(time, true);
-                        LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated
-                                     << " Calibrated: " << hazardRateCalibrated << " alpha "
-                                     << hazardRateCalibrated / hazardRateUncalibrated);
                     }
                 }
                 else{
@@ -577,8 +567,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     } else {
         DLOG("Detachment point is 1.0 so building an index CDS for [0,1.0] 'tranche'.");
         
-        auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(engineFactory->builder("IndexCreditDefaultSwap"));
-        QL_REQUIRE(cdsBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
+
 
         auto cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             side, currTotalNtl, basketNotionals, 0.0, runningRate, schedule, bdc, dayCounter, settlesAccrual_,
@@ -588,8 +577,10 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         bool useIndexCurve =
             parseBool(cdoEngineBuilder->engineParameter("useIndexCurveForIndexCDS", {}, false, "false"));
         if (useIndexCurve) {
+
             auto cdsEngineBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(
                 engineFactory->builder("IndexCreditDefaultSwap"));
+            QL_REQUIRE(cdsEngineBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
             cds->setPricingEngine(cdsEngineBuilder->engine(ccy, creditCurveIdWithTerm(), creditCurves, string("Index"),
                                                            fixedRecovery, false));
         } else {
