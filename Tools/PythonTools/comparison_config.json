@@ -299,7 +299,6 @@
           {
             "names": [
               "AddOn",
-              "NPV",
               "IndependentAmountHeld",
               "InitialMargin",
               "VariationMargin",
@@ -323,14 +322,22 @@
           "TradeType",
           "NettingSet",
           "AssetClass",
-          "HedgingSet"
+          "HedgingSet",
+          "HedgingSubset"
+        ],
+        "optional_keys": [
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
         ],
         "column_settings": [
           {
             "names": [
               "NPV",
-              "NpvCcy",
-              "SD",
+              "Bucket",
+              "Qualifier",
+              "Currency",
               "delta",
               "d",
               "MF",
@@ -338,11 +345,12 @@
               "S",
               "E",
               "T",
-              "CurrentPrice1",
-              "CurrentPrice2",
+              "SD",
+              "CurrentPrice",
               "NumNominalFlows",
               "Price",
-              "Strike"
+              "Strike",
+              "Volatility"
             ],
             "abs_tol": 0.05,
             "rel_tol": null
