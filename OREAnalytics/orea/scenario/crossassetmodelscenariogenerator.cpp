@@ -94,7 +94,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     if (n_com_ > 0) {
         commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
         for (Size j = 0; j < n_com_; j++) {
-            std::string name = simMarketConfig_->commodityNames()[j];
+            std::string name = model_->com(j)->name();
             ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
             Size n_ten = ten_com_.back().size();
             for (Size k = 0; k < n_ten; k++)
