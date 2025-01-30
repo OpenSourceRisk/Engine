@@ -496,7 +496,6 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 } else {
                     amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
                 }
-
                 extractAmcCalculator(trade, amcCalc, multiplier, true);
                 if (amcIndividualTrainingOutput) {
                     LOG("Serialising AMC calculator for trade " << trade.first);
@@ -924,6 +923,10 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     ore::analytics::ObservationMode::Mode obsMode = ore::analytics::ObservationMode::instance().mode();
 
+    // get includeTodaysCashFlows and includeReferenceDateEvents from main thread to use in the worker threads below
+    auto includeTodaysCashFlows = QuantLib::Settings::instance().includeTodaysCashFlows();
+    auto localIncRefDateEvents = QuantLib::Settings::instance().includeReferenceDateEvents();
+
     // set up market and model builder
 
     auto marketModelBuilder = [this](const QuantLib::ext::shared_ptr<ore::data::Loader>& loader)
@@ -965,11 +968,15 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &stickyCloseOutDates, &progressIndicator,
+        auto job = [this, obsMode, includeTodaysCashFlows, localIncRefDateEvents, &portfoliosAsString, &loaders,
+                    &simDates,
+                    &stickyCloseOutDates, &progressIndicator,
                     &pathData, &marketModelBuilder](int id) -> resultType {
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
+            QuantLib::Settings::instance().includeTodaysCashFlows() = includeTodaysCashFlows;
+            QuantLib::Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
             ore::analytics::ObservationMode::instance().setMode(obsMode);
 
             LOG("Start thread " << id);
