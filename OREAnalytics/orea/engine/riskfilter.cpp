@@ -48,7 +48,8 @@ const bm<MarketRiskConfiguration::RiskClass> riskClassMap = list_of<bm<MarketRis
         (MarketRiskConfiguration::RiskClass::Inflation, "Inflation")
         (MarketRiskConfiguration::RiskClass::Credit, "Credit")
         (MarketRiskConfiguration::RiskClass::Equity, "Equity")
-        (MarketRiskConfiguration::RiskClass::FX, "FX");
+        (MarketRiskConfiguration::RiskClass::FX, "FX")
+        (MarketRiskConfiguration::RiskClass::Commodity, "Commodity");
 
 const bm<MarketRiskConfiguration::RiskType> riskTypeMap = list_of<bm<MarketRiskConfiguration::RiskType>::value_type>(
     MarketRiskConfiguration::RiskType::All, "All")(
@@ -114,6 +115,8 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
                                                          RiskFactorKey::KeyType::FXVolatility,
                                                          RiskFactorKey::KeyType::EquitySpot,
                                                          RiskFactorKey::KeyType::EquityVolatility,
+                                                         RiskFactorKey::KeyType::CommodityCurve,
+                                                         RiskFactorKey::KeyType::CommodityVolatility,
                                                          RiskFactorKey::KeyType::DividendYield,
                                                          RiskFactorKey::KeyType::SurvivalProbability,
                                                          RiskFactorKey::KeyType::RecoveryRate,
@@ -189,6 +192,9 @@ RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, cons
         case MarketRiskConfiguration::RiskClass::Equity:
             allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility,
                              RiskFactorKey::KeyType::DividendYield};
+            break;
+        case MarketRiskConfiguration::RiskClass::Commodity:
+            allowed_class = {RiskFactorKey::KeyType::CommodityCurve, RiskFactorKey::KeyType::CommodityVolatility};
             break;
         case MarketRiskConfiguration::RiskClass::FX:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};
