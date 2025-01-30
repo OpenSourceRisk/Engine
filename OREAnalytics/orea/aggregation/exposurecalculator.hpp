@@ -68,7 +68,9 @@ public:
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
         const bool flipViewXVA,
-	const bool exposureProfilesUseCloseOutValues_ = false
+        const bool exposureProfilesUseCloseOutValues_ = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false
     );
 
     virtual ~ExposureCalculator() {}
@@ -157,6 +159,7 @@ protected:
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
     bool flipViewXVA_;
     bool exposureProfilesUseCloseOutValues_ = false;
+    bool continueOnError_;
 };
 
 } // namespace analytics
