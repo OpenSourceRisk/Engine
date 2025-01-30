@@ -73,7 +73,10 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     }
 }
 
-void addPriceQuotes(vector<string>& quotes, const std::string& base, const std::string& term, const std::vector<string>& detachmentPoints)  {
+void addPriceQuotes(vector<string>& quotes, const std::string& quoteName, const std::string& term, const std::vector<string>& detachmentPoints)  {
+    const static  std::string quoteTypeStr = to_string(MarketDatum::QuoteType::PRICE);
+    const std::string suffix = quoteTypeStr + "/" + quoteName + "/" + term;
+
     std::vector<string> attachmentPoints;
     if (detachmentPoints.size() == 1 &&  detachmentPoints.front() == "*") {
         attachmentPoints.push_back("*");
@@ -86,26 +89,29 @@ void addPriceQuotes(vector<string>& quotes, const std::string& base, const std::
     for (size_t i = 0; i<detachmentPoints.size(); ++i) {
         const auto& ap = attachmentPoints[i];
         const auto& dp = detachmentPoints[i];
-        quotes.push_back(base + term + "/" + ap + "/" + dp);
+        quotes.push_back("INDEX_CDS_TRANCHE/" + suffix + "/" + ap + "/" + dp);
     }
 }
 
-void addBaseCorrelationQuotes(vector<string>& quotes, const std::string& base, const std::string& term, const std::vector<string>& detachmentPoints)  {
+void addBaseCorrelationQuotes(vector<string>& quotes, const std::string & quoteName, const std::string& term, const std::vector<string>& detachmentPoints)  {
+    const static  std::string quoteTypeStr = to_string(MarketDatum::QuoteType::BASE_CORRELATION);
+    const std::string suffix = quoteTypeStr + "/" + quoteName + "/" + term;
     for (size_t i = 0; i<detachmentPoints.size(); ++i) {
         const auto& dp = detachmentPoints[i];
-        quotes.push_back(base + term + "/" + dp);
+        quotes.push_back("INDEX_CDS_TRANCHE/" + suffix +  "/" + dp);
+        // Add legacy quote name
+        quotes.push_back("CDS_INDEX/" + suffix +  "/" + dp);
     }
 }
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         for (const auto& quoteType : quoteTypes_) {
-            string base = "INDEX_CDS_TRANCHE/" + to_string(quoteType) + "/" + quoteName_ + "/";
             for (auto t : terms_) {
                 if (quoteType == MarketDatum::QuoteType::BASE_CORRELATION) {
-                    addBaseCorrelationQuotes(quotes_, base, t, detachmentPoints_);
+                    addBaseCorrelationQuotes(quotes_, quoteName_, t, detachmentPoints_);
                 } else if (quoteType == MarketDatum::QuoteType::PRICE) {
-                    addPriceQuotes(quotes_, base, t, detachmentPoints_);
+                    addPriceQuotes(quotes_, quoteName_, t, detachmentPoints_);
                 }
             }
         }
@@ -214,3 +220,4 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
 }
 } // namespace data
 } // namespace ore
+
