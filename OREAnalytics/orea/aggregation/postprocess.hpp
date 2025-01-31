@@ -174,7 +174,9 @@ public:
         //! Treatment of the initial difference between vm collateral balance and mtm
         //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
         //! and vice-versa for over-collateralisation in case of positive mtm
-        const bool firstMporCollateralAdjustment = false);
+        const bool firstMporCollateralAdjustment = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -400,6 +402,7 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_;
+    bool continueOnError_;
 };
 
 } // namespace analytics
