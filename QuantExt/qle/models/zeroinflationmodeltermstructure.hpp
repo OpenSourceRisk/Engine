@@ -71,6 +71,9 @@ public:
     //! Set the current state and move the reference date to date \p d
     void move(const QuantLib::Date& d, const QuantLib::Array& s);
 
+    void enableCache(const bool b = true) const { enableCache_ = b; }
+    virtual void clearCache() const {}
+
 protected:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
@@ -83,6 +86,8 @@ protected:
         called.
     */
     virtual void checkState() const {}
+
+    mutable bool enableCache_ = false;
 };
 
 }
