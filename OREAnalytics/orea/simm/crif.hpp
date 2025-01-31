@@ -400,7 +400,7 @@ private:
     int bb_rw_;
 
     // SA-CCR fields
-    CrifRecord::CapitalModel capitalModel_;
+    CrifRecord::CapitalModel capitalModel_ = CrifRecord::CapitalModel::Empty;
     int counterpartyName_;
     int counterpartyId_;
     int nettingSetNumber_;
