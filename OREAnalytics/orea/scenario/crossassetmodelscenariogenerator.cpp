@@ -278,6 +278,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
         zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        ts->enableCache();
     }
 
     // Same logic here as for the zeroInfCurves above.
@@ -298,6 +299,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
         yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        ts->enableCache();
     }
 
     for (Size j = 0; j < n_cr_; ++j) {
@@ -332,6 +334,7 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 } // namespace
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
@@ -607,7 +610,9 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                               survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
             scenarios[i]->add(recoveryRateKeys_[k], rr);
         }
+
     }
+
 
     if (totalSamples_ == currentSample_ && !amcPathDataOutput_.empty()) {
         LOG("Serialize paths, fx and irState buffers to'" << amcPathDataOutput_ << "'");
@@ -616,7 +621,19 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         oa << pathData_;
         os.close();
     }
+
     return scenarios;
 }
+
+void CrossAssetModelScenarioGenerator::reset() {
+
+    pathGenerator_->reset();
+
+    for (auto const& [x, b, m, t] : zeroInfCurves_)
+        t->clearCache();
+    for (auto const& [x, b, m, t] : yoyInfCurves_)
+        t->clearCache();
+}
+
 } // namespace analytics
 } // namespace ore
