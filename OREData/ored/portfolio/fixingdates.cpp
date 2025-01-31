@@ -337,7 +337,8 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
     for (auto const& f : yoyInflationFixingDates_) {
         // get the data
         std::string indexName = f.indexName;
-        std::vector<Date> observationDates {f.fixingDate, f.fixingDate-1*Years};
+        // The previous date isnt strictly required only if we use ZC Wrapper Index
+        std::vector<std::pair<Date, bool>> observationDates {{f.fixingDate,f.mandatory}, {f.fixingDate-1*Years, false}};
         Date payDate = f.payDate;
         bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
         bool indexInterpolated = f.indexInterpolated;
@@ -346,12 +347,11 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            for (const auto& obsDate : observationDates) {
+            for (const auto& [obsDate, mandatory] : observationDates) {
                 auto fixingDates =
-                    needsForecast(obsDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
+                    needsForecast(obsDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, mandatory);
                 if (!fixingDates.empty())
                     result[indexName].addDates(fixingDates);
-                // Add the previous year's date(s) also if any.
             }
         }
     }
