@@ -49,7 +49,7 @@ void AnalyticsManager::addAnalytic(const std::string& label, const QuantLib::ext
     // Label is not necessarily a valid analytics type
     // Get the latter via analytic->analyticTypes()
     LOG("register analytic with label '" << label << "' and sub-analytics " << to_string(analytic->analyticTypes()));
-    analytics_[label] = analytic;
+    analytics_.push_back(make_pair(label, analytic));
     // This forces an update of valid analytics vector with the next call to validAnalytics()
     validAnalytics_.clear();
 }

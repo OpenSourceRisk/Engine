@@ -83,9 +83,6 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
 }
 
 void XvaStressAnalyticImpl::buildDependencies() {
-    auto xvaAnalytic =
-        AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
-    addDependentAnalytic("XVA", xvaAnalytic);
 }
 
 void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -113,8 +110,6 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
     
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
-
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
     // build t0, sim market, stress scenario generator
 

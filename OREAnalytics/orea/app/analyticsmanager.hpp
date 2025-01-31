@@ -57,7 +57,9 @@ public:
     void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
     // returns a vector of all analytics, including dependent analytics
-    const std::unordered_map<std::string, QuantLib::ext::shared_ptr<Analytic>>& analytics() const { return analytics_; }
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>>& analytics() const {
+        return analytics_;
+    }
     void clear();
     
     Analytic::analytic_reports const reports();
@@ -73,7 +75,7 @@ public:
                 const std::set<std::string>& lowerHeaderReportNames = {});
 
 private:
-    std::unordered_map<std::string, QuantLib::ext::shared_ptr<Analytic>> analytics_;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>> analytics_;
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports reports_;
