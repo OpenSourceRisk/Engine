@@ -337,7 +337,7 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
     for (auto const& f : yoyInflationFixingDates_) {
         // get the data
         std::string indexName = f.indexName;
-        Date fixingDate = f.fixingDate;
+        std::vector<Date> observationDates {f.fixingDate, f.fixingDate-1*Years};
         Date payDate = f.payDate;
         bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
         bool indexInterpolated = f.indexInterpolated;
@@ -346,14 +346,12 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            auto fixingDates =
-                needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
-            if (!fixingDates.empty())
-                result[indexName].addDates(fixingDates);
-            // Add the previous year's date(s) also if any.
-            for (const auto& [d, mandatory] : fixingDates) {
-                Date previousYear = d - 1 * Years;
-                result[indexName].addDate(previousYear, mandatory);
+            for (const auto& obsDate : observationDates) {
+                auto fixingDates =
+                    needsForecast(obsDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
+                if (!fixingDates.empty())
+                    result[indexName].addDates(fixingDates);
+                // Add the previous year's date(s) also if any.
             }
         }
     }
