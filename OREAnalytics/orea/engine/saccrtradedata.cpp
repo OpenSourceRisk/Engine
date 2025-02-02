@@ -2322,8 +2322,9 @@ vector<Contribution> SwapSaccrImpl::calculateImplContributions() const {
         const auto& [legCurrentNotional, legCcy, currentPrice] = getLegAverageNotional(i, legData.legType());
         Real legNotional = legCurrentNotional * legMultiplier;
         Real delta = legNotional > 0.0 ? 1.0 : -1.0;
+        legNotional = abs(legNotional);
 
-        Contribution contrib(underlyingData, legCcy, legCurrentNotional, delta);
+        Contribution contrib(underlyingData, legCcy, legNotional, delta);
 
         // Current price
         if (legAssetClass == OREAssetClass::EQ || legAssetClass == OREAssetClass::COM)

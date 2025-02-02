@@ -357,6 +357,43 @@
           }
         ]
       },
+      "capital_crif.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "CounterpartyName",
+          "CounterpartyID",
+          "NettingSetNumber",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": null
+          },
+          {
+            "names": [
+              "ValuationDate",
+              "EndDate",
+              "Label3",
+              "Regulation",
+              "Model",
+              "TradeType"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
       "crifPlus.csv": {
         "keys": [
           "TradeID",
