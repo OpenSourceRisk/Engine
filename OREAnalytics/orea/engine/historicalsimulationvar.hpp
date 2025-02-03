@@ -78,8 +78,6 @@ protected:
         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
-private:
-    std::vector<QuantLib::Real> pnls_;
 };
 
 } // namespace analytics

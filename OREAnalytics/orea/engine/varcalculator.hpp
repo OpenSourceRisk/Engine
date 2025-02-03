@@ -53,6 +53,8 @@ public:
 
     const std::vector<Real>& p() const { return p_; }
 
+    const std::vector<QuantLib::Real>& pnls() const { return pnls_; };
+
 protected:
     QuantLib::ext::shared_ptr<VarCalculator> varCalculator_;
     
@@ -62,6 +64,8 @@ protected:
                          const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
     std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
+
+    std::vector<QuantLib::Real> pnls_;
 
 private:
     std::vector<Real> p_;

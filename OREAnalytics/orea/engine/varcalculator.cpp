@@ -30,12 +30,25 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
 }
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
     report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
     for (Size i = 0; i < p_.size(); ++i)
         report->addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
+
+    // Used for Historical PnL Report
+    if (s == 2) {
+        report = reports->reports().at(1);
+        // prepare report
+        report->addColumn("Portfolio", string())
+            .addColumn("RiskClass", string())
+            .addColumn("RiskType", string())
+            .addColumn("PLDate1", Date())
+            .addColumn("PLDate2", Date())
+            .addColumn("PLAmount", double(), 6);
+    }
 
     createVarCalculator();
 }
@@ -44,7 +57,8 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
                                 const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                 const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
@@ -62,6 +76,24 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
         report->add(to_string(rg->riskType()));
         for (auto const& v : var)
             report->add(v);
+    }
+
+    // Used for Historical PnL Report
+    if (s == 2) {
+        report = reports->reports().at(1);
+
+        if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
+            // Loop through all samples
+            for (Size s = 0; s < histPnlGen_->cube()->samples(); ++s) {
+                report->next();
+                report->add(tg->portfolioId());
+                report->add(to_string(rg->riskClass()));
+                report->add(to_string(rg->riskType()));
+                report->add(hisScenGen_->startDates()[s]);
+                report->add(hisScenGen_->endDates()[s]);
+                report->add(pnls().at(s));
+            }
+        }
     }
 }
 
