@@ -375,7 +375,9 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
             QuantLib::ext::shared_ptr<SpreadCdsHelper> tmp;
+            Date underlyingMaturity;
             try {
+                underlyingMaturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 tmp = QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
@@ -385,6 +387,9 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
+                } else if (underlyingMaturity >= (asof +1)) {
+                    WLOG("DefaultCurve:: SKIP cds with term " << quote.term << " cds maturity (" <<
+                        io::iso_date(underlyingMaturity) <<")at or before T + 1 ("<< io::iso_date(asof +1)<<")");
                 } else {
                     QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " << curveID
                                                                           << " for asof date " << asof
