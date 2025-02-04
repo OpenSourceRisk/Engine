@@ -1,6 +1,43 @@
 \subsubsection{Generic Barrier Option}
 \label{input:generic_barrieroption}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+
+Generic Barrier Options pay a (European) vanilla call / put, an asset or nothing or a cash or nothing payoff at their
+maturity. The payoff at maturity can be made conditional on (single) European Knock-In or Knock-Out barrier condition
+(``Transatlantic Barrier'').
+
+In addition, a number of American Knock-In and Knock-Out barrier conditions can be defined that are monitored on a
+defined schedule, e.g. a daily schedule between a monitoring start and end date. The different barrier types are
+``UpAndIn'', ``UpAndOut'', ``DownAndIn'', ``DownAndOut''. If at least one Knock-In barrier is defined, the final payoff
+is only activated if at least one Knock-In barrier is touched. If at least one Konck-Out barrier is defined, the final
+payoff is zero'ed out if at least one Knock-Out barrier is touched. An option that is knocked out, can not knock in
+again. However, there are different sub-types of Knock-Out barriers
+
+\begin{itemize}
+\item KoAlways: The option can knock out any time in the monitoring period
+\item KoAfterKi: The option can only knock out after a Knock-In
+\item KoBeforeKi: The option can only knock out before a Knock-In
+\end{itemize}
+
+In case the American or the Transatlantic barrier deactivate the final option (i.e. if the option knocks out if a
+Knock-Out barrier is defined or does not knock in if a Konck-In barrier is defined), a rebate amount might be specified
+that is received by the option holder to compensate for the unfortunate deactivation of their option:
+
+If only Knock-Out barriers are defined, one can associate different rebate amounts to each of the barriers. Once the
+option knocks out at a barrier, the associated amount is paid. Furthermore, the timing of the payment can be ``atHit''
+(i.e. immediately when the barrier is hit) or ``atExpiry'' (i.e. on the settlement date associated to the expiry date of the
+underlying option).
+
+If only Knock-In barriers or a mixed set of Knock-In and Konck-Out barriers are defined, only a unique reabte amount can
+be defined that is paid ``atExpiry''.
+
+In both cases a separate Transatlantic Barrier Rebate amount can be specified that is paid when the American barriers do
+not deactivate the underlying option, but the additional Transatlantic Barrier does.
+
+{\bf Input}}\fi
+
 Generic Barrier Options are defined using one of the trade types \emph{FxGenericBarrierOption}, \emph{EquityGenericBarrierOption},
 \emph{CommodityGenericBarrierOption} depending on the underlying asset class and an associated node FxGenericBarrierOptionData,
 EquityGenericBarrierOptionData, CommodityGenericBarrierOptionData. Listing \ref{lst:generic_barrieroption_data} shows an

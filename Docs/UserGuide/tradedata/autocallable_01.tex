@@ -1,5 +1,43 @@
 \subsubsection{Autocallable Type 01}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+The autocallable option of type 01 is characterized by the following data
+
+\begin{itemize}
+\item a notional amount $N$
+\item a determination level $D$
+\item a trigger level $T$
+\item The referecne underlying $U$
+\item a number of fixing dates $f_i$ for $i=1,\ldots,n$
+\item a number of settlement dates $s_i$ for $i=1,\ldots,n$
+\item a list of accumulation factors $a_i$ for $i=1,\ldots,n$
+\item a cap $C$
+\end{itemize}
+
+On each fixing date $f_i$ for $i=1,\ldots,n$, if the underlying spot is at or below the trigger level, i.e.
+
+$$U(f_i) <= T$$
+
+the option holder receives an amount
+
+$$N\cdot a_i$$
+
+on the settlement date $s_i$ and the structure terminates on this same date.
+
+If no trigger event occurs on any of the fixing dates and if the underlying spot is above the determination level on the
+{\em last} fixing date $f_n$, i.e.
+
+$$U(f_n) > D$$
+
+then the option holder {\em pays} an amount
+
+$$N \min(C, (U(f_n) - D))$$
+
+to the counterparty of the transaction. The underlying can be an Equity, FX or Commodity underlying.
+
+{\bf Input}}\fi
+
 The \verb+Autocallable_01+ node is the trade data container for the Autocallable\_01 trade type, listing
 \ref{lst:autocallable01_data} shows the structure of an example.
 

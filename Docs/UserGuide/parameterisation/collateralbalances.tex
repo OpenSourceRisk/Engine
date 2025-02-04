@@ -1,0 +1,64 @@
+%========================================================
+\section{Collateral Balances}\label{sec:collateralbalances}
+%========================================================
+
+The collateral balances file - {\tt collateralbalances.xml} - 
+contains the list of collateral balances (i.e.\ margin amounts
+and independent amount) under a Credit Support Annex.
+
+\vspace{1em}
+
+The balances of each netting set are defined within their own
+\lstinline!CollateralBalance! node. All of these
+\lstinline!CollateralBalance! nodes are contained as children
+of a \lstinline!CollateralBalances! node.
+
+\vspace{1em}
+
+The collateral balances are given in the following XML template:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CollateralBalances>
+        <CollateralBalance>
+            <NettingSetId> </NettingSetId>
+            <Currency>USD</Currency>
+            <IndependentAmountHeld/>
+            <InitialMargin> </InitialMargin>
+            <VariationMargin> </VariationMargin>
+        </CollateralBalance>
+        <CollateralBalance>
+            .......
+        </CollateralBalance>
+    </CollateralBalances>
+\end{minted}
+\caption{Collateral balance definition}
+\label{lst:collateralbalances}
+\end{listing}
+
+The meanings of the various elements of the \lstinline!CollateralBalance!
+node are as follows (default input values for certain analytics are
+specified in their own respective sections, otherwise the
+defaults given below, if any, are applicable):
+\begin{itemize}
+\item \lstinline!NettingSetId!: The unique identifier for the (collateralised) ISDA netting set.
+\ifdefined\RiskCatalogue{ Alternatively, a \lstinline!NettingSetDetails! node can be used, see Section
+\ref{sec:nettingsetdetails}.}\fi \\
+  Allowable values: Any string.
+\item \lstinline!Currency!: The currency that the collateral balance amounts are assumed to be
+denominated in.\\
+  Allowable values: See Table \ref{tab:currency}.
+\item \lstinline!IndependentAmountHeld! [Optional]: The netted sum of all independent amounts
+covered by the CSA.\\
+  Allowable values: Any number. A negative number implies that the counterparty holds
+  the independent amount. If provided, overrides the specified independent amount held (if any)
+  in the corresponding netting set definitions file. Otherwise (if left blank or omitted),
+  the independent amount in the netting set definitions file is used.
+\item \lstinline!InitialMargin! [Optional]: The initial margin amount received.\\
+  Allowable values: Any number. A negative number implies that the counterparty holds
+  the initial margin.
+\item \lstinline!VariationMargin! [Optional]: The variation margin amount received.\\
+  Allowable values: Any number. A negative number implies that the counterparty holds
+  the variation margin.
+\end{itemize}

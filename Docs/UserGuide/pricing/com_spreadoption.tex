@@ -1,0 +1,78 @@
+\subsubsection{Commodity Spread Option}
+\label{pricing:com_spread_option}
+
+European Commodity Spread Options are priced using the Kirk approximation described in Section 2.9.2 of \cite{Clark_2014}.
+
+We assume that the spot commodity prices $S^1$ and $S^2$ follows two correlated Geometric 
+Brownian Motion:
+\begin{align*}
+dS_1/S_1 &= \mu_1(t)dt + \sigma_1(t)\,dW_1 \\
+dS_2/S_2 &= \mu_2(t)dt + \sigma_2(t)\,dW_2
+\end{align*}
+
+with $\Bigl \langle dW_1, dW_2 \Bigr \rangle = \rho$.
+
+The payoff on payment date for a long commodity spread option with quantity $N$ and strike $K$ is then given by
+\begin{equation}
+\left[ \omega \left( S_1(T) - S_2(T) - K \right) \right]^{+} N
+\end{equation}
+
+If $K \ll S_2(T)$ then  $S_2(T) + K$ is approximately lognormal distributed and the ratio of two lognormal processes is again lognormal.
+
+Clark defines two new processes: 
+
+$$ Y(t) = S_2(t) + K \exp(-r(T-t))$$ and
+$$ Z(t) = \frac{S_2(t)}{Y(t)}.$$
+
+The payoff of the spread option becomes
+
+\begin{equation}
+Y(T) \left[ \omega  \left( Z(T) - 1 \right) \right]^{+} N
+\end{equation}
+
+If we calibrate the drift so that today's price matches the expected future commodity price we can price this European option with the normal Black76 formula using $Z(0)=\frac{S_1(0)}{S_2(0)+K}$ and $\sigma_Z = \sqrt{\sigma_1^2 + (\sigma_2 \frac{S_2(t)}{Y(t)})^2  + \sigma_1 \sigma_2 \frac{S_2(t)}{Y(t)} \rho }$.
+
+See Black Model, Section \ref{sec:models}, for more details.
+
+\subsubsection{Commodity Calendar Spread Option - Spot Prices}
+\label{pricing:com_calendar_spread_option}
+
+European Commodity Calendar Spread Options are priced using the Kirk approximation described in Section 2.9.3 of \cite{Clark_2014}.
+
+The payoff on payment date for a long commodity spread option with quantity $N$ and strike $K$ is then given by
+\begin{equation}
+\left[ \omega \left( S(T) - S(t_1) - K \right) \right]^{+} N
+\end{equation}
+
+We defining a new process $S_2$ that has volatility $\sigma$ from $0 \le t \le t_1$ and zero drift and volatility after $t_1$.
+
+The total variance of $S_2(T)$ is $\sigma^2 t_1$ which is the same as $\bar{\sigma}^2T$ with $\bar{\sigma} = \sigma * \sqrt{\frac{t1}{T}}$.
+
+Under the assumption that this product is not path dependent and we can express the payout as:
+
+\begin{equation}
+\left[ \omega \left( S(T) - S_2(T) - K \right) \right]^{+} N
+\end{equation}
+
+We can use the Kirk approximation with $S_1 = S$, $\sigma_1 =\sigma$ and $S_2$ defined as above with $\sigma_2 = \bar{\sigma} = \sigma * \sqrt{\frac{t1}{T}}$.
+
+\subsubsection{Commodity Calendar Spread Option - Future Prices}
+\label{pricing:com_calendar_spread_option_future}
+If we model Futures the observed contracts will be the prompt future at time $t_1$ and $T$. We can use the Kirk approximation but with the initial asset prices of the those futures and their corresponding volatilities.
+
+\subsubsection{Commodity Asian Spread Option}
+\label{pricing:com_asian_spread_option}
+
+Let $A^f_{t_n,t_{n_1}}$ the arithmetic average price of the underlying $f$ between $t_n$ and $t_{n_1}$ .
+
+The payoff of a Asian spread option of difference between two average prices is:
+
+\begin{equation}
+\left[ \omega \left( A^f_{t_n,t_{n_1}} - A^g_{t_m,t_{m_1}} - K \right) \right]^{+} N
+\end{equation}
+
+After applying the adjustements describes in Section 2.7.4 of \cite{Clark_2014} for average price options (see \ref{pricing:com_apo_future_settlement_prices})
+one can use the transformed volatilities in Kirk approximation as described for non-averaging options.
+If the payoff is a calendar spread of two averages of different future contract months but the same
+underlying asset the near end volatility needs to be scaled by
+$\sqrt{\frac{t_1}{T}}$ as described in \ref{pricing:com_calendar_spread_option}.

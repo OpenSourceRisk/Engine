@@ -1,6 +1,57 @@
 \subsubsection{Cap/Floor}
 \label{ss:capfloor}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A single floating swap leg with interest payments benchmarked to IBOR or CMS 
+indices, may have a cap, floor, or collar. This creates a series of European 
+interest rate options (caplets or floorlets) where the cap or floor rate is the 
+strike price, and each floating rate reset date is an option expiry date. \\
+
+A collar is the combination of a series of long caplets and short floorlets 
+for a long position in the collar. \\
+
+Payoff of a caplet on an IBOR floating leg coupon period to the payer of the 
+leg (the option buyer):
+$$
+N[L(t_{i-1},t_i)-K]^+ \delta(t_{i-1}, t_i) 
+= N \,\max(0,L(t_{i-1},t_i)-K)\,\delta(t_{i-1}, t_i)
+$$
+
+Payoff of a floorlet on an IBOR floating leg coupon period to the receiver of 
+the leg (the option buyer):
+$$
+N[K-L(t_{i-1},t_i)]^+ \delta(t_{i-1}, t_i)
+= N \,\max(0,K-L(t_{i-1},t_i)) \,\delta(t_{i-1}, t_i)
+$$
+
+Where:
+\begin{itemize}
+\item $N$: the Notional
+\item $L(t_{i-1},t_i)$: the IBOR index fixing for the period
+\item $K$: the cap or floor rate, i.e. the strike
+\item $\delta(t_{i-1},t_i)$: the daycount fraction for the coupon period 
+\end{itemize}
+
+For a caplet or floorlet on a CMS index the $L(t_{i-1},t_i)$ index can be 
+replaced by $\CMS_n$ where $n$ indicates CMS rate for $n$ number of years.
+	
+Standalone caps and floors with a single payoff on an IBOR or CMS index are 
+also supported. Payoff of a cap/floor on an IBOR index:
+$$
+N\cdot \left[\omega(L(t_{i-1},t_i)-K)\right]^+
+$$
+where $\omega=1$ for a cap, $\omega=-1$ for a floor.\\
+
+Payoff of a cap/floor on a CMS index:
+$$
+N \cdot \left[\omega(\CMS_n - K)\right]^+
+$$
+where $\CMS_n$ is the n year CMS rate.
+
+{\bf Input}}\fi
+
+
 The \lstinline!CapFloorData! node is the trade data container for the \emph{CapFloor} trade type.  It's a cap, floor or
 collar (i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor, SIFMA,
 OIS, CMS, Duration-adjusted CMS, CMS Spread, CPI, YY coupons.

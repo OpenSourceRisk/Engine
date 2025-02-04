@@ -1,5 +1,25 @@
 \subsubsection{FX Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A European FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at one predetermined time in the future. For this right the buyer pays a 
+premium to the seller. Settlement can be either cash or physical delivery.
+
+An American FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at any time during the life of the option up until the expiration date. 
+The right to exchange of one currency for another can only be exercised once. 
+For this right the buyer pays a premium to the seller.
+\begin{itemize}
+\item Settlement can be either cash or physical delivery.
+\item Payoff, i.e. the FX exchange or cash settlement, can take place at 
+exercise or expiry. 
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!FXOptionData! node is the trade data container for the \emph{FxOption} trade type. FX options with exercise styles \emph{European} or \emph{American} are supported. 
 The \lstinline!FXOptionData! node includes one and only one \lstinline!OptionData! trade
 component sub-node plus elements specific to the FX Option. The structure of an \lstinline!FXOptionData! node
@@ -55,7 +75,12 @@ holder of the Put counterpart has the right to buy USD using EUR, or equivalentl
 
 \item \lstinline!PayOffAtExpiry! [Optional] The allowable values are \emph{true} for payoff at expiry, or \emph{false} for payoff at exercise (relevant for \emph{American} style FxOptions). Defaults to \emph{true} if left blank or omitted.
 
-\item \lstinline!AutomaticExercise! [Optional] The allowable values are \emph{true} indicating Automatic Exercise is applicable and  \emph{false} indicates that it is not. Used if the FXOption expiry date is on the currentdate or in the past, and the payment date is in the future - so that there still isan outstanding cashflow if the FXOption was in the money on the expiry date. Inthis case, if AutomaticExercise is applied, the FX fixingon the expiry date is used to automatically determine the payoff and thuswhether the option was exercised or not. Defaults to \emph{false} if left blank or omitted.
+\item \lstinline!AutomaticExercise! [Optional] The allowable values are \emph{true} indicating Automatic Exercise is applicable and  \emph{false} indicates that it is not. Used if the FXOption expiry date is on the current
+date or in the past, and the payment date is in the future - so that there still is
+an outstanding cashflow if the FXOption was in the money on the expiry date. In
+this case, if AutomaticExercise is applied, the FX fixing
+on the expiry date is used to automatically determine the payoff and thus
+whether the option was exercised or not. Defaults to \emph{false} if left blank or omitted.
 
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. For \emph{American} style FxOptions the ExerciseDate represents the Expiry date, i.e. they can be exercised up until this date. \\
 
@@ -81,14 +106,14 @@ Allowable values: Any positive real number.
 
 Allowable values: See Table \ref{tab:currency}.
 
-\item SoldAmount [Optional]: The amount in the SoldCurrency.
+\item SoldAmount [Optional]: The amount in the SoldCurrency. Note that if Delta is omitted, the SoldAmount field is mandatory.
 
 Allowable values: Any positive real number.
 
-\item Delta [Optional]: The fx option delta. The SoldAmount is computed by deriving the strike from the delta.
+\item Delta [Optional]: The FX option delta. When a delta value is given the FX Option strike is derived from the delta, and the SoldAmount is ignored.
 
-Allowable values: Any non null real number. A SoldAmount or a Delta node is required.
-Note: The delta to strike conversion is based on the valuation date. Therefore the strike will change day to day based on the market data variation.
+Allowable values: Any non null real number. A SoldAmount or a Delta field is required, as the strike is derived from one or the other.
+Note: The delta to strike conversion is based on the valuation date. Therefore the strike will change day to day based on the market data variation.  It is not possible to enter a seasoned trade with a Delta such that the trade strike (SoldAmount) is derived from the Delta on the trade date and then kept constant throughout the life of the trade. 
 
 \item FXIndex [Optional]: If the option \textit{European}, has cash settlement and is subject to \textit{Automatic Exercise}, as indicated by the \lstinline!AutomaticExercise! node under \lstinline!OptionData!, this node must be populated with a valid FX index. The FX index is used to retrieve an FX rate on the expiry date that is in turn used to determine the payoff on the cash settlement date. The payoff is in the \lstinline!SoldCurrency! i.e.\ the domestic currency.
 
