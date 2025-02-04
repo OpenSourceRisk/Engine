@@ -40,14 +40,7 @@ void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& 
 
     // Used for Historical PnL Report
     if (s == 2) {
-        report = reports->reports().at(1);
-        // prepare report
-        report->addColumn("Portfolio", string())
-            .addColumn("RiskClass", string())
-            .addColumn("RiskType", string())
-            .addColumn("PLDate1", Date())
-            .addColumn("PLDate2", Date())
-            .addColumn("PLAmount", double(), 6);
+        createAdditionalReports(reports);
     }
 
     createVarCalculator();
@@ -80,20 +73,7 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
 
     // Used for Historical PnL Report
     if (s == 2) {
-        report = reports->reports().at(1);
-
-        if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
-            // Loop through all samples
-            for (Size s = 0; s < histPnlGen_->cube()->samples(); ++s) {
-                report->next();
-                report->add(tg->portfolioId());
-                report->add(to_string(rg->riskClass()));
-                report->add(to_string(rg->riskType()));
-                report->add(hisScenGen_->startDates()[s]);
-                report->add(hisScenGen_->endDates()[s]);
-                report->add(pnls().at(s));
-            }
-        }
+        writeAdditionalReports(reports, riskGroup, tradeGroup);
     }
 }
 
