@@ -358,16 +358,20 @@ std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex
         pfRegressorGroups.insert(tradeRegressors);
         pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
     }
+
     std::set<std::set<std::size_t>> pfRegressorPosGroups;
     for (const auto& g : pfRegressorGroups) {
         std::set<std::size_t> group;
-        std::transform(g.begin(), g.end(), std::inserter(group, group.end()),
-                       [&g](std::size_t v) { return std::distance(g.begin(), g.find(v)); });
+        std::transform(g.begin(), g.end(), std::inserter(group, group.end()), [&pfRegressors](std::size_t v) {
+            return std::distance(pfRegressors.begin(), pfRegressors.find(v));
+        });
         pfRegressorPosGroups.insert(group);
     }
+
     std::size_t pfExposureNodeTmp =
         model_->npv(cg_add(*g, tradeSum), obsDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
     pfRegressorPosGroups_[pfExposureNodeTmp] = pfRegressorPosGroups;
+
     model_->useStickyCloseOutDates(false);
     return pfExposureNodeTmp;
 }
