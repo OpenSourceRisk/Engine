@@ -46,7 +46,7 @@ void PnlExplainAnalyticImpl::buildDependencies() {
     if (sensiAnalytic.second)
         addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
 
-    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), true);
+    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
     if (pnlAnalytic.second)
         addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
 }
