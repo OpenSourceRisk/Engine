@@ -136,8 +136,8 @@ const Real DynamicCreditXvaCalculator::calculateFbaIncrement(
     const string& tid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
     Real increment = 0.0;
-    std::size_t dvaidx = cptyCube_->getTradeIndex(dvaName_);
-    std::size_t cidx = cptyCube_->getTradeIndex(cid);
+    std::size_t dvaidx = dvaName_.empty() ? 0 : cptyCube_->getTradeIndex(dvaName_);
+    std::size_t cidx = cid.empty() ? 0 : cptyCube_->getTradeIndex(cid);
     std::size_t tidx = tradeExposureCube_->getTradeIndex(tid);
     std::size_t d0idx = d0 == asof() ? 0 : cptyCube_->getDateIndex(d0);
     std::size_t d1idx = tradeExposureCube_->getDateIndex(d1);
@@ -154,8 +154,8 @@ const Real DynamicCreditXvaCalculator::calculateFcaIncrement(
     const string& tid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
     Real increment = 0.0;
-    std::size_t dvaidx = cptyCube_->getTradeIndex(dvaName_);
-    std::size_t cidx = cptyCube_->getTradeIndex(cid);
+    std::size_t dvaidx = dvaName_.empty() ? 0 : cptyCube_->getTradeIndex(dvaName_);
+    std::size_t cidx = cid.empty() ? 0 : cptyCube_->getTradeIndex(cid);
     std::size_t tidx = tradeExposureCube_->getTradeIndex(tid);
     std::size_t d0idx = d0 == asof() ? 0 : cptyCube_->getDateIndex(d0);
     std::size_t d1idx = tradeExposureCube_->getDateIndex(d1);
@@ -172,8 +172,8 @@ const Real DynamicCreditXvaCalculator::calculateNettingSetFbaIncrement(
     const string& nid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
     Real increment = 0.0;
-    std::size_t dvaidx = cptyCube_->getTradeIndex(dvaName_);
-    std::size_t cidx = cptyCube_->getTradeIndex(cid);
+    std::size_t dvaidx = dvaName_.empty() ? 0 : cptyCube_->getTradeIndex(dvaName_);
+    std::size_t cidx = cid.empty() ? 0 : cptyCube_->getTradeIndex(cid);
     std::size_t nidx = nettingSetExposureCube_->getTradeIndex(nid);
     std::size_t d0idx = d0 == asof() ? 0 : cptyCube_->getDateIndex(d0);
     std::size_t d1idx = nettingSetExposureCube_->getDateIndex(d1);
@@ -190,8 +190,8 @@ const Real DynamicCreditXvaCalculator::calculateNettingSetFcaIncrement(
     const string& nid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
     Real increment = 0.0;
-    std::size_t dvaidx = cptyCube_->getTradeIndex(dvaName_);
-    std::size_t cidx = cptyCube_->getTradeIndex(cid);
+    std::size_t dvaidx = dvaName_.empty() ? 0 : cptyCube_->getTradeIndex(dvaName_);
+    std::size_t cidx = cid.empty() ? 0 : cptyCube_->getTradeIndex(cid);
     std::size_t nidx = nettingSetExposureCube_->getTradeIndex(nid);
     std::size_t d0idx = d0 == asof() ? 0 : cptyCube_->getDateIndex(d0);
     std::size_t d1idx = nettingSetExposureCube_->getDateIndex(d1);
@@ -207,8 +207,8 @@ const Real DynamicCreditXvaCalculator::calculateNettingSetFcaIncrement(
 const Real DynamicCreditXvaCalculator::calculateNettingSetMvaIncrement(
     const string& nid, const string& cid, const Date& d0, const Date& d1, const Real& dcf) {
     Real increment = 0.0;
-    std::size_t dvaidx = cptyCube_->getTradeIndex(dvaName_);
-    std::size_t cidx = cptyCube_->getTradeIndex(cid);
+    std::size_t dvaidx = dvaName_.empty() ? 0 : cptyCube_->getTradeIndex(dvaName_);
+    std::size_t cidx = cid.empty() ? 0 : cptyCube_->getTradeIndex(cid);
     std::size_t nidx = nettingSetExposureCube_->getTradeIndex(nid);
     std::size_t d0idx = d0 == asof() ? 0 : cptyCube_->getDateIndex(d0);
     std::size_t d1idx = dimCalculator_->dimCube()->getDateIndex(d1);
