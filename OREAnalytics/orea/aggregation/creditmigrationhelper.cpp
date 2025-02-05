@@ -292,7 +292,7 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
         Size simEntityState = simulatedEntityState(i, path);
         for (auto const& tradeId : issuerTradeIds_[i]) {
             try {
-                Size tid = cube_->idsAndIndexes().at(tradeId);
+                Size tid = cube_->getTradeIndex(tradeId);
                 Real baseValue = cube_->get(tid, date, path, 0);
                 Real stateValue = cube_->get(tid, date, path, cubeIndexStateNpvs_ + simEntityState);
                 if (loanExposureMode_ == LoanExposureMode::Notional) {
@@ -334,7 +334,7 @@ Real CreditMigrationHelper::generateMigrationPnl(const Size date, const Size pat
         // default risk for derivative exposure
         // TODO, assuming a zero recovery here...
         for (auto const& nettingSetId : cptyNettingSetIds_[i]) {
-            Size nid = nettedCube_->idsAndIndexes().at(nettingSetId);
+            Size nid = nettedCube_->getTradeIndex(nettingSetId);
             QL_REQUIRE(nettedCube_, "empty netted cube");
             if (simEntityState == n - 1)
                 pnl -= std::max(nettedCube_->get(nid, date, path), 0.0);
@@ -369,7 +369,7 @@ void CreditMigrationHelper::generateConditionalMigrationPnl(const Size date, con
         for (auto const& tradeId : issuerTradeIds_[i]) {
             for (Size j = 0; j < n_; ++j) {
                 try {
-                    Size tid = cube_->idsAndIndexes().at(tradeId);
+                    Size tid = cube_->getTradeIndex(tradeId);
                     Real baseValue = cube_->get(tid, date, path, 0);
                     Real stateValue = cube_->get(tid, date, path, cubeIndexStateNpvs_ + j);
                     if (loanExposureMode_ == LoanExposureMode::Notional) {
@@ -437,7 +437,7 @@ void CreditMigrationHelper::generateConditionalMigrationPnl(const Size date, con
         // default risk for derivative exposure
         // TODO, assuming a zero recovery here...
         for (auto const& nettingSetId : cptyNettingSetIds_[i]) {
-            auto nid = nettedCube_->idsAndIndexes().at(nettingSetId);
+            auto nid = nettedCube_->getTradeIndex(nettingSetId);
             QL_REQUIRE(nettedCube_, "empty netted cube");
             pnl[i][n_ - 1] -= std::max(nettedCube_->get(nid, date, path), 0.0);
         }
@@ -485,7 +485,7 @@ Array CreditMigrationHelper::pnlDistribution(const Size date) {
         if (parameters_->marketRisk()) {
             for (Size j = 0; j <= date + 1; ++j) {
                 for (auto const& tradeId : tradeIds) {
-                    Size i = cube_->idsAndIndexes().at(tradeId);
+                    Size i = cube_->getTradeIndex(tradeId);
                     // get cumulative survival probability on the path
                     Real sp = 1.0;
                     //Real rr = 0.0;
