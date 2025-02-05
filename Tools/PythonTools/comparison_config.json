@@ -1695,6 +1695,24 @@
             "rel_tol": 1e-12
           }
         ]
+      },
+      "historical_PnL.csv": {
+        "keys": [
+          "Portfolio",
+          "RiskClass",
+          "RiskType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PLDate1",
+			  "PLDate2",
+			  "PLAmount"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-12
+          }
+        ]
       }
     }
   },
