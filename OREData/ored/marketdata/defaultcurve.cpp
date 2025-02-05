@@ -375,12 +375,11 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
             QuantLib::ext::shared_ptr<SpreadCdsHelper> tmp;
-
             try {
                 bool cdsDateRule = cdsConv->rule() == DateGeneration::CDS ||
                                    cdsConv->rule() == DateGeneration::CDS2015 ||
                                    cdsConv->rule() == DateGeneration::OldCDS;
-                if (cdsDateRule && cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof) {
+                if (cdsDateRule && cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Day) {
                     WLOG("DefaultCurve:: SKIP cds with term "
                          << quote.term << " cds maturity ("
                          << io::iso_date(cdsMaturity(asof, quote.term, cdsConv->rule())) << ") is before T ("
