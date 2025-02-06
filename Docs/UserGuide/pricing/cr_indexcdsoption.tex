@@ -95,11 +95,11 @@ K_P = 1 - \frac{N_{td}}{N_{vd}} \left( 1 - K \right)
 since the contractual strike amount is expressed w.r.t. the trade date notional by market convention, which can be
 higher than the notional at valuation date.
 
-If the strike is given as a spread, the first step is to convert the spread strike $K_s$ to a price strike $K_p$ as
+If the strike is given as a spread, the first step is to convert the spread strike $K_s$ to a price strike $K_P$ as
 follows:
 
 \begin{equation}
-K_P = 1 + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)}{P_{OIS}(0,t_e)} (c - K_s)
+K_P = 1 + \frac{N_{td}}{N_{vd}}{RA(K_s) (c - K_s)
 \end{equation}
 
 where
@@ -154,7 +154,7 @@ as default curves / recovery rates. The Index CDS option price is now calculated
 where
 
 \begin{itemize}
-\item $\sigma$ is the market volatility for expiry $t_e$ and strike $K_p$
+\item $\sigma$ is the market volatility for expiry $t_e$ and strike $K_P$
 \item $\omega$ is $1$ for a call, $-1$ for a put
 \end{itemize}
 
