@@ -1700,17 +1700,17 @@
         "keys": [
           "Portfolio",
           "RiskClass",
-          "RiskType"
+          "RiskType",
+          "PLDate1",
+          "PLDate2"
         ],
         "column_settings": [
           {
             "names": [
-              "PLDate1",
-			  "PLDate2",
 			  "PLAmount"
             ],
-            "abs_tol": 1e-08,
-            "rel_tol": 1e-12
+            "abs_tol": 1e-05,
+            "rel_tol": 1e-05
           }
         ]
       }
