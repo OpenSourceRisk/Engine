@@ -188,7 +188,9 @@ S_p = S + \frac{\text{FEP}}{S(t_e) \cdot RA \cdot N_{vd} \cdot P_{OIS,t}(0,t_e)}
 \end{equation}
 
 where $S$ is the fair spread of the underlying index CDS. Note that the numerical integration engine models $S_p$ as a
-stochastic quantity on the other hand. The adjusted strike spread $K_s'$ is calculated as
+stochastic quantity on the other hand, see \ref{pricing:cr_indexcdsoption_Sp2}. The adjusted strike spread $K_s'$
+is calculated as
+
 
 \begin{equation}
 K_s' = c + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)}{S(t_e) \cdot RA} \left( K_s - c \right)
@@ -208,8 +210,7 @@ calculated using the risky strike annuity on the notional at trade date rather t
 Finally, the option price is calculated using the Black formula
 
 \begin{equation}
-  \text{NPV}_{opt} = \frac{P_{OIS,t}(0,t_e)}{P_{*}(0,t_e)}
-                    RA\cdot N_{vd} \cdot \text{Black} \left( K_s', F_p, \sigma\sqrt{t_e}, \omega \right)
+  \text{NPV}_{opt} = P_{OIS,t}(0,t_e) \cdot S(t_e) \cdot  RA \cdot N_{vd} \cdot \text{Black} \left( K_s', F_p, \sigma\sqrt{t_e}, \omega \right)
 \end{equation}
 
 with a call (protection buyer) / put (protection seller) indicator $\omega = 1, -1$ and a volatility $\sigma$
@@ -253,16 +254,25 @@ RA(K_s) \cdot (c - K_s) = K^*
 for $K_s$. Notice that we can skip the numerical root finding if the trade strike is given as a spread strike {\em and}
 $N_{td} = N_{vd}$ (in which case $K_s$ is simply the trade strike).
 
-The FEP-adjusted forward price $F_p$ is calculated as in \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}. The FEP
-adjusted index value $V_c(S_P)$ as a function of the FEP-adjusted forward spread $S_P$ is given as
+The FEP-adjusted forward price $F_p$ is calculated as in \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}.  The FEP
+adjusted forward spread $S_p$ modeled as a lognormal variable
 
-\begin{equation}
-V_c = (S_P - c)\cdot a
+\begin{equation}\label{pricing:cr_indexcdsoption_Sp2}
+S_p(x) = m e^{-\frac{1}{2} \sigma^2 t_e + x \sigma \sqrt{t_e}}
 \end{equation}
 
-Note: Contrary to the Black pricing approach where we approximated $S_P$ by a deterministic value,
-see \ref{pricing:cr_indexcdsoption_Sp}, we now model $S_P$ as a stochastic quantity. We also approximate the true risky
-annuity by a continuous risky annuity $a$ to speed up calculations. The continuous risky annuity is defined as
+where $\sigma$ is the pricing volatility for strike $K_s$ and $x \sim N(0,1)$ and $m$ is a free parameter which will be
+calibrated in a moment. Compare \ref{pricing:cr_indexcdsoption_Sp2} to the Black pricing
+approach \ref{pricing:cr_indexcdsoption_Sp} where we approximated $S_p$ by a deterministic value.
+
+The FEP adjusted index value $V_c(S_p)$ as a function of the FEP-adjusted forward spread $S_p$ is then given as
+
+\begin{equation}
+V_c = (S_p - c)\cdot a
+\end{equation}
+
+We approximate the true risky annuity by a continuous risky annuity $a$ to speed up calculations. The continuous risky
+annuity is defined as
 
 \begin{equation}
 a = \int_{t_e}^{t_m} e^{-\int_{t_e}^u (r + \lambda) ds} du
@@ -285,14 +295,8 @@ $0/0$:
 a = (t_m-t_e) \left(1 - \frac{1}{2}w+\frac{1}{6}w^2-\frac{1}{24}w^3\right)
 \end{eqnarray}
 
-The FEP adjusted forward spread $S$ modeled as a lognormal variable
-
-\begin{equation}
-S(x) = m e^{-\frac{1}{2} \sigma^2 t_e + x \sigma \sqrt{t}}
-\end{equation}
-
-where $\sigma$ is the pricing volatility for strike $K_s$ and $x \sim N(0,1)$ and $m$ is a free parameter that we
-calibrate to $F_p$ (see \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}) by solving
+The free parameter $m$ from \ref{pricing:cr_indexcdsoption_Sp2} is calibrated to $F_p$
+(see \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}) by solving
 
 \begin{equation}
 \int_{-\infty}^{\infty} V_c(x,m) \, \phi(x) \, dx = 1 - F_p
