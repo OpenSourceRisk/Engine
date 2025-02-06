@@ -150,7 +150,7 @@ void CamSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<or
             .log();
     }
 
-    LOG("CamSensitivityStorageManager: Added sensitivities to cube for trade="
+    TLOG("CamSensitivityStorageManager: Added sensitivities to cube for trade="
 	<< trade->id() << " sample=" << sampleIndex << " date=" << dateIndex);
 }
 
