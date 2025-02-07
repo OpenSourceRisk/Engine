@@ -101,6 +101,7 @@ public:
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
+    const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -144,6 +145,7 @@ private:
     bool isPayer_;
     bool isInflationLinked_;
     string subType_;
+    std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = std::nullopt;
 };
 
 //! Serializable Bond

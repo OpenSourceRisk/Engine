@@ -352,6 +352,7 @@
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
       <xs:element type="xs:string" name="SubType" minOccurs="0"/>
+      <xs:element type="bondPriceType" name="PriceType" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

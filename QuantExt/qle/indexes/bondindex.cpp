@@ -33,13 +33,14 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
                      const bool conditionalOnSurvival, const Date& issueDate, const PriceQuoteMethod priceQuoteMethod,
                      const double priceQuoteBaseValue, const bool isInflationLinked, const double bidAskAdjustment,
-                     const bool bondIssueDateFallback)
+                     const bool bondIssueDateFallback,
+                     const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
       issueDate_(issueDate), priceQuoteMethod_(priceQuoteMethod), priceQuoteBaseValue_(priceQuoteBaseValue),
       isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment),
-      bondIssueDateFallback_(bondIssueDateFallback) {
+      bondIssueDateFallback_(bondIssueDateFallback), quotedDirtyPrices_(quotedDirtyPrices) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -139,11 +140,23 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     Real price = timeSeries()[fd] + bidAskAdjustment_;
     if (price == Null<Real>())
         return price;
-    if (dirty_) {
+
+    // If the quoted prices are clean and return is dirty, then include accruedAmount
+    if (quotedDirtyPrices_ && *quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean && dirty_ == true) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         if (fixingDate >= issueDate_)
             price += bond_->accruedAmount(fd) / 100.0;
+
+    // If the quoted prices are dirty and return is clean, then remove accruedAmount
+    } else if (quotedDirtyPrices_ && *quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty && dirty_ == false) {
+        QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for clean prices");
+        if (fixingDate >= issueDate_)
+            price -= bond_->accruedAmount(fd) / 100.0;
     }
+    // else...
+    // Do not adjust price if (quotedDirtyPrices_==clean/false && dirty_==clean/false) or
+    // (quotedDirtyPrices_==dirty/true && dirty_==dirty/true), since the quoted fixing in the timeSeries is the same as
+    // the returned type (clean=clean or dirty=dirty)
 
     if (isInflationLinked_) {
         price *= QuantExt::inflationLinkedBondQuoteFactor(bond_);
