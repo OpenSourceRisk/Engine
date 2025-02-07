@@ -1145,6 +1145,7 @@ A node with name \lstinline!CDS! is used to store conventions for credit default
   <PaymentConvention>...</PaymentConvention>
   <Rule>...</Rule>
   <DayCounter>...</DayCounter>
+  <LastPeriodDayCounter>...</LastPeriodDayCounter>
   <SettlesAccrual>...</SettlesAccrual>
   <PaysAtDefaultTime>...</PaysAtDefaultTime>
 </CDS>
@@ -1176,6 +1177,11 @@ The date generation rule for the fee leg on the CDS. The ISDA standard is \lstin
 
 \item \lstinline!DayCounter!:
 The day counter for fee leg payments on the CDS. The ISDA standard is \lstinline!A360! but any valid day counter from Table \ref{tab:daycount} is allowed.
+
+\item \lstinline!LastPeriodDayCounter! [optional]: The day counter for the last fee leg payment on the CDS. The ISDA
+  standard is \lstinline!A360 (Incl Last)! but any valid day counter from Table \ref{tab:daycount} is allowed. If not
+  given, the following fallback rule applies: If DayCounter is \lstinline!A360!, LastPeriodDayCounter is set to
+  \lstinline!A360 (Incl Last)!, otherwise LastPeriodDayCounter is set to the same value as DayCounter.
 
 \item \lstinline!SettlesAccrual!:
 A boolean value indicating if an accrued fee is due on the occurrence of a credit event. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. In general, this is set \lstinline!true!.
