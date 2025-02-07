@@ -19,6 +19,7 @@
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/trade.hpp>
 
 #include <ql/time/date.hpp>
@@ -36,14 +37,15 @@ ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues)
+    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
       today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA),
-      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues) {
+      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues),
+      continueOnError_(continueOnError) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
@@ -105,23 +107,45 @@ void ExposureCalculator::build() {
         if (exerciseNextBreak_ && !ta.empty()) {
             // loop over actions and pick next mutual break, if available
             vector<TradeAction> actions = ta.actions();
-            for (Size j = 0; j < actions.size(); ++j) {
-                DLOG("TradeAction for " << tradeId << ", actionType " << actions[j].type() << ", actionOwner "
-                                        << actions[j].owner());
-                // FIXME: Introduce enumeration and parse text when building trade
-                if (actions[j].type() == "Break" && actions[j].owner() == "Mutual") {
-                    QuantLib::Schedule schedule = ore::data::makeSchedule(actions[j].schedule());
-                    vector<Date> dates = schedule.dates();
-                    std::sort(dates.begin(), dates.end());
-                    Date today = Settings::instance().evaluationDate();
-                    for (Size k = 0; k < dates.size(); ++k) {
-                        if (dates[k] > today && dates[k] < nextBreakDate) {
-                            nextBreakDate = dates[k];
-                            DLOG("Next break date for trade " << tradeId << ": "
-                                                              << QuantLib::io::iso_date(nextBreakDate));
-                            break;
+            try {
+                for (Size j = 0; j < actions.size(); ++j) {
+                    DLOG("TradeAction for " << tradeId << ", actionType " << actions[j].type() << ", actionOwner "
+                                            << actions[j].owner());
+                    // FIXME: Introduce enumeration and parse text when building trade
+                    if (actions[j].type() == "Break" && actions[j].owner() == "Mutual") {
+                        QuantLib::Schedule schedule = ore::data::makeSchedule(actions[j].schedule());
+                        vector<Date> dates = schedule.dates();
+                        std::sort(dates.begin(), dates.end());
+                        Date today = Settings::instance().evaluationDate();
+                        for (Size k = 0; k < dates.size(); ++k) {
+                            if (dates[k] > today && dates[k] < nextBreakDate) {
+                                nextBreakDate = dates[k];
+                                DLOG("Next break date for trade " << tradeId << ": "
+                                                                << QuantLib::io::iso_date(nextBreakDate));
+                                break;
+                            }
                         }
                     }
+                }
+            } catch (std::exception& e) {
+                if (continueOnError_) {
+                    StructuredTradeErrorMessage(tradeId, trade->tradeType(),
+                                                "Error processing trade actions",
+                                                std::string(e.what()) + ", excluding trade from netting set " + std::string(nettingSetId) + ".")
+                        .log();
+                    ee_b_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    eee_b_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    pfe_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    epe_b_[tradeId] = 0.0;
+                    eepe_b_[tradeId] = 0.0;
+                    epe_bTimeWeighted_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    eepe_bTimeWeighted_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                } else {
+                    StructuredTradeErrorMessage(tradeId, trade->tradeType(),
+                                                "Error processing trade actions",
+                                                e.what())
+                        .log();
+                    throw e;
                 }
             }
         }

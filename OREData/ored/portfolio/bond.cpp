@@ -83,7 +83,7 @@ void BondData::fromXML(XMLNode* node) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
-        if (ld.concreteLegData()->legType() == "CPI") {
+        if (ld.concreteLegData()->legType() == LegType::CPI) {
             isInflationLinked_ = true;
         }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
@@ -161,9 +161,10 @@ void BondData::initialise() {
         // fill isInflationLinked
         for (Size i = 0; i < coupons().size(); ++i) {
             if (i == 0)
-                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == LegType::CPI;
             else {
-                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                bool isIthCouponInflationLinked =
+                    coupons()[i].concreteLegData()->legType() == LegType::CPI;
                 QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
                            "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
                                         << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);

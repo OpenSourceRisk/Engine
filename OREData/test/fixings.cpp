@@ -210,13 +210,19 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
     // Build the portfolio and retrieve the fixings
     p.build(engineFactory);
     m = p.fixings(today);
-
     // Check the retrieved fixings against the expected results
     auto exp = tradeTypeExpected();
     auto key = make_tuple(tradeType, tradeCase, includeSettlementDateFlows, enforcesTodaysHistoricFixings);
     if (exp.count(key) == 0) {
+        size_t mandatoryFixings = 0;
+        for (const auto& [index, requiredFixingDates] : m) {
+            for (const auto& [date, mandatoryFixing] : requiredFixingDates) {
+                if (mandatoryFixing)
+                    ++mandatoryFixings;
+            }
+        }
         // Expected result is no required fixings
-        BOOST_CHECK_MESSAGE(m.empty(), "Expected no required fixings for ["
+        BOOST_CHECK_MESSAGE(mandatoryFixings == 0, "Expected no required fixings for ["
                                            << tradeType << ", " << tradeCase << ", "
                                            << ore::data::to_string(includeSettlementDateFlows) << ", "
                                            << ore::data::to_string(enforcesTodaysHistoricFixings)

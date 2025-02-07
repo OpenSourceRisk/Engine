@@ -32,7 +32,7 @@ namespace data {
 
 class DurationAdjustedCmsLegBuilder : public ore::data::LegBuilder {
 public:
-    DurationAdjustedCmsLegBuilder() : LegBuilder("DurationAdjustedCMS") {}
+    DurationAdjustedCmsLegBuilder() : LegBuilder(LegType::DurationAdjustedCMS) {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
