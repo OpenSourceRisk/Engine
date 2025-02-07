@@ -123,6 +123,13 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/make_shared.hpp>
 
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <qle/models/lgm.hpp>
+
+#include <qle/instruments/multilegoption.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 
