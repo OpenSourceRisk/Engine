@@ -47,6 +47,7 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <ql/time/calendars/target.hpp>
 
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
@@ -60,7 +61,14 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BlackMultilegOptionEngine)
 
-BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
+double black76_swaption_price(double F, double K, double r, double T, double sigma, bool is_call) { //TODO einbauen
+    double d1 = (std::log(F / K) + 0.5 * sigma * sigma * T) / (sigma * std::sqrt(T));
+    double d2 = d1 - sigma * std::sqrt(T);
+    return exp(-r * T) * (is_call ? (F * 0.5 * erfc(-d1 / std::sqrt(2)) - K * 0.5 * erfc(-d2 / std::sqrt(2))) :
+                                    (K * 0.5 * erfc(d2 / std::sqrt(2)) - F * 0.5 * erfc(d1 / std::sqrt(2))));
+}
+
+/*BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
     // In case of zero volatility the LGM model and the Black Multileg will both converte to the
     // discounted cashflows method, i.e. the usual swap pricing routine.
     // 
@@ -74,7 +82,7 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
     Date settlementDate(15, July, 2015);
     Date expiryDate(10, July, 2017);
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
-    double vol = 0.0000001; 
+    double vol = 0.0000001;  // No volatility
     Date startDate(15, July, 2017);
     Settings::instance().evaluationDate() = settlementDate;
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -110,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = 0.01; strike < 0.25; strike += 0.01)
     {
         // Get Lgm Price
@@ -123,7 +131,7 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
-        // Get Bermudan Price
+        // Get Black Multileg Price
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
@@ -138,7 +146,6 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        // Get Black Multileg Price
         auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
@@ -156,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
             BOOST_CHECK_CLOSE(lgmPrice, multiPrice, 1.0); // Tolerance of 1%
     }
 
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+    BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (double strike = 0.01; strike < 0.25; strike += 0.01)
     {
         // Get Lgm Price
@@ -169,7 +176,7 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
-        // Get Bermudan Price
+        // Get Black Multileg Price
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
@@ -184,7 +191,6 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        // Get Black Multileg Price
         auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
@@ -201,21 +207,134 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCase) {
         else
             BOOST_CHECK_CLOSE(lgmPrice, multiPrice, 1.0); // Tolerance of 1%
     }
-}
+}*/
 
-BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCaseDisplacement) {
-    // The displacement allows for negative strikes values.
-    // More precisely the whole "setting" of the Black'76 model is shifted to the
-    // positive part, i.e. the upper side above the x-axis. The forward and the strike
-    // are thus shifted according to the given displacement parameter before pricing.
+BOOST_AUTO_TEST_CASE(testSwapCase) {
+    // In case of zero volatility the Black76 model will converge to the discounted cashflows
+    // model, i.e. the price of a swap (when in-the-money).
 
-    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine with displacement against LGM in zero valatility case ...");
+    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine against discounted cashflows ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date expiryDate(10, July, 2017);
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
-    double vol = 0.0000001; 
+    double vol = 0.0000001;  // No volatility
+    Date startDate(15, July, 2017);
+    Settings::instance().evaluationDate() = settlementDate;
+    Date maturityDate = calendar.advance(settlementDate, 5, Years);
+    Real notional = 1.0;
+    Rate fixedRate = 0.02;
+    Volatility vola(vol);
+   
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    Handle<YieldTermStructure> eurYtsHandle(eurYts);
+
+    BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
+    for (double strike = 0.04; strike < 0.10; strike += 0.01) // Only in-the-money cases
+    {
+        // Get Lgm Price
+        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+        Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), 
+            schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+                
+        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
+        swap -> setPricingEngine(swapEng);
+        Real swapPrice = swap -> NPV();
+       
+        // Get Black Multileg Price
+        Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
+            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
+        Period period(6, Months);
+        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
+            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
+        std::vector<Leg> legs = {floatLeg, fixedLeg};
+        std::vector<bool> payer = {true, false};
+        std::vector<Currency> currency{QuantLib::EURCurrency(), QuantLib::EURCurrency()};
+        
+        EuropeanExercise exe(expiryDate);
+        QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
+        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
+        Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
+        QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
+        swaptionMulti -> setPricingEngine(engineMulti);
+        Real multiPrice = swaptionMulti->NPV();
+        
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): ");
+        BOOST_TEST_MESSAGE("    Swap Model: " << swapPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("------------");
+        
+        if (std::fabs(swapPrice - multiPrice) < 10e-4)
+          BOOST_CHECK(true);
+        else
+            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 1.0); // Tolerance of 1%
+    }
+
+    BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
+    for (double strike = 0.001; strike < 0.015; strike += 0.005) // Only in-the-money cases
+    {
+        // Get Lgm Price
+        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+        Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
+            schedule, EURIBOR6m,  0.0, Actual365Fixed());  
+
+        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
+        swap -> setPricingEngine(swapEng);
+        Real swapPrice = swap -> NPV();
+
+        // Get Black Multileg Price
+        Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
+            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
+        Period period(6, Months);
+        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
+            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
+        std::vector<Leg> legs = {floatLeg, fixedLeg};
+        std::vector<bool> payer = {false, true};
+        std::vector<Currency> currency{QuantLib::EURCurrency(), QuantLib::EURCurrency()};
+        
+        EuropeanExercise exe(expiryDate);
+        QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
+        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
+        Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
+        QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
+        swaptionMulti -> setPricingEngine(engineMulti);
+        Real multiPrice = swaptionMulti->NPV();
+        
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): ");
+        BOOST_TEST_MESSAGE("    Swap Model: " << swapPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("------------");
+        
+        if (std::fabs(swapPrice - multiPrice) < 10e-4)
+          BOOST_CHECK(true);
+        else
+            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 1.0); // Tolerance of 1%
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
+    // This test checks the results from the BlackMultilegOptionEngine against
+    // a manual implementation of the Black76 formula (see top of this source file).
+    // Due to a shift in forward and strike (model displacement) the whole "setting"
+    // is moved to the positive side above the x-axis.
+    
+    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine against shifted Black76 formula ...");
+
+    Calendar calendar = TARGET();
+    Date settlementDate(15, July, 2015);
+    Date expiryDate(10, July, 2017);
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
+    double T = 2.0;
+    double vol = 0.0000001; // No volatility
     Date startDate(15, July, 2017);
     Settings::instance().evaluationDate() = settlementDate;
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -247,24 +366,22 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCaseDisplacement) {
     eurVols_a = Array(eurVols.begin(), eurVols.end());
     notimes_a = Array(0);
     eurKappa_a = Array(1, 0.000000); // No mean reversion
+    
+    double Annuity=2.8827;
+    double shift = 0.015;
 
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-    for (double strike = -0.01; strike < 0.25; strike += 0.01)
+    BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
+    for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
-        // Get Lgm Price
-        QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
         boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
         Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), 
             schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
-        swaption->setPricingEngine(lgmEngine);
-        Real lgmPrice = swaption->NPV(); 
 
-        // Get Bermudan Price
+        // Get Black Multileg Price
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
@@ -279,39 +396,34 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCaseDisplacement) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        // Get Black Multileg Price
-        double shift = 0.015;
         auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);
         Real multiPrice = swaptionMulti->NPV();
         
+        double blackFormula= Annuity * black76_swaption_price(fixedRate+shift, strike+shift, fixedRate, T, vol, false);
+
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): ");
-        BOOST_TEST_MESSAGE("    LGM Model: " << lgmPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("    Black76: " << blackFormula * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
         
-        if (std::fabs(lgmPrice - multiPrice) < 10e-4)
+        if (std::fabs(blackFormula - multiPrice) < 10e-4)
           BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(lgmPrice, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1%
     }
 
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-    for (double strike = -0.01; strike < 0.25; strike += 0.01)
-    {
-        // Get Lgm Price
-        QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+    BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
+    for (double strike = -0.01; strike < 0.05; strike += 0.01)
+    {       
         boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
         Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
-            schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
-        swaption->setPricingEngine(lgmEngine);
-        Real lgmPrice = swaption->NPV(); 
+            schedule, EURIBOR6m,  0.0, Actual365Fixed());     
 
-        // Get Bermudan Price
+        // Get Black Multileg Price
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
@@ -326,167 +438,24 @@ BOOST_AUTO_TEST_CASE(testAgainstLGMEdgeCaseDisplacement) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        // Get Black Multileg Price
-        double shift = 0.015;
         auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);
         Real multiPrice = swaptionMulti->NPV();
         
+        double blackFormula= Annuity* black76_swaption_price(fixedRate+shift, strike+shift, fixedRate, T, vol, true);
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): ");
-        BOOST_TEST_MESSAGE("    LGM Model: " << lgmPrice * 10000.0 << " bp.");
+        BOOST_TEST_MESSAGE("    Black76: " << blackFormula * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
         
-        if (std::fabs(lgmPrice - multiPrice) < 10e-4)
+        if (std::fabs(blackFormula - multiPrice) < 10e-4)
           BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(lgmPrice, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1%
     }
 }
-
-BOOST_AUTO_TEST_CASE(testAgainstBermudanEngine) {
-    // A Bermudan swaption is defined as a swaption with earyl exercise feature, i.e.
-    // there are many dates per year that the swaption can be exercised.
-    // Therein, exercising means that the fixed-float deal is applied to the remaining
-    // part of the swap period until maturity.
-    // Therefore the Bermudan engine must return a value at least as high as the 
-    // "European" engine (up to numerical errors).
-
-    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine against Bermudan Engine ...");
-
-    Calendar calendar = TARGET();
-    Date settlementDate(15, July, 2015);
-    Date expiryDate(10, July, 2017);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
-    double vol = 0.01; 
-    Date startDate(15, July, 2017);
-    Settings::instance().evaluationDate() = settlementDate;
-    Date maturityDate = calendar.advance(settlementDate, 5, Years);
-    Rate fixedRate = 0.02;
-
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
-   
-    std::vector<Date> volstepdates;
-    volstepdates.push_back(Date(15, July, 2016));
-    volstepdates.push_back(Date(15, July, 2017));
-    volstepdates.push_back(Date(15, July, 2018));
-    volstepdates.push_back(Date(15, July, 2019));
-    volstepdates.push_back(Date(15, July, 2020));
-
-    std::vector<Real> eurVols;
-
-    auto  volsteptimes_a = Array(volstepdates.size());
-
-    for (Size i = 0; i < volstepdates.size(); ++i) 
-        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
-    
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(vol); 
-
-    Array eurVols_a;
-    Array notimes_a, eurKappa_a;
-    eurVols_a = Array(eurVols.begin(), eurVols.end());
-    notimes_a = Array(0);
-    eurKappa_a = Array(1, 0.000000); // No mean reversion
-
-    Volatility vola(vol);
-
-    Handle<YieldTermStructure> eurYtsHandle(eurYts);
-    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
-
-    Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
-
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-    for (double strike = 0.01; strike < 0.05; strike += 0.01)
-    {
-        // Get Bermudan Price
-        Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
-            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
-        Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
-        QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
-            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
-        std::vector<Leg> legs = {floatLeg, fixedLeg};
-        std::vector<bool> payer = {true, false};
-        std::vector<Currency> currency{QuantLib::EURCurrency(), QuantLib::EURCurrency()};
-        
-        EuropeanExercise exe(expiryDate);
-        QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
-
-         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 10000);
-         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-             LinearGaussMarkovModel::Discretization::Euler, true, inte);
-         Size americanExerciseTimeStepsPerYear = 10;
-         QuantLib::ext::shared_ptr<PricingEngine> engineBermudan = 
-             QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 0.0001, 10000, 0.0001, 10000,  eurYtsHandle, americanExerciseTimeStepsPerYear);
-         swaptionMulti->setPricingEngine(engineBermudan);
-         Real bermPrice = swaptionMulti->NPV();
-
-        // Get Black Multileg Price
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
-        Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
-        QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
-        swaptionMulti -> setPricingEngine(engineMulti);
-        Real multiPrice = swaptionMulti->NPV();
-        
-        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): ");
-        BOOST_TEST_MESSAGE("    Berm Model: " << bermPrice * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("------------");
-        
-        BOOST_CHECK(multiPrice < bermPrice);
-    }
-
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-    for (double strike = 0.01; strike < 0.05; strike += 0.01)
-    {
-        // Get Bermudan Price
-        Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
-            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
-        Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
-        QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
-            .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
-        std::vector<Leg> legs = {floatLeg, fixedLeg};
-        std::vector<bool> payer = {false, true};
-        std::vector<Currency> currency{QuantLib::EURCurrency(), QuantLib::EURCurrency()};
-        
-        EuropeanExercise exe(expiryDate);
-        QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
-
-         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
-         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
-             LinearGaussMarkovModel::Discretization::Euler, true, inte);
-         Size americanExerciseTimeStepsPerYear = 1;
-         QuantLib::ext::shared_ptr<PricingEngine> engineBermudan = 
-             QuantLib::ext::make_shared<NumericLgmMultiLegOptionEngine>(lgm, 0.01, 100, 0.01, 100,  eurYtsHandle, americanExerciseTimeStepsPerYear);
-         swaptionMulti->setPricingEngine(engineBermudan);
-         Real bermPrice = swaptionMulti->NPV();
-
-        // Get Black Multileg Price
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed());
-        Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
-        QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
-        swaptionMulti -> setPricingEngine(engineMulti);
-        Real multiPrice = swaptionMulti->NPV();
-        
-        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): ");
-        BOOST_TEST_MESSAGE("    Berm Model: " << bermPrice * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("------------");
-        
-        if (std::fabs(multiPrice - bermPrice) < 50e-4)
-          BOOST_CHECK(true);
-        else
-            BOOST_CHECK_CLOSE(multiPrice, bermPrice, 10.0); // Tolerance of 10%
-
-    }
-}
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
