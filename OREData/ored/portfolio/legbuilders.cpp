@@ -36,7 +36,7 @@ Leg FixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_p
     Leg leg = makeFixedLeg(data, openEndDateReplacement);
     applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(leg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
-    if (data.legType() == "Fixed" && !data.isNotResetXCCY()) {
+    if (data.legType() == LegType::Fixed && !data.isNotResetXCCY()) {
 
         QL_REQUIRE(!data.fxIndex().empty(), "FixedLegBuilder: need fx index for fx resetting leg");
         auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
@@ -107,7 +107,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::share
 
     // handle fx resetting Ibor leg
 
-    if (data.legType() == "Floating" && !data.isNotResetXCCY()) {
+    if (data.legType() == LegType::Floating && !data.isNotResetXCCY()) {
         QL_REQUIRE(!data.fxIndex().empty(), "FloatingRateLegBuilder: need fx index for fx resetting leg");
         auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
                                     configuration, true);       
