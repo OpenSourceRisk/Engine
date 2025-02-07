@@ -46,7 +46,7 @@ public:
 
     InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     Size depth, const T& t = T())
-        : asof_(asof), dates_(dates), samples_(samples), depth_(depth), t0data_(new T[depth_ * samples_]),
+        : asof_(asof), dates_(dates), samples_(samples), depth_(depth),
           data_(dates_.size(), std::vector<T*>(ids.size())) {
 
         Size pos = 0;
