@@ -157,6 +157,7 @@ void DiscountingBondTRSEngine::calculate() const {
         cfResults.back().payDate = c->date();
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 0;
+        cfResults.back().discountFactor = discountCurve_->discount(c->date()) * S;
         cfResults.back().type = "Return";
         if (auto bc = QuantLib::ext::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();

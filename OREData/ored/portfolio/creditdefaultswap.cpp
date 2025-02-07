@@ -64,7 +64,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     npvCurrency_ = legData.currency();
     notionalCurrency_ = legData.currency();
 
-    QL_REQUIRE(legData.legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(legData.schedule());
     QL_REQUIRE(schedule.size() > 1, "CreditDefaultSwap requires at least two dates in the schedule");
 
@@ -165,7 +165,7 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
                                    instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
-    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[2]"] = ore::data::to_string(swap_.leg().legType());
     additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
