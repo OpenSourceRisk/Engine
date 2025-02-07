@@ -118,6 +118,8 @@ public:
     
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
 
+    void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override {};
+
 protected:    
     const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
@@ -126,6 +128,10 @@ protected:
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
     //bool salvageCovarianceMatrix_ = true;  --> hence default spectral
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::Spectral;
+
+    void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override {};
 };
 
 ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& method);
