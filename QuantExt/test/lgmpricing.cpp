@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     // We check that equality for different swaption types (payer and receiver) and different strikes
     // that will cover the practically relevant area.
     
-    BOOST_TEST_MESSAGE("Testing LGM pricing in cases equivalent to the Bachelier model in long term case ...");
+    BOOST_TEST_MESSAGE("Testing LGM in cases equivalent to the Bachelier model  ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -221,28 +221,27 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+    Volatility vola(vol);
+    QuantLib::ext::shared_ptr<PricingEngine> engineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+    QuantLib::ext::shared_ptr<PricingEngine> engineBach = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
+
     boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
-
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
 
-        swaption->setPricingEngine(eurSwEng1);
-        Real npv = swaption->NPV(); 
-        Volatility vola(vol);
-        QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
+        swaption->setPricingEngine(engineLgm);
+        Real npv = swaption->NPV();         
 
-        swaption->setPricingEngine(engineN0);
+        swaption->setPricingEngine(engineBach);
         Real bach = swaption->NPV();
         
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("    Bachelier Model: " << bach * 10000.0 << " bp.");
-        //BOOST_TEST_MESSAGE("    LGM:  " <<  npv * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
 
         if (std::fabs(npv - bach) < 10e-4)
@@ -255,17 +254,16 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); Volatility vola(vol);
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
 
-        QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
-        swaption->setPricingEngine(eurSwEng1);
+        swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV();
 
-        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        swaption->setPricingEngine(engineN0);
+        swaption->setPricingEngine(engineBach);
         Real bach = swaption->NPV();
-        BOOST_TEST_MESSAGE("    Bachelier Model: " << bach * 10000.0 << " bp.");
         
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("    Bachelier Model: " << bach * 10000.0 << " bp.");        
         BOOST_TEST_MESSAGE("------------");
         
         if (std::fabs(npv - bach) < 10e-4)
@@ -278,9 +276,12 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
 }
 
 BOOST_AUTO_TEST_CASE(testBachelierManual) {
-    // TODO he same test as before, but with manual calculation of the annuity
+    // The same test as before, but with manual calculation of the annuity.
+    // The latter one is the factor which the Bachelier formula is multiplied by
+    // in the usual swaption pricing method. The implementation of the Bachelier
+    // formula is also checked by this test at the same time.
     
-    BOOST_TEST_MESSAGE("Testing LGM pricing in cases equivalent to the Bachelier model in long term case ...");
+    BOOST_TEST_MESSAGE("Testing LGM pricing in Bachelier case manually ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+    QuantLib::ext::shared_ptr<PricingEngine> engineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
@@ -331,25 +332,19 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     for (int i=4;i<10;++i)
         Annuity += 0.5 * exp(-(double) (i) * 0.5 *  fixedRate);
 
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
 
-        swaption->setPricingEngine(eurSwEng1);
+        swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV(); 
-        Volatility vola(vol);
-        QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
 
         double limitValue = Annuity * bachelierPutPrice(fixedRate, strike, vol, T, fixedRate);
-        //swaption->setPricingEngine(engineN0);
-        //Real bach = swaption->NPV();
         
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        //BOOST_TEST_MESSAGE("    Bachelier Model: " << bach * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        //BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
 
         if (std::fabs(npv - limitValue) < 10e-4)
@@ -358,24 +353,19 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
             BOOST_CHECK_CLOSE(npv, limitValue, 4.0); // Tolerance of 4%
     }
 
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+    BOOST_TEST_MESSAGE("Checking Payer Swaptionss ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); Volatility vola(vol);
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
 
-        QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
-        swaption->setPricingEngine(eurSwEng1);
+        swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV();
 
         double limitValue = Annuity * bachelierCallPrice(fixedRate, strike, vol, T, fixedRate);
-        //swaption->setPricingEngine(engineN0);
-        //Real bach = swaption->NPV();
 
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        //BOOST_TEST_MESSAGE("    Bachelier Model: " << bach * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        //BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
         
         if (std::fabs(npv - limitValue) < 10e-4)
@@ -386,113 +376,6 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
-
-BOOST_AUTO_TEST_CASE(testSwapCaseManual) {
-    // The same test as before, but with zero volatility additional to the zero mean reversion.
-    
-    BOOST_TEST_MESSAGE("Testing LGM pricing in cases equivalent to the Bachelier model in long term case ...");
-
-    Calendar calendar = TARGET();
-    Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2017)); // T=2
-    double T = 2.0;
-    double vol = 0.00001; // Nearly Zero Volatility
-    Date startDate(15, July, 2017);
-    Settings::instance().evaluationDate() = settlementDate;    
-    Date maturityDate = calendar.advance(settlementDate, 5, Years);
-    Real notional = 1.0;
-    Rate fixedRate = 0.02;
-
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
-   
-    std::vector<Date> volstepdates;
-    volstepdates.push_back(Date(15, July, 2016));
-    volstepdates.push_back(Date(15, July, 2017));
-    volstepdates.push_back(Date(15, July, 2018));
-    volstepdates.push_back(Date(15, July, 2019));
-    volstepdates.push_back(Date(15, July, 2020));
-
-    std::vector<Real> eurVols;
-
-    auto  volsteptimes_a = Array(volstepdates.size());
-
-    for (Size i = 0; i < volstepdates.size(); ++i) 
-        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
-    
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(vol); // Alpha
-
-    Array eurVols_a;
-    Array notimes_a, eurKappa_a;
-    eurVols_a = Array(eurVols.begin(), eurVols.end());
-    notimes_a = Array(0);
-    eurKappa_a = Array(1, 0.0000); // No mean reversion 
-
-    Handle<YieldTermStructure> eurYtsHandle(eurYts);
-    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
-
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-    Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
-
-    double Annuity=2.8827; // TODO derive numerical value
-
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-    for (double strike = -0.01; strike < 0.05; strike += 0.01)
-    {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
-
-        swaption->setPricingEngine(eurSwEng1);
-        Real npv = swaption->NPV(); 
-        //Volatility vola(vol);
-        //QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
-
-        double limitValue = Annuity * bachelierPutPrice(fixedRate, strike, vol, T, fixedRate);
-        //swaption->setPricingEngine(engineN0);
-        //Real bach = swaption->NPV();
-        
-        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        //BOOST_TEST_MESSAGE("Bachelier Model: " << bach * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE("    LGM: " << npv * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("------------");
-
-        if (std::fabs(npv - limitValue) < 10e-4)
-            BOOST_CHECK(true);
-        else
-            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
-    }
-
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-    for (double strike = -0.01; strike < 0.05; strike += 0.01) 
-    {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); Volatility vola(vol);
-
-        QuantLib::ext::shared_ptr<PricingEngine> engineN0 = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
-        swaption->setPricingEngine(eurSwEng1);
-        Real npv = swaption->NPV();
-
-        double limitValue = Annuity * bachelierCallPrice(fixedRate, strike, vol, T, fixedRate);
-        //swaption->setPricingEngine(engineN0);
-        //Real bach = swaption->NPV();
-
-        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        //BOOST_TEST_MESSAGE("Bachelier Model: " << bach * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE("    LGM: " << npv * 10000.0 << " bp.");
-        BOOST_TEST_MESSAGE("------------");
-        
-        if (std::fabs(npv - limitValue) < 10e-4)
-            BOOST_CHECK(true);
-        else
-            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
-    }
-    
-    BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
-}
-
 
 BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     // For the pricing of Bermudan-style swaptions there are MC (Monte-Carlo) 
@@ -501,7 +384,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     // Both methods must return equal values up to a numerical error. These 
     // results must be higher or equal to the European value.
 
-    BOOST_TEST_MESSAGE("Testing LGM pricing in cases with only one exercise date ...");
+    BOOST_TEST_MESSAGE("Testing LGM pricing Bermudan functionality ...");
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date expiryDate(10, July, 2017);
@@ -674,7 +557,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
     // Both methods must return values equal to the European price in case of only
     // one given exercise date.
 
-    BOOST_TEST_MESSAGE("Testing LGM pricing in cases with only one exercise date ...");
+    BOOST_TEST_MESSAGE("Testing LGM Bermduan pricing in cases with only one exercise date ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -765,7 +648,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
          swaptionMulti->setPricingEngine(engineBermudanMC);
          Real bermPriceMC = swaptionMulti->NPV();   
         
-        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): ");
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): ");
         BOOST_TEST_MESSAGE("    LGM Model: " << lgmPrice * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("    Berm Model FD: " << bermPriceFD * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("    Berm Model MC: " << bermPriceMC * 10000.0 << " bp.");
