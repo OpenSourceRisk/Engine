@@ -38,10 +38,7 @@ void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& 
     for (Size i = 0; i < p_.size(); ++i)
         report->addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
 
-    // Used for Historical PnL Report
-    if (s == 2) {
-        createAdditionalReports(reports);
-    }
+    createAdditionalReports(reports);
 
     createVarCalculator();
 }
@@ -71,10 +68,7 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
             report->add(v);
     }
 
-    // Used for Historical PnL Report
-    if (s == 2) {
-        writeAdditionalReports(reports, riskGroup, tradeGroup);
-    }
+    writeAdditionalReports(reports, riskGroup, tradeGroup);
 }
 
 } // namespace analytics

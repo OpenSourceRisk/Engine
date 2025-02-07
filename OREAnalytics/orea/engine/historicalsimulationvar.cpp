@@ -69,7 +69,7 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
     const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
     const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-
+    QL_REQUIRE(reports->reports().size()== 2, "HistoricalSimulationVarReport::writeAdditionalReports - 2 reports expected for HistoricalSimulationVar");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
     auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);

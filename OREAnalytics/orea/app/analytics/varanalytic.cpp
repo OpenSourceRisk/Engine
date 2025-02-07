@@ -73,7 +73,7 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     varReport_->calculate(reports);
     CONSOLE("OK");
-
+    
     analytic()->reports()[label_]["var"] = varReport;
 
     LOG("VaR completed");
