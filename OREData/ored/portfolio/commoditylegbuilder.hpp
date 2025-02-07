@@ -32,7 +32,7 @@ namespace data {
 
 class CommodityFixedLegBuilder : public ore::data::LegBuilder {
 public:
-    CommodityFixedLegBuilder() : LegBuilder("CommodityFixed") {}
+    CommodityFixedLegBuilder() : LegBuilder(LegType::CommodityFixed) {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
@@ -44,7 +44,7 @@ public:
 class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
 public:
     CommodityFloatingLegBuilder()
-        : LegBuilder("CommodityFloating"), allAveraging_(false) {}
+        : LegBuilder(LegType::CommodityFloating), allAveraging_(false) {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,

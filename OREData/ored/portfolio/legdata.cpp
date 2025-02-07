@@ -80,6 +80,8 @@
 #include <ql/utilities/vectors.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
+#include <boost/bimap.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
@@ -90,6 +92,42 @@ namespace ore {
 namespace data {
 
 bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
+
+// clang-format off
+const boost::bimap<string, LegType> legTypeMap =
+    boost::assign::list_of<boost::bimap<string, LegType>::value_type>
+    ("Fixed", LegType::Fixed)
+    ("Floating", LegType::Floating)
+    ("Cashflow", LegType::Cashflow)
+    ("CMS", LegType::CMS)
+    ("CMB", LegType::CMB)
+    ("DigitalCMS", LegType::DigitalCMS)
+    ("DurationAdjustedCMS", LegType::DurationAdjustedCMS)
+    ("CMSSpread", LegType::CMSSpread)
+    ("DigitalCMSSpread", LegType::DigitalCMSSpread)
+    ("Equity", LegType::Equity)
+    ("CPI", LegType::CPI)
+    ("ZeroCouponFixed", LegType::ZeroCouponFixed)
+    ("FormulaBased", LegType::FormulaBased)
+    ("CommodityFloating", LegType::CommodityFloating)
+    ("CommodityFixed", LegType::CommodityFixed)
+    ("EquityMargin", LegType::EquityMargin)
+    ("YY", LegType::YY);
+// clang-format on
+
+LegType parseLegType(const std::string& legType)  {
+    if (legTypeMap.left.find(legType) != legTypeMap.left.end())
+        return legTypeMap.left.at(legType);
+
+    QL_FAIL("Could not parse leg type string '" << legType << "'");
+}
+
+std::ostream& operator<<(std::ostream& out, const LegType& legType) {
+    if (legTypeMap.right.find(legType) != legTypeMap.right.end())
+        return out << legTypeMap.right.at(legType);
+
+    QL_FAIL("Leg type not supported for operator<<");
+}
 
 void CashflowData::fromXML(XMLNode* node) {
     // allow for empty Cashflow legs without any payments
@@ -856,7 +894,7 @@ QuantLib::ext::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(
 XMLNode* LegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("LegData");
     QL_REQUIRE(node, "Failed to create LegData node");
-    XMLUtils::addChild(doc, node, "LegType", legType());
+    XMLUtils::addChild(doc, node, "LegType", ore::data::to_string(legType()));
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
     if (paymentConvention_ != "")
@@ -2847,7 +2885,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         return resettingLeg;
 
     } else if ((data.notionalInitialExchange() || data.notionalFinalExchange() || data.notionalAmortizingExchange()) &&
-               (data.legType() != "CPI")) {
+               (data.legType() != LegType::CPI)) {
 
         // check for notional exchanges on non FX reseting trades
 
