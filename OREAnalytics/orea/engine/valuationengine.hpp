@@ -71,8 +71,8 @@ public:
     enum class ErrorPolicy { RemoveAll, RemoveSample };
 
     struct Errors {
-        std::set<Size> t0;                       // set of trade indices with errors
-        std::set<std::pair<Size, Size>> samples; // set of (trade index, sample) with errors
+        std::set<QuantLib::Size> t0;                                 // set of trade indices with errors
+        std::set<std::pair<QuantLib::Size, QuantLib::Size>> samples; // set of (trade index, sample) with errors
     };
 
     //! Constructor
