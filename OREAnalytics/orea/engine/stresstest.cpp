@@ -123,11 +123,11 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
             const string& label = scenarioGenerator->scenarios()[j]->label();
             TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
-            Real npv = errors.t0.find(index->second) == errors.t0.end() &&
-                               errors.samples.find(std::make_pair(index->second, j)) == errors.samples.end()
-                           ? cube->get(index->second, 0, j, 0)
-                           : Null<Real>();
-            Real sensi = npv == Null<Real>() || npv0 == Null<Real>() ? Null<Real>() : npv - npv0;
+            Real npv =
+                npv0 != Null<Real>() && errors.samples.find(std::make_pair(index->second, j)) == errors.samples.end()
+                    ? cube->get(index->second, 0, j, 0)
+                    : Null<Real>();
+            Real sensi = npv0 == Null<Real>() || npv0 == Null<Real>() ? Null<Real>() : npv - npv0;
             if (fabs(sensi) > threshold || QuantLib::close_enough(sensi, threshold)) {
                 report->next();
                 report->add(tradeId);
