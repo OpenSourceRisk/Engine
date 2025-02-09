@@ -33,7 +33,7 @@ class DurationAdjustedCmsLegData : public ore::data::LegAdditionalData {
 
 public:
     DurationAdjustedCmsLegData()
-        : ore::data::LegAdditionalData("DurationAdjustedCMS", false), fixingDays_(Null<Size>()), isInArrears_(true),
+        : ore::data::LegAdditionalData(LegType::DurationAdjustedCMS, false), fixingDays_(Null<Size>()), isInArrears_(true),
           nakedOption_(false) {}
 
     //! Detailed constructor
@@ -47,7 +47,7 @@ public:
                                const std::vector<double>& gearings = std::vector<double>(),
                                const std::vector<std::string>& gearingDates = std::vector<std::string>(),
                                bool nakedOption = false)
-        : LegAdditionalData("CMS", false), swapIndex_(swapIndex), duration_(duration), fixingDays_(fixingDays),
+        : LegAdditionalData(LegType::CMS, false), swapIndex_(swapIndex), duration_(duration), fixingDays_(fixingDays),
           isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
           floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
           nakedOption_(nakedOption) {

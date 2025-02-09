@@ -163,7 +163,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
                       << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
                       << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
     }
-    if (initialSize == failedTrades && initialSize > 0) {
+    if (emitStructuredError && initialSize == failedTrades && initialSize > 0) {
         map<string, string> subfields;
         for (auto failedTrade : trades_) {
             subfields.insert({"tradeId", failedTrade.first});

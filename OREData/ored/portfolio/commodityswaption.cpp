@@ -121,15 +121,15 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const Qua
     QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
                "Both commodity legs are " << (legData_[0].isPayer() ? "paying" : "receiving"));
 
-    QL_REQUIRE(legData_[0].legType() == "CommodityFixed" || legData_[0].legType() == "CommodityFloating",
+    QL_REQUIRE(legData_[0].legType() == LegType::CommodityFixed || legData_[0].legType() == LegType::CommodityFloating,
                "Leg type needs to be CommodityFixed or CommodityFloating but 1st leg has type "
                    << legData_[0].legType());
-    QL_REQUIRE(legData_[1].legType() == "CommodityFixed" || legData_[1].legType() == "CommodityFloating",
+    QL_REQUIRE(legData_[1].legType() == LegType::CommodityFixed || legData_[1].legType() == LegType::CommodityFloating,
                "Leg type needs to be CommodityFixed or CommodityFloating but 2nd leg has type "
                    << legData_[1].legType());
 
-    if (legData_[0].legType() == "CommodityFixed") {
-        QL_REQUIRE(legData_[1].legType() == "CommodityFloating",
+    if (legData_[0].legType() == LegType::CommodityFixed) {
+        QL_REQUIRE(legData_[1].legType() == LegType::CommodityFloating,
                    "1st leg is CommodityFixed so 2nd leg should be CommodityFloating but is " << legData_[1].legType());
         auto floatLeg = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[1].concreteLegData());
         name_ = floatLeg->name();
