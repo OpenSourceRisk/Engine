@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
     Date expiryDate(10, July, 2017);
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
     double T = 2.0;
-    double vol = 0.02; // No volatility
+    double vol = 0.02; 
     Date startDate(15, July, 2017);
     Settings::instance().evaluationDate() = settlementDate;
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -327,10 +327,10 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
 BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
     // This test again checks the results from the BlackMultilegOptionEngine against
     // a manual implementation of the Black76 formula as before. 
-    // This time, a very long maturity time is given. The engine can perform the
-    // correct calculation until 100 periods.
+    // This time, a very long maturity time is given. The engine performs the correct
+    // calculation for up to 100 periods.
     
-    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine against shifted Black76 formula ...");
+    BOOST_TEST_MESSAGE("Testing Black Multileg Option Engine in case of very long maturity ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
