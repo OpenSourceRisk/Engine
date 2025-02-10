@@ -130,13 +130,13 @@ XMLNode* BondData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
     if (!priceQuoteBaseValue_.empty())
         XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
+    XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     if (quotedDirtyPrices_ != std::nullopt) {
         if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean)
             XMLUtils::addChild(doc, bondNode, "PriceType", "Clean");
         else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty)
             XMLUtils::addChild(doc, bondNode, "PriceType", "Dirty");
     }
-    XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     if (!hasCreditRisk_)
