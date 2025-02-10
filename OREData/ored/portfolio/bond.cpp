@@ -419,6 +419,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.creditGroup = data.creditGroup();
     res.priceQuoteMethod = data.priceQuoteMethod();
     res.priceQuoteBaseValue = data.priceQuoteBaseValue();
+    res.quotedDirtyPrices = data.quotedDirtyPrices();
     return res;
 }
 

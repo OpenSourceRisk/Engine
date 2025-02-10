@@ -195,6 +195,7 @@ struct BondBuilder {
         std::string creditGroup;
         QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
         double priceQuoteBaseValue = 1.0;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
 
         double inflationFactor() const;
     };
