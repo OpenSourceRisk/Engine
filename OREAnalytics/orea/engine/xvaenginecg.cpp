@@ -801,7 +801,7 @@ void XvaEngineCG::calculateDynamicDelta() {
     */
 
     std::vector<bool> keepNodesDerivatives(g->size(), false);
-    for (auto const& [l, n, v] : model_->modelParameters()) {
+    for (auto const& [l, n, v] : baseModelParams_) {
         keepNodesDerivatives[n] = true;
     }
 
