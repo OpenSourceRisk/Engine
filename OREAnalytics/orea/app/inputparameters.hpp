@@ -26,6 +26,8 @@
 #include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/sacvasensitivityrecord.hpp>
+#include <orea/engine/cvasensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -36,7 +38,6 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
@@ -53,6 +54,7 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
@@ -235,6 +237,8 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreSensis(bool b) { storeSensis_ = b; }
+    void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
@@ -265,8 +269,8 @@ public:
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
-    // TODO: load from XML
-    // void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
@@ -377,7 +381,14 @@ public:
     void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
     void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
     void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
+    void setXvaSensiOutputPrecision(Size p) { xvaSensiOutputPrecision_ = p; }
 
+    // Setters for SA-CVA
+    // input file matches the required format for SA-CVA calcs, aggregated per CvaRiskFactorKey
+    void setSaCvaNetSensitivitiesFromFile(const std::string& fileName);
+    // input file is the CVA par sensitivity from ORE's XVA Sensitivity Analytic
+    void setCvaSensitivitiesFromFile(const std::string& fileName);
+  
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
     void setXvaExplainSimMarketParamsFromFile(const std::string& f);
@@ -387,7 +398,7 @@ public:
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-
+    void setCrif(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif) { crif_ = crif; }
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -649,6 +660,10 @@ public:
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeSensis() const { return storeSensis_; }
+    bool allowPartialScenarios() const { return allowPartialScenarios_; }
+    const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
+    const vector<Real>& vegaSensiGrid() const { return vegaSensiGrid_; } 
     Size storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() const { return storeSurvivalProbabilities_; }
     bool writeCube() const { return writeCube_; }
@@ -660,7 +675,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
-    // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
+    const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
@@ -850,6 +865,15 @@ public:
     bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
     bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
     Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+    QuantLib::Size xvaSensiOutputPrecision() const { return xvaSensiOutputPrecision_; }
+
+    /*************************************
+     * SA-CVA 
+     *************************************/
+    const SaCvaNetSensitivities& saCvaNetSensitivities() const { return saCvaNetSensitivities_; }
+    const vector<CvaSensitivityRecord>& cvaSensitivities() const { return cvaSensitivities_; }
+    bool useUnhedgedCvaSensis() const { return useUnhedgedCvaSensis_; }
+    const std::vector<std::string>& cvaPerfectHedges() const { return cvaPerfectHedges_; }
 
     /****************************
      * Getters for zero to par shift
@@ -1031,6 +1055,10 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeSensis_ = false;
+    bool allowPartialScenarios_ = false;
+    vector<Real> curveSensiGrid_;
+    vector<Real> vegaSensiGrid_;
     Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
@@ -1198,9 +1226,20 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
-    bool xvaSensiParSensi_ = false;
+    bool xvaSensiParSensi_ = true;
     bool xvaSensiOutputJacobi_ = false;
     QuantLib::Real xvaSensiThreshold_ = 1e-6;
+    QuantLib::Size xvaSensiOutputPrecision_ = 4;
+
+    /*****************
+     * SA-CVA 
+     *****************/
+    SaCvaNetSensitivities saCvaNetSensitivities_; 
+    vector<CvaSensitivityRecord> cvaSensitivities_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
+    bool useUnhedgedCvaSensis_ = true;
+    std::vector<std::string> cvaPerfectHedges_ = {"ForeignExchange|Delta", "ForeignExchange|Vega"};
+
     /*****************
      * XVA Explain analytic
      *****************/
