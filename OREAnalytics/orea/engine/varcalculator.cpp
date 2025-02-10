@@ -30,12 +30,15 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
 }
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
     report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
     for (Size i = 0; i < p_.size(); ++i)
         report->addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
+
+    createAdditionalReports(reports);
 
     createVarCalculator();
 }
@@ -44,7 +47,8 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
                                 const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                 const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for VAR report");
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
@@ -63,6 +67,8 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
         for (auto const& v : var)
             report->add(v);
     }
+
+    writeAdditionalReports(reports, riskGroup, tradeGroup);
 }
 
 } // namespace analytics

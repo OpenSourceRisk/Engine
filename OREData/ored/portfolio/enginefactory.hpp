@@ -277,7 +277,7 @@ public:
     void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
 
     //! Get a leg builder by leg type
-    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const string& legType);
+    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
 
     //! Add a set of default engine and leg builders
     void addDefaultBuilders();
@@ -300,7 +300,7 @@ private:
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
-    map<string, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
+    map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
 };
@@ -309,15 +309,15 @@ private:
 class RequiredFixings;
 class LegBuilder {
 public:
-    LegBuilder(const string& legType) : legType_(legType) {}
+    LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                          const bool useXbsCurves = false) const = 0;
-    const string& legType() const { return legType_; }
+    const LegType& legType() const { return legType_; }
 
 private:
-    const string legType_;
+    const LegType legType_;
 };
 
 } // namespace data
