@@ -6,6 +6,7 @@ analyticeuropeanenginedeltagamma.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
+blackmultilegoptionengine.cpp
 blackswaptionenginedeltagamma.cpp
 blacktriangulation.cpp
 blackvariancecurve.cpp
