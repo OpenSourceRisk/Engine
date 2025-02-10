@@ -376,23 +376,24 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         for (auto quote : quotes) {
             QuantLib::ext::shared_ptr<SpreadCdsHelper> tmp;
             try {
-                bool cdsDateRule = cdsConv->rule() == DateGeneration::CDS ||
-                                   cdsConv->rule() == DateGeneration::CDS2015 ||
-                                   cdsConv->rule() == DateGeneration::OldCDS;
-                if (cdsDateRule && cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Day) {
+                auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
+                     cdsConv->rule() == DateGeneration::OldCDS) &&
+                    maturity <= asof + 1 * Days) {
                     WLOG("DefaultCurve:: SKIP cds with term "
-                         << quote.term << " cds maturity ("
-                         << io::iso_date(cdsMaturity(asof, quote.term, cdsConv->rule())) << ") is before T ("
-                         << io::iso_date(asof) << "), the first CDS payment is the next IMM payment date after T+1");
+                         << quote.term << " because cds maturity (" << io::iso_date(maturity)
+                         << ") is <= T + 1 (T =" << io::iso_date(asof)
+                         << "), but by standard conventioons the first CDS payment is the next IMM payment"
+                            "date strictly after T + 1.");
                     continue;
                 };
-                tmp = QuantLib::ext::make_shared<SpreadCdsHelper>(
+                helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter());
-
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                runningSpread = config.runningSpread();
+                helperQuoteTerms[tmp->latestDate()] = quote.term;
             } catch (exception& e) {
-
                 if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
@@ -401,13 +402,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                                                           << " for asof date " << asof
                                                                           << ", with error: " << e.what());
                 }
-            }
-            if (tmp) {
-                if (tmp->latestDate() > asof) {
-                    helpers.push_back(tmp);
-                    runningSpread = config.runningSpread();
-                }
-                helperQuoteTerms[tmp->latestDate()] = quote.term;
             }
         }
     } else {
