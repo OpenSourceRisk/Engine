@@ -156,12 +156,13 @@ BOOST_AUTO_TEST_SUITE(LgmPricingCases)
 
 // The following two helper functions are used in that unit test suite only.
 // The implementation of those shall not be called from a library to 
-// ensure the independency of testing. 
+// ensure the independency of testing. Since they both come without 
+// discounting they are ready for swaption pricing.
 
 // Bachelier model for European Call option
 double bachelierCallPrice(double spot, double strike, double volatility, double timeToMaturity, double riskFreeRate) {
     double d1 = (spot - strike) / (volatility * std::sqrt(timeToMaturity));
-    double callPrice = std::exp(-riskFreeRate * timeToMaturity) * ((spot - strike) * 0.5 * erfc(-d1 / std::sqrt(2.0)) + 
+    double callPrice = ((spot - strike) * 0.5 * erfc(-d1 / std::sqrt(2.0)) + 
         volatility * std::sqrt(timeToMaturity) * std::exp(-0.5 * d1 * d1) / std::sqrt(2.0 * M_PI));
     return callPrice;
 }
@@ -169,7 +170,7 @@ double bachelierCallPrice(double spot, double strike, double volatility, double 
 // Bachelier model for European Put option
 double bachelierPutPrice(double spot, double strike, double volatility, double timeToMaturity, double riskFreeRate) {
     double d1 = (spot - strike) / (volatility * std::sqrt(timeToMaturity));
-    double putPrice = std::exp(-riskFreeRate * timeToMaturity) * ((strike - spot) * 0.5 * 
+    double putPrice = ((strike - spot) * 0.5 * 
         erfc(d1 / std::sqrt(2.0)) + volatility * std::sqrt(timeToMaturity) * std::exp(-0.5 * d1 * d1) / std::sqrt(2.0 * M_PI));
     return putPrice;
 }
@@ -326,7 +327,6 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
-    //double Annuity=2.8827; // TODO derive numerical value
     double Annuity=0.0;
 
     for (int i=4;i<10;++i)
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
         if (std::fabs(npv - limitValue) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, limitValue, 4.0); // Tolerance of 4%
+            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptionss ...");
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
         if (std::fabs(npv - limitValue) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, limitValue, 4.0); // Tolerance of 4%
+            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
