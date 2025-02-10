@@ -269,7 +269,9 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+            LegData legData = bondData_.coupons()[i];
+            legData.setPaymentLag(bondData_.paymentLag());
+            leg = legBuilder->buildLeg(legData, engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
