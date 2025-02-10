@@ -181,8 +181,7 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
         const std::vector<Date>& stickyCloseOutDates)>>
         amcEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid,
-        const std::vector<Date>& stickyCloseOutDates)>>
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid)>>
         amcCgEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
@@ -197,8 +196,7 @@ public:
                         const bool allowOverwrite = false);
     void addAmcCgEngineBuilder(
         const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-            const std::vector<Date>& stickyCloseOutDates)>& builder,
+            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& builder,
         const bool allowOverwrite = false);
     void addLegBuilder(const std::function<QuantLib::ext::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
@@ -209,7 +207,7 @@ public:
                               const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
     generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
+                                const std::vector<Date>& simDates) const;
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 
@@ -279,7 +277,7 @@ public:
     void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
 
     //! Get a leg builder by leg type
-    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const string& legType);
+    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
 
     //! Add a set of default engine and leg builders
     void addDefaultBuilders();
@@ -302,7 +300,7 @@ private:
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
-    map<string, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
+    map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
 };
@@ -311,15 +309,15 @@ private:
 class RequiredFixings;
 class LegBuilder {
 public:
-    LegBuilder(const string& legType) : legType_(legType) {}
+    LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                          const bool useXbsCurves = false) const = 0;
-    const string& legType() const { return legType_; }
+    const LegType& legType() const { return legType_; }
 
 private:
-    const string legType_;
+    const LegType legType_;
 };
 
 } // namespace data

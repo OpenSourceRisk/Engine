@@ -72,7 +72,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                          const std::vector<Real>& creditMigrationDistributionGrid,
                          const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
                          bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
-                         const bool firstMporCollateralAdjustment)
+                         const bool firstMporCollateralAdjustment,
+                         bool continueOnError)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
       market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
       analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
@@ -87,7 +88,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment), continueOnError_(continueOnError) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
 
@@ -182,7 +183,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             portfolio, cube_, cubeInterpretation_,
             market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
             quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
-	    analytics_["exposureProfilesUseCloseOutValues"]
+            analytics_["exposureProfilesUseCloseOutValues"], continueOnError_
         );
     exposureCalculator_->build();
 

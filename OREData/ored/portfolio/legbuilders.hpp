@@ -33,7 +33,7 @@ namespace data {
 
 class FixedLegBuilder : public LegBuilder {
 public:
-    FixedLegBuilder() : LegBuilder("Fixed") {}
+    FixedLegBuilder() : LegBuilder(LegType::Fixed) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -42,7 +42,7 @@ public:
 
 class ZeroCouponFixedLegBuilder : public LegBuilder {
 public:
-    ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
+    ZeroCouponFixedLegBuilder() : LegBuilder(LegType::ZeroCouponFixed) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -51,7 +51,7 @@ public:
 
 class FloatingLegBuilder : public LegBuilder {
 public:
-    FloatingLegBuilder() : LegBuilder("Floating") {}
+    FloatingLegBuilder() : LegBuilder(LegType::Floating) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -60,7 +60,7 @@ public:
 
 class CashflowLegBuilder : public LegBuilder {
 public:
-    CashflowLegBuilder() : LegBuilder("Cashflow") {}
+    CashflowLegBuilder() : LegBuilder(LegType::Cashflow) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -69,7 +69,7 @@ public:
 
 class CPILegBuilder : public LegBuilder {
 public:
-    CPILegBuilder() : LegBuilder("CPI") {}
+    CPILegBuilder() : LegBuilder(LegType::CPI) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -78,7 +78,7 @@ public:
 
 class YYLegBuilder : public LegBuilder {
 public:
-    YYLegBuilder() : LegBuilder("YY") {}
+    YYLegBuilder() : LegBuilder(LegType::YY) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -87,7 +87,7 @@ public:
 
 class CMSLegBuilder : public LegBuilder {
 public:
-    CMSLegBuilder() : LegBuilder("CMS") {}
+    CMSLegBuilder() : LegBuilder(LegType::CMS) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -96,7 +96,7 @@ public:
 
 class CMBLegBuilder : public LegBuilder {
 public:
-    CMBLegBuilder() : LegBuilder("CMB") {}
+    CMBLegBuilder() : LegBuilder(LegType::CMB) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -105,7 +105,7 @@ public:
 
 class DigitalCMSLegBuilder : public LegBuilder {
 public:
-    DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
+    DigitalCMSLegBuilder() : LegBuilder(LegType::DigitalCMS) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -114,7 +114,7 @@ public:
 
 class CMSSpreadLegBuilder : public LegBuilder {
 public:
-    CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
+    CMSSpreadLegBuilder() : LegBuilder(LegType::CMSSpread) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -123,7 +123,7 @@ public:
 
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
 public:
-    DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
+    DigitalCMSSpreadLegBuilder() : LegBuilder(LegType::DigitalCMSSpread) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
@@ -132,7 +132,7 @@ public:
 
 class EquityLegBuilder : public LegBuilder {
 public:
-    EquityLegBuilder() : LegBuilder("Equity") {}
+    EquityLegBuilder() : LegBuilder(LegType::Equity) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),

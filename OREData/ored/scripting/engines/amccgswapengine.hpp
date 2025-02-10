@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file mclgmswapengine.hpp
+/*! \file amccgswapengine.hpp
     \brief MC LGM swap engines
     \ingroup engines
 */
@@ -34,17 +34,14 @@ class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments
                         public AmcCgBaseEngine {
 public:
     AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-                    const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false)
-        : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
-                          reevaluateExerciseInStickyRun),
-          ccy_(ccy) {
+                    const std::vector<Date>& simulationDates)
+        : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
+          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
         registerWith(modelCg);
     }
 
-    void buildComputationGraph() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const override;
 
 private:

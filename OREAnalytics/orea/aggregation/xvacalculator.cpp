@@ -358,8 +358,11 @@ void ValueAdjustmentCalculator::build() {
             nettingSetSumCva_[nid] += tradeCva_[tid];
             nettingSetSumDva_[nid] += tradeDva_[tid];
         } catch (const std::exception& e) {
+            map<string, string> subfields;
+            subfields.insert({"tradeId", tid});
+            subfields.insert({"tradeType", trade->tradeType()});
             StructuredAnalyticsErrorMessage("ValueAdjustmentCalculator", "Error processing trade.", e.what(),
-                                            {{"tradeId", tid}})
+                                            subfields)
                 .log();
         }
     }

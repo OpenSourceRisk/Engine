@@ -1,0 +1,97 @@
+\subsubsection{Generic Barrier Option}
+\label{pricing:generic_barrieroption}
+Generic Barrier Options are priced using a finite-difference solver in a Black-Scholes model. The final payoff $V(T,S(T))$
+at the option expiry $T$ dependent on the underlying value $S(T)$ is easily generated, including an additional
+transatlantic barrier condition. We use the notation as in table \ref{tab:generic_barrier_pricing_notation}
+
+\begin{table}[h]
+  \begin{tabular}{p{3cm}|p{11cm}}
+    Variable & Meaning \\ \hline
+    $V_{V}(t,S)$ & Value of the option conditional on $(t,S)$, this excludes rebate payments and assumes barrier monitoring from $t$ on\\ \hline
+    $V_{NA}(t,S)$ & Value of the final payoff at $t$ conditional on no knock events happening for times $s$ with $s \geq t$ \\ \hline
+    $V_{KI}(t,S)$ & Value of the final payoff at $t$ conditional on a KI event but no KO event happening for a time $s$ with $s \geq t$ \\ \hline
+    $V_{KO}(t,S)$ & Value of the final payoff at $t$ conditional on a KO event but no KI event happening for a time $s$ with $s \geq t$ \\ \hline
+    $V_{KIKO}(t,S)$ & Value of the final payoff at $t$ conditional on a KI event at time $u$ and a KO event at $v$ with $t\leq u<v$) \\ \hline
+    $V_{KOKI}(t,S)$ & Value of the final payoff at $t$ conditional on a KO event at time $u$ and a KI event at $v$ with $t\leq u<v$) \\ \hline
+  \end{tabular}
+  \caption{Values in FD backward solver}
+  \label{tab:generic_barrier_pricing_notation}
+\end{table}
+
+The idea is that we track future Knock events. For a series of future knock events we collapse neighboring events of the
+same type ``in'' and ``out'' into a single event (because only the first is relevant). Also we only look two events into
+the future, since this is sufficient for the update rules below. Notice that for this purpose we ignore whether the
+events as allowed in this order according to the term sheet, i.e. we track a sequence of KI then KO events in $V_{KIKO}$
+even if KoBeforeKi is defined, i.e. the KO event is excluded by the termsheet in this case. Also notice, that $V_{x}$
+for $x \in \{ NA, KI, KO, KIKO, KOKI \}$ is the value of the final payoff, i.e. without considering KI or KO events in
+the value itself. This is different for $V_{V}$, where we account for exluded barrier events and include the barrier
+events in the value.
+
+At expiry we set $V_{V} = V$ if no KI barrier is defined and $V_{V} = 0$ if a KI barrier is defined. Furthermore we set
+$V_{NA} = V$ and $V_x = 0$ for $x \in \{ KI, KO, KIKO, KOKI \}$. The rollback from $t_{i+1}$ to $t_i$ works as follows:
+
+If there is no KI or KO event at $t_i$, all values are rolled back without any update.
+
+If there is a KI event at $t_i$, we apply the following updates after the roll back:
+
+\begin{itemize}
+\item $V_{KIKO} := V_{KO} + V_{KIKO} + V_{KOKI}$
+\item $V_{KOKI} := 0$
+\item $V_{KI} := V_{NA} + V_{KI}$
+\item $V_{KO} := 0$
+\item $V_{NA} := 0$
+\item $V_{V} := V_{KI}$, add $V_{KIKO}$ if KoBeforeKi
+\end{itemize}
+
+If there is a KO event at $t_i$, we apply the following updates after the roll back:
+
+\begin{itemize}
+\item $V_{KOKI} := V_{KI} + V_{KOKI} + V_{KIKO}$
+\item $V_{KIKO} := 0$
+\item $V_{KO} := V_{NA} + V_{KO}$
+\item $V_{KI} := 0$
+\item $V_{NA} := 0$
+\item $V_{V} := 0$ if KoAlways or KoBeforeKi
+\end{itemize}
+
+If the trade is seasoned we continue the rollback into the past to account for past KI and KO events properly. This
+rollback does not involve the computation of conditional expectations though, we only update the values according to the
+rules above.
+
+Rebates are handled as follows:
+
+The Transatlantic Barrier Rebate is incorporated into the final option payoff, i.e. for
+the nodes where the Transatlantic Barrier deactivates the option, a payoff amount equal to the rebate amount is
+generated.
+
+If only KO-Barriers are present, the rebate NPV is computed in the PDE by setting $V_{V}$ to the rebate amount (instead
+of $0$) on nodes where a KO event is detected. The payment timing is accounted for by appropriate discounting of that
+amount.
+
+If at least one KI-Barrier barrier is present, only a unique rebate amount is allowed which is always paid on the option
+settlement date. We can roll back this amount as $R_x$ in complete analogy to the $V_x$ for $x \in \{ NA, KI, KO, KIKO,
+KOKI \}$. The variables $R_x$ are initialised in the same way as $V_x$, but with the final option payoff replaced with
+the rebate payment $R$. The rebate NPV is then computed as the discounted value of $R$ at $t=0$ minus $R_V$ (because
+$R_V$ represents an option that pays $R$ at maturity if the original barrier option is active).
+
+When evaluated via Monte-Carlo simulation, the exercise probability and the trigger probability are 
+given as additional results. Additional to this, the knock-out probability of the transatlantic feature is given as well if relevant. 
+Therein, there are the following definitions active:
+
+\begin{table}[h]
+  \begin{tabular}{p{4.5cm}|p{8cm}}
+      Additional Result&Description\\ 
+      \hline
+      ExerciseProbability&The estimated probability of the exercise event. The latter means that the payoff 
+      is non-zero at maturity (i.e. the plain vanilla part of the payoff is positive and no knock-out event 
+      has accured and necessary knock-in events have occured until then).\\ \hline
+      TriggerProbability&The estimated probability of the exercise event. The latter means that the knock-in 
+      or the knock-out event (or one of them if there are multiple ones) has been triggered.\\ \hline      
+      TransatlanticTriggered&The estimated probability of the transatlantic trigger event. The latter means 
+      that the transatlantic knock-out event (or at least one of them if there are multiple ones) has been triggerd.\\ \hline
+  \end{tabular}
+  \caption{Additional results output labels for the Generic Barrier Option}
+  \label{tab:AdditionalResultsGenericBarrier}
+\end{table}
+
+

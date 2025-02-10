@@ -512,7 +512,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     ProgressMessage(msg, 0, 1).log();
 
     std::vector<Date> simDates, stickyCloseOutDates;
-    if (analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
+    if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag() &&
+        analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
         simDates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
         stickyCloseOutDates = analytic()->configurations().scenarioGeneratorData->getGrid()->closeOutDates();
     } else {
@@ -773,7 +774,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
         inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(),
         analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), inputs_->mporCashFlowMode(),
-        firstMporCollateralAdjustment);
+        firstMporCollateralAdjustment, inputs_->continueOnError());
     LOG("post done");
 }
 
@@ -1009,8 +1010,12 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                     ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
                     analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
                 } catch (const std::exception& e) {
+                    QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess_->portfolio()->trades().find(tradeId)->second;
+                    map<string, string> subfields;
+                    subfields.insert({"tradeId", tradeId});
+                    subfields.insert({"tradeType", failedTrade->tradeType()});
                     StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
-                                                    {{"tradeId", tradeId}})
+                                                    subfields)
                         .log();
                 }
             }

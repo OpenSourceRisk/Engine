@@ -1,5 +1,8 @@
 \subsubsection{Knock Out Swap}
 
+A Knock Out Swap refers to a vanilla fixed vs. float Interest Rate Swap that terminates when the float index fixing is above
+(``up and out'') or below (``down and out'') a given barrier level.
+
 A Knock Out Swap is represented using the TradeType \emph{KnockOutSwap} and a KnockOutSwapData block as shown in listing
 \ref{lst:knock_out_swap}. It must have one \lstinline!BarrierData! node, and two legs, one fixed and one floating, each represented by a \lstinline!LegData! trade component. 
 

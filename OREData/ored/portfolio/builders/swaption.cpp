@@ -18,6 +18,7 @@
 
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -347,6 +348,17 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },
                          model->lgm(0), yts, externalModelIndices, simulationDates_, stickyCloseOutDates_);
 } // LgmCam engineImpl
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                       const std::string& discountCurve, const std::string& securitySpread) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    QuantLib::ext::shared_ptr<IborIndex> index;
+    std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(std::vector<std::string>{ccy}, modelCg_,
+                                                                 simulationDates_);
+}
 
 } // namespace data
 } // namespace ore

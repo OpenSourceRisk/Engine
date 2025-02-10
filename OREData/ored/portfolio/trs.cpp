@@ -621,8 +621,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     for (Size i = 0; i < fundingData_.legData().size(); ++i) {
 
         auto& ld = fundingData_.legData()[i];
-        QL_REQUIRE(ld.legType() == "Fixed" || ld.legType() == "Floating" || ld.legType() == "CMS" ||
-                       ld.legType() == "CMB",
+        QL_REQUIRE(ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating ||
+                       ld.legType() == LegType::CMS || ld.legType() == LegType::CMB,
                    "TRS::build(): funding leg type: only fixed, floating, CMS, CMB are supported");
         TRS::FundingData::NotionalType notionalType =
             fundingData_.notionalType().empty() ? (ld.notionals().empty() ? TRS::FundingData::NotionalType::PeriodReset
@@ -658,7 +658,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         fundingNotionalTypes.push_back(notionalType);
 
         // update credit risk currency and credit qualifier mapping for CMB leg
-        if (ld.legType() == "CMB") {
+        if (ld.legType() == LegType::CMB) {
             auto cmbData = QuantLib::ext::dynamic_pointer_cast<ore::data::CMBLegData>(ld.concreteLegData());
             QL_REQUIRE(cmbData, "TRS::build(): internal error, could to cast to CMBLegData.");
             if(creditRiskCurrency_.empty())
@@ -744,7 +744,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     bool additionalCashflowLegPayer = false;
     std::string additionalCashflowLegCurrency = fundingCurrency;
     if (additionalCashflowData_.legData().concreteLegData()) {
-        QL_REQUIRE(additionalCashflowData_.legData().legType() == "Cashflow",
+        QL_REQUIRE(additionalCashflowData_.legData().legType() == LegType::Cashflow,
                    "TRS::build(): additional cashflow data leg must have type 'Cashflow'");
         additionalCashflowLeg = engineFactory->legBuilder(additionalCashflowData_.legData().legType())
                                     ->buildLeg(additionalCashflowData_.legData(), engineFactory, requiredFixings_,

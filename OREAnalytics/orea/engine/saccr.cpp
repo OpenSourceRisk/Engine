@@ -74,6 +74,7 @@ using std::set;
 using std::string;
 using std::vector;
 using QuantLib::Null;
+using ore::data::LegType;
 
 namespace {
 bool isCrossCurrencySwap(const QuantLib::ext::shared_ptr<ore::data::Trade> trade) {
@@ -110,7 +111,7 @@ bool isBasisSwap(const QuantLib::ext::shared_ptr<ore::data::Trade> trade) {
     }
 
     for (const auto& l : legData) {
-        if (l.legType() == "Floating")
+        if (l.legType() == LegType::Floating)
             floatingLegCount += 1;
     }
 
@@ -155,7 +156,7 @@ Real getOptionStrike(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade, c
         // Otherwise fallback to rate provided in the fixed leg
         } else {
             for (const auto& l : swaption->legData()) {
-                if (l.legType() == "Fixed") {
+                if (l.legType() == LegType::Fixed) {
                     auto fixedLeg = QuantLib::ext::dynamic_pointer_cast<ore::data::FixedLegData>(l.concreteLegData());
                     if (fixedLeg && fixedLeg->rates().size() == 1)
                         return fixedLeg->rates()[0];
@@ -656,7 +657,7 @@ Real SACCR::getDelta(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& t
             }
         } else if (tradeData.assetClass == SACCR::AssetClass::IR) {
             for (const auto& leg : swap->legData()) {
-                if (leg.legType() == "Floating") {
+                if (leg.legType() == LegType::Floating) {
                     multiplier = leg.isPayer() ? -1 : 1;
                     break;
                 }
@@ -757,15 +758,15 @@ Real SACCR::getDelta(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& t
         QL_REQUIRE(swap->legData().size() == 2, "two legs expected.");
 
         // if both legs are floating then this is a basis swap
-        if (swap->legData().at(0).legType() == "CommodityFloating" &&
-            swap->legData().at(1).legType() == "CommodityFloating") {
+        if (swap->legData().at(0).legType() == LegType::CommodityFloating &&
+            swap->legData().at(1).legType() == LegType::CommodityFloating) {
             QuantLib::ext::shared_ptr<CommodityFloatingLegData> com =
                 (QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(swap->legData().at(0).concreteLegData()));
             auto legData = com->name() == firstRiskfactor ? swap->legData().at(0) : swap->legData().at(1);
             multiplier = legData.isPayer() ? -1 : 1;
         } else {
             auto legData =
-                swap->legData().at(0).legType() == "CommodityFloating" ? swap->legData().at(0) : swap->legData().at(1);
+                swap->legData().at(0).legType() == LegType::CommodityFloating ? swap->legData().at(0) : swap->legData().at(1);
             multiplier = legData.isPayer() ? -1 : 1;
         }
 
@@ -1013,7 +1014,7 @@ Real SACCR::getCurrentNotional(const QuantLib::ext::shared_ptr<Trade>& trade, SA
             QL_REQUIRE(!isBasis || tokens.size() == 2, "Expected 2 tokens for firstRiskFactor. Got " << tokens.size());
 
             for (Size i = 0; i < commoditySwap->legCurrencies().size(); i++) {
-                if (commoditySwap->legData().at(i).legType() != "CommodityFloating")
+                if (commoditySwap->legData().at(i).legType() != LegType::CommodityFloating)
                     continue;
 
                 auto floatingLeg = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(

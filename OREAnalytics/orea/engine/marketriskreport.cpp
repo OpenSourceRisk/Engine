@@ -54,7 +54,8 @@ bool MarketRiskGroup::allLevel() const {
 map<MarketRiskConfiguration::RiskClass, Size> MarketRiskGroupContainer::CompRisk::rcOrder = {
     {MarketRiskConfiguration::RiskClass::All, 0},       {MarketRiskConfiguration::RiskClass::InterestRate, 1},
     {MarketRiskConfiguration::RiskClass::Inflation, 2}, {MarketRiskConfiguration::RiskClass::Credit, 3},
-    {MarketRiskConfiguration::RiskClass::Equity, 4},    {MarketRiskConfiguration::RiskClass::FX, 5}};
+    {MarketRiskConfiguration::RiskClass::Equity, 4},    {MarketRiskConfiguration::RiskClass::FX, 5},
+    {MarketRiskConfiguration::RiskClass::Commodity, 6}};
 
 map<MarketRiskConfiguration::RiskType, Size> MarketRiskGroupContainer::CompRisk::rtOrder = {
     {MarketRiskConfiguration::RiskType::All, 0},

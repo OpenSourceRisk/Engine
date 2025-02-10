@@ -32,7 +32,7 @@ namespace data {
 
 class EquityMarginLegBuilder : public ore::data::LegBuilder {
 public:
-    EquityMarginLegBuilder() : LegBuilder("EquityMargin") {}
+    EquityMarginLegBuilder() : LegBuilder(LegType::EquityMargin) {}
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            ore::data::RequiredFixings& requiredFixings, const std::string& configuration,

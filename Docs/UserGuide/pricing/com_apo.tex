@@ -1,0 +1,132 @@
+\subsubsection{Commodity Average Price Option - Future Settlement Prices}
+\label{pricing:com_apo_future_settlement_prices}
+
+This section describes the pricing of a Commodity Average Price Option (APO) that references future settlement prices. In particular, we consider the case where on each pricing date in the calculation period of the APO, the settlement price of the prompt future contract is observed. The calculations can be easily generalised to a non-prompt future contract.
+
+We assume that there are $N$ future contracts and that their price processes are as outlined in Section \ref{pricing:com_swaption_future_settlement_prices}. The APO has a single calculation period containing $n$ pricing dates $t_0 < t_1 < \ldots < t_n$. On each pricing date, the settlement price of the prompt future contract is observed. As in Section \ref{pricing:com_swaption_future_settlement_prices}, to associate a pricing date $t_i$, $i = 1, \ldots, n$ with its prompt future contract we define the function $T:[0, +\infty) \to \{ 0, 1, \ldots, N \}$. This function takes a pricing date and returns the index of the future contract whose settlement price is to be observed. We now define the average price associated with the calculation period as
+\begin{equation}
+\label{eq:comm_apo_future_A}
+A = \frac{1}{n} \sum_{i=1}^{n} F_{T(t_{i})}(t_{i})
+\end{equation}
+The payoff on payment date $\tau \geq t_n$ for a long commodity APO with quantity $N$ and strike $K$ is then given by
+\begin{equation}
+\left[ \omega \left( A - K \right) \right]^{+} N
+\end{equation}
+where $\omega$ is $1$ for a call and $-1$ for a put. Now, the value of the APO, $V(0)$, at time zero is given by
+\begin{equation}
+\label{eq:value_apo_future_t0}
+V(0) = P(0, \tau) \Ex{ \left[ \omega \left( A - K \right) \right]^{+} N }
+\end{equation}
+Monte Carlo simulation is one option for calculating the value for the expectation in \eqref{eq:value_apo_future_t0}. In particular, we can take the future price option surface if one exists, read off the volatility of the relevant future price processes and simulate the future price processes as defined in \eqref{eq:comm_future_price_processes}.
+
+Section 2.7.4.2 of \cite{Clark_2014}, presents a closed form analytical approximation for the expectation in \eqref{eq:value_apo_future_t0}. The quantity $A$ in \eqref{eq:comm_apo_future_A} is approximated with a lognormal random variable by matching the first and second moments. Let $X \sim LN(\mu_X, \sigma^2_X t_n)$ where we impose the conditions
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\Ex{A} &= \Ex{X} = \exp \left\{ \mu_X + \frac{1}{2} \sigma^2_X t_n \right\} \\
+\Var{A} &= \Var{X} = \left[ e^{\sigma^2_X t_n} - 1 \right] \Ex{X}^2
+\end{align}
+\endgroup
+which yields
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\sigma_X &= \sqrt{ \frac{1}{t_n} \ln \frac{\Ex{A^2}}{\Ex{A}^2} } \label{eq:apo_future_sigma_x} \\
+\mu_X &= \ln \Ex{A} - \frac{1}{2} \sigma^2_X t_n \label{eq:apo_future_mu_x}
+\end{align}
+\endgroup
+With this definition of $X$, we can now write the approximate value, $\tilde{V}(0)$, of the APO at time zero as
+\begin{equation}
+\tilde{V}(0) = P(0, \tau) N \Ex{ \left[ \omega \left( X - K \right) \right]^{+} }
+\end{equation}
+This is the familiar expectation that appears in the Black-76 model as outlined in Section \ref{models:black}. In particular, using the $\text{Black}$ function defined in Section \ref{models:black}, we have
+\begin{equation}
+\tilde{V}(0) = P(0, \tau) N \, \text{Black} \left( K, \Ex{A}, \sigma_X \sqrt{t_n}, \omega \right)
+\end{equation}
+
+All that remains is to write down the explicit value for $\Ex{A}$ and $\Ex{A^2}$ appearing in \eqref{eq:apo_future_sigma_x} and \eqref{eq:apo_future_mu_x}. It is clear that
+\begin{equation}
+\Ex{A} = \frac{1}{n} \sum_{i=1}^{n} F_{T(t_{i})}(0)
+\end{equation}
+For $\Ex{A^2}$, we have
+\begin{equation}
+\begin{split}
+\Ex{A^2} &= \Ex{ \left( \frac{1}{n} \sum_{i=1}^{n} F_{T(t_{i})}(t_{i}) \right) \left( \frac{1}{n} \sum_{j=1}^{n} F_{T(t_{j})}(t_{j}) \right) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} \Ex{ F_{T(t_{i})}(t_{i}) F_{T(t_{j})}(t_{j}) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} F_{T(t_{i})}(0) F_{T(t_{j})}(0) \exp \left\{ \rho_{T(t_i), T(t_j)} \sigma_{T(t_i)} \sigma_{T(t_j)} t_{\min(i,j)} \right\}
+\end{split}
+\end{equation}
+
+\subsubsection{Commodity Average Price Option - Spot Prices}
+\label{pricing:com_apo_spot_prices}
+This section describes the pricing of a Commodity Average Price Option (APO) that references commodity spot prices. In particular, we consider the case where on each pricing date in the calculation period of the APO, the commodity spot price is observed.
+
+We assume that the commodity spot price process is as outlined in Section \ref{pricing:com_swaption_spot_prices} and in particular \eqref{eq:comm_spot_price_process}. The APO has a single calculation period containing $n$ pricing dates $t_0 < t_1 < \ldots < t_n$. On each pricing date, the commodity spot price is observed. We now define the average price associated with the calculation period as
+\begin{equation}
+\label{eq:comm_apo_spot_A}
+A = \frac{1}{n} \sum_{i=1}^{n} S(t_{i})
+\end{equation}
+The payoff on payment date $\tau \geq t_n$ for a long commodity APO with quantity $N$ and strike $K$ is then given by
+\begin{equation}
+\left[ \omega \left( A - K \right) \right]^{+} N
+\end{equation}
+where $\omega$ is $1$ for a call and $-1$ for a put. Now, the value of the APO, $V(0)$, at time zero is given by
+\begin{equation}
+\label{eq:value_apo_spot_t0}
+V(0) = P(0, \tau) \Ex{ \left[ \omega \left( A - K \right) \right]^{+} N }
+\end{equation}
+Monte Carlo simulation is one option for calculating the value for the expectation in \eqref{eq:value_apo_spot_t0}. In particular, one needs to simulate the spot price process $S(t)$.
+
+Section 2.7.4.1 of \cite{Clark_2014}, presents a closed form analytical approximation for the expectation in \eqref{eq:value_apo_spot_t0}. The quantity $A$ in \eqref{eq:comm_apo_spot_A} is approximated with a lognormal random variable by matching the first and second moments. Let $X \sim LN(\mu_X, \sigma^2_X t_n)$ where we impose the conditions
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\Ex{A} &= \Ex{X} = \exp \left\{ \mu_X + \frac{1}{2} \sigma^2_X t_n \right\} \\
+\Var{A} &= \Var{X} = \left[ e^{\sigma^2_X t_n} - 1 \right] \Ex{X}^2
+\end{align}
+\endgroup
+which yields
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\sigma_X &= \sqrt{ \frac{1}{t_n} \ln \frac{\Ex{A^2}}{\Ex{A}^2} } \label{eq:apo_spot_sigma_x} \\
+\mu_X &= \ln \Ex{A} - \frac{1}{2} \sigma^2_X t_n \label{eq:apo_spot_mu_x}
+\end{align}
+\endgroup
+With this definition of $X$, we can now write the approximate value, $\tilde{V}(0)$, of the APO at time zero as
+\begin{equation}
+\tilde{V}(0) = P(0, \tau) N \Ex{ \left[ \omega \left( X - K \right) \right]^{+} }
+\end{equation}
+This is the familiar expectation that appears in the Black-76 model as outlined in Section \ref{models:black}. In particular, using the $\text{Black}$ function defined in Section \ref{models:black}, we have
+\begin{equation}
+\tilde{V}(0) = P(0, \tau) N \, \text{Black} \left( K, \Ex{A}, \sigma_X \sqrt{t_n}, \omega \right)
+\end{equation}
+
+All that remains is to write down the explicit value for $\Ex{A}$ and $\Ex{A^2}$ appearing in \eqref{eq:apo_spot_sigma_x} and \eqref{eq:apo_spot_mu_x}. It is clear that
+\begin{equation}
+\Ex{A} = \frac{1}{n} \sum_{i=1}^{n} F(0, t_i)
+\end{equation}
+where $F(t, T)$ is as defined in \eqref{eq:spot_forward_rate}. For $\Ex{A^2}$, using \eqref{eq:comm_spot_exp_product} we have
+\begin{equation}
+\begin{split}
+\Ex{A^2} &= \Ex{ \left( \frac{1}{n} \sum_{i=1}^{n} S(t_{i}) \right) \left( \frac{1}{n} \sum_{j=1}^{n} S(t_{j}) \right) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} \Ex{ S(t_{i}) S(t_{j}) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} F(0, t_i) F(0, t_j) \exp \left\{ \int_{0}^{t_{\min(i,j)}} \sigma^2_S(u) du \right\}
+\end{split}
+\end{equation}
+
+\underline{FX adjustment}
+
+Similarly to \ref{pricing:com_swaption_future_settlement_prices}, if the underlying references a commodity quoted in a currency different from the option currency, we need to make adjustmentds for the FX rate. This gives us:
+
+\begin{equation}
+\Ex{A} = \frac{1}{n} \sum_{i=1}^{n} F(0, t_i) Z(0, t_i)
+\end{equation}
+where $F(t, T)$ is as defined in \eqref{eq:spot_forward_rate}. For $\Ex{A^2}$, using \eqref{eq:comm_spot_exp_product} we have
+\begin{equation}
+\begin{split}
+\Ex{A^2} &= \Ex{ \left( \frac{1}{n} \sum_{i=1}^{n} S(t_{i}) Z(t_i) \right) \left( \frac{1}{n} \sum_{j=1}^{n} S(t_{j}) Z(t_j) \right) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} \Ex{ S(t_{i}) Z(t_i) S(t_{j}) Z(t_j) } \\
+         &= \frac{1}{n^2} \sum_{i,j=1}^{n} F(0, t_i) Z(0, t_i) F(0, t_j) Z(0, t_j) \exp \left\{ \int_{0}^{t_{\min(i,j)}} \sigma^2_S(u) du \right\}
+\end{split}
+\end{equation}

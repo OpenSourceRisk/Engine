@@ -1,0 +1,23 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection{Single Currency Basis Swap}
+\label{pricing:ir_bs}
+
+The Single Currency Basis Swap exchanges legs (A and B) of variable payments with generally different 
+index tenors and payment frequencies, so that we can write the present value as
+\begin{align*}
+\NPV &= \NPV_{A} - \NPV_{B} \\
+\NPV_{A} &= \sum_{i=1}^{n^{A}} N^{A}_i\,(f^A_i + s^A_i)\,\delta^{A}_i\,P(t^{A}_i)\\
+\NPV_{B} &= \sum_{i=1}^{n^{B}} N^{B}_i\,(f^B_i + s^B_i)\,\delta^{B}_i\,P(t^{B}_i)
+\end{align*}
+where 
+\begin{itemize}
+\item $f^A_i$: the forward projected rate for period $i$ from $t^{A}_{i-1}$ to $t^{A}_i$ for 
+IBOR index A and tenor A - this will be a fixing instead of a forward rate for the 
+current period
+\item $f^B_i$: the forward projected rate for period $i$ from $t^{B}_{i-1}$ to $t^{B}_i$ for 
+IBOR index B and tenor B - this will be a fixing instead of a forward rate for the 
+current period
+\item $s^{A,B}_i$: spread for floating leg A's resp. B's period $i$
+\item $\delta^{A,B}_i$: the daycount fraction in years for leg A's resp. B's period $i$ from $t^{A,B}_{i-1}$ to $t^{A,B}_i$
+\end{itemize}
+

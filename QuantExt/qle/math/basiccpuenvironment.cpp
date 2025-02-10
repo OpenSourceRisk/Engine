@@ -364,9 +364,10 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
                 args[j] = &values_[p.args(i)[j] - numberOfVariates_[currentId_ - 1]];
         }
         if (p.resultId(i) < numberOfInputVars_[currentId_ - 1])
-            values_[p.resultId(i)] = ops[p.op(i)](args);
+            values_[p.resultId(i)] = ops[p.op(i)](args, p.resultId(i));
         else if (p.resultId(i) >= numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1])
-            values_[p.resultId(i) - numberOfVariates_[currentId_ - 1]] = ops[p.op(i)](args);
+            values_[p.resultId(i) - numberOfVariates_[currentId_ - 1]] =
+                ops[p.op(i)](args, p.resultId(i) - numberOfVariates_[currentId_ - 1]);
         else {
             QL_FAIL("BasiCpuContext::finalizeCalculation(): internal error, result id "
                     << p.resultId(i) << " does not fall into values array.");

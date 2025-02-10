@@ -1,5 +1,23 @@
 \subsubsection{Credit Default Swap / Quanto Credit Default Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A CDS is a credit derivative between two counterparties. The buyer of a CDS makes 
+premium payments to the CDS seller. In return, the seller agrees that in the event 
+that an underlying reference entity defaults or experiences a credit event, seller 
+will compensate the buyer, in relation to a financial instrument issued by the 
+reference entity.
+
+\begin{itemize}
+\item Reference entity is typically a corporation, government that has issued loans or bonds, and is not party to the CDS contract. 
+\item Single name as well as Indices are supported as reference entities.
+\end{itemize}
+
+In a fixed recovery CDS, the recovery rate that is used when determining the payment 
+on the occurence of a credit event is specified up front in the contract.
+
+{\bf Input}}\fi
+
 A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The \lstinline!CreditDefaultSwapData! block must include either a \lstinline!CreditCurveId! element or a \lstinline!ReferenceInformation! node. 
 
 The {\tt LegData} sub-node must be a fixed leg, and  represents the recurring premium payments. The direction of the fixed leg payments define if the CDS is for bought (\lstinline!Payer!: \emph{true}) or sold (\lstinline!Payer!: \emph{false}) protection.

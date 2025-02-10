@@ -48,6 +48,7 @@
 #include <ql/models/model.hpp>
 
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -140,7 +141,7 @@ public:
     /*! return index for credit (0 = first credit name) */
     Size crName(const std::string& name) const;
 
-    /*! return index for commodity (0 = first equity) */
+    /*! return index for commodity (0 = first comm name) */
     Size comIndex(const std::string& comName) const;
 
     /*! observer and linked calibrated model interface */

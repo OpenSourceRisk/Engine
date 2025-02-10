@@ -1,5 +1,13 @@
 \subsubsection{Window Barrier Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+Window Barrier Options pay a (European) vanilla call / put. An American Knock-In or Knock-Out barrier condition can be
+defined that are monitored continuously between a start and end date. The different barrier types are ``UpAndIn'',
+``UpAndOut'', ``DownAndIn'', ``DownAndOut''.
+
+{\bf Input}}\fi
+
 The \verb+FxWindowBarrierOptionData+, \verb+EquityWindowBarrierOptionData+, \verb+CommodityWindowBarrierOptionData+ is
 the trade data container for the FxWindowBarrierOption, EquityWindowBarrierOption, CommodityBarrierOption trade
 type. The following listing shows the structure of an example trade for an FX underlying.

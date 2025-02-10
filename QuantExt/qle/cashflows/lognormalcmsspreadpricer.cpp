@@ -177,12 +177,11 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
     c1_->setPricer(cmsPricer_);
     c2_->setPricer(cmsPricer_);
 
+    fixingTime_ = cmsPricer_->swaptionVolatility()->timeFromReference(fixingDate_);
+    swapRate1_ = c1_->indexFixing();
+    swapRate2_ = c2_->indexFixing();
+
     if (fixingDate_ > today_) {
-
-        fixingTime_ = cmsPricer_->swaptionVolatility()->timeFromReference(fixingDate_);
-
-        swapRate1_ = c1_->indexFixing();
-        swapRate2_ = c2_->indexFixing();
 
         adjustedRate1_ = c1_->adjustedFixing();
         adjustedRate2_ = c2_->adjustedFixing();
@@ -216,11 +215,26 @@ void LognormalCmsSpreadPricer::initialize(const FloatingRateCoupon& coupon) {
         // for the normal volatility case we do not need the drifts
         // but rather use adjusted rates directly in the integrand
 
+        coupon_->additionalResults()["volatility1"] = vol1_;
+        coupon_->additionalResults()["volatility2"] = vol2_;
+        coupon_->additionalResults()["correlation"] = rho();
+        coupon_->additionalResults()["shift1"] = shift1_;
+        coupon_->additionalResults()["shift2"] = shift2_;
+        coupon_->additionalResults()["volType"] =
+            volType_ == ShiftedLognormal ? std::string("ShiftedLognormal") : std::string("Normal");
+
     } else {
         // fixing is in the past or today
-        adjustedRate1_ = c1_->indexFixing();
-        adjustedRate2_ = c2_->indexFixing();
+        adjustedRate1_ = swapRate1_;
+        adjustedRate2_ = swapRate2_;
     }
+
+    coupon_->additionalResults()["fixingDate"] = fixingDate_;
+    coupon_->additionalResults()["fixingTime"] = fixingTime_;
+    coupon_->additionalResults()["swapRate1"] = swapRate1_;
+    coupon_->additionalResults()["swapRate2"] = swapRate2_;
+    coupon_->additionalResults()["adjustedSwapRate1"] = adjustedRate1_;
+    coupon_->additionalResults()["adjustedSwapRate2"] = adjustedRate2_;
 }
 
 Real LognormalCmsSpreadPricer::optionletPrice(Option::Type optionType, Real strike) const {
@@ -260,7 +274,9 @@ Real LognormalCmsSpreadPricer::optionletPrice(Option::Type optionType, Real stri
             std::sqrt(fixingTime_ * (gearing1_ * gearing1_ * vol1_ * vol1_ + gearing2_ * gearing2_ * vol2_ * vol2_ +
                                      2.0 * gearing1_ * gearing2_ * rho() * vol1_ * vol2_));
         res = bachelierBlackFormula(optionType_, strike, forward, stddev, 1.0);
+        coupon_->additionalResults()["stddev"] = stddev;
     }
+    coupon_->additionalResults()["discountFactor"] = discount_;
     return res * discount_ * coupon_->accrualPeriod();
 }
 

@@ -69,9 +69,11 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<InMemoryReport> varReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     reports->add(varReport);
 
+    addAdditionalReports(reports);
+
     varReport_->calculate(reports);
     CONSOLE("OK");
-        
+    
     analytic()->reports()[label_]["var"] = varReport;
 
     LOG("VaR completed");
@@ -179,6 +181,17 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 
         inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown());
 
+}
+
+void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+
+        QuantLib::ext::shared_ptr<InMemoryReport> histPnLReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+
+        reports->add(histPnLReport);
+
+        analytic()->reports()[label_]["historical_PnL"] = histPnLReport;
 }
 
 } // namespace analytics

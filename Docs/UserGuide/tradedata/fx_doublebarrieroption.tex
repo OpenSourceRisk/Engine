@@ -1,6 +1,33 @@
 \subsubsection{FX Double Barrier Option}
 
-The \lstinline!FxDoubleBarrierOptionData!  node is the trade data container for the \emph{FxDoubleBarrierOption} trade type.  
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An FX Double Barrier option is a path-dependent option whose existence depends upon an
+FX spot rate reaching one of the two pre-set barrier levels. Exercise is European.
+
+This product has two continuously monitored barriers with a Vanilla European
+FX Option Underlying.
+
+Double FX Barrier options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes
+active when the FX spot rate reaches the one of the barrier level at any point
+in the option's life. Once a barrier is knocked-in, the option will not cease
+to exist until the option expires and effectively it becomes a Vanilla FX Option.
+\item A knock-out option starts its life active, but ceases to exist/becomes
+inactive, if the one of the barriers is reached during the life of the option.
+\end{itemize}
+
+When a Double FX Barrier option expires inactive, the payoff may be zero, or
+there may be a cash rebate (barrier rebate) paid out as a fraction of the
+original option premium.
+
+Note that the current implementation does not support options with
+Knock-In-Knock-Out (KIKO) barrier or Knock-Out-Knock-In (KOKI) barriers. The former is covered by a separate FX KIKO Barrier Option instrument.
+
+{\bf Input}}
+
+\else
 
 An FX Double Barrier Option is a path-dependent option whose existence depends upon
 an FX spot rate reaching one of the two pre-set barrier levels. Exercise is European, and barriers are American (continuously monitored).
@@ -14,6 +41,10 @@ the option expires and effectively it becomes a Vanilla FX Option.
 \item A knock-out option starts its life active, but ceases to exist/becomes inactive, if
 the one of the barriers is reached during the life of the option.
 \end{itemize}
+
+\fi
+
+The \lstinline!FxDoubleBarrierOptionData!  node is the trade data container for the \emph{FxDoubleBarrierOption} trade type.  
 
 The barrier levels of an FX Double Barrier Option are quoted as the amount in SoldCurrency
 per unit BoughtCurrency. The \lstinline!FxDoubleBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements

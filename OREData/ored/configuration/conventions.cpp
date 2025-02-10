@@ -2627,7 +2627,7 @@ void Conventions::fromXML(XMLNode* node) {
         } else {
             try {
                 id = XMLUtils::getChildValue(child, "Id", true);
-                DLOG("Reading Convention " << id);
+                TLOG("Reading Convention " << id);
                 unparsed_[id] = std::make_pair(type, XMLUtils::toString(child));
             } catch (const std::exception& e) {
                 WLOG("Exception during retrieval of convention "
