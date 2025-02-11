@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testSwapCase) {
     Rate fixedRate = 0.02;
     Volatility vola(vol);
    
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(testSwapCase) {
         if (std::fabs(swapPrice - multiPrice) < 10e-4)
           BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 0.1); // Tolerance of 0.1%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testSwapCase) {
         if (std::fabs(swapPrice - multiPrice) < 10e-4)
           BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(swapPrice, multiPrice, 0.1); // Tolerance of 0.1%
     }
 }
 
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
     double Annuity=0.0;
 
         for (int i=4;i<10;++i)
-            Annuity += 0.5 * exp(-(double) (i+1) * 0.5 *  fixedRate);
+            Annuity += 0.5 * exp(-(double) (i+1) * 0.5 * fixedRate);
 
     double shift = 0.015;
 
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
         if (std::fabs(blackFormula - multiPrice) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 0.1); // Tolerance of 0.1%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
         if (std::fabs(blackFormula - multiPrice) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 0.1); // Tolerance of 0.1%
     }
 }
 
@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
-   
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
+
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
     volstepdates.push_back(Date(15, July, 2017));
@@ -421,10 +421,10 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
         BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
         
-        if (std::fabs(blackFormula - multiPrice) < 200e-4)
+        if (std::fabs(blackFormula - multiPrice) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1% //TODO why
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 0.5); // Tolerance of 0.5%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
@@ -470,10 +470,10 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
         BOOST_TEST_MESSAGE("    Multileg Model: " << multiPrice * 10000.0 << " bp.");
         BOOST_TEST_MESSAGE("------------");
         
-        if (std::fabs(blackFormula - multiPrice) < 200e-4)
+        if (std::fabs(blackFormula - multiPrice) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 1.0); // Tolerance of 1% //TODO why
+            BOOST_CHECK_CLOSE(blackFormula, multiPrice, 0.5); // Tolerance of 0.5%
     }
 }
 

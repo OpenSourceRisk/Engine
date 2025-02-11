@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("    Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
+        BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
 
     // Starting at 10% which is 8% above the market atm rate
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
+        BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
 
     // Ending at -5% which is 7% below the market atm rate
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(testTooLateExercise) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
 
-        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
+        BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
 
     // Ending 1% below market rate level of 2%
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
          
-        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
+        BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("    Swap Value: " << swapValue * 10000.0);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, swapValue, 0.1); // Tolerance of 1%
+        BOOST_CHECK_CLOSE(npv, swapValue, 0.1); // Tolerance of 0.1%
     }
 
     // Starting 1% below market rate level of 2%
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("    Swap Value: " << swapValue * 10000.0);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, swapValue, 0.1); // Tolerance of 3%
+        BOOST_CHECK_CLOSE(npv, swapValue, 0.1); // Tolerance of 0.1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm2) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts = QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts = QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(testSmallMaturity) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts = QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));

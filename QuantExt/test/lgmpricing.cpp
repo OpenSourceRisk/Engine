@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
         if (std::fabs(npv - bach) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, bach, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(npv, bach, 0.1); // Tolerance of 1%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
         if (std::fabs(npv - bach) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, bach, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(npv, bach, 0.1); // Tolerance of 1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));   
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
         if (std::fabs(npv - limitValue) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
 
     BOOST_TEST_MESSAGE("Checking Payer Swaptionss ...");
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
         if (std::fabs(npv - limitValue) < 10e-4)
             BOOST_CHECK(true);
         else
-            BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
+            BOOST_CHECK_CLOSE(npv, limitValue, 0.1); // Tolerance of 0.1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         if (std::fabs(bermPriceMC - bermPriceFD) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceMC, bermPriceFD, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceMC, bermPriceFD, 0.1); // Tolerance of 0.1%
 
         BOOST_CHECK(bermPriceMC > lgmPrice); // The Bermudan price must be higher than the European price
         BOOST_CHECK(bermPriceFD > lgmPrice); // The Bermudan price must be higher than the European price
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         if (std::fabs(bermPriceMC - bermPriceFD) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceMC, bermPriceFD, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceMC, bermPriceFD, 0.1); // Tolerance of 0.1%
 
         BOOST_CHECK(bermPriceMC > lgmPrice); // The Bermudan price must be higher than the European price
         BOOST_CHECK(bermPriceFD > lgmPrice); // The Bermudan price must be higher than the European price
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed(), Compounded, Semiannual);
    
     std::vector<Date> volstepdates;
     volstepdates.push_back(Date(15, July, 2016));
@@ -657,12 +657,12 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         if (std::fabs(bermPriceMC - lgmPrice) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceMC, lgmPrice, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceMC, lgmPrice, 0.1); // Tolerance of 0.1%
 
         if (std::fabs(bermPriceFD - lgmPrice) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceFD, lgmPrice, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceFD, lgmPrice, 0.1); // Tolerance of 0.1%
 
     }
 
@@ -718,12 +718,12 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         if (std::fabs(bermPriceMC - lgmPrice) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceMC, lgmPrice, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceMC, lgmPrice, 0.1); // Tolerance of 0.1%
 
         if (std::fabs(bermPriceFD - lgmPrice) < 10e-4) // Threshold of 10 basis points for "zero" cases
           BOOST_CHECK(true);
         else
-          BOOST_CHECK_CLOSE(bermPriceFD, lgmPrice, 1); // Tolerance of 1%
+          BOOST_CHECK_CLOSE(bermPriceFD, lgmPrice, 0.1); // Tolerance of 0.1%
     }
 }
 
