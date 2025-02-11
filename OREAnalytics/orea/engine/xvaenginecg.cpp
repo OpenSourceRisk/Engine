@@ -412,7 +412,7 @@ void XvaEngineCG::buildCgPartC() {
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
-    if (mode_ == Mode::Full || !generateTradeLevelExposure_) {
+    if (mode_ == Mode::Full || dynamicDelta_ || !generateTradeLevelExposure_) {
         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
             pfExposureNodes_.push_back(createPortfolioExposureNode(i, true));
             if (!closeOutDates_.empty())
