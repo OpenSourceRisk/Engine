@@ -36,7 +36,7 @@ void ModelCG::useStickyCloseOutDates(const bool b) const {
 ModelCG::ModelParameter::ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2,
                                         const QuantLib::Date& date, const QuantLib::Date& date2,
                                         const QuantLib::Date& date3, const std::size_t index, const std::size_t index2)
-    : type_(type), qualifier_(qualifier), qualifier2_(qualifier), date_(date), date2_(date2), date3_(date3),
+    : type_(type), qualifier_(qualifier), qualifier2_(qualifier2), date_(date), date2_(date2), date3_(date3),
       index_(index), index2_(index2) {}
 
 bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y) {
@@ -104,8 +104,8 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "lgm_reducedDiscountBond";
     case ModelCG::ModelParameter::Type::fxbs_sigma:
         return o << "fxbs_sigma";
-    case ModelCG::ModelParameter::Type::x0:
-        return o << "x0";
+    case ModelCG::ModelParameter::Type::logX0:
+        return o << "logX0";
     case ModelCG::ModelParameter::Type::logFxSpot:
         return o << "logFxSpot";
     case ModelCG::ModelParameter::Type::sqrtCorr:

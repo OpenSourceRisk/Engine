@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/scripting/models/modelcgimpl.hpp>
+#include <ored/scripting/models/lgmcg.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <ql/instruments/overnightindexedswap.hpp>
