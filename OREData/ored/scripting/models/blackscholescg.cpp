@@ -300,13 +300,15 @@ void BlackScholesCG::performCalculations() const {
     // precompute sqrtCov nodes and add model parameters for covariance (needed in futureBarrierProbability())
 
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
+        Date date = *std::next(effectiveSimulationDates_.begin(), i);
         for (Size j = 0; j < indices_.size(); ++j) {
             for (Size k = 0; k < indices_.size(); ++k) {
-                std::string id = "__sqrtCov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
-                sqrtCov[i][j][k] =
-                    addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->sqrtCov(i, j, k); });
-                id = "__cov_" + std::to_string(j) + "_" + std::to_string(k) + "_" + std::to_string(i);
-                cov[i][j][k] = addModelParameter(id, [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
+                sqrtCov[i][j][k] = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::sqrtCov, {}, {}, date, {}, {}, j, k),
+                    [sqrtCovCalc, i, j, k] { return sqrtCovCalc->sqrtCov(i, j, k); });
+                cov[i][j][k] = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cov, {}, {}, date, {}, {}, j, k),
+                    [sqrtCovCalc, i, j, k] { return sqrtCovCalc->cov(i, j, k); });
             }
         }
     }
@@ -333,8 +335,12 @@ void BlackScholesCG::performCalculations() const {
         for (Size j = 0; j < indices_.size(); ++j) {
             auto p = model_->processes().at(j);
             std::string id = std::to_string(j) + "_" + ore::data::to_string(d);
-            std::size_t div= addModelParameter("__div_" + id, [p, d]() { return p->dividendYield()->discount(d); });
-            std::size_t rfr = addModelParameter("__rfr_" + id, [p, d]() { return p->riskFreeRate()->discount(d); });
+            std::size_t div =
+                addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::div, {}, {}, d, {}, {}, j),
+                                  [p, d]() { return p->dividendYield()->discount(d); });
+            std::size_t rfr =
+                addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::rfr, {}, {}, d, {}, {}, j),
+                                  [p, d]() { return p->riskFreeRate()->discount(d); });
             std::size_t tmp = cg_div(*g_, rfr, div);
             drift[i][j] = cg_subtract(*g_, cg_negative(*g_, cg_log(*g_, cg_div(*g_, tmp, discountRatio[j]))),
                                       cg_mult(*g_, cg_const(*g_, 0.5), cov[i][j][j]));
@@ -362,9 +368,10 @@ void BlackScholesCG::performCalculations() const {
 
     std::vector<std::size_t> logState(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
-        std::string id = "__x0_" + std::to_string(j);
         auto p = model_->processes().at(j);
-        logState[j] = addModelParameter(id, [p] { return std::log(p->x0()); });
+        logState[j] =
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::x0, {}, {}, {}, {}, {}, j),
+                              [p] { return std::log(p->x0()); });
         underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
     }
 

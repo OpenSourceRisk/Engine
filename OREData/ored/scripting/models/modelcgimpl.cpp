@@ -459,40 +459,6 @@ const std::vector<std::vector<std::size_t>>& ModelCGImpl::randomVariates() const
     return randomVariates_;
 }
 
-std::vector<std::tuple<std::string, std::size_t, double>> ModelCGImpl::modelParameters() const {
-    calculate();
-    std::vector<std::tuple<std::string, std::size_t, double>> res;
-    for (auto const& [l, n, f] : modelParameters_) {
-        res.push_back(std::make_tuple(l, n, f()));
-    }
-    return res;
-}
-
-std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
-ModelCGImpl::modelParameterFunctors() const {
-    return modelParameters_;
-}
-
-std::size_t ModelCGImpl::addModelParameter(const std::string& id, std::function<double(void)> f) const {
-    return ::ore::data::addModelParameter(*g_, modelParameters_, id, f);
-}
-
-void ModelCGImpl::dumpModelParameters() const {
-    for (auto const& [l, n, f] : modelParameters_)
-        std::cout << std::setw(50) << std::left << l << std::setw(10) << n << f() << std::endl;
-}
-
-std::size_t addModelParameter(ComputationGraph& g,
-                              std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& m,
-                              const std::string& id, std::function<double(void)> f) {
-    std::size_t n;
-    if (n = g.variable(id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
-        n = cg_var(g, id, ComputationGraph::VarDoesntExist::Create);
-        m.push_back(std::make_tuple(id, n, f));
-    }
-    return n;
-}
-
 Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates) {
     if (!sloppyDates)
         return d;

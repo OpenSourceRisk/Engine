@@ -88,12 +88,6 @@ public:
     // CG / AD part of the interface
     std::size_t cgVersion() const override;
     const std::vector<std::vector<std::size_t>>& randomVariates() const override; // dim / steps
-    std::vector<std::tuple<std::string, std::size_t, double>> modelParameters() const override;
-    std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
-    modelParameterFunctors() const override;
-
-    // dump model parameters to console, mostly for debugging purposes
-    void dumpModelParameters() const override;
 
 protected:
     // get (non-ir) index (forward) value for index[indexNo] for (fwd >=) d >= reference date
@@ -124,10 +118,6 @@ protected:
 
     // to be populated by derived classes when building the computation graph
     mutable std::vector<std::vector<size_t>> randomVariates_;
-    mutable std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>> modelParameters_;
-
-    // convenience function to add model parameters
-    std::size_t addModelParameter(const std::string& id, std::function<double(void)> f) const;
 
     // manages cg version and triggers recalculations of random variate / model parameter nodes
     void performCalculations() const override;
@@ -142,11 +132,6 @@ private:
                                         const Date& limDate, const Date& obsdate, const Date& fwddate,
                                         const Date& baseDate) const;
 };
-
-// convenience function to add model parameters, standalone variant
-std::size_t addModelParameter(ComputationGraph& g,
-                              std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& m,
-                              const std::string& id, std::function<double(void)> f);
 
 // map date to a coarser grid if sloppyDates = true, otherwise just return d
 Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates);

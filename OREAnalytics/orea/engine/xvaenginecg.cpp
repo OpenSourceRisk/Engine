@@ -459,7 +459,8 @@ void XvaEngineCG::buildCgPP() {
         Date d = i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1);
         Date e = *std::next(valuationDates_.begin(), i);
         std::size_t defaultProb =
-            addModelParameter(*g, model_->modelParameterFunctors(), "__defaultprob_" + std::to_string(i),
+            addModelParameter(*g, model_->modelParameters(),
+                              ModelCG::ModelParameter(ModelCG::ModelParameter::Type ::defaultProb, {}, {}, d),
                               [defaultCurve, d, e]() { return defaultCurve->defaultProbability(d, e); });
         cvaNode_ = cg_add(*g, cvaNode_, cg_mult(*g, defaultProb, cg_max(*g, pfExposureNodes_[i], cg_const(*g, 0.0))));
     }
@@ -521,7 +522,10 @@ void XvaEngineCG::doForwardEvaluation() {
 
     // Populate constants and model parameters
 
-    baseModelParams_ = model_->modelParameters();
+    baseModelParams_.clear();
+    for (auto const& p : model_->modelParameters()) {
+        baseModelParams_.push_back(std::make_pair(p.node(), p.eval()));
+    }
     populateConstants(values_, valuesExternal_);
     populateModelParameters(baseModelParams_, values_, valuesExternal_);
     timing_popparam_ = timer.elapsed().wall;
@@ -563,7 +567,7 @@ void XvaEngineCG::doForwardEvaluation() {
         keepNodes_[c.second] = true;
     }
 
-    for (auto const& [l, n, v] : baseModelParams_) {
+    for (auto const& [n, v] : baseModelParams_) {
         keepNodes_[n] = true;
     }
 
@@ -801,11 +805,12 @@ void XvaEngineCG::calculateDynamicDelta() {
     */
 
     std::vector<bool> keepNodesDerivatives(g->size(), false);
-    for (auto const& [l, n, v] : baseModelParams_) {
+    for (auto const& [n, v] : baseModelParams_) {
         keepNodesDerivatives[n] = true;
     }
 
-    for (auto const& n : pfExposureNodesInflated_) {
+    // for (auto const& n : pfExposureNodesInflated_) {
+    for (std::size_t n = pfExposureNodesInflated_[20]; n == pfExposureNodesInflated_[20]; n++) {
 
         std::cout << "calculate dyn delta derivatives for node " << n << std::endl;
 
@@ -825,8 +830,9 @@ void XvaEngineCG::calculateDynamicDelta() {
 
         // collect and aggregate the derivatives of interest
 
-        
-
+        for (auto const& [n, v] : baseModelParams_) {
+            std::cout << n << " " << expectation(dynamicDeltaDerivatives_[n]).at(0) << std::endl;
+        }
     }
 
     timing_dynamicDelta_ = timer.elapsed().wall;
@@ -860,7 +866,7 @@ void XvaEngineCG::calculateSensitivities() {
 
             std::vector<bool> keepNodesDerivatives(g->size(), false);
 
-            for (auto const& [l, n, v] : baseModelParams_)
+            for (auto const& [n, v] : baseModelParams_)
                 keepNodesDerivatives[n] = true;
 
             // backward derivatives run
@@ -872,7 +878,7 @@ void XvaEngineCG::calculateSensitivities() {
             // read model param derivatives
 
             Size i = 0;
-            for (auto const& [l, n, v] : baseModelParams_) {
+            for (auto const& [n, v] : baseModelParams_) {
                 modelParamDerivatives[i++] = expectation(xvaDerivatives_[n]).at(0);
             }
 
@@ -936,13 +942,17 @@ void XvaEngineCG::calculateSensitivities() {
 
                     // calcuate CVA sensi using ad derivatives
 
-                    auto modelParameters = model_->modelParameters();
+                    std::vector<std::pair<std::size_t,double>> modelParameters;
+                    for (auto const& p : model_->modelParameters()) {
+                        modelParameters.push_back(std::make_pair(p.node(), p.eval()));
+                    }
+
                     Size i = 0;
                     boost::accumulators::accumulator_set<
                         double, boost::accumulators::stats<boost::accumulators::tag::weighted_sum>, double>
                         acc;
-                    for (auto const& [l, n, v0] : baseModelParams_) {
-                        Real v1 = std::get<2>(modelParameters[i]);
+                    for (auto const& [n, v0] : baseModelParams_) {
+                        Real v1 = modelParameters[i].second;
                         acc(modelParamDerivatives[i], boost::accumulators::weight = (v1 - v0));
                         ++i;
                     }
@@ -952,14 +962,19 @@ void XvaEngineCG::calculateSensitivities() {
 
                     // calcuate CVA sensi doing full recalc of CVA
 
+                    std::vector<std::pair<std::size_t, double>> modelParameters;
+                    for (auto const& p : model_->modelParameters()) {
+                        modelParameters.push_back(std::make_pair(p.node(), p.eval()));
+                    }
+
                     if (useExternalComputeDevice_) {
                         ComputeEnvironment::instance().context().initiateCalculation(
                             model_->size(), externalCalculationId_, 0, externalComputeDeviceSettings_);
                         populateConstants(values_, valuesExternal_);
-                        populateModelParameters(model_->modelParameters(), values_, valuesExternal_);
+                        populateModelParameters(modelParameters, values_, valuesExternal_);
                         finalizeExternalCalculation();
                     } else {
-                        populateModelParameters(model_->modelParameters(), values_, valuesExternal_);
+                        populateModelParameters(modelParameters, values_, valuesExternal_);
                         forwardEvaluation(*g, values_, ops_, RandomVariable::deleter, true, opNodeRequirements_,
                                           keepNodes_);
                     }
@@ -1052,7 +1067,7 @@ void XvaEngineCG::run() {
 
     updateProgress(0, 4);
 
-    generateTradeLevelExposure_ = false; // npvOutputCube_ != nullptr;
+    generateTradeLevelExposure_ = npvOutputCube_ != nullptr;
 
     if (firstRun_) {
         buildT0Market();
@@ -1081,7 +1096,6 @@ void XvaEngineCG::run() {
 
     if (firstRun_) {
         outputGraphStats();
-        // model_->dumpModelParameters(); // for debugging only
     }
 
     getExternalContext();
@@ -1196,13 +1210,13 @@ void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values,
     DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
 }
 
-void XvaEngineCG::populateModelParameters(
-    const std::vector<std::tuple<std::string, std::size_t, double>>& modelParameters,
-    std::vector<RandomVariable>& values, std::vector<ExternalRandomVariable>& valuesExternal) const {
+void XvaEngineCG::populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
+                                          std::vector<RandomVariable>& values,
+                                          std::vector<ExternalRandomVariable>& valuesExternal) const {
 
     DLOG("XvaEngineCG: populate model parameters");
 
-    for (auto const& [l, n, v] : modelParameters) {
+    for (auto const& [n, v] : modelParameters) {
         if (useExternalComputeDevice_) {
             valuesExternal[n] = ExternalRandomVariable(v);
         } else {

@@ -118,7 +118,7 @@ private:
                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
     void populateConstants(std::vector<RandomVariable>& values,
                            std::vector<ExternalRandomVariable>& valuesExternal) const;
-    void populateModelParameters(const std::vector<std::tuple<std::string, std::size_t, double>>& modelParameters,
+    void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
@@ -176,7 +176,7 @@ private:
     std::vector<Date> valuationDates_;
     std::vector<Date> closeOutDates_;
 
-    std::vector<std::tuple<std::string, std::size_t, double>> baseModelParams_;
+    std::vector<std::pair<std::size_t, double>> baseModelParams_;
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;

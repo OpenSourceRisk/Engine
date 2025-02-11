@@ -37,8 +37,9 @@ class LgmCG {
 public:
     LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
           const std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()>& p,
-          std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& modelParameters)
-        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters) {}
+          std::set<ModelCG::ModelParameter>& modelParameters, std::set<ModelCG::ModelParameter>& derivedModelParameters)
+        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters),
+          derivedModelParameters_(derivedModelParameters) {}
 
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
 
@@ -62,7 +63,8 @@ private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;
     std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()> p_;
-    std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& modelParameters_;
+    std::set<ModelCG::ModelParameter>& modelParameters_;
+    std::set<ModelCG::ModelParameter>& derivedModelParameters_;
 };
 
 } // namespace ore::data

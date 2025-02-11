@@ -25,6 +25,7 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
@@ -41,16 +42,89 @@ namespace ore {
 namespace data {
 
 using QuantLib::Date;
-using QuantLib::Real;
 using QuantLib::Integer;
 using QuantLib::Natural;
+using QuantLib::Real;
 using QuantLib::Size;
 
 class ModelCG : public QuantLib::LazyObject {
 public:
     enum class Type { MC, FD };
 
-    explicit ModelCG(const QuantLib::Size n);
+    class ModelParameter {
+    public:
+        enum class Type {
+            none,                    // type not set (= model param is not initialized)
+            fix,                     // fixing, historical or projected
+            dsc,                     // T0 ir discount
+            fwd,                     // T0 discrete ir fwd
+            ifwd,                    // T0 instantaneous ir fwd
+            fwdCompAvg,              // T0 compounded / avg ir rate
+            fxSpot,                  // T0 fx spot rate
+            div,                     // T0 div yield dsc factor
+            rfr,                     // T0 rfr       dsc factor
+            defaultProb,             // T0 default prob
+            lgm_H,                   // lgm1f parameters
+            lgm_Hprime,              // ...
+            lgm_alpha,               // ...
+            lgm_zeta,                // ...
+            lgm_numeraire,           // ... (derived)
+            lgm_discountBond,        // ...
+            lgm_reducedDiscountBond, // ...
+            fxbs_sigma,              // fxbs parameters
+            x0,                      // stoch process initial value
+            logFxSpot,               // log fx spot (iniial value from T0)
+            sqrtCorr,                // model sqrt correlation
+            sqrtCov,                 // model sqrt covariance
+            corr,                    // model correlation
+            cov,                     // model cov
+            cam_corrzz,              // cam ir-ir corr
+            cam_corrzx,              // cam ir-fx corr
+        };
+
+        ~ModelParameter() = default;
+        ModelParameter() = default;
+        ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2 = {},
+                       const QuantLib::Date& date = {}, const QuantLib::Date& date2 = {},
+                       const QuantLib::Date& date3 = {}, const std::size_t index = 0, const std::size_t index2 = 0);
+        ModelParameter(const ModelParameter& p) = default;
+        ModelParameter(ModelParameter&& p) = default;
+        ModelParameter& operator=(ModelParameter&& p) = default;
+
+        friend bool operator==(const ModelParameter& x, const ModelParameter& y);
+        friend bool operator<(const ModelParameter& x, const ModelParameter& y);
+
+        Type type() const { return type_; }
+        const std::string& qualifier() const { return qualifier_; }
+        const std::string& qualifier2() const { return qualifier2_; }
+        const QuantLib::Date& date() const { return date_; }
+        const QuantLib::Date& date2() const { return date2_; }
+        const QuantLib::Date& date3() const { return date2_; }
+        std::size_t index() const { return index_; }
+        std::size_t index2() const { return index2_; }
+        double eval() const { return functor_ ? functor_() : 0.0; }
+        std::size_t node() const { return node_; }
+
+        void setFunctor(const std::function<double(void)>& f) const { functor_ = f; }
+        void setNode(const std::size_t node) const { node_ = node; }
+
+    private:
+        // key, not all fields are filled in general
+        Type type_ = Type::none;
+        std::string qualifier_;
+        std::string qualifier2_;
+        QuantLib::Date date_;
+        QuantLib::Date date2_;
+        QuantLib::Date date3_;
+        std::size_t index_;
+        std::size_t index2_;
+        // functor, only filled for primary model parameters, not derived ones
+        mutable std::function<double(void)> functor_;
+        // node in cg
+        mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
+    };
+
+    ModelCG(const QuantLib::Size n);
     virtual ~ModelCG() {}
 
     // computation graph
@@ -142,9 +216,6 @@ public:
     // CG / AD part of the interface
     virtual std::size_t cgVersion() const = 0;
     virtual const std::vector<std::vector<std::size_t>>& randomVariates() const = 0; // dim / steps
-    virtual std::vector<std::tuple<std::string, std::size_t, double>> modelParameters() const = 0;
-    virtual std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
-    modelParameterFunctors() const = 0;
 
     // get fx spot as of today directly, i.e. bypassing the cg
     virtual Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const = 0;
@@ -155,8 +226,17 @@ public:
     // calculate the model
     void calculate() const override { LazyObject::calculate(); }
 
-    // dump model parameters to console, mostly for debugging purposes
-    virtual void dumpModelParameters() const = 0;
+    // get model parameters
+    std::set<ModelCG::ModelParameter>& modelParameters() const { return modelParameters_; };
+
+    // get derived model parameters
+    std::set<ModelCG::ModelParameter>& derivedModelParameters() const { return derivedModelParameters_; };
+
+    // add a model parameer if not yet present, return node in any case
+    std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
+
+    // add a model parameer if not yet present, return node in any case
+    std::size_t addDerivedModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
 
 protected:
     // map with additional results provided by this model instance
@@ -165,12 +245,27 @@ protected:
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
 
+    // container holding model parameters and derived model parameters
+    mutable std::set<ModelCG::ModelParameter> modelParameters_;
+    mutable std::set<ModelCG::ModelParameter> derivedModelParameters_;
+
 private:
     void performCalculations() const override {}
 
     // size of random variables within model
     const QuantLib::Size n_;
 };
+
+bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
+bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
+
+// standalone version of ModelCG::addModelParameters()
+std::size_t addModelParameter(QuantExt::ComputationGraph& g, std::set<ModelCG::ModelParameter>& modelParameters,
+                              const ModelCG::ModelParameter& p, const std::function<double(void)>& f);
+
+// output model parameter
+std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t);
+std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter& p);
 
 } // namespace data
 } // namespace ore

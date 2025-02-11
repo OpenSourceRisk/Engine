@@ -97,7 +97,7 @@ private:
 
     mutable bool haveBaseValues_ = false;
     mutable double baseNpv_;
-    mutable std::vector<std::tuple<std::string, std::size_t, double>> baseModelParams_;
+    mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
     mutable std::map<std::string, boost::any> instrumentAdditionalResults_;
 
