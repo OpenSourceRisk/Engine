@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/scripting/models/modelcg.hpp>
+
 #include <qle/ad/computationgraph.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
