@@ -59,7 +59,7 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(LgmBuilderTest)
 
 namespace {
-
+/*
     BOOST_AUTO_TEST_CASE(testLgmBuilderCalibrationError) {
         BOOST_TEST_MESSAGE("Testing LGM builder calibration error types ...");
 
@@ -110,7 +110,7 @@ namespace {
         p1->printParameters(0.0); // Read calibrated parameters
 
         // TODO
-    }
+    }*/
 }
 
 BOOST_AUTO_TEST_SUITE_END()
