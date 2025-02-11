@@ -36,8 +36,7 @@ public:
     BondFuture() : Trade("BondFuture") {}
 
     //! Constructor taking an envelope
-    BondFuture(Envelope env, const std::vector<std::string>& secList)
-        : Trade("BondFuture", env), secList_(secList) {}
+    BondFuture(Envelope env, const std::vector<std::string>& secList) : Trade("BondFuture", env), secList_(secList) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
@@ -45,36 +44,36 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
-    //std::map<AssetClass, std::set<std::string>>
-    //underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    // std::map<AssetClass, std::set<std::string>>
+    // underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const
+    // override;
 
     //! inspectors
-    //const std::vector<std::string>& secList() const { return secList_; }
-
+    // const std::vector<std::string>& secList() const { return secList_; }
 
 protected:
-
-    BondData identifyCtdBond(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
+    std::string identifyCtdBond(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
+    void checkData(QuantLib::Date expiry, QuantLib::Date settlement);
+
 private:
-
-    //mandatory first tier information
-    std::string contractName_; //can be used to identify tier 2/3 info
+    // mandatory first tier information
+    std::string contractName_; // can be used to identify tier 2/3 info
     std::vector<std::string> secList_;
-    // std::string currency_; --> use Trade::notionalCurrency_;
-    // double notional_; --> use Trade::notional_;
+    std::string currency_;
+    double contractNotional_;
 
-    //second tier information - both can be used in conjunction to identify tier 3 info
+    // second tier information - both can be used in conjunction to identify tier 3 info
     std::string contractMonths_;
-    std::string deliverableGrade_; //futureType differentiating the underlying
+    std::string deliverableGrade_; // futureType differentiating the underlying
 
-    //thirdt tier information
-    std::string lastTrading_; //expiry
-    std::string lastDelivery_; //settlement date
+    // thirdt tier information
+    std::string lastTrading_;  // expiry
+    std::string lastDelivery_; // settlement date
 
-    //transformed dates
+    // transformed dates
     Date expiry_;
     Date settlement_;
 };

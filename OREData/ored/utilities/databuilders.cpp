@@ -29,6 +29,7 @@
 #include <ored/portfolio/barrieroption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -210,8 +211,8 @@
 #include <ored/portfolio/worstofbasketswap.hpp>
 
 #include <qle/math/basiccpuenvironment.hpp>
-#include <qle/math/openclenvironment.hpp>
 #include <qle/math/cudaenvironment.hpp>
+#include <qle/math/openclenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -313,6 +314,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("CreditDefaultSwapOption", CreditDefaultSwapOption, false)
     ORE_REGISTER_TRADE_BUILDER("Failed", FailedTrade, false)
     ORE_REGISTER_TRADE_BUILDER("ForwardBond", ForwardBond, false)
+    ORE_REGISTER_TRADE_BUILDER("BondFuture", BondFuture, false)
     ORE_REGISTER_TRADE_BUILDER("EquityDoubleTouchOption", EquityDoubleTouchOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityOptionStrip", CommodityOptionStrip, false)
     ORE_REGISTER_TRADE_BUILDER("SyntheticCDO", SyntheticCDO, false)

@@ -129,6 +129,7 @@
 #include <ored/portfolio/bestentryoption.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondbasket.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>

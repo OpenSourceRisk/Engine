@@ -115,6 +115,7 @@ portfolio/basketvarianceswap.cpp
 portfolio/bestentryoption.cpp
 portfolio/bond.cpp
 portfolio/bondbasket.cpp
+portfolio/bondfuture.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -515,6 +516,7 @@ portfolio/basketvarianceswap.hpp
 portfolio/bestentryoption.hpp
 portfolio/bond.hpp
 portfolio/bondbasket.hpp
+portfolio/bondfuture.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
