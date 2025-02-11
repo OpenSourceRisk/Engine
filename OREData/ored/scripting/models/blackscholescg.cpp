@@ -549,19 +549,25 @@ std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const
 
         if (obsdate1 <= d1 && d2 <= obsdate2) {
             if (ind1 != Null<Size>()) {
-                std::string id =
-                    "__cov_" + std::to_string(ind1) + "_" + std::to_string(ind1) + "_" + std::to_string(i - 1);
-                variance = cg_add(*g_, variance, cg_var(*g_, id));
+                auto c = modelParameters_.find(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cov, {}, {}, d1, {}, {}, ind1, ind1));
+                QL_REQUIRE(c != modelParameters_.end(), "BlackScholesCG::getFutureBarrierProb(): internal error, "
+                                                        "covariance 1/1 not found in model parameters.");
+                variance = cg_add(*g_, variance, c->node());
             }
             if (ind2 != Null<Size>()) {
-                std::string id =
-                    "__cov_" + std::to_string(ind2) + "_" + std::to_string(ind2) + "_" + std::to_string(i - 1);
-                variance = cg_add(*g_, variance, cg_var(*g_, id));
+                auto c = modelParameters_.find(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cov, {}, {}, d1, {}, {}, ind2, ind2));
+                QL_REQUIRE(c != modelParameters_.end(), "BlackScholesCG::getFutureBarrierProb(): internal error, "
+                                                        "covariance 2/2 not found in model parameters.");
+                variance = cg_add(*g_, variance, c->node());
             }
             if (ind1 != Null<Size>() && ind2 != Null<Size>()) {
-                std::string id =
-                    "__cov_" + std::to_string(ind1) + "_" + std::to_string(ind2) + "_" + std::to_string(i - 1);
-                variance = cg_subtract(*g_, variance, cg_mult(*g_, cg_const(*g_, 2.0), cg_var(*g_, id)));
+                auto c = modelParameters_.find(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cov, {}, {}, d1, {}, {}, ind1, ind2));
+                QL_REQUIRE(c != modelParameters_.end(), "BlackScholesCG::getFutureBarrierProb(): internal error, "
+                                                        "covariance 1/2 not found in model parameters.");
+                variance = cg_subtract(*g_, variance, cg_mult(*g_, cg_const(*g_, 2.0), c->node()));
             }
         }
     }
