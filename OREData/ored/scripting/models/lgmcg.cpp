@@ -120,7 +120,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
 std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                           const Date& t, const std::size_t x, const Date& stateDate) const {
 
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate, stateDate, {}, 0, 0);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate, t, stateDate);
 
     Date today = Settings::instance().evaluationDate();
     if (fixingDate <= today) {

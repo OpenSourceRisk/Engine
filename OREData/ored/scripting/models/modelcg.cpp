@@ -53,10 +53,6 @@ std::size_t ModelCG::addModelParameter(const ModelParameter& p, const std::funct
     return ::ore::data::addModelParameter(*g_, modelParameters_, p, f);
 }
 
-std::size_t ModelCG::addDerivedModelParameter(const ModelParameter& p, const std::function<double(void)>& f) const {
-    return ::ore::data::addModelParameter(*g_, derivedModelParameters_, p, f);
-}
-
 std::size_t addModelParameter(QuantExt::ComputationGraph& g, std::set<ModelCG::ModelParameter>& modelParameters,
                               const ModelCG::ModelParameter& p, const std::function<double(void)>& f) {
     if (auto m = modelParameters.find(p); m != modelParameters.end()) {

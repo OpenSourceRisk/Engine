@@ -72,7 +72,7 @@ public:
             lgm_discountBond,        // ...
             lgm_reducedDiscountBond, // ...
             fxbs_sigma,              // fxbs parameters
-            x0,                      // stoch process initial value
+            logX0,                   // stoch process log initial value
             logFxSpot,               // log fx spot (iniial value from T0)
             sqrtCorr,                // model sqrt correlation
             sqrtCov,                 // model sqrt covariance
@@ -234,9 +234,6 @@ public:
 
     // add a model parameer if not yet present, return node in any case
     std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
-
-    // add a model parameer if not yet present, return node in any case
-    std::size_t addDerivedModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
 
 protected:
     // map with additional results provided by this model instance

@@ -370,7 +370,7 @@ void BlackScholesCG::performCalculations() const {
     for (Size j = 0; j < indices_.size(); ++j) {
         auto p = model_->processes().at(j);
         logState[j] =
-            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::x0, {}, {}, {}, {}, {}, j),
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
                               [p] { return std::log(p->x0()); });
         underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, logState[j]);
     }
