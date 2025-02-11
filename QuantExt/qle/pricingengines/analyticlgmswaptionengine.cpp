@@ -296,7 +296,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         try { 
             try { // Try Brent
                 yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
-                    0.0, -3.0, 3.0 );
+                    0.0, 0.01 );
             } catch (const std::exception& e) { // Try Brent with optimized starting point
                 double startValue=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
                             -3.0, 3.0);
