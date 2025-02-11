@@ -55,7 +55,7 @@ public:
     public:
         enum class Type {
             none,                    // type not set (= model param is not initialized)
-            fix,                     // fixing, historical or projected
+            fix,                     // fixing, historical (non-derived param) or projected (derived)
             dsc,                     // T0 ir discount
             fwd,                     // T0 discrete ir fwd
             ifwd,                    // T0 instantaneous ir fwd
@@ -68,7 +68,7 @@ public:
             lgm_Hprime,              // ...
             lgm_alpha,               // ...
             lgm_zeta,                // ...
-            lgm_numeraire,           // ... (derived)
+            lgm_numeraire,           // ... (derived param)
             lgm_discountBond,        // ...
             lgm_reducedDiscountBond, // ...
             fxbs_sigma,              // fxbs parameters
@@ -109,7 +109,7 @@ public:
         void setNode(const std::size_t node) const { node_ = node; }
 
     private:
-        // key, not all fields are filled in general
+        // key, diferent types use a different subset of fields
         Type type_ = Type::none;
         std::string qualifier_;
         std::string qualifier2_;
@@ -118,9 +118,9 @@ public:
         QuantLib::Date date3_;
         std::size_t index_;
         std::size_t index2_;
-        // functor, only filled for primary model parameters, not derived ones
+        // functor, only filled for primary model parameters, not derived params
         mutable std::function<double(void)> functor_;
-        // node in cg
+        // node in cg, always filled
         mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
     };
 
