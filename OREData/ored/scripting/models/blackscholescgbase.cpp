@@ -234,7 +234,6 @@ std::size_t BlackScholesCGBase::getDiscount(const Size idx, const Date& s, const
 }
 
 std::size_t BlackScholesCGBase::numeraire(const Date& s) const {
-    std::string id = "__curve_0_" + ore::data::to_string(s);
     auto c = curves_.at(0);
     std::size_t ds =
         addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], {}, s),
