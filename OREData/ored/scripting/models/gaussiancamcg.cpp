@@ -394,7 +394,7 @@ void GaussianCamCG::performCalculations() const {
                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[0], {}, date),
                 [cam, t] { return cam->irlgm1f(0)->H(t); });
             std::size_t Hprime = addModelParameter(
-                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[j], {}, date),
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_Hprime, currencies_[j], {}, date),
                 [cam, t, j] { return cam->irlgm1f(j)->Hprime(t); });
             std::size_t Hprime0 = addModelParameter(
                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_Hprime, currencies_[0], {}, date),
