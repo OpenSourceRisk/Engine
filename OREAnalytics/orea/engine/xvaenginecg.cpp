@@ -1052,7 +1052,7 @@ void XvaEngineCG::run() {
 
     updateProgress(0, 4);
 
-    generateTradeLevelExposure_ = false; // npvOutputCube_ != nullptr;
+    generateTradeLevelExposure_ = npvOutputCube_ != nullptr;
 
     if (firstRun_) {
         buildT0Market();
@@ -1081,7 +1081,6 @@ void XvaEngineCG::run() {
 
     if (firstRun_) {
         outputGraphStats();
-        // model_->dumpModelParameters(); // for debugging only
     }
 
     getExternalContext();
