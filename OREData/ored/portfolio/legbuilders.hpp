@@ -37,7 +37,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class ZeroCouponFixedLegBuilder : public LegBuilder {
@@ -46,7 +46,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class FloatingLegBuilder : public LegBuilder {
@@ -55,7 +55,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class CashflowLegBuilder : public LegBuilder {
@@ -64,7 +64,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class CPILegBuilder : public LegBuilder {
@@ -73,7 +73,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class YYLegBuilder : public LegBuilder {
@@ -82,7 +82,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class CMSLegBuilder : public LegBuilder {
@@ -91,7 +91,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class CMBLegBuilder : public LegBuilder {
@@ -100,7 +100,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class DigitalCMSLegBuilder : public LegBuilder {
@@ -109,7 +109,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class CMSSpreadLegBuilder : public LegBuilder {
@@ -118,7 +118,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
@@ -127,7 +127,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 class EquityLegBuilder : public LegBuilder {
@@ -136,7 +136,7 @@ public:
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 } // namespace data
