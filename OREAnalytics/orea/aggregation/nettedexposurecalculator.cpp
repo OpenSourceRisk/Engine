@@ -101,10 +101,8 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    Size cubeIndex = 0;
-    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++cubeIndex) {
-        const auto& trade = tradeIt->second;
-        string tradeId = tradeIt->first;
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        std::size_t cubeIndex = cube_->getTradeIndex(tradeId);
         string nettingSetId = trade->envelope().nettingSetId();
         string cp = trade->envelope().counterparty();
         if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
@@ -371,10 +369,9 @@ void NettedExposureCalculator::build() {
                 }
 
                 if (marginalAllocation_) {
-                    Size i = 0;
-                    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
-                         ++tradeIt, ++i) {
-                        const auto& trade = tradeIt->second;
+                    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+                        std::size_t i = cube_->getTradeIndex(tradeId);
+                        std::size_t i2 = tradeExposureCube_->getTradeIndex(tradeId);
                         string nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;
@@ -390,14 +387,14 @@ void NettedExposureCalculator::build() {
 
                         if (multiPath_) {
                             if (exposure > 0.0)
-                                tradeExposureCube_->set(allocation, i, j, k, allocatedEpeIndex_);
+                                tradeExposureCube_->set(allocation, i2, j, k, allocatedEpeIndex_);
                             else
-                                tradeExposureCube_->set(-allocation, i, j, k, allocatedEneIndex_);
+                                tradeExposureCube_->set(-allocation, i2, j, k, allocatedEneIndex_);
                         } else {
                             if (exposure > 0.0)
-                                averagePositiveAllocation[i][j] += allocation / cube_->samples();
+                                averagePositiveAllocation[i2][j] += allocation / cube_->samples();
                             else
-                                averageNegativeAllocation[i][j] -= allocation / cube_->samples();
+                                averageNegativeAllocation[i2][j] -= allocation / cube_->samples();
                         }
                     }
                 }
@@ -455,7 +452,8 @@ void NettedExposureCalculator::build() {
     }
 
     if (marginalAllocation_ && !multiPath_) {
-        for (Size i = 0; i < portfolio_->trades().size(); ++i) {
+        for (auto const& [tradeId, trade] : portfolio_->trades()) {
+            std::size_t i = tradeExposureCube_->getTradeIndex(tradeId);
             for (Size j = 0; j < cube_->dates().size(); ++j) {
                 tradeExposureCube_->set(averagePositiveAllocation[i][j], i, j, 0, allocatedEpeIndex_);
                 tradeExposureCube_->set(averageNegativeAllocation[i][j], i, j, 0, allocatedEneIndex_);
@@ -547,17 +545,18 @@ NettedExposureCalculator::collateralPaths(
 }
 
 vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
+    std::size_t tidx = exposureCube_->getTradeIndex(tid);
     vector<Real> exp(cube_->dates().size() + 1, 0.0);
     exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < cube_->dates().size(); i++) {
         if (multiPath_) {
 	        for (Size k = 0; k < exposureCube_->samples(); k++) {
-	            exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+	            exp[i + 1] += exposureCube_->get(tidx, i, k, index);
 	        }
 	        exp[i + 1] /= exposureCube_->samples();
 	    }
 	    else {
-	        exp[i + 1] = exposureCube_->get(tid, cube_->dates()[i], 0, index);
+	        exp[i + 1] = exposureCube_->get(tidx, i, 0, index);
 	    }
     }
     return exp;

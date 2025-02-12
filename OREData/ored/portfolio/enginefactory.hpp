@@ -313,7 +313,7 @@ public:
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                         const bool useXbsCurves = false) const = 0;
+                         const bool useXbsCurves = false, const bool attachPricer = true) const = 0;
     const LegType& legType() const { return legType_; }
 
 private:
