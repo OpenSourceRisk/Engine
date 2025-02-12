@@ -141,27 +141,14 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     if (price == Null<Real>())
         return price;
 
-    // This override is required in the case when reference_data.xml is not used (bond data is on the trade) and
-    // the caller didn't first run bondutils.populateFromBondReferenceData(). In this corner case, the quotedDirtyPrices_
-    // will be null even though it would have been defaulted to Clean during populateFromBondReferenceData. This safety
-    // measure allows regression tests to pass.
-    QuantLib::Bond::Price::Type quotedDirtyPrices_override;
-    if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean) {
-        quotedDirtyPrices_override = QuantLib::Bond::Price::Type::Clean;
-    } else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty) {
-        quotedDirtyPrices_override = QuantLib::Bond::Price::Type::Dirty;
-    } else {
-        quotedDirtyPrices_override = QuantLib::Bond::Price::Type::Clean;
-    }
-
-    // If the quoted prices are clean and return is dirty, then include accruedAmount
-    if (quotedDirtyPrices_override == QuantLib::Bond::Price::Type::Clean && dirty_ == true) {
+    // If the quoted prices are clean (or assume clean if it was not explicitly set) and return is dirty, then include accruedAmount
+    if ((quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean || !quotedDirtyPrices_) && dirty_ == true) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         if (fixingDate >= issueDate_)
             price += bond_->accruedAmount(fd) / 100.0;
 
     // If the quoted prices are dirty and return is clean, then remove accruedAmount
-    } else if (quotedDirtyPrices_override == QuantLib::Bond::Price::Type::Dirty && dirty_ == false) {
+    } else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty && dirty_ == false) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for clean prices");
         if (fixingDate >= issueDate_)
             price -= bond_->accruedAmount(fd) / 100.0;
