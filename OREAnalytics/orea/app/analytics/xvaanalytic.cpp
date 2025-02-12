@@ -111,6 +111,7 @@ QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
         QuantLib::ext::make_shared<EngineData>(*inputs_->simulationPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "Classic";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -492,7 +493,8 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     LOG("XvaAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
-    edCopy->globalParameters()["RunType"] = "NPV";
+    edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "American";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");

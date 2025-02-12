@@ -111,9 +111,19 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             tmpFloatData->capDates() = capDates_;
             tmpFloatData->nakedOption() = true;
             tmpLegData.concreteLegData() = tmpFloatData;
+
+            // We don't have to attach leg pricer for amc runs.
+            // NPV of coupons are calculated within McMultiLegBaseEngine without a leg pricer
+            auto mcType = engineFactory->engineData()->globalParameters().find("McType");
+            bool attachLegPrcier = (
+                (mcType == engineFactory->engineData()->globalParameters().end()) ||
+                (mcType->second != "American")
+            );
+            
             legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
                                 ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
-                                           engineFactory->configuration(MarketContext::pricing)));
+                                           engineFactory->configuration(MarketContext::pricing),
+                                           Null<Date>(), false, attachLegPrcier));
             // if both caps and floors are given, we have to use a payer leg, since in this case
             // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
             // and a short cap while we have documented a collar to be a short floor and long cap

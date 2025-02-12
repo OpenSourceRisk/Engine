@@ -32,7 +32,8 @@ namespace data {
 
 Leg FixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                               RequiredFixings& requiredFixings, const string& configuration,
-                              const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                              const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                              const bool attachPricer) const {
     Leg leg = makeFixedLeg(data, openEndDateReplacement);
     applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(leg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
@@ -69,7 +70,8 @@ Leg FixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_p
 
 Leg ZeroCouponFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                         RequiredFixings& requiredFixings, const string& configuration,
-                                        const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                        const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                        const bool attachPricer) const {
     Leg leg = makeZCFixedLeg(data);
     applyIndexing(leg, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(leg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
@@ -78,7 +80,8 @@ Leg ZeroCouponFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext
 
 Leg FloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                  RequiredFixings& requiredFixings, const string& configuration,
-                                 const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                 const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                 const bool attachPricer) const {
     auto floatData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
     string indexName = floatData->index();
@@ -90,16 +93,16 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::share
         QuantLib::ext::shared_ptr<OvernightIndex> idx = ois;
         if (!floatData->historicalFixings().empty())
             idx = QuantLib::ext::make_shared<OvernightIndexWithFixingOverride>(ois, floatData->historicalFixings());
-        result = makeOISLeg(data, idx, engineFactory, true, openEndDateReplacement);
+        result = makeOISLeg(data, idx, engineFactory, attachPricer, openEndDateReplacement);
     } else {
         auto bma = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)
-            result = makeBMALeg(data, bma, engineFactory, openEndDateReplacement);
+            result = makeBMALeg(data, bma, engineFactory, openEndDateReplacement, attachPricer);
         else {
             QuantLib::ext::shared_ptr<IborIndex> idx = index;
             if (!floatData->historicalFixings().empty())
                 idx = QuantLib::ext::make_shared<IborIndexWithFixingOverride>(index, floatData->historicalFixings());
-            result = makeIborLeg(data, idx, engineFactory, true, openEndDateReplacement);
+            result = makeIborLeg(data, idx, engineFactory, attachPricer, openEndDateReplacement);
         }
     }
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
@@ -151,18 +154,20 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::share
 
 Leg CashflowLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                  RequiredFixings& requiredFixings, const string& configuration,
-                                 const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                 const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                 const bool attachPricer) const {
     return makeSimpleLeg(data);
 }
 
 Leg CPILegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             RequiredFixings& requiredFixings, const string& configuration,
-                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                            const bool attachPricer) const {
     auto cpiData = QuantLib::ext::dynamic_pointer_cast<CPILegData>(data.concreteLegData());
     QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
     string inflationIndexName = cpiData->index();
     auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
-    Leg result = makeCPILeg(data, index, engineFactory, openEndDateReplacement);
+    Leg result = makeCPILeg(data, index, engineFactory, openEndDateReplacement, attachPricer);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -170,7 +175,8 @@ Leg CPILegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr
 
 Leg YYLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const string& configuration,
-                           const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                           const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                           const bool attachPricer) const {
     auto yyData = QuantLib::ext::dynamic_pointer_cast<YoYLegData>(data.concreteLegData());
     QL_REQUIRE(yyData, "Wrong LegType, expected YY");
     string inflationIndexName = yyData->index();
@@ -178,13 +184,13 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<
     Leg result;
     if (!irregularYoY) {
         auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
-        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement, attachPricer);
         applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
         addToRequiredFixings(result,
                              QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     } else {
         auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
-        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement, attachPricer);
         applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
         addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     }
@@ -193,12 +199,13 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<
 
 Leg CMSLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             RequiredFixings& requiredFixings, const string& configuration,
-                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                            const bool attachPricer) const {
     auto cmsData = QuantLib::ext::dynamic_pointer_cast<CMSLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
     string swapIndexName = cmsData->swapIndex();
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
-    Leg result = makeCMSLeg(data, index, engineFactory, true, openEndDateReplacement);
+    Leg result = makeCMSLeg(data, index, engineFactory, attachPricer, openEndDateReplacement);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -206,12 +213,13 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr
 
 Leg CMBLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             RequiredFixings& requiredFixings, const string& configuration,
-                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                            const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                            const bool attachPricer) const {
     auto cmbData = QuantLib::ext::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
     QL_REQUIRE(cmbData, "Wrong LegType, expected CMB");
     string indexName = cmbData->genericBond();
     auto index = parseConstantMaturityBondIndex(indexName);
-    Leg result = makeCMBLeg(data, engineFactory, true, openEndDateReplacement);
+    Leg result = makeCMBLeg(data, engineFactory, attachPricer, openEndDateReplacement);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -219,7 +227,8 @@ Leg CMBLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr
 
 Leg DigitalCMSLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                    RequiredFixings& requiredFixings, const string& configuration,
-                                   const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                   const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                   const bool attachPricer) const {
     auto digitalCmsData = QuantLib::ext::dynamic_pointer_cast<DigitalCMSLegData>(data.concreteLegData());
     QL_REQUIRE(digitalCmsData, "Wrong LegType, expected DigitalCMS");
 
@@ -228,7 +237,7 @@ Leg DigitalCMSLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::sha
 
     string swapIndexName = digitalCmsData->underlying()->swapIndex();
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
-    Leg result = makeDigitalCMSLeg(data, index, engineFactory, true, openEndDateReplacement);
+    Leg result = makeDigitalCMSLeg(data, index, engineFactory, attachPricer, openEndDateReplacement);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -236,7 +245,8 @@ Leg DigitalCMSLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::sha
 
 Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                   RequiredFixings& requiredFixings, const string& configuration,
-                                  const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                  const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                  const bool attachPricer) const {
     auto cmsSpreadData = QuantLib::ext::dynamic_pointer_cast<CMSSpreadLegData>(data.concreteLegData());
     QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");
     auto index1 = *engineFactory->market()->swapIndex(cmsSpreadData->swapIndex1(), configuration);
@@ -244,7 +254,7 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shar
     Leg result = makeCMSSpreadLeg(data,
                                   QuantLib::ext::make_shared<QuantLib::SwapSpreadIndex>(
                                       "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
-                                  engineFactory, true, openEndDateReplacement);
+                                  engineFactory, attachPricer, openEndDateReplacement);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -252,7 +262,8 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shar
 
 Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                          RequiredFixings& requiredFixings, const string& configuration,
-                                         const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                         const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                         const bool attachPricer) const {
     auto digitalCmsSpreadData = QuantLib::ext::dynamic_pointer_cast<DigitalCMSSpreadLegData>(data.concreteLegData());
     QL_REQUIRE(digitalCmsSpreadData, "Wrong LegType, expected DigitalCMSSpread");
 
@@ -266,7 +277,7 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ex
         makeDigitalCMSSpreadLeg(data,
                                 QuantLib::ext::make_shared<QuantLib::SwapSpreadIndex>(
                                     "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
-                                engineFactory, openEndDateReplacement);
+                                engineFactory, openEndDateReplacement, attachPricer);
     applyIndexing(result, data, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
@@ -274,7 +285,8 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const QuantLib::ex
 
 Leg EquityLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                RequiredFixings& requiredFixings, const string& configuration,
-                               const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                               const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                               const bool attachPricer) const {
     auto eqData = QuantLib::ext::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();

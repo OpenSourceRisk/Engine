@@ -117,7 +117,7 @@ getFormulaBasedCouponPricer(const QuantLib::ext::shared_ptr<QuantExt::FormulaBas
 Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
                         const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                         const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
-                        const QuantLib::Date& openEndDateReplacement) {
+                        const QuantLib::Date& openEndDateReplacement, const bool attachPricer) {
     auto formulaBasedData = QuantLib::ext::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
     QL_REQUIRE(formulaBasedData, "Wrong LegType, expected FormulaBased, got " << data.legType());
     Currency paymentCurrency = parseCurrency(data.currency());
@@ -158,6 +158,9 @@ Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<Qua
             .withPaymentAdjustment(bdc)
             .withFixingDays(formulaBasedData->fixingDays())
             .inArrears(formulaBasedData->isInArrears());
+
+    if (!attachPricer)
+        return formulaBasedLeg;
 
     auto couponPricer = getFormulaBasedCouponPricer(formulaBasedIndex, paymentCurrency, engineFactory, indexMaps);
 
