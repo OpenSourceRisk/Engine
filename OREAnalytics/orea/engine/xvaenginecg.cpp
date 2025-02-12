@@ -420,6 +420,8 @@ void XvaEngineCG::buildCgPartC() {
             pfExposureNodesInflated_.push_back(
                 cg_mult(*g, pfExposureNodes_.back(),
                         model_->numeraire(i == 0 ? model_->referenceDate() : valuationDates_[i - 1])));
+            // copy over the regressor group from the pf exp node to the inflated version of the same node
+            pfRegressorPosGroups_[pfExposureNodesInflated_.back()] = pfRegressorPosGroups_[pfExposureNodes_.back()];
         }
     }
 
@@ -809,10 +811,13 @@ void XvaEngineCG::calculateDynamicDelta() {
         keepNodesDerivatives[n] = true;
     }
 
-    // for (auto const& n : pfExposureNodesInflated_) {
-    for (std::size_t n = pfExposureNodesInflated_[20]; n == pfExposureNodesInflated_[20]; n++) {
+    for (std::size_t i = 0; i < valuationDates_.size() + 1; ++i) {
 
-        std::cout << "calculate dyn delta derivatives for node " << n << std::endl;
+        std::size_t n = pfExposureNodesInflated_[i];
+        std::size_t n0 = pfExposureNodes_[i];
+
+        Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
+        Real t = model_->actualTimeFromReference(valDate);
 
         // init derivatives container
 
@@ -828,11 +833,57 @@ void XvaEngineCG::calculateDynamicDelta() {
                             RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
 
-        // collect and aggregate the derivatives of interest
+        // collect and aggregate the derivatives of interest (pathwise values)
 
-        for (auto const& [n, v] : baseModelParams_) {
-            std::cout << n << " " << expectation(dynamicDeltaDerivatives_[n]).at(0) << std::endl;
+        std::map<std::string, std::size_t> currencyLookup;
+        std::size_t index = 0;
+        for (auto const& c : model_->currencies())
+            currencyLookup[c] = index++;
+
+        std::vector<RandomVariable> pathIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+
+        for (auto const& p : model_->modelParameters()) {
+            if(p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
+                std::size_t ccyIndex = currencyLookup.at(p.qualifier());
+                // zero rate sensi for T - t as seen from val date t = - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
+                pathIrDelta[ccyIndex] +=
+                    RandomVariable(model_->size(), -(model_->actualTimeFromReference(p.date()) - t) * 1E-4) *
+                    values_[p.node()] * dynamicDeltaDerivatives_[p.node()];
+            }
         }
+
+        // calculate conditional expectations on the aggregated sensis
+
+        std::vector<RandomVariable> conditionalIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+
+        for (std::size_t ccy = 0; ccy < pathIrDelta.size(); ++ccy) {
+
+            if (g->predecessors(n0).empty())
+                continue;
+
+            std::vector<const RandomVariable*> args;
+            args.push_back(&pathIrDelta[ccy]);
+            for (std::size_t p = 1; p < g->predecessors(n0).size(); ++p)
+                args.push_back(&values_[g->predecessors(n0)[p]]);
+
+            conditionalIrDelta[ccy] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+
+            // debug conditional ir delta vs. model state on time step
+            // if (ccy == 0 && i == 20) {
+            //     std::cout << "args size " << args.size() << std::endl;
+            //     for (std::size_t j = 0; j < model_->size(); ++j) {
+            //         std::cout << j << "," << args[2]->at(j) << "," << conditionalIrDelta[ccy].at(j) << std::endl;
+            //     }
+            // }
+            // end debug
+        }
+
+        // output for debug: expected ir delta over all time steps
+        // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
+        //     std::cout << i << "," << QuantLib::io::iso_date(valDate) << "," << model_->currencies()[ccy] << ","
+        //               << expectation(conditionalIrDelta[ccy]).at(0) << std::endl;
+        // }
+        // end output for debug
     }
 
     timing_dynamicDelta_ = timer.elapsed().wall;
@@ -1104,6 +1155,10 @@ void XvaEngineCG::run() {
 
     setupValueContainers();
     doForwardEvaluation();
+
+    // dump model parameters
+    // for(auto const&p : model_->modelParameters())
+    //     std::cout << p << "," << p.eval() << std::endl;
 
     updateProgress(2, 4);
 
