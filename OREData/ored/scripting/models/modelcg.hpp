@@ -152,6 +152,9 @@ public:
     // the base ccy of the model
     virtual const std::string& baseCcy() const = 0;
 
+    // the list of supported model currencies
+    virtual const std::vector<std::string>& currencies() const = 0;
+
     // time between two dates d1 <= d2, default actact should be overriden in derived claases if appropriate
     virtual std::size_t dt(const Date& d1, const Date& d2) const;
 
