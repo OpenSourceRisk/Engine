@@ -5115,4 +5115,7 @@ In addition to product specific settings there is also a block with global param
   a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
   types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
   able to compute analytical or AAD first order sensitivities.
+\item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines 
+  file is referenced. Might also be left empty. This is used by some trade constructions to adapt to certain monte carlo
+  types. E.g. Pricer would not be attached to coupons which can be computed in AMC without a leg / coupon pricer
 \end{itemize}
