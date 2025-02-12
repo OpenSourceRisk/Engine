@@ -70,6 +70,7 @@ public:
                 const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // Model interface implementation (partial)
+    Real actualTimeFromReference(const Date& d) const override;
     const std::string& baseCcy() const override { return currencies_.front(); }
     const std::vector<std::string>& currencies() const override { return currencies_; }
     std::size_t dt(const Date& d1, const Date& d2) const override;

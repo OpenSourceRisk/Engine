@@ -149,6 +149,9 @@ public:
     // the eval date
     virtual const Date& referenceDate() const = 0;
 
+    // the (actual) time from reference measured in the model
+    virtual Real actualTimeFromReference(const Date& d) const = 0;
+
     // the base ccy of the model
     virtual const std::string& baseCcy() const = 0;
 
