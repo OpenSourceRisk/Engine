@@ -75,6 +75,7 @@ private:
     std::vector<std::string> secList_;
     std::string currency_;
     double contractNotional_;
+    std::string longShort_;
 
     // second tier information - both can be used in conjunction to identify tier 3 info
     std::string contractMonth_;

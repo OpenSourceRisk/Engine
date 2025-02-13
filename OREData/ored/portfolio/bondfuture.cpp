@@ -109,7 +109,7 @@ FutureType BondFuture::selectTypeUS(const string& value) {
 void BondFuture::checkData() {
 
     QL_REQUIRE(!contractName_.empty(), "BondFuture invalid: no contractName given");
-    // contractNotional_ already checked in fromXML
+    // contractNotional_, longShort_ already checked in fromXML
 
     vector<string> missingElements;
     if (currency_.empty())
@@ -202,10 +202,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
-    QL_REQUIRE(builder_fwd, "BondFuture::build(): internal error, forward bond engine builder is null");
-    ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
-    QL_REQUIRE(builder_bd, "BondFuture::build(): internal error, bond engine builder is null");
+    ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardBond");
+    QL_REQUIRE(builder, "BondFuture::build(): internal error, forward bond engine builder is null");
 
     // if data not given explicitly, exploit bond future reference data
     populateFromBondFutureReferenceData(engineFactory->referenceData());
@@ -232,21 +230,21 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // hardcoded values for bondfuture vs forward bond
     double amount = 0.0;                   // strike amount is zero for bondfutures
-    bool longInForward = true;             // TODO Check
     double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
-    bool isPhysicallySettled = false;      // TODO Check
+    bool isPhysicallySettled = true;      // TODO Check
     bool settlementDirty = true;           // TODO Check
 
     // create quantext forward bond instrument
-    ext::shared_ptr<Payoff> payoff = longInForward ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
-                                                   : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
+    ext::shared_ptr<Payoff> payoff = parsePositionType(longShort_) == Position::Long
+                                         ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
+                                         : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
 
     ext::shared_ptr<Instrument> fwdBond =
         ext::make_shared<ForwardBond>(underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty,
                                       compensationPayment, compensationPaymentDate, contractNotional_);
 
-    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
+    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder);
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
@@ -262,7 +260,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     maturityType_ = "Contract settled";
     npvCurrency_ = currency_;
     notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // FIX ME: get future cfs
+    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // presenting the cashflows of the underlying
     legCurrencies_ = vector<string>(1, currency_);
     legPayers_ = vector<bool>(1, false); // TODO check if this is valid
 }
@@ -319,6 +317,7 @@ void BondFuture::fromXML(XMLNode* node) {
     // mandatory first tier information
     contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
     contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
+    longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
 
     secList_.clear();
     XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
@@ -341,6 +340,7 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, node, "ContractName", contractName_);
     XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
+    XMLUtils::addChild(doc, node, "LongShort", longShort_);
 
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
