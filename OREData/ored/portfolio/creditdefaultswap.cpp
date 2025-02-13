@@ -155,6 +155,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     issuer_ = swap_.issuerId();
+
+    additionalData_["tradeRecoveryRate"] = swap_.recoveryRate();
 }
 
 const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
