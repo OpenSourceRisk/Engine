@@ -107,6 +107,9 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 
     currencies_.emplace_back("Currency", "PayCurrency", fixedLegData.currency());
 
+    QL_REQUIRE(!barrierData_.overrideTriggered(),
+               "KnockOutSwap::build(): OverrideTriggered not supported by this instrument type.");
+
     QL_REQUIRE(barrierData_.style().empty() || barrierData_.style() == "European",
 	       "Expected European barrier style, got '" << barrierData_.style() << "'");
 

@@ -181,7 +181,8 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, payDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
-        start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
+        start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+        barrier_.overrideTriggered());
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
@@ -189,19 +190,6 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
 
-}
-
-bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
 }
 
 void FxDoubleTouchOption::fromXML(XMLNode* node) {

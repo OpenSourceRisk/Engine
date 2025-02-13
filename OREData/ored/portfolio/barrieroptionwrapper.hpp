@@ -40,9 +40,8 @@ class BarrierOptionWrapper : public OptionWrapper {
 public:
     BarrierOptionWrapper(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
                          const QuantLib::Date& exerciseDate, const QuantLib::Date& settlementDate,
-			 const bool isPhysicalDelivery,
-                         const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst, Barrier::Type barrierType,
-                         Handle<Quote> spot, Real rebate, const QuantLib::Currency ccy,
+                         const bool isPhysicalDelivery, const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst,
+                         Barrier::Type barrierType, Handle<Quote> spot, Real rebate, const QuantLib::Currency ccy,
                          const QuantLib::Date& startDate, const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
                          const QuantLib::Calendar& calendar,
                          // multiplier as seen from the option holder
@@ -51,13 +50,14 @@ public:
                          const Real undMultiplier = 1.0,
                          const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
                              std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
-                         const std::vector<Real>& additionalMultipliers = std::vector<Real>())
+                         const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
+                         const std::optional<bool>& overrideTriggered = std::nullopt)
         : OptionWrapper(inst, isLongOption, std::vector<QuantLib::Date>(1, exerciseDate),
-			std::vector<QuantLib::Date>(1, settlementDate), isPhysicalDelivery,
-                        std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier, undMultiplier,
-                        additionalInstruments, additionalMultipliers),
-          spot_(spot), barrierType_(barrierType), rebate_(rebate), ccy_(ccy), startDate_(startDate), 
-          index_(index) {
+                        std::vector<QuantLib::Date>(1, settlementDate), isPhysicalDelivery,
+                        std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier,
+                        undMultiplier, additionalInstruments, additionalMultipliers),
+          spot_(spot), barrierType_(barrierType), rebate_(rebate), ccy_(ccy), startDate_(startDate), index_(index),
+          overrideTriggered_(overrideTriggered) {
         calendar_ = index ? index->fixingCalendar() : calendar;
         reset();
     }
@@ -74,26 +74,28 @@ protected:
     const QuantLib::Date startDate_;
     QuantLib::ext::shared_ptr<QuantLib::Index> index_;
     QuantLib::Calendar calendar_;
+    std::optional<bool> overrideTriggered_;
 };
 
 class SingleBarrierOptionWrapper : public BarrierOptionWrapper {
 public:
-    SingleBarrierOptionWrapper(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
-                               const QuantLib::Date& exerciseDate,
-			       const QuantLib::Date& settlementDate, const bool isPhysicalDelivery,
-                               const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst, Barrier::Type barrierType,
-                               Handle<Quote> spot, Real barrier, Real rebate, const QuantLib::Currency ccy,
-                               const QuantLib::Date& startDate, const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
-                               const QuantLib::Calendar& calendar,
-                               // multiplier as seen from the option holder
-                               const Real multiplier = 1.0,
-                               // undMultiplier w.r.t. underlying as seen from the option holder
-                               const Real undMultiplier = 1.0,
-                               const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
-                                   std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
-                               const std::vector<Real>& additionalMultipliers = std::vector<Real>())
-      : BarrierOptionWrapper(inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst, barrierType, spot, rebate,
-                               ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers),
+    SingleBarrierOptionWrapper(
+        const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
+        const QuantLib::Date& exerciseDate, const QuantLib::Date& settlementDate, const bool isPhysicalDelivery,
+        const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst, Barrier::Type barrierType, Handle<Quote> spot,
+        Real barrier, Real rebate, const QuantLib::Currency ccy, const QuantLib::Date& startDate,
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& index, const QuantLib::Calendar& calendar,
+        // multiplier as seen from the option holder
+        const Real multiplier = 1.0,
+        // undMultiplier w.r.t. underlying as seen from the option holder
+        const Real undMultiplier = 1.0,
+        const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+            std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
+        const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
+        const std::optional<bool>& overrideTriggered = std::nullopt)
+        : BarrierOptionWrapper(inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
+                               barrierType, spot, rebate, ccy, startDate, index, calendar, multiplier, undMultiplier,
+                               additionalInstruments, additionalMultipliers, overrideTriggered),
           barrier_(barrier) {}
 
     bool checkBarrier(Real spot, bool isTouchingOnly) const override;
@@ -105,30 +107,32 @@ protected:
 
 class DoubleBarrierOptionWrapper : public BarrierOptionWrapper {
 public:
-    DoubleBarrierOptionWrapper(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
-                               const QuantLib::Date& exerciseDate,
-			       const QuantLib::Date& settlementDate, const bool isPhysicalDelivery,
-                               const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst, DoubleBarrier::Type barrierType,
-                               Handle<Quote> spot, Real barrierLow, Real barrierHigh, Real rebate,
-                               const QuantLib::Currency ccy, const QuantLib::Date& startDate,
-                               const QuantLib::ext::shared_ptr<QuantLib::Index>& index, const QuantLib::Calendar& calendar,
-                               // multiplier as seen from the option holder
-                               const Real multiplier = 1.0,
-                               // undMultiplier w.r.t. underlying as seen from the option holder
-                               const Real undMultiplier = 1.0,
-                               const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
-                                   std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
-                               const std::vector<Real>& additionalMultipliers = std::vector<Real>())
+    DoubleBarrierOptionWrapper(
+        const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
+        const QuantLib::Date& exerciseDate, const QuantLib::Date& settlementDate, const bool isPhysicalDelivery,
+        const QuantLib::ext::shared_ptr<QuantLib::Instrument>& undInst, DoubleBarrier::Type barrierType,
+        Handle<Quote> spot, Real barrierLow, Real barrierHigh, Real rebate, const QuantLib::Currency ccy,
+        const QuantLib::Date& startDate, const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
+        const QuantLib::Calendar& calendar,
+        // multiplier as seen from the option holder
+        const Real multiplier = 1.0,
+        // undMultiplier w.r.t. underlying as seen from the option holder
+        const Real undMultiplier = 1.0,
+        const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+            std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
+        const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
+        const std::optional<bool>& overrideTriggered = std::nullopt)
         : BarrierOptionWrapper(
-			       inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
+              inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
               (barrierType == DoubleBarrier::Type::KnockOut ? Barrier::Type::UpOut : Barrier::Type::UpIn), spot, rebate,
-              ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers),
+              ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers,
+              overrideTriggered),
           barrierLow_(barrierLow), barrierHigh_(barrierHigh) {
         QL_REQUIRE(barrierType == DoubleBarrier::Type::KnockOut || barrierType == DoubleBarrier::Type::KnockIn,
                    "Invalid barrier type " << barrierType << ". Only KnockOut and KnockIn are supported.");
         QL_REQUIRE(barrierLow < barrierHigh, "barrierLow has to be less than barrierHigh");
     }
-        
+
     bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
