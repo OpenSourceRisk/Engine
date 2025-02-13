@@ -23,7 +23,7 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/cashflows/scaledcoupon.hpp> 
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
@@ -59,6 +59,36 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
         return QuantLib::Settlement::ParYieldCurve; // ql < 1.14 behaviour
 }
 } // namespace
+
+bool areConstantLegs (vector<vector<ext::shared_ptr<CashFlow>>> legs)
+{
+    Real constNotional = Null<Real>();
+    Real constRate = Null<Real>();
+    Real constAmount = Null<Real>();
+
+    for (Size i = 0; i < legs.size(); ++i) 
+        for (auto const& c : legs[i]) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) 
+            {
+                if(constNotional==Null<Real>())
+                    constNotional=cpn->nominal();
+                    else if (cpn->nominal()!=constNotional)
+                        return false;
+   
+                if(constRate==Null<Real>())
+                    constRate=cpn->rate();
+                    else if (cpn->rate()!=constRate)
+                        return false;
+
+                if(constAmount==Null<Real>())
+                    constAmount=cpn->amount();
+                    else if (cpn->amount()!=constAmount)
+                        return false;
+            }
+        }
+
+    return true;
+}
 
 void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -286,10 +316,21 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
             "Swaption::build(): instrument is not handled by the available engines: " +
                 boost::join(builderPrecheckMessages, ", "));
+       
         if (exerciseType_ == Exercise::European || exerciseType_ == Exercise::Bermudan)
-            builderType = "BermudanSwaption";
+        {           
+            if(areConstantLegs(underlying_->legs()))
+                builderType = "BermudanSwaption";
+            else
+                builderType = "BermudanSwaption_nonStandard";
+        }
         else if (exerciseType_ == Exercise::American)
-            builderType = "AmericanSwaption";
+        { 
+            if(areConstantLegs(underlying_->legs())) 
+                builderType = "AmericanSwaption";
+            else
+                builderType = "AmericanSwaption_nonStandard";
+        }
     }
 
     DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()

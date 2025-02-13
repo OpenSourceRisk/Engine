@@ -56,7 +56,7 @@ protected:
 class EuropeanSwaptionEngineBuilder final : public SwaptionEngineBuilder {
 public:
     EuropeanSwaptionEngineBuilder()
-        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
+        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption", "EuropeanSwaption_NonStandard"}) {}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
