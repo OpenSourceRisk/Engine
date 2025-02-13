@@ -24,7 +24,7 @@
 
 namespace QuantExt {
 
-bool checkBarrier(const QuantLib::Real spot, const QuantLib::Barrier::Type type, const QuantLib::Real barrier) {
+bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier) {
     switch (type) {
     case QuantLib::Barrier::DownIn:
     case QuantLib::Barrier::DownOut:
