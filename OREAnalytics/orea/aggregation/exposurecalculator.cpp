@@ -73,7 +73,6 @@ ExposureCalculator::ExposureCalculator(
 
 void ExposureCalculator::build() {
     LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
-    size_t i = 0;
     const Date today = market_->asofDate();
     const DayCounter dc = ActualActual(ActualActual::ISDA);
 
@@ -89,10 +88,9 @@ void ExposureCalculator::build() {
         included.
         This may effect DateGrids with daily data points*/
     const Date baselMaxEEPDate = WeekendsOnly().adjust(today + 1 * Years + 4 * Days);
-    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
-        auto trade = tradeIt->second;
-        string tradeId = tradeIt->first;
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
         string nettingSetId = trade->envelope().nettingSetId();
+        std::size_t i = cube_->getTradeIndex(tradeId);
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSetDefaultValue_.find(nettingSetId) == nettingSetDefaultValue_.end()) {
             nettingSetDefaultValue_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
@@ -242,11 +240,12 @@ void ExposureCalculator::build() {
 }
 
 vector<Real> ExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
+    Size tidx = exposureCube_->getTradeIndex(tid);
     vector<Real> exp(dates_.size() + 1, 0.0);
-    exp[0] = exposureCube_->getT0(tid, index);
+    exp[0] = exposureCube_->getT0(tidx, index);
     for (Size i = 0; i < dates_.size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {
-            exp[i + 1] += exposureCube_->get(tid, dates_[i], k, index);
+            exp[i + 1] += exposureCube_->get(tidx, i, k, index);
         }
         exp[i + 1] /= exposureCube_->samples();
     }

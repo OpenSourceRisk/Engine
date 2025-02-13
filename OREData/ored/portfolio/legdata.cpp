@@ -1542,7 +1542,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
 }
 
 Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
-               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
+               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement,
+               const bool attachPricer) {
     QuantLib::ext::shared_ptr<FloatingLegData> floatData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
     QuantLib::ext::shared_ptr<BMAIndex> index = indexWrapper->bma();
@@ -1593,12 +1594,14 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
     if (floatData->caps().size() > 0 || floatData->floors().size() > 0) {
 
         QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageBMACouponPricer> cfCouponPricer;
-        auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponLegEngineBuilder>(
-            engineFactory->builder("CapFlooredAverageBMACouponLeg"));
-        QL_REQUIRE(builder, "No builder found for CapFlooredAverageBMACouponLeg");
-        cfCouponPricer = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(
-            builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
-        QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageBMACouponPricer");
+        if (attachPricer) {
+            auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredAverageBMACouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredAverageBMACouponLeg");
+            cfCouponPricer = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageBMACouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageBMACouponPricer");
+        }
 
         for (Size i = 0; i < leg.size(); ++i) {
             auto bmaCpn = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(leg[i]);
@@ -1606,7 +1609,9 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
             if (caps[i] != Null<Real>() || floors[i] != Null<Real>()) {
                 auto cpn = QuantLib::ext::make_shared<CappedFlooredAverageBMACoupon>(
                     bmaCpn, caps[i], floors[i], floatData->nakedOption(), floatData->includeSpread());
-                cpn->setPricer(cfCouponPricer);
+                if (attachPricer) {
+                    cpn->setPricer(cfCouponPricer);
+                }
                 leg[i] = cpn;
             }
         }
@@ -1671,7 +1676,8 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 }
 
 Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
-               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
+               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement,
+               const bool attachPricer) {
 
     QuantLib::ext::shared_ptr<CPILegData> cpiLegData = QuantLib::ext::dynamic_pointer_cast<CPILegData>(data.concreteLegData());
     QL_REQUIRE(cpiLegData, "Wrong LegType, expected CPI, got " << data.legType());
@@ -1773,36 +1779,37 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
     if (couponCapFloor || finalFlowCapFloor) {
         
         string indexName = cpiLegData->index();
-        
-        // get a coupon pricer for the leg
-        QuantLib::ext::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
-        QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
-        QuantLib::ext::shared_ptr<CapFlooredCpiLegCouponEngineBuilder> cappedFlooredCpiCouponBuilder =
-            QuantLib::ext::dynamic_pointer_cast<CapFlooredCpiLegCouponEngineBuilder>(cpBuilder);
-        QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer = cappedFlooredCpiCouponBuilder->engine(indexName);
+        if (attachPricer) {
+            // get a coupon pricer for the leg
+            QuantLib::ext::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
+            QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
+            QuantLib::ext::shared_ptr<CapFlooredCpiLegCouponEngineBuilder> cappedFlooredCpiCouponBuilder =
+                QuantLib::ext::dynamic_pointer_cast<CapFlooredCpiLegCouponEngineBuilder>(cpBuilder);
+            QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer = cappedFlooredCpiCouponBuilder->engine(indexName);
 
-        // get a cash flow pricer for the leg
-        QuantLib::ext::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CappedFlooredCpiLegCashFlows");
-        QL_REQUIRE(cfBuilder, "No builder found for CappedFlooredCpiLegCashFLows");
-        QuantLib::ext::shared_ptr<CapFlooredCpiLegCashFlowEngineBuilder> cappedFlooredCpiCashFlowBuilder =
-            QuantLib::ext::dynamic_pointer_cast<CapFlooredCpiLegCashFlowEngineBuilder>(cfBuilder);
-        QuantLib::ext::shared_ptr<InflationCashFlowPricer> cashFlowPricer = cappedFlooredCpiCashFlowBuilder->engine(indexName);
+            // get a cash flow pricer for the leg
+            QuantLib::ext::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CappedFlooredCpiLegCashFlows");
+            QL_REQUIRE(cfBuilder, "No builder found for CappedFlooredCpiLegCashFLows");
+            QuantLib::ext::shared_ptr<CapFlooredCpiLegCashFlowEngineBuilder> cappedFlooredCpiCashFlowBuilder =
+                QuantLib::ext::dynamic_pointer_cast<CapFlooredCpiLegCashFlowEngineBuilder>(cfBuilder);
+            QuantLib::ext::shared_ptr<InflationCashFlowPricer> cashFlowPricer = cappedFlooredCpiCashFlowBuilder->engine(indexName);
 
-        // set coupon pricer for the leg
-        for (Size i = 0; i < leg.size(); i++) {
-            // nothing to do for the plain CPI Coupon, because the pricer is already set when the leg builder is called
-            // nothing to do for the plain CPI CashFlow either, because it does not require a pricer
+            // set coupon pricer for the leg
+            for (Size i = 0; i < leg.size(); i++) {
+                // nothing to do for the plain CPI Coupon, because the pricer is already set when the leg builder is called
+                // nothing to do for the plain CPI CashFlow either, because it does not require a pricer
 
-            QuantLib::ext::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
-                QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICoupon>(leg[i]);
-            if (cfCpiCoupon && couponCapFloor) {
-                cfCpiCoupon->setPricer(couponPricer);
-            }
+                QuantLib::ext::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
+                    QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICoupon>(leg[i]);
+                if (cfCpiCoupon && couponCapFloor) {
+                    cfCpiCoupon->setPricer(couponPricer);
+                }
 
-            QuantLib::ext::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
-                QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
-                cfCpiCashFlow->setPricer(cashFlowPricer);
+                QuantLib::ext::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
+                    QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
+                if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
+                    cfCpiCashFlow->setPricer(cashFlowPricer);
+                }
             }
         }
     }
@@ -1821,7 +1828,8 @@ Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflatio
 }
 
 Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationIndex>& index,
-               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
+               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement,
+               const bool attachPricer) {
     QuantLib::ext::shared_ptr<YoYLegData> yoyLegData = QuantLib::ext::dynamic_pointer_cast<YoYLegData>(data.concreteLegData());
     QL_REQUIRE(yoyLegData, "Wrong LegType, expected YoY, got " << data.legType());
 
@@ -1894,20 +1902,22 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
         leg = yoyLeg.operator Leg();
 
         if (couponCapFloor) {
-            // get a coupon pricer for the leg
-            QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredYYLeg");
-            QL_REQUIRE(builder, "No builder found for CapFlooredYYLeg");
-            QuantLib::ext::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
-                QuantLib::ext::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
-            string indexname = yoyLegData->index();
-            QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer =
-                cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
+            if (attachPricer) {
+                // get a coupon pricer for the leg
+                QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredYYLeg");
+                QL_REQUIRE(builder, "No builder found for CapFlooredYYLeg");
+                QuantLib::ext::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
+                    QuantLib::ext::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
+                string indexname = yoyLegData->index();
+                QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer =
+                    cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
 
-            // set coupon pricer for the leg
+                // set coupon pricer for the leg
 
-            for (Size i = 0; i < leg.size(); i++) {
-                QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
-                    QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
+                for (Size i = 0; i < leg.size(); i++) {
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+                        QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
+                }
             }
 
             // build naked option leg if required
@@ -1947,20 +1957,22 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
         leg = yoyLeg.operator Leg();
 
         if (couponCapFloor) {
-            // get a coupon pricer for the leg
-            QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredNonStdYYLeg");
-            QL_REQUIRE(builder, "No builder found for CapFlooredNonStdYYLeg");
-            QuantLib::ext::shared_ptr<CapFlooredNonStandardYoYLegEngineBuilder> cappedFlooredYoYBuilder =
-                QuantLib::ext::dynamic_pointer_cast<CapFlooredNonStandardYoYLegEngineBuilder>(builder);
-            string indexname = zcIndex->name();
-            QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer =
-                cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
+            if (attachPricer) {
+                // get a coupon pricer for the leg
+                QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredNonStdYYLeg");
+                QL_REQUIRE(builder, "No builder found for CapFlooredNonStdYYLeg");
+                QuantLib::ext::shared_ptr<CapFlooredNonStandardYoYLegEngineBuilder> cappedFlooredYoYBuilder =
+                    QuantLib::ext::dynamic_pointer_cast<CapFlooredNonStandardYoYLegEngineBuilder>(builder);
+                string indexname = zcIndex->name();
+                QuantLib::ext::shared_ptr<InflationCouponPricer> couponPricer =
+                    cappedFlooredYoYBuilder->engine(IndexNameTranslator::instance().oreName(indexname));
 
-            // set coupon pricer for the leg
+                // set coupon pricer for the leg
 
-            for (Size i = 0; i < leg.size(); i++) {
-                QuantLib::ext::dynamic_pointer_cast<QuantExt::NonStandardCappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
-                    QuantLib::ext::dynamic_pointer_cast<QuantExt::NonStandardYoYInflationCouponPricer>(couponPricer));
+                for (Size i = 0; i < leg.size(); i++) {
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::NonStandardCappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+                        QuantLib::ext::dynamic_pointer_cast<QuantExt::NonStandardYoYInflationCouponPricer>(couponPricer));
+                }
             }
 
             // build naked option leg if required
@@ -2157,6 +2169,10 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
 	    = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
 					    cmbData->fixingDays(), bondIndices[i], gearings[i], spreads[i], Date(), Date(),
 					    dayCounter, cmbData->isInArrears());	
+
+    if (!attachPricer)
+        return leg;
+
 	auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
 	coupon->setPricer(pricer);
 	leg.push_back(coupon);
@@ -2326,7 +2342,8 @@ Leg makeCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantL
 
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::Date& openEndDateReplacement) {
+                            const QuantLib::Date& openEndDateReplacement,
+                            const bool attachPricer) {
     auto digitalCmsSpreadData = QuantLib::ext::dynamic_pointer_cast<DigitalCMSSpreadLegData>(data.concreteLegData());
     QL_REQUIRE(digitalCmsSpreadData, "Wrong LegType, expected DigitalCMSSpread");
 
@@ -2397,6 +2414,9 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr
 
     if (cmsSpreadData->caps().size() > 0 || cmsSpreadData->floors().size() > 0)
         QL_FAIL("caps/floors not supported in DigitalCMSSpreadOptions");
+
+    if (!attachPricer)
+        return digitalCmsSpreadLeg;
 
     // Get a coupon pricer for the leg
     auto builder1 = engineFactory->builder("CMS");
