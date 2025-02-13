@@ -37,8 +37,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-bool checkBarrier(Real spot, Barrier::Type type, Real barrier);
-
 void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
@@ -178,19 +176,6 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
         }
-    }
-}
-
-bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
     }
 }
 

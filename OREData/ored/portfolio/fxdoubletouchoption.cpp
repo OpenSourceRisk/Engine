@@ -191,19 +191,6 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
 }
 
-bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
-}
-
 void FxDoubleTouchOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fxNode = XMLUtils::getChildNode(node, "FxDoubleTouchOptionData");

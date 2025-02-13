@@ -158,19 +158,6 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     additionalData_["payoffCurrency"] = payoffCurrency_;
 }
 
-bool EquityDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
-}
-
 void EquityDoubleTouchOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityDoubleTouchOptionData");

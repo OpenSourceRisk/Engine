@@ -24,12 +24,15 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <qle/instruments/payment.hpp>
+
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/payment.hpp>
+#include <qle/utilities/barrier.hpp>
+
+#include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <ql/instruments/barrieroption.hpp>
 #include <ql/settings.hpp>
 
 using namespace QuantLib;
@@ -105,16 +108,7 @@ bool SingleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) co
     if (isTouchingOnly)
         return close_enough(spot, barrier_);
     else {
-        switch (barrierType_) {
-        case Barrier::DownIn:
-        case Barrier::DownOut:    
-            return spot <= barrier_;
-        case Barrier::UpIn:
-        case Barrier::UpOut:
-            return spot >= barrier_;
-        default:
-            QL_FAIL("unknown barrier type " << barrierType_);
-        }
+        return ::QuantExt::checkBarrier(spot, barrierType_, barrier_);
     }
 }
 
