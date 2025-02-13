@@ -304,6 +304,7 @@ portfolio/tradeactions.cpp
 portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
 portfolio/trademonetary.cpp
+portfolio/tradegenerator.cpp
 portfolio/tradestrike.cpp
 portfolio/tranche.cpp
 portfolio/trs.cpp
@@ -714,6 +715,7 @@ portfolio/tradeactions.hpp
 portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
 portfolio/trademonetary.hpp
+portfolio/tradegenerator.hpp
 portfolio/tradestrike.hpp
 portfolio/tranche.hpp
 portfolio/trs.hpp
