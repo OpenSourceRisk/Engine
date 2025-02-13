@@ -314,9 +314,22 @@ void BondFuture::fromXML(XMLNode* node) {
 }
 
 XMLNode* BondFuture::toXML(XMLDocument& doc) const {
-    // TODO implement
-    XMLNode* bondFutureNode = doc.allocNode("BondFutureData");
-    return bondFutureNode;
+    XMLNode* node = doc.allocNode("BondFutureData");
+
+    XMLUtils::addChild(doc, node, "ContractName", contractName_);
+    XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
+    XMLUtils::addChild(doc, node, "Currency", currency_);
+
+    XMLUtils::addChild(doc, node, "ContractMonths", contractMonths_);
+    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
+    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
+    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
+
+    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
+    for (auto& sec : secList_)
+        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
+
+        return node;
 }
 
 void BondFuture::populateFromBondFutureReferenceData(

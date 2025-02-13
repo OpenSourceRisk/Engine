@@ -111,11 +111,13 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
 
 void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondFutureReferenceDatum::BondFutureData::fromXML(): no node given");
+
     secList.clear();
-    XMLUtils::checkNode(node, "DeliveryBasket");
-    for (XMLNode* child = XMLUtils::getChildNode(node, "SecurityId"); child; child = XMLUtils::getNextSibling(child)) {
-        secList.push_back(XMLUtils::getChildValue(child, "SecurityId", true));
-    }
+    XMLNode* basket = XMLUtils::getChildNode(node, "DeliveryBasket");
+    QL_REQUIRE(basket, "No DeliveryBasket Node");
+    for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child; child = XMLUtils::getNextSibling(child))
+        secList.push_back(XMLUtils::getNodeValue(child));
+
     contractMonths = XMLUtils::getChildValue(node, "ContractMonths", false, "");
     deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false, "");
     lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false, "");
@@ -129,9 +131,9 @@ XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
     XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
     XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
-    for (auto& sec : secList) {
+    for (auto& sec : secList)
         XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
-    }
+
     return node;
 }
 
