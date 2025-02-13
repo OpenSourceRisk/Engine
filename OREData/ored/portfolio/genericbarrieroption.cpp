@@ -423,6 +423,8 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         barrierRebatePayTimes;
     bool hasKi = false, hasKo = false;
     for (auto const& b : barriers_) {
+        QL_REQUIRE(!b.overrideTriggered(),
+                   "GenericBarrierOption::build(): OverrideTriggered is not supported by this instrument type.");
         std::string barrierType;
         if (b.type() == "DownAndIn") {
             barrierType = "1";
