@@ -43,6 +43,13 @@ rate for a given reference entity and debt tier is determined in a credit event 
 In a fixed recovery CDS, the recovery rate $R$ is specified at trade inception in the 
 contract terms.
 
+Per ISDA Standard Model, the Real Recovery Rate is used for conversion from ParSpread to Upfront with piecewise constant hazard rate. 
+The Assumed Recovery Rate is used for the conventional spread/upfront conversion using a flat hazard rate within the ISDA standard model.
+The CDS Real Recovery Rate (also known as the Composite Recovery Rate) is a consensus value that is calculated daily based on observable CDS market data submitted 
+by sell-side bank contributors. It is used for default curve building and pricing except for the conventional spread / upfront conversion mentioned before.
+The Assumed Recovery Rate (also known as standard recovery rates) is based on a matrix of recovery rate levels defined by ISDA according to Contract Region/ISDA Transaction Type/CDS Tier Recovery factors.
+These rates do not fluctuate on a daily basis as they reference the ISDA recovery rate matrix fixings.
+
 \subsubsection{Asset Backed Credit Default Swap}
 \label{pricing:cr_abcds}
 
