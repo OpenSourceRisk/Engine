@@ -169,8 +169,8 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
         barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate,
-        settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
-        start, fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers));
+        settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy, start,
+        fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers, barrier_.overrideTriggered()));
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {

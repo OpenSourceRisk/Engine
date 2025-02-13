@@ -119,7 +119,9 @@ bool SingleBarrierOptionWrapper::exercise() const {
     // check historical fixings - only check if the instrument is not calculated
     // really only needs to be checked if evaluation date changed
     if (!instrument_->isCalculated()) {
-        if (startDate_ != Date() && startDate_ < today) {
+        if(overrideTriggered_) {
+            trigger = *overrideTriggered_;
+        } else if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
 
@@ -155,10 +157,14 @@ bool SingleBarrierOptionWrapper::exercise() const {
 
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
-        const bool isTouchingOnly = false;
-        trigger = checkBarrier(spot_->value(), isTouchingOnly);
-        if (trigger)
-            exerciseDate_ = today;
+        if (overrideTriggered_) {
+            trigger = *overrideTriggered_;
+        } else {
+            const bool isTouchingOnly = false;
+            trigger = checkBarrier(spot_->value(), isTouchingOnly);
+            if (trigger)
+                exerciseDate_ = today;
+        }
     }
 
     exercised_ = trigger;
@@ -179,7 +185,9 @@ bool DoubleBarrierOptionWrapper::exercise() const {
     // check historical fixings - only check if the instrument is not calculated
     // really only needs to be checked if evaluation date changed
     if (!instrument_->isCalculated()) {
-        if (startDate_ != Date() && startDate_ < today) {
+        if(overrideTriggered_) {
+            trigger = *overrideTriggered_;
+        } else if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
 
@@ -210,9 +218,14 @@ bool DoubleBarrierOptionWrapper::exercise() const {
 
     // check todays spot, if triggered today set the exerciseDate, may have to pay a rebate
     if (!trigger) {
-        const bool isTouchingOnly = false;
-        trigger = checkBarrier(spot_->value(), isTouchingOnly);
-        exerciseDate_ = today;
+        if (overrideTriggered_) {
+            trigger = *overrideTriggered_;
+        } else {
+            const bool isTouchingOnly = false;
+            trigger = checkBarrier(spot_->value(), isTouchingOnly);
+            if (trigger)
+                exerciseDate_ = today;
+        }
     }
 
     exercised_ = trigger;

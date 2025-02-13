@@ -82,6 +82,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(barriers_[1].style().empty() || barriers_[1].style() == "American",
                "only american barrier style supported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxBarrierOption");
+    QL_REQUIRE(!barriers_[0].overrideTriggered() && !barriers_[1].overrideTriggered(),
+               "FxKIKOBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);

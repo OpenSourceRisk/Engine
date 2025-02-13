@@ -71,7 +71,6 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
-    Date today = Settings::instance().evaluationDate();
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Parse trade data
@@ -113,28 +112,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     QL_REQUIRE(calendar_ != "", "No calendar provided");
 
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex = parseEquityIndex(eqIndex_);
-
-    // check if the barrier has been triggered already
-    bool triggered = false;
     Calendar cal = eqIndex->fixingCalendar();
-    if (startDate_ != "" && start < today) {
-
-        Date d = start;
-
-        while (d < today && !triggered) {
-
-            Real fixing = eqIndex->pastFixing(d);
-
-            if (fixing == 0.0 || fixing == Null<Real>()) {
-                ALOG("Got invalid Equity fixing for index " << eqIndex_ << " on " << d
-                                                            << "Skipping this date, assuming no trigger");
-            } else {
-                triggered = QuantExt::checkBarrier(fixing, barrierType, level);
-            }
-
-            d = cal.advance(d, 1, Days);
-        }
-    }
 
     // set pricing engines
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -165,8 +143,9 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Handle<Quote> spot = market->equitySpot(assetName);
     Date settlementDate = expiryDate;
     instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-        barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
-        payoffAmount_, additionalInstruments, additionalMultipliers);
+        barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start,
+        eqIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+        barrier_.overrideTriggered());
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;

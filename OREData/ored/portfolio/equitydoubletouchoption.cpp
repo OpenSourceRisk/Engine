@@ -141,8 +141,9 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-        doubleTouch, isLong, expiryDate, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy, start, eqIndex, cal,
-        payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
+        doubleTouch, isLong, expiryDate, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy,
+        start, eqIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+        barrier_.overrideTriggered());
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
