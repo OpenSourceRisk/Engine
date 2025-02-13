@@ -317,13 +317,13 @@ void MarketCalibrationReportBase::addCommodityCurve(const QuantLib::Date& refdat
         return;
 
     const string commodityStr = "commodityCuve";
-    addCommodityCurveImpl(refdate, info, id, label, commodityStr);
 
     // check if we have already processed this curve
     if (checkCalibrations(label, commodityStr, id)) {
         DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
+    addCommodityCurveImpl(refdate, info, id, label, commodityStr);
     calibrations_[label][commodityStr].insert(id);
 }
 
