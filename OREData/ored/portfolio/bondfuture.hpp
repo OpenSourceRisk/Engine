@@ -56,7 +56,9 @@ protected:
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
-    void checkData(QuantLib::Date expiry, QuantLib::Date settlement);
+    void checkDates(QuantLib::Date expiry, QuantLib::Date settlement);
+
+    void checkData();
 
 private:
     // mandatory first tier information

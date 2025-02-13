@@ -118,6 +118,7 @@ void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
     for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child; child = XMLUtils::getNextSibling(child))
         secList.push_back(XMLUtils::getNodeValue(child));
 
+    currency = XMLUtils::getChildValue(node, "Currency", false, "");
     contractMonths = XMLUtils::getChildValue(node, "ContractMonths", false, "");
     deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false, "");
     lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false, "");
@@ -126,6 +127,7 @@ void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
 
 XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BondFutureData");
+    XMLUtils::addChild(doc, node, "Currency", currency);
     XMLUtils::addChild(doc, node, "ContractMonths", contractMonths);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);

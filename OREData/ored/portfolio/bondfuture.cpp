@@ -38,13 +38,17 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void populateFromBondFutureReferenceData(std::string& contractMonths, std::string& deliverableGrade,
-                                         std::string& lastTrading, std::string& lastDelivery,
-                                         std::vector<std::string>& secList,
+void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonths,
+                                         std::string& deliverableGrade, std::string& lastTrading,
+                                         std::string& lastDelivery, std::vector<std::string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
     DLOG("populating data bondfuture from reference data");
     // checked before
     // QL_REQUIRE(bondFutureRefData, "populateFromBondFutureReferenceData(): empty bondfuture reference datum given");
+    if (currency.empty()) {
+        currency = bondFutureRefData->bondFutureData().currency;
+        TLOG("overwrite currency with '" << currency << "'");
+    }
     if (contractMonths.empty()) {
         contractMonths = bondFutureRefData->bondFutureData().contractMonths;
         TLOG("overwrite contractMonths with '" << contractMonths << "'");
@@ -103,7 +107,32 @@ FutureType selectTypeUS(std::string value) {
         QL_FAIL("FutureType " << value << " unkown");
 }
 
-void BondFuture::checkData(Date expiry, Date settlement) {
+void BondFuture::checkData() {
+
+    QL_REQUIRE(!contractName_.empty(), "BondFuture invalid: no contractName given");
+    // contractNotional_ already checked in fromXML
+
+    std::vector<std::string> missingElements;
+    if (currency_.empty())
+        missingElements.push_back("Currency");
+
+    // we can deduce lastTrading_/lastDelivery_ given DeliverableGrade/ContractMonths
+    if (lastTrading_.empty() && lastDelivery_.empty()) {
+        if (deliverableGrade_.empty())
+            missingElements.push_back("DeliverableGrade");
+        if (contractMonths_.empty())
+            missingElements.push_back("ContractMonths");
+    }
+
+    if (secList_.size() < 1)
+        missingElements.push_back("DeliveryBasket");
+
+    QL_REQUIRE(missingElements.empty(), "BondFuture invalid: missing " + boost::algorithm::join(missingElements, ", ") +
+                                                " - check if reference data is set up for '"
+                                            << contractName_ << "'");
+}
+
+void BondFuture::checkDates(Date expiry, Date settlement) {
 
     Date asof = Settings::instance().evaluationDate();
     if (settlement < expiry)
@@ -117,8 +146,7 @@ void BondFuture::checkData(Date expiry, Date settlement) {
                                             << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
 }
 
-std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade,
-                                                      Month contractMonth) {
+std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade, Month contractMonth) {
     Date expiry;
     Date settlement;
 
@@ -159,7 +187,8 @@ std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade,
     } else
         QL_FAIL("deduceDates: Currencies other than USD or CNY is not implemented. " << ccy.code() << " provided.");
 
-    std::cout << "asof " << io::iso_date(asof) << " expiry " << io::iso_date(expiry) << " settlement " << io::iso_date(settlement) << std::endl;
+    //std::cout << "asof " << io::iso_date(asof) << " expiry " << io::iso_date(expiry) << " settlement "
+    //          << io::iso_date(settlement) << std::endl;
 
     return std::make_pair(expiry, settlement);
 }
@@ -181,20 +210,18 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // if data not given explicitly, exploit bond future reference data
     populateFromBondFutureReferenceData(engineFactory->referenceData());
-
-    Date expiry = parseDate(lastTrading_);
-    Date settlement = parseDate(lastDelivery_);
+    checkData();
 
     // if dates are not given explicitly or by referenceData, deduce dates from contract months
+    Date expiry = parseDate(lastTrading_);
+    Date settlement = parseDate(lastDelivery_);
     if (expiry == Date() || settlement == Date()) {
         pair<Date, Date> exp_set =
             deduceDates(parseCurrency(currency_), deliverableGrade_, parseMonth(contractMonths_));
         expiry = exp_set.first;
         settlement = exp_set.second;
     }
-
-    // check data
-    checkData(expiry, settlement);
+    checkDates(expiry, settlement);
 
     // identify CTD bond
     //
@@ -206,24 +233,22 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
         BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
 
     // hardcoded values for bondfuture vs forward bond
-    double amount = 0.0; // strike amount is zero for bondfutures
-    bool longInForward = true; // TODO Check
-    double compensationPayment = 0.0; // no compensation payments for bondfutures
+    double amount = 0.0;                   // strike amount is zero for bondfutures
+    bool longInForward = true;             // TODO Check
+    double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
-    bool isPhysicallySettled = false; // TODO Check
-    bool settlementDirty = true; // TODO Check
+    bool isPhysicallySettled = false;      // TODO Check
+    bool settlementDirty = true;           // TODO Check
 
     // create quantext forward bond instrument
-    ext::shared_ptr<Payoff> payoff =
-        longInForward ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
-                      : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
+    ext::shared_ptr<Payoff> payoff = longInForward ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
+                                                   : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
 
-    ext::shared_ptr<Instrument> fwdBond = ext::make_shared<ForwardBond>(
-        underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty, compensationPayment,
-        compensationPaymentDate, contractNotional_);
+    ext::shared_ptr<Instrument> fwdBond =
+        ext::make_shared<ForwardBond>(underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty,
+                                      compensationPayment, compensationPaymentDate, contractNotional_);
 
-    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
-        ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
+    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
@@ -239,9 +264,9 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     maturityType_ = "Contract settled";
     npvCurrency_ = currency_;
     notional_ = contractNotional_;
-    legs_ = vector<QuantLib::Leg>(1, underlying.bond->cashflows()); //FIX ME: get future cfs 
+    legs_ = vector<QuantLib::Leg>(1, underlying.bond->cashflows()); // FIX ME: get future cfs
     legCurrencies_ = vector<string>(1, currency_);
-    legPayers_ = vector<bool>(1, false); //TODO check if this is valid
+    legPayers_ = vector<bool>(1, false); // TODO check if this is valid
 }
 
 string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -296,7 +321,6 @@ void BondFuture::fromXML(XMLNode* node) {
     // mandatory first tier information
     contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
     contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
-    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", true);
 
     secList_.clear();
     XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
@@ -305,6 +329,7 @@ void BondFuture::fromXML(XMLNode* node) {
         secList_.push_back(XMLUtils::getNodeValue(child));
 
     // second tier information
+    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false, "");
     contractMonths_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonths", false, "");
     deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false, "");
 
@@ -318,8 +343,8 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, node, "ContractName", contractName_);
     XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
-    XMLUtils::addChild(doc, node, "Currency", currency_);
 
+    XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ContractMonths", contractMonths_);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
@@ -329,11 +354,10 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     for (auto& sec : secList_)
         XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
 
-        return node;
+    return node;
 }
 
-void BondFuture::populateFromBondFutureReferenceData(
-    const ext::shared_ptr<ReferenceDataManager>& referenceData) {
+void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData) {
     QL_REQUIRE(!contractName_.empty(), "BondFuture::populateFromBondReferenceData(): no contract name given");
 
     if (!referenceData || !referenceData->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
@@ -344,8 +368,8 @@ void BondFuture::populateFromBondFutureReferenceData(
             referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));
         QL_REQUIRE(bondFutureRefData, "could not cast to BondReferenceDatum, this is unexpected");
         DLOG("Got BondFutureReferenceDatum for name " << contractName_ << " overwrite empty elements in trade");
-        ore::data::populateFromBondFutureReferenceData(contractMonths_, deliverableGrade_, lastTrading_, lastDelivery_,
-                                                       secList_, bondFutureRefData);
+        ore::data::populateFromBondFutureReferenceData(currency_, contractMonths_, deliverableGrade_, lastTrading_,
+                                                       lastDelivery_, secList_, bondFutureRefData);
     }
 }
 

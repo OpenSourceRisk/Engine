@@ -138,6 +138,7 @@ public:
     static constexpr const char* TYPE = "BondFuture";
 
     struct BondFutureData : XMLSerializable {
+        std::string currency;
         std::vector<std::string> secList;
         std::string contractMonths;
         std::string deliverableGrade; // futureType differentiating the underlying
