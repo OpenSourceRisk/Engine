@@ -22,6 +22,8 @@
 
 #include <qle/utilities/barrier.hpp>
 
+#include <ql/errors.hpp>
+
 namespace QuantExt {
 
 bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier) {
@@ -33,7 +35,7 @@ bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const d
     case QuantLib::Barrier::UpOut:
         return spot >= barrier;
     default:
-        QL_FAIL("unknown barrier type " << type);
+        QL_FAIL("unhandled barrier type " << type);
     }
 }
 
