@@ -71,39 +71,121 @@ void populateFromBondFutureReferenceData(string& currency, string& contractMonth
     DLOG("populating bondfuture data from reference data done.");
 }
 
-FutureType BondFuture::selectTypeUS(const string& value) {
+void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
+    DLOG("BondFuture::build() called for trade " << id());
 
-    //                       Deliverable Maturities	    CME Globex  Bloomberg
-    // 2-Year T-Note         1 3/4 to 2 years	        ZT          TU
-    // 3-Year T-Note         9/12 to 3 years	        Z3N         3Y
-    // 5-Year T-Note         4 1/6 to 5 1/4 years	    ZF          FV
-    // 10-Year T-Note        6 1/2 to 8 years	        ZN          TY
-    // Ultra 10-Year T-Note	 9 5/12 to 10 Years	        TN          UXY
-    // T-Bond                15 years up to 25 years	ZB          US
-    // 20-Year T-Bond        19 2/12 to 19 11/12 years	TWE         TWE
-    // Ultra T-Bond	         25 years to 30 years	    UB          WN
-    // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
+    // ISDA taxonomy https://www.isda.org/a/20EDE/q4-2011-credit-standardisation-legend.pdf
+    // TODO: clarify ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 
-    string val_up = boost::to_upper_copy(value);
+    ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardBond");
+    QL_REQUIRE(builder, "BondFuture::build(): internal error, forward bond engine builder is null");
 
-    if (val_up == "UB" || val_up == "WN")
-        return FutureType::LongTenor;
-    else if (val_up == "ZB" || val_up == "US")
-        return FutureType::LongTenor;
-    else if (val_up == "TWE")
-        return FutureType::LongTenor;
-    else if (val_up == "TN" || val_up == "UXY")
-        return FutureType::LongTenor;
-    else if (val_up == "ZN" || val_up == "TY")
-        return FutureType::LongTenor;
-    else if (val_up == "ZF" || val_up == "FV")
-        return FutureType::ShortTenor;
-    else if (val_up == "Z3N" || val_up == "3Y")
-        return FutureType::ShortTenor;
-    else if (val_up == "ZT" || val_up == "TU")
-        return FutureType::ShortTenor;
-    else
-        QL_FAIL("FutureType " << val_up << " unkown");
+    // if data not given explicitly, exploit bond future reference data
+    populateFromBondFutureReferenceData(engineFactory->referenceData());
+    checkData();
+
+    // if dates are not given explicitly or by referenceData, deduce dates from contractMonth/deliverableGrade
+    Date expiry = parseDate(lastTrading_);
+    Date settlement = parseDate(lastDelivery_);
+    if (expiry == Date() || settlement == Date())
+        deduceDates(expiry, settlement);
+    checkDates(expiry, settlement);
+
+    // identify CTD bond
+    //
+    // TODO use identifyCtdBond method
+    //
+    string securityId = secList_.front();
+
+    BondBuilder::Result underlying =
+        BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
+
+    // hardcoded values for bondfuture vs forward bond
+    double amount = 0.0;                   // strike amount is zero for bondfutures
+    double compensationPayment = 0.0;      // no compensation payments for bondfutures
+    Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
+    bool isPhysicallySettled = true;       // TODO Check
+    bool settlementDirty = true;           // TODO Check
+
+    // create quantext forward bond instrument
+    ext::shared_ptr<Payoff> payoff = parsePositionType(longShort_) == Position::Long
+                                         ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
+                                         : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
+
+    ext::shared_ptr<Instrument> fwdBond =
+        ext::make_shared<ForwardBond>(underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty,
+                                      compensationPayment, compensationPaymentDate, contractNotional_);
+
+    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder);
+    QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
+
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, string()),
+        underlying.creditCurveId, securityId, underlying.bondTrade->bondData().referenceCurveId(),
+        underlying.bondTrade->bondData().incomeCurveId(), settlementDirty));
+
+    setSensitivityTemplate(*fwdBondBuilder);
+    addProductModelEngine(*fwdBondBuilder);
+    instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
+
+    maturity_ = settlement;
+    maturityType_ = "Contract settled";
+    npvCurrency_ = currency_;
+    notional_ = contractNotional_;
+    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // presenting the cashflows of the underlying
+    legCurrencies_ = vector<string>(1, currency_);
+    legPayers_ = vector<bool>(1, false); // TODO check if this is valid
+}
+
+void BondFuture::fromXML(XMLNode* node) {
+    Trade::fromXML(node);
+    XMLNode* bondFutureNode = XMLUtils::getChildNode(node, "BondFutureData");
+    QL_REQUIRE(bondFutureNode, "No BondFutureData Node");
+
+    // mandatory first tier information
+    contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
+    contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
+    longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
+
+    secList_.clear();
+    XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
+    if (basket) {
+        for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child;
+             child = XMLUtils::getNextSibling(child))
+            secList_.push_back(XMLUtils::getNodeValue(child));
+    }
+    // second tier information
+    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false, "");
+    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false, "");
+    deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false, "");
+
+    // thirdt tier information
+    lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false, "");
+    lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false, "");
+}
+
+XMLNode* BondFuture::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("BondFutureData");
+
+    XMLUtils::addChild(doc, node, "ContractName", contractName_);
+    XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
+    XMLUtils::addChild(doc, node, "LongShort", longShort_);
+
+    XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
+    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
+    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
+    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
+
+    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
+    for (auto& sec : secList_)
+        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
+
+    return node;
 }
 
 void BondFuture::checkData() {
@@ -131,23 +213,7 @@ void BondFuture::checkData() {
                                             << contractName_ << "'");
 }
 
-void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
-
-    Date asof = Settings::instance().evaluationDate();
-    if (settlement < expiry)
-        QL_FAIL("BondFuture::checkDate -- id " << id() << " settlement date " << io::iso_date(settlement)
-                                               << " lies before expiry " << io::iso_date(expiry));
-    if (expiry < asof)
-        QL_FAIL("BondFuture::checkDate -- id " << id() << " is expired, asof " << io::iso_date(asof) << " vs. expiry "
-                                               << io::iso_date(expiry));
-    if (asof + 9 * Months > expiry)
-        ALOG("BondFuture::checkDate -- id " << id() << " expiry may be not in standard cycle of next three quarters "
-                                            << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
-}
-
-pair<Date, Date> BondFuture::deduceDates() {
-    Date expiry;
-    Date settlement;
+void BondFuture::deduceDates(Date& expiry, Date& settlement) {
 
     Currency ccy_ql = parseCurrency(currency_);
     Month contractMonth_ql = parseMonth(contractMonth_);
@@ -188,81 +254,56 @@ pair<Date, Date> BondFuture::deduceDates() {
 
     } else
         QL_FAIL("deduceDates: Currencies other than USD or CNY is not implemented. " << ccy_ql.code() << " provided.");
-
-    return std::make_pair(expiry, settlement);
 }
 
-void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
-    DLOG("BondFuture::build() called for trade " << id());
+FutureType BondFuture::selectTypeUS(const string& value) {
 
-    // ISDA taxonomy https://www.isda.org/a/20EDE/q4-2011-credit-standardisation-legend.pdf
-    // TODO: clarify ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
+    //                       Deliverable Maturities	    CME Globex  Bloomberg
+    // 2-Year T-Note         1 3/4 to 2 years	        ZT          TU
+    // 3-Year T-Note         9/12 to 3 years	        Z3N         3Y
+    // 5-Year T-Note         4 1/6 to 5 1/4 years	    ZF          FV
+    // 10-Year T-Note        6 1/2 to 8 years	        ZN          TY
+    // Ultra 10-Year T-Note	 9 5/12 to 10 Years	        TN          UXY
+    // T-Bond                15 years up to 25 years	ZB          US
+    // 20-Year T-Bond        19 2/12 to 19 11/12 years	TWE         TWE
+    // Ultra T-Bond	         25 years to 30 years	    UB          WN
+    // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
 
-    ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardBond");
-    QL_REQUIRE(builder, "BondFuture::build(): internal error, forward bond engine builder is null");
+    string val_up = boost::to_upper_copy(value);
 
-    // if data not given explicitly, exploit bond future reference data
-    populateFromBondFutureReferenceData(engineFactory->referenceData());
-    checkData();
+    if (val_up == "UB" || val_up == "WN")
+        return FutureType::LongTenor;
+    else if (val_up == "ZB" || val_up == "US")
+        return FutureType::LongTenor;
+    else if (val_up == "TWE")
+        return FutureType::LongTenor;
+    else if (val_up == "TN" || val_up == "UXY")
+        return FutureType::LongTenor;
+    else if (val_up == "ZN" || val_up == "TY")
+        return FutureType::LongTenor;
+    else if (val_up == "ZF" || val_up == "FV")
+        return FutureType::ShortTenor;
+    else if (val_up == "Z3N" || val_up == "3Y")
+        return FutureType::ShortTenor;
+    else if (val_up == "ZT" || val_up == "TU")
+        return FutureType::ShortTenor;
+    else
+        QL_FAIL("FutureType " << val_up << " unkown");
+}
 
-    // if dates are not given explicitly or by referenceData, deduce dates from contract months
-    Date expiry = parseDate(lastTrading_);
-    Date settlement = parseDate(lastDelivery_);
-    if (expiry == Date() || settlement == Date()) {
-        pair<Date, Date> exp_set = deduceDates();
-        expiry = exp_set.first;
-        settlement = exp_set.second;
-    }
-    checkDates(expiry, settlement);
+void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
 
-    // identify CTD bond
-    //
-    // TODO use identifyCtdBond method
-    //
-    string securityId = secList_.front();
-
-    BondBuilder::Result underlying =
-        BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
-
-    // hardcoded values for bondfuture vs forward bond
-    double amount = 0.0;                   // strike amount is zero for bondfutures
-    double compensationPayment = 0.0;      // no compensation payments for bondfutures
-    Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
-    bool isPhysicallySettled = true;      // TODO Check
-    bool settlementDirty = true;           // TODO Check
-
-    // create quantext forward bond instrument
-    ext::shared_ptr<Payoff> payoff = parsePositionType(longShort_) == Position::Long
-                                         ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
-                                         : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
-
-    ext::shared_ptr<Instrument> fwdBond =
-        ext::make_shared<ForwardBond>(underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty,
-                                      compensationPayment, compensationPaymentDate, contractNotional_);
-
-    ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder);
-    QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
-
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, string()),
-        underlying.creditCurveId, securityId, underlying.bondTrade->bondData().referenceCurveId(),
-        underlying.bondTrade->bondData().incomeCurveId(), settlementDirty));
-
-    setSensitivityTemplate(*fwdBondBuilder);
-    addProductModelEngine(*fwdBondBuilder);
-    instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
-
-    maturity_ = settlement;
-    maturityType_ = "Contract settled";
-    npvCurrency_ = currency_;
-    notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // presenting the cashflows of the underlying
-    legCurrencies_ = vector<string>(1, currency_);
-    legPayers_ = vector<bool>(1, false); // TODO check if this is valid
+    Date asof = Settings::instance().evaluationDate();
+    if (settlement < expiry)
+        QL_FAIL("BondFuture::checkDate -- id " << id() << " settlement date " << io::iso_date(settlement)
+                                               << " lies before expiry " << io::iso_date(expiry));
+    if (expiry < asof)
+        QL_FAIL("BondFuture::checkDate -- id " << id() << " is expired, asof " << io::iso_date(asof) << " vs. expiry "
+                                               << io::iso_date(expiry));
+    // refine + 9 * Months ...
+    if (asof + 9 * Months > expiry)
+        ALOG("BondFuture::checkDate -- id " << id() << " expiry may be not in standard cycle of next three quarters "
+                                            << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
 }
 
 string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -308,52 +349,6 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
     return ctdSec;
 
 } // BondFuture::ctdBond
-
-void BondFuture::fromXML(XMLNode* node) {
-    Trade::fromXML(node);
-    XMLNode* bondFutureNode = XMLUtils::getChildNode(node, "BondFutureData");
-    QL_REQUIRE(bondFutureNode, "No BondFutureData Node");
-
-    // mandatory first tier information
-    contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
-    contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
-    longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
-
-    secList_.clear();
-    XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
-    if(basket){
-        for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child; child = XMLUtils::getNextSibling(child))
-            secList_.push_back(XMLUtils::getNodeValue(child));
-    }
-    // second tier information
-    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false, "");
-    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false, "");
-    deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false, "");
-
-    // thirdt tier information
-    lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false, "");
-    lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false, "");
-}
-
-XMLNode* BondFuture::toXML(XMLDocument& doc) const {
-    XMLNode* node = doc.allocNode("BondFutureData");
-
-    XMLUtils::addChild(doc, node, "ContractName", contractName_);
-    XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
-    XMLUtils::addChild(doc, node, "LongShort", longShort_);
-
-    XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
-    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
-    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
-    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
-
-    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
-    for (auto& sec : secList_)
-        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
-
-    return node;
-}
 
 void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData) {
     QL_REQUIRE(!contractName_.empty(), "BondFuture::populateFromBondReferenceData(): no contract name given");

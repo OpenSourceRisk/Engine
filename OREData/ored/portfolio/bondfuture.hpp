@@ -57,17 +57,18 @@ public:
     // const std::vector<std::string>& secList() const { return secList_; }
 
 protected:
-    std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory);
-
-    std::pair<QuantLib::Date, QuantLib::Date> deduceDates();
-
-    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
-
-    void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
 
     void checkData();
 
+    void deduceDates(QuantLib::Date& expiry, QuantLib::Date& settlement);
+
     FutureType selectTypeUS(const std::string& value);
+
+    void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
+
+    std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory);
+
+    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
 private:
     // mandatory first tier information
