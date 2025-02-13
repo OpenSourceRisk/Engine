@@ -38,9 +38,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonths,
-                                         std::string& deliverableGrade, std::string& lastTrading,
-                                         std::string& lastDelivery, std::vector<std::string>& secList,
+void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
+                                         string& lastTrading, string& lastDelivery, vector<string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
     DLOG("populating data bondfuture from reference data");
     // checked before
@@ -49,9 +48,9 @@ void populateFromBondFutureReferenceData(std::string& currency, std::string& con
         currency = bondFutureRefData->bondFutureData().currency;
         TLOG("overwrite currency with '" << currency << "'");
     }
-    if (contractMonths.empty()) {
-        contractMonths = bondFutureRefData->bondFutureData().contractMonths;
-        TLOG("overwrite contractMonths with '" << contractMonths << "'");
+    if (contractMonth.empty()) {
+        contractMonth = bondFutureRefData->bondFutureData().contractMonth;
+        TLOG("overwrite contractMonth with '" << contractMonth << "'");
     }
     if (deliverableGrade.empty()) {
         deliverableGrade = bondFutureRefData->bondFutureData().deliverableGrade;
@@ -72,7 +71,7 @@ void populateFromBondFutureReferenceData(std::string& currency, std::string& con
     DLOG("populating bondfuture data from reference data done.");
 }
 
-FutureType selectTypeUS(std::string value) {
+FutureType BondFuture::selectTypeUS(const string& value) {
 
     //                       Deliverable Maturities	    CME Globex  Bloomberg
     // 2-Year T-Note         1 3/4 to 2 years	        ZT          TU
@@ -85,26 +84,26 @@ FutureType selectTypeUS(std::string value) {
     // Ultra T-Bond	         25 years to 30 years	    UB          WN
     // source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
 
-    boost::to_upper(value);
+    string val_up = boost::to_upper_copy(value);
 
-    if (value == "UB" || value == "WN")
+    if (val_up == "UB" || val_up == "WN")
         return FutureType::LongTenor;
-    else if (value == "ZB" || value == "US")
+    else if (val_up == "ZB" || val_up == "US")
         return FutureType::LongTenor;
-    else if (value == "TWE")
+    else if (val_up == "TWE")
         return FutureType::LongTenor;
-    else if (value == "TN" || value == "UXY")
+    else if (val_up == "TN" || val_up == "UXY")
         return FutureType::LongTenor;
-    else if (value == "ZN" || value == "TY")
+    else if (val_up == "ZN" || val_up == "TY")
         return FutureType::LongTenor;
-    else if (value == "ZF" || value == "FV")
+    else if (val_up == "ZF" || val_up == "FV")
         return FutureType::ShortTenor;
-    else if (value == "Z3N" || value == "3Y")
+    else if (val_up == "Z3N" || val_up == "3Y")
         return FutureType::ShortTenor;
-    else if (value == "ZT" || value == "TU")
+    else if (val_up == "ZT" || val_up == "TU")
         return FutureType::ShortTenor;
     else
-        QL_FAIL("FutureType " << value << " unkown");
+        QL_FAIL("FutureType " << val_up << " unkown");
 }
 
 void BondFuture::checkData() {
@@ -112,16 +111,16 @@ void BondFuture::checkData() {
     QL_REQUIRE(!contractName_.empty(), "BondFuture invalid: no contractName given");
     // contractNotional_ already checked in fromXML
 
-    std::vector<std::string> missingElements;
+    vector<string> missingElements;
     if (currency_.empty())
         missingElements.push_back("Currency");
 
-    // we can deduce lastTrading_/lastDelivery_ given DeliverableGrade/ContractMonths
+    // we can deduce lastTrading_/lastDelivery_ given DeliverableGrade/ContractMonth
     if (lastTrading_.empty() && lastDelivery_.empty()) {
         if (deliverableGrade_.empty())
             missingElements.push_back("DeliverableGrade");
-        if (contractMonths_.empty())
-            missingElements.push_back("ContractMonths");
+        if (contractMonth_.empty())
+            missingElements.push_back("ContractMonth");
     }
 
     if (secList_.size() < 1)
@@ -132,7 +131,7 @@ void BondFuture::checkData() {
                                             << contractName_ << "'");
 }
 
-void BondFuture::checkDates(Date expiry, Date settlement) {
+void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
 
     Date asof = Settings::instance().evaluationDate();
     if (settlement < expiry)
@@ -146,21 +145,24 @@ void BondFuture::checkDates(Date expiry, Date settlement) {
                                             << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
 }
 
-std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade, Month contractMonth) {
+pair<Date, Date> BondFuture::deduceDates() {
     Date expiry;
     Date settlement;
 
+    Currency ccy_ql = parseCurrency(currency_);
+    Month contractMonth_ql = parseMonth(contractMonth_);
+
     Date asof = Settings::instance().evaluationDate();
     int year = asof.year();
-    if (asof.month() > contractMonth)
+    if (asof.month() > contractMonth_ql)
         year++;
 
-    if (ccy == USDCurrency()) {
+    if (ccy_ql == USDCurrency()) {
         // source : "Understanding Treasury Futures", CME Group, November 2017
         Calendar cal = UnitedStates(UnitedStates::GovernmentBond);
-        Date lastBusiness = cal.endOfMonth(Date(1, contractMonth, year));
+        Date lastBusiness = cal.endOfMonth(Date(1, contractMonth_ql, year));
 
-        if (selectTypeUS(deliverableGrade) == FutureType::ShortTenor) {
+        if (selectTypeUS(deliverableGrade_) == FutureType::ShortTenor) {
             // expiry: Last Trading Day: Last business day of the delivery month
             // settlement: Last Delivery Day: Third business day following the Last Trading Day
             expiry = lastBusiness;
@@ -171,12 +173,12 @@ std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade, Mo
             expiry = cal.advance(lastBusiness, -7 * Days);
             settlement = lastBusiness;
         }
-    } else if (ccy == CNYCurrency()) {
+    } else if (ccy_ql == CNYCurrency()) {
         // source: http://www.cffex.com.cn/en_new/10t.html
         // source: http://www.cffex.com.cn/en_new/2ts.html
         // source: http://www.cffex.com.cn/en_new/5tf.html
         Calendar cal = China(China::IB);
-        Date secondFriday = Date::nthWeekday(2, Friday, contractMonth, year);
+        Date secondFriday = Date::nthWeekday(2, Friday, contractMonth_ql, year);
 
         // expiry: Last Trading Day:	Second Friday of the Contract’s expiry month
         // settlement: Last Delivery Day: Third trading day after the last trading day
@@ -185,10 +187,7 @@ std::pair<Date, Date> deduceDates(Currency ccy, std::string deliverableGrade, Mo
         settlement = cal.advance(expiry, +3 * Days);
 
     } else
-        QL_FAIL("deduceDates: Currencies other than USD or CNY is not implemented. " << ccy.code() << " provided.");
-
-    //std::cout << "asof " << io::iso_date(asof) << " expiry " << io::iso_date(expiry) << " settlement "
-    //          << io::iso_date(settlement) << std::endl;
+        QL_FAIL("deduceDates: Currencies other than USD or CNY is not implemented. " << ccy_ql.code() << " provided.");
 
     return std::make_pair(expiry, settlement);
 }
@@ -216,8 +215,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     Date expiry = parseDate(lastTrading_);
     Date settlement = parseDate(lastDelivery_);
     if (expiry == Date() || settlement == Date()) {
-        pair<Date, Date> exp_set =
-            deduceDates(parseCurrency(currency_), deliverableGrade_, parseMonth(contractMonths_));
+        pair<Date, Date> exp_set = deduceDates();
         expiry = exp_set.first;
         settlement = exp_set.second;
     }
@@ -252,7 +250,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, std::string()),
+        id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, string()),
         underlying.creditCurveId, securityId, underlying.bondTrade->bondData().referenceCurveId(),
         underlying.bondTrade->bondData().incomeCurveId(), settlementDirty));
 
@@ -264,7 +262,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     maturityType_ = "Contract settled";
     npvCurrency_ = currency_;
     notional_ = contractNotional_;
-    legs_ = vector<QuantLib::Leg>(1, underlying.bond->cashflows()); // FIX ME: get future cfs
+    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // FIX ME: get future cfs
     legCurrencies_ = vector<string>(1, currency_);
     legPayers_ = vector<bool>(1, false); // TODO check if this is valid
 }
@@ -324,13 +322,13 @@ void BondFuture::fromXML(XMLNode* node) {
 
     secList_.clear();
     XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
-    QL_REQUIRE(basket, "No DeliveryBasket Node");
-    for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child; child = XMLUtils::getNextSibling(child))
-        secList_.push_back(XMLUtils::getNodeValue(child));
-
+    if(basket){
+        for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child; child = XMLUtils::getNextSibling(child))
+            secList_.push_back(XMLUtils::getNodeValue(child));
+    }
     // second tier information
     currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false, "");
-    contractMonths_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonths", false, "");
+    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false, "");
     deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false, "");
 
     // thirdt tier information
@@ -345,7 +343,7 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
 
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "ContractMonths", contractMonths_);
+    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
     XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
@@ -368,7 +366,7 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
             referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));
         QL_REQUIRE(bondFutureRefData, "could not cast to BondReferenceDatum, this is unexpected");
         DLOG("Got BondFutureReferenceDatum for name " << contractName_ << " overwrite empty elements in trade");
-        ore::data::populateFromBondFutureReferenceData(currency_, contractMonths_, deliverableGrade_, lastTrading_,
+        ore::data::populateFromBondFutureReferenceData(currency_, contractMonth_, deliverableGrade_, lastTrading_,
                                                        lastDelivery_, secList_, bondFutureRefData);
     }
 }

@@ -30,6 +30,11 @@ namespace data {
 
 enum FutureType { ShortTenor, LongTenor };
 
+void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonth,
+                                         std::string& deliverableGrade, std::string& lastTrading,
+                                         std::string& lastDelivery, std::vector<std::string>& secList,
+                                         const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData);
+
 class BondFuture : public Trade {
 public:
     //! Default constructor
@@ -52,13 +57,17 @@ public:
     // const std::vector<std::string>& secList() const { return secList_; }
 
 protected:
-    std::string identifyCtdBond(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
+    std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory);
+
+    std::pair<QuantLib::Date, QuantLib::Date> deduceDates();
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
-    void checkDates(QuantLib::Date expiry, QuantLib::Date settlement);
+    void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
 
     void checkData();
+
+    FutureType selectTypeUS(const std::string& value);
 
 private:
     // mandatory first tier information
@@ -68,7 +77,7 @@ private:
     double contractNotional_;
 
     // second tier information - both can be used in conjunction to identify tier 3 info
-    std::string contractMonths_;
+    std::string contractMonth_;
     std::string deliverableGrade_; // futureType differentiating the underlying
 
     // thirdt tier information

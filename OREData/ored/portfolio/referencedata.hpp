@@ -140,7 +140,7 @@ public:
     struct BondFutureData : XMLSerializable {
         std::string currency;
         std::vector<std::string> secList;
-        std::string contractMonths;
+        std::string contractMonth;
         std::string deliverableGrade; // futureType differentiating the underlying
         std::string lastTrading;      // expiry
         std::string lastDelivery;     // settlement date
