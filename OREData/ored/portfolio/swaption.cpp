@@ -70,22 +70,25 @@ bool areConstantLegs (vector<vector<ext::shared_ptr<CashFlow>>> legs)
         for (auto const& c : legs[i]) {
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) 
             {
-                if(constNotional==Null<Real>())
-                    constNotional=cpn->nominal();
-                    else if (cpn->nominal()!=constNotional)
+                if(constNotional == Null<Real>())
+                    constNotional = cpn->nominal();
+                    else if (cpn->nominal() != constNotional)
                         return false;
    
-                if(constRate==Null<Real>())
-                    constRate=cpn->rate();
-                    else if (cpn->rate()!=constRate)
+                if(constRate == Null<Real>())
+                    constRate = cpn->rate();
+                    else if (cpn->rate() != constRate)
                         return false;
 
-                if(constAmount==Null<Real>())
-                    constAmount=cpn->amount();
-                    else if (cpn->amount()!=constAmount)
+                if(constAmount == Null<Real>())
+                    constAmount = cpn->amount();
+                    else if (cpn->amount() != constAmount)
                         return false;
             }
         }
+
+        if(constNotional == Null<Real>() || constRate == Null<Real>() || constAmount == Null<Real>())
+            return false; 
 
     return true;
 }
@@ -322,14 +325,14 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             if(areConstantLegs(underlying_->legs()))
                 builderType = "BermudanSwaption";
             else
-                builderType = "BermudanSwaption_nonStandard";
+                builderType = "BermudanSwaption_NonStandard";
         }
         else if (exerciseType_ == Exercise::American)
         { 
             if(areConstantLegs(underlying_->legs())) 
                 builderType = "AmericanSwaption";
             else
-                builderType = "AmericanSwaption_nonStandard";
+                builderType = "AmericanSwaption_NonStandard";
         }
     }
 
