@@ -464,6 +464,53 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{BMA / SIFMA Basis Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{BMABasisSwap} is used to store conventions for BMA / SIFMA Basis Swap quotes. The structure of this
+node is shown in Listing \ref{lst:ois_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BMABasisSwap>
+  <Id> </Id>
+  <Index> </Index>
+  <BMAIndex> </BMAIndex>
+  <PaymentCalendar> </PaymentCalendar>
+  <PaymentConvention> </PaymentConvention>
+  <BMAPaymentLag> </BMAPaymentLag>
+  <IndexPaymentLag> </IndexPaymentLag>
+  <IndexPaymentFrequency> </IndexPaymentFrequency>
+  <IndexEOM> </IndexEOM>
+  <IndexRule> </IndexRule>
+  <OvernightSpotLag> </OvernightSpotLag>
+  <OvernightRateCutoff> </OvernightRateCutoff>
+</BMABasisSwap>
+\end{minted}
+\caption{BMA / SIFMA Basis conventions}
+\label{lst:bma_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+
+\begin{itemize}
+\item Index: The name of an ibor, term rate or overnight index, e.g. USD-LIBOR-3M, USD-SOFR-3M, USD-SOFR
+\item BMAIndex: The name of a BMA / SIFMA index, e.g. USD-SIFMA
+\item PaymentCalendar [Optional]: The payment calendar, applicable to both legs. If not specified, defaults to NullCalendar.
+\item PaymentConvention [Optional]: The payment convention, applicable to both legs. If not specified, defaults to Following.
+\item BMAPaymentLag [Optional]: The payment lag on the BMA / SIFMA leg. If not specified, defaults to $0$.
+\item IndexPaymentLag [Optional]: The payment lag on the reference leg. If not specified, defaults to $0$.
+\item IndexPaymentFrequency [Optional]: The payment frequency on the reference leg. If not specified, defaults to ``quarterly''.
+\item IndexEOM [Optional]: Whether the reference leg follows eom-convention. If not specified, defaults to false.
+\item IndexRule [Optional]: The date generation rule for the reference leg. If not specified, defaults to ``backward''.
+\item OvernightSpotLag [Optional]: The spot settlement lag to be applied to the reference leg. If not specified,
+  defaults to $0$. Only applies to (compounding) overnight reference lags.
+\item OvernightRateCutoff [Optional]: The rate cutoff to be applied to the reference leg. If not specified,
+  defaults to $0$. Only applies to (compounding) overnight reference lags.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
