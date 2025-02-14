@@ -189,10 +189,10 @@ void TRS::fromXML(XMLNode* node) {
     std::vector<XMLNode*> underlyingTradeNodes = XMLUtils::getChildrenNodes(underlyingDataNode, "Trade");
     std::vector<XMLNode*> underlyingTradeNodes2 = XMLUtils::getChildrenNodes(underlyingDataNode, "Derivative");
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
+        QL_REQUIRE((XMLUtils::getChildrenNodes(underlyingDataNode, "PortfolioIndexTradeData")).size() == 1, "Expecting one PortfolioIndex Node");
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
         portfolioDeriv_ = true;
         indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
-        returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
                "at least one 'Trade' or 'Derivative' or 'PortfolioIndexTradeData' node required");
@@ -218,9 +218,9 @@ void TRS::fromXML(XMLNode* node) {
         auto t = XMLUtils::getChildNode(n, "Trade");
         if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
             if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
+                QL_REQUIRE(underlyingTradeNodes2.size() == 1 && portfolioId_ == "", "Expecting one derivative.");
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
                 indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
-                returnData_.setPortfolioId(portfolioId_);
                 portfolioDeriv_ = false;
             }
         }
