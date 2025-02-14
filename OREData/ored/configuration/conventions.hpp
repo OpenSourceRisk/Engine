@@ -765,10 +765,19 @@ public:
 
     //! \name Inspectors
     //@{
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
-    const string& liborIndexName() const { return strLiborIndex_; }
-    const string& bmaIndexName() const { return strBmaIndex_; }
+    const string& indexName() const { return strIndex_; }
+    const string& bmaIndexName() const { return strBMAIndex_; }
+    const Calendar& paymentCalendar() const { return paymentCalendar_; }
+    BusinessDayConvention paymentConvention() const { return paymentConvention_; }
+    Natural BMAPaymentLag() const { return BMAPaymentLag_; }
+    Natural indexPaymentLag() const { return indexPaymentLag_; }
+    Frequency indexPaymentFrequency() const { return indexPaymentFrequency_; }
+    bool indexEom() const { return indexEom_; }
+    DateGeneration::Rule indexRule() const { return indexRule_; }
+    Natural overnightSpotLag() const { return overnightSpotLag_; }
+    Natural overnightRateCutoff() const { return overnightRateCutoff_; }
     //@}
 
     //! \name Serialisation
@@ -779,9 +788,28 @@ public:
     //@}
 
 private:
+    Calendar paymentCalendar_;
+    BusinessDayConvention paymentConvention_;
+    Natural BMAPaymentLag_;
+    Natural indexPaymentLag_;
+    Frequency indexPaymentFrequency_;
+    bool indexEom_;
+    DateGeneration::Rule indexRule_;
+    Natural overnightSpotLag_;
+    Natural overnightRateCutoff_;
+
     // Strings to store the inputs
-    string strLiborIndex_;
-    string strBmaIndex_;
+    string strIndex_;
+    string strBMAIndex_;
+    string strPaymentCalendar_;
+    string strPaymentConvention_;
+    string strBMAPaymentLag_;
+    string strIndexPaymentLag_;
+    string strIndexPaymentFrequency_;
+    string strIndexEom_;
+    string strIndexRule_;
+    string strOvernightSpotLag_;
+    string strOvernightRateCutoff_;
 };
 
 //! Container for storing FX Spot quote conventions

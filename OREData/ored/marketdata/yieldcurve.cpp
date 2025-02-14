@@ -2376,7 +2376,7 @@ void YieldCurve::addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegm
 
     // If libor index projection curve ID is not this curve.
     string liborCurveID = bmaBasisSwapSegment->projectionCurveID();
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex = bmaBasisSwapConvention->liborIndex();
+    QuantLib::ext::shared_ptr<IborIndex> liborIndex = bmaBasisSwapConvention->index();
     liborCurveID = yieldCurveKey(currency_, liborCurveID, asofDate_);
     QuantLib::ext::shared_ptr<YieldCurve> liborCurve;
     map<string, QuantLib::ext::shared_ptr<YieldCurve>>::iterator it;

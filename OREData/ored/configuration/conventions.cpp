@@ -815,12 +815,22 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) const {
 }
 
 BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
-    : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
+    : Convention(id, Type::BMABasisSwap), strIndex_(longIndex), strBMAIndex_(shortIndex) {
     build();
 }
 
 void BMABasisSwapConvention::build() {
-     parseIborIndex(strLiborIndex_);
+     parseIborIndex(strIndex_);
+     parseIborIndex(strBMAIndex_);
+     paymentCalendar_ = strPaymentCalendar_.empty() ? NullCalendar() : parseCalendar(strPaymentCalendar_);
+     paymentConvention_ = strPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strPaymentConvention_);
+     BMAPaymentLag_ = strBMAPaymentLag_.empty() ? 0 : parseInteger(strBMAPaymentLag_);
+     indexPaymentLag_ = strIndexPaymentLag_.empty() ? 0 :parseInteger(strIndexPaymentLag_);
+     indexPaymentFrequency_ = strIndexPaymentFrequency_.empty() ? Quarterly : parseFrequency(strIndexPaymentFrequency_);
+     indexEom_ = strIndexEom_.empty() ? false : parseBool(strIndexEom_);
+     indexRule_ = strIndexRule_.empty() ? QuantLib::DateGeneration::Backward : parseDateGenerationRule(strIndexRule_);
+     overnightSpotLag_ = strOvernightSpotLag_.empty() ? 0 : parseInteger(strOvernightSpotLag_);
+     overnightRateCutoff_ = strOvernightRateCutoff_.empty() ? 0 : parseInteger(strOvernightRateCutoff_);
 }
 
 void BMABasisSwapConvention::fromXML(XMLNode* node) {
@@ -829,9 +839,29 @@ void BMABasisSwapConvention::fromXML(XMLNode* node) {
     type_ = Type::BMABasisSwap;
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
-    // Get string values from xml
-    strLiborIndex_ = XMLUtils::getChildValue(node, "LiborIndex", true);
-    strBmaIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
+    strIndex_ = XMLUtils::getChildValue(node, "Index", false);
+
+    if(strIndex_.empty()) {
+        strIndex_ = XMLUtils::getChildValue(node, "LiborIndex", true);
+        WLOG("BMABasisSwapConvention: LiborIndex is deprecated, use Index instead.");
+    }
+
+    strBMAIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
+
+    // applicable to both legs
+    strPaymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
+    strPaymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention", false);
+
+    // applicable to bma leg
+    strBMAPaymentLag_ = XMLUtils::getChildValue(node, "BMAPaymentLag", false);
+
+    // applicable to libor and ois ("Index") or ois ("Overnight") leg
+    strIndexPaymentLag_ = XMLUtils::getChildValue(node, "IndexPaymentLag", false);
+    strIndexPaymentFrequency_ = XMLUtils::getChildValue(node, "IndexPaymentFrequency", false);
+    strIndexEom_ = XMLUtils::getChildValue(node, "IndexEOM", false);
+    strIndexRule_ = XMLUtils::getChildValue(node, "IndexRule", false);
+    strOvernightSpotLag_ = XMLUtils::getChildValue(node, "OvernightSpotLag", false);
+    strOvernightRateCutoff_ = XMLUtils::getChildValue(node, "OvernightRateCutoff", false);
 
     build();
 }
@@ -840,19 +870,40 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("BMABasisSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "LiborIndex", strLiborIndex_);
-    XMLUtils::addChild(doc, node, "BMAIndex", strBmaIndex_);
+
+    XMLUtils::addChild(doc, node, "Index", strIndex_);
+    XMLUtils::addChild(doc, node, "BMAIndex", strBMAIndex_);
+
+    if (strPaymentCalendar_.empty())
+        XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCalendar_);
+
+    if (strPaymentConvention_.empty())
+        XMLUtils::addChild(doc, node, "PaymentConvention", strPaymentConvention_);
+    if (strBMAPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "BMAPaymentLag", strBMAPaymentLag_);
+    if (strIndexPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "IndexPaymentLag", strIndexPaymentLag_);
+    if (strIndexPaymentFrequency_.empty())
+        XMLUtils::addChild(doc, node, "IndexPaymentFrequency", strIndexPaymentFrequency_);
+    if (strIndexEom_.empty())
+        XMLUtils::addChild(doc, node, "IndexEom", strIndexEom_);
+    if (strIndexRule_.empty())
+        XMLUtils::addChild(doc, node, "IndexRule", strIndexRule_);
+    if (strOvernightSpotLag_.empty())
+        XMLUtils::addChild(doc, node, "OvernightSpotLag", strOvernightSpotLag_);
+    if (strOvernightRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "OvernightRateCutoff", strOvernightRateCutoff_);
 
     return node;
 }
 
 QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> BMABasisSwapConvention::bmaIndex() const {
-    auto tmp = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBmaIndex_));
-    QL_REQUIRE(tmp, "the index string '" << strBmaIndex_ << "' does not represent a BMA / SIFMA index.");
+    auto tmp = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBMAIndex_));
+    QL_REQUIRE(tmp, "the index string '" << strBMAIndex_ << "' does not represent a BMA / SIFMA index.");
     return tmp;
 }
 
-QuantLib::ext::shared_ptr<IborIndex> BMABasisSwapConvention::liborIndex() const { return parseIborIndex(strLiborIndex_); }
+QuantLib::ext::shared_ptr<IborIndex> BMABasisSwapConvention::index() const { return parseIborIndex(strIndex_); }
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
