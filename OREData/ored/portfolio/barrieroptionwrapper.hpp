@@ -27,6 +27,7 @@
 #include <ql/instruments/barriertype.hpp>
 #include <ql/index.hpp>
 #include <qle/instruments/payment.hpp>
+#include <optional>
 
 namespace ore {
 namespace data {
