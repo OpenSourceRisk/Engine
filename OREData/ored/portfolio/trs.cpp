@@ -191,6 +191,7 @@ void TRS::fromXML(XMLNode* node) {
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         QL_REQUIRE((XMLUtils::getChildrenNodes(underlyingDataNode, "PortfolioIndexTradeData")).size() == 1, "Expecting one PortfolioIndex Node");
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+        QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
         portfolioDeriv_ = true;
         indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
     }
@@ -220,6 +221,7 @@ void TRS::fromXML(XMLNode* node) {
             if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 QL_REQUIRE(underlyingTradeNodes2.size() == 1 && portfolioId_ == "", "Expecting one derivative.");
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+                QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
                 indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
                 portfolioDeriv_ = false;
             }
