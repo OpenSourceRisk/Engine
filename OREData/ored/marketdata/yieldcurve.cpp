@@ -2370,48 +2370,39 @@ void YieldCurve::addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegm
     QL_REQUIRE(bmaBasisSwapSegment, "BMA basis swap segment of " + curveSpec_.ccy() + "/" + curveSpec_.curveConfigID() +
                                         " did not successfully cast to a BMA basis swap yield curve segment!");
 
-    // TODO: should be checking here whether or not the bma index is forwarding on this curve. either way, we make sure!
-    QuantLib::ext::shared_ptr<BMAIndexWrapper> bmaIndex = bmaBasisSwapConvention->bmaIndex();
-    bmaIndex = dynamic_pointer_cast<BMAIndexWrapper>(bmaIndex->clone(handle()));
+    auto bmaIndex = QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(bmaBasisSwapConvention->bmaIndex()->clone(h_));
 
     // If libor index projection curve ID is not this curve.
-    string liborCurveID = bmaBasisSwapSegment->projectionCurveID();
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex = bmaBasisSwapConvention->index();
-    liborCurveID = yieldCurveKey(currency_, liborCurveID, asofDate_);
-    QuantLib::ext::shared_ptr<YieldCurve> liborCurve;
+    auto index = bmaBasisSwapConvention->index();
+    string indexCurveID = yieldCurveKey(currency_,bmaBasisSwapSegment->projectionCurveID(),asofDate_);
+    QuantLib::ext::shared_ptr<YieldCurve> indexCurve;
     map<string, QuantLib::ext::shared_ptr<YieldCurve>>::iterator it;
-    it = requiredYieldCurves_.find(liborCurveID);
-    if (it != requiredYieldCurves_.end()) {
-        liborCurve = it->second;
+    if(auto it = requiredYieldCurves_.find(indexCurveID); it != requiredYieldCurves_.end()) {
+        indexCurve = it->second;
     } else {
-        QL_FAIL("The libor side projection curve, " << liborCurveID
-                                                    << ", required in the building "
-                                                       "of the curve, "
-                                                    << curveSpec_.name() << ", was not found.");
+        QL_FAIL("The index projection curve, " << indexCurveID
+                                               << ", required in the building "
+                                                  "of the curve, "
+                                               << curveSpec_.name() << ", was not found.");
     }
-    liborIndex = liborIndex->clone(liborCurve->handle());
+    index = index->clone(indexCurve->handle());
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                "BMA swap segment does not support pillar choice " << segment->pillarChoice());
+
     auto bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i], asofDate_);
-
-        // Check that we have a valid bma basis swap quote
         if (marketQuote) {
             QuantLib::ext::shared_ptr<BMASwapQuote> bmaBasisSwapQuote;
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BMA_SWAP,
                        "Market quote not of type bma swap.");
             QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO, "Market quote not of type ratio.");
             bmaBasisSwapQuote = QuantLib::ext::dynamic_pointer_cast<BMASwapQuote>(marketQuote);
-
-            // Create bma basis swap helper if we do.
-            QuantLib::ext::shared_ptr<RateHelper> bmaSwapHelper;
-            bmaSwapHelper.reset(new BMASwapRateHelper(bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(),
-                                                      bmaIndex->fixingDays(), bmaIndex->fixingCalendar(),
-                                                      bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
-                                                      bmaIndex->dayCounter(), bmaIndex->bma(), liborIndex));
-            instruments.push_back(bmaSwapHelper);
+            instruments.push_back(QuantLib::ext::make_shared<BMASwapRateHelper>(
+                bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(), bmaIndex->fixingDays(),
+                bmaIndex->fixingCalendar(), bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
+                bmaIndex->dayCounter(), bmaIndex->bma(), index));
         }
     }
 }
