@@ -374,7 +374,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
-            QuantLib::ext::shared_ptr<SpreadCdsHelper> tmp;
             try {
                 auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
@@ -392,7 +391,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
                     cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
-                helperQuoteTerms[tmp->latestDate()] = quote.term;
+                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
                 if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
