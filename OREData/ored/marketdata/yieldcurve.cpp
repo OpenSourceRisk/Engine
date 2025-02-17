@@ -2372,9 +2372,8 @@ void YieldCurve::addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegm
 
     auto bmaIndex = QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(bmaBasisSwapConvention->bmaIndex()->clone(h_));
 
-    // If libor index projection curve ID is not this curve.
     auto index = bmaBasisSwapConvention->index();
-    string indexCurveID = yieldCurveKey(currency_,bmaBasisSwapSegment->projectionCurveID(),asofDate_);
+    string indexCurveID = yieldCurveKey(currency_, bmaBasisSwapSegment->projectionCurveID(), asofDate_);
     QuantLib::ext::shared_ptr<YieldCurve> indexCurve;
     map<string, QuantLib::ext::shared_ptr<YieldCurve>>::iterator it;
     if(auto it = requiredYieldCurves_.find(indexCurveID); it != requiredYieldCurves_.end()) {
@@ -2402,7 +2401,13 @@ void YieldCurve::addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegm
             instruments.push_back(QuantLib::ext::make_shared<BMASwapRateHelper>(
                 bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(), bmaIndex->fixingDays(),
                 bmaIndex->fixingCalendar(), bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
-                bmaIndex->dayCounter(), bmaIndex->bma(), index));
+                bmaIndex->dayCounter(), bmaIndex->bma(), bmaBasisSwapConvention->bmaPaymentCalendar(),
+                bmaBasisSwapConvention->bmaPaymentConvention(), bmaBasisSwapConvention->bmaPaymentLag(),
+                bmaBasisSwapConvention->indexSettlementDays(), bmaBasisSwapConvention->indexPaymentPeriod(),
+                bmaBasisSwapConvention->indexConvention(), index, bmaBasisSwapConvention->indexPaymentCalendar(),
+                bmaBasisSwapConvention->indexPaymentConvention(), bmaBasisSwapConvention->indexPaymentLag(),
+                bmaBasisSwapConvention->overnightLockoutDays(),
+                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
         }
     }
 }

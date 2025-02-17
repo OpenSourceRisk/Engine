@@ -760,7 +760,7 @@ public:
     //! Default constructor
     BMABasisSwapConvention() {}
     //! Detailed constructor
-    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex);
+    BMABasisSwapConvention(const string& id, const string& index, const string& bmaIndex);
     //@}
 
     //! \name Inspectors
@@ -768,16 +768,17 @@ public:
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
     const string& indexName() const { return strIndex_; }
-    const string& bmaIndexName() const { return strBMAIndex_; }
-    const Calendar& paymentCalendar() const { return paymentCalendar_; }
-    BusinessDayConvention paymentConvention() const { return paymentConvention_; }
-    Natural BMAPaymentLag() const { return BMAPaymentLag_; }
+    const string& bmaIndexName() const { return strBmaIndex_; }
+    const Calendar& bmaPaymentCalendar() const { return bmaPaymentCalendar_; }
+    BusinessDayConvention bmaPaymentConvention() const { return bmaPaymentConvention_; }
+    Natural bmaPaymentLag() const { return bmaPaymentLag_; }
+    const Calendar& indexPaymentCalendar() const { return indexPaymentCalendar_; }
+    BusinessDayConvention indexPaymentConvention() const { return indexPaymentConvention_; }
     Natural indexPaymentLag() const { return indexPaymentLag_; }
-    Frequency indexPaymentFrequency() const { return indexPaymentFrequency_; }
-    bool indexEom() const { return indexEom_; }
-    DateGeneration::Rule indexRule() const { return indexRule_; }
-    Natural overnightSpotLag() const { return overnightSpotLag_; }
-    Natural overnightRateCutoff() const { return overnightRateCutoff_; }
+    Natural indexSettlementDays() const { return indexSettlementDays_; }
+    const Period& indexPaymentPeriod() const { return indexPaymentPeriod_; }
+    BusinessDayConvention indexConvention() const { return indexConvention_; }
+    Natural overnightLockoutDays() const { return overnightLockoutDays_; }
     //@}
 
     //! \name Serialisation
@@ -788,28 +789,30 @@ public:
     //@}
 
 private:
-    Calendar paymentCalendar_;
-    BusinessDayConvention paymentConvention_;
-    Natural BMAPaymentLag_;
+    Calendar bmaPaymentCalendar_;
+    BusinessDayConvention bmaPaymentConvention_;
+    Natural bmaPaymentLag_;
+    Calendar indexPaymentCalendar_;
+    BusinessDayConvention indexPaymentConvention_;
     Natural indexPaymentLag_;
-    Frequency indexPaymentFrequency_;
-    bool indexEom_;
-    DateGeneration::Rule indexRule_;
-    Natural overnightSpotLag_;
-    Natural overnightRateCutoff_;
+    Natural indexSettlementDays_;
+    Period indexPaymentPeriod_;
+    BusinessDayConvention indexConvention_;
+    Natural overnightLockoutDays_;
 
     // Strings to store the inputs
     string strIndex_;
-    string strBMAIndex_;
-    string strPaymentCalendar_;
-    string strPaymentConvention_;
-    string strBMAPaymentLag_;
+    string strBmaIndex_;
+    string strBmaPaymentCalendar_;
+    string strBmaPaymentConvention_;
+    string strBmaPaymentLag_;
+    string strIndexPaymentCalendar_;
+    string strIndexPaymentConvention_;
     string strIndexPaymentLag_;
-    string strIndexPaymentFrequency_;
-    string strIndexEom_;
-    string strIndexRule_;
-    string strOvernightSpotLag_;
-    string strOvernightRateCutoff_;
+    string strIndexSettlementDays_;
+    string strIndexPaymentPeriod_;
+    string strIndexConvention_;
+    string strOvernightLockoutDays_;
 };
 
 //! Container for storing FX Spot quote conventions

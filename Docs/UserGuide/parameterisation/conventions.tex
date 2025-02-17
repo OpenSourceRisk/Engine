@@ -477,15 +477,15 @@ node is shown in Listing \ref{lst:ois_conventions}.
   <Id> </Id>
   <Index> </Index>
   <BMAIndex> </BMAIndex>
-  <PaymentCalendar> </PaymentCalendar>
-  <PaymentConvention> </PaymentConvention>
-  <BMAPaymentLag> </BMAPaymentLag>
+  <BmaPaymentCalendar> </BmaPaymentCalendar>
+  <BmaPaymentConvention> </BmaPaymentConvention>
+  <BmaPaymentLag> </BmaPaymentLag>
+  <IndexPaymentCalendar> </IndexPaymentCalendar>
+  <IndexPaymentConvention> </IndexPaymentConvention>
   <IndexPaymentLag> </IndexPaymentLag>
-  <IndexPaymentFrequency> </IndexPaymentFrequency>
-  <IndexEOM> </IndexEOM>
-  <IndexRule> </IndexRule>
-  <OvernightSpotLag> </OvernightSpotLag>
-  <OvernightRateCutoff> </OvernightRateCutoff>
+  <IndexSettlementDays> </IndexSettlementDays>
+  <IndexPaymentPeriod> </IndexPaymentPeriod>
+  <OvernightLockoutDays> </OvernightLockoutDays>
 </BMABasisSwap>
 \end{minted}
 \caption{BMA / SIFMA Basis conventions}
@@ -497,17 +497,16 @@ The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item Index: The name of an ibor, term rate or overnight index, e.g. USD-LIBOR-3M, USD-SOFR-3M, USD-SOFR
 \item BMAIndex: The name of a BMA / SIFMA index, e.g. USD-SIFMA
-\item PaymentCalendar [Optional]: The payment calendar, applicable to both legs. If not specified, defaults to NullCalendar.
-\item PaymentConvention [Optional]: The payment convention, applicable to both legs. If not specified, defaults to Following.
-\item BMAPaymentLag [Optional]: The payment lag on the BMA / SIFMA leg. If not specified, defaults to $0$.
-\item IndexPaymentLag [Optional]: The payment lag on the reference leg. If not specified, defaults to $0$.
-\item IndexPaymentFrequency [Optional]: The payment frequency on the reference leg. If not specified, defaults to ``quarterly''.
-\item IndexEOM [Optional]: Whether the reference leg follows eom-convention. If not specified, defaults to false.
-\item IndexRule [Optional]: The date generation rule for the reference leg. If not specified, defaults to ``backward''.
-\item OvernightSpotLag [Optional]: The spot settlement lag to be applied to the reference leg. If not specified,
-  defaults to $0$. Only applies to (compounding) overnight reference lags.
-\item OvernightRateCutoff [Optional]: The rate cutoff to be applied to the reference leg. If not specified,
-  defaults to $0$. Only applies to (compounding) overnight reference lags.
+\item BmaPaymentCalendar [Optional]: The payment calendar of the BMA / SIFMA leg. If not specified, defaults to BMA index fixing calendar.
+\item BmaPaymentConvention [Optional]: The payment convention of the BMA / SIFMA leg. If not specified, defaults to Following.
+\item BmaPaymentLag [Optional]: The payment lag of the BMA / SIFMA leg. If not specified, defaults to $0$.
+\item IndexPaymentCalendar [Optional]: The payment calendar of the reference leg. If not specified, defaults to index fixing calendar.
+\item IndexPaymentConvention [Optional]: The payment convention of the reference leg. If not specified, defaults to Following.
+\item IndexPaymentLag [Optional]: The payment lag of the reference leg. If not specified, defaults to $0$.
+\item IndexSettlementDays [Optional]: The settlement days of the reference leg. If not specified, defaults to index fixing days.
+\item IndexPaymentPeriod [Optional]: The payment period of the reference leg. If not specified, defaults to bma index
+  tenor if reference index is overnight, otherwise to reference index tenor.
+\item OvernightLockoutDays [Optional]: Lockout days (rate cutoff) for the reference leg, if index is overnight.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
