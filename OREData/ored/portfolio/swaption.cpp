@@ -60,36 +60,77 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 }
 } // namespace
 
-bool areConstantLegs (vector<vector<ext::shared_ptr<CashFlow>>> legs)
+// This helper functionality checks the legs for constant definitions of
+// given notional, rates, spreads, gearing and amount values. There must be precisely
+// one floating and one fixed leg for the trade to be "constant".
+bool areConstantLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
-    Real constNotional = Null<Real>();
+    // Fields to be checked on the floating leg
+    Real constNotionalFixed = Null<Real>();
     Real constRate = Null<Real>();
-    Real constAmount = Null<Real>();
 
-    for (Size i = 0; i < legs.size(); ++i) 
-        for (auto const& c : legs[i]) {
-            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) 
+    // Fields to be checked on the fixed leg
+    Real constNotionalFloat = Null<Real>();
+    Real constSpread = Null<Real>();
+    Real constGearing = Null<Real>();
+
+    // Store leg "indices" to avoid double legs
+    int indexFloatingLegs=Null<int>();
+    int indexFixedLegs=Null<int>();
+
+    for (Size i = 0; i < legs.size(); ++i) // For each leg
+        for (auto const& c : legs[i]) { // For each coupon payment in the current leg
+
+            // Try to cast down to floating coupons
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) 
             {
-                if(constNotional == Null<Real>())
-                    constNotional = cpn->nominal();
-                    else if (cpn->nominal() != constNotional)
-                        return false;
+                if (indexFloatingLegs == Null<int>()) 
+                    indexFloatingLegs = i;
+                else if (indexFloatingLegs != i)
+                    return false;
+
+                if(constNotionalFloat == Null<Real>()) 
+                    constNotionalFloat = cpn->nominal();
+                else if (cpn->nominal() != constNotionalFloat)
+                    return false;
+
+                if(constGearing == Null<Real>())
+                    constGearing = cpn->gearing();
+                else if (cpn->gearing() != constGearing)
+                    return false;
+   
+                if(constSpread == Null<Real>())
+                    constSpread = cpn->spread();
+                else if (cpn->spread() != constSpread)
+                    return false;
+            }
+
+            // Try to cast down to fixed coupons
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) 
+            { 
+                if (indexFixedLegs == Null<int>()) 
+                    indexFixedLegs = i;
+                else if (indexFixedLegs != i)
+                    return false;
+                                    
+                if(constNotionalFixed == Null<Real>()) 
+                    constNotionalFixed = cpn->nominal();
+                else if (cpn->nominal() != constNotionalFixed)
+                    return false;
    
                 if(constRate == Null<Real>())
                     constRate = cpn->rate();
-                    else if (cpn->rate() != constRate)
-                        return false;
-
-                if(constAmount == Null<Real>())
-                    constAmount = cpn->amount();
-                    else if (cpn->amount() != constAmount)
-                        return false;
+                else if (cpn->rate() != constRate)
+                    return false;
             }
         }
 
-        if(constNotional == Null<Real>() || constRate == Null<Real>() || constAmount == Null<Real>())
-            return false; 
+    // Both legs and fields must have been there at least once
+    if(constNotionalFixed == Null<Real>() || constNotionalFloat == Null<Real>() || 
+        constRate == Null<Real>() || constSpread == Null<Real>() || constGearing == Null<Real>())
+        return false; 
 
+    // If no non-constant field and no other subtlety was found return true
     return true;
 }
 
@@ -329,7 +370,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         }
         else if (exerciseType_ == Exercise::American)
         { 
-            if(areConstantLegs(underlying_->legs())) 
+            if(areConstantLegs(underlying_->legs()))
                 builderType = "AmericanSwaption";
             else
                 builderType = "AmericanSwaption_NonStandard";
