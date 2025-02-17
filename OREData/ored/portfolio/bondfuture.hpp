@@ -31,7 +31,9 @@ namespace data {
 enum FutureType { ShortTenor, LongTenor };
 
 void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonth,
-                                         std::string& deliverableGrade, std::string& lastTrading,
+                                         std::string& deliverableGrade, std::string& rootDate, std::string& expiryBasis,
+                                         std::string& settlementBasis, std::string& expiryLag,
+                                         std::string& settlementLag, std::string& lastTrading,
                                          std::string& lastDelivery, std::vector<std::string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData);
 
@@ -81,14 +83,16 @@ private:
     // second tier information - both can be used in conjunction to identify tier 3 info
     std::string contractMonth_;
     std::string deliverableGrade_; // futureType differentiating the underlying
+    // bond future date conventions
+    std::string rootDate_;   // first, end, nth weekday (e.g. 'Monday,3') taken
+    std::string expiryBasis_;     // root, expiry, settle taken
+    std::string settlementBasis_; // root, expiry, settle taken
+    std::string expiryLag_;       // periods taken
+    std::string settlementLag_;   // periods taken
 
     // thirdt tier information
     std::string lastTrading_;  // expiry
     std::string lastDelivery_; // settlement date
-
-    // transformed dates
-    Date expiry_;
-    Date settlement_;
 };
 } // namespace data
 } // namespace ore

@@ -144,6 +144,13 @@ public:
         std::string deliverableGrade; // futureType differentiating the underlying
         std::string lastTrading;      // expiry
         std::string lastDelivery;     // settlement date
+        // bond future date conventions
+        std::string rootDate;         // first, end, nth weekday (e.g. 'Monday,3') taken
+        std::string expiryBasis;      // root, expiry, settle taken
+        std::string settlementBasis;  // root, expiry, settle taken
+        std::string expiryLag;        // periods taken
+        std::string settlementLag;    // periods taken
+
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };

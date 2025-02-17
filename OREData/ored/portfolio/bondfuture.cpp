@@ -39,7 +39,9 @@ namespace ore {
 namespace data {
 
 void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
-                                         string& lastTrading, string& lastDelivery, vector<string>& secList,
+                                         string& rootDate, string& expiryBasis, string& settlementBasis,
+                                         string& expiryLag, string& settlementLag, string& lastTrading,
+                                         string& lastDelivery, vector<string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
     DLOG("populating data bondfuture from reference data");
     // checked before
@@ -55,6 +57,26 @@ void populateFromBondFutureReferenceData(string& currency, string& contractMonth
     if (deliverableGrade.empty()) {
         deliverableGrade = bondFutureRefData->bondFutureData().deliverableGrade;
         TLOG("overwrite deliverableGrade with '" << deliverableGrade << "'");
+    }
+    if (rootDate.empty()) {
+        rootDate = bondFutureRefData->bondFutureData().rootDate;
+        TLOG("overwrite rootDate with '" << rootDate << "'");
+    }
+    if (expiryBasis.empty()) {
+        expiryBasis = bondFutureRefData->bondFutureData().expiryBasis;
+        TLOG("overwrite expiryBasis with '" << expiryBasis << "'");
+    }
+    if (settlementBasis.empty()) {
+        settlementBasis = bondFutureRefData->bondFutureData().settlementBasis;
+        TLOG("overwrite settlementBasis with '" << settlementBasis << "'");
+    }
+    if (expiryLag.empty()) {
+        expiryLag = bondFutureRefData->bondFutureData().expiryLag;
+        TLOG("overwrite expiryLag with '" << expiryLag << "'");
+    }
+    if (settlementLag.empty()) {
+        settlementLag = bondFutureRefData->bondFutureData().settlementLag;
+        TLOG("overwrite settlementLag with '" << settlementLag << "'");
     }
     if (lastTrading.empty()) {
         lastTrading = bondFutureRefData->bondFutureData().lastTrading;
@@ -138,7 +160,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     notional_ = contractNotional_;
     legs_ = vector<Leg>(1, underlying.bond->cashflows()); // presenting the cashflows of the underlying
     legCurrencies_ = vector<string>(1, currency_);
-    legPayers_ = vector<bool>(1, false); // TODO check if this is valid
+    legPayers_ = vector<bool>(1, false);
 }
 
 void BondFuture::fromXML(XMLNode* node) {
@@ -146,7 +168,6 @@ void BondFuture::fromXML(XMLNode* node) {
     XMLNode* bondFutureNode = XMLUtils::getChildNode(node, "BondFutureData");
     QL_REQUIRE(bondFutureNode, "No BondFutureData Node");
 
-    // mandatory first tier information
     contractName_ = XMLUtils::getChildValue(bondFutureNode, "ContractName", true);
     contractNotional_ = XMLUtils::getChildValueAsDouble(bondFutureNode, "ContractNotional", true);
     longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
@@ -158,14 +179,17 @@ void BondFuture::fromXML(XMLNode* node) {
              child = XMLUtils::getNextSibling(child))
             secList_.push_back(XMLUtils::getNodeValue(child));
     }
-    // second tier information
-    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false, "");
-    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false, "");
-    deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false, "");
+    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false);
+    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false);
+    deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false);
+    rootDate_ = XMLUtils::getChildValue(bondFutureNode, "RootDate", false);
+    expiryBasis_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryBasis", false);
+    settlementBasis_ = XMLUtils::getChildValue(bondFutureNode, "SettlementBasis", false);
+    expiryLag_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryLag", false);
+    settlementLag_ = XMLUtils::getChildValue(bondFutureNode, "SettlementLag", false);
 
-    // thirdt tier information
-    lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false, "");
-    lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false, "");
+    lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false);
+    lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false);
 }
 
 XMLNode* BondFuture::toXML(XMLDocument& doc) const {
@@ -178,6 +202,12 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
+    XMLUtils::addChild(doc, node, "RootDate", rootDate_);
+    XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis_);
+    XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis_);
+    XMLUtils::addChild(doc, node, "ExpiryLag", expiryLag_);
+    XMLUtils::addChild(doc, node, "SettlementLag", settlementLag_);
+
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
     XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
 
@@ -198,11 +228,18 @@ void BondFuture::checkData() {
         missingElements.push_back("Currency");
 
     // we can deduce lastTrading_/lastDelivery_ given DeliverableGrade/ContractMonth
+    // expiryLag_, settlementLag_ covered in method where it is used
     if (lastTrading_.empty() && lastDelivery_.empty()) {
         if (deliverableGrade_.empty())
             missingElements.push_back("DeliverableGrade");
         if (contractMonth_.empty())
             missingElements.push_back("ContractMonth");
+        if (rootDate_.empty())
+            missingElements.push_back("RootDate");
+        if (expiryBasis_.empty())
+            missingElements.push_back("ExpiryBasis");
+        if (settlementBasis_.empty())
+            missingElements.push_back("SettlementBasis");
     }
 
     if (secList_.size() < 1)
@@ -214,7 +251,11 @@ void BondFuture::checkData() {
 }
 
 void BondFuture::deduceDates(Date& expiry, Date& settlement) {
+    DLOG("BondFuture::deduceDates called.");
 
+    /*
+
+    //This is the hardcode rule version
     Currency ccy_ql = parseCurrency(currency_);
     Month contractMonth_ql = parseMonth(contractMonth_);
 
@@ -254,6 +295,61 @@ void BondFuture::deduceDates(Date& expiry, Date& settlement) {
 
     } else
         QL_FAIL("deduceDates: Currencies other than USD or CNY is not implemented. " << ccy_ql.code() << " provided.");
+    */
+
+    Month contractMonth_ql = parseMonth(contractMonth_);
+    Date asof = Settings::instance().evaluationDate();
+    int year = asof.year();
+    if (asof.month() > contractMonth_ql)
+        year++;
+
+    Calendar cal = parseCalendar(currency_);
+
+    // calc root date
+    Date rootDate;
+    vector<string> tokens;
+    boost::split(tokens, rootDate_, boost::is_any_of(","));
+    string day = boost::to_upper_copy(tokens[0]);
+    if (day == "FIRST")
+        rootDate = cal.adjust(Date(1, contractMonth_ql, year), QuantLib::Following);
+    else if (day == "END")
+        rootDate = cal.endOfMonth(Date(1, contractMonth_ql, year), QuantLib::Preceding);
+    else { // nth weekday case expected (example format 'Fri,2' for second Friday)
+        QL_REQUIRE(tokens.size() == 2, "RootDate " << rootDate_ << " unexpected");
+        int n = parseInteger(tokens[1]);
+        Weekday day = parseWeekday(tokens[0]);
+        rootDate = Date::nthWeekday(n, day, contractMonth_ql, year);
+    }
+
+    // now calc expiry // settlement from root date
+    string expiryBasis_up = boost::to_upper_copy(expiryBasis_);
+    string settlementBasis_up = boost::to_upper_copy(settlementBasis_);
+    Period expiryLag_ql = 0 * Days;
+    if (!expiryLag_.empty())
+        expiryLag_ql = parsePeriod(expiryLag_);
+    Period settlementLag_ql = 0 * Days;
+    if (!settlementLag_.empty())
+        settlementLag_ql = parsePeriod(settlementLag_);
+    BusinessDayConvention bdc_expiry = QuantLib::Following;
+    if (expiryLag_ql < 0 * Days)
+        bdc_expiry = QuantLib::Preceding;
+    BusinessDayConvention bdc_settle = QuantLib::Following;
+    if (settlementLag_ql < 0 * Days)
+        bdc_settle = QuantLib::Preceding;
+
+    if (expiryBasis_up == "ROOT" && settlementBasis_up == "EXPIRY") {
+        expiry = cal.advance(rootDate, expiryLag_ql, bdc_expiry);
+        settlement = cal.advance(expiry, settlementLag_ql, bdc_settle);
+    } else if (settlementBasis_up == "ROOT" && expiryBasis_up == "SETTLEMENT") {
+        settlement = cal.advance(rootDate, settlementLag_ql, bdc_settle);
+        expiry = cal.advance(settlement, expiryLag_ql, bdc_expiry);
+    } else if (expiryBasis_up == "ROOT" && settlementBasis_up == "ROOT") {
+        expiry = cal.advance(rootDate, expiryLag_ql, bdc_expiry);
+        settlement = cal.advance(rootDate, settlementLag_ql, bdc_settle);
+    } else {
+        QL_FAIL("expected either expiry or settlement or both to start with root");
+    }
+
 }
 
 FutureType BondFuture::selectTypeUS(const string& value) {
@@ -295,15 +391,17 @@ void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
 
     Date asof = Settings::instance().evaluationDate();
     if (settlement < expiry)
-        QL_FAIL("BondFuture::checkDate -- id " << id() << " settlement date " << io::iso_date(settlement)
-                                               << " lies before expiry " << io::iso_date(expiry));
+        QL_FAIL("BondFuture::checkDates for " << id() << " settlement date " << io::iso_date(settlement)
+                                              << " lies before expiry " << io::iso_date(expiry));
     if (expiry < asof)
-        QL_FAIL("BondFuture::checkDate -- id " << id() << " is expired, asof " << io::iso_date(asof) << " vs. expiry "
-                                               << io::iso_date(expiry));
+        QL_FAIL("BondFuture::checkDates for " << id() << " is expired, asof " << io::iso_date(asof) << " vs. expiry "
+                                              << io::iso_date(expiry));
     // refine + 9 * Months ...
     if (asof + 9 * Months > expiry)
-        ALOG("BondFuture::checkDate -- id " << id() << " expiry may be not in standard cycle of next three quarters "
-                                            << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
+        ALOG("BondFuture::checkDates for " << id() << " expiry may be not in standard cycle of next three quarters "
+                                           << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
+    DLOG("BondFuture::checkDates for " << id() << " ExpiryDate " << io::iso_date(expiry) << " SettlementDate "
+                                       << io::iso_date(settlement));
 }
 
 string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -361,8 +459,9 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
             referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));
         QL_REQUIRE(bondFutureRefData, "could not cast to BondReferenceDatum, this is unexpected");
         DLOG("Got BondFutureReferenceDatum for name " << contractName_ << " overwrite empty elements in trade");
-        ore::data::populateFromBondFutureReferenceData(currency_, contractMonth_, deliverableGrade_, lastTrading_,
-                                                       lastDelivery_, secList_, bondFutureRefData);
+        ore::data::populateFromBondFutureReferenceData(currency_, contractMonth_, deliverableGrade_, rootDate_,
+                                                       expiryBasis_, settlementBasis_, expiryLag_, settlementLag_,
+                                                       lastTrading_, lastDelivery_, secList_, bondFutureRefData);
     }
 }
 
