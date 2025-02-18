@@ -834,7 +834,7 @@ void BMABasisSwapConvention::build() {
         strIndexPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strIndexPaymentConvention_);
     indexPaymentLag_ = strIndexPaymentLag_.empty() ? 0 : parseInteger(strIndexPaymentLag_);
     indexSettlementDays_ =
-        strIndexSettlementDays_.empty() ? index->fixingDays() : parseInteger(strIndexSettlementDays_);
+        strIndexSettlementDays_.empty() ? bmaIndex->fixingDays() : parseInteger(strIndexSettlementDays_);
     indexPaymentPeriod_ = strIndexPaymentPeriod_.empty() ? (isOis ? bmaIndex->tenor() : index->tenor())
                                                          : parsePeriod(strIndexPaymentPeriod_);
     indexConvention_ =
