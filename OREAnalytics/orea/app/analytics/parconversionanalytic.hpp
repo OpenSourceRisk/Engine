@@ -41,7 +41,7 @@ public:
 class ParConversionAnalytic : public Analytic {
 public:
     ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, analyticsManager,
                    false, false, false,
                    false) {}

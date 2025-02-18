@@ -89,7 +89,7 @@ public:
              //! Any inputs required by this Analytic
              const QuantLib::ext::shared_ptr<InputParameters>& inputs,
              //! Pointer to the analytics manager
-             const QuantLib::ext::shared_ptr<AnalyticsManager>& analyticsManager = nullptr,
+             const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager = nullptr,
              //! Flag to indicate whether a simulation config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
@@ -122,7 +122,7 @@ public:
     const std::string label() const;
     const std::set<std::string>& analyticTypes() const { return types_; }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
-    const QuantLib::ext::shared_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
+    const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
     QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
@@ -172,7 +172,7 @@ protected:
     //! contains all the input parameters for the run
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     //! the analytics manger, used for sharing analytics
-    QuantLib::ext::shared_ptr<AnalyticsManager> analyticsManager_;
+    QuantLib::ext::weak_ptr<AnalyticsManager> analyticsManager_;
 
     Configurations configurations_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
@@ -275,7 +275,7 @@ public:
 class MarketDataAnalytic : public Analytic {
 public:
     MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs, analyticsManager) {}
 };
 

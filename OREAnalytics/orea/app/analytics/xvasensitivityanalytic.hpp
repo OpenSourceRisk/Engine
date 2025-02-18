@@ -123,7 +123,7 @@ private:
 class XvaSensitivityAnalytic : public Analytic {
 public:
     explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                    const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, analyticsManager,
                    true, true, false, false) {
     }

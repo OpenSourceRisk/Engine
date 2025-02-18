@@ -43,7 +43,7 @@ public:
 class StressTestAnalytic : public Analytic {
 public:
     StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, analyticsManager, false, false,
                    false, false) {}
 };

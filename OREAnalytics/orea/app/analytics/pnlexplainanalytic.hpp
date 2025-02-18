@@ -49,7 +49,7 @@ public:
 class PnlExplainAnalytic : public Analytic {
 public:
     PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, analyticsManager, true,
                    true) {}
 };

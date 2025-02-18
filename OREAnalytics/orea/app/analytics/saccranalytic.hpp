@@ -41,7 +41,7 @@ public:
 class SaCcrAnalytic : public Analytic {
 public:
     SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                  const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs, analyticsManager) {}
 
     const QuantLib::ext::shared_ptr<SACCR> saccr() const { return saccr_; }

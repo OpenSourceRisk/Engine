@@ -53,7 +53,7 @@ static const std::set<std::string> calibrationAnalyticSubAnalytics{};
 class CalibrationAnalytic : public Analytic {
 public:
     explicit CalibrationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                 const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                                 const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, analyticsManager, false,
                    false, false, false) {}
 };

@@ -54,7 +54,7 @@ namespace analytics {
 Analytic::Analytic(std::unique_ptr<Impl> impl,
          const std::set<std::string>& analyticTypes,
          const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-         const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
          bool simulationConfig,
          bool sensitivityConfig,
          bool scenarioGeneratorConfig,
