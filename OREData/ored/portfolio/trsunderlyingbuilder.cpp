@@ -406,7 +406,6 @@ void DerivativeTrsUnderlyingBuilder::build(
     IndexNameTranslator::instance().add(indexName, indexName);
     underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
     indexQuantities[indexName] = 1.0;
-    underlyingMultiplier = 1.0;
     
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);
