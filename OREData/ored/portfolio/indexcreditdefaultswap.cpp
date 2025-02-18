@@ -71,6 +71,17 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     legs_[0] = flb.buildLeg(swap_.leg(), engineFactory, requiredFixings_, configuration);
 
     Schedule schedule = makeSchedule(swap_.leg().schedule());
+
+    
+
+    if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
+        Date protectionStart = swap_.protectionStart();
+        Date tradeDate = swap_.tradeDate();
+        protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
+        tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
+        schedule = removeCDSPeriodsBeforeStartDate(schedule, tradeDate + 1);
+    }
+
     BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
 
@@ -189,8 +200,8 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     if (swap_.upfrontFee() == Null<Real>()) {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, fixedLegData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
-            lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(),  swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
+            lastPeriodDayCounter, true,  swap_.tradeDate(), swap_.cashSettlementDays());
     } else {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, swap_.upfrontFee(), fixedLegData->rates().front(), schedule,
