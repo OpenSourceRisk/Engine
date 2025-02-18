@@ -71,7 +71,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
     OptionData option_;
     vector<BarrierData> barriers_;
     string startDate_;

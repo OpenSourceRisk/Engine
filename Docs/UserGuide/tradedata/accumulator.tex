@@ -341,7 +341,7 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     defined settlement delay. Defaults to \emph{false}.
 \item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
     If \emph{true} the fixing at knockout settlement date is used to compute the knockout flow, otherwise the fixing at knockout date. Defaults to \emph{false}.
-\item FxIndex [Optional]: Required for composite accumulators of type 2, where the strike, knockout barrier and pay currency are different from the underlying quote currency. A node with the underlying of the FX conversion from quote currency to pay currency.
+\item FxIndex [Optional]: Required for composite accumulators of type 2, where the strike, knockout barrier and pay currency are different from the underlying quote currency. Intended for Commodity and Equity Accumulators. A node with the underlying of the FX conversion from quote currency to pay currency.
 \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign (quote) currency, \lstinline!CCY2! is the domestic (pay) currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
 \end{itemize}
 

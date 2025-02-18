@@ -348,6 +348,7 @@
       <xs:element type="xs:string" name="PriceQuoteMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuoteBaseValue" minOccurs="0"/>
       <xs:element type="xs:string" name="BondNotional" minOccurs="0"/>
+      <xs:element type="bondPriceType" name="PriceType" minOccurs="0"/>
       <xs:element type="xs:string" name="Payer" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
@@ -1435,13 +1436,14 @@
       <xs:element type="xs:float" name="Rebate" minOccurs="0"/>
       <xs:element type="currencyCode" name="RebateCurrency" minOccurs="0"/>
       <xs:element name="RebatePayTime" minOccurs="0">
-    <xs:simpleType>
-      <xs:restriction base="xs:string">
-        <xs:enumeration value="atHit"/>
-        <xs:enumeration value="atExpiry"/>
-      </xs:restriction>
-    </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="atHit"/>
+          <xs:enumeration value="atExpiry"/>
+        </xs:restriction>
+      </xs:simpleType>
       </xs:element>
+      <xs:element type="bool" name="OverrideTriggered" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

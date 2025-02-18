@@ -110,7 +110,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
 
     // Need fixed leg data with one rate. This should be the standard running coupon on the index CDS e.g.
     // 100bp for CDX IG and 500bp for CDX HY.
-    QL_REQUIRE(legData.legType() == "Fixed", "Index CDS option " << id() << " requires fixed leg.");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "Index CDS option " << id() << " requires fixed leg.");
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();

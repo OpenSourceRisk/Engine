@@ -192,7 +192,8 @@ QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib
         QuantLib::ext::shared_ptr<data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
-        QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
+        QL_REQUIRE(swap->legData()[0].legType() == LegType::Floating && swap->legData()[1].legType() == LegType::Fixed,
+                   "Leg mixup");
         if (fixedFreqs.find(fixFreq) == fixedFreqs.end())
             fixedFreqs[fixFreq] = 1;
         else

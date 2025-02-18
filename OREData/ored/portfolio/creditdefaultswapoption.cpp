@@ -206,7 +206,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // the strike spread. It may matter for the resulting valuation depending on the engine that is used - see 
     // "A CDS Option Miscellany, Richard J. Martin, 2019, Section 2.4".
     const auto& legData = swap_.leg();
-    QL_REQUIRE(legData.legType() == "Fixed", "CDS option " << id() << " requires fixed leg.");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "CDS option " << id() << " requires fixed leg.");
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();

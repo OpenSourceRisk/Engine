@@ -151,7 +151,7 @@ void SwaptionSabrCube::performCalculations() const {
     if (!modelShift_.empty()) {
         QL_REQUIRE(modelShift_.size() == allSwapTenors.size(),
                    "SwaptionSabrCube::performCalculations(): model shift size ("
-                       << modelShift_.size() << ") does not match swap tenors size (" << allSwapTenors.size());
+                       << modelShift_.size() << ") does not match swap tenors size (" << allSwapTenors.size() << ")");
         for (Size j = 0; j < allSwapTenors.size(); ++j) {
             modelShift[allSwapLengths[j]] = modelShift_[j];
         }
