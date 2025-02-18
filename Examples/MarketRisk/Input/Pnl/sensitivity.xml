@@ -1,0 +1,37 @@
+<SensitivityAnalysis>
+	<DiscountCurves>
+		<DiscountCurve ccy="USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-DEPOSIT</Convention>
+					<Convention id="OIS">USD-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</DiscountCurve>
+	</DiscountCurves>
+	<IndexCurves>
+		<IndexCurve index="USD-FedFunds">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-DEPOSIT</Convention>
+					<Convention id="OIS">USD-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+	</IndexCurves>
+	<ComputeGamma>false</ComputeGamma>
+	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+</SensitivityAnalysis>
+

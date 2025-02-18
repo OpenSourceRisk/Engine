@@ -24,6 +24,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -308,6 +309,11 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
         instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate, exerciseDate, 
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
+
+    additionalData_["exerciseDate"] = to_string(exerciseDate);
+    Date today = Settings::instance().evaluationDate();
+    DayCounter actact = ActualActual(ActualActual::ISMA);
+    additionalData_["exerciseTime"] = actact.yearFraction(today, exerciseDate);
 }
 
 void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
