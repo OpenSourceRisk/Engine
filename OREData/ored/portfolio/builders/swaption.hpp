@@ -69,7 +69,7 @@ private:
 class LGMSwaptionEngineBuilder : public SwaptionEngineBuilder {
 public:
     LGMSwaptionEngineBuilder(const string& engine)
-        : SwaptionEngineBuilder("LGM", engine, {"EuropeanSwaption", "BermudanSwaption", "BermudanSwaption_NonStandard", "AmericanSwaption"}) {}
+        : SwaptionEngineBuilder("LGM", engine, {"EuropeanSwaption", "BermudanSwaption", "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard"}) {}
 
 protected:
     QuantLib::ext::shared_ptr<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& dates,
