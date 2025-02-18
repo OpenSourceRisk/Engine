@@ -107,7 +107,7 @@ static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
 class XvaAnalytic : public Analytic {
 public:
     explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                         const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr,
+                         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
                          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<XvaAnalyticImpl>(inputs, offSetScenario, offsetSimMarketParams),

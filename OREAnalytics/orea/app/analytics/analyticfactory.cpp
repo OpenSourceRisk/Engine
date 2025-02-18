@@ -62,21 +62,22 @@ void AnalyticFactory::addBuilder(const std::string& className, const std::set<st
 std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
 AnalyticFactory::build(const string& subAnalytic,
     const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-    const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager, const bool useCache) const {
+    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager, const bool useCache) const {
     auto builder = getBuilder(subAnalytic);
     QuantLib::ext::shared_ptr<Analytic> a;
-    if (useCache && analyticsManager && analyticsManager->analytics().size() > 0) {
+    auto s = analyticsManager.lock();
+    if (useCache && s && s->analytics().size() > 0) {
         // if not buildNew then we first check if we already have this analytic in the AnalyticsManager
-        const auto& it = find_if(analyticsManager->analytics().begin(),analyticsManager->analytics().end(),
+        const auto& it = find_if(s->analytics().begin(), s->analytics().end(),
                     [&builder](const pair<string, ext::shared_ptr<Analytic>>& ac) { return builder.first == ac.first; });
-        if (it != analyticsManager->analytics().end())
+        if (it != s->analytics().end())
             a = it->second;
     }
 
     if (!a && builder.second) {
         a = builder.second->build(inputs, analyticsManager);
-        if (useCache && analyticsManager)
-            analyticsManager->addAnalytic(builder.first, a);
+        if (useCache && s)
+            s->addAnalytic(builder.first, a);
     }
 
     return std::make_pair(builder.first, a);

@@ -47,7 +47,7 @@ public:
 class BaCvaAnalytic : public Analytic {
 public:
     BaCvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<BaCvaAnalyticImpl>(inputs), {"BA_CVA"}, inputs, analyticsManager) {}
 };
 

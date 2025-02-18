@@ -60,7 +60,6 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
     : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs), analyticsManager_(analyticsManager) {
-
     configurations().asofDate = inputs->asof();
 
     // set these here, can be overwritten in setUpConfigurations

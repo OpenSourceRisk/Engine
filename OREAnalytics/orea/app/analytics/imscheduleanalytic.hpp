@@ -43,7 +43,7 @@ public:
 class IMScheduleAnalytic : public Analytic {
 public:
     IMScheduleAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr,
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
                        const QuantLib::ext::shared_ptr<Crif>& crif = nullptr,
                        const bool hasNettingSetDetails = false)
         : Analytic(std::make_unique<IMScheduleAnalyticImpl>(inputs), {"IM_SCHEDULE"}, inputs, analyticsManager,

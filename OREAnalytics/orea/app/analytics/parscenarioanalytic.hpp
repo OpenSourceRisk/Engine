@@ -51,7 +51,7 @@ private:
 class ParScenarioAnalytic : public Analytic {
 public:
     ParScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<ParScenarioAnalyticImpl>(inputs), {"PAR_SCENARIO"}, inputs, analyticsManager, true,
                    false, false,
                    false) {}

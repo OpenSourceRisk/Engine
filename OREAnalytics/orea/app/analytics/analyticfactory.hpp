@@ -49,19 +49,18 @@ public:
     virtual ~AbstractAnalyticBuilder() {}
     virtual QuantLib::ext::shared_ptr<Analytic>
     build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-          const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const = 0;
+          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const = 0;
 };
 
 //! Template AnalyticBuilder class
-/*!+		pn	{pi_=0x0000019632613460 {ptr=0x0000000000000000 <NULL> del={initialized_=true storage_={...} } } }	boost::detail::shared_count
-
+/*!
   \ingroup analytics
 */
 template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
 public:
     virtual QuantLib::ext::shared_ptr<Analytic> build(
         const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const override {
+        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const override {
         auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager);
         a->initialise();
         return a;
@@ -89,7 +88,7 @@ public:
     //! Build, throws for unknown className
     std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
     build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs, 
-        const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
         const bool useCache = false) const;
 
  private:

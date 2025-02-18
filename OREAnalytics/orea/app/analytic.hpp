@@ -89,7 +89,7 @@ public:
              //! Any inputs required by this Analytic
              const QuantLib::ext::shared_ptr<InputParameters>& inputs,
              //! Pointer to the analytics manager
-             const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager = nullptr,
+             const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
              //! Flag to indicate whether a simulation config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
@@ -275,7 +275,7 @@ public:
 class MarketDataAnalytic : public Analytic {
 public:
     MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs, analyticsManager) {}
 };
 

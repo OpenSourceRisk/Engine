@@ -50,7 +50,7 @@ class VarAnalytic : public Analytic {
 public:
     VarAnalytic(std::unique_ptr<Analytic::Impl> impl, const std::set<std::string>& analyticTypes,
                 const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr,
+                const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
                 bool simulationConfig = false,
                 bool sensitivityConfig = false)
         : Analytic(std::move(impl), analyticTypes, inputs, analyticsManager, simulationConfig, sensitivityConfig, false,
@@ -77,7 +77,7 @@ protected:
 class ParametricVarAnalytic : public VarAnalytic {
 public:
     ParametricVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : VarAnalytic(std::make_unique<ParametricVarAnalyticImpl>(inputs), {"PARAMETRIC_VAR"}, inputs,
                       analyticsManager) {}
 };
@@ -98,7 +98,7 @@ protected:
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
 public:
     HistoricalSimulationVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+                                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs,
                       analyticsManager, true) {}
 };
