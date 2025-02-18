@@ -881,7 +881,7 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
     for (Size i = 0; i < refData.size(); i++) {
-        underlyingDerivativeId_.push_back((std::to_string(i)));
+        underlyingDerivativeId_.push_back((portfolioId_));
         QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
     }
