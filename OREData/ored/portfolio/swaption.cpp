@@ -354,7 +354,10 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // for European swaptions that are not handled by the black pricer, we fall back to the numeric Bermudan pricer
     if (exerciseType_ == Exercise::European &&
         QuantExt::BlackMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages)) {
-        builderType = "EuropeanSwaption";
+        if(areConstantLegs(underlying_->legs()))
+            builderType = "EuropeanSwaption";
+        else
+            builderType = "EuropeanSwaption_NonStandard";
     } else {
         QL_REQUIRE(
             QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
