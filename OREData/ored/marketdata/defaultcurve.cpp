@@ -375,10 +375,10 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
             try {
-                auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                    maturity <= asof + 1 * Days) {
+                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
+                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                     WLOG("DefaultCurve:: SKIP cds with term "
                          << quote.term << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
