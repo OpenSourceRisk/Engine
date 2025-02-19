@@ -374,7 +374,7 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        return getUnderlyingNPV(i) / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
     try {
@@ -382,9 +382,18 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
         return tmp;
     } catch (const std::exception&) {
         if (adjustedDate == today)
-            return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+            return getUnderlyingNPV(i) / arguments_.underlyingMultiplier_[i];
         else
             throw;
+    }
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    if (auto b = QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i])) {
+        Date today = Settings::instance().evaluationDate();
+        return b->fixing(today, true);
+    } else {
+        return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
 
@@ -431,7 +440,7 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if (endDate == Null<Date>()) {
-                    s1 = arguments_.underlying_[i]->instrument()->NPV();
+                    s1 = getUnderlyingNPV(i);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];
