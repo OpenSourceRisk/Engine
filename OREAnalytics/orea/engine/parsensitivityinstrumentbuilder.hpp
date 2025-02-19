@@ -113,6 +113,16 @@ private:
                        std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
                        const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
+    //! Create BMA Basis Swap for implying par rate sensitivity from zero rate sensitivity
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    makeBMABasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                     std::string ccy, std::string indexName, std::string bmaIndexName, std::string yieldCurveName,
+                     std::string equityForecastCurveName, QuantLib::Period term,
+                     const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions, const bool singleCurve,
+                     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+                     std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
+                     const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
+
     //! Create Cap/Floor QuantLib::Instrument for implying flat vol sensitivity from optionlet vol sensitivity
     QuantLib::ext::shared_ptr<QuantLib::CapFloor> makeCapFloor(
         const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string indexName, QuantLib::Period term, double strike,

@@ -193,7 +193,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                                  parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                                                  data.discountCurve, marketConfiguration);
                     else if (instType == "BMA")
-                        ret = makeBmaBasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
+                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
                                                parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                                                data.discountCurve, marketConfiguration);
                     else
@@ -293,7 +293,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                             ccy, term, convention, parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                             marketConfiguration);
                     else if (instType == "BMA")
-                        ret = makeBmaBasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
+                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
                                                parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                                                data.discountCurve, marketConfiguration);
                     else
@@ -384,7 +384,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                                  parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                                                  data.discountCurve, marketConfiguration);
                     else if (instType == "BMA")
-                        ret = makeBmaBasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
+                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
                                                parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
                                                data.discountCurve, marketConfiguration);
                     else
@@ -1175,6 +1175,95 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
 
     // latest date and return result
     return std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>(helper, latestRelevantDate);
+}
+std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityInstrumentBuilder::makeBMABasisSwap(
+    const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Market>& market, string ccy, string indexName,
+    string bmaIndexName, string yieldCurveName, string equityForecastCurveName, Period term,
+    const QuantLib::ext::shared_ptr<Convention>& convention, const bool singleCurve,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, std::set<std::string>& removeTodaysFixingIndices,
+    const string& expDiscountCurve, const string& marketConfiguration) const {
+
+    auto conv = QuantLib::ext::dynamic_pointer_cast<BMABasisSwapConvention>(convention);
+    QL_REQUIRE(conv, "ParSensitivityInstrumentBuilder::makeBMABasisSwap(): convention not recognised, expected "
+                     "BMABasisSwapConvention");
+
+    // get indices
+
+    auto bmaIndex = conv->bmaIndex()->bma();
+    auto index = conv->index();
+
+    // determine curves
+
+    Handle<YieldTermStructure> bmaIndexCurve, indexCurve, discountCurve;
+
+    if (market != nullptr) {
+
+        if (!expDiscountCurve.empty())
+            discountCurve = market->iborIndex(expDiscountCurve, marketConfiguration)->forwardingTermStructure();
+        else if (!ccy.empty())
+            discountCurve = market->discountCurve(ccy, marketConfiguration);
+        else if (!yieldCurveName.empty())
+            discountCurve = market->yieldCurve(yieldCurveName, marketConfiguration);
+        else if (!equityForecastCurveName.empty())
+            discountCurve = market->equityForecastCurve(equityForecastCurveName, marketConfiguration);
+        else {
+            QL_FAIL(
+                "ParSensitivityInstrumentBuilder::makeBMABasisSwap(): tenor basis swap discount curve undetermined");
+        }
+
+        if (singleCurve)
+            indexCurve = discountCurve;
+        else
+            indexCurve = market->iborIndex(!indexName.empty() ? indexName : conv->indexName(), marketConfiguration)
+                             ->forwardingTermStructure();
+
+        bmaIndexCurve =
+            market->iborIndex(!bmaIndexName.empty() ? bmaIndexName : conv->bmaIndexName(), marketConfiguration)
+                ->forwardingTermStructure();
+    }
+
+
+    // attach curves to indices
+
+    bmaIndex = QuantLib::ext::make_shared<BMAIndex>(bmaIndexCurve);
+    index = index->clone(indexCurve);
+
+    // create helper (note: 3M and ModifiedFollowing are hardcoded, maybe we want to expose them in conventions later)
+
+    auto helper = QuantLib::ext::make_shared<BMASwapRateHelper>(
+        Handle<Quote>(), term, bmaIndex->fixingDays(), bmaIndex->fixingCalendar(), 3 * Months, ModifiedFollowing,
+        bmaIndex->dayCounter(), bmaIndex, conv->bmaPaymentCalendar(), conv->bmaPaymentConvention(),
+        conv->bmaPaymentLag(), conv->indexSettlementDays(), conv->indexPaymentPeriod(), conv->indexConvention(), index,
+        conv->indexPaymentCalendar(), conv->indexPaymentConvention(), conv->indexPaymentLag(),
+        conv->overnightLockoutDays(), discountCurve);
+
+    // link bma index in helper to curve (because the helpers has linked its internal handle to the index we passed in)
+
+    if (market != nullptr)
+        helper->termStructureHandle().linkTo(*bmaIndexCurve);
+
+    // extract instrument from helper
+
+    auto swap = helper->swap();
+
+    // attach engine and set par helper dependencies
+
+    if (market != nullptr) {
+        swap->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurve));
+    } else {
+        if (!singleCurve) {
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, indexName, 0);
+        }
+        parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve,bmaIndexName, 0);
+        if (!expDiscountCurve.empty())
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::IndexCurve, expDiscountCurve, 0);
+        else
+            parHelperDependencies_.emplace(RiskFactorKey::KeyType::DiscountCurve, ccy);
+    }
+
+    // return swap and latest relevant date
+
+    return std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>(swap, helper->latestRelevantDate());
 }
 
 QuantLib::ext::shared_ptr<CapFloor> ParSensitivityInstrumentBuilder::makeCapFloor(
