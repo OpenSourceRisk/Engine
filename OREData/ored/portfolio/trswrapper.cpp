@@ -391,7 +391,7 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
 Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
     if (auto b = QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i])) {
         Date today = Settings::instance().evaluationDate();
-        return b->fixing(today, true);
+        return b->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
         return arguments_.underlying_[i]->instrument()->NPV();
     }
