@@ -75,6 +75,7 @@ private:
     std::vector<RiskFactorKey> headerKeys_;
     bool writeDuplicateDates_ = true;
 
+    Size writtenDatesScenario_ = 0;
     std::set<Date> writtenDates_;
     std::size_t keysHash_ = 0;
 };
