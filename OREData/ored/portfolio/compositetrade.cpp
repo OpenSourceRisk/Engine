@@ -70,7 +70,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
             fxRatesNotional_[i] = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
-        Real effectiveMultiplier = instrumentWrapper->multiplier();
+        Real effectiveMultiplier = (indexQuantity_ == Null<Real>() ? instrumentWrapper->multiplier() : indexQuantity_);
         if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
             effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
         }
@@ -152,10 +152,15 @@ void CompositeTrade::fromXML(XMLNode* node) {
     }
 
     portfolioId_ = XMLUtils::getChildValue(compNode, "BasketName", false);
+    indexQuantity_ = Null<Real>();
 
     XMLNode* tradesNode = XMLUtils::getChildNode(compNode, "Components");
     if (portfolioBasket_ && portfolioId_.empty()) {
         QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
+    } else if (portfolioBasket_) {
+        if (XMLUtils::getChildValueAsDouble(compNode, "IndexQuantity")) {
+            indexQuantity_ = XMLUtils::getChildValueAsDouble(compNode, "IndexQuantity");
+        }
     }
     if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
 
@@ -253,6 +258,7 @@ std::map<AssetClass, std::set<std::string>>
 CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, std::set<std::string>> result;
+    populateFromReferenceData(referenceDataManager);
     for (const auto& t : trades_) {
         auto underlyings = t->underlyingIndices(referenceDataManager);
         for (const auto& kv : underlyings) {
@@ -274,7 +280,7 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
     return additionalData_;
 }
 
-void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) const{
 
     if (!portfolioId_.empty() && referenceData != nullptr &&
         (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
@@ -288,7 +294,7 @@ void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<R
 }
 
 void CompositeTrade::getTradesFromReferenceData(
-    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const{
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
