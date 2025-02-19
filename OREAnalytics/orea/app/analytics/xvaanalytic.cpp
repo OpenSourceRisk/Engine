@@ -111,6 +111,7 @@ QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
         QuantLib::ext::make_shared<EngineData>(*inputs_->simulationPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "Classic";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -492,7 +493,8 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     LOG("XvaAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
-    edCopy->globalParameters()["RunType"] = "NPV";
+    edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "American";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -937,7 +939,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     } else { // runSimulation_
 
         // build the portfolio linked to today's market
-        analytic()->buildPortfolio();
+        //
+        // during simulation stage, trades may be built using amc engine factory
+        // instead of classic engine factory, resulting in trade errors from the following buildPortfolio()
+        //
+        // when buildFailedTrades is set to False, trade errors are emitted in structured log, because
+        // the trades will be removed from the portfolio and do NOT participate in the post-processing.
+        // we have a genuine interest in such errors
+        //
+        // when buildFailedTrades is set to True, trade errors are NOT emitted in structured log, because
+        // the trades will NOT be removed from the portfolio and DO participate in the post-processing.
+        // any genuine error should have been reported during simulation stage
+        analytic()->buildPortfolio(!inputs_->buildFailedTrades());
 
         analytic()->enrichIndexFixings(analytic()->portfolio());
 

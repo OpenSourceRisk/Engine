@@ -437,6 +437,8 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
                    "expected barrier style American or European, got " << b.style());
         QL_REQUIRE(b.style() != "European" || scriptToUse == AccumulatorScript::Accumulator01,
                    "European barrier style not allowed if PricingDates are given (Accumulator02 script variant)");
+        QL_REQUIRE(!b.overrideTriggered(), "OverrideTriggered not allowed.");
+
         if (b.type() == "UpAndOut" && !b.levels().empty()) {
             knockOutType = "4";
             knockOutLevel = boost::lexical_cast<std::string>(b.levels().front().value());

@@ -232,7 +232,7 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
         mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
-void Analytic::buildPortfolio() {
+void Analytic::buildPortfolio(const bool emitStructuredError) {
     startTimer("buildPortfolio()");
     QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
         
@@ -250,7 +250,7 @@ void Analytic::buildPortfolio() {
 
         LOG("Build the portfolio");
         QuantLib::ext::shared_ptr<EngineFactory> factory = impl()->engineFactory();
-        portfolio()->build(factory, "analytic/" + label());
+        portfolio()->build(factory, "analytic/" + label(), emitStructuredError);
 
         // remove dates that will have matured
         Date maturityDate = inputs()->asof();

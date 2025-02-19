@@ -310,7 +310,8 @@ namespace data {
 
 Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                        RequiredFixings& requiredFixings, const string& configuration,
-                                       const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                       const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                       const bool attachPricer) const {
 
     // Check that our leg data has commodity fixed leg data
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(data.concreteLegData());
@@ -410,7 +411,8 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext:
 
 Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                           RequiredFixings& requiredFixings, const string& configuration,
-                                          const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                          const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                          const bool attachPricer) const {
 
     // allAveraging_ flag should be reset to false before each build. If we do not do this, the allAveraging_
     // flag may have been set from building a different leg previously

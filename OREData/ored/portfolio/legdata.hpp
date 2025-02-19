@@ -943,6 +943,7 @@ public:
     std::vector<std::string>& paymentDates() { return paymentDates_; }
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     bool& strictNotionalDates() { return strictNotionalDates_; }
+    void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
     //@}
 
     virtual QuantLib::ext::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
@@ -996,17 +997,20 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+               const bool attachPricer = true);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
                     const QuantLib::Natural notionalPaymentLag, const BusinessDayConvention paymentConvention,
                     const Calendar paymentCalendar, const bool excludeIndexing = true);
 Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+               const bool attachPricer = true);
 Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+               const bool attachPricer = true);
 Leg makeCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
@@ -1021,7 +1025,8 @@ Leg makeCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantL
                      const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                            const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                            const bool attachPricer = true);
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
