@@ -158,8 +158,8 @@ void CompositeTrade::fromXML(XMLNode* node) {
     if (portfolioBasket_ && portfolioId_.empty()) {
         QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
     } else if (portfolioBasket_) {
-        if (XMLUtils::getChildValueAsDouble(compNode, "IndexQuantity")) {
-            indexQuantity_ = XMLUtils::getChildValueAsDouble(compNode, "IndexQuantity");
+        if (auto n = XMLUtils::getChildNode(compNode, "IndexQuantity")) {
+            indexQuantity_ = parseReal(XMLUtils::getNodeValue(n));
         }
     }
     if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
