@@ -55,7 +55,9 @@ void ScenarioWriter::reset() {
         src_->reset();
     close();
     writtenDates_.clear();
+    writtenDatesScenario_ = 0;
     keysHash_ = 0;
+    i_ = 0;
 }
 
 void ScenarioWriter::close() {
@@ -77,7 +79,17 @@ QuantLib::ext::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
 void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s, const bool writeHeader) {
     const Date& d = s->asof();
 
+    if (writeHeader)
+        firstDate_ = d;
+
+    if (d == firstDate_)
+        ++i_;
+
     if (!writeDuplicateDates_) {
+        if (i_ != writtenDatesScenario_) {
+            writtenDates_.clear();
+            writtenDatesScenario_ = i_;
+        }
         if (writtenDates_.find(d) != writtenDates_.end())
             return;
         writtenDates_.insert(d);
@@ -97,12 +109,7 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             for (Size i = 1; i < keys_.size(); i++)
                 fprintf(fp_, "%c%s", sep_, to_string(keys_[i]).c_str());
             fprintf(fp_, "\n");
-
-            // set the first date, this will bump i_ to 1 below
-            firstDate_ = d;
         }
-        if (d == firstDate_)
-            i_++;
 
         fprintf(fp_, "%s%c%zu%c%.8f", to_string(d).c_str(), sep_, i_, sep_, s->getNumeraire());
         for (auto k : keys_)
@@ -121,11 +128,8 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             report_->addColumn("Numeraire", double(), 8);
             for (Size i = 0; i < headerKeys_.size(); i++)
                 report_->addColumn(to_string(headerKeys_[i]), double(), 8);
-            // set the first date, this will bump i_ to 1 below
-            firstDate_ = d;
         }
-        if (d == firstDate_)
-            i_++;
+
         report_->next();
         report_->add(to_string(d));
         report_->add(i_);
