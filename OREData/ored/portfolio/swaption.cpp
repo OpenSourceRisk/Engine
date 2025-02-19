@@ -380,6 +380,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         }
     }
 
+    if(! envelope().additionalField("pricing_product_type", false).empty()) // If a type is given
+        builderType = envelope().additionalField("pricing_product_type", false);
+
     DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()
                                  << " builder precheck messages:");
     for (auto const& m : builderPrecheckMessages) {
