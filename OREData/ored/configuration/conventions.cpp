@@ -857,9 +857,9 @@ void BMABasisSwapConvention::fromXML(XMLNode* node) {
 
     strBmaIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
 
-    strBmaPaymentCalendar_ = XMLUtils::getChildValue(node, "BmaPaymentCalendar", false);
-    strBmaPaymentConvention_ = XMLUtils::getChildValue(node, "BmaPaymentConvention", false);
-    strBmaPaymentLag_ = XMLUtils::getChildValue(node, "BmaPaymentLag", false);
+    strBmaPaymentCalendar_ = XMLUtils::getChildValue(node, "BMAPaymentCalendar", false);
+    strBmaPaymentConvention_ = XMLUtils::getChildValue(node, "BMAPaymentConvention", false);
+    strBmaPaymentLag_ = XMLUtils::getChildValue(node, "BMAPaymentLag", false);
 
     strIndexPaymentCalendar_ = XMLUtils::getChildValue(node, "IndexPaymentCalendar", false);
     strIndexPaymentConvention_ = XMLUtils::getChildValue(node, "IndexPaymentConvention", false);
@@ -882,11 +882,11 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "BMAIndex", strBmaIndex_);
 
     if (strBmaPaymentCalendar_.empty())
-        XMLUtils::addChild(doc, node, "BmaPaymentCalendar", strBmaPaymentCalendar_);
+        XMLUtils::addChild(doc, node, "BMAPaymentCalendar", strBmaPaymentCalendar_);
     if (strBmaPaymentConvention_.empty())
-        XMLUtils::addChild(doc, node, "BmaPaymentConvention", strBmaPaymentConvention_);
+        XMLUtils::addChild(doc, node, "BMAPaymentConvention", strBmaPaymentConvention_);
     if (strBmaPaymentLag_.empty())
-        XMLUtils::addChild(doc, node, "BmaPaymentLag", strBmaPaymentLag_);
+        XMLUtils::addChild(doc, node, "BMAPaymentLag", strBmaPaymentLag_);
     if (strIndexPaymentCalendar_.empty())
         XMLUtils::addChild(doc, node, "IndexPaymentCalendar", strIndexPaymentCalendar_);
     if (strIndexPaymentConvention_.empty())
