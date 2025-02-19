@@ -104,7 +104,7 @@ private:
             std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
-    //! Create Basis Swap for implying par rate sensitivity from zero rate sensitivity
+    //! Create in-ccy Tenor Basis Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
     makeTenorBasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
                        std::string receiveIndexName, std::string payIndexName, std::string yieldCurveName,
