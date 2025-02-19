@@ -25,21 +25,23 @@ namespace ore {
 namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
-                               const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys)
-    : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys) {
+                               const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys,
+                               const bool writeDuplicateDates)
+    : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode,
-                               const std::vector<RiskFactorKey>& headerKeys)
-    : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys) {
+                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates)
+    : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
                                QuantLib::ext::shared_ptr<ore::data::Report> report,
-                               const std::vector<RiskFactorKey>& headerKeys)
-    : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys) {}
+                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates)
+    : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys),
+      writeDuplicateDates_(writeDuplicateDates) {}
 
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
@@ -75,10 +77,11 @@ QuantLib::ext::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
 void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s, const bool writeHeader) {
     const Date& d = s->asof();
 
-    if(writtenDates_.find(d) != writtenDates_.end())
-        return;
-
-    writtenDates_.insert(d);
+    if (!writeDuplicateDates_) {
+        if (writtenDates_.find(d) != writtenDates_.end())
+            return;
+        writtenDates_.insert(d);
+    }
 
     if (keysHash_ == 0 || keysHash_ != s->keysHash()) {
         // take a copy of the keys here to ensure the order is preserved
