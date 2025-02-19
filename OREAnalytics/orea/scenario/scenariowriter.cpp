@@ -52,6 +52,8 @@ void ScenarioWriter::reset() {
     if (src_)
         src_->reset();
     close();
+    writtenDates_.clear();
+    keysHash_ = 0;
 }
 
 void ScenarioWriter::close() {
@@ -71,10 +73,20 @@ QuantLib::ext::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
 }
 
 void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s, const bool writeHeader) {
-    const Date d = s->asof();
-    // take a copy of the keys here to ensure the order is preserved
-    keys_ = s->keys();
-    std::sort(keys_.begin(), keys_.end());
+    const Date& d = s->asof();
+
+    if(writtenDates_.find(d) != writtenDates_.end())
+        return;
+
+    writtenDates_.insert(d);
+
+    if (keysHash_ == 0 || keysHash_ != s->keysHash()) {
+        // take a copy of the keys here to ensure the order is preserved
+        keys_ = s->keys();
+        std::sort(keys_.begin(), keys_.end());
+        keysHash_ = s->keysHash();
+    }
+
     if (fp_) {
         if (writeHeader) {
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");

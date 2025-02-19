@@ -71,6 +71,9 @@ private:
     Size i_;
     const char sep_ = ',';
     std::vector<RiskFactorKey> headerKeys_;
+
+    std::set<Date> writtenDates_;
+    std::size_t keysHash_ = 0;
 };
 } // namespace analytics
 } // namespace ore
