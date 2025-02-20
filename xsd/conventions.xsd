@@ -176,9 +176,20 @@
 
   <xs:complexType name="bmaBasisSwapType">
     <xs:all>
-      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="LiborIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="BMAIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Id" minOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="0"/>
+      <!-- deprecated -->
+      <xs:element type="xs:string" name="LiborIndex" minOccurs="0"/>
+      <xs:element type="xs:string" name="BMAIndex" minOccurs="1"/>
+      <xs:element type="xs:string" name="BMAPaymentCalendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BMAPaymentConvention" minOccurs="0"/>
+      <xs:element type="xs:integer" name="BMAPaymentLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="IndexPaymentCalendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="IndexPaymentConvention" minOccurs="0"/>
+      <xs:element type="xs:integer" name="IndexPaymentLag" minOccurs="0"/>
+      <xs:element type="xs:integer" name="IndexSettlementDays" minOccurs="0"/>
+      <xs:element type="period" name="IndexPaymentPeriod" minOccurs="0"/>
+      <xs:element type="xs:integer" name="OvernightLockoutDays" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
