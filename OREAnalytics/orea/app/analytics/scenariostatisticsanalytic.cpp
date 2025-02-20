@@ -81,7 +81,8 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueO
 
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     analytic()->reports()["SCENARIO_STATISTICS"]["scenario"] = report;
-    scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
+    scenarioGenerator_ =
+        QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
 }
 
 void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
