@@ -69,8 +69,6 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
     int kkk=0;
     std::cin >>kkk;
 
-    double tol = 1e-10;
-
     // Fields to be checked on the fixed leg
     Real constNotionalFixed = Null<Real>();
     Real constRate = Null<Real>();
@@ -94,15 +92,15 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 
                 if(constNotionalFloat == Null<Real>()) 
                     constNotionalFloat = cpn->nominal();
-                else if (std::fabs(cpn->nominal() - constNotionalFloat) > tol)
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotionalFloat))
                     return false;
 
-                if (std::fabs(cpn->gearing() - 1.00) > tol)
+                if (!QuantLib::close_enough(cpn->gearing() , 1.00))
                     return false;
    
                 if(constSpread == Null<Real>())
                     constSpread = cpn->spread();
-                else if (std::fabs(cpn->spread() - constSpread) > tol)
+                else if (!QuantLib::close_enough(cpn->spread(), constSpread))
                     return false;
             }
 
@@ -115,12 +113,12 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                                     
                 if(constNotionalFixed == Null<Real>()) 
                     constNotionalFixed = cpn->nominal();
-                else if (std::fabs(cpn->nominal() - constNotionalFixed) > tol)
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotionalFixed))
                     return false;
    
                 if(constRate == Null<Real>())
                     constRate = cpn->rate();
-                else if (std::fabs(cpn->rate() - constRate) > tol)
+                else if (!QuantLib::close_enough(cpn->rate(), constRate))
                     return false;
             }
         }
