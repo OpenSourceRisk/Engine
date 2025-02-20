@@ -200,8 +200,9 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     if (swap_.upfrontFee() == Null<Real>()) {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, fixedLegData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(),  swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
-            lastPeriodDayCounter, true,  swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
+            QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
+            swap_.cashSettlementDays());
     } else {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, swap_.upfrontFee(), fixedLegData->rates().front(), schedule,

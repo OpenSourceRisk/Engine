@@ -72,7 +72,6 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
 
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
         Date protectionStart = swap_.protectionStart();
-
         Date tradeDate = swap_.tradeDate();
         protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
         tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
