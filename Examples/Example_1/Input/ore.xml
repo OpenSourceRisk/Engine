@@ -46,7 +46,7 @@
       <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -56,7 +56,7 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
     <Analytic type="xva">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="useXvaRunner">N</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
