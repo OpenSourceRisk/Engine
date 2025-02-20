@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1.2
 ARG debian_tag
-FROM debian:${debian_tag}
+FROM debian:trixie
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
