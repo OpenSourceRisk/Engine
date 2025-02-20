@@ -60,30 +60,33 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 }
 } // namespace
 
-// This helper functionality checks the legs for constant definitions of
-// given notional, rates, spreads, gearing and amount values. There must be precisely
-// one floating and one fixed leg for the trade to be "constant".
-bool areConstantLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
+// This helper functionality checks the legs for constant definitions of the given 
+// notional, the rates and the spreads. Additional to this, the gearing must be equal to one.
+// Finally, there must be precisely one floating and one fixed leg for the trade to be "standard".
+bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
-    // Fields to be checked on the floating leg
+    std::cout<< "Constant Check started ..."<< std::endl;
+    int kkk=0;
+    std::cin >>kkk;
+
+    double tol = 1e-10;
+
+    // Fields to be checked on the fixed leg
     Real constNotionalFixed = Null<Real>();
     Real constRate = Null<Real>();
 
-    // Fields to be checked on the fixed leg
+    // Fields to be checked on the floating leg
     Real constNotionalFloat = Null<Real>();
     Real constSpread = Null<Real>();
-    Real constGearing = Null<Real>();
 
     // Store leg "indices" to avoid double legs
-    int indexFloatingLegs=Null<int>();
-    int indexFixedLegs=Null<int>();
+    int indexFloatingLegs = Null<int>();
+    int indexFixedLegs = Null<int>();
 
-    for (Size i = 0; i < legs.size(); ++i) // For each leg
-        for (auto const& c : legs[i]) { // For each coupon payment in the current leg
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (auto const& c : legs[i]) { 
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
 
-            // Try to cast down to floating coupons
-            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) 
-            {
                 if (indexFloatingLegs == Null<int>()) 
                     indexFloatingLegs = i;
                 else if (indexFloatingLegs != i)
@@ -91,23 +94,20 @@ bool areConstantLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 
                 if(constNotionalFloat == Null<Real>()) 
                     constNotionalFloat = cpn->nominal();
-                else if (cpn->nominal() != constNotionalFloat)
+                else if (std::fabs(cpn->nominal() - constNotionalFloat) > tol)
                     return false;
 
-                if(constGearing == Null<Real>())
-                    constGearing = cpn->gearing();
-                else if (cpn->gearing() != constGearing)
+                if (std::fabs(cpn->gearing() - 1.00) > tol)
                     return false;
    
                 if(constSpread == Null<Real>())
                     constSpread = cpn->spread();
-                else if (cpn->spread() != constSpread)
+                else if (std::fabs(cpn->spread() - constSpread) > tol)
                     return false;
             }
 
-            // Try to cast down to fixed coupons
-            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) 
-            { 
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+
                 if (indexFixedLegs == Null<int>()) 
                     indexFixedLegs = i;
                 else if (indexFixedLegs != i)
@@ -115,19 +115,20 @@ bool areConstantLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                                     
                 if(constNotionalFixed == Null<Real>()) 
                     constNotionalFixed = cpn->nominal();
-                else if (cpn->nominal() != constNotionalFixed)
+                else if (std::fabs(cpn->nominal() - constNotionalFixed) > tol)
                     return false;
    
                 if(constRate == Null<Real>())
                     constRate = cpn->rate();
-                else if (cpn->rate() != constRate)
+                else if (std::fabs(cpn->rate() - constRate) > tol)
                     return false;
             }
         }
+    }
 
     // Both legs and fields must have been there at least once
     if(constNotionalFixed == Null<Real>() || constNotionalFloat == Null<Real>() || 
-        constRate == Null<Real>() || constSpread == Null<Real>() || constGearing == Null<Real>())
+        constRate == Null<Real>() || constSpread == Null<Real>())
         return false; 
 
     // If no non-constant field and no other subtlety was found return true
@@ -354,7 +355,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // for European swaptions that are not handled by the black pricer, we fall back to the numeric Bermudan pricer
     if (exerciseType_ == Exercise::European &&
         QuantExt::BlackMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages)) {
-        if(areConstantLegs(underlying_->legs()))
+        if(areStandardLegs(underlying_->legs()))
             builderType = "EuropeanSwaption";
         else
             builderType = "EuropeanSwaption_NonStandard";
@@ -366,22 +367,23 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
        
         if (exerciseType_ == Exercise::European || exerciseType_ == Exercise::Bermudan)
         {           
-            if(areConstantLegs(underlying_->legs()))
+            if(areStandardLegs(underlying_->legs()))
                 builderType = "BermudanSwaption";
             else
                 builderType = "BermudanSwaption_NonStandard";
         }
         else if (exerciseType_ == Exercise::American)
         { 
-            if(areConstantLegs(underlying_->legs()))
+            if(areStandardLegs(underlying_->legs()))
                 builderType = "AmericanSwaption";
             else
                 builderType = "AmericanSwaption_NonStandard";
         }
     }
 
-    if(! envelope().additionalField("pricing_product_type", false).empty()) // If a type is given
-        builderType = envelope().additionalField("pricing_product_type", false);
+    string pricingProductType = envelope().additionalField("pricing_product_type", false);
+    if (!pricingProductType.empty()) 
+        builderType = pricingProductType;
 
     DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()
                                  << " builder precheck messages:");
