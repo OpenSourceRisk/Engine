@@ -102,6 +102,7 @@ public:
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
     const std::string& paymentLag() const { return paymentLag_; }
+    const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -149,6 +150,7 @@ private:
     bool isInflationLinked_;
     string subType_;
     string paymentLag_;
+    std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = std::nullopt;
 };
 
 //! Serializable Bond
@@ -198,6 +200,7 @@ struct BondBuilder {
         std::string creditGroup;
         QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
         double priceQuoteBaseValue = 1.0;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
 
         double inflationFactor() const;
     };

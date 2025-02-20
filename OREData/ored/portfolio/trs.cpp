@@ -189,8 +189,11 @@ void TRS::fromXML(XMLNode* node) {
     std::vector<XMLNode*> underlyingTradeNodes = XMLUtils::getChildrenNodes(underlyingDataNode, "Trade");
     std::vector<XMLNode*> underlyingTradeNodes2 = XMLUtils::getChildrenNodes(underlyingDataNode, "Derivative");
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
+        QL_REQUIRE((XMLUtils::getChildrenNodes(underlyingDataNode, "PortfolioIndexTradeData")).size() == 1, "Expecting one PortfolioIndex Node");
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
-        returnData_.setPortfolioId(portfolioId_);
+        QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
+        portfolioDeriv_ = true;
+        indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
                "at least one 'Trade' or 'Derivative' or 'PortfolioIndexTradeData' node required");
@@ -214,6 +217,15 @@ void TRS::fromXML(XMLNode* node) {
     for (auto const n : underlyingTradeNodes2) {
         underlyingDerivativeId_.push_back(XMLUtils::getChildValue(n, "Id", true));
         auto t = XMLUtils::getChildNode(n, "Trade");
+        if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
+            if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
+                QL_REQUIRE(underlyingTradeNodes2.size() == 1 && portfolioId_ == "", "Expecting one derivative.");
+                portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+                QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
+                indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
+                portfolioDeriv_ = false;
+            }
+        }
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
         std::string tradeType = XMLUtils::getChildValue(t, "TradeType", true);
         auto u = TradeFactory::instance().build(tradeType);
@@ -330,8 +342,9 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     QL_REQUIRE(fundingLegPayers.size() <= 1, "funding leg payer flags must match");
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
-    QuantLib::Real portfolioInitialPrice = 0;
-    if (!portfolioId_.empty()) {
+    QuantLib::Real portfolioInitialPrice = Null<Real>();
+
+    if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
         RequiredFixings portfolioFixing;
@@ -451,6 +464,15 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex(underlying_.size(), nullptr);
     std::vector<Real> underlyingMultiplier(underlying_.size(), Null<Real>());
+
+    for (int i = 0; i < underlyingMultiplier.size(); i++) {
+        if (!portfolioId_.empty()) {
+            underlyingMultiplier[i] = indexQuantity_;
+        } else {
+            underlyingMultiplier[i] = 1;
+        }
+    }
+
     std::vector<std::string> assetCurrency(underlying_.size(), fundingCurrency);
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset(underlying_.size(), nullptr);
 
@@ -859,7 +881,7 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
     for (Size i = 0; i < refData.size(); i++) {
-        underlyingDerivativeId_.push_back((std::to_string(i)));
+        underlyingDerivativeId_.push_back((portfolioId_));
         QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
     }

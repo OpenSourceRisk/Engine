@@ -64,7 +64,8 @@ private:
 Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
                         const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                         const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
-                        const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                        const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                        const bool attachPricer = true);
 
 } // namespace data
 } // namespace ore
