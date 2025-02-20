@@ -17,7 +17,7 @@
 */
 
 #include <qle/termstructures/creditcurve.hpp>
-
+#include <boost/algorithm/string.hpp>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -35,5 +35,21 @@ const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& CreditCurve::
 const QuantLib::Handle<QuantLib::YieldTermStructure>& CreditCurve::rateCurve() const { return rateCurve_; }
 const QuantLib::Handle<QuantLib::Quote>& CreditCurve::recovery() const { return recovery_; }
 const CreditCurve::RefData& CreditCurve::refData() const { return refData_; }
+
+
+CreditCurve::Seniority parseSeniority(const std::string& seniority){
+    auto lowerSeniority = boost::algorithm::to_lower_copy(seniority);
+    if (lowerSeniority.empty() || lowerSeniority == "snrfor"){
+        return CreditCurve::Seniority::SNRFOR;
+    } else if (lowerSeniority == "snrlac")
+        return CreditCurve::Seniority::SNRLAC;
+    else if (lowerSeniority == "sublt2")
+        return CreditCurve::Seniority::SUBLT2;
+    else if (lowerSeniority == "secdom")
+        return CreditCurve::Seniority::SECDOM;
+    else
+        QL_FAIL("Seniority " << seniority << " not recognised");
+
+}
 
 } // namespace QuantExt

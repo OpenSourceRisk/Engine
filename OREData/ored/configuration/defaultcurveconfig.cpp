@@ -226,6 +226,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
             bootstrapConfig_.fromXML(n);
         }
+        seniorityTier_ = XMLUtils::getChildValue(node, "SeniorityTier", false);
     }
 }
 
@@ -272,6 +273,9 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Type", "Null");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        if (!seniorityTier_.empty()) {
+            XMLUtils::addChild(doc, node, "SeniorityTier", seniorityTier_);
+        }
     } else {
         QL_FAIL("Unknown type in DefaultCurveConfig::toXML()");
     }

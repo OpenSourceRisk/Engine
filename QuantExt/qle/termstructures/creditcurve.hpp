@@ -32,6 +32,13 @@ namespace QuantExt {
 
 class CreditCurve : public QuantLib::Observer, public QuantLib::Observable {
 public:
+    enum class Seniority {
+        SNRFOR,
+        SNRLAC,
+        SUBLT2,
+        SECDOM,
+    };
+
     struct RefData {
         RefData() {}
         QuantLib::Date startDate = QuantLib::Null<QuantLib::Date>();
@@ -47,6 +54,8 @@ public:
         QuantLib::DayCounter dayCounter = QuantLib::Actual360(false);
         QuantLib::DayCounter lastPeriodDayCounter = QuantLib::Actual360(true);
         QuantLib::Natural cashSettlementDays = 3;
+        Seniority seniority = Seniority::SNRFOR;
+
     };
 
     explicit CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
@@ -67,5 +76,8 @@ protected:
     RefData refData_;
     void update() override;
 };
+
+//! If no seniority is given, the default is Seniority::SNRFOR
+CreditCurve::Seniority parseSeniority(const std::string& seniority);
 
 } // namespace QuantExt

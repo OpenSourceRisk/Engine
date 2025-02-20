@@ -351,7 +351,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);
     
-    
+    std::vector<QuantExt::CreditCurve::Seniority> seniorities;
     std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
     vector<Real> recoveryRates;
 
@@ -364,6 +364,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         auto originalCurve = market->defaultCurve(cc, config)->curve();
         dpts.push_back(originalCurve);
+        const auto& ref = market->defaultCurve(cc, config)->refData();
+        seniorities.push_back(ref.seniority);
     }
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
@@ -547,7 +549,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         basket->setLossModel(
             cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
-                                                         indexCdsMaturity, homogeneous));
+                                                         indexCdsMaturity, homogeneous, seniorities));
 
         DLOG("Basket Notional (" << adjDetachPoint << ")" << basket->basketNotional());
         DLOG("Tranche Notional (" << adjDetachPoint << ")" << basket->trancheNotional());
@@ -609,8 +611,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-        basket->setLossModel(
-            cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity, homogeneous));
+        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
+                                                         homogeneous, seniorities));
 
         auto cdoA =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,

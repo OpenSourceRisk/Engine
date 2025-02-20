@@ -455,15 +455,15 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     Currency ccy = parseCurrency(config.currency());
 
     std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
+    std::vector<QuantExt::CreditCurve::Seniority> seniorities;
     for (const auto& name : basketData.remainingNames) {
         auto mappedName = creditCurveNameMapping(name);
         const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
         QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
         recoveryRates.push_back(creditCurve->recovery()->value());
         dpts.push_back(creditCurve->curve());
+        seniorities.push_back(creditCurve->refData().seniority);
     }
-
-
     for (const auto& term : terms) {
 
 
@@ -532,13 +532,20 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             double trancheWidth = (adjustedDetachPoint - adjustedAttachPoint) * basketData.indexFactor;
             double inceptionTrancheWidth = (inceptionDetachPoint - inceptionAttachPoint);
             double previousTrancheCleanNPV = (i == 0) ? 0 : trancheNPV.back();
+            DLOG("inceptionAttachPoint" << inceptionAttachPoint);
+            DLOG("inceptionDetachPoint" << inceptionDetachPoint);
+            DLOG("inceptionTrancheWidth" << inceptionTrancheWidth);
+            DLOG("adjustedAttachPoint" << adjustedAttachPoint);
+            DLOG("adjustedDetachPoint" << adjustedDetachPoint);
+            DLOG("trancheWidth" << trancheWidth);
+            DLOG("previousTrancheNPV" << previousTrancheCleanNPV);
             // LOG("previous Tranche clean NPV" << previousTrancheCleanNPV);
             //  Build Tranche
             auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
             RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
             GaussCopulaBucketingLossModelBuilder modelBuilder{
                 -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020"};
-            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false);
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, seniorities);
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
                 config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,

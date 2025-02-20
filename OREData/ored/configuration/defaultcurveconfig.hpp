@@ -95,7 +95,8 @@ public:
         const bool allowNegativeRates() const { return allowNegativeRates_; }
         const string& initialState() const { return initialState_; }
         const vector<string>& states() const { return states_; }
-       //@}
+        const string& seniorityTier() const { return seniorityTier_; }
+        //@}
 
         //! \name Setters
         //@{
@@ -141,7 +142,7 @@ public:
         vector<string> multiSectionSwitchDates_;
         string initialState_;
         vector<string> states_;
-
+        string seniorityTier_;
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
 
