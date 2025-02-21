@@ -49,9 +49,12 @@ protected:
 class VarAnalytic : public Analytic {
 public:
     VarAnalytic(std::unique_ptr<Analytic::Impl> impl, const std::set<std::string>& analyticTypes,
-                const QuantLib::ext::shared_ptr<InputParameters>& inputs, bool simulationConfig = false,
+                const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+                bool simulationConfig = false,
                 bool sensitivityConfig = false)
-        : Analytic(std::move(impl), analyticTypes, inputs, simulationConfig, sensitivityConfig, false, false) {}
+        : Analytic(std::move(impl), analyticTypes, inputs, analyticsManager, simulationConfig, sensitivityConfig, false,
+                   false) {}
 };
 
 class ParametricVarAnalyticImpl : public VarAnalyticImpl {
@@ -74,9 +77,9 @@ protected:
 class ParametricVarAnalytic : public VarAnalytic {
 public:
     ParametricVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : VarAnalytic(std::make_unique<ParametricVarAnalyticImpl>(inputs), {"PARAMETRIC_VAR"}, inputs) {}
+                          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : VarAnalytic(std::make_unique<ParametricVarAnalyticImpl>(inputs), {"PARAMETRIC_VAR"}, inputs,
+                      analyticsManager) {}
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -94,11 +97,10 @@ protected:
 
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
 public:
-    HistoricalSimulationVarAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs, true) {}
+    HistoricalSimulationVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs,
+                      analyticsManager, true) {}
 };
 
 } // namespace analytics

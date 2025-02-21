@@ -19,6 +19,7 @@
 #include <orea/app/analytics/xvastressanalytic.hpp>
 
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -31,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 void XvaStressAnalyticImpl::writeCubes(const std::string& label,
-                                       const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic) {
+                                       const QuantLib::ext::shared_ptr<Analytic>& xvaAnalytic) {
     if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
         return;
     }
@@ -81,6 +82,9 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
     setLabel(LABEL);
 }
 
+void XvaStressAnalyticImpl::buildDependencies() {
+}
+
 void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                         const std::set<std::string>& runTypes) {
 
@@ -106,8 +110,6 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
     
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
-
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
     // build t0, sim market, stress scenario generator
 
@@ -166,9 +168,11 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            auto newAnalytic = ext::make_shared<XvaAnalytic>(
-                inputs_, scenario,
-                analytic()->configurations().simMarketParams);
+            auto newAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
+            auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
+            xvaImpl->setOffsetScenario(scenario);
+            xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports

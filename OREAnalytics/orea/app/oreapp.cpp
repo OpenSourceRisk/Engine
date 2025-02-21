@@ -253,6 +253,7 @@ void OREApp::analytics() {
         }
         // Create the analytics manager
         analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_->initialise();
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics");
         CONSOLE(to_string(inputs_->analytics()));
@@ -525,6 +526,7 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
 
         // Create the analytics manager
         analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
+        analyticsManager_->initialise();
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
         CONSOLEW("Requested analytics:");
         CONSOLE(to_string(inputs_->analytics()));
