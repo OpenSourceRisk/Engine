@@ -33,9 +33,6 @@ void SimmAnalyticImpl::setUpConfigurations() {
 
 void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     analytic()->buildMarket(loader, false);
 
     auto simmAnalytic = static_cast<SimmAnalytic*>(analytic());

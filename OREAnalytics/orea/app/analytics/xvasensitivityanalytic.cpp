@@ -322,7 +322,9 @@ ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, 
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
     QL_REQUIRE(scenarioGenerator != nullptr,
                "Internal error: Can not compute XVA sensi without valid scenario generator.");
@@ -336,15 +338,15 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            // auto newAnalytic =
-            //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-	    auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, scenario, simMarketParams);
-            auto newAnalytic = xvaAnalytic.second;
+            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
+            XvaAnalyticImpl* xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
+            xvaImpl->setOffsetScenario(scenario);
+            xvaImpl->setOffsetSimMarketParams(simMarketParams);
 	    
-	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
-            newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
+            xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
+            for (auto& [name, rpt] : xvaAnalytic->reports()["XVA"]) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);
@@ -423,10 +425,9 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
 
     // Store the par sensi stream in the base anlytics class in case we want to post process later (e.g. for SACVA)
     auto nettingSetCube = results.nettingParSensiCube_[XvaResults::Adjustment::CVA];
-    analytic()->parCvaSensiCubeStream() =
-        QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+    setParCvaSensiCubeStream(QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency()));
 
-    QL_REQUIRE(analytic()->parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
+    QL_REQUIRE(parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
 
     return results;
 }

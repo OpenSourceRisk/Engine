@@ -40,12 +40,18 @@ void PnlAnalyticImpl::setUpConfigurations() {
     setGenerateAdditionalResults(true);
 }
 
+void PnlAnalyticImpl::buildDependencies() {
+    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager(), false);
+    if (mporAnalytic.second) {
+        mporAnalytic.second->configurations().curveConfig = inputs_->curveConfigs().get("mpor");
+        auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
+        sai->setUseSpreadedTermStructures(true);
+        addDependentAnalytic(mporLookupKey, mporAnalytic.second);
+    }
+}
+
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
-    
-    if (!analytic()->match(runTypes))
-        return;
-
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
