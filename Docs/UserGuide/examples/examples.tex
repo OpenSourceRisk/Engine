@@ -158,11 +158,47 @@ Run with: {\tt python run.py}
 This example contains 150+ sample trades in ORE XML across six asset classes, vanilla and complex, see subfolder {\tt Example\_Trades}.
 The sample trades have also been concatenated into a single portfolio in {\tt Input/portfolio.xml}.
 
-The Input folder contains the necessary configuration and market data to support a valuation batch.
-
-Run with: {\tt python run.py}
+The Input folder contains the necessary configuration and market data to support a valuation batch. Run it with: {\tt python run.py}
 
 See the {\bf ORE Product Catalogue} in {\tt Docs/UserGuide/products.tex|pdf} for payoff descriptions, input guide and pricing methods.
+
+\medskip
+In addition to the {\tt npv} and {\tt cashflow} analytic we have selected the {\tt portfolioDetails} analytic in {\tt Products/Input/ore.xml}:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Setup>
+     ...
+  </Setup>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="portfolioDetails">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="riskFactorFileName">riskFactors.csv</Parameter>
+      <Parameter name="marketObjectFileName">marketObjects.csv</Parameter>
+      </Analytic>
+  </Analytics>
+\end{minted}
+
+This leads to the reporting of portfolio composition in a series of extra files in folder {\tt Products/Output}:
+\begin{itemize}
+\item counterparties.csv
+\item marketObjects.csv
+\item netting\_sets.csv
+\item riskFactors.csv
+\item swap\_indices.csv
+\item trade\_types.csv
+\item underlying\_indices.csv
+\end{itemize}
 
 \subsection{Curve Building}
 
