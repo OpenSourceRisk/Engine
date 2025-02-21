@@ -208,7 +208,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     if (inputs_->writeScenarios()) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->reports()["XVA"]["scenario"] = report;
-        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
+        scenarioGenerator_ =
+            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
     }
 }
 
