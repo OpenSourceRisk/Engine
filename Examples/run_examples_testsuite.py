@@ -103,7 +103,7 @@ def regress_all_utests():
     i = 1
     examples=get_list_of_examples()
     academy=get_list_ore_academy()
-    allexamples = sorted(examples + academy))
+    allexamples = sorted(examples + academy)
     print("Examples:", examples)
     print("Academy:", academy)
     print("All:", allexamples)
