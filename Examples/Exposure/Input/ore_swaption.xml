@@ -44,6 +44,11 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
       <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configFile">simulation.xml</Parameter>
+      <Parameter name="outputFile">calibration.csv</Parameter>
+    </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>

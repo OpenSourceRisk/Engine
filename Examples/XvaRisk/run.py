@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import subprocess as p
-                                       # Legacy Examples
+                                    # Legacy Examples
 cases = [ "run_stress.py",          # 67
 	  "run_xvaexplain.py",      # 70
 	  "run_sensi.py",           # 68

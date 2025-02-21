@@ -29,6 +29,7 @@ print("+--------------------------------------------------+")
 # This is legacy example 32
 
 oreex.run("Input/ore_inflation_jy.xml")
+oreex.setup_plot("exposure_inflation_jy")
 oreex.plot("inflation_jy/exposure_trade_trade_01.csv", 2, 3, 'r', "EPE CPI Swap 1")
 oreex.plot("inflation_jy/exposure_trade_trade_02.csv", 2, 3, 'g', "EPE CPI Swap 2")
 oreex.plot("inflation_jy/exposure_trade_trade_03.csv", 2, 3, 'b', "EPE YOY Swap 1")
