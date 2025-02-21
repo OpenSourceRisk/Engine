@@ -6,13 +6,13 @@
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log_50.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
-    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../../Examples/Input/conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_cpr_50.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
@@ -43,7 +43,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">sensi_scenarios_50.csv</Parameter>
       <Parameter name="sensitivityOutputFile">zero_sensi_50.csv</Parameter>
       <Parameter name="crossGammaOutputFile">crossgamma_50.csv</Parameter>
