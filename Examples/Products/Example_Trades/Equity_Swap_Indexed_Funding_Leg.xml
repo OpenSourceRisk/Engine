@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EqSwapIndexedFundingLeg_STOXX_Short_Version">
+        <TradeType>EquitySwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquitySwapData>
+            <LegData>
+                <Payer>true</Payer>
+                <LegType>Floating</LegType>
+                <Currency>USD</Currency>
+                <PaymentConvention>Following</PaymentConvention>
+                <DayCounter>A360</DayCounter>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <Spreads>
+                        <Spread>0.005</Spread>
+                    </Spreads>
+                    <FixingDays>2</FixingDays>
+                    <IsInArrears>false</IsInArrears>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-12-22</StartDate>
+                        <EndDate>2035-12-23</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <Indexings>
+                    <FromAssetLeg>true</FromAssetLeg>
+                </Indexings>
+            </LegData>
+            <LegData>
+                <Payer>false</Payer>
+                <LegType>Equity</LegType>
+                <Currency>USD</Currency>
+                <PaymentConvention>Following</PaymentConvention>
+                <DayCounter>A360</DayCounter>
+                <EquityLegData>
+                    <Quantity>1000</Quantity>
+                    <ReturnType>Total</ReturnType>
+                    <Name>RIC:.STOXX50E</Name>
+                    <InitialPrice>3368.858184</InitialPrice>
+                    <InitialPriceCurrency>USD</InitialPriceCurrency>
+                    <NotionalReset>true</NotionalReset>
+                    <FixingDays>0</FixingDays>
+                    <FXTerms>
+                        <EquityCurrency>EUR</EquityCurrency>
+                        <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+                    </FXTerms>
+                </EquityLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-12-22</StartDate>
+                        <EndDate>2035-12-23</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </EquitySwapData>
+    </Trade>
+    <Trade id="EqSwapIndexedFundingLeg_STOXX_Explicit_Version">
+        <TradeType>EquitySwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquitySwapData>
+            <LegData>
+                <Payer>true</Payer>
+                <LegType>Floating</LegType>
+                <Currency>USD</Currency>
+                <PaymentConvention>Following</PaymentConvention>
+                <DayCounter>A360</DayCounter>
+                <!-- the effective notional is this notional here times the quantity times the share price;
+           for an EquitySwap this should be set to 1.0 usually -->
+                <Notionals>
+                    <Notional>1</Notional>
+                </Notionals>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <Spreads>
+                        <Spread>0.005</Spread>
+                    </Spreads>
+                    <FixingDays>2</FixingDays>
+                    <IsInArrears>false</IsInArrears>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-12-22</StartDate>
+                        <EndDate>2027-12-23</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <Indexings>
+                    <Indexing>
+                        <Quantity>1000</Quantity>
+                        <!-- EQ-{IdentifierType}:{Name}:{Currency}:{Exchange} -->
+                        <Index>EQ-RIC:.STOXX50E</Index>
+                        <!-- optional, first index fixing to apply; if not given, value is read from the fixing history;
+               for an EquitySwap this should be set to the InitialPrice from the equity leg -->
+                        <InitialFixing>3368.858184</InitialFixing>
+                        <!-- optional, if not given the valuation schedule is assumed to be the same as the accrual schedule
+               of the floating rate coupons;
+               for an EquitySwap this should be set to the valuation schedule of the equity leg -->
+                        <ValuationSchedule>
+                            <Rules>
+                                <StartDate>2025-12-22</StartDate>
+                                <EndDate>2027-12-23</EndDate>
+                                <Tenor>3M</Tenor>
+                                <Calendar>USD</Calendar>
+                                <Convention>ModifiedFollowing</Convention>
+                                <Rule>Forward</Rule>
+                            </Rules>
+                        </ValuationSchedule>
+                        <!-- derivation rules for the equity fixing date from the valuation dates -->
+                        <!-- optional, defaults to 0 (is set for an EquitySwap according to the comment above -->
+                        <FixingDays>0</FixingDays>
+                        <!-- optional, defaults to NullCalendar() -->
+                        <FixingCalendar>US</FixingCalendar>
+                        <!-- optional, defaults to P -->
+                        <FixingConvention>P</FixingConvention>
+                        <!-- optional, defaults to false -->
+                        <IsInArrears>false</IsInArrears>
+                    </Indexing>
+                    <Indexing>
+                        <!-- additional FX conversion, Quantity defaults to 1  -->
+                        <Quantity>1</Quantity>
+                        <!-- the fx index to use, one of the ccys must match the leg ccy -->
+                        <Index>FX-TR20H-EUR-USD</Index>
+                        <!-- the fx index fixing days (only used for fx) -->
+                        <FixingDays>0</FixingDays>
+                        <!-- the fx index calendar (only used for fx) -->
+                        <FixingCalendar>EUR,USD</FixingCalendar>
+                        <!-- the effective initial fixing to apply (i.e. domestic ccy = leg ccy);
+               for an EquitySwap this should not be given, to be consistent with the EquityLeg FX conversion,
+               except the InitialPrice in the equity leg is given in trade ccy which implies that we do not
+               need an FX conversion for this first price. -->
+                        <InitialFixing>1.0</InitialFixing>
+                        <!-- see the comments above -->
+                        <ValuationSchedule>
+                            <Rules>
+                                <StartDate>2025-12-22</StartDate>
+                                <EndDate>2027-12-23</EndDate>
+                                <Tenor>3M</Tenor>
+                                <Calendar>USD</Calendar>
+                                <Convention>ModifiedFollowing</Convention>
+                                <Rule>Forward</Rule>
+                            </Rules>
+                        </ValuationSchedule>
+                        <FixingConvention>P</FixingConvention>
+                        <IsInArrears>false</IsInArrears>
+                    </Indexing>
+                </Indexings>
+            </LegData>
+            <LegData>
+                <Payer>false</Payer>
+                <LegType>Equity</LegType>
+                <Currency>USD</Currency>
+                <PaymentConvention>Following</PaymentConvention>
+                <DayCounter>A360</DayCounter>
+                <EquityLegData>
+                    <Quantity>1000</Quantity>
+                    <ReturnType>Total</ReturnType>
+                    <Name>RIC:.STOXX50E</Name>
+                    <InitialPrice>3368.858184</InitialPrice>
+                    <InitialPriceCurrency>USD</InitialPriceCurrency>
+                    <NotionalReset>true</NotionalReset>
+                    <FixingDays>0</FixingDays>
+                    <FXTerms>
+                        <EquityCurrency>EUR</EquityCurrency>
+                        <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+                    </FXTerms>
+                </EquityLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-12-22</StartDate>
+                        <EndDate>2027-12-23</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </EquitySwapData>
+    </Trade>
+</Portfolio>

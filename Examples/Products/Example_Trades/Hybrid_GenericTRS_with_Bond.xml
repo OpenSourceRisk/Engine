@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="TRS_with_Bond">
+        <TradeType>TotalReturnSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <TotalReturnSwapData>
+            <!-- a trade defining the underlying on which the return is computed -->
+            <!-- this can have types Bond, ConvertibleBond, EquityPosition -->
+            <UnderlyingData>
+                <Trade>
+                    <TradeType>Bond</TradeType>
+                    <BondData>
+                        <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
+                        <BondNotional>1000000.00</BondNotional>
+                    </BondData>
+                </Trade>
+            </UnderlyingData>
+            <!-- the return leg definition -->
+            <ReturnData>
+                <Payer>false</Payer>
+                <!-- the currency defining the trade ccy -->
+                <Currency>EUR</Currency>
+                <!-- reference schedule definition -->
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2022-09-04</StartDate>
+                        <EndDate>2025-09-04</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <!-- valuation dates are derived from the above schedule -->
+                <!-- defaults to 0D -->
+                <ObservationLag>0D</ObservationLag>
+                <!-- defaults to P -->
+                <ObservationConvention>P</ObservationConvention>
+                <!-- defaults to schedule calendar -->
+                <ObservationCalendar>USD</ObservationCalendar>
+                <!-- payment dates can be derived from the above schedule ... -->
+                <PaymentLag>2D</PaymentLag>
+                <PaymentConvention>F</PaymentConvention>
+                <PaymentCalendar>TARGET</PaymentCalendar>
+                <!-- ... or can be overwritten by a list of explicit dates -->
+                <!-- <PaymentDates> -->
+                <!--   <PaymentDate> ... </PaymentDate> -->
+                <!--   <PaymentDate> ... </PaymentDate> -->
+                <!-- </PaymentDates> -->
+                <!-- Optional initial price and currency -->
+                <InitialPrice>1.05</InitialPrice>
+                <!-- defaults to asset ccy, can be set to return ccy also -->
+                <InitialPriceCurrency>EUR</InitialPriceCurrency>
+                <!-- FX Conversion Details, required if asset ccy != return ccy -->
+                <!-- <FXTerms> -->
+                <!--   <FXIndex>FX-TR20H-EUR-USD</FXIndex> -->
+                <!-- </FXTerms> -->
+            </ReturnData>
+            <!-- the funding leg definition -->
+            <FundingData>
+                <!-- any number of legs, must all be in the return ccy -->
+                <LegData>
+                    <Payer>true</Payer>
+                    <LegType>Floating</LegType>
+                    <Currency>EUR</Currency>
+                    <PaymentConvention>Following</PaymentConvention>
+                    <DayCounter>A360</DayCounter>
+                    <FloatingLegData>
+                        <Index>EUR-EURIBOR-6M</Index>
+                        <Spreads>
+                            <Spread>0.01</Spread>
+                        </Spreads>
+                        <FixingDays>2</FixingDays>
+                        <IsInArrears>false</IsInArrears>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2022-09-04</StartDate>
+                            <EndDate>2025-09-04</EndDate>
+                            <Tenor>6M</Tenor>
+                            <Calendar>USD</Calendar>
+                            <Convention>ModifiedFollowing</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </FundingData>
+        </TotalReturnSwapData>
+    </Trade>
+</Portfolio>

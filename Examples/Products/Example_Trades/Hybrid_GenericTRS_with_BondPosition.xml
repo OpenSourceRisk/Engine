@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="TRS_with_BondPositions">
+        <TradeType>TotalReturnSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <TotalReturnSwapData>
+            <UnderlyingData>
+                <Trade>
+                    <TradeType>BondPosition</TradeType>
+                    <BondBasketData>
+                        <Quantity>1000</Quantity>
+                        <!-- Identifier is optional when Underlying bonds are defined -->
+                        <Identifier>CUSTOM</Identifier>
+                        <Underlying>
+                            <Type>Bond</Type>
+                            <Name>IE00BH3SQ895</Name>
+                            <IdentifierType>ISIN</IdentifierType>
+                            <Weight>0.5</Weight>
+                        </Underlying>
+                        <Underlying>
+                            <Type>Bond</Type>
+                            <Name>IT0005177909</Name>
+                            <IdentifierType>ISIN</IdentifierType>
+                            <Weight>0.5</Weight>
+                        </Underlying>
+                    </BondBasketData>
+                </Trade>
+            </UnderlyingData>
+            <!-- the return leg definition -->
+            <ReturnData>
+                <Payer>false</Payer>
+                <!-- the trade ccy, also called return ccy -->
+                <Currency>EUR</Currency>
+                <!-- reference schedule definition, valuation dates are derived from this schedule -->
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-02-11</StartDate>
+                        <EndDate>2029-02-11</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>EUR</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <ObservationLag>0D</ObservationLag>
+                <!-- FX Conversion Details, required if asset ccy != return ccy -->
+                <FXTerms>
+                    <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+                </FXTerms>
+            </ReturnData>
+            <!-- the funding leg definition -->
+            <FundingData>
+                <!-- any number of legs, must all be in the return ccy -->
+                <LegData>
+                    <Payer>true</Payer>
+                    <LegType>Floating</LegType>
+                    <Currency>EUR</Currency>
+                    <PaymentConvention>Following</PaymentConvention>
+                    <DayCounter>A360</DayCounter>
+                    <FloatingLegData>
+                        <Index>EUR-EURIBOR-6M</Index>
+                        <Spreads>
+                            <Spread>0.01</Spread>
+                        </Spreads>
+                        <FixingDays>2</FixingDays>
+                        <IsInArrears>false</IsInArrears>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2025-02-11</StartDate>
+                            <EndDate>2035-02-11</EndDate>
+                            <Tenor>6M</Tenor>
+                            <Calendar>EUR</Calendar>
+                            <Convention>ModifiedFollowing</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </FundingData>
+        </TotalReturnSwapData>
+    </Trade>
+</Portfolio>

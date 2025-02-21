@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="CreditLinkedSwap">
+        <TradeType>CreditLinkedSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CreditLinkedSwapData>
+            <CreditCurveId>RED:46A844|SNRFOR|USD|XR14</CreditCurveId>
+            <SettlesAccrual>false</SettlesAccrual>
+            <!-- <FixedRecoveryRate>0.4</FixedRecoveryRate> -->
+            <DefaultPaymentTime>atDefault</DefaultPaymentTime>
+            <!-- amounts that are paid independent of any credit events -->
+            <IndependentPayments>
+                <LegData>
+                    <LegType>Cashflow</LegType>
+                    <Payer>false</Payer>
+                    <Currency>USD</Currency>
+                    <CashflowData>
+                        <Cashflow>
+                            <Amount date="2022-06-17">1000.0</Amount>
+                        </Cashflow>
+                    </CashflowData>
+                </LegData>
+            </IndependentPayments>
+            <!-- amounts that are paid conditional on survival until payment date -->
+            <ContingentPayments>
+                <LegData>
+                    <LegType>Fixed</LegType>
+                    <Payer>false</Payer>
+                    <Currency>USD</Currency>
+                    <Notionals>
+                        <Notional>152350000</Notional>
+                    </Notionals>
+                    <DayCounter>30/360</DayCounter>
+                    <PaymentConvention>F</PaymentConvention>
+                    <FixedLegData>
+                        <Rates>
+                            <Rate>0.066</Rate>
+                        </Rates>
+                    </FixedLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2021-07-17</StartDate>
+                            <EndDate>2034-06-17</EndDate>
+                            <Tenor>6M</Tenor>
+                            <Calendar>US</Calendar>
+                            <Convention>F</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+                <LegData>
+                    <LegType>Cashflow</LegType>
+                    <Payer>false</Payer>
+                    <Currency>USD</Currency>
+                    <CashflowData>
+                        <Cashflow>
+                            <Amount date="2034-06-17">14900000</Amount>
+                        </Cashflow>
+                    </CashflowData>
+                </LegData>
+            </ContingentPayments>
+            <!-- amounts that are paid in case of default, weighted with (1-RR) -->
+            <DefaultPayments/>
+            <!-- amounts that are paid in case of default, weighted with RR -->
+            <RecoveryPayments>
+                <LegData>
+                    <LegType>Cashflow</LegType>
+                    <Payer>true</Payer>
+                    <Currency>USD</Currency>
+                    <CashflowData>
+                        <Cashflow>
+                            <Amount date="2022-12-16">0.0</Amount>
+                            <Amount date="2023-06-17">502755</Amount>
+                            <Amount date="2023-12-16">1005510</Amount>
+                            <Amount date="2024-06-16">1508265</Amount>
+                            <Amount date="2024-12-15">2011020</Amount>
+                            <Amount date="2025-06-16">2513775</Amount>
+                            <Amount date="2025-12-16">3016530</Amount>
+                            <Amount date="2026-06-17">3519285</Amount>
+                            <Amount date="2026-12-16">4022040</Amount>
+                            <Amount date="2027-06-17">4524795</Amount>
+                            <Amount date="2027-12-16">5027550</Amount>
+                            <Amount date="2028-06-16">5530305</Amount>
+                            <Amount date="2028-12-15">6033060</Amount>
+                            <Amount date="2029-06-16">6535815</Amount>
+                            <Amount date="2029-12-16">7038570</Amount>
+                            <Amount date="2030-06-17">7541325</Amount>
+                            <Amount date="2030-12-16">8044080</Amount>
+                            <Amount date="2031-06-17">8546835</Amount>
+                            <Amount date="2031-12-16">9049590</Amount>
+                            <Amount date="2032-06-16">9552345</Amount>
+                            <Amount date="2032-12-15">10055100</Amount>
+                            <Amount date="2033-06-16">10557855</Amount>
+                            <Amount date="2033-12-16">11060610</Amount>
+                            <Amount date="2034-06-17">11563365</Amount>
+                        </Cashflow>
+                    </CashflowData>
+                </LegData>
+            </RecoveryPayments>
+        </CreditLinkedSwapData>
+    </Trade>
+</Portfolio>
