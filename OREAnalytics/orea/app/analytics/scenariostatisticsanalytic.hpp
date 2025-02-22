@@ -53,12 +53,10 @@ protected:
 
 class ScenarioStatisticsAnalytic : public Analytic {
 public:
-    ScenarioStatisticsAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true,
-                   false, true, true) {}
+    ScenarioStatisticsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                               const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs,
+                   analyticsManager, true, false, true, true) {}
 };
 
 } // namespace analytics

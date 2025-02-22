@@ -45,6 +45,8 @@
 namespace ore {
 namespace analytics {
 
+class AnalyticsManager;
+
 class Analytic {
 public:
     class Impl;
@@ -86,6 +88,8 @@ public:
              const std::set<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
              const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+             //! Pointer to the analytics manager
+             const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
              //! Flag to indicate whether a simulation config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
@@ -98,12 +102,12 @@ public:
     virtual ~Analytic() {}
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
-    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {});
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations(const bool = false){};
-    virtual void setUpConfigurations();
+    void initialise();
     
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
@@ -118,6 +122,7 @@ public:
     const std::string label() const;
     const std::set<std::string>& analyticTypes() const { return types_; }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
+    const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
     QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
@@ -166,6 +171,8 @@ protected:
     std::set<std::string> types_;
     //! contains all the input parameters for the run
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    //! the analytics manger, used for sharing analytics
+    QuantLib::ext::weak_ptr<AnalyticsManager> analyticsManager_;
 
     Configurations configurations_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
@@ -184,6 +191,9 @@ protected:
     bool writeIntermediateReports_ = true;
 
     Timer timer_;
+
+private:
+    bool analyticComplete_ = false;
 };
 
 class Analytic::Impl {
@@ -196,6 +206,10 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes = {}) = 0;
     
+    void initialise();
+    const bool initialised() { return initialised_; };
+    virtual void buildDependencies(){};
+    virtual void buildConfigurations(){};
     virtual void setUpConfigurations(){};
 
     //! build an engine factory
@@ -238,6 +252,7 @@ protected:
 private:
     Analytic* analytic_;
     bool generateAdditionalResults_ = false;
+    bool initialised_ = false;
 };
 
 /*! Market analytics
@@ -260,9 +275,8 @@ public:
 class MarketDataAnalytic : public Analytic {
 public:
     MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs, analyticsManager) {}
 };
 
 template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::Impl::dependentAnalytic(const std::string& key) const {

@@ -31,10 +31,6 @@ void ScenarioAnalyticImpl::setUpConfigurations() {
 
 void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("ScenarioAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);

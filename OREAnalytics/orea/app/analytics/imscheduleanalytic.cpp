@@ -52,17 +52,12 @@ void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::da
 
 void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("IMScheduleAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader, false);
 
     auto imAnalytic = static_cast<IMScheduleAnalytic*>(analytic());
     QL_REQUIRE(imAnalytic, "Analytic must be of type IMScheduleAnalytic");
-
     
     imAnalytic->loadCrifRecords(loader);
 

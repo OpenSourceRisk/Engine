@@ -715,7 +715,7 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
-	std::map<std::string, Real> currentIM;
+	    std::map<std::string, Real> currentIM;
         if (inputs_->collateralBalances()) {
             for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
                 currentIM[n.nettingSetId()] =
@@ -785,6 +785,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                   const std::set<std::string>& runTypes) {
 
     LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
+
+    QL_REQUIRE(!((offsetScenario_ == nullptr) ^ (offsetSimMarketParams_ == nullptr)),
+               "Need offsetScenario and corresponding simMarketParameter");
 
     SavedSettings settings;
 

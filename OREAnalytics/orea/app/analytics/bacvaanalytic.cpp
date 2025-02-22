@@ -30,11 +30,14 @@ void BaCvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
+void BaCvaAnalyticImpl::buildDependencies() {
+    auto saccrAnalytic =
+        AnalyticFactory::instance().build(saccrLookupKey, inputs_, analytic()->analyticsManager(), true).second;
+    addDependentAnalytic(saccrLookupKey, saccrAnalytic);
+}
+
 void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                 const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("BaCvaAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
