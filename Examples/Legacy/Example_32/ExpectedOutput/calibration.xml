@@ -38,7 +38,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>5Y, 10Y, 15Y</Expiries>
 				<Terms>15Y, 10Y, 5Y</Terms>
@@ -65,7 +65,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>5Y, 10Y, 15Y</Expiries>
 				<Terms>15Y, 10Y, 5Y</Terms>

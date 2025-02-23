@@ -33,9 +33,6 @@
       <Parameter name="Interactive">false</Parameter>
     </EngineParameters>
   </Product>
-  <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError">true</Parameter>
-  </GlobalParameters>
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>

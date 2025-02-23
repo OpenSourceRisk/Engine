@@ -235,8 +235,11 @@ XMLNode* LgmData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, parameterTransformationNode, "ShiftHorizon", shiftHorizon_);
     XMLUtils::addChild(doc, parameterTransformationNode, "Scaling", scaling_);
 
-    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", ore::data::to_string(floatSpreadMapping_));
-
+    std::ostringstream o;
+    o << floatSpreadMapping_;
+    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", o.str());
+    // XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", to_string(floatSpreadMapping_));
+    
     return lgmNode;
 }
 

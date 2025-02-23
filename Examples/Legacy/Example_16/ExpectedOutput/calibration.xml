@@ -41,7 +41,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -68,7 +68,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -95,7 +95,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -122,7 +122,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -149,7 +149,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>

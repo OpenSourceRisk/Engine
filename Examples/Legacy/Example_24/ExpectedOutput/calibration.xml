@@ -37,7 +37,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 4Y, 6Y, 8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
 				<Terms>19Y, 18Y, 16Y, 14Y, 12Y, 10Y, 8Y, 6Y, 4Y, 2Y, 1Y</Terms>
@@ -64,7 +64,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>1</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 4Y, 6Y, 8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
 				<Terms>19Y, 18Y, 16Y, 14Y, 12Y, 10Y, 8Y, 6Y, 4Y, 2Y, 1Y</Terms>
