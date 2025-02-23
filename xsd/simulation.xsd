@@ -169,6 +169,7 @@
             <xs:choice maxOccurs="unbounded" minOccurs="0">
               <xs:element type="lgm" name="LGM"/>
               <xs:element type="jarrowYildrim" name="JarrowYildirim"/>
+              <xs:element type="dodgsonKainth" name="DodgsonKainth"/>
             </xs:choice>
           </xs:sequence>
         </xs:complexType>
@@ -464,6 +465,46 @@
           <xs:sequence>
             <xs:element type="volatilityParameter" name="Volatility"/>
           </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="calibrationConfiguration" name="CalibrationConfiguration" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute type="xs:string" name="index" />
+  </xs:complexType>
+
+  <xs:complexType name="dodgsonKainth">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="calibrationTypeType" name="CalibrationType"/>
+      <xs:element name="CalibrationBaskets" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="calibrationBasket" name="CalibrationBasket" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Reversion">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="reversionTypeType" name="ReversionType"/>
+            <xs:element type="paramTypeType" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Volatility">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="volatilityTypeType" name="VolatilityType"/>
+            <xs:element type="paramTypeType" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <!-- FIXME: comma delimited list -->
+            <xs:element type="xs:string" name="InitialValue"/>
+            <!-- FIXME: comma delimited list -->
+          </xs:all>
         </xs:complexType>
       </xs:element>
       <xs:element type="calibrationConfiguration" name="CalibrationConfiguration" maxOccurs="1" minOccurs="0"/>

@@ -49,7 +49,7 @@
 	</Configuration>
 	<YieldCurves id="default">
 		<YieldCurve name="AUD-IN-USD">Yield/AUD/AUD-IN-USD</YieldCurve>
-		<YieldCurve name="BENCHMARK_EUR">Yield/EUR/EUR-ESTER</YieldCurve>
+		<YieldCurve name="BENCHMARK-EUR">Yield/EUR/EUR-ESTER</YieldCurve>
 		<YieldCurve name="CAD-IN-USD">Yield/CAD/CAD-IN-USD</YieldCurve>
 		<YieldCurve name="CHF-IN-USD">Yield/CHF/CHF-IN-USD</YieldCurve>
 		<YieldCurve name="CLP-IN-USD">Yield/CLP/CLP-IN-USD</YieldCurve>
@@ -228,6 +228,7 @@
                 <CDSVolatility name="RED:2I65BYEG6">CDSVolatility/RED:2I65BYEG6</CDSVolatility>
         </CDSVolatilities>
 	<DefaultCurves id="default">
+		<DefaultCurve name="CPTY_C">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
 		<DefaultCurve name="ISIN:DE000A3H2WP2">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
 		<DefaultCurve name="ISIN:IE00BH3SQ895">Default/EUR/ISIN:IE00BH3SQ895</DefaultCurve>
 		<DefaultCurve name="ISIN:IT0005177909">Default/EUR/ISIN:IT0005177909</DefaultCurve>

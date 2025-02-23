@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <Portfolio>
   <Trade id="Bond_Fixed">
     <TradeType>Bond</TradeType>
@@ -14,7 +13,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -31,8 +30,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -62,7 +61,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160717</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -79,8 +78,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -119,7 +118,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>false</Payer>
@@ -140,8 +139,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -171,7 +170,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Floating</LegType>
           <Payer>false</Payer>
@@ -192,8 +191,8 @@
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -232,7 +231,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -249,8 +248,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -282,8 +281,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20210203</StartDate>
-            <EndDate>20260203</EndDate>
+            <StartDate>2035-02-03</StartDate>
+            <EndDate>2040-02-03</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -313,7 +312,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -330,8 +329,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -363,8 +362,8 @@
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20210203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>2035-02-03</StartDate>
+              <EndDate>2040-02-03</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -403,7 +402,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -429,8 +428,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -460,7 +459,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -472,7 +471,7 @@
             <AmortizationData>
               <Type>FixedAmount</Type>
               <Value>1000000</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Frequency>1Y</Frequency>
               <Underflow>false</Underflow>
             </AmortizationData>
@@ -486,8 +485,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -526,7 +525,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -538,7 +537,7 @@
           <AmortizationData>
             <Type>RelativeToInitialNotional</Type>
             <Value>0.05</Value>
-            <StartDate>20170203</StartDate>
+            <StartDate>2026-02-03</StartDate>
             <Frequency>1Y</Frequency>
             <Underflow>false</Underflow>
           </AmortizationData>
@@ -552,8 +551,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -583,7 +582,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -595,7 +594,7 @@
             <AmortizationData>
               <Type>RelativeToInitialNotional</Type>
               <Value>0.05</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Frequency>1Y</Frequency>
               <Underflow>false</Underflow>
             </AmortizationData>
@@ -609,8 +608,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -645,7 +644,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -657,7 +656,7 @@
           <AmortizationData>
             <Type>RelativeToPreviousNotional</Type>
             <Value>0.05</Value>
-            <StartDate>20170203</StartDate>
+            <StartDate>2026-02-03</StartDate>
             <Frequency>1Y</Frequency>
             <Underflow>false</Underflow>
           </AmortizationData>
@@ -671,8 +670,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -702,7 +701,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -714,7 +713,7 @@
             <AmortizationData>
               <Type>RelativeToPreviousNotional</Type>
               <Value>0.05</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Frequency>1Y</Frequency>
               <Underflow>false</Underflow>
             </AmortizationData>
@@ -728,8 +727,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -764,7 +763,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -776,7 +775,7 @@
           <AmortizationData>
             <Type>Annuity</Type>
             <Value>1000000</Value>
-            <StartDate>20170203</StartDate>
+            <StartDate>2026-02-03</StartDate>
             <Underflow>false</Underflow>
           </AmortizationData>
         </Amortizations>
@@ -789,8 +788,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -820,7 +819,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -832,7 +831,7 @@
             <AmortizationData>
               <Type>Annuity</Type>
               <Value>1000000</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Underflow>false</Underflow>
             </AmortizationData>
           </Amortizations>
@@ -845,8 +844,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -881,7 +880,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>false</Payer>
@@ -893,7 +892,7 @@
           <AmortizationData>
             <Type>Annuity</Type>
             <Value>1000000</Value>
-            <StartDate>20170203</StartDate>
+            <StartDate>2026-02-03</StartDate>
             <Underflow>false</Underflow>
           </AmortizationData>
         </Amortizations>
@@ -910,8 +909,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -941,7 +940,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Floating</LegType>
           <Payer>false</Payer>
@@ -953,7 +952,7 @@
             <AmortizationData>
               <Type>Annuity</Type>
               <Value>1000000</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Underflow>false</Underflow>
             </AmortizationData>
           </Amortizations>
@@ -970,8 +969,8 @@
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20210203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2035-02-03</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -1006,7 +1005,7 @@
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -1018,14 +1017,14 @@
           <AmortizationData>
             <Type>FixedAmount</Type>
             <Value>1000000</Value>
-            <StartDate>20170203</StartDate>
+            <StartDate>2026-02-03</StartDate>
             <Frequency>1Y</Frequency>
             <Underflow>false</Underflow>
           </AmortizationData>
           <AmortizationData>
             <Type>RelativeToPreviousNotional</Type>
             <Value>0.01</Value>
-            <StartDate>20210203</StartDate>
+            <StartDate>2035-02-03</StartDate>
             <Frequency>1Y</Frequency>
             <Underflow>false</Underflow>
           </AmortizationData>
@@ -1039,7 +1038,7 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
+            <StartDate>2025-02-03</StartDate>
             <EndDate>20260203</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -1070,7 +1069,7 @@
         <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20160718</IssueDate>
+        <IssueDate>2025-02-01</IssueDate>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>false</Payer>
@@ -1082,14 +1081,14 @@
             <AmortizationData>
               <Type>FixedAmount</Type>
               <Value>1000000</Value>
-              <StartDate>20170203</StartDate>
+              <StartDate>2026-02-03</StartDate>
               <Frequency>1Y</Frequency>
               <Underflow>false</Underflow>
             </AmortizationData>
             <AmortizationData>
               <Type>RelativeToPreviousNotional</Type>
               <Value>0.01</Value>
-              <StartDate>20210203</StartDate>
+              <StartDate>2035-02-03</StartDate>
               <Frequency>1Y</Frequency>
               <Underflow>false</Underflow>
             </AmortizationData>
@@ -1103,8 +1102,8 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>2025-02-03</StartDate>
+              <EndDate>2045-02-03</EndDate>
               <Tenor>1Y</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -1135,10 +1134,10 @@
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
       <SecurityId>SECURITY_1</SecurityId>
-      <ReferenceCurveId>BENCHMARK-EUR-6M</ReferenceCurveId>
+      <ReferenceCurveId>BENCHMARK-EUR</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
+      <IssueDate>2025-02-03</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -1155,8 +1154,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
+            <StartDate>2025-02-03</StartDate>
+            <EndDate>2035-02-03</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
