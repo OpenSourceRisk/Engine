@@ -144,7 +144,7 @@
             <IssuerId>CPTY_A</IssuerId>
             <CreditCurveId>ISIN:IE00BH3SQ895</CreditCurveId>
             <SecurityId>SECURITY_1</SecurityId>
-            <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
+            <ReferenceCurveId>BENCHMARK-EUR</ReferenceCurveId>
             <SettlementDays>2</SettlementDays>
             <Calendar>TARGET</Calendar>
             <IssueDate>2023-01-31</IssueDate>

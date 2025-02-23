@@ -1239,7 +1239,7 @@
 	</Swap>
 	<BMABasisSwap>
 		<Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
-		<LiborIndex>USD-LIBOR-3M</LiborIndex>
+		<Index>USD-LIBOR-3M</Index>
 		<BMAIndex>USD-SIFMA</BMAIndex>
 	</BMABasisSwap>
 	<FX>
@@ -1370,7 +1370,7 @@
 	</OIS>
 	<BMABasisSwap>
 		<Id>USD-SOFR-SIFMA-3M-BASIS-CONVENTIONS</Id>
-		<LiborIndex>USD-SOFR-3M</LiborIndex>
+		<Index>USD-SOFR-3M</Index>
 		<BMAIndex>USD-SIFMA</BMAIndex>
 	</BMABasisSwap>
 	<CommodityFuture>
