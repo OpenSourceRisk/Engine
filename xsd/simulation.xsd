@@ -507,6 +507,14 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="ParameterTransformation">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:float" name="ShiftHorizon"/>
+            <xs:element type="xs:float" name="Scaling"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="calibrationConfiguration" name="CalibrationConfiguration" maxOccurs="1" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="index" />
