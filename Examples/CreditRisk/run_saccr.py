@@ -12,7 +12,7 @@ print("+-----------------------------------------------------+")
 print("| SA-CCR                                              |")
 print("+-----------------------------------------------------+")
 
-# Legacy example 68, SA-CVA part
+# Legacy example 68, SA-CCR part
 
-oreex.print_headline("Run SA-CCR, BA-CVA, SMRC")
+oreex.print_headline("Run SA-CCR")
 oreex.run("Input/ore_saccr.xml")
