@@ -288,7 +288,9 @@ void GaussianCamCG::performCalculations() const {
                                                 std::vector<std::size_t>(cam->dimension(), cg_const(*g_, 0.0)));
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
         QuantLib::Date date = *std::next(effectiveSimulationDates_.begin(), i);
+        QuantLib::Date date2 = *std::next(effectiveSimulationDates_.begin(), i + 1);
         Real t = timeGrid_[i];
+        Real t2 = timeGrid_[i + 1];
         std::size_t H0 =
             addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[0], {}, date),
                               [cam, t] { return cam->irlgm1f(0)->H(t); });
@@ -332,15 +334,23 @@ void GaussianCamCG::performCalculations() const {
                     cg_add(*g_, {cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha)),
                                  cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j),
                                  cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj))});
-                std::size_t fwd0 = addModelParameter(
-                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::ifwd, currencies_[0], {}, date),
-                    [cam, t] { return cam->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous); });
-                std::size_t fwdj = addModelParameter(
-                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::ifwd, currencies_[j], {}, date),
-                    [cam, j, t] { return cam->irlgm1f(j)->termStructure()->forwardRate(t, t, Continuous); });
+                std::size_t dsc0a = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], "default", date),
+                    [cam, t] { return cam->irlgm1f(0)->termStructure()->discount(t); });
+                std::size_t dsc0b = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], "default", date2),
+                    [cam, t2] { return cam->irlgm1f(0)->termStructure()->discount(t2); });
+                std::size_t dscja = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[j], "default", date),
+                    [cam, t, j] { return cam->irlgm1f(j)->termStructure()->discount(t); });
+                std::size_t dscjb = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[j], "default", date2),
+                    [cam, t2, j] { return cam->irlgm1f(j)->termStructure()->discount(t2); });
+                std::size_t irDrift =
+                    cg_mult(*g_, cg_const(*g_, -1.0 / (t2 - t)),
+                            cg_log(*g_, cg_mult(*g_, cg_div(*g_, dsc0b, dsc0a), cg_div(*g_, dscja, dscjb))));
                 drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
-                    cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), fwd0,
-                                 cg_negative(*g_, fwdj),
+                    cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), irDrift,
                                  cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma))});
                 if (cam->measure() == IrModel::Measure::BA) {
                     drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =

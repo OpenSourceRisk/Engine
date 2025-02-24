@@ -58,7 +58,6 @@ public:
             fix,                     // fixing, historical (non-derived param) or projected (derived)
             dsc,                     // T0 ir discount
             fwd,                     // T0 discrete ir fwd
-            ifwd,                    // T0 instantaneous ir fwd
             fwdCompAvg,              // T0 compounded / avg ir rate
             fxSpot,                  // T0 fx spot rate
             div,                     // T0 div yield dsc factor
@@ -73,7 +72,7 @@ public:
             lgm_reducedDiscountBond, // ...
             fxbs_sigma,              // fxbs parameters
             logX0,                   // stoch process log initial value
-            logFxSpot,               // log fx spot (iniial value from T0)
+            logFxSpot,               // log fx spot (initial value from T0)
             sqrtCorr,                // model sqrt correlation
             sqrtCov,                 // model sqrt covariance
             corr,                    // model correlation

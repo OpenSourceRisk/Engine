@@ -76,8 +76,6 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "dsc";
     case ModelCG::ModelParameter::Type::fwd:
         return o << "fwd";
-    case ModelCG::ModelParameter::Type::ifwd:
-        return o << "ifwd";
     case ModelCG::ModelParameter::Type::fwdCompAvg:
         return o << "fwdCompAvg";
     case ModelCG::ModelParameter::Type::fxSpot:
