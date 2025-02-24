@@ -18806,6 +18806,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				<!--
 				<StrikeSurface priority="2">
 					<Calendar>USD</Calendar>
 					<QuoteType>Premium</QuoteType>
@@ -18818,6 +18819,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				-->
 			</VolatilityConfig>
 			<Report/>
 		</EquityVolatility>
@@ -18902,6 +18904,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				<!--
 				<StrikeSurface priority="2">
 					<Calendar>EUR</Calendar>
 					<QuoteType>Premium</QuoteType>
@@ -18914,6 +18917,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				-->
 			</VolatilityConfig>
 			<Report/>
 		</EquityVolatility>
@@ -18975,6 +18979,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				<!--
 				<StrikeSurface priority="2">
 					<Calendar>EUR</Calendar>
 					<QuoteType>Premium</QuoteType>
@@ -18987,6 +18992,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				-->
 			</VolatilityConfig>
 			<Report/>
 		</EquityVolatility>
@@ -19026,6 +19032,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				<!--
 				<StrikeSurface priority="2">
 					<Calendar>USD</Calendar>
 					<QuoteType>Premium</QuoteType>
@@ -19038,6 +19045,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				-->
 			</VolatilityConfig>
 			<Report/>
 		</EquityVolatility>
@@ -19077,6 +19085,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				<!--
 				<StrikeSurface priority="2">
 					<Calendar>USD</Calendar>
 					<QuoteType>Premium</QuoteType>
@@ -19089,6 +19098,7 @@
 					<TimeExtrapolation>Flat</TimeExtrapolation>
 					<StrikeExtrapolation>Flat</StrikeExtrapolation>
 				</StrikeSurface>
+				-->
 			</VolatilityConfig>
 			<Report/>
 		</EquityVolatility>
