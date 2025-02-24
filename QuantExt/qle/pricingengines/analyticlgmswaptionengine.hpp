@@ -66,24 +66,24 @@ class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swap
 public:
     /*! nextCoupon is Mapping A, proRata is Mapping B
         in Lichters, Stamm, Gallagher (2015), 11.2.2 */
-    enum FloatSpreadMapping { nextCoupon, proRata, simple };
+    enum class FloatSpreadMapping { nextCoupon, proRata, simple };
 
     /*! Lgm model based constructor */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
 
     /*! CrossAsset model based constructor */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
 
     /*! parametrization based constructor, note that updates in the
         parametrization are not observed by the engine, you would
         have to call update() on the engine explicitly */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
 
     void calculate() const override;
 
