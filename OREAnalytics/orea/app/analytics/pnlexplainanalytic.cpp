@@ -41,6 +41,17 @@ void PnlExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 }
 
+void PnlExplainAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
+    if (pnlAnalytic.second)
+        addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
+}
+
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
     
@@ -58,6 +69,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
     auto pnlAnalytic = dependentAnalytic(pnlLookupKey);
+    pnlAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    pnlAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     pnlAnalytic->runAnalytic(loader);
     auto pnlReport = pnlAnalytic->reports().at("PNL").at("pnl");
 

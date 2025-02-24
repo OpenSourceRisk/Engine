@@ -75,12 +75,10 @@ private:
 
 class XvaExplainAnalytic : public Analytic {
 public:
-    explicit XvaExplainAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false,
-                   false) {}
+    explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, analyticsManager, true,
+                   false, false, false) {}
 };
 
 } // namespace analytics

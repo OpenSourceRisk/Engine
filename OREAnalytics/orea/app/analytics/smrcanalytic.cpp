@@ -29,10 +29,6 @@ void SmrcAnalyticImpl::setUpConfigurations() {
 
 void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("SmrcAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
