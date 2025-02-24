@@ -114,6 +114,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> scenarios;
     if (!inputs_->scenarioReader()) {
+        analytic()->reports()[label_]["zero_scenarios"] = pnlAnalytic->reports().at("PNL").at("zero_scenarios");
+
         vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>> histScens = {t0Scenario, t1Scenario};
 
         QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
