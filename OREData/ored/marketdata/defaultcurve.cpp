@@ -374,13 +374,24 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
-            QuantLib::ext::shared_ptr<SpreadCdsHelper> tmp;
             try {
-                tmp = QuantLib::ext::make_shared<SpreadCdsHelper>(
+                if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
+                     cdsConv->rule() == DateGeneration::OldCDS) &&
+                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
+                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    WLOG("DefaultCurve:: SKIP cds with term "
+                         << quote.term << " because cds maturity (" << io::iso_date(maturity)
+                         << ") is <= T + 1 (T =" << io::iso_date(asof)
+                         << "), but by standard conventioons the first CDS payment is the next IMM payment"
+                            "date strictly after T + 1.");
+                    continue;
+                };
+                helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter());
-
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                runningSpread = config.runningSpread();
+                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
                 if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
@@ -390,13 +401,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                                                           << " for asof date " << asof
                                                                           << ", with error: " << e.what());
                 }
-            }
-            if (tmp) {
-                if (tmp->latestDate() > asof) {
-                    helpers.push_back(tmp);
-                    runningSpread = config.runningSpread();
-                }
-                helperQuoteTerms[tmp->latestDate()] = quote.term;
             }
         }
     } else {
