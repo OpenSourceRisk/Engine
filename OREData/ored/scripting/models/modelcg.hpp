@@ -59,7 +59,6 @@ public:
             dsc,                     // T0 ir discount
             fwd,                     // T0 discrete ir fwd
             fwdCompAvg,              // T0 compounded / avg ir rate
-            fxSpot,                  // T0 fx spot rate
             div,                     // T0 div yield dsc factor
             rfr,                     // T0 rfr       dsc factor
             defaultProb,             // T0 default prob

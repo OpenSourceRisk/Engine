@@ -243,8 +243,9 @@ std::size_t BlackScholesCGBase::numeraire(const Date& s) const {
 
 std::size_t BlackScholesCGBase::getFxSpot(const Size idx) const {
     auto c = fxSpots_.at(idx);
-    return addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxSpot, currencies_[idx + 1]),
-                             [c] { return c->value(); });
+    return cg_exp(
+        *g_, addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, currencies_[idx + 1]),
+                               [c] { return c->value(); }));
 }
 
 Real BlackScholesCGBase::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {

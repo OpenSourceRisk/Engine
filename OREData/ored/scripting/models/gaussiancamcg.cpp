@@ -532,9 +532,9 @@ std::size_t GaussianCamCG::numeraire(const Date& s) const {
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
-    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::fxSpot, currencies_[idx + 1]);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::logFxSpot, currencies_[idx + 1]);
     auto c = fxSpots_.at(idx);
-    return addModelParameter(id, [c] { return c->value(); });
+    return cg_exp(*g_, addModelParameter(id, [c] { return c->value(); }));
 }
 
 Real GaussianCamCG::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
