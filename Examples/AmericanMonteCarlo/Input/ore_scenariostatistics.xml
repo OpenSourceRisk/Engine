@@ -28,7 +28,7 @@
     <Analytic type="scenarioStatistics">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation_scenariostatistics.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenarios.csv</Parameter>
+      <Parameter name="scenarioOutputFile">scenariostatistics.csv</Parameter>
       <Parameter name="amcPathDataOutput">Output/scenariostatistics/amcBuffer.dat</Parameter>
       <Parameter name="outputStatistics">N</Parameter>
       <Parameter name="outputDistributions">N</Parameter>
