@@ -2,7 +2,7 @@
 <ORE>
   <Setup>
     <Parameter name="asofDate">2019-12-30</Parameter>
-    <Parameter name="inputPath">Input/HistSimVaR</Parameter>
+    <Parameter name="inputPath">Input/HistSimVar</Parameter>
     <Parameter name="outputPath">Output/HistSimVar</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>

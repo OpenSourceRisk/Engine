@@ -77,7 +77,7 @@
       <Parameter name="dimRegressionOrder">2</Parameter>
     </Analytic>
     <Analytic type="xvaSensitivity">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">xvasensimarket.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
@@ -93,7 +93,7 @@
       <!-- Load net sensitivities that can be passed into the SA-CVA calculator directly -->
       <!--<Parameter name="saCvaNetSensitivitiesFile">sacva_sensitivity.csv</Parameter>-->
       <!-- Load CVA sensitivities, output of the xva sensi analytic, that needs mapping and aggregation -->
-      <Parameter name="cvaSensitivitiesFile">../Output/sensi/amc/xva_par_sensitivity_cva.csv</Parameter>
+      <!--<Parameter name="cvaSensitivitiesFile">../Output/sensi/amc/xva_par_sensitivity_cva.csv</Parameter>-->
     </Analytic>
   </Analytics>
 </ORE>
