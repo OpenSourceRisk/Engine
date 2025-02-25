@@ -841,20 +841,42 @@ void XvaEngineCG::calculateDynamicDelta() {
             currencyLookup[c] = index++;
 
         std::vector<RandomVariable> pathIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+        std::vector<RandomVariable> pathFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
 
         for (auto const& p : model_->modelParameters()) {
-            if(p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
+
+            // debug output: expected path derivatives for all model parameters for time step 20 (5y 20221-02-05)
+
+            // if (i == 20) {
+            //     std::cout << p << "," << expectation(dynamicDeltaDerivatives_[p.node()]).at(0) << std::endl;
+            // }
+
+            // debug output end
+
+            // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
+
+            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
-                // zero rate sensi for T - t as seen from val date t = - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
                 pathIrDelta[ccyIndex] +=
                     RandomVariable(model_->size(), -(model_->actualTimeFromReference(p.date()) - t) * 1E-4) *
                     values_[p.node()] * dynamicDeltaDerivatives_[p.node()];
             }
+
+            // fx spot sensi as seen from val date t for a relative shift r is r * d NPV / d ln fxSpot, we use r = 0.01
+
+            if(p.type() == ModelCG::ModelParameter::Type::logFxSpot) {
+                std::size_t ccyIndex = currencyLookup.at(p.qualifier());
+                QL_REQUIRE(ccyIndex > 0,
+                           "XvaEngineCG::calculateDynamicDelta(): internal error, logFxSpot qualifier is base ccy");
+                pathFxDelta[ccyIndex - 1] += RandomVariable(model_->size(), 0.01) * dynamicDeltaDerivatives_[p.node()];
+            }
+
         }
 
         // calculate conditional expectations on the aggregated sensis
 
         std::vector<RandomVariable> conditionalIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+        std::vector<RandomVariable> conditionalFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
 
         for (std::size_t ccy = 0; ccy < pathIrDelta.size(); ++ccy) {
 
@@ -868,21 +890,36 @@ void XvaEngineCG::calculateDynamicDelta() {
 
             conditionalIrDelta[ccy] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
 
-            // debug conditional ir delta vs. model state on time step
+            if(ccy > 0) {
+                args[0] = &pathFxDelta[ccy - 1];
+                conditionalFxDelta[ccy - 1] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+            }
+
+            // debug conditional ir delta vs. model state on time step 20
+
             // if (ccy == 0 && i == 20) {
             //     std::cout << "args size " << args.size() << std::endl;
             //     for (std::size_t j = 0; j < model_->size(); ++j) {
             //         std::cout << j << "," << args[2]->at(j) << "," << conditionalIrDelta[ccy].at(j) << std::endl;
             //     }
             // }
+
             // end debug
         }
 
-        // output for debug: expected ir delta over all time steps
+        // output for debug: expected ir delta, fx delta over all time steps
+
         // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
-        //     std::cout << i << "," << QuantLib::io::iso_date(valDate) << "," << model_->currencies()[ccy] << ","
-        //               << expectation(conditionalIrDelta[ccy]).at(0) << std::endl;
+        //     std::cout << i << "," << "irDelta," << QuantLib::io::iso_date(valDate) << "," << model_->currencies()[ccy]
+        //               << "," << expectation(conditionalIrDelta[ccy]).at(0) << std::endl;
         // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
+        //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
+        //               << model_->currencies()[ccy + 1] << "," << expectation(conditionalFxDelta[ccy]).at(0)
+        //               << std::endl;
+        // }
+
         // end output for debug
     }
 
