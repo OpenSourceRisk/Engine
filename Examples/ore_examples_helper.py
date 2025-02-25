@@ -18,13 +18,13 @@ from math import log
 def get_list_of_examples():
 #    return sorted([e for e in os.listdir(os.getcwd())
 #                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#    return get_list_of_new_examples()
-    return get_list_of_legacy_examples()
+#    return get_list_of_legacy_examples()
+    return get_list_of_new_examples()
 
 def get_list_of_legacy_examples():
     legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
                      if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#                     if e == 'Example_68'])
+#                     if e == 'Example_8'])
     return [ os.path.join("Legacy", e) for e in legacy ]
 
 def get_list_of_new_examples():
