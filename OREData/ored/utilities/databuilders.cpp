@@ -268,6 +268,7 @@ void dataBuilders() {
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
     ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
+    ORE_REGISTER_BOND_BUILDER("BondFuture", BondFutureBuilder, false)
 
     ORE_REGISTER_TRADE_BUILDER("CashPosition", CashPosition, false)
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)

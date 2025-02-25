@@ -184,6 +184,8 @@ struct BondBuilder {
         std::string builderLabel;
         QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
         QuantLib::ext::shared_ptr<ore::data::Bond> bondTrade;
+        QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument;
+        QuantLib::ext::shared_ptr<ore::data::Trade> oreTrade;
         QuantLib::ext::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
         bool isInflationLinked = false;
         bool hasCreditRisk = true;

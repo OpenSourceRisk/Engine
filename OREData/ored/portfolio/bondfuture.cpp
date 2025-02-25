@@ -123,8 +123,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     //
     string securityId = secList_.front();
 
-    BondBuilder::Result underlying =
-        BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
+    ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
 
     // hardcoded values for bondfuture vs forward bond
     double amount = 0.0;                   // strike amount is zero for bondfutures
@@ -139,16 +138,16 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
                                          : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
 
     ext::shared_ptr<Instrument> fwdBond =
-        ext::make_shared<ForwardBond>(underlying.bond, payoff, expiry, settlement, isPhysicallySettled, settlementDirty,
-                                      compensationPayment, compensationPaymentDate, contractNotional_);
+        ext::make_shared<ForwardBond>(ctdUnderlying_.bond, payoff, expiry, settlement, isPhysicallySettled,
+                                      settlementDirty, compensationPayment, compensationPaymentDate, contractNotional_);
 
     ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder);
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
         id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, string()),
-        underlying.creditCurveId, securityId, underlying.bondTrade->bondData().referenceCurveId(),
-        underlying.bondTrade->bondData().incomeCurveId(), settlementDirty));
+        ctdUnderlying_.creditCurveId, securityId, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
+        ctdUnderlying_.bondTrade->bondData().incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);
@@ -158,7 +157,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     maturityType_ = "Contract settled";
     npvCurrency_ = currency_;
     notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, underlying.bond->cashflows()); // presenting the cashflows of the underlying
+    legs_ = vector<Leg>(1, ctdUnderlying_.bond->cashflows()); // presenting the cashflows of the underlying
     legCurrencies_ = vector<string>(1, currency_);
     legPayers_ = vector<bool>(1, false);
 }
@@ -349,7 +348,6 @@ void BondFuture::deduceDates(Date& expiry, Date& settlement) {
     } else {
         QL_FAIL("expected either expiry or settlement or both to start with root");
     }
-
 }
 
 FutureType BondFuture::selectTypeUS(const string& value) {
@@ -463,6 +461,46 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
                                                        expiryBasis_, settlementBasis_, expiryLag_, settlementLag_,
                                                        lastTrading_, lastDelivery_, secList_, bondFutureRefData);
     }
+}
+
+BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                             const std::string& securityId) const {
+
+    auto future = QuantLib::ext::make_shared<ore::data::BondFuture>(securityId, 1.0);
+    future->populateFromBondFutureReferenceData(referenceData);
+    future->id() = "BondFutureBuilder" + securityId;
+    future->build(engineFactory);
+
+    QL_REQUIRE(future->instrument(), "BondFutureBuilder: constructed future is null, this is unexpected");
+    auto qlFuture = QuantLib::ext::dynamic_pointer_cast<ForwardBond>(future->instrument()->qlInstrument());
+
+    Result res;
+    // set null ptr
+    res.bond = QuantLib::ext::shared_ptr<QuantLib::Bond>();
+    res.bondTrade = QuantLib::ext::shared_ptr<ore::data::Bond>();
+    res.qlInstrument = future->instrument()->qlInstrument();
+    res.oreTrade = future->instrument();
+    res.currency = future->currency();
+
+    res.isInflationLinked = false;
+    res.hasCreditRisk = future->ctdUnderlying().hasCreditRisk;
+    res.creditCurveId = future->ctdUnderlying().creditCurveId;
+    res.securityId = future->ctdUnderlying().securityId;
+    res.creditGroup = future->ctdUnderlying().creditGroup;
+    res.priceQuoteMethod = future->ctdUnderlying().priceQuoteMethod;
+    res.priceQuoteBaseValue = future->ctdUnderlying().priceQuoteBaseValue;
+
+    return res;
+}
+
+void BondFutureBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
+                                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                            const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                            const std::string& securityId) const {
+
+    DLOG("BondFutureBuilder::modifyToForwardBond called for " << securityId);
+    QL_FAIL("BondFutureBuilder::modifyToForwardBond not implememted");
 }
 
 } // namespace data

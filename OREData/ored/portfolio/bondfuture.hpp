@@ -24,6 +24,7 @@
 
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ql/instruments/bond.hpp>
 
 namespace ore {
 namespace data {
@@ -42,8 +43,11 @@ public:
     //! Default constructor
     BondFuture() : Trade("BondFuture") {}
 
-    //! Constructor taking an envelope
-    BondFuture(Envelope env, const std::vector<std::string>& secList) : Trade("BondFuture", env), secList_(secList) {}
+    //! Constructor to set up a bondfuture from reference data
+    BondFuture(const string& contractName, Real contractNotional, const string& longShort = "Long",
+               Envelope env = Envelope())
+        : Trade("BondFuture", env), contractName_(contractName), contractNotional_(contractNotional),
+          longShort_(longShort) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
@@ -57,9 +61,12 @@ public:
 
     //! inspectors
     // const std::vector<std::string>& secList() const { return secList_; }
+    const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
+    const string& currency() const { return currency_; }
+
+    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
 protected:
-
     void checkData();
 
     void deduceDates(QuantLib::Date& expiry, QuantLib::Date& settlement);
@@ -69,8 +76,6 @@ protected:
     void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
 
     std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory);
-
-    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
 private:
     // mandatory first tier information
@@ -84,7 +89,7 @@ private:
     std::string contractMonth_;
     std::string deliverableGrade_; // futureType differentiating the underlying
     // bond future date conventions
-    std::string rootDate_;   // first, end, nth weekday (e.g. 'Monday,3') taken
+    std::string rootDate_;        // first, end, nth weekday (e.g. 'Monday,3') taken
     std::string expiryBasis_;     // root, expiry, settle taken
     std::string settlementBasis_; // root, expiry, settle taken
     std::string expiryLag_;       // periods taken
@@ -93,6 +98,20 @@ private:
     // thirdt tier information
     std::string lastTrading_;  // expiry
     std::string lastDelivery_; // settlement date
+
+    BondBuilder::Result ctdUnderlying_;
 };
+
+struct BondFutureBuilder : public BondBuilder {
+    virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                         const std::string& contractName) const override;
+
+    void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
+                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                             const std::string& securityId) const override;
+};
+
 } // namespace data
 } // namespace ore
