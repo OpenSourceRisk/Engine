@@ -13,8 +13,8 @@ cases = [ "run_swapflat.py",  # 1, 2, 10
           "run_commodity.py", # 24
           "run_inflation.py", # 17, 32 
           "run_credit.py",    # 33
-          "run_cmsspread.py"  # 25
-          "run_fbc.py"        # 64
+          "run_cmsspread.py", # 25
+          "run_fbc.py",       # 64
           "run_longterm.py",  # 12
           "run_measures.py",  # 36
           "run_hw2f.py",      # 37 and 38
