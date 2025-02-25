@@ -71,7 +71,7 @@ oreex.decorate_plot(title="Effect of Collateral")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("threshold_epe")
-oreex.plot("exposure_nettingset_CPTY_A.csv", 2, 3, 'b', "EPE NettingSet")
+oreex.plot("vm_threshold/exposure_nettingset_CPTY_A.csv", 2, 3, 'b', "EPE NettingSet")
 oreex.plot("vm_threshold/exposure_nettingset_CPTY_A.csv", 2, 3, 'r', "EPE NettingSet, Threshold 1m")
 oreex.decorate_plot(title="Effect of Collateral")
 oreex.save_plot_to_file()
