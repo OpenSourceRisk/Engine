@@ -45,10 +45,10 @@ def get_list_of_new_examples():
             ]
 
 def get_list_ore_academy():
-#    return sorted([e for e in os.listdir(os.getcwd()) if e[:11] == 'OREAcademy_'])
-    academy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Academy"))])
-    return [ os.path.join("Academy", e) for e in academy ]
-
+    return ["Academy/FC003_Reporting_Currency",
+            "Academy/TA001_Equity_Option",
+            "Academy/TA002_IR_Swap"
+            ]
 
 def print_on_console(line):
     print(line)
