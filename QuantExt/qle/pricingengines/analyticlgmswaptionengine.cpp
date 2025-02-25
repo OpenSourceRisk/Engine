@@ -331,4 +331,16 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     return sum;
 }
 
+std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
+    if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon)
+        oss << "NextCoupon";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
+        oss << "ProRata";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple)
+        oss << "Simple";
+    else
+        QL_FAIL("FloatSpreadMapping type not covered");
+    return oss;
+}
+  
 } // namespace QuantExt

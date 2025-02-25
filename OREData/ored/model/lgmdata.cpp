@@ -108,18 +108,6 @@ QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(
         QL_FAIL("FloatSpreadMapping '" << s << "' not recognized");
 }
 
-std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
-    if (m == QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon)
-        oss << "NextCoupon";
-    else if (m == QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
-        oss << "ProRata";
-    else if (m == QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple)
-        oss << "Simple";
-    else
-        QL_FAIL("FloatSpreadMapping type not covered");
-    return oss;
-}
-
 void LgmData::clear() {
     optionExpiries_.clear();
     optionTerms_.clear();
@@ -235,9 +223,6 @@ XMLNode* LgmData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, parameterTransformationNode, "ShiftHorizon", shiftHorizon_);
     XMLUtils::addChild(doc, parameterTransformationNode, "Scaling", scaling_);
 
-    // std::ostringstream o;
-    // o << floatSpreadMapping_;
-    // XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", o.str());
     XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", to_string(floatSpreadMapping_));
     
     return lgmNode;

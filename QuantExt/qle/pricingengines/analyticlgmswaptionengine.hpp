@@ -109,6 +109,8 @@ private:
     mutable Real nominal_;
 };
 
+std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
+  
 } // namespace QuantExt
 
 #endif
