@@ -27,7 +27,7 @@ using namespace CrossAssetAnalytics;
 
 AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size foreignCurrency)
-    : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false), cacheDirty_(true) {}
+    : model_(model), foreignCurrency_(foreignCurrency) {}
 
 Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
                                         const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
@@ -78,12 +78,15 @@ Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
 
     Real variance = cachedIntegrals_ + (fxi->variance(t) - fxi->variance(t0)) +
                     model_->integrator()->operator()(
-                        [&lgm0, &lgmi1, &fxi, rzx0i, rzxi1i, H0, Hi1](const Real t) {
+                        [&lgm0, &lgmi1, &fxi, rzx0i, rzxi1i, H0, Hi1, this](const Real t) {
                             Real a0 = lgm0->alpha(t);
                             Real ai1 = lgmi1->alpha(t);
                             Real si = fxi->sigma(t);
                             Real H0t = lgm0->H(t);
                             Real Hi1t = lgmi1->H(t);
+                            // apply shift if specified
+                            if (applySigmaShift_ && t >= sigmaShiftT0_ && t <= sigmaShiftT1_)
+                                si += sigmaShift_;
                             return
                                 // forth term
                                 2.0 * (H0 * a0 * si * rzx0i - H0t * a0 * si * rzx0i) -
@@ -123,5 +126,15 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     results_.value = value(0.0, t, payoff, domesticDiscount, fxForward);
 
 } // calculate()
+
+void AnalyticCcLgmFxOptionEngine::setSigmaShift(const Time t0, const Time t1, const Real shift) const {
+    sigmaShiftT0_ = t0;
+    sigmaShiftT1_ = t1;
+    sigmaShift_ = shift;
+    applySigmaShift_ = true;
+    cacheDirty_ = true;
+}
+
+void AnalyticCcLgmFxOptionEngine::resetSigmaShift() const { applySigmaShift_ = false; }
 
 } // namespace QuantExt
