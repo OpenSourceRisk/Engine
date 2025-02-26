@@ -255,6 +255,7 @@
 #include <qle/math/stoplightbounds.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
 #include <qle/methods/fdmblackscholesmesher.hpp>
 #include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
