@@ -109,8 +109,8 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     LOG("Saving collateral balances to file: " << p.string());
     collateralBalances->toFile(p.string());
 
-    analytic()->reports()[label()]["saccr"] = saCcrReport;
-    analytic()->reports()[label()]["saccr_detail"] = saCcrDetailReport;    
+    analytic()->addReport(label(), "saccr", saCcrReport);
+    analytic()->addReport(label(), "saccr_detail", saCcrDetailReport);
 }
 
 }

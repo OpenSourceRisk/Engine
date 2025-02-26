@@ -39,15 +39,15 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 
     if (inputs_->rawCubeOutput()) {
         DLOG("Write raw cube under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
-        xvaAnalytic->reports()["XVA"]["rawcube"]->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
+        // analytic()->addReport("XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
+        xvaAnalytic->getReport("XVA", "rawcube")->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
                                                          ".csv");
     }
 
     if (inputs_->netCubeOutput()) {
         DLOG("Write raw cube under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["netcube_" + label] = xvaAnalytic->reports()["XVA"]["netcube"];
-        xvaAnalytic->reports()["XVA"]["netcube"]->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
+        // analytic()->addReport("XVA_STRESS"]["netcube_" + label] = xvaAnalytic->reports()["XVA"]["netcube"];
+        xvaAnalytic->getReport("XVA", "netcube")->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
                                                          ".csv");
     }
 
@@ -70,7 +70,7 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 
     if (inputs_->writeScenarios()) {
         DLOG("Write scenario report under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
+        // analytic()->addReport("XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
         xvaAnalytic->reports()["XVA"]["scenario"]->toFile(inputs_->resultsPath().string() + "/scenario" + label +
                                                           ".csv");
     }
@@ -176,7 +176,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
+            for (auto& [name, rpt] : newAnalytic->reports().at("XVA")) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     DLOG("Save and extend report " << name);
@@ -203,7 +203,7 @@ void XvaStressAnalyticImpl::concatReports(
     for (auto& [name, reports] : xvaReports) {
         auto report = concatenateReports(reports);
         if (report != nullptr) {
-            analytic()->reports()[label()][name] = report;
+            analytic()->addReport(label(), name, report);
         }
     }
 }

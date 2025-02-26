@@ -91,7 +91,8 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
     return tmps;
 }
 
-void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
+void AnalyticsManager::runAnalytics(
+    const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
     QL_REQUIRE(initialised_, "AnalyticsManager has not been initialised");
     if (analytics_.size() == 0)
         return;
@@ -141,7 +142,13 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     for (auto a : analytics_) {
         LOG("run analytic with label '" << a.first << "'");
         a.second->startTimer("Run " + a.second->label() + "Analytic");
-        a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        try {
+            a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        } catch (const exception& e) {
+            failedAnalytics_.push_back(a.first);
+            ALOG("Error running analytic with label '" << a.first << "': " << e.what());
+            StructuredAnalyticsErrorMessage(a.first, "Failed Analytic", e.what());
+        }
         a.second->stopTimer("Run " + a.second->label() + "Analytic");
         LOG("run analytic with label '" << a.first << "' finished.");
         // then populate the market calibration report if required
@@ -151,8 +158,7 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
 
     if (inputs_->portfolio()) {
         auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
-            .writePricingStats(*pricingStatsReport, inputs_->portfolio());
+        ReportWriter(inputs_->reportNaString()).writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
 

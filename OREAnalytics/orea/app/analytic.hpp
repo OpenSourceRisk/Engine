@@ -137,7 +137,14 @@ public:
     Configurations& configurations() { return configurations_; }
 
     //! Analytic results
-    analytic_reports& reports() { return reports_; };
+    analytic_reports reports();
+    void addReport(const std::string& key, const std::string& subKey,
+        const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+        reports_[key][subKey] = report;
+    }
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key, const std::string& subKey) {
+        return reports_[key][subKey];
+    }
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
@@ -232,11 +239,11 @@ public:
     }
     template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
     QuantLib::ext::shared_ptr<Analytic> dependentAnalytic(const std::string& key) const;
-    const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
+    const std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>>& dependentAnalytics() const {
         return dependentAnalytics_;
     }
-    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
-        dependentAnalytics_[key] = analytic;
+    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic, const bool incDependentReports = false) {
+        dependentAnalytics_[key] = std::make_pair(analytic, incDependentReports);
     }
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
     virtual std::vector<QuantLib::Date> additionalMarketDates() const { return {}; }
@@ -247,7 +254,8 @@ protected:
     //! label for logging purposes primarily
     std::string label_;
 
-    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> dependentAnalytics_;
+    //! map to dependent analytics, holds a bool if we want to report intermeditate reports
+    std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>> dependentAnalytics_;
 
 private:
     Analytic* analytic_;
@@ -282,7 +290,7 @@ public:
 template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::Impl::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
-    QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second);
+    QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second.first);
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
 }
