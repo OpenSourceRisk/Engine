@@ -121,7 +121,8 @@ private:
     void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
-    std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
+    std::pair<std::size_t, std::size_t> createPortfolioExposureNode(const std::size_t dateIndex,
+                                                                    const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
     std::size_t getAmcNpvIndexForValuationDate(const std::size_t i) const;
@@ -196,18 +197,18 @@ private:
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv
     std::vector<std::set<std::string>> tradeCurrencyGroup_;            // relevant ccys per trade
 
-    // portfolio exposure, per valuation resp. close-out date, as conditional expectation
-    std::vector<std::size_t> pfExposureNodes_;
+    // portfolio exposure, per valuation resp. close-out date, as path values and conditional expectation
+    std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
     std::vector<std::size_t> pfExposureCloseOutNodes_;
 
-    // porfolio exposure, per valuation date, as conditional expectation, multiplied by numeraire
-    std::vector<std::size_t> pfExposureNodesInflated_;
+    // porfolio exposure, per valuation date, as path values, multiplied by numeraire
+    std::vector<std::size_t> pfExposureNodesPathwiseInflated_;
 
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
 
-    // regressor groups per portfolio exposure node (pfExposureNodes_)
+    // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     std::vector<RandomVariable> values_;

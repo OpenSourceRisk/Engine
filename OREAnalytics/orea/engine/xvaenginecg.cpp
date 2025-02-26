@@ -336,7 +336,8 @@ void XvaEngineCG::buildCgPartB() {
          << model_->computationGraph()->size());
 }
 
-std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate) {
+std::pair<std::size_t, std::size_t> XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex,
+                                                                             const bool isValuationDate) {
 
     auto g = model_->computationGraph();
 
@@ -369,12 +370,14 @@ std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex
         pfRegressorPosGroups.insert(group);
     }
 
+    std::size_t pfExposureNodePathwiseTmp = cg_add(*g, tradeSum);
     std::size_t pfExposureNodeTmp =
-        model_->npv(cg_add(*g, tradeSum), obsDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
+        model_->npv(pfExposureNodePathwiseTmp, obsDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
+    pfRegressorPosGroups_[pfExposureNodePathwiseTmp] = pfRegressorPosGroups;
     pfRegressorPosGroups_[pfExposureNodeTmp] = pfRegressorPosGroups;
 
     model_->useStickyCloseOutDates(false);
-    return pfExposureNodeTmp;
+    return std::make_pair(pfExposureNodePathwiseTmp, pfExposureNodeTmp);
 }
 
 std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
@@ -414,14 +417,18 @@ void XvaEngineCG::buildCgPartC() {
 
     if (mode_ == Mode::Full || dynamicDelta_ || !generateTradeLevelExposure_) {
         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
-            pfExposureNodes_.push_back(createPortfolioExposureNode(i, true));
-            if (!closeOutDates_.empty())
-                pfExposureCloseOutNodes_.push_back(createPortfolioExposureNode(i, false));
-            pfExposureNodesInflated_.push_back(
-                cg_mult(*g, pfExposureNodes_.back(),
-                        model_->numeraire(i == 0 ? model_->referenceDate() : valuationDates_[i - 1])));
+            auto [n1, n2] = createPortfolioExposureNode(i, true);
+            pfExposureNodesPathwise_.push_back(n1);
+            pfExposureNodes_.push_back(n2);
+            if (!closeOutDates_.empty()) {
+                auto [_, n] = createPortfolioExposureNode(i, false);
+                pfExposureCloseOutNodes_.push_back(n);
+            }
+            auto tmp = model_->numeraire(i == 0 ? model_->referenceDate() : valuationDates_[i - 1]);
+            pfExposureNodesPathwiseInflated_.push_back(cg_mult(*g, pfExposureNodesPathwise_.back(), tmp));
             // copy over the regressor group from the pf exp node to the inflated version of the same node
-            pfRegressorPosGroups_[pfExposureNodesInflated_.back()] = pfRegressorPosGroups_[pfExposureNodes_.back()];
+            pfRegressorPosGroups_[pfExposureNodesPathwiseInflated_.back()] =
+                pfRegressorPosGroups_[pfExposureNodes_.back()];
         }
     }
 
@@ -813,8 +820,7 @@ void XvaEngineCG::calculateDynamicDelta() {
 
     for (std::size_t i = 0; i < valuationDates_.size() + 1; ++i) {
 
-        std::size_t n = pfExposureNodesInflated_[i];
-        std::size_t n0 = pfExposureNodes_[i];
+        std::size_t n = pfExposureNodesPathwiseInflated_[i];
 
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
         Real t = model_->actualTimeFromReference(valDate);
@@ -826,7 +832,7 @@ void XvaEngineCG::calculateDynamicDelta() {
 
         dynamicDeltaDerivatives_[n].setAll(1.0);
 
-        // run backward derivatives from n
+        // run backward derivatives from n, note: we use eps = 0 in grads_ here!
 
         backwardDerivatives(*g, values_, dynamicDeltaDerivatives_, grads_, RandomVariable::deleter,
                             keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
@@ -847,7 +853,7 @@ void XvaEngineCG::calculateDynamicDelta() {
 
             // debug output: expected path derivatives for all model parameters for time step 20 (5y 20221-02-05)
 
-            // if (i == 20) {
+            // if (i == 8) {
             //     std::cout << p << "," << expectation(dynamicDeltaDerivatives_[p.node()]).at(0) << std::endl;
             // }
 
@@ -877,6 +883,8 @@ void XvaEngineCG::calculateDynamicDelta() {
 
         std::vector<RandomVariable> conditionalIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
         std::vector<RandomVariable> conditionalFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
+
+        std::size_t n0 = pfExposureNodes_[i]; // to get regressor
 
         for (std::size_t ccy = 0; ccy < pathIrDelta.size(); ++ccy) {
 
