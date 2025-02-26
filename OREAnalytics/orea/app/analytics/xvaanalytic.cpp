@@ -208,7 +208,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     if (inputs_->writeScenarios()) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->reports()["XVA"]["scenario"] = report;
-        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
+        scenarioGenerator_ =
+            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
     }
 }
 
@@ -582,13 +583,14 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
+        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgBumpSensis(), false /* true */, inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
@@ -714,7 +716,7 @@ void XvaAnalyticImpl::runPostProcessor() {
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
-	std::map<std::string, Real> currentIM;
+	    std::map<std::string, Real> currentIM;
         if (inputs_->collateralBalances()) {
             for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
                 currentIM[n.nettingSetId()] =
@@ -785,6 +787,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
 
+    QL_REQUIRE(!((offsetScenario_ == nullptr) ^ (offsetSimMarketParams_ == nullptr)),
+               "Need offsetScenario and corresponding simMarketParameter");
+
     SavedSettings settings;
 
     optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
@@ -824,13 +829,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
+        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgBumpSensis(), false /* true */, inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
@@ -942,7 +948,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     } else { // runSimulation_
 
         // build the portfolio linked to today's market
-        analytic()->buildPortfolio();
+        //
+        // during simulation stage, trades may be built using amc engine factory
+        // instead of classic engine factory, resulting in trade errors from the following buildPortfolio()
+        //
+        // when buildFailedTrades is set to False, trade errors are emitted in structured log, because
+        // the trades will be removed from the portfolio and do NOT participate in the post-processing.
+        // we have a genuine interest in such errors
+        //
+        // when buildFailedTrades is set to True, trade errors are NOT emitted in structured log, because
+        // the trades will NOT be removed from the portfolio and DO participate in the post-processing.
+        // any genuine error should have been reported during simulation stage
+        analytic()->buildPortfolio(!inputs_->buildFailedTrades());
 
         analytic()->enrichIndexFixings(analytic()->portfolio());
 

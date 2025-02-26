@@ -68,6 +68,16 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Schedule schedule = makeSchedule(legData.schedule());
     QL_REQUIRE(schedule.size() > 1, "CreditDefaultSwap requires at least two dates in the schedule");
 
+    
+
+    if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
+        Date protectionStart = swap_.protectionStart();
+        Date tradeDate = swap_.tradeDate();
+        protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
+        tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
+        schedule = removeCDSPeriodsBeforeStartDate(schedule, tradeDate + 1);
+     }
+
     BusinessDayConvention payConvention = Following;
     if (!legData.paymentConvention().empty()) {
         payConvention = parseBusinessDayConvention(legData.paymentConvention());
@@ -122,8 +132,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     if (swap_.upfrontFee() == Null<Real>()) {
         cds = QuantLib::ext::make_shared<QuantLib::CreditDefaultSwap>(
             prot, notional_, couponLeg, fixedRate, schedule, payConvention, dc, swap_.settlesAccrual(),
-            swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter,
-            swap_.rebatesAccrual(), swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
+            lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(), swap_.cashSettlementDays());
     } else {
         cds = QuantLib::ext::make_shared<QuantLib::CreditDefaultSwap>(
             prot, notional_, couponLeg, swap_.upfrontFee(), fixedRate, schedule, payConvention, dc,
@@ -155,6 +165,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     issuer_ = swap_.issuerId();
+
+    additionalData_["tradeRecoveryRate"] = swap_.recoveryRate();
 }
 
 const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {

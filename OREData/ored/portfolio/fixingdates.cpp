@@ -864,7 +864,6 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                     }
                     TLOG("Adding extra fixing dates for overnight index " << i);
                     fixings[i].addDates(oisDates, false);
-                    
                 } else if (isBmaIndex(i)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
@@ -881,7 +880,16 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
                         if (bma->bmaIndexName() == i) {
-                            liborNames.insert(bma->liborIndexName());
+                            if(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(bma->index())) {
+                                if (oisDates.empty()) {
+                                    TLOG("Generating fixing dates for overnight indices.");
+                                    oisDates = generateLookbackDates(asof, oisLookback, calendar);
+                                }
+                                TLOG("Adding extra fixing dates for overnight index " << i);
+                                fixings[i].addDates(oisDates, false);
+                            } else {
+                                liborNames.insert(bma->indexName());
+                            }
                         }
                     }
                     for (auto const& l : liborNames) {

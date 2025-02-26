@@ -1436,13 +1436,14 @@
       <xs:element type="xs:float" name="Rebate" minOccurs="0"/>
       <xs:element type="currencyCode" name="RebateCurrency" minOccurs="0"/>
       <xs:element name="RebatePayTime" minOccurs="0">
-    <xs:simpleType>
-      <xs:restriction base="xs:string">
-        <xs:enumeration value="atHit"/>
-        <xs:enumeration value="atExpiry"/>
-      </xs:restriction>
-    </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="atHit"/>
+          <xs:enumeration value="atExpiry"/>
+        </xs:restriction>
+      </xs:simpleType>
       </xs:element>
+      <xs:element type="bool" name="OverrideTriggered" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -2221,6 +2222,7 @@
          <xs:complexType>
            <xs:sequence>
             <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
+            <xs:element type="xs:string" name="IndexQuantity" minOccurs="0"/>
            </xs:sequence>
          </xs:complexType>
         </xs:element>
@@ -2891,6 +2893,7 @@
       <xs:element type="xs:float" name="NotionalOverride" minOccurs="0"/>
       <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="IndexQuantity" minOccurs="0"/>
       <xs:element type="compositeTradeComponents" name="Components" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
