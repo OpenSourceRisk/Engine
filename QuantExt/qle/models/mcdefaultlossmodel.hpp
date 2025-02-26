@@ -89,8 +89,10 @@ protected:
         TLOG("Constituents");
         TLOG("i,name,notional,pd,recoveryRates");
         for (size_t i = 0; i < pds.size(); ++i) {
-            TLOG(i << "," << names[i] << "," << io::iso_date(d) << "," << pds[i] << "," << notionals[i] << ","
-                   << recoveryRates_[i][0] << "," << recoveryRates_[i][1] << "," << recoveryRates_[i][2]);
+            TLOG(i << "," << names[i] << "," << io::iso_date(d) << "," << pds[i] << "," << notionals[i]);
+            for (size_t j = 0; j < recoveryRates_[i].size(); ++j) {
+                TLOG("RR " << recoveryRates_[i][j] << " with prob " << recoveryProbabilities_[j]);
+            }
         }
         InverseCumulativeRng<MersenneTwisterUniformRng, InverseCumulativeNormal> normal(MersenneTwisterUniformRng(123));
 
@@ -109,8 +111,9 @@ protected:
                 thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
             }
             thresholds[id].push_back(QL_MIN_REAL);
-            TLOG(id << "," << thresholds[id][0] << "," << thresholds[id][1] << "," << thresholds[id][2] << ","
-                    << thresholds[id][3]);
+            for (size_t j = 0; j < recoveryProbabilities_.size(); ++j) {
+                TLOG("id " << id << " Threshold " << j << " " << thresholds[id][j])
+            }
         }
 
         const double sqrtRho = std::sqrt(baseCorrelation_->value());

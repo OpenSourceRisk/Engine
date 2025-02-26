@@ -84,6 +84,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Index Tranche");
+    //bool isCDXNAHY = false;
     QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("CreditIndex", qualifier_)) {
         auto refDatum = refData->getData("CreditIndex", qualifier_);
@@ -93,6 +94,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         if (creditIndexRefDatum->indexFamily() == "") {
             ALOG("IndexFamily is blank in credit index reference data for entity " << qualifier_);
         }
+        //isCDXNAHY = creditIndexRefDatum->indexFamily() == "CDX.NA.HY";
     } else {
         ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
     }
@@ -366,6 +368,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         dpts.push_back(originalCurve);
         const auto& ref = market->defaultCurve(cc, config)->refData();
         seniorities.push_back(ref.seniority);
+        TLOG("Trade " << id() << ", Issuer " << cc << " recovery rate: " << recoveryRates.back());
     }
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
@@ -394,15 +397,20 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             const auto [name, period] = splitCurveIdWithTenor(indexCurveName);
 
             auto calibrationCdsMaturity = cdsMaturity(indexCdsStartDate, period, DateGeneration::CDS2015);
-
-            LOG("Build index calibration for " << creditCurveIdWithTerm());
-            LOG("Index maturity " << calibrationCdsMaturity);
+            
+            TLOG("Build index calibration for " << creditCurveIdWithTerm());
+            TLOG("Index maturity " << calibrationCdsMaturity);
 
             Handle<DefaultProbabilityTermStructure> indexCurve = market->defaultCurve(indexCurveName, config)->curve();
+            auto discountCurveCalibration = market->defaultCurve(indexCurveName, config)->rateCurve();
             Handle<Quote> indexRecovery = market->recoveryRate(indexCurveName, config);
 
+            for(size_t i = 0; i < creditCurves.size(); ++i){
+                DLOG("CreditCurve " << creditCurves[i] << " with recovery " << recoveryRates[i] << " with notional "
+                                    << basketNotionals[i]);
+            }
             curveCalibration = ext::make_shared<CreditIndexConstituentCurveCalibration>(
-                indexCdsStartDate, period, runningRate, indexRecovery, indexCurve, yts);
+                indexCdsStartDate, period, runningRate, indexRecovery, indexCurve, discountCurveCalibration);
 
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());

@@ -148,25 +148,60 @@ public:
         if (useStochasticRecovery_) {
             for (Size i = 0; i < recoveryRates.size(); ++i) {
                 // Use the same recovery rate probabilities across all entites
-                recoveryProbabilities.push_back(rrProbs_);                 
+                //recoveryProbabilities.push_back(rrProbs_);                 
                 // recovery rate grid dependent on market recovery rate
-                std::vector<Real> rrGrid(3, recoveryRates[i]); // constant recovery by default
-                QL_REQUIRE(rrProbs_.size() == rrGrid.size(), "recovery grid size mismatch");
+                std::vector<Real> rrGrid(11, recoveryRates[i]); // constant recovery by default
+                std::vector<Real> rrProb(11, 0.0); // constant recovery by default
+                //QL_REQUIRE(rrProbs_.size() == rrGrid.size(), "recovery grid size mismatch");
                 if (recoveryRateGrid_ == "Markit2020") {
-                    if (seniorities[i] == QuantExt::CreditCurve::Seniority::SNRFOR) {
-                        rrGrid[0] = 0.1;
-                        rrGrid[1] = 0.4;
-                        rrGrid[2] = 0.7;
+                    rrGrid[10] = 0.025;
+                    rrGrid[9] = 0.1;
+                    rrGrid[8] = 0.2;
+                    rrGrid[7] = 0.3;
+                    rrGrid[6] = 0.4;
+                    rrGrid[5] = 0.5;
+                    rrGrid[4] = 0.6;
+                    rrGrid[3] = 0.7;
+                    rrGrid[2] = 0.8;
+                    rrGrid[1] = 0.9;
+                    rrGrid[0] = 0.975;
+                    if (seniorities[i] == QuantExt::CreditCurve::Seniority::SUBLT2) {
+                        TLOG("Constituent " << i << " is SUBLT2 and use stochastic lgd");
+                        rrProb[10] = 0.325118277844636;
+                        rrProb[9] = 0.224476678356585;
+                        rrProb[8] = 0.137505881380772;
+                        rrProb[7] = 0.0976082381433515;
+                        rrProb[6] = 0.0720651798043243;
+                        rrProb[5] = 0.0533735316069257;
+                        rrProb[4] = 0.0386620690651551;
+                        rrProb[3] = 0.0265532021173571;
+                        rrProb[2] = 0.0162995635078089;
+                        rrProb[1] = 0.00748608812541296;
+                        rrProb[0] = 0.000851290047671927;
+                    } else {
+                        rrProb[10] = 0.0215505369655808;
+                        rrProb[9] = 0.108383283087955;
+                        rrProb[8] = 0.150968176350172;
+                        rrProb[7] = 0.164610171389183;
+                        rrProb[6] = 0.159045332991804;
+                        rrProb[5] = 0.140043519486056;
+                        rrProb[4] = 0.112108402294552;
+                        rrProb[3] = 0.0793324094757484;
+                        rrProb[2] = 0.0459235225768655;
+                        rrProb[1] = 0.0169370460512352;
+                        rrProb[0] = 0.00109759933084774;
                     }
                     recoveryGrids.push_back(rrGrid);
+                    recoveryProbabilities.push_back(rrProb);
                 } else if (recoveryRateGrid_ == "MarkitNAHY") {
                     if (seniorities[i] == QuantExt::CreditCurve::Seniority::SNRFOR ||
                         seniorities[i] == QuantExt::CreditCurve::Seniority::SECDOM) {
-                        rrGrid[0] = 0.1;
+                        rrGrid[0] = 0.7;
                         rrGrid[1] = 0.4;
-                        rrGrid[2] = 0.7;
+                        rrGrid[2] = 0.1;
                     }
                     recoveryGrids.push_back(rrGrid);
+                    recoveryProbabilities.push_back(rrProb);
                 } else if (recoveryRateGrid_ != "Constant") {
                     QL_FAIL("recovery rate model code " << recoveryRateGrid_ << " not recognized");
                 }
@@ -174,16 +209,32 @@ public:
         }
         
         DLOG("Build ExtendedGaussianConstantLossLM");
-        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(new QuantExt::ExtendedGaussianConstantLossLM(
-            baseCorrelation, recoveryRates, recoveryProbabilities, recoveryGrids, LatentModelIntegrationType::GaussianQuadrature, poolSize,
-            GaussianCopulaPolicy::initTraits()));
-    
+        /*
+        TCopulaPolicy::initTraits initTraits;
+        initTraits.tOrders = {3, 3};
+
+        QuantLib::ext::shared_ptr<QuantExt::ExtendedTCopulaConstantLossLM>studentLM(new
+        QuantExt::ExtendedTCopulaConstantLossLM( baseCorrelation, recoveryRates, recoveryProbabilities, recoveryGrids,
+                LatentModelIntegrationType::GaussianQuadrature, poolSize, initTraits));
 
         bool homogeneous = poolIsHomogenous && homogeneousPoolWhenJustified_;
 
-        return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets_, gaussCopulaMax_,
-                                                                gaussCopulaMin_, gaussCopulaSteps_, useQuadrature_,
-                                                                useStochasticRecovery_);
+        return QuantLib::ext::make_shared<QuantExt::StudentPoolLossModel>(
+            homogeneous, studentLM, nBuckets_, gaussCopulaMax_, gaussCopulaMin_, gaussCopulaSteps_, useQuadrature_,
+            useStochasticRecovery_);
+*/
+        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(
+            new QuantExt::ExtendedGaussianConstantLossLM(baseCorrelation, recoveryRates, recoveryProbabilities,
+                                                         recoveryGrids, LatentModelIntegrationType::GaussianQuadrature,
+                                                         poolSize, GaussianCopulaPolicy::initTraits()));
+
+        
+        bool homogeneous = poolIsHomogenous && homogeneousPoolWhenJustified_;
+
+        return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(
+            homogeneous, gaussLM, nBuckets_, gaussCopulaMax_, gaussCopulaMin_, gaussCopulaSteps_, useQuadrature_,
+            useStochasticRecovery_);
+          
     }
 
 private:
@@ -288,36 +339,54 @@ public:
         // of the concrete rate grid
         bool useStochasticRecovery = parseBool(modelParameter("useStochasticRecovery", {}, false, "false"));
         std::vector<std::vector<Real>> recoveryGrids;
-        vector<Real> rrProb;
+        vector<Real> rrProb(11, 1.0);
         if (useStochasticRecovery) {
-            string rrProbString = modelParameter("recoveryRateProbabilities");
-            string rrGridString = modelParameter("recoveryRateGrid");
-            vector<string> rrProbStringTokens;
-            boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-
-            rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
-
-            QL_REQUIRE(rrProb.size() == 3, "Expect three recoveryrate proabilites");
             for (Size i = 0; i < recoveryRates.size(); ++i) {
+                // Use the same recovery rate probabilities across all entites
+                // recoveryProbabilities.push_back(rrProbs_);
                 // recovery rate grid dependent on market recovery rate
-                std::vector<Real> rrGrid(3.0, recoveryRates[i]); // constant recovery by default
-                QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
+                std::vector<Real> rrGrid(11, recoveryRates[i]); // constant recovery by default
+                //std::vector<Real> rrProb(21, 0.0);              // constant recovery by default
+                // QL_REQUIRE(rrProbs_.size() == rrGrid.size(), "recovery grid size mismatch");
 
-                
-                if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
-                            rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
-                            rrGrid[1] = recoveryRates[i];
-                            rrGrid[2] = 0.1;
-                            LOG("Using recovery rate grid for entity " << i << ": " << rrGrid[0] << " " << rrGrid[1] <<
-                " " << rrGrid[2]); } else ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
-                                                 << " out of range [0.1, 0.55], using constant recovery");
-                
+                rrGrid[10] = 0.025;
+                rrGrid[9] = 0.1;
+                rrGrid[8] = 0.2;
+                rrGrid[7] = 0.3;
+                rrGrid[6] = 0.4;
+                rrGrid[5] = 0.5;
+                rrGrid[4] = 0.6;
+                rrGrid[3] = 0.7;
+                rrGrid[2] = 0.8;
+                rrGrid[1] = 0.9;
+                rrGrid[0] = 0.975;
+                if (seniorities[i] == QuantExt::CreditCurve::Seniority::SUBLT2) {
+                    TLOG("Constituent " << i << " is snrfor and use stochastic lgd");
+                    rrProb[10] = 0.325118277844636;
+                    rrProb[9] = 0.224476678356585;
+                    rrProb[8] = 0.137505881380772;
+                    rrProb[7] = 0.0976082381433515;
+                    rrProb[6] = 0.0720651798043243;
+                    rrProb[5] = 0.0533735316069257;
+                    rrProb[4] = 0.0386620690651551;
+                    rrProb[3] = 0.0265532021173571;
+                    rrProb[2] = 0.0162995635078089;
+                    rrProb[1] = 0.00748608812541296;
+                    rrProb[0] = 0.000851290047671927;
+                } else {
+                    rrProb[10] = 0.0215505369655808;
+                    rrProb[9] = 0.108383283087955;
+                    rrProb[8] = 0.150968176350172;
+                    rrProb[7] = 0.164610171389183;
+                    rrProb[6] = 0.159045332991804;
+                    rrProb[5] = 0.140043519486056;
+                    rrProb[4] = 0.112108402294552;
+                    rrProb[3] = 0.0793324094757484;
+                    rrProb[2] = 0.0459235225768655;
+                    rrProb[1] = 0.0169370460512352;
+                    rrProb[0] = 0.00109759933084774;
+                }
                 recoveryGrids.push_back(rrGrid);
-            }
-        } else{
-            rrProb = {1.0};
-            for (Size i = 0; i < recoveryRates.size(); ++i) {
-                recoveryGrids.push_back({recoveryRates[i]});
             }
         }
             DLOG("Build MonteCarloModel");

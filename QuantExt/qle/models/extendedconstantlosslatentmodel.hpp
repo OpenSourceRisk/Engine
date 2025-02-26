@@ -75,7 +75,11 @@ public:
             Real expectedRecovery = 0.0;
             for (Size j = 0; j < recoveryProbabilities_[i].size(); ++j)
                 expectedRecovery += recoveryProbabilities_[i][j] * recoveryRates_[i][j];
-            QL_REQUIRE(QuantLib::close_enough(expectedRecovery, recoveries_[i]), "expected recovery does not match market recovery rate for obligor " << i);
+            if(!QuantLib::close_enough(expectedRecovery, recoveries_[i])){
+                WLOG("expected recovery (" << expectedRecovery << ") does not match market recovery (" << recoveries_[i]
+                                           << ") rate for obligor " << i);
+            }
+                
         }
     }
 
@@ -110,6 +114,7 @@ private:
 
 typedef ExtendedConstantLossLatentModel<GaussianCopulaPolicy> ExtendedGaussianConstantLossLM;
 
+typedef ExtendedConstantLossLatentModel<TCopulaPolicy> ExtendedTCopulaConstantLossLM;
 /*! ExtendedConstantLossLatentModel interface for loss models.
   While it does not provide distribution type losses (e.g. expected tranche
   losses) because it lacks an integration algorithm it serves to allow

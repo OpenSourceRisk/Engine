@@ -102,7 +102,9 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
 
         auto q = QuantLib::ext::dynamic_pointer_cast<BaseCorrelationQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to BaseCorrelationQuote");
-
+        TLOG("Loaded quote " << q->name() << " for base correlation curve " << config.curveID());
+        TLOG("Quote has term " << q->term() << " and detachment point " << fixed << setprecision(9)
+                              << q->detachmentPoint());
         // Go to next quote if index name in the quote does not match the cds vol configuration name.
         if (config.quoteName() != q->cdsIndexName())
             continue;
@@ -451,38 +453,37 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     QL_REQUIRE(detachPoints.size() == dps.size(), "Mismatch size");
 
     // Build curve calibration
-    std::vector<double> recoveryRates;
+    
     Currency ccy = parseCurrency(config.currency());
-
-    std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-    std::vector<QuantExt::CreditCurve::Seniority> seniorities;
-    for (const auto& name : basketData.remainingNames) {
-        auto mappedName = creditCurveNameMapping(name);
-        const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
-        QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
-        recoveryRates.push_back(creditCurve->recovery()->value());
-        dpts.push_back(creditCurve->curve());
-        seniorities.push_back(creditCurve->refData().seniority);
-    }
+    
     for (const auto& term : terms) {
+        std::vector<double> recoveryRates;
+        std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
+        std::vector<QuantExt::CreditCurve::Seniority> seniorities;
+        for (const auto& name : basketData.remainingNames) {
+            auto mappedName = creditCurveNameMapping(name);
+            const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+            QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
+            recoveryRates.push_back(creditCurve->recovery()->value());
+            dpts.push_back(creditCurve->curve());
+            seniorities.push_back(creditCurve->refData().seniority);
+        }
 
-
-            Handle<DefaultProbabilityTermStructure> indexCurve;
-            Handle<Quote> indexRecovery;
-            Handle<YieldTermStructure> discountCurve;
-            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
-            auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
-            auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
-            QL_REQUIRE(indexCreditCurve != nullptr,
-                       "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
-            discountCurve = indexCreditCurve->rateCurve();
-            indexCurve = indexCreditCurve->curve();
-            indexRecovery = indexCreditCurve->recovery();
+        Handle<DefaultProbabilityTermStructure> indexCurve;
+        Handle<Quote> indexRecovery;
+        Handle<YieldTermStructure> discountCurve;
+        std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
+        auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
+        auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
+        QL_REQUIRE(indexCreditCurve != nullptr,
+                    "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
+        discountCurve = indexCreditCurve->rateCurve();
+        indexCurve = indexCreditCurve->curve();
+        indexRecovery = indexCreditCurve->recovery();
+            
         if (config.calibrateConstituentsToIndexSpread()) {
             auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
                 config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
-
-
 
             auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames,
                                                                          basketData.remainingWeights, dpts, recoveryRates);
@@ -565,8 +566,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             double mktUpfront = it->second->value();
             auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
                                    &trancheWidth](const double correlation) {
+                //TLOG("Imply BaseCorrelations: call targetfunction with correlation " << correlation);
                 baseCorrelQuote->setValue(correlation);
-                double implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
+                double implyUpfront = implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
+
+                //TLOG("Imply BaseCorrelation: Correlation: " << correlation << " Upfront: " << mktUpfront << "Implied Upfront: " << implyUpfront
+                 //                    << " Error: " << mktUpfront - implyUpfront);
                 return mktUpfront - implyUpfront;
             };
 
@@ -574,7 +579,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
             double targetCorrelation = baseCorrelations.empty() ? 0.5 : baseCorrelations.back();
             if (inceptionDetachPoint < 1.0 || !close_enough(inceptionDetachPoint, 1.0)) {
-                targetCorrelation = solver.solve(targetFunction, 0.000001, 0.5, 0 + QL_EPSILON, 1 - QL_EPSILON);
+                targetCorrelation = solver.solve(targetFunction, 0.000001, 0.5, 0.01, 0.99);
                 baseCorrelations.push_back(targetCorrelation);
             }
             double error = targetFunction(targetCorrelation);
