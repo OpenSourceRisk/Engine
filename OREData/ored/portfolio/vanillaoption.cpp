@@ -83,14 +83,15 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
     // For Quanto, check for European and Cash, except for an FX underlying
     if (!sameCcy) {
-        QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");
+        //QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");  to be removed once dev is done
         if (settlementType == Settlement::Type::Physical) {
             QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
                        "Physically settled Quanto options are allowed only for an FX underlying.");
         }
     }
 
-    if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
+    if ((exerciseType == Exercise::European || exerciseType == Exercise::American) &&
+        settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
         // Get the payment date.
@@ -162,8 +163,10 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 else {
                     LOG("Build QuantoVanillaOption for trade " << id());
                     vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
-                    if (assetClassUnderlying_ == AssetClass::EQ)
+                    if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::European)
                         tradeTypeBuilder = "QuantoEquityOption";
+                    else if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::American)
+                        tradeTypeBuilder = "QuantoEquityOptionAmerican";
                     else if (assetClassUnderlying_ == AssetClass::COM)
                         tradeTypeBuilder = "QuantoCommodityOption";
                     else
@@ -187,6 +190,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             } else {
                 LOG("Build QuantoVanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
