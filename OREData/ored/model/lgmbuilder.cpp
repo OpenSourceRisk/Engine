@@ -407,8 +407,7 @@ void LgmBuilder::performCalculations() const {
     error_ = QL_MAX_REAL;
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
-        (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will be aborted."));
+        (continueOnError_ ? std::string("Calculation will proceed.") : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
@@ -463,9 +462,10 @@ void LgmBuilder::performCalculations() const {
             calibrationInfo.valid = true;
         }
     } else {
-        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
-                                       " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_).log();
+        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration target function value (" +
+                                       std::to_string(error_) + ") exceeds notification threshold (" +
+                                       std::to_string(bootstrapTolerance_) + ").";
+        StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
             auto d = getBasketDetails(calibrationInfo);
