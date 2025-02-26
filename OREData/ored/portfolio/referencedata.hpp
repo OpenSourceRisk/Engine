@@ -201,14 +201,15 @@ public:
     const std::set<CreditIndexConstituent>& constituents() const;
 
     const std::string& indexFamily() const { return indexFamily_; }
+    const std::string& subIndexFamily() const { return subIndexFamily_; }
 
     void setIndexFamily(const std::string& indexFamily) { indexFamily_ = indexFamily; }
-
+    void setSubIndexFamily(const std::string& subIndexFamily) { subIndexFamily_ = subIndexFamily; }
 private:
     std::set<CreditIndexConstituent> constituents_;
     std::string indexFamily_;
+    std::string subIndexFamily_;
 };
-
 
 /*
 <ReferenceDatum id="SP500">
