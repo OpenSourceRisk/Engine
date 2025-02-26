@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -53,12 +54,12 @@ namespace analytics {
 Analytic::Analytic(std::unique_ptr<Impl> impl,
          const std::set<std::string>& analyticTypes,
          const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
          bool simulationConfig,
          bool sensitivityConfig,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
-    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
-
+    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs), analyticsManager_(analyticsManager) {
     configurations().asofDate = inputs->asof();
 
     // set these here, can be overwritten in setUpConfigurations
@@ -76,22 +77,35 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
         impl_->setAnalytic(this);
         impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
     }
-
-    setUpConfigurations();
 }
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
-    if (impl_) {
+    if (!analyticComplete_ && impl_) {
+        if (!impl_->initialised())
+            QL_FAIL("Analytic " + label() + " is not initialed.");
         impl_->runAnalytic(loader, runTypes);
         MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
+    analyticComplete_ = true;
 }
 
-void Analytic::setUpConfigurations() {
-    if (impl_)
-        impl_->setUpConfigurations();
+void Analytic::initialise() {
+    if (impl() && !impl()->initialised()) {
+        impl()->initialise();
+        buildConfigurations();
+    }
+}
+
+void Analytic::Impl::initialise() {
+    if (!initialised_) {
+        buildDependencies();
+        setUpConfigurations();
+        for (const auto& [_, a] : dependentAnalytics_)
+            a->initialise();
+        initialised_ = true;
+    }
 }
 
 std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAnalytics() const {
@@ -154,7 +168,6 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
@@ -232,7 +245,7 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
         mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
-void Analytic::buildPortfolio() {
+void Analytic::buildPortfolio(const bool emitStructuredError) {
     startTimer("buildPortfolio()");
     QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
         
@@ -250,7 +263,7 @@ void Analytic::buildPortfolio() {
 
         LOG("Build the portfolio");
         QuantLib::ext::shared_ptr<EngineFactory> factory = impl()->engineFactory();
-        portfolio()->build(factory, "analytic/" + label());
+        portfolio()->build(factory, "analytic/" + label(), emitStructuredError);
 
         // remove dates that will have matured
         Date maturityDate = inputs()->asof();

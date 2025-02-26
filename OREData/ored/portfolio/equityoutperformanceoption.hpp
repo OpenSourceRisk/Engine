@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ored/portfolio/equityderivative.hpp>
-#include <ored/portfolio/barrierdata.hpp>
 
 #include <ored/portfolio/optiondata.hpp>
 

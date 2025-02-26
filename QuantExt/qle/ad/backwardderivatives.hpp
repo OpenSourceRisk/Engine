@@ -43,9 +43,9 @@ void backwardDerivatives(
     const std::vector<std::function<T(const std::vector<const T*>&, const QuantLib::Size)>>& fwdOps = {},
     const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
         fwdOpRequiresNodesForDerivatives = {},
-    const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
+    const std::vector<bool>& fwdOpKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
     const std::function<T(const std::vector<const T*>&, const QuantLib::Size)>& conditionalExpectation = {},
-    std::function<void(T&)> preDeleter = {}) {
+    std::function<void(T&)> fwdOpPreDeleter = {}, const std::vector<bool>& fwdOpAllowsPredeletion = {}) {
 
     if (g.size() == 0)
         return;
@@ -65,7 +65,7 @@ void backwardDerivatives(
                 QL_REQUIRE(range.second != ComputationGraph::nan,
                            "backwardDerivatives(): red block " << redBlockId << " was not closed.");
                 for (std::size_t n = range.first; n < range.second; ++n) {
-                    if (g.redBlockId(n) == redBlockId && !fwdKeepNodes[n])
+                    if (g.redBlockId(n) == redBlockId && !fwdOpKeepNodes[n])
                         deleter(values[n]);
                 }
             }
@@ -76,8 +76,8 @@ void backwardDerivatives(
                 auto range = g.redBlockRanges()[g.redBlockId(node) - 1];
                 QL_REQUIRE(range.second != ComputationGraph::nan,
                            "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
-                forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdKeepNodes,
-                                  range.first, range.second, true, preDeleter);
+                forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdOpKeepNodes,
+                                  range.first, range.second, true, fwdOpPreDeleter, fwdOpAllowsPredeletion);
             }
 
             // update the red block id

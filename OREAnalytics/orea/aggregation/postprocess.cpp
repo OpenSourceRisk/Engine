@@ -200,7 +200,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], 
             flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     }
-    cvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        cvaCalculator_->build();
 
     /***************************
      * Simple allocation methods
@@ -261,7 +262,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
             flipViewLendingCurvePostfix);
     }
-    allocatedCvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        allocatedCvaCalculator_->build();
 
     /********************************************************
      * Cache average EPE and ENE
