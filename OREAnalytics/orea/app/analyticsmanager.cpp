@@ -146,7 +146,6 @@ void AnalyticsManager::runAnalytics(
             a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
         } catch (const exception& e) {
             failedAnalytics_.push_back(a.first);
-            ALOG("Error running analytic with label '" << a.first << "': " << e.what());
             StructuredAnalyticsErrorMessage(a.first, "Failed Analytic", e.what());
         }
         a.second->stopTimer("Run " + a.second->label() + "Analytic");
