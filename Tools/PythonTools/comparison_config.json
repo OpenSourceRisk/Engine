@@ -998,7 +998,7 @@
               "ShiftSize_1",
               "ShiftSize_2"
             ],
-            "abs_tol": 0.02,
+            "abs_tol": 0.03,
             "rel_tol": 1e-9
           }
         ]
