@@ -39,14 +39,12 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 
     if (inputs_->rawCubeOutput()) {
         DLOG("Write raw cube under scenario " << label);
-        // analytic()->addReport("XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
         xvaAnalytic->getReport("XVA", "rawcube")->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
                                                          ".csv");
     }
 
     if (inputs_->netCubeOutput()) {
         DLOG("Write raw cube under scenario " << label);
-        // analytic()->addReport("XVA_STRESS"]["netcube_" + label] = xvaAnalytic->reports()["XVA"]["netcube"];
         xvaAnalytic->getReport("XVA", "netcube")->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
                                                          ".csv");
     }
@@ -71,7 +69,7 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
     if (inputs_->writeScenarios()) {
         DLOG("Write scenario report under scenario " << label);
         // analytic()->addReport("XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
-        xvaAnalytic->reports()["XVA"]["scenario"]->toFile(inputs_->resultsPath().string() + "/scenario" + label +
+        xvaAnalytic->getReport("XVA", "scenario")->toFile(inputs_->resultsPath().string() + "/scenario" + label +
                                                           ".csv");
     }
 }

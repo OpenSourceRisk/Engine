@@ -143,8 +143,15 @@ public:
         reports_[key][subKey] = report;
     }
     const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key, const std::string& subKey) {
-        return reports_[key][subKey];
+        auto it = reports_.find(key);
+        if (it != reports_.end()) {
+			auto it2 = it->second.find(subKey);
+			if (it2 != it->second.end())
+				return it2->second;
+		}
+        QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
     }
+
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
