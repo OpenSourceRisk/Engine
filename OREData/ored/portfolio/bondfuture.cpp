@@ -118,11 +118,10 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     checkDates(expiry, settlement);
 
     // identify CTD bond
-    //
-    // TODO use identifyCtdBond method
-    //
+    QL_REQUIRE(secList_.size() > 0, "BondFuture::build no DeliveryBasket given");
     string securityId = secList_.front();
-
+    if (secList_.size() > 1)
+        securityId = identifyCtdBond(engineFactory, expiry);
     ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
 
     // hardcoded values for bondfuture vs forward bond
@@ -402,48 +401,47 @@ void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
                                        << io::iso_date(settlement));
 }
 
-string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory) {
-
-    auto market = engineFactory->market();
+string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry) {
 
     // get settlement price for future
-    double sp = -10.0;
-    try {
-        // TODO implement futureprice method
-    } catch (const std::exception& e) {
-        // MESSAGE: failed to retrieve future price quote
-    }
-
-    // loop secList retrieve bondprice (bp) and conversion factor (cf)
-    // find lowest value for bp_i - sp x cf_i
+    double settlementPriceFuture;
+    //TODO get settlementPriceFuture from FutureRefData,
 
     double lowestValue = 1e6; // arbitray high number
     string ctdSec = string();
 
     for (const auto& sec : secList_) {
 
+        // create bond instrument
+        auto bond = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), sec);
+        // get value at expiry
+        QuantLib::ext::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
+            QuantLib::ext::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(bond.bond->pricingEngine());
+        QL_REQUIRE(drbe != nullptr,
+                   "fwd bond spread imply not supported for non-vanilla bonds or pe != discountingriskybondrengine");
+        double cleanBondPriceAtExpiry =
+            drbe->calculateNpv(expiry, expiry, bond.bond->cashflows()).npv - bond.bond->accruedAmount(expiry) / 100.0;
+
+        // get conversion factor
+        double conversionFactor = 1.0;
         try {
-            // TODO implement bondPrice method
-            double bp = 1.0; // market->bondPrice(sec)->value();
-            double cf = market->conversionFactor(sec)->value();
-            // if conversion factor not given, deduce from method...
-            double value = bp - sp * cf;
-
-            // store result
-            if (value < lowestValue) {
-                lowestValue = value;
-                ctdSec = sec;
-            }
-
+            conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
         } catch (const std::exception& e) {
             // MESSAGE: failed to retrieve bond price quote or conversion factor for SECID
+            // TODO implement Conversion Factor Method more generic than the existing...
+        }
+
+        // do the test, inspired by
+        //  HULL: OPTIONS, FUTURES, AND OTHER DERIVATIVES, 7th Edition, page 134
+        double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
+        if (value < lowestValue) {
+            lowestValue = value;
+            ctdSec = sec;
         }
     }
-    // Check if results
+
     QL_REQUIRE(!ctdSec.empty(), "No CTD bond found.");
-
     return ctdSec;
-
 } // BondFuture::ctdBond
 
 void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData) {
