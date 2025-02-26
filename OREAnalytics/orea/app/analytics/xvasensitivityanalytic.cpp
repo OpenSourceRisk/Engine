@@ -346,7 +346,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
 	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : xvaAnalytic->reports()["XVA"]) {
+            for (auto [name, rpt] : xvaAnalytic->reports()["XVA"]) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);

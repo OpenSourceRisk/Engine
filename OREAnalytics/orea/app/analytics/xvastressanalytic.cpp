@@ -174,7 +174,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : newAnalytic->reports().at("XVA")) {
+            for (auto [name, rpt] : newAnalytic->reports().at("XVA")) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     DLOG("Save and extend report " << name);
