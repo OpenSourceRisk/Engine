@@ -1755,7 +1755,12 @@
             "names": [
 		"eigenvector_1",
 		"eigenvector_2",
-		"eigenvector_3"
+		"eigenvector_3",
+		"eigenvector_4",
+		"eigenvector_5",
+		"eigenvector_6",
+		"eigenvector_7",
+		"eigenvector_8"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-4

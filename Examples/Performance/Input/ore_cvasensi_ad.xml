@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/cvasensi/cvasensi/ad</Parameter>
+    <Parameter name="outputPath">Output/cvasensi/ad</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">63</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>

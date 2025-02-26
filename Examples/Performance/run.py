@@ -2,7 +2,7 @@
 
 import subprocess as p
                                     # Legacy Examples
-cases = [ "run_multithreading.py"  # 41
+cases = [ "run_multithreading.py", # 41
           "run_sensi.py",          # 61
           "run_cvasensi.py"        # 56
          ]
