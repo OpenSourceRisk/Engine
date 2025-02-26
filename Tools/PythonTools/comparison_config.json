@@ -1731,6 +1731,36 @@
             "rel_tol": 1e-05
           }
         ]
+      },
+      "eigenvalues.csv": {
+        "keys": [
+          "number"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "value"
+            ],
+            "abs_tol": 1e-10,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
+      "eigenvectors.csv": {
+        "keys": [
+          "tenor"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"eigenvector_1",
+		"eigenvector_2",
+		"eigenvector_3"
+            ],
+            "abs_tol": 1e-10,
+            "rel_tol": 1e-6
+          }
+        ]
       }
     }
   },
