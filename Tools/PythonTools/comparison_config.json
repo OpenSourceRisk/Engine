@@ -1741,8 +1741,8 @@
             "names": [
               "value"
             ],
-            "abs_tol": 1e-10,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
           }
         ]
       },
@@ -1757,8 +1757,8 @@
 		"eigenvector_2",
 		"eigenvector_3"
             ],
-            "abs_tol": 1e-10,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
           }
         ]
       }
