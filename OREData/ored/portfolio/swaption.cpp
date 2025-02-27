@@ -28,6 +28,8 @@
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
@@ -60,35 +62,28 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 }
 } // namespace
 
-// This helper functionality checks the legs for constant definitions of the given 
-// notional, the rates and the spreads. Additional to this, the gearing must be equal to one.
-// Finally, there must be precisely one floating and one fixed leg for the trade to be "standard".
+// This helper functionality checks for constant definitions of the given 
+// notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
+// Additional to this, the gearing must be equal to one on all floating legs.
+// Finally, the floating legs must be of type IborCoupon, OvernightIndexedCoupon or AverageONIndexedCoupon.
+// If all those conditions are met, the trade is called standard.
 bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
-    // Fields to be checked on the fixed leg
-    Real constNotionalFixed = Null<Real>();
+
+    // Fields to be checked on the fixed legs
+    Real constNotional = Null<Real>();
     Real constRate = Null<Real>();
 
-    // Fields to be checked on the floating leg
-    Real constNotionalFloat = Null<Real>();
+    // Fields to be checked on the floating legs
     Real constSpread = Null<Real>();
-
-    // Store leg "indices" to avoid double legs
-    int indexFloatingLegs = Null<int>();
-    int indexFixedLegs = Null<int>();
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (auto const& c : legs[i]) { 
+           
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-
-                if (indexFloatingLegs == Null<int>()) 
-                    indexFloatingLegs = i;
-                else if (indexFloatingLegs != i)
-                    return false;
-
-                if(constNotionalFloat == Null<Real>()) 
-                    constNotionalFloat = cpn->nominal();
-                else if (!QuantLib::close_enough(cpn->nominal(), constNotionalFloat))
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
                     return false;
 
                 if (!QuantLib::close_enough(cpn->gearing() , 1.00))
@@ -98,31 +93,37 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                     constSpread = cpn->spread();
                 else if (!QuantLib::close_enough(cpn->spread(), constSpread))
                     return false;
+                
+                if (                    
+                    !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) 
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))                
+                )
+                    return false; // The trade must then be a non-standard type like e.g. CMS coupon
+
+                continue;
             }
 
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
-
-                if (indexFixedLegs == Null<int>()) 
-                    indexFixedLegs = i;
-                else if (indexFixedLegs != i)
-                    return false;
-                                    
-                if(constNotionalFixed == Null<Real>()) 
-                    constNotionalFixed = cpn->nominal();
-                else if (!QuantLib::close_enough(cpn->nominal(), constNotionalFixed))
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
                     return false;
    
                 if(constRate == Null<Real>())
                     constRate = cpn->rate();
                 else if (!QuantLib::close_enough(cpn->rate(), constRate))
                     return false;
+                
+                continue;
             }
+
+            return false; // Coupon could not be cast to one of the two main types
         }
     }
 
     // Both legs and fields must have been there at least once
-    if(constNotionalFixed == Null<Real>() || constNotionalFloat == Null<Real>() || 
-        constRate == Null<Real>() || constSpread == Null<Real>())
+    if(constNotional == Null<Real>() || constRate == Null<Real>() || constSpread == Null<Real>())
         return false; 
 
     // If no non-constant field and no other subtlety was found return true
