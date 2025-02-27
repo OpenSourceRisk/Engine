@@ -814,9 +814,11 @@ void XvaEngineCG::calculateDynamicDelta() {
         fxVegaConverter[ccyIndex] = CcLgmFxOptionVegaParConverter(*model_->cam(), ccyIndex, fxVegaTerms);
 
         // debug output
-        std::cout << "fx vega " << model_->currencies()[ccyIndex + 1] << ":" << std::endl;
-        std::cout << "dpardzero = \n" << fxVegaConverter[ccyIndex].dpardzero() << std::endl;
-        std::cout << "dzerodpar = \n" << fxVegaConverter[ccyIndex].dzerodpar() << std::endl;
+
+        // std::cout << "fx vega " << model_->currencies()[ccyIndex + 1] << ":" << std::endl;
+        // std::cout << "dpardzero = \n" << fxVegaConverter[ccyIndex].dpardzero() << std::endl;
+        // std::cout << "dzerodpar = \n" << fxVegaConverter[ccyIndex].dzerodpar() << std::endl;
+
         // end debug output
     }
 
