@@ -25,7 +25,7 @@
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
-
+#include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/builders/cdo.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/instruments/makecds.hpp>
@@ -459,14 +459,14 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     for (const auto& term : terms) {
         std::vector<double> recoveryRates;
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-        std::vector<QuantExt::CreditCurve::Seniority> seniorities;
+        std::vector<CdsTier> seniorities;
         for (const auto& name : basketData.remainingNames) {
             auto mappedName = creditCurveNameMapping(name);
             const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
             QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
             recoveryRates.push_back(creditCurve->recovery()->value());
             dpts.push_back(creditCurve->curve());
-            seniorities.push_back(creditCurve->refData().seniority);
+            seniorities.push_back(parseCdsTier(creditCurve->refData().seniority));
         }
 
         Handle<DefaultProbabilityTermStructure> indexCurve;
@@ -545,7 +545,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
             RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
             GaussCopulaBucketingLossModelBuilder modelBuilder{
-                -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020"};
+                -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020", false};
             auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, seniorities);
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(

@@ -251,6 +251,9 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
                 XMLUtils::addAttribute(doc, qNode, "optional", "true");
             XMLUtils::appendNode(quotesNode, qNode);
         }
+        if (!seniorityTier_.empty()) {
+            XMLUtils::addChild(doc, node, "SeniorityTier", seniorityTier_);
+        }
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));

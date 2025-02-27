@@ -78,6 +78,27 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
                                                               << "' or default configuration.");
 }
 
+
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId){
+    auto tmp = "__INDEXTRANCHE_" + creditCurveId;
+    return tmp;
+}
+
+QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                                                        const std::string& creditCurveId,
+                                                                        const std::string& configuration) {
+    Handle<QuantExt::CreditCurve> curve;
+    std::string name = indexTrancheSpecificCreditCurveName(creditCurveId);
+    try {
+        curve = market->defaultCurve(name, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find index tranche specific credit curve " << name << " so just using "
+                               << creditCurveId << " default curve.");
+        curve = market->defaultCurve(creditCurveId, configuration);
+    }
+    return curve;
+}
+
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
     auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
     return tmp;

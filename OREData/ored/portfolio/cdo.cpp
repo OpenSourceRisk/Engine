@@ -52,6 +52,7 @@
 #include <qle/utilities/time.hpp>
 #include <qle/utilities/creditcurves.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <numeric>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 
@@ -353,7 +354,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);
     
-    std::vector<QuantExt::CreditCurve::Seniority> seniorities;
+    std::vector<CdsTier> seniorities;
     std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
     vector<Real> recoveryRates;
 
@@ -362,12 +363,20 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     } 
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
-        Real mktRecoveryRate = market->recoveryRate(cc, config)->value();
+        auto creditCurve = indexTrancheSpecificCreditCurve(market, cc, config);
+
+        auto originalCurve = creditCurve->curve();
+        Real mktRecoveryRate = creditCurve->recovery()->value();
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
-        auto originalCurve = market->defaultCurve(cc, config)->curve();
         dpts.push_back(originalCurve);
         const auto& ref = market->defaultCurve(cc, config)->refData();
-        seniorities.push_back(ref.seniority);
+        auto seniority = CdsTier::SNRFOR;
+        try {
+            seniority = parseCdsTier(ref.seniority);
+        } catch (const std::exception& e) {
+            WLOG("Error parsing seniority for credit curve " << cc << "  got " << e.what());
+        }
+        seniorities.push_back(seniority);
         TLOG("Trade " << id() << ", Issuer " << cc << " recovery rate: " << recoveryRates.back());
     }
 
@@ -425,7 +434,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                     DLOG("Credit Curve " << creditCurves.front());
                     auto uncalibratedCurve = dpts.front();
                     auto calibratedCurve = result.curves.front();
-                    dpts = std::move(result.curves);
+                    
 
                     DLOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
                     DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
@@ -435,14 +444,30 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                             << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
                             << result.marketNpv[i] - result.impliedNpv[i]);
                     }
+                    /*
+                    TODO: DELETE DEBUG OUTPUT
                     std::set<double> times{0.5, 1., 1.5, 2., 3.5, 4., 5., 6.};
                     for(auto& maturity : result.cdsMaturity){
-                        
                         times.insert(uncalibratedCurve->timeFromReference(maturity-1));
                         times.insert(uncalibratedCurve->timeFromReference(maturity));
                         times.insert(uncalibratedCurve->timeFromReference(maturity+1));
-                        
                     }
+                    std::cout << "Constituent Curve Calibration results for creditCurve:" << creditCurveIdWithTerm() << std::endl;
+                    std::cout << "i,creditCurve,recoveryRate,basketNotional";
+                    for(auto& time : times){
+                        std::cout << "," << time;
+                    }
+                    std::cout << std::endl;
+                    for (size_t i = 0; i < creditCurves.size(); i++){
+                        std::cout << i << "," << creditCurves[i] << "," << recoveryRates[i] << ","
+                                  << basketNotionals[i];
+                        for(auto& time : times){
+                            std::cout << "," << dpts[i]->defaultProbability(time, true);
+                        }
+                        std::cout << std::endl;
+                    }
+                        */
+                    dpts = std::move(result.curves);
                 }
                 else{
                     WLOG("Calibration failed for creditCurve:" << creditCurveIdWithTerm() << " got " << result.errorMessage << " continue without index curve calibration");

@@ -118,6 +118,7 @@ public:
         QuantLib::Period& indexTerm() { return indexTerm_; }
         boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
+        string& seniorityTier() { return seniorityTier_; }
         //@}
 
     private:
