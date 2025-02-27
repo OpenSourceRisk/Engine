@@ -28,6 +28,8 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/utilities.hpp>
 namespace ore {
@@ -265,6 +267,25 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
     CONSOLE("OK");
     CONSOLEW("XVA_EXPLAIN: Generate Stresstests");
     auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic->impl().get())->parRates();
+
+    // Write out par rates
+    QuantLib::ext::shared_ptr<SimpleScenario> todayScenario = 
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "today", 1.0);
+    for (const auto& [key, value] : todaysRates)
+        todayScenario->add(key, value);
+    
+    QuantLib::ext::shared_ptr<SimpleScenario> mporScenario =
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "mpor", 1.0);
+    for (const auto& [key, value] : mporRates)
+        mporScenario->add(key, value);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto sw = ScenarioWriter(nullptr, scenarioReport);
+    sw.writeScenario(todayScenario, true);
+    sw.writeScenario(mporScenario, false);
+    analytic()->reports()[label()]["par_scenarios"] = scenarioReport;
+
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;
     const auto& sensitivityData = analytic()->configurations().sensiScenarioData;
