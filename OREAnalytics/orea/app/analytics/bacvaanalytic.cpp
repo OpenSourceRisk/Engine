@@ -61,7 +61,7 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     ReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
     LOG("BA-CVA Calculation - Completed");
 
-    analytic()->reports()[label()]["bacva"] = baCvaReport;
+    analytic()->addReport(label(), "bacva", baCvaReport);
 }
 
 } // namespace analytics

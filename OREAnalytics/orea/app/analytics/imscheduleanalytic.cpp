@@ -97,8 +97,8 @@ void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Schedule IM reports generated");
     MEM_LOG;
 
-    analytic()->reports()["IM_SCHEDULE"]["im_schedule"] = imScheduleSummaryReport;
-    analytic()->reports()["IM_SCHEDULE"]["im_schedule_trade"] = imScheduleTradeReport;
+    analytic()->addReport("IM_SCHEDULE", "im_schedule", imScheduleSummaryReport);
+    analytic()->addReport("IM_SCHEDULE", "im_schedule_trade", imScheduleTradeReport);
 }
 
 } // namespace analytics

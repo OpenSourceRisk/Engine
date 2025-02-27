@@ -37,32 +37,29 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<
 
 void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                  const map<Date, set<string>>& quotes, const Date& requestDate) {
-    for (auto const& d : csvLoader_->asofDates()) {
+    std::set<Wildcard> wildcards;
+    std::set<std::string> names;
 
-        std::set<Wildcard> wildcards;
-        std::set<std::string> names;
-
-        if (!inputs_->entireMarket()) {
-            if (auto q = quotes.find(d); q != quotes.end()) {
-                for (auto const& tmp : q->second) {
-                    Wildcard wc(tmp);
-                    if (wc.hasWildcard())
-                        wildcards.insert(wc);
-                    else
-                        names.insert(tmp);
-                }
+    if (!inputs_->entireMarket()) {
+        if (auto q = quotes.find(requestDate); q != quotes.end()) {
+            for (auto const& tmp : q->second) {
+                Wildcard wc(tmp);
+                if (wc.hasWildcard())
+                    wildcards.insert(wc);
+                else
+                    names.insert(tmp);
             }
         }
+    }
 
-        for (const auto& md : csvLoader_->loadQuotes(d)) {
-            if (!inputs_->entireMarket()) {
-                if (names.find(md->name()) != names.end() ||
-                    std::any_of(wildcards.begin(), wildcards.end(),
-                                [&md](const Wildcard& w) { return w.matches(md->name()); }))
-                    loader->add(md);
-            } else {
+    for (const auto& md : csvLoader_->loadQuotes(requestDate)) {
+        if (!inputs_->entireMarket()) {
+            if (names.find(md->name()) != names.end() ||
+                std::any_of(wildcards.begin(), wildcards.end(),
+                            [&md](const Wildcard& w) { return w.matches(md->name()); }))
                 loader->add(md);
-            }
+        } else {
+            loader->add(md);
         }
     }
 }

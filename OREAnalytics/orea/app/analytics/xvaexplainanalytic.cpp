@@ -224,18 +224,18 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     stressAnalytic->runAnalytic(loader);
     CONSOLEW("XVA_EXPLAIN: Write Reports");
-    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
-    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
+    auto xvaReport = stressAnalytic->getReport("XVA_STRESS", "xva");
+    analytic()->addReport(label(), "xvaExplain_details", xvaReport);
     XvaExplainResults xvaData(xvaReport);
 
     auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
-    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
+    analytic()->addReport(label(), "xvaExplain", xvaExplainReport);
 
     auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
-    analytic()->reports()[label()]["xvaExplain_summary"] = xvaExplainSummaryReport;
+    analytic()->addReport(label(), "xvaExplain_summary", xvaExplainSummaryReport);
     CONSOLE("OK");
 }
 
