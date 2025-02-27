@@ -16,11 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
+#include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
+#include <ored/model/utilities.hpp>
+#include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/strike.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
@@ -29,14 +33,11 @@
 #include <qle/models/marketobserver.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
-#include <ored/model/lgmbuilder.hpp>
-#include <ored/model/structuredmodelerror.hpp>
-#include <ored/model/utilities.hpp>
-#include <ored/utilities/dategrid.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/strike.hpp>
+#include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -407,8 +408,7 @@ void LgmBuilder::performCalculations() const {
     error_ = QL_MAX_REAL;
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
-        (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will be aborted."));
+        (continueOnError_ ? std::string("Calculation will proceed.") : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
@@ -463,9 +463,10 @@ void LgmBuilder::performCalculations() const {
             calibrationInfo.valid = true;
         }
     } else {
-        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
-                                       " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_).log();
+        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration target function value (" +
+                                       std::to_string(error_) + ") exceeds notification threshold (" +
+                                       std::to_string(bootstrapTolerance_) + ").";
+        StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
             auto d = getBasketDetails(calibrationInfo);

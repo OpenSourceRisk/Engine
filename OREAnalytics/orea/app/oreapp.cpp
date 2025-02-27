@@ -320,6 +320,9 @@ void OREApp::analytics() {
                 b.second->toFile(fileName);
             }
         }
+        
+        if (analyticsManager_->failedAnalytics().size() > 0)
+            QL_FAIL("Failed to run analytics " + boost::algorithm::join(analyticsManager_->failedAnalytics(), ","));
 
         CONSOLE("OK");
     } catch (std::exception& e) {

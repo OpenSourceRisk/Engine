@@ -28,6 +28,8 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/utilities.hpp>
 namespace ore {
@@ -222,18 +224,18 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     stressAnalytic->runAnalytic(loader);
     CONSOLEW("XVA_EXPLAIN: Write Reports");
-    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
-    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
+    auto xvaReport = stressAnalytic->getReport("XVA_STRESS", "xva");
+    analytic()->addReport(label(), "xvaExplain_details", xvaReport);
     XvaExplainResults xvaData(xvaReport);
 
     auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
-    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
+    analytic()->addReport(label(), "xvaExplain", xvaExplainReport);
 
     auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
-    analytic()->reports()[label()]["xvaExplain_summary"] = xvaExplainSummaryReport;
+    analytic()->addReport(label(), "xvaExplain_summary", xvaExplainSummaryReport);
     CONSOLE("OK");
 }
 
@@ -265,6 +267,25 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
     CONSOLE("OK");
     CONSOLEW("XVA_EXPLAIN: Generate Stresstests");
     auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic->impl().get())->parRates();
+
+    // Write out par rates
+    QuantLib::ext::shared_ptr<SimpleScenario> todayScenario = 
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "today", 1.0);
+    for (const auto& [key, value] : todaysRates)
+        todayScenario->add(key, value);
+    
+    QuantLib::ext::shared_ptr<SimpleScenario> mporScenario =
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "mpor", 1.0);
+    for (const auto& [key, value] : mporRates)
+        mporScenario->add(key, value);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto sw = ScenarioWriter(nullptr, scenarioReport);
+    sw.writeScenario(todayScenario, true);
+    sw.writeScenario(mporScenario, false);
+    analytic()->reports()[label()]["par_scenarios"] = scenarioReport;
+
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;
     const auto& sensitivityData = analytic()->configurations().sensiScenarioData;
