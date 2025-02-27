@@ -28,6 +28,7 @@ namespace QuantExt {
 
 class CcLgmFxOptionVegaParConverter {
 public:
+    CcLgmFxOptionVegaParConverter() = default;
     CcLgmFxOptionVegaParConverter(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency,
                                   const std::vector<QuantLib::Period>& optionTerms);
 
@@ -38,7 +39,7 @@ public:
 
 private:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
-    Size foreignCurrency_;
+    Size foreignCurrency_ = 0;
     std::vector<QuantLib::Period> optionTerms_;
 
     std::vector<Real> optionTimes_;
