@@ -65,10 +65,6 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 // Finally, there must be precisely one floating and one fixed leg for the trade to be "standard".
 bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
-    std::cout<< "Constant Check started ..."<< std::endl;
-    int kkk=0;
-    std::cin >>kkk;
-
     // Fields to be checked on the fixed leg
     Real constNotionalFixed = Null<Real>();
     Real constRate = Null<Real>();
