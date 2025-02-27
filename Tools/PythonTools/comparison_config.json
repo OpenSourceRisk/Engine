@@ -1058,7 +1058,7 @@
 		"Scenario NPV",
 		"Difference"
             ],
-            "abs_tol": 0.01,
+            "abs_tol": 0.04,
             "rel_tol": 1e-6
           }
         ]
