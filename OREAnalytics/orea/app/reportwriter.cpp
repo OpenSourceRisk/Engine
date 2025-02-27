@@ -30,6 +30,8 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 
+#include <ql/cashflows/floatingratecoupon.hpp>
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -158,12 +160,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FXRate(Local-Base)", double(), 10)
         .addColumn("PresentValue(Base)", double(), 10)
         .addColumn("BaseCurrency", string())
-        .addColumn("FloorStrike", double(), 6)
-        .addColumn("CapStrike", double(), 6)
-        .addColumn("FloorVolatility", double(), 6)
-        .addColumn("CapVolatility", double(), 6)
-        .addColumn("EffectiveFloorVolatility", double(), 6)
-        .addColumn("EffectiveCapVolatility", double(), 6);
+        .addColumn("FloorStrike", double(), 10)
+        .addColumn("CapStrike", double(), 10)
+        .addColumn("FloorVolatility", double(), 10)
+        .addColumn("CapVolatility", double(), 10)
+        .addColumn("EffectiveFloorVolatility", double(), 10)
+        .addColumn("EffectiveCapVolatility", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
@@ -243,11 +245,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
-        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn, i));
-        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn, i));
-        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn, i));
-        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn, i));
-        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn, i));
+        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn, i));
+        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn, i));
+        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn, i));
+        string ccy = boost::get<string>(cashflowReport.data(ccyColumn, i));
+        Real pv = boost::get<Real>(cashflowReport.data(pvColumn, i));
         Real fx = 1.0;
     // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
@@ -802,6 +804,77 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ssNettingSets, const std::map<std::string, std::string>& tradeNettingSetMap, Real outputThreshold,
+                                             Size outputPrecision) {
+
+    LOG("Writing XVA Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
+
+    report.addColumn("NettingSetId", string());
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
+    report.addColumn("Currency", string());
+    report.addColumn("Base XVA", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
+
+    // Make sure that we are starting from the start
+    ssTrades->reset();
+    while (SensitivityRecord sr = ssTrades->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            auto it = tradeNettingSetMap.find(sr.tradeId);
+            report.next();
+            report.add(it != tradeNettingSetMap.end() ? it->second : "");
+            report.add(sr.tradeId);
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    ssNettingSets->reset();
+    while (SensitivityRecord sr = ssNettingSets->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add("");
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
 void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
@@ -829,6 +902,7 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
     LOG("Sensitivity Config report finished.");
 }
 
+namespace {
 template <class T>
 void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
@@ -839,6 +913,24 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
+
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+                 const std::size_t precision) {
+    auto p = parseBoostAny(result, precision);
+    if (boost::starts_with(p.first, "vector")) {
+        vector<std::string> tokens;
+        string vect = p.second;
+        vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        boost::split(tokens, vect, boost::is_any_of(","));
+        for (Size i = 0; i < tokens.size(); ++i) {
+            boost::trim(tokens[i]);
+            report.next().add(tradeId).add(field + "[" + std::to_string(i) + "]").add(p.first.substr(7)).add(tokens[i]);
+        }
+    } else {
+        report.next().add(tradeId).add(field).add(p.first).add(p.second);
+    }
+}
+} // namespace
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
                                                 QuantLib::ext::shared_ptr<Market> market,
@@ -862,22 +954,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, precision);
-                if (boost::starts_with(p.first, "vector")) {
-                    vector<std::string> tokens;
-                    string vect = p.second;
-                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                    boost::split(tokens, vect, boost::is_any_of(","));
-                    for (Size i = 0; i < tokens.size(); i++) {
-                        boost::trim(tokens[i]);
-                        report.next()
-                            .add(tradeId)
-                            .add(kv.first + "[" + std::to_string(i) + "]")
-                            .add(p.first.substr(7))
-                            .add(tokens[i]);
-                    }
-                } else
-                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                addAnyResults(report, tradeId, kv.first, kv.second, precision);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -939,22 +1016,25 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, precision);
-                        if (boost::starts_with(p.first, "vector")) {
-                            vector<std::string> tokens;
-                            string vect = p.second;
-                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                            boost::split(tokens, vect, boost::is_any_of(","));
-                            for (Size i = 0; i < tokens.size(); i++) {
-                                boost::trim(tokens[i]);
-                                report.next()
-                                    .add(tradeId)
-                                    .add(kv.first + "[" + std::to_string(i) + "]")
-                                    .add(p.first.substr(7))
-                                    .add(tokens[i]);
+                        addAnyResults(report, tradeId, kv.first, kv.second, precision);
+                    }
+                }
+            }
+
+            // add coupon additional results
+
+            for (Size i = 0; i < trade->legs().size(); ++i) {
+                for (Size j = 0; j < trade->legs()[i].size(); ++j) {
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(trade->legs()[i][j])) {
+                        try {
+                            c->rate(); // ensure the additional results results are available
+                            for (auto const& kv : c->additionalResults()) {
+                                addAnyResults(report, tradeId,
+                                              kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                              kv.second, precision);
                             }
-                        } else
-                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        } catch (...) {
+                        }
                     }
                 }
             }
@@ -1099,6 +1179,34 @@ void ReportWriter::writeRunTimes(ore::data::Report& report, const Timer& timer) 
 
     report.end();
     LOG("Finished writing runtimes report")
+}
+
+void ReportWriter::writeTimeAveragedNettedExposure(
+    ore::data::Report& report,
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>& data) {
+
+    LOG("Writing time averaged netted exposure");
+
+    report.addColumn("NettingSetId", string())
+        .addColumn("Sample", Size())
+        .addColumn("PosExpNoColl", double(), 4)
+        .addColumn("NegExpNoColl", double(), 4)
+        .addColumn("PosExpWithColl", double(), 4)
+        .addColumn("NegExpWithColl", double(), 4);
+
+    for (auto const& [n, avg] : data) {
+        for (Size k = 0; k < avg.size(); ++k) {
+            report.next()
+                .add(n)
+                .add(k)
+                .add(avg[k].positiveExposureBeforeCollateral)
+                .add(avg[k].negativeExposureBeforeCollateral)
+                .add(avg[k].positiveExposureAfterCollateral)
+                .add(avg[k].negativeExposureAfterCollateral);
+        }
+    }
+
+    report.end();
 }
 
 void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
@@ -2098,7 +2206,6 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     
     QL_REQUIRE(t0NpvReport->rows() == t0NpvLaggedReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1NpvLaggedReport->rows(), "different number of rows in npv reports");
-    QL_REQUIRE(t0NpvReport->rows() == t1NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(t0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
@@ -2320,6 +2427,116 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
         ALOG("Error during xva explain report generation, got " << e.what());
     }
 }
+  
+void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
+    report.addColumn(header, string());
+    report.next().add(xml);
+    report.end();
+}
 
+void ReportWriter::writeBaCvaReport(const QuantLib::ext::shared_ptr<BaCvaCalculator>& baCvaCalculator,
+                                    ore::data::Report& reportOut) {
+
+    reportOut.addColumn("Counterparty", string())
+        .addColumn("NettingSet", string())
+        .addColumn("Analytic", string())
+        .addColumn("Value", double(), 6);
+
+    std::map<std::string, std::set<std::string>> counterpartyNettingSets = baCvaCalculator->counterpartyNettingSets();
+
+    reportOut.next().add("All").add("All").add("BA_CVA_CAPITAL").add(baCvaCalculator->cvaResult());
+
+    for (auto it = counterpartyNettingSets.begin(); it != counterpartyNettingSets.end(); it++) {
+        reportOut.next().add(it->first).add("All").add("sCVA").add(baCvaCalculator->counterpartySCVA(it->first));
+        reportOut.next().add(it->first).add("All").add("RiskWeight").add(baCvaCalculator->riskWeight(it->first));
+        for (auto n : it->second) {
+            reportOut.next().add(it->first).add(n).add("EAD").add(baCvaCalculator->EAD(n));
+            reportOut.next().add(it->first).add(n).add("EffMaturity").add(baCvaCalculator->effectiveMaturity(n));
+            reportOut.next().add(it->first).add(n).add("DiscountFactor").add(baCvaCalculator->discountFactor(n));
+        }
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream>& ss,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    ss->reset();
+    while (CvaSensitivityRecord sr = ss->next()) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    for (auto sr : records) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
+                                         ore::data::Report& reportOut) {
+
+    LOG("Writing SA CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskType", string())
+        .addColumn("CvaType", string())
+        .addColumn("MarginType", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("Bucket", string())
+        .addColumn("Value", double(), 4);
+
+    for (auto sr : sensis) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.riskType));
+        reportOut.add(to_string(sr.cvaType));
+        reportOut.add(to_string(sr.marginType));
+        reportOut.add(sr.riskFactor);
+        reportOut.add(sr.bucket);
+        reportOut.add(sr.value);
+    }
+
+    reportOut.end();
+}
+  
 } // namespace analytics
 } // namespace ore

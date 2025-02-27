@@ -185,10 +185,11 @@ QuantExt::RandomVariable NumericLgmRiskParticipationAgreementEngineTLock::comput
     Real multiplier = (arguments_.payer ? -1.0 : 1.0) * arguments_.bondNotional * arguments_.bond->notional(settlement);
 
     if (arguments_.terminationDate == referenceDate_) {
-        Real price = BondFunctions::cleanPrice(*arguments_.bond, **treasuryCurve_, settlement);
+        Real priceAmount = BondFunctions::cleanPrice(*arguments_.bond, **treasuryCurve_, settlement);
+        Bond::Price price(priceAmount, Bond::Price::Clean);
         Real yield =
             BondFunctions::yield(*arguments_.bond, price, arguments_.dayCounter, Compounded, Semiannual, settlement);
-        Real dv01 = price / 100.0 *
+        Real dv01 = price.amount() / 100.0 *
                     BondFunctions::duration(*arguments_.bond, yield, arguments_.dayCounter, Compounded, Semiannual,
                                             Duration::Modified, settlement);
         return QuantExt::RandomVariable(gridSize(), multiplier * (arguments_.referenceRate - yield) * dv01 *
@@ -209,10 +210,11 @@ QuantExt::RandomVariable NumericLgmRiskParticipationAgreementEngineTLock::comput
         modelCurve.state(states[i]);
 
         // use hardcoded conventions for Treasury bonds
-        Real price = BondFunctions::cleanPrice(*arguments_.bond, modelCurve, settlement);
+        Real priceAmount = BondFunctions::cleanPrice(*arguments_.bond, modelCurve, settlement);
+        Bond::Price price(priceAmount, Bond::Price::Clean);
         Real yield =
             BondFunctions::yield(*arguments_.bond, price, arguments_.dayCounter, Compounded, Semiannual, settlement);
-        Real dv01 = price / 100.0 *
+        Real dv01 = price.amount() / 100.0 *
                     BondFunctions::duration(*arguments_.bond, yield, arguments_.dayCounter, Compounded, Semiannual,
                                             Duration::Modified, settlement);
 

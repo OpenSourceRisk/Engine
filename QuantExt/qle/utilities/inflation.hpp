@@ -69,8 +69,7 @@ extractAllInflationUnderlyingFromBond(const QuantLib::ext::shared_ptr<QuantLib::
 namespace ZeroInflation {
 
 //! Check if today - availabilityLag is already known, otherwise return the fixingDate of the previous fixing
-QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date& asof);
-
+QuantLib::Date lastAvailableFixing(const QuantLib::InflationIndex& index, const QuantLib::Date& asof);
 
 //! Computes a CPI fixing giving an zeroIndex, with interpolation if needed 
 QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index, const QuantLib::Date& maturity,
@@ -80,8 +79,7 @@ QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflation
 //! derives the zero inflation curve base date based on the useLastKnownFixing rule
 QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
-                             const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index);
-
+                             const QuantLib::ext::shared_ptr<QuantLib::InflationIndex>& index);
 
 //! computes the fixingDate for ZC CPI Swap following the rule
 //! for an interpolated index it is d - obsLag but 

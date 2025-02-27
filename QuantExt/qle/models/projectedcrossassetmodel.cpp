@@ -58,8 +58,9 @@ getProjectedCrossAssetModel(const QuantLib::ext::shared_ptr<CrossAssetModel>& mo
 
     // build projected cam and return it
 
-    return QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm(),
-                                               model->measure(), model->discretization());
+    return QuantLib::ext::make_shared<CrossAssetModel>(
+        parametrizations, correlation, model->salvagingAlgorithm(), model->measure(), model->discretization(),
+        unwrapPiecewiseIntegrator(model->integrator()), model->piecewiseIntegrationWrapper());
 }
 
 std::vector<Size> getStateProcessProjection(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,

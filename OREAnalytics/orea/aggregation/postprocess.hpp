@@ -174,7 +174,9 @@ public:
         //! Treatment of the initial difference between vm collateral balance and mtm
         //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
         //! and vice-versa for over-collateralisation in case of positive mtm
-        const bool firstMporCollateralAdjustment = false);
+        const bool firstMporCollateralAdjustment = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -183,11 +185,12 @@ public:
     const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
-    //! Return list of Trade IDs in the portfolio
+    //! Return map of Trade IDs to cube trade indices
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
-    //! Return list of netting set IDs in the portfolio
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    //! Return map netting set IDs to (net-)cube netting set indices
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
     }
@@ -245,6 +248,10 @@ public:
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
   
+    //! Return the time-averaged pathwise positive and negative exposures before and after collateral
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+    timeAveragedNettedExposure() const;
+
     //! Return Netting Set CVA Hazard Rate Sensitivity vector
     vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitivity vector
@@ -311,6 +318,7 @@ public:
     const QuantLib::ext::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
     const QuantLib::ext::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
+
     //! Return the dynamic initial margin cube (regression approach)
     //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets
@@ -394,6 +402,7 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_;
+    bool continueOnError_;
 };
 
 } // namespace analytics

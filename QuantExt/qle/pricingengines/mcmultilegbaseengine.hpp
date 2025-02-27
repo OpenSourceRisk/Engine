@@ -33,6 +33,16 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
+//#include <boost/archive/binary_iarchive.hpp>
+//#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
+
 namespace QuantExt {
 
 // statistics
@@ -62,7 +72,7 @@ class McMultiLegBaseEngine {
 public:
     enum RegressorModel { Simple, LaggedFX };
 
-protected:
+//protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
         input to AmcCalculator::simulatePath().
@@ -84,6 +94,9 @@ protected:
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false);
+
+    //! Destructor
+    virtual ~McMultiLegBaseEngine() {}
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -143,6 +156,16 @@ protected:
             amountCalculator;
     };
 
+    // overwrite function to transform values going into regression
+    // current usage in the fwd bond case
+    virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                                                      const std::set<Real>& exerciseXvaTimes,
+                                                      const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
+        return pathValueUndDirty;
+    };
+
+    virtual bool useOverwritePathValueUndDirty() const { return false; };
+
     // class representing a regression model for a certain observation (= xva, exercise) time
     class RegressionModel {
     public:
@@ -157,6 +180,8 @@ protected:
         // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
         RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
                              const std::set<Real>& pathTimes) const;
+        // is this model initialized and trained?
+        bool isTrained() const { return isTrained_; }
 
     private:
         Real observationTime_ = Null<Real>();
@@ -164,19 +189,30 @@ protected:
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
         Matrix coordinateTransform_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_ =
+            std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>{};
         Array regressionCoeffs_;
+
+        Size basisDim_ = 0;
+        Size basisOrder_ = 0;
+        LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
+        Size basisSystemSizeBound_ = Null<Size>();
+
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
 
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
+        MultiLegBaseAmcCalculator() = default;
         MultiLegBaseAmcCalculator(
             const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
             const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelRebate,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
@@ -199,6 +235,7 @@ protected:
         std::set<Real> xvaTimes_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelRebate_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
         Real resultValue_;
@@ -211,6 +248,11 @@ protected:
         bool includeReferenceDateEvents_;
 
         std::vector<Filter> exercised_;
+
+        // used for serialisation of amc trianing
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
+
     };
 
     // generate the mc path values of the model process
@@ -224,7 +266,7 @@ protected:
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                          std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto,
+                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
@@ -249,5 +291,6 @@ protected:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
+
 
 } // namespace QuantExt

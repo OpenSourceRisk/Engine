@@ -48,9 +48,6 @@ void StressTestAnalyticImpl::setUpConfigurations() {
 
 void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("StressTestAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -64,6 +61,8 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     CONSOLEW("StressTestAnalytic: Build Portfolio");
     analytic()->buildPortfolio();
     CONSOLE("OK");
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
@@ -102,16 +101,13 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                   *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
                   inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
 
-    analytic()->reports()[label()]["stress"] = report;
+    analytic()->addReport(label(), "stress", report);
     if (cfReport) {
-        analytic()->reports()[label()]["stress_cashflows"] = cfReport;
+        analytic()->addReport(label(), "stress_cashflows", cfReport);
     }
 
     CONSOLE("OK");
 }
-
-StressTestAnalytic::StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {}
 
 } // namespace analytics
 } // namespace ore

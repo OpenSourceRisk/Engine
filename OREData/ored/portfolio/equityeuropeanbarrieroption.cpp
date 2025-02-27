@@ -52,6 +52,8 @@ void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFa
     QL_REQUIRE(barrier_.levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barrier_.style().empty() || barrier_.style() == "European", "Only european barrier style suppported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxEuropeanBarrierOption");
+    QL_REQUIRE(!barrier_.overrideTriggered(),
+               "EquityEuropeanBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
     assetName_ = equityName();
 

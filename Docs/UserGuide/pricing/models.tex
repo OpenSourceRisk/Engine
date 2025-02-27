@@ -1,0 +1,303 @@
+\section{Pricing Models}
+\label{sec:models}
+
+%--------------------------------------------------------------------------------
+\subsection{Bachelier Model}
+\label{models:bachelier}
+
+Under the Bachelier model it is assumed the asset price S is normally distributed 
+and follows an Arithmetic Brownian Motion process (Haug, 1997) Ch 1.3.1:
+$$
+dS=\sigma(t)\,dW(t)
+$$
+where $dW(t)$ is a Wiener process. \\
+
+Then, the Bachelier model gives the following analytical solution for the price 
+at expiry of a call/put option with strike $K$, on an underlying asset with price $S$, 
+and normal volatilities $\sigma$:
+$$
+\mbox{Bachelier}(K,S,v,\omega)=v\, \phi\left(\omega\,\frac{S-K}{v}\right)
++\omega\, (S-K) \,\Phi\left(\omega\,\frac{S-K}{v}\right)
+$$
+where
+\begin{itemize}
+\item $K$: strike price
+\item $S$: price of the underlying asset
+\item $T$: time to expiration in years
+\item  terminal volatility $v$: $\displaystyle v^2(T)=\int_0^T\sigma^2(t)\,dt$ 
+\item $\sigma(t)$: instantaneous volatility of the underlying asset price
+\item $\omega$: 1 for a call option and -1 for a put option
+\item $\Phi(\cdot)$: the cumulative standard normal distribution
+\item $\phi(\cdot)$: the standard normal density function
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Black Model, Shifted Black Model}
+\label{models:black}
+
+In Black's model it is assumed that variable $F$ for future times t follows a Geometric 
+Brownian Motion:
+$$
+dF/F=\mu(t)+\sigma(t)\,dW(t)
+$$
+where $\mu(t)$ is the drift and $dW(t)$ is a Wiener process. If $F$ is a forward price 
+or yield, and the Wiener process is assumed in the T-forward measure, then the Geometric 
+Brownian Motion is drift-free, $\mu(t)\equiv 0$.
+
+This leads to the Black76 analytic formula, see (Lichters, Stamm, Gallagher, 2015) 
+Appendix C.1, for the price at expiry of a call or put option on underlying asset $F$ 
+with strike $K$ and log-normal volatilities $\sigma$: 
+$$
+\mbox{Black}(K,F ,v,\omega)=\omega\,\left\{F\,\Phi(\omega\, d_+) - K\,\Phi(\omega \, d_-)\right\}
+$$
+where
+\begin{itemize}
+\item $K$: strike rate
+\item $F$: the underlying asset forward price $F$
+\item $\sigma(t)$: the instantaneous log-normal volatility of $F$
+\item  terminal volatility $v$: $\displaystyle v^2=\int_0^T\sigma^2(t)\,dt$ 
+\item $\omega$: 1 for call, -1 for put
+\item $\Phi(\cdot)$: the cumulative standard normal distribution
+\item $\displaystyle d_+ = \frac{1}{v}\left(\ln\frac{F}{K}+ \frac{1}{2}v^2\right)$
+\item $d_-= d_+ - v$
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsubsection*{Shifted Black model}
+
+To apply the Black model in low- or negative-rate scenarios, one can assume displaced 
+Geometric Brownian Motion, introducing a displacement parameter $\alpha\geq 0$ into 
+the dynamics
+$$
+d(F + \alpha) = (F + \alpha)\,\sigma(t)\,dW
+$$
+This parameter is the same for the entire volatility surface.
+
+The present value of a call or put (assuming displaced GBM) uses 
+the same analytical solution as the previous section (Black formula), but with 
+forward rate $F$ and strike $K$ amended to include the displacement parameter 
+$\alpha$:
+\begin{align*}
+F_{\mbox{shifted}} &= F + \alpha \\
+K_{\mbox{shifted}} &= K + \alpha
+\end{align*}
+
+%--------------------------------------------------------------------------------
+\subsection{Linear Terminal Swap Rate model (LTSR)}
+\label{models:LTSR}
+
+CMS-linked cash flows (in CMS Swaps and CMS Cap/Floors) are priced using Terminal 
+Swap Rate Models to replicate the payoff with quoted market Swaptions, i.e.
+\begin{align*}
+V(0) &= A(0)\,\E(\alpha(S(t))\,f(S(t))) \\
+&= A(0)\,\alpha(S(0))\,f(S(0)) +\int_{-\infty}^{S(0)} f'' (k)\,p(k)\,dk 
++ \int_{S(0)}^\infty f''(k)\,c(k)\,dk
+\end{align*}
+where
+\begin{itemize}
+\item $V(0)$: the NPV at time zero of a CMS-linked cash flow
+\item $\E(\dots)$: the expectation in the physical annuity measure
+\item $S(t)$: the relevant Swap rate observed at fixing time $t$
+\item $A(t)$: the NPV of the annuity (w.r.t. physical settlement) at fixing 
+time $t$
+\item $P(t,T)$: the discount factor between fixing time t and payment time $T$
+\item $\alpha(s)=\E(P(t,T)/A(t) | S(t) = s)$: the annuity mapping function
+\item $f(S(t))$: the payoff depending on $S(t)$ and paid at time $T$
+\item $p(k)$: the NPV of a put (receiver Swaption with physical settlement), 
+struck at strike $k$
+\item $c(k)$: the NPV of a call (payer Swaption with physical settlement), 
+struck at strike $k$
+\end{itemize}
+See (Andersen \& Piterbarg, 2010), Ch. 16.3 and Ch. 16.6. 
+
+The LTSR is specified by the annuity mapping function $\alpha(s)=a\,s+b$, 
+where the coefficient $b$ is determined by a ``no arbitrage'' condition and $a$ 
+is linked to a one-factor model mean reversion parameter $\kappa$, see 
+(Andersen \& Piterbarg, 2010), formulas 16.27 and 16.28, for details. It 
+supports normal, log-normal, and shifted log-normal volatilities. Besides the 
+mean reversion, the lower and upper integrations bounds are the parameters of 
+this model.
+
+For log-normal volatilities, the Hagan model can also be used. Hagan model 
+parameters are Mean Reversion and Yield Curve Model. The Yield Curve Model 
+parameter can take the following values: Standard, ExactYield, ParallelShifts, 
+NonParallelShifts. Each of these models corresponds to a certain specification 
+of the annuity mapping function $\alpha(s)$ \cite{Hagan_2003}.
+
+%--------------------------------------------------------------------------------
+\subsection{Log-Normal Swap Rate Model (LSM)}
+\label{models:LSM}
+
+CMS Spread Options with payoff $\max(\varphi(S_1(t)-S_2(t)-K),0)$ are priced using 
+the LSM \cite{Brigo_Mercurio_2006} Ch 13.6.2, optionally with partial smile 
+adjustment \cite{Berrahoui_2004}. This model supports log-normal swap rate dynamics 
+and has been extended to support shifted log-normal and normal dynamics as well
+\cite{Caspers_2015}. 
+
+The model is given by:
+\begin{align*}
+dS_1 &= \mu_1 \,(S_1+d_1)\,dt+\sigma_1\, (S_1+d_1)\,dW_1 \\
+dS_2 &= \mu_2 \,(S_2+d_2)\,dt+\sigma_2\, (S_2+d_2)\,dW_2 \\
+dW_1 \,dW_2 & =\rho \,dt
+\end{align*}
+in the shifted lognormal case ($d_1=d_2=0$ in the lognormal case), and by
+\begin{align*}
+dS_1 &=\mu_1 dt + \sigma_1\, dW_1 \\
+dS_2 &=\mu_2 dt +\sigma_2\, dW_2 \\
+dW_1\,dW_2 &=\rho\,dt
+\end{align*}
+in the normal case. All equations are in the T-forward measure. 
+
+Here:
+\begin{itemize}
+\item $t$: fixing Time
+\item $T$: payment Time
+\item $S_1,S_2$: Swap Rates
+\item $K$: strike
+\item $\varphi$: +1 for a call, -1 for a put
+\item $\mu_1,\mu_2$: implied drifts, see below
+\item $\sigma_1,\sigma_2$: swap rate volatilities
+\item $\rho$: instantaneous correlation
+\end{itemize}
+The drifts are determined as deterministic, constant values such that the 
+T-forward expectation matches the convexity-adjusted swap rate with identical 
+fixing and payment time as the CMS Spread payoff.  The convexity adjustment 
+for the single swap rates are computed using one of the models in Section 
+\ref{models:LTSR}.
+
+The swap rate volatilities are either taken as the market ATM volatilities of 
+the swap rates with the option expiry equal to the fixing time of the CMS Spread 
+payoff, or (optionally) as smile volatilities with strikes $S_2+K$ (for $S_1$) and 
+$S_1-K$ (for $S_2$), see \cite{Berrahoui_2004} for the rationale of the latter.
+
+The instantaneous correlation is an external input to the model, which can be 
+implied from quoted CMS Spread option premiums.
+
+The (shifted) lognormal model allows for a semi-analytical solution involving 
+a one-dimensional numerical integration which can be carried out using a 
+Gauss-Hermite integration scheme, see \cite{Brigo_Mercurio_2006} Ch 13.6.2 for 
+the details. The normal model can be solved using the Bachelier option pricing 
+formula, see \cite{Caspers_2015}.
+
+%--------------------------------------------------------------------------------
+\subsection{One-Factor Linear Gauss Markov model (LGM)}
+\label{models:LGM}
+
+The starting point for the one-factor LGM model is the one-factor Hull-White (HW)
+model with time-dependent parameters in the bank account measure. 
+$$
+dr_t = (\theta_t-\lambda_t \,r_t)\,dt + \sigma_t\, dW_t
+$$
+
+where:
+\begin{itemize}
+\item $\theta_t$: long-term mean interest rate
+\item $\lambda_t$: mean reversion parameter
+\item $r_t$: short interest rate 
+\item $\sigma_t$: volatility of the short rate
+\item $dW_t$: a Wiener process
+\end{itemize}
+
+The LGM model is closely related to the HW model, and it can e.g. be 
+obtained from the HW model by means of a change of variables and change of measure. 
+In the LGM, both numeraire and zero bond price are closed-form functions 
+\begin{align*}
+N(t) &= \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\} \\
+P(t,T,z_t)
+&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}.
+\end{align*}
+of a single Gaussian random variable $z_t$,
+$$
+dz_t=\alpha_t\, dW_t.
+$$
+The LGM parameters $H_t$ and $\zeta_t$ can be related to the HW 
+model's mean reversion speed $\lambda_t$ and volatility $\sigma_t$ above.
+The model's volatility functions are calibrated to Swaptions, choosing 
+a limited range of Swaption expiries and underlying Swap maturities from the 
+ATM surface or adapted to the deal strike. %(Open Source Risk, 2017)
+%
+%\medskip
+%The full volatility smile (cube) is taken into account where available. LGM can 
+%handle both normal and log-normal volatilities 
+For details refer to \cite{LSG_2015} Ch. 11.1.
+
+\medskip
+Pricing with LGM is done, depending on product type, either
+\begin{itemize}
+\item semi-analytically using the closed form expressions for numeraire and 
+zero bond above
+\item using a backward induction approach on a one-dimensional 
+LGM lattice, or
+\item using Monte Carlo simulation.
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Barone-Adesi and Whaley Model}
+\label{models:barone-adesi}
+
+In the Barone-Adesi and Whaley model, the price of an American option is subdivided 
+into a European option component (priced with Black76) and an early exercise premium 
+component. Summed up, the prices of these two components give the American option price.   
+
+The early exercise premium is approximated with a free boundary value problem for an 
+ordinary differential equation, which in turn, is solved numerically by quadratic 
+approximation. 
+
+The starting point for the approximation is the Black-Scholes partial differential 
+equation for the value of an FX Option with price $V$:
+$$
+\frac{1}{2} \sigma^2\, S^2 \frac{\partial^2 V}{\partial S^2} + 
+(r_d -r_f)\, S\, \frac{\partial V}{\partial S} - r_d\, V
++\frac{\partial V}{\partial t} = 0
+$$
+where:
+\begin{itemize}
+\item $V$: the option price
+\item $S$: the underlying spot FX rate between domestic and foreign currencies
+\item $\sigma$: the volatility of the FX rate
+\item $r_d$: the domestic interest rate
+\item $r_f$: the foreign interest rate
+\end{itemize}
+
+For American options, there is no known analytic solution to the differential equation 
+above. Barone-Adesi and Whaley decomposes the American option price into the European 
+price and the early exercise premium:
+$$
+C_{Amer} (S,T)= C_{Euro} (S,T) + E_c (S,T)
+$$
+where:
+\begin{itemize}
+\item $C_{Amer} (S,T)$: the price of an American FX call option on underlying FX 
+rate $S$ at expiry $T$
+\item $C_{Euro} (S,T)$: the price of a European FX call option on underlying FX 
+rate $S$ at expiry $T$
+\item $E_c (S,T)$: the early exercise premium of the American FX call option
+\end{itemize}
+
+Using that $E_c (S,T)$ also satisfies the Black-Scholes partial differential equation, 
+and removing terms involving $\partial V / \partial t$ that are negligible, it is found 
+that:
+$$
+C_{Amer} (S,T)=\left\{ \begin{array}{lcl}
+C_{Euro}(S,T) + A_2\left(\frac{S}{S^*}\right)^{q_2} &;& S < S^*\\
+S-K &;& S\geq S^* 
+\end{array}
+\right.
+$$
+where:
+\begin{itemize}
+\item $\displaystyle A_2=\frac{S^*}{q_2} \left(1-e^{-r_f (T-t)}\right)\,\Phi(d_1\,S^*)$
+\item $\displaystyle q_2=\frac{1}{2}\left(-(\beta-1)+\sqrt{(\beta-1)^2+4\alpha/h}\right)$
+\item $\displaystyle \alpha =\frac{2\,r_d}{\sigma^2}$ 
+\item $\displaystyle \beta=2\frac{r_d-r_f}{\sigma^2}$ 
+\item $\displaystyle h(T)=1-e^{-r_d (T-t)}$
+\item $\displaystyle d_1(S)=\frac{1}{\sigma\sqrt{T-t}}\,
+	\left(\ln\frac{S}{K}+\left(r_d - r_f + \frac{\sigma^2}{2}\right)(T-t)\right)$
+\item $S^*$: the FX rate below which the option should be exercised
+\item $K$: the strike FX rate
+\item $S^*$ solves:
+$\displaystyle S^*-K = C_{Euro}(S^*,T) + \frac{S^*}{q_2}  \left(1-e^{-r_f (T-t)}\right) \Phi(d_1 \,S^*)$
+\end{itemize}
+
+For more details refer to the original Barone-Adesi \& Whaley paper \cite{Barone-Adesi_1987}.
+

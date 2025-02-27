@@ -20,7 +20,7 @@
     \brief some utility functions
     \ingroup utilities
 */
-
+#include <ql/tuple.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/context.hpp>
@@ -129,6 +129,8 @@ public:
     std::string commName() const;
     // get inf name INF-EUHICP (i.e. without the #L, #F suffix)
     std::string infName() const;
+    // get if inf fixing should be interpolated
+    bool infIsInterpolated() const { return infIsInterpolated_; }
     // comparisons (based on the name)
     bool operator==(const IndexInfo& j) const { return name() == j.name(); }
     bool operator!=(const IndexInfo& j) const { return !(*this == j); }
@@ -149,6 +151,9 @@ private:
     QuantLib::ext::shared_ptr<ZeroInflationIndex> inf_;
     QuantLib::ext::shared_ptr<Index> generic_;
     std::string commName_, infName_;
+    // Inflation indices are never interpolated but coupons can use an interpolated fixing
+    // for convencience we define indexes which are will return interpolated fixings instead of flat fixings.
+    bool infIsInterpolated_;
 };
 
 std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
@@ -201,7 +206,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
   The function returns a ql inflation index accounting for the interpolation (but without ts attached),
   and the ORE index name without the #F, #L suffix.
 */
-std::pair<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string>
+QuantExt::ext::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);
 
 /*! Builds an index (EQ-SP5-EUR, FX-ECB-EUR-USD, ...) that can be used in scripted trades, from an underlying */

@@ -48,9 +48,9 @@ public:
 
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
-                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
+                               const std::vector<Date>& amcSimDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
-          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
+          amcSimDates_(amcSimDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
@@ -101,6 +101,12 @@ protected:
     void addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const;
     void setupCalibrationStrikes(const ScriptedTradeScriptData& script, const QuantLib::ext::shared_ptr<Context>& context);
 
+    // overwrite since engine and model parameters can be overwritten in scripted trade data
+    std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                                const bool mandatory = true, const std::string& defaultValue = "") const override;
+    std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                               const bool mandatory = true, const std::string& defaultValue = "") const override;
+
     // gets eq ccy from market
     std::string getEqCcy(const IndexInfo& e);
 
@@ -148,6 +154,8 @@ protected:
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
     // model / engine parameters
+    std::map<std::string, std::string> modelParameterOverwrite_;
+    std::map<std::string, std::string> engineParameterOverwrite_;
     std::string modelParam_, infModelType_, engineParam_, baseCcyParam_, gridCoarsening_;
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
@@ -170,6 +178,7 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     SalvagingAlgorithm::Type salvagingAlgorithm_;
+    Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
 };
 
 } // namespace data

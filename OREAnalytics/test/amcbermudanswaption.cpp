@@ -52,7 +52,6 @@
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 #include <qle/pricingengines/mclgmswaptionengine.hpp>
@@ -663,7 +662,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override {}
     };
     AMCValuationEngine amcValEngine(model, sgd, QuantLib::ext::shared_ptr<Market>(), std::vector<string>(),
-                                    std::vector<string>(), 0, std::string(), std::string());
+                                    std::vector<string>(), 0, std::string(), std::string(), false, false);
     auto trade = QuantLib::ext::make_shared<TestTrade>("BermudanSwaption", testCase.inBaseCcy ? "EUR" : "USD",
                                                        QuantLib::ext::make_shared<VanillaInstrument>(swaption));
     trade->id() = "DummyTradeId";

@@ -64,9 +64,19 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     npvCurrency_ = legData.currency();
     notionalCurrency_ = legData.currency();
 
-    QL_REQUIRE(legData.legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(legData.schedule());
     QL_REQUIRE(schedule.size() > 1, "CreditDefaultSwap requires at least two dates in the schedule");
+
+    
+
+    if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
+        Date protectionStart = swap_.protectionStart();
+        Date tradeDate = swap_.tradeDate();
+        protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
+        tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
+        schedule = removeCDSPeriodsBeforeStartDate(schedule, tradeDate + 1);
+     }
 
     BusinessDayConvention payConvention = Following;
     if (!legData.paymentConvention().empty()) {
@@ -122,8 +132,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     if (swap_.upfrontFee() == Null<Real>()) {
         cds = QuantLib::ext::make_shared<QuantLib::CreditDefaultSwap>(
             prot, notional_, couponLeg, fixedRate, schedule, payConvention, dc, swap_.settlesAccrual(),
-            swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter,
-            swap_.rebatesAccrual(), swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
+            lastPeriodDayCounter, swap_.rebatesAccrual(), swap_.tradeDate(), swap_.cashSettlementDays());
     } else {
         cds = QuantLib::ext::make_shared<QuantLib::CreditDefaultSwap>(
             prot, notional_, couponLeg, swap_.upfrontFee(), fixedRate, schedule, payConvention, dc,
@@ -155,6 +165,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     issuer_ = swap_.issuerId();
+
+    additionalData_["tradeRecoveryRate"] = swap_.recoveryRate();
 }
 
 const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
@@ -165,7 +177,7 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
                                    instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
-    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[2]"] = ore::data::to_string(swap_.leg().legType());
     additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];
@@ -179,7 +191,7 @@ QuantLib::Real CreditDefaultSwap::notional() const {
     // get the current notional from CDS premium leg
     if (!legs_.empty()) {
         for (Size i = 0; i < legs_[0].size(); ++i) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][i]);
             if (coupon->date() > asof)
                 return coupon->nominal();
         }

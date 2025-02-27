@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         context->scalars["Expiry"] = EventVec{paths, calibrationExpiries[i]};
         context->scalars["Strike"] = RandomVariable(paths, atmf);
         optionEngine.run();
-        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(context->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
         // compute the analytical price
         auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             testMarket->fxRate("USDEUR"), testMarket->discountCurve("USD"), testMarket->discountCurve("EUR"),
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         context->scalars["Expiry"] = EventVec{paths, calibrationExpiries[i]};
         context->scalars["Strike"] = RandomVariable(paths, atmf);
         optionEngine.run();
-        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(context->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
         // compute the analytical price
         auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             testMarket->equitySpot("SP5"), testMarket->equityDividendCurve("SP5"),
@@ -285,13 +285,13 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
             calibrationExpiries[i], Date(7, July, 2029), vol, iborIndex, fixedLegTenor, fixedDayCounter,
             floatDayCounter, testMarket->discountCurve("EUR"), BlackCalibrationHelper::RelativePriceError, Null<Real>(),
             1.0, swvol->volatilityType(), swvol->shift(optionTime, swapLength));
-        Real atmStrike = helper->underlyingSwap()->fairRate();
+        Real atmStrike = helper->underlying()->fairRate();
         // script price
         auto workingContext = QuantLib::ext::make_shared<Context>(*context);
         std::vector<ValueType> fixedSchedule, floatSchedule, fixingSchedule;
-        for (auto const& d : helper->underlyingSwap()->fixedSchedule().dates())
+        for (auto const& d : helper->underlying()->fixedSchedule().dates())
             fixedSchedule.push_back(EventVec{paths, d});
-        for (auto const& d : helper->underlyingSwap()->floatingSchedule().dates()) {
+        for (auto const& d : helper->underlying()->floatingSchedule().dates()) {
             floatSchedule.push_back(EventVec{paths, d});
             fixingSchedule.push_back(EventVec{paths, iborIndex->fixingDate(d)});
         }
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
         workingContext->scalars["FixedRate"] = RandomVariable(paths, atmStrike);
         ScriptEngine swaptionEngine(swaptionAst, workingContext, gaussianCam);
         swaptionEngine.run(swaptionScript);
-        Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(workingContext->scalars["Option"])).at(0);
+        Real scriptPrice = expectation(boost::get<RandomVariable>(workingContext->scalars["Option"])).at(0);
         // analytical price
         Real analyticalPrice = helper->marketValue();
         // compare script and analytical price

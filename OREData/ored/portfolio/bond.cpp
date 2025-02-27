@@ -83,12 +83,23 @@ void BondData::fromXML(XMLNode* node) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
-        if (ld.concreteLegData()->legType() == "CPI") {
+        if (ld.concreteLegData()->legType() == LegType::CPI) {
             isInflationLinked_ = true;
         }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
     hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
+    if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "clean") {
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "dirty") {
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Dirty;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)).empty()) {
+        quotedDirtyPrices_ = std::nullopt;
+    } else {
+        DLOG("the PriceType is not valid. Value must be 'Clean' or 'Dirty'. Overiding to 'Clean'.");
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
+    }
+    
     initialise();
 }
 
@@ -120,6 +131,12 @@ XMLNode* BondData::toXML(XMLDocument& doc) const {
     if (!priceQuoteBaseValue_.empty())
         XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
+    if (quotedDirtyPrices_ != std::nullopt) {
+        if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean)
+            XMLUtils::addChild(doc, bondNode, "PriceType", "Clean");
+        else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty)
+            XMLUtils::addChild(doc, bondNode, "PriceType", "Dirty");
+    }
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     if (!hasCreditRisk_)
@@ -161,9 +178,10 @@ void BondData::initialise() {
         // fill isInflationLinked
         for (Size i = 0; i < coupons().size(); ++i) {
             if (i == 0)
-                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == LegType::CPI;
             else {
-                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                bool isIthCouponInflationLinked =
+                    coupons()[i].concreteLegData()->legType() == LegType::CPI;
                 QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
                            "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
                                         << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
@@ -178,7 +196,7 @@ void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<Bon
     ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_,
                                              priceQuoteMethod_, priceQuoteBaseValue_, creditCurveId_, creditGroup_,
                                              referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
-                                             securityId_, referenceDatum, startDate, endDate);
+                                             quotedDirtyPrices_, securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }
@@ -254,6 +272,8 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
@@ -266,7 +286,9 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+            LegData legData = bondData_.coupons()[i];
+            legData.setPaymentLag(bondData_.paymentLag());
+            leg = legBuilder->buildLeg(legData, engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
@@ -399,6 +421,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.creditGroup = data.creditGroup();
     res.priceQuoteMethod = data.priceQuoteMethod();
     res.priceQuoteBaseValue = data.priceQuoteBaseValue();
+    res.quotedDirtyPrices = data.quotedDirtyPrices();
     return res;
 }
 
@@ -421,7 +444,7 @@ std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& se
     return std::make_pair(expiry, strippedId);
 }
 
-void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                              const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                              const std::string& securityId) const {

@@ -23,25 +23,27 @@ namespace analytics {
 
 void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
 		const std::set<std::string>& runTypes) {
-    
+
+    auto effectivePortfolio = analytic()->portfolio() == nullptr ? inputs_->portfolio() : analytic()->portfolio();
+
     if (!portfolioAnalyser_) {
-        analytic()->buildPortfolio();
         portfolioAnalyser_ = QuantLib::ext::make_shared<PortfolioAnalyser>(
-            analytic()->portfolio(), inputs_->pricingEngine(), inputs_->baseCurrency(),
-            analytic()->configurations().curveConfig, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            effectivePortfolio,
+            inputs_->pricingEngine(), inputs_->baseCurrency(), analytic()->configurations().curveConfig,
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
     }
 
     // risk factor report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> rfReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     portfolioAnalyser_->riskFactorReport(*rfReport);
-    analytic()->reports()[label_]["risk_factors"] = rfReport;
+    analytic()->addReport(label_, "risk_factors", rfReport);
 
     // market object report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> moReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     portfolioAnalyser_->marketObjectReport(*moReport);
-    analytic()->reports()[label_]["market_objects"] = moReport;
+    analytic()->addReport(label_, "market_objects", moReport);
 
     // swap indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> siReport =
@@ -50,7 +52,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     for (const auto& si : portfolioAnalyser_->swapindices())
         siReport->next().add(si);
     siReport->end();
-    analytic()->reports()[label_]["swap_indices"] = siReport;
+    analytic()->addReport(label_, "swap_indices", siReport);
 
     // Count of cps, netting sets and trade types
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cpReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
@@ -60,7 +62,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     nsReport->addColumn("NettingSets", string()).addColumn("Count", Size());
     ttReport->addColumn("TradeTypes", string()).addColumn("Count", Size());
     map<string, Size> counterParties, nettingSets, tradeTypes;
-    for (const auto& [_, t] : analytic()->portfolio()->trades()) {
+    for (const auto& [_, t] : effectivePortfolio->trades()) {
         counterParties[t->envelope().counterparty()]++;
         nettingSets[t->envelope().nettingSetId()]++;
         tradeTypes[t->tradeType()]++;
@@ -74,23 +76,22 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     cpReport->end();
     nsReport->end();
     ttReport->end();
-    analytic()->reports()[label_]["counterparties"] = cpReport;
-    analytic()->reports()[label_]["netting_sets"] = nsReport;
-    analytic()->reports()[label_]["trade_types"] = ttReport;
-    
+    analytic()->addReport(label_, "counterparties", cpReport);
+    analytic()->addReport(label_, "netting_sets", nsReport);
+    analytic()->addReport(label_, "trade_types", ttReport);
+
     // underlying indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> uiReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     uiReport->addColumn("AssetType", string()).addColumn("Indices", string());
-    auto underlyingIndices = analytic()->portfolio()->underlyingIndices();
-    for (const auto& ui : underlyingIndices) {
+    for (const auto& ui : portfolioAnalyser_->underlyingIndices()) {
         string indices;
         for (const auto& s : ui.second)
             indices += indices.empty() ? s : "|" + s;
         uiReport->next().add(to_string(ui.first)).add(indices);
     }
     uiReport->end();
-    analytic()->reports()[label_]["underlying_indices"] = uiReport;
+    analytic()->addReport(label_, "underlying_indices", uiReport);
 
 }
 

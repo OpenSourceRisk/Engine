@@ -40,11 +40,13 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<Size>& projectedStateProcessIndices,
-    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates)
+    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates,
+    const std::vector<Date>& stickyCloseOutDates)
     : ModelCGImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
       cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
-      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates) {
+      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates),
+      stickyCloseOutDates_(stickyCloseOutDates) {
 
     // check inputs
 
@@ -123,6 +125,11 @@ void GaussianCamCG::performCalculations() const {
         effectiveSimulationDates_.clear();
         effectiveSimulationDates_.insert(referenceDate());
         for (auto const& d : simulationDates_) {
+            if (d >= referenceDate())
+                effectiveSimulationDates_.insert(d);
+        }
+
+        for (auto const& d : stickyCloseOutDates_) {
             if (d >= referenceDate())
                 effectiveSimulationDates_.insert(d);
         }
@@ -234,9 +241,9 @@ void GaussianCamCG::performCalculations() const {
 
     for (Size i = 0; i < cam->correlation().rows(); ++i) {
         for (Size j = 0; j < cam->correlation().columns(); ++j) {
-            sqrtCorrelation[i][j] =
-                addModelParameter("__cam_sqrtCorr_" + std::to_string(i) + "_" + std::to_string(j),
-                                  [cam, i, j] { return cam->stateProcess()->sqrtCorrelation()(i, j); });
+            sqrtCorrelation[i][j] = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::sqrtCorr, {}, {}, {}, {}, {}, i, j),
+                [cam, i, j] { return cam->stateProcess()->sqrtCorrelation()(i, j); });
         }
     }
 
@@ -247,25 +254,29 @@ void GaussianCamCG::performCalculations() const {
                                   cam->dimension(), std::vector<std::size_t>(cam->brownians(), cg_const(*g_, 0.0))));
 
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        std::string dateStr = ore::data::to_string(*std::next(effectiveSimulationDates_.begin(), i));
+        QuantLib::Date date = *std::next(effectiveSimulationDates_.begin(), i);
         Real t = timeGrid_[i];
         for (Size j = 0; j < cam->components(CrossAssetModel::AssetType::IR); ++j) {
-            std::size_t alpha = addModelParameter("__lgm_" + currencies_[j] + "_alpha_" + dateStr,
-                                                  [cam, j, t] { return cam->irlgm1f(j)->alpha(t); });
+            std::size_t alpha = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_alpha, currencies_[j], {}, date),
+                [cam, j, t] { return cam->irlgm1f(j)->alpha(t); });
             setValue2(diffusionOnCorrelatedBrownians[i], alpha, *cam, CrossAssetModel::AssetType::IR, j,
                       CrossAssetModel::AssetType::IR, j, 0, 0);
         }
         for (Size j = 0; j < cam->components(CrossAssetModel::AssetType::FX); ++j) {
-            std::size_t sigma = addModelParameter("__fxbs_" + currencies_[j + 1] + "_sigma_" + dateStr,
-                                                  [cam, j, t] { return cam->fxbs(j)->sigma(t); });
+            std::size_t sigma = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter ::Type::fxbs_sigma, currencies_[j + 1], {}, date),
+                [cam, j, t] { return cam->fxbs(j)->sigma(t); });
             setValue2(diffusionOnCorrelatedBrownians[i], sigma, *cam, CrossAssetModel::AssetType::FX, j,
                       CrossAssetModel::AssetType::FX, j, 0, 0);
         }
         if (cam->measure() == IrModel::Measure::BA) {
-            std::size_t H0 = addModelParameter("__lgm_" + currencies_[0] + "_H_" + dateStr,
-                                               [cam, t] { return cam->irlgm1f(0)->H(t); });
-            std::size_t alpha0 = addModelParameter("__lgm_" + currencies_[0] + "_alpha_" + dateStr,
-                                                   [cam, t] { return cam->irlgm1f(0)->alpha(t); });
+            std::size_t H0 = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[0], {}, date),
+                [cam, t] { return cam->irlgm1f(0)->H(t); });
+            std::size_t alpha0 = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_alpha, currencies_[0], {}, date),
+                [cam, t] { return cam->irlgm1f(0)->alpha(t); });
             setValue2(diffusionOnCorrelatedBrownians[i], cg_mult(*g_, alpha0, H0), *cam, CrossAssetModel::AssetType::IR,
                       0, CrossAssetModel::AssetType::IR, 0, 1, 0);
         }
@@ -276,55 +287,77 @@ void GaussianCamCG::performCalculations() const {
     std::vector<std::vector<std::size_t>> drift(timeGrid_.size() - 1,
                                                 std::vector<std::size_t>(cam->dimension(), cg_const(*g_, 0.0)));
     for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-        std::string dateStr = ore::data::to_string(*std::next(effectiveSimulationDates_.begin(), i));
+        QuantLib::Date date = *std::next(effectiveSimulationDates_.begin(), i);
+        QuantLib::Date date2 = *std::next(effectiveSimulationDates_.begin(), i + 1);
         Real t = timeGrid_[i];
+        Real t2 = timeGrid_[i + 1];
         std::size_t H0 =
-            addModelParameter("__lgm_" + currencies_[0] + "_H_" + dateStr, [cam, t] { return cam->irlgm1f(0)->H(t); });
-        std::size_t alpha0 = addModelParameter("__lgm_" + currencies_[0] + "_alpha_" + dateStr,
-                                               [cam, t] { return cam->irlgm1f(0)->alpha(t); });
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[0], {}, date),
+                              [cam, t] { return cam->irlgm1f(0)->H(t); });
+        std::size_t alpha0 = addModelParameter(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_alpha, currencies_[0], {}, date),
+            [cam, t] { return cam->irlgm1f(0)->alpha(t); });
         for (Size j = 0; j < cam->components(CrossAssetModel::AssetType::IR); ++j) {
-            std::size_t H = addModelParameter("__lgm_" + currencies_[j] + "_H_" + dateStr,
-                                              [cam, t, j] { return cam->irlgm1f(j)->H(t); });
-            std::size_t alpha = addModelParameter("__lgm_" + currencies_[j] + "_alpha_" + dateStr,
-                                                  [cam, t, j] { return cam->irlgm1f(j)->alpha(t); });
+            std::size_t H = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[j], {}, date),
+                [cam, t, j] { return cam->irlgm1f(j)->H(t); });
+            std::size_t alpha = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_alpha, currencies_[j], {}, date),
+                [cam, t, j] { return cam->irlgm1f(j)->alpha(t); });
             if (j == 0) {
                 if (cam->measure() == IrModel::Measure::BA) {
                     drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)] =
                         cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha));
                 }
             } else {
-                std::size_t sigma = addModelParameter("__fxbs_" + currencies_[j - 1] + "_sigma_" + dateStr,
-                                                      [cam, t, j] { return cam->fxbs(j - 1)->sigma(t); });
-                std::size_t rhozz0j = addModelParameter("__cam_corr_zz_0_" + std::to_string(j), [cam, j] {
-                    return cam->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR, j);
-                });
-                std::size_t rhozx0j = addModelParameter("__cam_corr_zx_0_" + std::to_string(j), [cam, j] {
-                    return cam->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::FX, j - 1);
-                });
-                std::size_t rhozxjj =
-                    addModelParameter("__cam_corr_zx_" + std::to_string(j) + "_" + std::to_string(j), [cam, j] {
+                std::size_t sigma = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, currencies_[j], {}, date),
+                    [cam, t, j] { return cam->fxbs(j - 1)->sigma(t); });
+                std::size_t rhozz0j = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cam_corrzz, {}, {}, {}, {}, {}, 0, j),
+                    [cam, j] {
+                        return cam->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR, j);
+                    });
+                std::size_t rhozx0j = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cam_corrzx, {}, {}, {}, {}, {}, 0, j - 1),
+                    [cam, j] {
+                        return cam->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::FX,
+                                                j - 1);
+                    });
+                std::size_t rhozxjj = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::cam_corrzx, {}, {}, {}, {}, {}, j, j - 1),
+                    [cam, j] {
                         return cam->correlation(CrossAssetModel::AssetType::IR, j, CrossAssetModel::AssetType::FX,
                                                 j - 1);
                     });
                 drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
                     cg_add(*g_, {cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha)),
                                  cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j),
-                                 cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj)});
-                std::size_t fwd0 = addModelParameter("__lgm_" + currencies_[0] + "_fwd_" + dateStr, [cam, t] {
-                    return cam->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous);
-                });
-                std::size_t fwdj = addModelParameter("__lgm_" + currencies_[j] + "_fwd_" + dateStr, [cam, j, t] {
-                    return cam->irlgm1f(j)->termStructure()->forwardRate(t, t, Continuous);
-                });
-                drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] =
-                    cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), fwd0,
-                                 cg_negative(*g_, fwdj), cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma)});
+                                 cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj))});
+                std::size_t dsc0a = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], "default", date),
+                    [cam, t] { return cam->irlgm1f(0)->termStructure()->discount(t); });
+                std::size_t dsc0b = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], "default", date2),
+                    [cam, t2] { return cam->irlgm1f(0)->termStructure()->discount(t2); });
+                std::size_t dscja = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[j], "default", date),
+                    [cam, t, j] { return cam->irlgm1f(j)->termStructure()->discount(t); });
+                std::size_t dscjb = addModelParameter(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[j], "default", date2),
+                    [cam, t2, j] { return cam->irlgm1f(j)->termStructure()->discount(t2); });
+                std::size_t irDrift =
+                    cg_mult(*g_, cg_const(*g_, -1.0 / (t2 - t)),
+                            cg_log(*g_, cg_mult(*g_, cg_div(*g_, dsc0b, dsc0a), cg_div(*g_, dscja, dscjb))));
+                drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
+                    cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), irDrift,
+                                 cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma))});
                 if (cam->measure() == IrModel::Measure::BA) {
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)],
+                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
+                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j));
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)],
+                    drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
+                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j));
                 }
             }
@@ -334,11 +367,10 @@ void GaussianCamCG::performCalculations() const {
     // initialize state vector
 
     std::vector<std::size_t> state(cam->dimension(), cg_const(*g_, 0.0));
-    std::string dateStr0 = ore::data::to_string(*effectiveSimulationDates_.begin());
 
     for (Size j = 0; j < cam->components(CrossAssetModel::AssetType::FX); ++j) {
         state[cam->pIdx(CrossAssetModel::AssetType::FX, j, 0)] =
-            addModelParameter("__fxbs_" + currencies_[j + 1] + "_" + dateStr0,
+            addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, currencies_[j + 1]),
                               [cam, j] { return std::log(cam->fxbs(j)->fxSpotToday()->value()); });
     }
 
@@ -361,23 +393,29 @@ void GaussianCamCG::performCalculations() const {
 
         std::vector<std::size_t> drift2(cam->dimension(), cg_const(*g_, 0.0));
 
-        std::string dateStr = ore::data::to_string(*std::next(effectiveSimulationDates_.begin(), i));
+        QuantLib::Date date = *std::next(effectiveSimulationDates_.begin(), i);
         Real t = timeGrid_[i];
 
         for (Size j = 1; j < cam->components(CrossAssetModel::AssetType::IR); ++j) {
-            std::size_t H = addModelParameter("__lgm_" + currencies_[j] + "_H_" + dateStr,
-                                              [cam, t, j] { return cam->irlgm1f(j)->H(t); });
-            std::size_t H0 = addModelParameter("__lgm_" + currencies_[0] + "_H_" + dateStr,
-                                               [cam, t] { return cam->irlgm1f(0)->H(t); });
-            std::size_t Hprime = addModelParameter("__lgm_" + currencies_[j] + "_Hprime_" + dateStr,
-                                                   [cam, t, j] { return cam->irlgm1f(j)->Hprime(t); });
-            std::size_t Hprime0 = addModelParameter("__lgm_" + currencies_[0] + "_Hprime_" + dateStr,
-                                                    [cam, t] { return cam->irlgm1f(0)->Hprime(t); });
-            std::size_t zeta = addModelParameter("__lgm_" + currencies_[j] + "_zeta_" + dateStr,
-                                                 [cam, t, j] { return cam->irlgm1f(j)->zeta(t); });
-            std::size_t zeta0 = addModelParameter("__lgm_" + currencies_[0] + "_zeta_" + dateStr,
-                                                  [cam, t] { return cam->irlgm1f(0)->zeta(t); });
-            drift2[cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] = cg_add(
+            std::size_t H = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[j], {}, date, {}, {}, 0, 0),
+                [cam, t, j] { return cam->irlgm1f(j)->H(t); });
+            std::size_t H0 = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_H, currencies_[0], {}, date),
+                [cam, t] { return cam->irlgm1f(0)->H(t); });
+            std::size_t Hprime = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_Hprime, currencies_[j], {}, date),
+                [cam, t, j] { return cam->irlgm1f(j)->Hprime(t); });
+            std::size_t Hprime0 = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_Hprime, currencies_[0], {}, date),
+                [cam, t] { return cam->irlgm1f(0)->Hprime(t); });
+            std::size_t zeta = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, currencies_[j], {}, date),
+                [cam, t, j] { return cam->irlgm1f(j)->zeta(t); });
+            std::size_t zeta0 = addModelParameter(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, currencies_[0], {}, date),
+                [cam, t] { return cam->irlgm1f(0)->zeta(t); });
+            drift2[cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] = cg_add(
                 *g_, {cg_mult(*g_, state[cam->pIdx(CrossAssetModel::AssetType::IR, 0, 0)], Hprime0),
                       cg_mult(*g_, cg_mult(*g_, zeta0, Hprime0), H0),
                       cg_negative(*g_, cg_mult(*g_, state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)], Hprime)),
@@ -427,10 +465,24 @@ void GaussianCamCG::performCalculations() const {
                "GaussianCamCG:internal error, did not populate all irState time steps.");
 }
 
+Date GaussianCamCG::adjustForStickyCloseOut(const Date& d) const {
+    if (useStickyCloseOutDates_) {
+        std::size_t idx =
+            std::distance(simulationDates_.begin(), simulationDates_.find(getSloppyDate(d, true, simulationDates_)));
+        QL_REQUIRE(stickyCloseOutDates_.size() > idx,
+                   "GaussianCamCG::adjustForStickyCloseOut("
+                       << d << "): internal error, idx = " << idx << ", simulationDates size = "
+                       << simulationDates_.size() << ", stickyCloseOutDates size = " << stickyCloseOutDates_.size());
+        return stickyCloseOutDates_[idx];
+    }
+    return d;
+}
+
 std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
     QL_REQUIRE(fwd == Null<Date>(), "GaussianCamCG::getIndexValue(): fwd != null not implemented ("
                                         << indexNo << "," << d << "," << fwd << ")");
-    return underlyingPaths_.at(d).at(indexNo);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(d), sloppySimDates_, effectiveSimulationDates_);
+    return underlyingPaths_.at(sd).at(indexNo);
 }
 
 std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -441,11 +493,11 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     auto cam(cam_);
-    Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(d), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
         currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
-        sloppySimDates_, effectiveSimulationDates_);
-    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, sd, irStates_.at(sd).at(currencyIdx));
+        derivedModelParameters_);
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(sd).at(currencyIdx), sd);
 }
 
 std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -464,27 +516,25 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[idx];
-    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(s), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
-        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
-        effectiveSimulationDates_);
-    return lgmcg.discountBond(sd, t, irStates_.at(sd)[idx]);
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, derivedModelParameters_);
+    return lgmcg.discountBond(s, t, irStates_.at(sd)[idx], Handle<YieldTermStructure>(), "default", sd);
 }
 
 std::size_t GaussianCamCG::numeraire(const Date& s) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[0];
-    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(s), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
-        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
-        effectiveSimulationDates_);
-    return lgmcg.numeraire(sd, irStates_.at(sd)[0]);
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, derivedModelParameters_);
+    return lgmcg.numeraire(s, irStates_.at(sd)[0], Handle<YieldTermStructure>(), "default", sd);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
-    std::string id = "__fxspot_" + std::to_string(idx);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::logFxSpot, currencies_[idx + 1]);
     auto c = fxSpots_.at(idx);
-    return addModelParameter(id, [c] { return c->value(); });
+    return cg_exp(*g_, addModelParameter(id, [c] { return c->value(); }));
 }
 
 Real GaussianCamCG::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
@@ -509,9 +559,50 @@ Real GaussianCamCG::getDirectDiscountT0(const Date& paydate, const std::string& 
     return curves_.at(cidx)->discount(paydate);
 }
 
+std::set<std::size_t>
+GaussianCamCG::npvRegressors(const Date& obsdate,
+                             const std::optional<std::set<std::string>>& relevantCurrencies) const {
+
+    std::optional<std::set<std::string>> effectiveRelevantCurrencies = relevantCurrencies;
+    if (effectiveRelevantCurrencies) {
+        effectiveRelevantCurrencies->insert(baseCcy());
+    }
+
+    std::set<std::size_t> state;
+
+    if (obsdate == referenceDate()) {
+        return state;
+    }
+
+    Date sd = getSloppyDate(adjustForStickyCloseOut(obsdate), sloppySimDates_, effectiveSimulationDates_);
+
+    if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            if (effectiveRelevantCurrencies && indices_[i].isFx()) {
+                if (effectiveRelevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) ==
+                    effectiveRelevantCurrencies->end())
+                    continue;
+            }
+            state.insert(underlyingPaths_.at(sd).at(i));
+        }
+    }
+
+    // TODO we include zero vol ir states here, we could exclude them
+    if (conditionalExpectationUseIr_) {
+        for (Size ccy = 0; ccy < currencies_.size(); ++ccy) {
+            if (!effectiveRelevantCurrencies ||
+                effectiveRelevantCurrencies->find(currencies_[ccy]) != effectiveRelevantCurrencies->end()) {
+                state.insert(irStates_.at(sd)[ccy]);
+            }
+        }
+    }
+
+    return state;
+}
+
 std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                               const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                               const std::size_t addRegressor2) const {
+                               const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                               const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
 
     calculate();
 
@@ -527,13 +618,16 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
-    state.push_back(irStates_.at(sd).at(0));
+    if (overwriteRegressors) {
+        state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
+    } else {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
+    }
 
-    if (addRegressor1 != ComputationGraph::nan)
-        state.push_back(addRegressor1);
-    if (addRegressor2 != ComputationGraph::nan)
-        state.push_back(addRegressor2);
+    for (auto const& r : addRegressors)
+        if (r != ComputationGraph::nan)
+            state.push_back(r);
 
     // if the state is empty, return the plain expectation (no conditioning)
 
@@ -551,6 +645,8 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     return cg_conditionalExpectation(*g_, amount, state, filter);
 }
+
+void GaussianCamCG::useStickyCloseOutDates(const bool b) const { useStickyCloseOutDates_ = b; }
 
 } // namespace data
 } // namespace ore

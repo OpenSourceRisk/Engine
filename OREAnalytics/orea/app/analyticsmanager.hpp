@@ -26,19 +26,24 @@
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/inputparameters.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <iostream>
 
 namespace ore {
 namespace analytics {
 
-class AnalyticsManager {
+class AnalyticsManager : public QuantLib::ext::enable_shared_from_this<AnalyticsManager> {
 public:
-    AnalyticsManager(//! Container for the inputs required by the standard analytics
-                     const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                     //! A market data loader object that can retrieve required data from a large repository
-                     const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader);
+    AnalyticsManager( //! Container for the inputs required by the standard analytics
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        //! A market data loader object that can retrieve required data from a large repository
+        const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader)
+        : inputs_(inputs), marketDataLoader_(marketDataLoader){};
     virtual ~AnalyticsManager() {};
+
+    //! initialise must be explicitly called
+    void initialise();
 
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
     bool hasAnalytic(const std::string& type);
@@ -51,8 +56,12 @@ public:
     void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
     void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
+    std::vector<std::string> failedAnalytics() { return failedAnalytics_; }
+
     // returns a vector of all analytics, including dependent analytics
-    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> analytics() { return analytics_; }
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>>& analytics() const {
+        return analytics_;
+    }
     void clear();
     
     Analytic::analytic_reports const reports();
@@ -68,11 +77,13 @@ public:
                 const std::set<std::string>& lowerHeaderReportNames = {});
 
 private:
-    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> analytics_;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>> analytics_;
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports reports_;
     std::set<std::string> validAnalytics_;
+    std::vector<std::string> failedAnalytics_;
+    bool initialised_ = false;
 };
 
 QuantLib::ext::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,

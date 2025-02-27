@@ -1,0 +1,32 @@
+\subsubsection{Commodity Futures Option}
+\label{pricing:com_futuresoption}
+
+Though Commodity Futures Options can be technically American style
+ (as e.g. in the case of base metal futures options at LME),
+we treat them as European options following \cite{Clark_2014}.
+
+The option payoff on option exercise date $t_e$ with underlying futures
+contract expiry $T>t_e$  is
+$$
+\NPV(t_e) = N\cdot \left(\omega(F(t_e, T) - K)\right)^+.
+$$
+We assume that the futures price follows Geometric Brownian Motion:
+$$
+dF(t,T)) = \sigma(t)\,F(t,T)\,dW.
+$$
+This leads to a Black76 analytical solution for the present value of
+the Futures Option:
+$$
+\NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{t_e},\omega)\cdot P(T)
+$$
+where:
+\begin{itemize}
+\item $N$: notional (units of the underyling futures contract)
+\item $K$: strike price
+\item $F(0,T)$: the futures price for contract expiry $T$ at time 0 (start)
+\item $\sigma$: the volatility of the commodity futures price
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $P(T)$: the discount factor for the underlying futures expiry $T$
+\end{itemize}
+
+See Black Model, Section \ref{sec:models}, for more details.

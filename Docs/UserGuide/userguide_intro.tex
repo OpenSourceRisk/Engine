@@ -1,0 +1,237 @@
+\section{Introduction}
+
+The {\em Open Source Risk Project} \cite{ORE} aims at providing a transparent platform for pricing and risk analysis
+that serves as
+%\medskip
+\begin{itemize}
+\item a benchmarking, validation, training, and teaching reference,
+\item an extensible foundation for tailored risk solutions.
+\end{itemize}
+
+Its main software project is {\em Open Source Risk Engine} (ORE), an application that provides
+\begin{itemize}
+\item a Monte Carlo simulation framework for contemporary risk analytics and value adjustments
+\item simple interfaces for trade data, market data and system configuration
+\item simple launchers and result visualisation in Jupyter, Excel, LibreOffice
+\item unit tests and various examples.  
+\end{itemize}
+ORE is open source software, provided under the Modified BSD License. It is based 
+on QuantLib, the open source library for quantitative finance \cite{QL}.
+
+%\medskip
+\subsubsection*{Audience}
+The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit
+firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant
+developers in charge of the implementation of pricing and risk methods similar to those in ORE. Moreover, the project
+aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely
+available, contemporary risk application. And in the meantime, as ORE is used in risk services at industrial scale since 2018
+with over 150 users, ORE is aimed at firms that consider the replacement of third party licensed software. 
+
+\subsubsection*{Contributions}
+Quaternion Risk Management \cite{QRM} has been committed to sponsoring the Open Source Risk project through ongoing project
+administration, through providing an initial release and a series of subsequent releases in order to achieve a wide
+analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021,
+Acadia \cite{acadia} has been committed to continue the sponsorship. The Open Source Risk project work continues with
+former Quaternion operating as Acadia's Quantitative Services unit. And with Acadia's acquisiton by London Stock
+Exchange Group (LSEG) in 2023, the journey continues under the roof of LSEG Post Trade.
+
+The community is invited to contribute to ORE, for example through
+feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
+enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
+
+\subsection{Scope}
+
+ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative
+portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various exposure measures:
+\begin{itemize}
+\item EE aka EPE (Expected Exposure or Expected Positive Exposure)
+\item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
+\item 'Basel' exposure measures relevant for regulatory capital charges under internal model methods 
+\item PFE (Potential Future Exposure at some user defined quantile)
+\end{itemize}
+and derivative value adjustments (xVA)
+\begin{itemize}
+\item CVA (Credit Value Adjustment)
+\item DVA (Debit Value Adjustment)
+\item FVA (Funding Value Adjustment)
+\item COLVA (Collateral Value Adjustment)
+\item MVA (Margin Value Adjustment)
+\end{itemize}
+for portfolios with netting, variation and initial margin agreements. 
+
+\medskip
+The market risk framework provides
+\begin{itemize}
+\item sensitivity analysis, also in the ``par'' domain
+\item stress testing, also in the ``par'' domain
+\item several parametric VaR versions (Delta VaR, Delta-Gamma Normal VaR, Delta-Gamma VaR with Cornish-Fisher expansion and Saddlepoint method)
+\item historical simulation VaR
+\item P\&L and P\&L explain
+\end{itemize}
+across all asset classes and products. 
+
+\medskip
+Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 to cover
+\begin{itemize}
+\item "First Generation" Equity and FX Exotics, released September with ORE v7
+\item Commodity products (Swaps, Basis Swaps, Average Price Options, Swaptions), released December 22 with ORE v8
+\item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
+\item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Composite Trades, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), released in June 23 with ORE v10
+\item a Scripted Trade framework in October 23 with ORE v11: This allows the modelling of complex hybrid payoffs
+  such as Accumulators, TARFs, PRDCs, Basket Options, etc, across IR, FX, INF, EQ, COM classes.  Scripted Trades are fully
+  integrated into the market risk and exposure simulation frameworks, supported by American Monte Carlo methods for pricing
+  and exposure simulation. The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into
+  the trade XML or in separate script "library" XML) and without recompiling the code base.
+\item Formula-based legs, Callable Swaps, Flexi Swaps, Balance Guaranteed Swaps and American Swaptions in May 24 with ORE v12
+\end{itemize}
+
+These contributions were accompanied by analytics extensions to enhance ORE usability
+\begin{itemize}
+\item Exposure simulation for xVA and PFE, adding Commodity to the asset class coverage, and adding American Monte Carlo for Exotics, released in December 22 with ORE v8
+\item Market Risk including multi-threaded sensitivity analysis, par sensitivity conversion, parametric delta/gamma VaR with Cornish-Fisher expansion and Saddlepoint method, released in March 23 with ORE v9
+\item Portfolio Credit Model, released in June 23 with ORE v10
+\item ISDA's Standard Initial Margin Model (SIMM), released in June 23 with ORE v10
+\item Historical Simulation VaR, P\&L and P\&L Explain, released in May 24 with ORE v12
+\end{itemize}
+
+\medskip 
+The product coverage of the latest release of ORE is sketched in Table \ref{tab_coverage}.
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{|l|p{1.5cm}|p{1.5cm}|p{1.2cm}|p{1.5cm}|}
+\hline
+Product & Pricing and Cashflows & Sensitivity Analysis & Stress Testing & Exposure Simulation \& XVA\\
+\hline
+Fixed and Floating Rate Bonds/Loans & Y & Y & Y & N \\
+\hline
+Interest Rate Swaps & Y & Y & Y & Y\\
+\hline
+Caps/Floors & Y & Y & Y & Y\\
+\hline
+Swaptions, Callable Swaps & Y & Y & Y &Y \\
+\hline
+Constant Maturity Swaps, CMS Caps/Floors & Y & Y & Y & Y\\
+\hline
+FX Forwards and Average Forwards & Y & Y & Y & Y \\
+\hline
+Cross Currency Swaps & Y & Y & Y & Y \\
+\hline
+FX European and Asian Options & Y & Y & Y & Y\\
+\hline
+FX Exotic Options (see below) & Y & Y & Y & Y\\
+\hline
+Equity Forwards & Y & Y & Y & Y\\
+\hline
+Equity Swaps & Y & Y & Y & N\\
+\hline
+Equity European and Asian Options & Y & Y & Y & Y \\
+\hline
+Equity Exotic Options (see below)  & Y & Y & Y & Y \\
+\hline
+Equity Future Options & Y & Y & Y & Y \\
+\hline
+Commodity Forwards and Swaps & Y & Y & Y & Y\\
+\hline
+Commodity European and Asian Options & Y & Y & Y & Y \\
+\hline
+Commodity Digital Options & Y & Y & Y & Y \\
+\hline
+Commodity Swaptions & Y & Y & Y & Y\\
+\hline
+CPI Swaps & Y & Y & N & Y \\
+\hline
+CPI Caps/Floors & Y & Y & N & N\\
+\hline
+Year-on-Year Inflation Swaps & Y & Y & N & Y \\
+\hline
+Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
+Credit Default Swaps, Options & Y & Y & N & Y \\
+\hline
+Index Credit Default Swaps, Options & Y & Y & N & Y \\
+\hline
+Credit Linked Swaps & Y & Y & N & Y \\
+\hline
+Index Tranches, Synthetic CDOs & Y & Y & N & Y \\
+\hline
+Composite Trades & Y & Y & Y & Y \\
+\hline
+Total Return Swaps and Contracts for Difference & Y & Y & Y & Y \\
+\hline
+Convertible Bonds & Y & Y & Y & N \\
+\hline
+ASCOTs & Y & Y & Y & Y \\
+\hline
+Scripted Trades & Y & Y & Y & Y \\
+\hline
+Flexi Swaps and Balance Guaranteed Swaps & Y & Y & Y & Y \\
+\hline
+\end{tabular}
+\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options, Outperformance options and Pairwise Variance Swaps. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
+\label{tab_coverage}
+\end{center}
+\end{table}
+
+\medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
+  Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
+a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
+and lognormal processes for FX rates and EQ prices, Dodgson-Kainth (or Jarrow-Yildirim) models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors. With the 8th release, Commodity simulation has been added, as well as the foundation for a multi-factor Hull-White based IR/FX/COM simulation model. 
+
+\subsection{ORE in Python or Java}
+
+ORE is written in C++ and comes with a command line executable {\tt ore.exe} that supports batch processes. 
+But since early versions of ORE we also provide language bindings following QuantLib's example using SWIG, in ORE's case with focus on Python and Java modules. 
+The ORE SWIG module extends (contains) the QuantLib SWIG module and offers moreover access to a part of ORE's functionality.
+Since ORE v9, Python {\em wheels} are provided for each release, so that users can install the most recent ORE Python module by calling
+
+\medskip
+\centerline{\tt pip install open-source-risk-engine}
+ 
+\medskip
+See section \ref{example:42} on how to use ORE-Python. 
+
+\subsection{Roadmap}
+
+It is planned that subsequent ORE releases will also provide the calculation of {\bf regulatory capital charges} 
+\begin{itemize}
+\item for Counterparty Credit Risk under the standardised approach (SA-CCR)
+\item for Market Risk (SMRC, FRTB-SA)
+\item for CVA Risk (BA-CVA, SA-CVA)
+\end{itemize}
+
+{\bf Performance:} ORE v12 contains applications of {\bf AAD} for sensitivity analysis, CVA sensitivity (proof-of concept stage),
+as well as applications of {\bf GPUs} to parallelize computations (see Examples 56 and 61), with significant
+speed-ups. Both areas are active work in progress, and further enhancements and tests should be released with the next versions.
+
+{\bf ORE Python:} Moreover, there is demand among ORE users for extended coverage of the ORE-Python version, so that we also expect steady growth
+of the Python wrapper around ORE.
+
+{\bf ORE Service:} ORE v12 contains an implementation of a restful API around ORE, see folder ore/Api and the example therein.
+This is written in Python, uses the ORE-Python module and the Flask web framework. This implementation is proof of concept,
+for demonstration purposes and to encourage the community to extend and contribute alternatives.
+
+\subsection{Further Resources}
+\begin{itemize}
+\item Open Source Risk Project site: \url{http://www.opensourcerisk.org}
+\item Source code and releases: \url{https://github.com/opensourcerisk/engine}
+\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
+\item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
+\item Forum: \url{http://www.opensourcerisk.org/forum}
+\item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
+\item ORE Product Catalogue \cite{products}
+\item ORE Methodology \cite{methods}
+\end{itemize}
+ 
+\subsubsection*{Organisation of this document}
+
+This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio
+processing. After an overview over the core ORE data flow in section \ref{sec:process} and installation instructions in
+section \ref{sec:installation} we start in section \ref{sec:examples} with a series of examples that illustrate how to
+launch ORE using its command line application, and we discuss typical results and reports. We then illustrate in section
+\ref{sec:visualisation} interactive analysis of resulting 'NPV cube' data. The final sections of this text document ORE
+parametrisation.
+
+The description of products, pricing and trade representration in ORE XML has been carved out and moved to \cite{products}.
+
+And finally, a summary of methodology applied in ORE can be found in \cite{methods}.

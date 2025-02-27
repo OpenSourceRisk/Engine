@@ -28,10 +28,10 @@ SwaptionSabrCube::SwaptionSabrCube(
     const Handle<SwaptionVolatilityStructure>& atmVolStructure, const std::vector<Period>& optionTenors,
     const std::vector<Period>& swapTenors, const std::vector<Period>& atmOptionTenors,
     const std::vector<Period>& atmSwapTenors, const std::vector<Spread>& strikeSpreads,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& swapIndexBase,
-    const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
+    const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
-    const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType,
     const std::map<std::pair<Period, Period>, std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
         initialModelParameters,
     const std::vector<Real>& outputShift, const std::vector<Real>& modelShift,
@@ -151,13 +151,13 @@ void SwaptionSabrCube::performCalculations() const {
     if (!modelShift_.empty()) {
         QL_REQUIRE(modelShift_.size() == allSwapTenors.size(),
                    "SwaptionSabrCube::performCalculations(): model shift size ("
-                       << modelShift_.size() << ") does not match swap tenors size (" << allSwapTenors.size());
+                       << modelShift_.size() << ") does not match swap tenors size (" << allSwapTenors.size() << ")");
         for (Size j = 0; j < allSwapTenors.size(); ++j) {
             modelShift[allSwapLengths[j]] = modelShift_[j];
         }
     }
 
-    parametricVolatility_ = boost::make_shared<SabrParametricVolatility>(
+    parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(
         modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
         atmVol()->volatilityType() == QuantLib::Normal
             ? ParametricVolatility::MarketQuoteType::NormalVolatility
@@ -175,14 +175,14 @@ Real SwaptionSabrCube::shiftImpl(Time optionTime, Time swapLength) const {
     return outputShiftInt_(swapLength);
 }
 
-boost::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTime, Time swapLength) const {
+QuantLib::ext::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTime, Time swapLength) const {
     calculate();
     if (auto c = cache_.find(std::make_pair(optionTime, swapLength)); c != cache_.end()) {
         return c->second;
     }
     Real forward = atmStrike(swapIndexBase_->fixingCalendar().adjust(optionDateFromTime(optionTime)),
                              std::max<int>(1, static_cast<int>(swapLength * 12.0 + 0.5)) * Months);
-    auto tmp = boost::make_shared<ParametricVolatilitySmileSection>(
+    auto tmp = QuantLib::ext::make_shared<ParametricVolatilitySmileSection>(
         optionTime, swapLength, forward, parametricVolatility_,
         volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility
                                              : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,

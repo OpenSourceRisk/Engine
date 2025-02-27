@@ -26,6 +26,8 @@
 #include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/sacvasensitivityrecord.hpp>
+#include <orea/engine/cvasensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -36,7 +38,6 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
@@ -53,6 +54,7 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
@@ -81,6 +83,9 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
+    void setIgnoreFixingLead(Size i) { ignoreFixingLead_ = i; }
+    void setIgnoreFixingLag(Size i) { ignoreFixingLag_ = i; }
     void setIncludeTodaysCashFlows(bool b) {
         Settings::instance().includeTodaysCashFlows() = b;
     }
@@ -225,11 +230,15 @@ public:
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setAmcPathDataInput(const std::string& s);
     void setAmcPathDataOutput(const std::string& s);
+    void setAmcIndividualTrainingInput(bool b) { amcIndividualTrainingInput_ = b; }
+    void setAmcIndividualTrainingOutput(bool b) { amcIndividualTrainingOutput_ = b; }
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreSensis(bool b) { storeSensis_ = b; }
+    void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
@@ -260,8 +269,8 @@ public:
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
-    // TODO: load from XML
-    // void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
@@ -304,9 +313,11 @@ public:
     void setDvaName(const std::string& s) { dvaName_ = s; }
     void setRawCubeOutput(bool b) { rawCubeOutput_ = b; }
     void setNetCubeOutput(bool b) { netCubeOutput_ = b; }
+    void setTimeAveragedNettedExposureOutput(bool b) { timeAveragedNettedExposureOutput_ = b; }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { rawCubeOutputFile_ = s; }
     void setNetCubeOutputFile(const std::string& s) { netCubeOutputFile_ = s; }
+    void setTimeAveragedNettedExposureOutputFile(const std::string& s) { timeAveragedNettedExposureOutputFile_ = s; }
     // funding value adjustment details
     void setFvaBorrowingCurve(const std::string& s) { fvaBorrowingCurve_ = s; }
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
@@ -367,7 +378,17 @@ public:
     void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
+    void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
+    void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
+    void setXvaSensiOutputPrecision(Size p) { xvaSensiOutputPrecision_ = p; }
 
+    // Setters for SA-CVA
+    // input file matches the required format for SA-CVA calcs, aggregated per CvaRiskFactorKey
+    void setSaCvaNetSensitivitiesFromFile(const std::string& fileName);
+    // input file is the CVA par sensitivity from ORE's XVA Sensitivity Analytic
+    void setCvaSensitivitiesFromFile(const std::string& fileName);
+  
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
     void setXvaExplainSimMarketParamsFromFile(const std::string& f);
@@ -377,7 +398,7 @@ public:
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-
+    void setCrif(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif) { crif_ = crif; }
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -479,6 +500,9 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    bool enrichIndexFixings() const { return enrichIndexFixings_; }
+    Size ignoreFixingLead() const { return ignoreFixingLead_; }
+    Size ignoreFixingLag() const { return ignoreFixingLag_; }
     const std::map<std::string, std::string>&  marketConfigs() const { return marketConfigs_; }
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
@@ -629,11 +653,17 @@ public:
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
     const std::string& amcPathDataOutput() const { return amcPathDataOutput_; }
+    bool amcIndividualTrainingInput() const { return amcIndividualTrainingInput_; }
+    bool amcIndividualTrainingOutput() const { return amcIndividualTrainingOutput_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() const { return exposureObservationModel_; }
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeSensis() const { return storeSensis_; }
+    bool allowPartialScenarios() const { return allowPartialScenarios_; }
+    const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
+    const vector<Real>& vegaSensiGrid() const { return vegaSensiGrid_; } 
     Size storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() const { return storeSurvivalProbabilities_; }
     bool writeCube() const { return writeCube_; }
@@ -645,11 +675,11 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
-    // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
+    const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-
+  
     /*****************
      * Getters for xva
      *****************/
@@ -686,8 +716,10 @@ public:
     const std::string& dvaName() const { return dvaName_; }
     bool rawCubeOutput() const { return rawCubeOutput_; }
     bool netCubeOutput() const { return netCubeOutput_; }
+    bool timeAveragedNettedExposureOutput() const { return timeAveragedNettedExposureOutput_; }
     const std::string& rawCubeOutputFile() const { return rawCubeOutputFile_; }
     const std::string& netCubeOutputFile() const { return netCubeOutputFile_; }
+    const std::string& timeAveragedNettedExposureOutputFile() const { return timeAveragedNettedExposureOutputFile_; }
     // funding value adjustment details
     const std::string& fvaBorrowingCurve() const { return fvaBorrowingCurve_; }
     const std::string& fvaLendingCurve() const { return fvaLendingCurve_; }
@@ -830,6 +862,19 @@ public:
     }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& xvaSensiPricingEngine() const { return xvaSensiPricingEngine_; }
 
+    bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
+    bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
+    Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+    QuantLib::Size xvaSensiOutputPrecision() const { return xvaSensiOutputPrecision_; }
+
+    /*************************************
+     * SA-CVA 
+     *************************************/
+    const SaCvaNetSensitivities& saCvaNetSensitivities() const { return saCvaNetSensitivities_; }
+    const vector<CvaSensitivityRecord>& cvaSensitivities() const { return cvaSensitivities_; }
+    bool useUnhedgedCvaSensis() const { return useUnhedgedCvaSensis_; }
+    const std::vector<std::string>& cvaPerfectHedges() const { return cvaPerfectHedges_; }
+
     /****************************
      * Getters for zero to par shift
      ****************************/
@@ -867,13 +912,16 @@ protected:
      ***********************************/
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
-    std::string baseCurrency_;
+    std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    bool enrichIndexFixings_ = false;
+    Size ignoreFixingLead_ = 0;
+    Size ignoreFixingLag_ = 0;
     optional<bool> includeTodaysCashFlows_;
     bool includeReferenceDateEvents_ = false;
   
@@ -1001,11 +1049,16 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
+    bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeSensis_ = false;
+    bool allowPartialScenarios_ = false;
+    vector<Real> curveSensiGrid_;
+    vector<Real> vegaSensiGrid_;
     Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
@@ -1033,7 +1086,7 @@ protected:
     Size reportBufferSize_ = 0;
     optional<bool> exposureIncludeTodaysCashFlows_;
     bool exposureIncludeReferenceDateEvents_ = false;
-
+ 
     /**************
      * XVA analytic
      **************/
@@ -1058,8 +1111,10 @@ protected:
     std::string dvaName_ = "";
     bool rawCubeOutput_ = false;
     bool netCubeOutput_ = false;
+    bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_ = "";
     std::string netCubeOutputFile_ = "";
+    std::string timeAveragedNettedExposureOutputFile_ = "";
     // funding value adjustment details
     std::string fvaBorrowingCurve_ = "";
     std::string fvaLendingCurve_ = "";    
@@ -1102,6 +1157,7 @@ protected:
      ***************/
     std::string simmVersion_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+  
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1170,6 +1226,19 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
+    bool xvaSensiParSensi_ = true;
+    bool xvaSensiOutputJacobi_ = false;
+    QuantLib::Real xvaSensiThreshold_ = 1e-6;
+    QuantLib::Size xvaSensiOutputPrecision_ = 4;
+
+    /*****************
+     * SA-CVA 
+     *****************/
+    SaCvaNetSensitivities saCvaNetSensitivities_; 
+    vector<CvaSensitivityRecord> cvaSensitivities_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
+    bool useUnhedgedCvaSensis_ = true;
+    std::vector<std::string> cvaPerfectHedges_ = {"ForeignExchange|Delta", "ForeignExchange|Vega"};
 
     /*****************
      * XVA Explain analytic
@@ -1226,9 +1295,13 @@ private:
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
+    std::string calibrationOutputFileName_;
+    std::string xvaSensiJacobiFileName_;
+    std::string xvaSensiJacobiInverseFileName_;
+    std::string timeAveragedNettedExposureFileName_;
 };
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
+void scaleUpPortfolio(QuantLib::ext::shared_ptr<ore::data::Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore

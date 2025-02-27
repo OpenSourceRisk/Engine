@@ -18,20 +18,9 @@
 
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
+
 #include <ored/utilities/log.hpp>
-#include <ql/instruments/creditdefaultswap.hpp>
-#include <ql/instruments/forwardrateagreement.hpp>
-#include <ql/instruments/makecapfloor.hpp>
-#include <ql/instruments/makeois.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/instruments/yearonyearinflationswap.hpp>
-#include <ql/instruments/zerocouponinflationswap.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
-#include <ql/pricingengine.hpp>
-#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
+
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
@@ -42,6 +31,21 @@
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
+
+#include <ql/instruments/creditdefaultswap.hpp>
+#include <ql/instruments/forwardrateagreement.hpp>
+#include <ql/instruments/makecapfloor.hpp>
+#include <ql/instruments/makeois.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
+#include <ql/instruments/bmaswap.hpp>
+#include <ql/instruments/yearonyearinflationswap.hpp>
+#include <ql/instruments/zerocouponinflationswap.hpp>
+#include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/pricingengine.hpp>
+#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
+#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -264,12 +268,15 @@ Real impliedQuote(const QuantLib::ext::shared_ptr<Instrument>& i) {
         else
             return QuantLib::ext::dynamic_pointer_cast<TenorBasisSwap>(i)->fairPayLegSpread();
     }
+    if(auto p = QuantLib::ext::dynamic_pointer_cast<BMASwap>(i)) {
+        return p->fairIndexFraction();
+    }
     if (QuantLib::ext::dynamic_pointer_cast<FixedBMASwap>(i))
         return QuantLib::ext::dynamic_pointer_cast<FixedBMASwap>(i)->fairRate();
     if (QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i))
         return QuantLib::ext::dynamic_pointer_cast<SubPeriodsSwap>(i)->fairRate();
-    QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument (is null = " << std::boolalpha << (i == nullptr)
-                                                                                << ")");
+    QL_FAIL("ParSensitivitiyAnalysis: impliedQuote(): unknown instrument (is null = " << std::boolalpha
+                                                                                      << (i == nullptr) << ")");
 }
 
 Volatility impliedVolatility(const QuantLib::CapFloor& cap, Real targetValue, const Handle<YieldTermStructure>& d,

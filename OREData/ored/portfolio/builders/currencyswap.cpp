@@ -23,6 +23,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -64,13 +65,15 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
     bool needBaseCcy = allCurrencies.size() > 1;
 
     std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
-    if(needBaseCcy)
+    if(needBaseCcy) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
-    for(auto const& c: allCurrencies) {
+    }
+    for (auto const& c : allCurrencies) {
         Size ccyIdx = cam_->ccyIndex(c);
-        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
-        if(ccyIdx > 0 && needBaseCcy)
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX,ccyIdx-1));
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
     }
     for (auto const& eq : eqNames) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
@@ -99,6 +102,15 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                           bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    std::vector<std::string> ccysStr;
+    std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
+    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(ccysStr, modelCg_, simulationDates_);
 }
 
 } // namespace data

@@ -337,7 +337,8 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
     for (auto const& f : yoyInflationFixingDates_) {
         // get the data
         std::string indexName = f.indexName;
-        Date fixingDate = f.fixingDate;
+        // The previous date isnt strictly required only if we use ZC Wrapper Index
+        std::vector<std::pair<Date, bool>> observationDates {{f.fixingDate,f.mandatory}, {f.fixingDate-1*Years, false}};
         Date payDate = f.payDate;
         bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
         bool indexInterpolated = f.indexInterpolated;
@@ -346,14 +347,11 @@ RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            auto fixingDates =
-                needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
-            if (!fixingDates.empty())
-                result[indexName].addDates(fixingDates);
-            // Add the previous year's date(s) also if any.
-            for (const auto& [d, mandatory] : fixingDates) {
-                Date previousYear = d - 1 * Years;
-                result[indexName].addDate(previousYear, mandatory);
+            for (const auto& [obsDate, mandatory] : observationDates) {
+                auto fixingDates =
+                    needsForecast(obsDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, mandatory);
+                if (!fixingDates.empty())
+                    result[indexName].addDates(fixingDates);
             }
         }
     }
@@ -519,10 +517,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
     auto zeroInflationIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear ||
-                          (c.interpolation() == QuantLib::CPI::AsIndex && zeroInflationIndex->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
@@ -537,10 +532,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 
 void FixingDateGetter::visit(CPICoupon& c) {
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear ||
-                          (c.observationInterpolation() == QuantLib::CPI::AsIndex && c.cpiIndex()->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
@@ -872,7 +864,6 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                     }
                     TLOG("Adding extra fixing dates for overnight index " << i);
                     fixings[i].addDates(oisDates, false);
-                    
                 } else if (isBmaIndex(i)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
@@ -889,7 +880,16 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
                         if (bma->bmaIndexName() == i) {
-                            liborNames.insert(bma->liborIndexName());
+                            if(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(bma->index())) {
+                                if (oisDates.empty()) {
+                                    TLOG("Generating fixing dates for overnight indices.");
+                                    oisDates = generateLookbackDates(asof, oisLookback, calendar);
+                                }
+                                TLOG("Adding extra fixing dates for overnight index " << i);
+                                fixings[i].addDates(oisDates, false);
+                            } else {
+                                liborNames.insert(bma->indexName());
+                            }
                         }
                     }
                     for (auto const& l : liborNames) {

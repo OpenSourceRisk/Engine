@@ -83,7 +83,8 @@ RiskParticipationAgreementBlackEngineBuilder::engineImpl(const std::string& id, 
         parseReal(
             modelParameter("Reversion", {IndexNameTranslator::instance().oreName(index->name()), rpa->npvCurrency()})),
         parseBool(engineParameter("AlwaysRecomputeOptionRepresentation")), parseInteger(engineParameter("MaxGapDays")),
-        maxDiscretisationPoints);
+        maxDiscretisationPoints,
+        parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -108,7 +109,8 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
         market_->defaultCurve(rpa->creditCurveId(), config)->curve(),
         market_->recoveryRate(rpa->creditCurveId(), config), market_->fxVol(ccyPair, config),
         parseBool(engineParameter("AlwaysRecomputeOptionRepresentation")), parseInteger(engineParameter("MaxGapDays")),
-        maxDiscretisationPoints);
+        maxDiscretisationPoints,
+        parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
 QuantLib::ext::shared_ptr<QuantExt::LGM>
@@ -323,7 +325,8 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
     Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
         rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, creditCurve, recoveryRate,
-        maxGapDays, maxDiscretisationPoints);
+        maxGapDays, maxDiscretisationPoints,
+        parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>

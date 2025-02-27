@@ -72,18 +72,19 @@ void Portfolio::fromXML(XMLNode* node) {
             StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()).log();
         }
 
-        // If trade loading failed, then insert a dummy trade with same id and envelope
+        // If trade loading failed, then insert a dummy trade with same id, envelope and trade actions
         if (failedToLoad && buildFailedTrades_) {
             try {
                 trade = TradeFactory::instance().build("Failed");
-                // this loads only type, id and envelope, but type will be set to the original trade's type
+                // this loads only type, id, envelope and trade actions, but type will be set to the original trade's type
                 trade->fromXML(nodes[i]);
                 // create a dummy trade of type "Dummy"
                 QuantLib::ext::shared_ptr<FailedTrade> failedTrade = QuantLib::ext::make_shared<FailedTrade>();
-                // copy id and envelope
+                // copy id, envelope and trade actions
                 failedTrade->id() = id;
                 failedTrade->setUnderlyingTradeType(tradeType);
                 failedTrade->setEnvelope(trade->envelope());
+                failedTrade->tradeActions() = trade->tradeActions();
                 // and add it to the portfolio
                 add(failedTrade);
                 WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
@@ -131,7 +132,10 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
     Size failedTrades = 0;
+    std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> buildTimes;
     while (trade != trades_.end()) {
+        std::string tradeType = trade->second->tradeType();
+        boost::timer::cpu_timer timer;
         auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
                                         buildFailedTrades(), emitStructuredError);
         if (success) {
@@ -143,10 +147,32 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         } else {
             trade = trades_.erase(trade);
         }
+        boost::timer::nanosecond_type t = timer.elapsed().wall;
+        if (auto f = buildTimes.find(tradeType); f != buildTimes.end()) {
+            f->second.first++;
+            f->second.second += t;
+        } else {
+            buildTimes[tradeType] = std::make_pair(1, t);
+        }
     }
     LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
                                            << failedTrades << " failed trades, context is " + context);
-
+    LOG("Build stats:");
+    for (auto const& [type, timing] : buildTimes) {
+        LOG(std::left << std::setw(25) << type << std::right << std::setw(10) << timing.first << std::setprecision(3)
+                      << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
+                      << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
+    }
+    if (emitStructuredError && initialSize == failedTrades && initialSize > 0) {
+        map<string, string> subfields;
+        for (auto failedTrade : trades_) {
+            subfields.insert({"tradeId", failedTrade.first});
+            subfields.insert({"tradeType", failedTrade.second->tradeType()});
+        }
+        StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Trade,
+                          "All trades in portfolio failed to build.", subfields)
+            .log();
+    }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
 

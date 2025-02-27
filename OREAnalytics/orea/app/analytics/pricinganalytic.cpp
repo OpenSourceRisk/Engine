@@ -63,6 +63,8 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     // Check coverage
     for (const auto& rt : runTypes) {
         if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
@@ -70,6 +72,8 @@ void PricingAnalyticImpl::runAnalytic(
             DLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
@@ -90,7 +94,7 @@ void PricingAnalyticImpl::runAnalytic(
             ReportWriter(inputs_->reportNaString())
                 .writeNpv(*report, effectiveResultCurrency, analytic()->market(), marketConfig,
                           analytic()->portfolio());
-            analytic()->reports()[type]["npv"] = report;
+            analytic()->addReport(type, "npv", report);
             CONSOLE("OK");
             if (inputs_->outputAdditionalResults()) {
                 CONSOLEW("Pricing: Additional Results");
@@ -98,7 +102,7 @@ void PricingAnalyticImpl::runAnalytic(
                 ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
                                                   marketConfig, effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
-                analytic()->reports()[type]["additional_results"] = addReport;
+                analytic()->addReport(type, "additional_results", addReport);
                 CONSOLE("OK");
             }
             if (inputs_->outputCurves()) {
@@ -110,7 +114,7 @@ void PricingAnalyticImpl::runAnalytic(
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
-                analytic()->reports()[type]["curves"] = curvesReport;
+                analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
         }
@@ -120,7 +124,7 @@ void PricingAnalyticImpl::runAnalytic(
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
-            analytic()->reports()[type]["cashflow"] = report;
+            analytic()->addReport(type, "cashflow", report);
             CONSOLE("OK");
         }
         else if (type == "CASHFLOWNPV") {
@@ -132,7 +136,7 @@ void PricingAnalyticImpl::runAnalytic(
             ReportWriter(inputs_->reportNaString())
                 .writeCashflowNpv(*report, tmpReport, analytic()->market(), marketConfig,
                                   effectiveResultCurrency, inputs_->cashflowHorizon());
-            analytic()->reports()[type]["cashflownpv"] = report;
+            analytic()->addReport(type, "cashflownpv", report);
             CONSOLE("OK");
         }
         else if (type == "SENSITIVITY") {
@@ -161,8 +165,7 @@ void PricingAnalyticImpl::runAnalytic(
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
-            // FIXME: Why are these disabled?
-            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+            const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
@@ -187,14 +190,14 @@ void PricingAnalyticImpl::runAnalytic(
             auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
             ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
-            analytic()->reports()[type]["sensitivity"] = report;
+            analytic()->addReport(type, "sensitivity", report);
 
             LOG("Sensi analysis - write sensitivity scenario report in memory");
             QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
                 .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(),
                                      inputs_->sensiThreshold());
-            analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
+            analytic()->addReport(type, "sensitivity_scenario", scenarioReport);
 
             auto simmSensitivityConfigReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
@@ -202,7 +205,7 @@ void PricingAnalyticImpl::runAnalytic(
                                               sensiAnalysis_->scenarioGenerator()->shiftSizes(),
                                               sensiAnalysis_->scenarioGenerator()->baseValues(),
                                               sensiAnalysis_->scenarioGenerator()->keyToFactor());
-            analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
+            analytic()->addReport(type, "sensitivity_config", simmSensitivityConfigReport);
 
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
@@ -232,16 +235,16 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
-                analytic()->reports()[type]["par_sensitivity"] = parSensiReport;
+                analytic()->addReport(type, "par_sensitivity", parSensiReport);
 
                 if (inputs_->outputJacobi()) {
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     writeParConversionMatrix(parAnalysis_->parSensitivities(), *jacobiReport);
-                    analytic()->reports()[type]["jacobi"] = jacobiReport;
+                    analytic()->addReport(type, "jacobi", jacobiReport);
                     
                     QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     parConverter->writeConversionMatrix(*jacobiInverseReport);
-                    analytic()->reports()[type]["jacobi_inverse"] = jacobiInverseReport;
+                    analytic()->addReport(type, "jacobi_inverse", jacobiInverseReport);
                 }
             }
             else {

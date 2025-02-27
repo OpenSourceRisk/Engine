@@ -150,7 +150,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                             }
                         }
                         if (addFX.first && data_[date].insert(md).second) {
-                            DLOG("Added MarketDatum " << key);
+                            TLOG("Added MarketDatum " << key);
                         } else if (!addFX.first) {
                             DLOG("Skipped MarketDatum " << key << " - dominant FX already present.")
                         }
@@ -253,5 +253,13 @@ std::set<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& 
     }
     return result;
 }
+
+std::set<QuantLib::Date> CSVLoader::asofDates() const {
+    std::set<QuantLib::Date> result;
+    for (auto const& [d, _] : data_)
+        result.insert(d);
+    return result;
+}
+
 } // namespace data
 } // namespace ore

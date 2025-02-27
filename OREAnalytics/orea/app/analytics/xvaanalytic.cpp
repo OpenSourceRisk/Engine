@@ -18,14 +18,19 @@
 
 #include <orea/aggregation/dimflatcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/aggregation/dimhelper.hpp>
+#include <orea/aggregation/dynamicdeltavarcalculator.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/jointnpvcube.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/cube/sparsenpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
+#include <orea/engine/sensitivitycalculator.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -106,6 +111,7 @@ QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
         QuantLib::ext::make_shared<EngineData>(*inputs_->simulationPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "Classic";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -133,8 +139,8 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
-        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true, false,
-        *inputs_->iborFallbackConfig(), false, offsetScenario_);
+        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
+        inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, offsetScenario_);
 
     if (offsetScenario_ == nullptr) {
         simMarketCalibration_ = simMarket_;
@@ -142,16 +148,17 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
     } else {
         // set useSpreadedTermstructure to true, yield better results in calibration of the CAM
         simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), analytic()->configurations().simMarketParams,
+            analytic()->market(), offsetSimMarketParams_,
             QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
-            *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true, false,
-            *inputs_->iborFallbackConfig(), false, offsetScenario_);
+            *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true,
+            inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, offsetScenario_);
 
         // Create a third market used for AMC and Postprocessor, holds a larger simmarket, e.g. default curves
         offsetSimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), offsetSimMarketParams_, QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
             configuration, *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams,
-            inputs_->continueOnError(), true, true, false, *inputs_->iborFallbackConfig(), false, offsetScenario_);
+            inputs_->continueOnError(), true, true, inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(),
+            false, offsetScenario_);
 
         TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
         TLOG("XvaAnalytic: Offset scenario is absolute = " << offsetScenario_->isAbsolute());
@@ -187,7 +194,8 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
         QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");
         auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
-        scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
+        scenarioGenerator_ =
+            sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
                       QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), inputs_->amcPathDataOutput());
         QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator");
     }
@@ -199,8 +207,9 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));
     if (inputs_->writeScenarios()) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        analytic()->reports()["XVA"]["scenario"] = report;
-        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
+        analytic()->addReport(LABEL, "scenario", report);
+        scenarioGenerator_ =
+            QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
     }
 }
 
@@ -210,12 +219,11 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
     ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarketCalibration_ : analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
-    CrossAssetModelBuilder modelBuilder(
-        market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
-        inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
-        inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        analytic()->configurations().crossAssetModelData->getSalvagingAlgorithm(), "xva cam building");
+    CrossAssetModelBuilder modelBuilder(market, analytic()->configurations().crossAssetModelData,
+                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
+                                        false, continueOnCalibrationError, "", "xva cam building");
 
     model_ = *modelBuilder.model();
 }
@@ -244,6 +252,14 @@ void XvaAnalyticImpl::initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const s
                                                                         samples_, cubeDepth, 0.0f);
 }
 
+std::set<std::string> XvaAnalyticImpl::getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const {
+    // collect netting set ids from portfolio
+    std::set<std::string> nettingSetIds;
+    for (auto const& [tradeId,trade] : portfolio->trades())
+        nettingSetIds.insert(trade->envelope().nettingSetId());
+    return nettingSetIds;
+}
+
 void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
 
     LOG("XVA: initClassicRun");
@@ -262,8 +278,39 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
     if (inputs_->nThreads() == 1) {
         if (portfolio->size() > 0)
             initCube(cube_, portfolio->ids(), cubeDepth_);
-        // not required by any calculators in ore at the moment
+	
+	// not required by any calculators in ore at the moment
         nettingSetCube_ = nullptr;
+	// except in this case with a classic single-threaded run, left here for validation purposes:
+        if (inputs_->storeSensis()) {
+            // Create the sensitivity storage manager
+            // FIXME: Does the storage manager check consistency with the sensis provided by the delta/gamma engines?
+            bool sensitivities2ndOrder = false;
+            vector<Real> curveSensitivityGrid = inputs_->curveSensiGrid();
+            vector<Real> vegaOptSensitivityGrid = inputs_->vegaSensiGrid();
+            vector<Real> vegaUndSensitivityGrid = inputs_->vegaSensiGrid();
+            vector<Real> fxVegaSensitivityGrid = inputs_->vegaSensiGrid();
+            Size n = curveSensitivityGrid.size();
+            Size u = vegaOptSensitivityGrid.size();
+            Size v = vegaUndSensitivityGrid.size();
+            Size w = fxVegaSensitivityGrid.size();
+	    QL_REQUIRE(n + u + v + w > 0, "store sensis chosen, but sensitivity grids not set"); 
+            // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
+            sensitivityStorageManager_ = QuantLib::ext::make_shared<ore::analytics::CamSensitivityStorageManager>(
+                analytic()->configurations().crossAssetModelData->currencies(), n, u, v, w, 0, sensitivities2ndOrder);
+            QL_REQUIRE(sensitivityStorageManager_, "creating sensitivity storage manager failed");
+
+	    // Create the netting set cube 
+	    Size samples = analytic()->configurations().scenarioGeneratorData->samples();
+            vector<Date> dates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
+            std::set<std::string> nettingSets = getNettingSetIds(portfolio);
+	    LOG("Initialise netting set cube for "
+		<< nettingSets.size() << " netting sets, " << dates.size() << " valuation dates, " << samples
+		<< " samples, " << sensitivityStorageManager_->getRequiredSize() << " sensitivities to store");
+            nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
+                inputs_->asof(), nettingSets, dates, samples, sensitivityStorageManager_->getRequiredSize(), 0.0f);
+        }
+
         // Init counterparty cube for the storage of survival probabilities
         if (inputs_->storeSurvivalProbabilities()) {
             // Use full list of counterparties, not just those in the sub-portflio
@@ -336,6 +383,11 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             calculators.push_back(QuantLib::ext::make_shared<MultiStateNPVCalculator>(
                 inputs_->exposureBaseCurrency(), cubeInterpreter_->creditStateNPVsIndex(),
                 inputs_->storeCreditStateNPVs()));
+        }
+	if (inputs_->storeSensis()) {
+	    LOG("CamSensitivityStorageManager: store sensis true");
+	    QL_REQUIRE(sensitivityStorageManager_, "sensitivity storage manager not set");
+            calculators.push_back(QuantLib::ext::make_shared<SensitivityCalculator>(sensitivityStorageManager_));
         }
         return calculators;
     };
@@ -442,7 +494,8 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     LOG("XvaAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
-    edCopy->globalParameters()["RunType"] = "NPV";
+    edCopy->globalParameters()["RunType"] = "Exposure";
+    edCopy->globalParameters()["McType"] = "American";
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = inputs_->marketConfig("lgmcalibration");
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
@@ -462,7 +515,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     ProgressMessage(msg, 0, 1).log();
 
     std::vector<Date> simDates, stickyCloseOutDates;
-    if (analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
+    if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag() &&
+        analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
         simDates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
         stickyCloseOutDates = analytic()->configurations().scenarioGeneratorData->getGrid()->closeOutDates();
     } else {
@@ -479,19 +533,22 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     amcPortfolio_ = QuantLib::ext::make_shared<Portfolio>();
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
-            try {
+            if (inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
+                auto t = trade;
+                auto [ft, success] = buildTrade(t, factory, "analytic/" + label(), false, true, true);
+                if (success)
+                    amcPortfolio_->add(trade);
+                else
+                    amcPortfolio_->add(ft);
+            } else {
+                // the amc-cg engine will build the trades itself
                 trade->reset();
-                if(inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
-                    // the amc-cg engine will build the trades itself
-                    trade->build(factory);
-                }
                 amcPortfolio_->add(trade);
-                DLOG("trade " << tradeId << " is added to amc portfolio");
-            } catch (const std::exception& e) {
-                StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()).log();
             }
+            DLOG("trade " << tradeId << " is added to amc portfolio");
         }
     }
+
     LOG("AMC portfolio built, size is " << amcPortfolio_->size());
 
     CONSOLE("OK");
@@ -526,13 +583,14 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
+        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgBumpSensis(), false /* true */, inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
@@ -558,7 +616,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-                inputs_->amcPathDataInput(), inputs_->amcPathDataOutput());
+                inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(), inputs_->amcIndividualTrainingInput(),
+                inputs_->amcIndividualTrainingOutput());
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
             if (!scenarioData_.empty())
@@ -588,6 +647,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
+                inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
                 inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
                 simMarketParams);
 
@@ -622,7 +682,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     analytics["flipViewXVA"] = inputs_->flipViewXVA();
     analytics["creditMigration"] = inputs_->creditMigrationAnalytic();
     analytics["exposureProfilesUseCloseOutValues"] = inputs_->exposureProfilesUseCloseOutValues();
-    
+
     string baseCurrency = inputs_->xvaBaseCurrency();
     string calculationType = inputs_->collateralCalculationType();
     string allocationMethod = inputs_->exposureAllocationMethod();
@@ -655,24 +715,43 @@ void XvaAnalyticImpl::runPostProcessor() {
     checkConfigurations(analytic()->portfolio());
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
-        if (inputs_->dimModel() == "Regression") {
-            LOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
-            std::map<std::string, Real> currentIM;
-            if (inputs_->collateralBalances()) {
-                for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
-                    currentIM[n.nettingSetId()] =
-                        b->initialMargin() * (b->currency() == baseCurrency
-                                                  ? 1.0
-                                                  : analytic()
-                                                        ->market()
-                                                        ->fxRate(b->currency() + baseCurrency, marketConfiguration)
-                                                        ->value());
-                }
+        LOG("dim calculator not set, create one");
+	    std::map<std::string, Real> currentIM;
+        if (inputs_->collateralBalances()) {
+            for (auto const& [n, b] : inputs_->collateralBalances()->collateralBalances()) {
+                currentIM[n.nettingSetId()] =
+                    b->initialMargin() *
+                    (b->currency() == baseCurrency
+                         ? 1.0
+                         : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
             }
+        }
+        if (inputs_->dimModel() == "Regression") {
+	    LOG("Create a " << inputs_->dimModel() << " Dynamic Initial Margin Calculator");
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
                 dimLocalRegressionBandwidth, currentIM);
+        } else if (inputs_->dimModel() == "DeltaVaR" ||
+		   inputs_->dimModel() == "DeltaGammaNormalVaR" ||
+		   inputs_->dimModel() == "DeltaGammaVaR") {
+            QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
+                       "netting set cube or sensitivity storage manager not set - "
+                           << "is this a single-threaded classic run storing sensis?");
+            // delta 1, delta-gamma-normal 2, delta-gamma 3
+            LOG("Create a " << inputs_->dimModel() << " Initial Margin Calculator");
+            Size ddvOrder;
+            if (inputs_->dimModel() == "DeltaVaR")
+                ddvOrder = 1;
+            else if (inputs_->dimModel() == "DeltaGammaNormalVaR")
+                ddvOrder = 2;
+            else
+                ddvOrder = 3;
+            QuantLib::ext::shared_ptr<DimHelper> dimHelper = QuantLib::ext::make_shared<DimHelper>(
+                model_, nettingSetCube_, sensitivityStorageManager_, inputs_->curveSensiGrid(), dimHorizonCalendarDays);
+            dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
+                dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
         } else {
             LOG("dim calculator not set, create FlatDynamicInitialMarginCalculator");
             dimCalculator_ = QuantLib::ext::make_shared<FlatDynamicInitialMarginCalculator>(
@@ -699,7 +778,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
         inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(),
         analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), inputs_->mporCashFlowMode(),
-        firstMporCollateralAdjustment);
+        firstMporCollateralAdjustment, inputs_->continueOnError());
     LOG("post done");
 }
 
@@ -708,15 +787,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
 
+    QL_REQUIRE(!((offsetScenario_ == nullptr) ^ (offsetSimMarketParams_ == nullptr)),
+               "Need offsetScenario and corresponding simMarketParameter");
+
     SavedSettings settings;
-    
+
     optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
     Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
     LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
     if (localIncTodaysCashFlows) {
         LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
     }
-    
+
     bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
@@ -744,21 +826,22 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
+        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgBumpSensis(), false /* true */, inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
         engine.run();
 
-        analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
+        analytic()->addReport(LABEL, "xvacg-exposure", engine.exposureReport());
         if (inputs_->xvaCgSensiScenarioData())
-            analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
+            analytic()->addReport(LABEL, "xvacg-cva-sensi-scenario", engine.sensiReport());
         return;
     }
 
@@ -802,10 +885,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
             doAmcRun = !amcPortfolio_->trades().empty();
             doClassicRun = !residualPortfolio->trades().empty();
+
+            analytic()->enrichIndexFixings(amcPortfolio_);
         } else {
             for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
                 residualPortfolio->add(trade);
         }
+
+        analytic()->enrichIndexFixings(residualPortfolio);
 
         /********************************************************************************
          * This is where we build cubes and the "classic" valuation work is done
@@ -858,7 +945,20 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     } else { // runSimulation_
 
         // build the portfolio linked to today's market
-        analytic()->buildPortfolio();
+        //
+        // during simulation stage, trades may be built using amc engine factory
+        // instead of classic engine factory, resulting in trade errors from the following buildPortfolio()
+        //
+        // when buildFailedTrades is set to False, trade errors are emitted in structured log, because
+        // the trades will be removed from the portfolio and do NOT participate in the post-processing.
+        // we have a genuine interest in such errors
+        //
+        // when buildFailedTrades is set to True, trade errors are NOT emitted in structured log, because
+        // the trades will NOT be removed from the portfolio and DO participate in the post-processing.
+        // any genuine error should have been reported during simulation stage
+        analytic()->buildPortfolio(!inputs_->buildFailedTrades());
+
+        analytic()->enrichIndexFixings(analytic()->portfolio());
 
         // ... and load a pre-built cube for post-processing
 
@@ -882,13 +982,13 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
-        analytic()->npvCubes()["XVA"]["cube"] = cube_;
-        analytic()->mktCubes()["XVA"]["scenariodata"] = *scenarioData_;
+        analytic()->npvCubes()[LABEL]["cube"] = cube_;
+        analytic()->mktCubes()[LABEL]["scenariodata"] = *scenarioData_;
         if (nettingSetCube_) {
-            analytic()->npvCubes()["XVA"]["nettingsetcube"] = nettingSetCube_;
+            analytic()->npvCubes()[LABEL]["nettingsetcube"] = nettingSetCube_;
         }
         if (cptyCube_) {
-            analytic()->npvCubes()["XVA"]["cptycube"] = cptyCube_;
+            analytic()->npvCubes()[LABEL]["cptycube"] = cptyCube_;
         }
     }
 
@@ -897,7 +997,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
-        analytic()->reports()["XVA"]["rawcube"] = report;
+        analytic()->addReport(LABEL, "rawcube", report);
     }
 
     if (runXva_) {
@@ -927,10 +1027,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
-                    analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
+                    analytic()->addReport(LABEL, "exposure_trade_" + tradeId, report);
                 } catch (const std::exception& e) {
+                    QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess_->portfolio()->trades().find(tradeId)->second;
+                    map<string, string> subfields;
+                    subfields.insert({"tradeId", tradeId});
+                    subfields.insert({"tradeType", failedTrade->tradeType()});
                     StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
-                                                    {{"tradeId", tradeId}})
+                                                    subfields)
                         .log();
                 }
             }
@@ -942,7 +1046,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+                    analytic()->addReport(LABEL, "exposure_nettingset_" + nettingSet, exposureReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
                                                     e.what(), {{"nettingSetId", nettingSet}})
@@ -953,7 +1057,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+                    analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
                                                     e.what(), {{"nettingSetId", nettingSet}})
@@ -964,7 +1068,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+                    analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
                                                     {{"nettingSetId", nettingSet}})
@@ -976,26 +1080,33 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
-        analytic()->reports()["XVA"]["xva"] = xvaReport;
+        analytic()->addReport(LABEL, "xva", xvaReport);
 
         if (inputs_->netCubeOutput()) {
             auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
-            analytic()->reports()["XVA"]["netcube"] = report;
+            analytic()->addReport(LABEL, "netcube", report);
+        }
+
+        if (inputs_->timeAveragedNettedExposureOutput()) {
+            auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            ReportWriter(inputs_->reportNaString())
+                .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
+            analytic()->addReport(LABEL, "timeAveragedNettedExposure", report);
         }
 
         if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
             // Generate DIM evolution report
             auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             postProcess_->exportDimEvolution(*dimEvolutionReport);
-            analytic()->reports()["XVA"]["dim_evolution"] = dimEvolutionReport;
+            analytic()->addReport(LABEL, "dim_evolution", dimEvolutionReport);
 
             // Generate DIM regression reports
             vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                 auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 dimRegReports.push_back(rep);
-                analytic()->reports()["XVA"]["dim_regression_" + std::to_string(i)] = rep;
+                analytic()->addReport(LABEL, "dim_regression_" + std::to_string(i), rep);
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
@@ -1010,8 +1121,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 analytic()
-                    ->reports()["XVA"]["credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i])] =
-                    rep;
+                    ->addReport("XVA", "credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i]), rep);
                 (*rep)
                     .addColumn("upperBucketBound", double(), 6)
                     .addColumn("pdf", double(), 8)

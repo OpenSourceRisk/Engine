@@ -55,6 +55,7 @@
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
       <Parameter name="MinObsDate">true</Parameter>
       <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+      <Parameter name="SpreadOnIncomeCurve">false</Parameter>
     </EngineParameters>
   </Product>
   <Product type="MultiLegOption">

@@ -61,14 +61,23 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
         tmpEndDate = std::min(tmpEndDate, valueEnd);
     }
 
-    Schedule sch = MakeSchedule()
-                       .from(valueStart)
-                       .to(tmpEndDate)
-                       .withTenor(1 * Days)
-                       .withCalendar(overnightIndex->fixingCalendar())
-                       .withConvention(overnightIndex->businessDayConvention())
-                       .backwards();
-    valueDates_ = sch.dates();
+    QL_REQUIRE(valueStart < tmpEndDate, "OvernightIndexedCoupon: valueStart ("
+                                            << valueStart << ") must be earlier than valueEnd (" << tmpEndDate << ")");
+
+    try {
+        Schedule sch = MakeSchedule()
+                           .from(valueStart)
+                           // .to(valueEnd)
+                           .to(tmpEndDate)
+                           .withTenor(1 * Days)
+                           .withCalendar(overnightIndex->fixingCalendar())
+                           .withConvention(overnightIndex->businessDayConvention())
+                           .backwards();
+        valueDates_ = sch.dates();
+    } catch (...) {
+        // handle degenerate schedules
+        valueDates_ = {valueStart, tmpEndDate};
+    }
 
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
@@ -177,11 +186,6 @@ void CappedFlooredAverageONIndexedCoupon::performCalculations() const {
 Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
 
 Rate CappedFlooredAverageONIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
-
-Rate CappedFlooredAverageONIndexedCoupon::rate() const {
-    calculate();
-    return rate_;
-}
 
 Rate CappedFlooredAverageONIndexedCoupon::convexityAdjustment() const { return underlying_->convexityAdjustment(); }
 

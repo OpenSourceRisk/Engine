@@ -284,7 +284,6 @@ pricingengines/discountingfxforwardenginedeltagamma.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
-pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
@@ -306,6 +305,7 @@ pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
+pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
@@ -414,6 +414,7 @@ termstructures/yoyoptionletsurfacestripper.cpp
 termstructures/yoypricesurfacefromvols.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
+utilities/barrier.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
 utilities/inflation.cpp
@@ -505,6 +506,7 @@ currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+gitversion.hpp
 indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -824,7 +826,6 @@ pricingengines/discountingfxforwardenginedeltagamma.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
-pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
@@ -846,6 +847,7 @@ pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
+pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
@@ -935,8 +937,6 @@ termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
-termstructures/inflation/inflationtraits.hpp
-termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
@@ -1011,6 +1011,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/barrier.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/inflation.hpp

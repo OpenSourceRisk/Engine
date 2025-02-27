@@ -17,7 +17,9 @@
 */
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/marketdataloader.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -37,6 +39,7 @@
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 #include <iostream>
 
@@ -51,12 +54,12 @@ namespace analytics {
 Analytic::Analytic(std::unique_ptr<Impl> impl,
          const std::set<std::string>& analyticTypes,
          const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
          bool simulationConfig,
          bool sensitivityConfig,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
-    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
-
+    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs), analyticsManager_(analyticsManager) {
     configurations().asofDate = inputs->asof();
 
     // set these here, can be overwritten in setUpConfigurations
@@ -74,29 +77,54 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
         impl_->setAnalytic(this);
         impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
     }
+}
 
-    setUpConfigurations();
+
+Analytic::analytic_reports Analytic::reports() { 
+    auto rpts = reports_;
+    for (const auto& [key, a] : impl_->dependentAnalytics()) {
+        if (a.second) {
+            auto ar = a.first->reports();
+            rpts.insert(ar.begin(), ar.end());
+        }
+	}
+    return rpts;
 }
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
-    if (impl_) {
+    if (!analyticComplete_ && impl_) {
+        if (!impl_->initialised())
+            QL_FAIL("Analytic " + label() + " is not initialed.");
         impl_->runAnalytic(loader, runTypes);
         MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
+    analyticComplete_ = true;
 }
 
-void Analytic::setUpConfigurations() {
-    if (impl_)
-        impl_->setUpConfigurations();
+void Analytic::initialise() {
+    if (impl() && !impl()->initialised()) {
+        impl()->initialise();
+        buildConfigurations();
+    }
+}
+
+void Analytic::Impl::initialise() {
+    if (!initialised_) {
+        buildDependencies();
+        setUpConfigurations();
+        for (const auto& [_, a] : dependentAnalytics_)
+            a.first->initialise();
+        initialised_ = true;
+    }
 }
 
 std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAnalytics() const {
     std::vector<QuantLib::ext::shared_ptr<Analytic>> analytics;
     for (const auto& [_, a] : dependentAnalytics_) {
-        analytics.push_back(a);
-        auto das = a->allDependentAnalytics();
+        analytics.push_back(a.first);
+        auto das = a.first->allDependentAnalytics();
         analytics.insert(end(analytics), begin(das), end(das));
     }
     return analytics;
@@ -105,7 +133,7 @@ std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAna
 QuantLib::ext::shared_ptr<Analytic> Analytic::Impl::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
-    return it->second;
+    return it->second.first;
 }
 
 const std::string Analytic::label() const { 
@@ -134,7 +162,7 @@ const Timer& Analytic::getTimer() {
 
     // Make sure all dependent analytics' timers have been added to this analytic's timer
     for (const auto& [analyticLabel, analytic] : impl_->dependentAnalytics())
-        timer_.addTimer(analyticLabel, analytic->getTimer());
+        timer_.addTimer(analyticLabel, analytic.first->getTimer());
 
     return timer_;
 }
@@ -145,20 +173,19 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
     mds.insert(addDates.begin(), addDates.end());
 
     for (const auto& a : impl_->dependentAnalytics()) {
-        addDates = a.second->impl()->additionalMarketDates();
+        addDates = a.second.first->impl()->additionalMarketDates();
         mds.insert(addDates.begin(), addDates.end());
     }
     return mds;
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
 
     for (const auto& a : impl_->dependentAnalytics()) {
-        auto ctmps = a.second->todaysMarketParams();
+        auto ctmps = a.second.first->todaysMarketParams();
         tmps.insert(end(tmps), begin(ctmps), end(ctmps));
     }
 
@@ -230,7 +257,7 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
         mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
-void Analytic::buildPortfolio() {
+void Analytic::buildPortfolio(const bool emitStructuredError) {
     startTimer("buildPortfolio()");
     QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
         
@@ -248,7 +275,7 @@ void Analytic::buildPortfolio() {
 
         LOG("Build the portfolio");
         QuantLib::ext::shared_ptr<EngineFactory> factory = impl()->engineFactory();
-        portfolio()->build(factory, "analytic/" + label());
+        portfolio()->build(factory, "analytic/" + label(), emitStructuredError);
 
         // remove dates that will have matured
         Date maturityDate = inputs()->asof();
@@ -304,6 +331,94 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
         // no bonds that require a spread imply => return null ptr
         return QuantLib::ext::shared_ptr<Loader>();
     }
+}
+
+void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+
+    if (!inputs()->enrichIndexFixings())
+        return;
+
+    startTimer("enrichIndexFixings()");
+    QL_REQUIRE(portfolio, "portfolio cannot be empty");
+
+    auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {
+        if (fallbackFixingDate > originalFixingDate) {
+            return (inputs()->ignoreFixingLead() == 0 ||
+                    (fallbackFixingDate - originalFixingDate <= inputs()->ignoreFixingLead()));
+        }
+        if (fallbackFixingDate < originalFixingDate) {
+            return (inputs()->ignoreFixingLag() == 0 ||
+                    (originalFixingDate - fallbackFixingDate <= inputs()->ignoreFixingLag()));
+        }
+        return true;
+    };
+
+    auto compTs = [](const std::pair<Date,Real>& a, const std::pair<Date,Real>& b) {
+        return a.first < b.first;
+    };
+
+    for (const auto& [index_name, dates] : portfolio->fixings(inputs()->asof())) {
+        try {
+            auto index = parseIndex(index_name);
+            const auto& timeSeries = index->timeSeries();
+            if (timeSeries.size() == 0)
+                continue;
+
+            vector<Date> datesToAdd;
+            vector<Real> fixingsToAdd;
+
+            for(const auto& [date, mandatory] : dates) {
+                if (mandatory && date != inputs()->asof()) {
+                    auto tmp = std::pair<Date,Real>(date, Null<Real>());
+
+                    if (timeSeries[date] != Null<Real>())
+                        continue;
+
+                    Date fallbackDate;
+                    Real fallbackFixing = Null<Real>();
+                    if (date < timeSeries.firstDate()) {
+                        fallbackDate = timeSeries.firstDate();
+                    }
+                    else if (date > timeSeries.lastDate()) {
+                        fallbackDate = timeSeries.lastDate();
+                    }
+                    else {
+                        auto iter = std::upper_bound(timeSeries.begin(), timeSeries.end(), tmp, compTs);
+                        if (isFallbackFixingDateWithinLimit(date, (--iter)->first)) {
+                            fallbackDate = iter->first;
+                        } else {
+                            fallbackDate = (++iter)->first;
+                        }
+                    }
+                    if (!isFallbackFixingDateWithinLimit(date, fallbackDate)) {
+                        continue;
+                    }
+                    fallbackFixing = timeSeries[fallbackDate];
+                    if (fallbackFixing == Null<Real>()) {
+                        continue;
+                    }
+                    datesToAdd.push_back(date);
+                    fixingsToAdd.push_back(fallbackFixing);
+                    StructuredFixingWarningMessage(
+                        index->name(), date, "Missing fixing",
+                        "Could not find required fixing ID. "
+                        "Using fallback fixing on " + to_string(fallbackDate)).log();
+                }
+            }
+
+            for(Size i = 0; i < datesToAdd.size(); ++i) {
+                index->addFixing(datesToAdd[i], fixingsToAdd[i], false);
+                DLOG("Added fallback fixing " << index->name() << " "
+                     << datesToAdd[i] << " " << fixingsToAdd[i]);
+            }
+            DLOG("Added " << datesToAdd.size() << " fallback(s) fixing for " << index->name())
+        }
+        catch (const std::exception& e) {
+            WLOG("Failed to enrich historical index fixings: " << e.what());
+        }
+    }
+
+    stopTimer("enrichIndexFixings()");
 }
 
 } // namespace analytics

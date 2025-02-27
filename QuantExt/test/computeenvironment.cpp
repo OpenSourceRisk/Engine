@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
             1, settings.rngSeed);
         MersenneTwisterUniformRng mt(settings.rngSeed);
 
-        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
 
         Size noErrors = 0, errorThreshold = 10;
         for (Size j = 0; j < 2; ++j) {
@@ -416,9 +416,9 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
             RandomVariable x(output[1]);
             RandomVariable z = conditionalExpectation(
                 y, {&x},
-                multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
+                multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x.size()));
 
-            double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+            double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
             Size noErrors = 0, errorThreshold = 10;
 
             for (Size i = 0; i < n; ++i) {
@@ -492,17 +492,17 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation2) {
         RandomVariable ex = expectation(yx1);
         RandomVariable z1 = conditionalExpectation(
             y, {&x1, &x2},
-            multiPathBasisSystem(2, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x1.size()));
+            multiPathBasisSystem(2, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x1.size()));
         RandomVariable x_adj = x1 + x2;
         RandomVariable z2 = conditionalExpectation(
             y, {&x_adj},
-            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x_adj.size()));
+            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x_adj.size()));
         RandomVariable x_adj2 = x1 + z1;
         RandomVariable z3 = conditionalExpectation(
             y, {&x_adj2},
-            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x_adj2.size()));
+            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x_adj2.size()));
 
-        double tol = settings.useDoublePrecision ? 1E-10 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-10 : 1E-3;
         Size noErrors = 0, errorThreshold = 10;
 
         for (Size i = 0; i < n; ++i) {

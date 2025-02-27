@@ -35,8 +35,8 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/functional/hash.hpp>
 
-#include <iostream>
 #include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
@@ -502,6 +502,17 @@ void RandomVariable::expand() {
     stopDataStats(n_);
 }
 
+bool RandomVariable::isfinite() const {
+    if (deterministic_)
+        return std::isfinite(constantData_);
+    for (Size i = 0; i < n_; ++i) {
+        if (!std::isfinite(data_[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
     QL_REQUIRE((time_ == Null<Real>() || t == Null<Real>()) || QuantLib::close_enough(time_, t),
                "RandomVariable: inconsistent times " << time_ << " and " << t);
@@ -879,8 +890,15 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     QL_REQUIRE(f.size() == y.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match y size (" << y.size() << ")");
     x.checkTimeConsistencyAndUpdate(y.time());
-    if (f.deterministic())
-        return f.at(0) ? x : y;
+    if (f.deterministic()) {
+        if (f.at(0))
+            return x;
+        else {
+            RandomVariable tmp(y);
+            tmp.setTime(x.time());
+            return tmp;
+        }
+    }
     resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
@@ -1349,8 +1367,9 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
 
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
-        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2), this is an even function
-        tmp.set(i, std::exp(-1.0 / delta * x[i]) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * x[i]), 2.0)));
+        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(x / delta) )
+        tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 
     stopCalcStats(x.size() * 8);
@@ -1362,20 +1381,32 @@ std::function<void(RandomVariable&)> RandomVariable::deleter =
     std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
 
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type, Size basisSystemSizeBound) {
-    thread_local static std::map<std::pair<Size, Size>,
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
+                     const std::set<std::set<Size>>& varGroups, Size basisSystemSizeBound) {
+
+    thread_local static std::map<std::size_t,
                                  std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
         cache;
+
     QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
     if (basisSystemSizeBound != Null<Size>()) {
-        while (RandomVariableLsmBasisSystem::size(dim, order) > static_cast<Real>(basisSystemSizeBound) && order > 1) {
+        while (RandomVariableLsmBasisSystem::size(dim, order, varGroups) > static_cast<Real>(basisSystemSizeBound) &&
+               order > 1) {
             --order;
         }
     }
-    if (auto c = cache.find(std::make_pair(dim, order)); c != cache.end())
+
+    std::size_t h = 0;
+    boost::hash_combine(h, dim);
+    boost::hash_combine(h, order);
+    for (auto const& g : varGroups)
+        for (auto const& v : g)
+            boost::hash_combine(h, v);
+
+    if (auto c = cache.find(h); c != cache.end())
         return c->second;
-    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
-    cache[std::make_pair(dim, order)] = tmp;
+    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type, varGroups);
+    cache[h] = tmp;
     return tmp;
 }
 

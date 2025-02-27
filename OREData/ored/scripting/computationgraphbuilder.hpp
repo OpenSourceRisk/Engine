@@ -46,9 +46,13 @@ public:
         QuantLib::Size slot;
     };
 
+    // calls to model->npv() are restricted to the set of minimalModelCcys if given
     ComputationGraphBuilder(ComputationGraph& g, const std::vector<std::string>& opLabels, const ASTNodePtr root,
-                            const QuantLib::ext::shared_ptr<Context> context, const QuantLib::ext::shared_ptr<ModelCG> model = nullptr)
-        : g_(g), opLabels_(opLabels), root_(root), context_(context), model_(model) {}
+                            const QuantLib::ext::shared_ptr<Context> context,
+                            const QuantLib::ext::shared_ptr<ModelCG> model = nullptr,
+                            const std::optional<std::set<std::string>>& minimalModelCcys = std::nullopt)
+        : g_(g), opLabels_(opLabels), root_(root), context_(context), model_(model),
+          minimalModelCcys_(minimalModelCcys) {}
     void run(const bool generatePayLog, const bool includePastCashflows = false, const std::string& script = "",
              bool interactive = false);
     const std::set<std::size_t>& keepNodes() const { return keepNodes_; }
@@ -57,10 +61,11 @@ public:
 private:
     ComputationGraph& g_;
 
-    const std::vector<std::string> opLabels_;
-    const ASTNodePtr root_;
-    const QuantLib::ext::shared_ptr<Context> context_;
-    const QuantLib::ext::shared_ptr<ModelCG> model_;
+    std::vector<std::string> opLabels_;
+    ASTNodePtr root_;
+    QuantLib::ext::shared_ptr<Context> context_;
+    QuantLib::ext::shared_ptr<ModelCG> model_;
+    std::optional<std::set<std::string>> minimalModelCcys_;
 
     std::set<std::size_t> keepNodes_;
     std::vector<PayLogEntry> payLogEntries_;

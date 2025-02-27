@@ -304,10 +304,10 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
     for (Size i = 0; i < marketSmile.strikes.size(); ++i) {
         x.push_back(marketSmile.strikes[i]);
         y.push_back(convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
-                            marketSmile.optionTypes.empty() ? boost::none
-                                                            : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
+                            marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt
+                                                            : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
                             marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
-                            preferredOutputQuoteType(), modelLognormalShift, boost::none));
+                            preferredOutputQuoteType(), modelLognormalShift, QuantLib::ext::nullopt));
     }
 
     Interpolation m = LinearFlat().interpolate(x.begin(), x.end(), y.begin());
@@ -410,9 +410,9 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
     for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
         t.marketQuotes_.push_back(convert(
             marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
-            marketSmile.optionTypes.empty() ? boost::none : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
+            marketSmile.optionTypes.empty() ? QuantLib::ext::nullopt : QuantLib::ext::optional<Option::Type>(marketSmile.optionTypes[i]),
             marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, preferredOutputQuoteType(),
-            t.lognormalShift_, boost::none));
+            t.lognormalShift_, QuantLib::ext::nullopt));
     }
     // we use relative errors w.r.t. the max market quote, because far otm quotes are close to zero
     t.refQuote_ = *std::max_element(t.marketQuotes_.begin(), t.marketQuotes_.end());
@@ -719,19 +719,19 @@ void SabrParametricVolatility::calculate() {
 
     // set up the parameter interpolations
 
-    alphaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    alphaInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
         underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), alpha_));
-    betaInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    betaInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
         underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), beta_));
-    nuInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    nuInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
         underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), nu_));
-    rhoInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    rhoInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
         underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), rho_));
-    lognormalShiftInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    lognormalShiftInterpolation_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         timeToExpiriesForInterpolation_.begin(), timeToExpiriesForInterpolation_.end(),
         underlyingLengthsForInterpolation_.begin(), underlyingLengthsForInterpolation_.end(), lognormalShift_));
 
@@ -745,7 +745,7 @@ void SabrParametricVolatility::calculate() {
 Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real underlyingLength, const Real strike,
                                         const Real forward, const MarketQuoteType outputMarketQuoteType,
                                         const Real outputLognormalShift,
-                                        const boost::optional<QuantLib::Option::Type> outputOptionType) const {
+                                        const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType) const {
 
     Real alpha = alphaInterpolation_(timeToExpiry, underlyingLength);
     Real beta = betaInterpolation_(timeToExpiry, underlyingLength);
@@ -754,7 +754,7 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
     Real lognormalShift = lognormalShiftInterpolation_(timeToExpiry, underlyingLength);
 
     Real result = evaluateSabr({alpha, beta, nu, rho}, forward, timeToExpiry, lognormalShift, {strike}).front();
-    return convert(result, preferredOutputQuoteType(), lognormalShift, boost::none, timeToExpiry, strike, forward,
+    return convert(result, preferredOutputQuoteType(), lognormalShift, QuantLib::ext::nullopt, timeToExpiry, strike, forward,
                    outputMarketQuoteType, outputLognormalShift == Null<Real>() ? lognormalShift : outputLognormalShift,
                    outputOptionType);
 }

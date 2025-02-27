@@ -11,7 +11,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>10000</Samples>
+    <Samples>100</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
     <DayCounter>A365F</DayCounter>
@@ -49,7 +49,7 @@
           <ParamType>Constant</ParamType>
           <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.0</InitialValue>
+          <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -57,7 +57,7 @@
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
-          <ShiftHorizon>20.0</ShiftHorizon>
+          <ShiftHorizon>10.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
       </LGM>
@@ -75,7 +75,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0</InitialValue>
+          <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
@@ -83,33 +83,7 @@
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
-          <ShiftHorizon>20.0</ShiftHorizon>
-          <Scaling>1.0</Scaling>
-        </ParameterTransformation>
-      </LGM>
-      <LGM ccy="CHF">
-        <CalibrationType>Bootstrap</CalibrationType>
-        <Volatility>
-          <Calibrate>Y</Calibrate>
-          <VolatilityType>Hagan</VolatilityType>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
-        </Volatility>
-        <Reversion>
-          <Calibrate>N</Calibrate>
-          <ReversionType>HullWhite</ReversionType>
-          <ParamType>Constant</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.0</InitialValue>
-        </Reversion>
-        <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-          <Strikes/>
-        </CalibrationSwaptions>
-        <ParameterTransformation>
-          <ShiftHorizon>20.0</ShiftHorizon>
+          <ShiftHorizon>10.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
       </LGM>
@@ -168,7 +142,8 @@
     </Currencies>
     <YieldCurves>
       <Configuration>
-        <Tenors>1Y, 5Y</Tenors>
+        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+        <!--<Tenors>1Y, 5Y</Tenors>-->
         <Interpolation>LogLinear</Interpolation>
         <!-- Alternative: LinearZero -->
         <Extrapolation>Y</Extrapolation>
@@ -211,11 +186,8 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <Names>
-        <Name>CPTY_A</Name>
-        <Name>BANK</Name>
-      </Names>
-      <Tenors>1Y, 2Y, 3Y, 5Y, 10Y</Tenors>
+      <Names></Names>
+      <Tenors>1Y, 5Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
       <SimulateRecoveryRates>true</SimulateRecoveryRates>
       <Calendars>
@@ -227,15 +199,15 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
       </Currencies>
-      <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
-      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+      <Expiries>1Y,5Y</Expiries>
+      <Terms>1Y,5Y</Terms>
       <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     <FxVolatilities>
@@ -243,11 +215,10 @@
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
-        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>EURUSD</CurrencyPair>
       </CurrencyPairs>
-      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Expiries>1Y,10Y</Expiries>
     </FxVolatilities>
-
     
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->

@@ -1,0 +1,78 @@
+\subsubsection{Cross Currency Swap}
+\label{pricing:ir_ccs}
+
+Cross Currency (XCCY) Swaps are priced using a multi-currency framework of discount 
+curves by cash flow currency and forwarding curves per index, and generally have 
+notional exchanges at the beginning and the end of the swap set to reflect the 
+prevailing FX spot rate on trade date.  However, XCCY Swaps may also be rebalancing, 
+having ``FX resets'' (i.e. notional adjustments at each fixing date to compensate the 
+FX rate move since last fixing).  This feature has an impact on discount curve 
+building (Lichters, Stamm, \& Gallagher, 2015) Ch 4.3 (see Section 7.5 for more 
+details on curve building).
+
+\medskip
+If a Cross Currency Swap contains capped/floored/collared payments, the pricing 
+approach described in the relevant cap/floor instrument methodology is applied 
+to the cap/floor components.
+
+\medskip
+The present value  of a non-rebalancing XCCY Swap (both legs floating, constant 
+notional) receiving currency A and paying currency B can be expressed as follows:
+\begin{align*}
+\intertext{Base currency NPV}
+\NPV &= X_A\cdot \NPV_A - X_B\cdot \NPV_B \\
+\intertext{with leg A NPV in currency A}
+\NPV_{A} &= -N^{A} \,P^{A}(t_0) 
++ N^{A} \,\sum_{i=1}^{n_A} (f^A_i+s^A_i) \,\delta^A_i\,P^A(t_i^A) 
++ N^{A} \,P^A(t_n^{A}) \\
+\intertext{and leg B NPV in currency B}
+\NPV_B &= - N^B\, P^B(t_0) + N^B \, \sum_{i=1}^{n_B} (f^B_i 
++ s^{B}_i)\,\delta^B_i\, P^B(t_i^B) + N^B \,P^B(t_n^B)
+\end{align*}
+where:
+\begin{itemize}
+%\item $\NPV_A$: the present value at time 0 of the currency A leg expressed in currency A
+%\item $\NPV_B$: the present value at time 0 of the currency B leg expressed in currency B
+\item $X_A$: the FX spot rate between currency A and the base currency at valuation time
+\item $X_B$: the FX spot rate between currency B and the base currency at valuation time
+\item $N^A$: the notional of the currency A leg expressed in currency A
+\item $N^B$: the notional of the currency B leg expressed in currency B
+%N^B : the notional in currency B
+\item $P^A(t_i^A)$:  the discount factor for time i for currency A
+\item $P^B(t_i^B)$:  the discount factor for time i for currency B
+\item $s^{A,B}_i$: the contractual XCCY basis swap spread on leg A resp. B for period $i$ 
+\item $f^A_i$: the forward projected IBOR rate for period $i$ for the currency A leg
+\item $f^B_i$: the forward projected IBOR rate for period $i$ for the currency B leg
+\end{itemize}
+
+We are assuming here that the date of the initial exchange of notionals has not passed yet.
+Once passed, these cash flows - like any past flows - are excluded from valuation. 
+And moreover, the forward projected rates for both legs will be fixings for the current 
+period, assuming fixings in advance.
+
+\medskip
+The Swap shown above, exchanging floating for floating interest, is a Cross Currency 
+Basis Swap (CCBS). A XCCY Swap may as well exchange fixed for floating or 
+fixed for fixed payments. 
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection*{Rebalancing Cross Currency Swap}
+
+The PV for each leg of a rebalancing XCCY Basis Swap between currency A and currency B, 
+where the rebalancing happens on leg B, can be expressed as follows:
+\begin{align*}
+\NPV &= X_A\cdot \NPV_A - X_B\cdot \NPV_B \\
+\NPV_A &= -N^A \,P^A(t_0) + N^A\cdot \sum_{i=1}^{n_A} (f^A_i + s^A_i)\,\delta^A_i \, P^A(t_i^A) + N^A\,P^A(t_n^A) \\
+\NPV_B & =-N_0^B \,P^B(t_0)
++\sum_{i=1}^{n_B} \left(N_{i-1}^B (f^B_i +s^B_i)\,\delta^B_i +(N_{i-1}^B-N_i^B)\right) \, P^B(t_i^B) 
+ + N_{n_B}^B\,P^B(t_{n_B}^B)
+\end{align*}
+The rebalancing feature causes intermediate notional cash flows $(N^B_{i-1} - N^B_i)$ 
+on leg B. The future leg B notional amounts are computed using FX Forward rates
+$$
+N^B_i = N^A \cdot \frac{X_A(t_i)}{X_B(t_i)} 
+$$
+such that the future leg B expected notional converted into leg A currency will correspond to 
+the constant leg A notional. This approach assumes zero correlation between the
+relevant interest and FX rates. Non-zero correlation would lead to a convexity
+adjustment, see e.g. \cite{LSG_2015} section 12.5.

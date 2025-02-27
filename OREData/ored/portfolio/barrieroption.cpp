@@ -128,11 +128,11 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     boost::variant<Barrier::Type, DoubleBarrier::Type> barrierType;
     if (barrier_.levels().size() < 2) {
         barrierType = parseBarrierType(barrier_.type());
-        barrier = QuantLib::ext::make_shared<QuantLib::BarrierOption>(QuantLib::ext::get<Barrier::Type>(barrierType), barrier_.levels()[0].value(), 
+        barrier = QuantLib::ext::make_shared<QuantLib::BarrierOption>(boost::get<Barrier::Type>(barrierType), barrier_.levels()[0].value(), 
             rebate, payoff, exercise);
     } else {
         barrierType = parseDoubleBarrierType(barrier_.type());
-        barrier = QuantLib::ext::make_shared<QuantLib::DoubleBarrierOption>(QuantLib::ext::get<DoubleBarrier::Type>(barrierType),
+        barrier = QuantLib::ext::make_shared<QuantLib::DoubleBarrierOption>(boost::get<DoubleBarrier::Type>(barrierType),
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
 
@@ -147,16 +147,17 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     const QuantLib::Handle<QuantLib::Quote>& spot = spotQuote();
     if (barrier_.levels().size() < 2)
         instWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-	    barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
-            settleType == Settlement::Physical ? true : false, vanilla, QuantLib::ext::get<Barrier::Type>(barrierType),
-            spot, barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
-            tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
+            barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
+            settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType), spot,
+            barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_, tradeMultiplier(),
+            tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered());
     else
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-            barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
-            settleType == Settlement::Physical ? true : false, vanilla, QuantLib::ext::get<DoubleBarrier::Type>(barrierType),
-            spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
-            tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
+            barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
+            settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
+            spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
+            index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers,
+            barrier_.overrideTriggered());
 
     instrument_ = instWrapper;
 

@@ -22,21 +22,27 @@
     \ingroup utilities
 */
 
-#include <boost/algorithm/string.hpp>
-#include <map>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/time/yearcounter.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <qle/instruments/cashflowresults.hpp>
-#include <qle/time/yearcounter.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/integrals/kronrodintegral.hpp>
+#include <ql/math/integrals/segmentintegral.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <map>
 #include <regex>
 
 using namespace QuantLib;
@@ -612,10 +618,15 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month> m = {{"Jan", Month::January}, {"Feb", Month::February}, {"Mar", Month::March},
-                                   {"Apr", Month::April},   {"May", Month::May},      {"Jun", Month::June},
-                                   {"Jul", Month::July},    {"Aug", Month::August},   {"Sep", Month::September},
-                                   {"Oct", Month::October}, {"Nov", Month::November}, {"Dec", Month::December}};
+    static map<string, Month> m = {
+        {"Jan", Month::January},     {"Feb", Month::February},      {"Mar", Month::March},
+        {"Apr", Month::April},       {"May", Month::May},           {"Jun", Month::June},
+        {"Jul", Month::July},        {"Aug", Month::August},        {"Sep", Month::September},
+        {"Oct", Month::October},     {"Nov", Month::November},      {"Dec", Month::December},
+        {"January", Month::January}, {"February", Month::February}, {"March", Month::March},
+        {"April", Month::April},     {"May", Month::May},           {"June", Month::June},
+        {"July", Month::July},       {"August", Month::August},     {"September", Month::September},
+        {"October", Month::October}, {"November", Month::November}, {"December", Month::December}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1546,6 +1557,36 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
     }
 
     return os;
+}
+
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
+    std::vector<std::string> pair = {p.first, p.second};
+    return pair;
+}
+
+QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s) {
+    if (s.empty())
+        return nullptr;
+    vector<string> tokens;
+    boost::split(tokens, s, boost::is_any_of(","));
+    QL_REQUIRE(!tokens.empty(), "parseIntegrationPolicy(" << s << "): no tokens found.");
+    if (tokens[0] == "Simpson") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<SimpsonIntegral>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                           parseInteger(tokens[3]));
+    } else if (tokens[0] == "Segment") {
+        QL_REQUIRE(tokens.size() == 2, "parseIntegrationPolicy(" << s << "): expected 2 tokens.");
+        return QuantLib::ext::make_shared<SegmentIntegral>(parseReal(tokens[1]));
+    } else if (tokens[0] == "GaussKronrodNonAdaptive") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodNonAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                                   parseReal(tokens[3]));
+    } else if (tokens[0] == "GaussKronrodAdaptive") {
+        QL_REQUIRE(tokens.size() == 3, "parseIntegrationPolicy(" << s << "): expected 3 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]));
+    } else {
+        QL_FAIL("parseIntegrationPolicy(" << s << "): not recognized");
+    }
 }
 
 } // namespace data

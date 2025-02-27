@@ -28,9 +28,9 @@
 namespace ore {
 namespace data {
 
-namespace {
-std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
-                         const std::vector<std::string>& qs, const bool mandatory, const std::string& defaultValue) {
+std::string EngineBuilder::getParameter(const std::map<std::string, std::string>& m, const std::string& p,
+                                        const std::vector<std::string>& qs, const bool mandatory,
+                                        const std::string& defaultValue) const {
     // first look for p_q if one or several qualifiers are given
     for (auto const& q : qs) {
         if (!q.empty()) {
@@ -50,7 +50,6 @@ std::string getParameter(const std::map<std::string, std::string>& m, const std:
     }
     return defaultValue;
 }
-} // namespace
 
 std::string EngineBuilder::engineParameter(const std::string& p, const std::vector<std::string>& qualifiers,
                                            const bool mandatory, const std::string& defaultValue) const {
@@ -106,18 +105,16 @@ void EngineBuilderFactory::addAmcEngineBuilder(
 
 void EngineBuilderFactory::addAmcCgEngineBuilder(
     const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-        const std::vector<Date>& stickyCloseOutDates)>& builder,
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& builder,
     const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    auto tmp = builder(nullptr, {}, {});
+    auto tmp = builder(nullptr, {});
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(
         amcCgEngineBuilderBuilders_.begin(), amcCgEngineBuilderBuilders_.end(),
         [&key](std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-                   const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-                   const std::vector<Date>& stickyCloseOutDates)>& b) {
-            auto tmp = b(nullptr, {}, {});
+                   const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& b) {
+            auto tmp = b(nullptr, {});
             return key == std::make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
         });
     QL_REQUIRE(it == amcCgEngineBuilderBuilders_.end() || allowOverwrite,
@@ -162,12 +159,11 @@ EngineBuilderFactory::generateAmcEngineBuilders(const QuantLib::ext::shared_ptr<
 
 std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
 EngineBuilderFactory::generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                                  const std::vector<Date>& simDates,
-                                                  const std::vector<Date>& stickyCloseOutDates) const {
+                                                  const std::vector<Date>& simDates) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> result;
     for (auto const& b : amcCgEngineBuilderBuilders_)
-        result.push_back(b(model, simDates, stickyCloseOutDates));
+        result.push_back(b(model, simDates));
     return result;
 }
 
@@ -241,12 +237,12 @@ void EngineFactory::registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilde
                                        const bool allowOverwrite) {
     if (allowOverwrite)
         legBuilders_.erase(legBuilder->legType());
-    QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
+    QL_REQUIRE(legBuilders_.insert(std::make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()
                                                            << "' - this is an internal error.");
 }
 
-QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const string& legType) {
+QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& legType) {
     auto it = legBuilders_.find(legType);
     QL_REQUIRE(it != legBuilders_.end(), "No LegBuilder for " << legType);
     return it->second;

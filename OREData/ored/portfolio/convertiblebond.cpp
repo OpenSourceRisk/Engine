@@ -467,6 +467,8 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
 
     // build converible underlying bond, add to required fixings
 
+    additionalData_["underlyingSecurityId"] = data_.bondData().securityId();
+
     ore::data::Bond underlyingBond(Envelope(), data_.bondData());
     underlyingBond.build(engineFactory);
     requiredFixings_.addData(underlyingBond.requiredFixings());
@@ -749,7 +751,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     return res;
 }
 
-void ConvertibleBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+void ConvertibleBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                                  const std::string& securityId) const {

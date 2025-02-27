@@ -35,6 +35,10 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
                                      bool recordSecuritySpecificCreditCurves)
     : portfolio_(p) {
 
+    QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
+
+    underlyingIndices_ = portfolio_->underlyingIndices();
+
     // Build Dependency Market
     market_ = QuantLib::ext::make_shared<DependencyMarket>(baseCcy, true, curveConfigs, iborFallbackConfig,
                                                    recordSecuritySpecificCreditCurves);

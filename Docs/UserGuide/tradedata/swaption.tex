@@ -1,6 +1,33 @@
 \subsubsection{Swaption}
 \label{ss:swaption} 
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A swaption is an option which gives the buyer the right, but not the obligation, 
+to enter into an underlying interest rate swap. The underlying swap may have varying 
+notional, rates, and spreads during its lifetime.
+
+With a {\bf European Swaption}, the buyer is only allowed to exercise the option and enter 
+into the swap on the expiration date of the swaption.
+There are two types of swaptions, payer and receiver:
+\begin{itemize}	
+\item Payer swaptions: the underlying swap pays fixed rate and receives floating 
+rate.
+\item Receiver swaptions: the underlying swap receives fixed and pays floating 
+rate.
+\end{itemize}
+European Swaption settlement can be either cash or physical delivery of the underlying swap.
+For cash settlement there are different methods to compute the settlement price (collateralized
+cash price, par yield curve).
+
+In a {\bf Bermudan Swaption}, the buyer is allowed to exercise the option and enter into the underlying
+swap on a predetermined set of dates rather than a single expiration
+date. The underlying swap may have varying notional, rates, and spreads during its lifetime.
+
+For an {\bf American Swaption} the buyer is allowed to exercise the option any time between two specified dates.
+
+{\bf Input}}\fi
+
 The \lstinline!SwaptionData!  node is the trade data container for the \emph{Swaption} trade type. The \lstinline!SwaptionData!
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
@@ -106,7 +133,7 @@ Note that for CallableSwaps, contrary to the above, the payer and receiver legs 
 \item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
   \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed.
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed. Also note that \emph{Cash} means the last Exercise date will be the Maturity date, whereas for \emph{Physical} the Maturity date will be the End date of the underlying Swap.
 
 \item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
 
@@ -114,6 +141,14 @@ Note that for CallableSwaps, contrary to the above, the payer and receiver legs 
 \emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
 \emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
 \emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
+
+\item \lstinline!MidCouponExercise! [Optional]:   If \emph{false}, the exercise-into underlying comprises all coupons with accrual start date greater or equal to notification date. I.e. one exercises into the next coupon, not the current one.\\
+If \emph{true}, the exercise-into underlying 
+comprises all coupons with accrual end date greater than the effective exercise date which is computed from the notification date by adding the notice period. 
+The accrual paid for such coupons on exercise is calculated from the effective exercise date to the accrual end date (short coupon).
+
+Allowable values: \emph{true}, \emph{false}. If omitted, defaults to \emph{false} for \emph{European} and \emph{Bermudan} swaptions and \emph{true} for \emph{American} swaptions.
+
 
 \item \lstinline!ExerciseFees![Optional]: This node contains child elements of type \lstinline!ExerciseFee!. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either

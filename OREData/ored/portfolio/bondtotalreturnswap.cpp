@@ -61,6 +61,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     Schedule schedule = makeSchedule(scheduleData_);
     Calendar calendar = parseCalendar(bondData_.calendar());
 
@@ -88,6 +90,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         observationConvention_.empty() ? Unadjusted : parseBusinessDayConvention(observationConvention_);
 
     PaymentLag paymentLag = parsePaymentLag(paymentLag_);
+    if (paymentLag_ != "")
+        bondData_.setPaymentLag(paymentLag_);
     Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
     Calendar paymentCalendar = parseCalendar(paymentCalendar_);
     BusinessDayConvention paymentConvention =

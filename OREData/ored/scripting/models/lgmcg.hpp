@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/scripting/models/modelcg.hpp>
+
 #include <qle/ad/computationgraph.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -37,35 +39,34 @@ class LgmCG {
 public:
     LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
           const std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()>& p,
-          std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
-          const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
+          std::set<ModelCG::ModelParameter>& modelParameters, std::set<ModelCG::ModelParameter>& derivedModelParameters)
         : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters),
-          effSimDates_(effSimDates) {}
+          derivedModelParameters_(derivedModelParameters) {}
 
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
 
     std::size_t numeraire(const Date& d, const std::size_t x,
                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                          const std::string& discountCurveId = "default") const;
+                          const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
 
     std::size_t discountBond(const Date& d, const Date& e, const std::size_t x,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                             const std::string& discountCurveId = "default") const;
+                             const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
 
     std::size_t reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                                    const std::string& discountCurveId = "default") const;
+                                    const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     std::size_t fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
-                       const std::size_t x) const;
+                       const std::size_t x, const Date& stateDate = Date()) const;
 
 private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;
     std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()> p_;
-    std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
-    std::set<Date> effSimDates_;
+    std::set<ModelCG::ModelParameter>& modelParameters_;
+    std::set<ModelCG::ModelParameter>& derivedModelParameters_;
 };
 
 } // namespace ore::data
