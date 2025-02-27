@@ -1814,9 +1814,7 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
-    if (analytics().find("PFE") != analytics().end() || analytics().find("XVA_STRESS") != analytics().end() ||
-        analytics().find("XVA_SENSITIVITY") != analytics().end() ||
-        analytics().find("XVA_EXPLAIN") != analytics().end()) {
+    if (analytics().find("PFE") != analytics().end()) {
         tmp = params_->get("pfe", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = (inputPath / tmp).generic_string();
