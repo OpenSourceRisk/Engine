@@ -43,8 +43,8 @@
       <Parameter name="Interactive">false</Parameter>
       <Parameter name="UseCG">true</Parameter>
       <Parameter name="UseExternalComputeDevice">true</Parameter>
-      <!--<Parameter name="ExternalComputeDevice">BasicCpu/Default/Default</Parameter>-->
-      <Parameter name="ExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter>
+      <Parameter name="ExternalComputeDevice">BasicCpu/Default/Default</Parameter>
+      <!--<Parameter name="ExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter>-->
     </EngineParameters>
   </Product>
 
