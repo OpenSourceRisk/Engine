@@ -346,7 +346,10 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
 	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : xvaAnalytic->reports()["XVA"]) {
+            auto rpts = xvaAnalytic->reports();
+            auto it = rpts.find("XVA");
+            QL_REQUIRE(it != rpts.end(), "XVA report not found in XVA analytic reports");
+            for (auto [name, rpt] : it->second) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);
@@ -376,7 +379,7 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
                                        inputs_->sensiThreshold());
-        analytic()->reports()[label()]["xva_zero_sensitivity_" + to_string(valueAdjustment)] = zeroSensiReport;
+        analytic()->addReport(label(), "xva_zero_sensitivity_" + to_string(valueAdjustment), zeroSensiReport);
     }
     LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
 }
@@ -403,12 +406,12 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
         QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-        analytic()->reports()[label()]["xva_sensi_jacobi"] = jacobiReport;
+        analytic()->addReport(label(), "xva_sensi_jacobi", jacobiReport);
 
         QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         parConverter->writeConversionMatrix(*jacobiInverseReport);
-        analytic()->reports()[label()]["xva_sensi_jacobi_inverse"] = jacobiInverseReport;
+        analytic()->addReport(label(), "xva_sensi_jacobi_inverse", jacobiInverseReport);
     }
 
     ParSensiResults results;
@@ -443,7 +446,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
                                        inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
-        analytic()->reports()[label()]["xva_par_sensitivity_" + to_string(valueAdjustment)] = report;
+        analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);
     }
 }
 
@@ -486,7 +489,7 @@ void XvaSensitivityAnalyticImpl::createDetailReport(
         }
         auto report = concatenateReports(extendedReports);
         if (report != nullptr) {
-            analytic()->reports()[label()][reportName] = report;
+            analytic()->addReport(label(), reportName, report);
         }
     }
 }

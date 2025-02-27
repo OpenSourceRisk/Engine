@@ -49,7 +49,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
-    analytic()->reports()[label()]["scenario"] = report;
+    analytic()->addReport(label(), "scenario", report);
 }
 
 } // namespace analytics
