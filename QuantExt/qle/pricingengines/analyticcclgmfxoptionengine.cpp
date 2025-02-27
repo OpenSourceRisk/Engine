@@ -95,6 +95,17 @@ Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
                         },
                         t0, t);
 
+    if (applySigmaShift_) {
+        Real lowerBound = std::max(t0, sigmaShiftT0_);
+        Real higherBound = std::min(t, sigmaShiftT1_);
+        if (lowerBound + 42.0 * QL_EPSILON < higherBound) {
+            // int (s+h)^2 du = int s^2 du + int 2sh du + int h^2 du, we add the two latter terms here:
+            variance += model_->underlyingIntegrator()->operator()(
+                [&fxi, this](const Real t) { return 2.0 * fxi->sigma(t) * sigmaShift_ + sigmaShift_ * sigmaShift_; },
+                lowerBound, higherBound);
+        }
+    }
+
     BlackCalculator black(payoff, fxForward, std::sqrt(variance), domesticDiscount);
 
     return black.value();
@@ -132,9 +143,10 @@ void AnalyticCcLgmFxOptionEngine::setSigmaShift(const Time t0, const Time t1, co
     sigmaShiftT1_ = t1;
     sigmaShift_ = shift;
     applySigmaShift_ = true;
-    cacheDirty_ = true;
 }
 
-void AnalyticCcLgmFxOptionEngine::resetSigmaShift() const { applySigmaShift_ = false; }
+void AnalyticCcLgmFxOptionEngine::resetSigmaShift() const {
+    applySigmaShift_ = false;
+}
 
 } // namespace QuantExt
