@@ -324,7 +324,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto sw = ScenarioWriter(nullptr, scenarioReport);
     sw.writeScenario(asofBaseScenario, true);
     sw.writeScenario(mporBaseScenario, false);
-    analytic()->reports()[label(), "zero_scenarios", scenarioReport);
+    analytic()->addReport(label(), "zero_scenarios", scenarioReport);
 }
 
 } // namespace analytics
