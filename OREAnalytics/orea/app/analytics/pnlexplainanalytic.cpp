@@ -22,6 +22,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
+#include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/zerotoparscenariogenerator.hpp>
@@ -38,6 +39,17 @@ void PnlExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+}
+
+void PnlExplainAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
+    if (pnlAnalytic.second)
+        addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
 }
 
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -57,6 +69,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
     auto pnlAnalytic = dependentAnalytic(pnlLookupKey);
+    pnlAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    pnlAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     pnlAnalytic->runAnalytic(loader);
     auto pnlReport = pnlAnalytic->reports().at("PNL").at("pnl");
 
@@ -100,8 +114,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> scenarios;
     if (!inputs_->scenarioReader()) {
-        analytic()->reports()[label_]["pnl_scenario_t0"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t0");
-        analytic()->reports()[label_]["pnl_scenario_t1"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t1");
+        analytic()->reports()[label_]["zero_scenarios"] = pnlAnalytic->reports().at("PNL").at("zero_scenarios");
 
         vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>> histScens = {t0Scenario, t1Scenario};
 
@@ -129,8 +142,18 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             zeroScenarios->setGenerateDifferenceScenarios(t0SimMarket->useSpreadedTermStructures());
             
             QL_REQUIRE(parSensiAnalysis, "Par Sensi Analysis required");
-            scenarios = QuantLib::ext::make_shared<ZeroToParScenarioGenerator>(zeroScenarios, t0SimMarket,
+            auto parScenarios = QuantLib::ext::make_shared<ZeroToParScenarioGenerator>(zeroScenarios, t0SimMarket,
                                                                                parSensiAnalysis->parInstruments());
+            
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());                        
+            auto sw = ScenarioWriter(nullptr, parScenarioReport);
+            sw.writeScenario(parScenarios->baseScenario(), true);
+            for (auto d : parScenarios->endDates())
+                sw.writeScenario(parScenarios->next(d), false);
+            
+            analytic()->reports()[label()]["par_scenarios"] = parScenarioReport;
+            scenarios = parScenarios;
         } else
             scenarios = zeroScenarios;
     } else {

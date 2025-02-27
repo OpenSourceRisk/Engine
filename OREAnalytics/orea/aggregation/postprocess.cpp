@@ -72,7 +72,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                          const std::vector<Real>& creditMigrationDistributionGrid,
                          const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
                          bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
-                         const bool firstMporCollateralAdjustment)
+                         const bool firstMporCollateralAdjustment,
+                         bool continueOnError)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
       market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
       analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
@@ -87,7 +88,9 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment), continueOnError_(continueOnError) {
+
+    LOG("PostProcess: started.");
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
 
@@ -109,51 +112,10 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
-    // check portfolio and cube have the same trade ids, in the same order
-    QL_REQUIRE(portfolio->size() == cube_->idsAndIndexes().size(),
-               "PostProcess::PostProcess(): portfolio size ("
-                   << portfolio->size() << ") does not match cube trade size (" << cube_->idsAndIndexes().size() << ")");
-    
-    auto portfolioIt = portfolio->trades().begin();
-    auto cubeIdIt = cube_->idsAndIndexes().begin();
-    for (size_t i = 0; i < portfolio->size(); i++, portfolioIt++, cubeIdIt++) {
-        const std::string& portfolioTradeId = portfolioIt->first;
-        const std::string& cubeTradeId = cubeIdIt->first;
-        QL_REQUIRE(portfolioTradeId == cubeTradeId, "PostProcess::PostProcess(): portfolio trade #"
-                                                        << i << " (id=" << portfolioTradeId
-                                                        << ") does not match cube trade id (" << cubeTradeId);
-    }
-
-    if (analytics_["dynamicCredit"]) {
-        QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
-        // check portfolio and cptyCube have the same counterparties, in the same order
-        auto cptyIds = portfolio->counterparties();
-        cptyIds.insert(dvaName_);
-        QL_REQUIRE(cptyIds.size() == cptyCube_->idsAndIndexes().size(),
-                   "PostProcess::PostProcess(): portfolio counterparty size ("
-                       << cptyIds.size() << ") does not match cpty cube trade size ("
-                       << cptyCube_->idsAndIndexes().size() << ")");
-
-        auto cptyIt = cptyIds.begin();
-        cubeIdIt = cptyCube_->idsAndIndexes().begin();
-        for (size_t i = 0; i < cptyIds.size(); ++i, ++cptyIt, ++cubeIdIt) {
-            const std::string& counterpartyId = *cptyIt;
-            const std::string& cubeTradeId = cubeIdIt->first;
-            QL_REQUIRE(counterpartyId == cubeTradeId, "PostProcess::PostProcess(): portfolio counterparty #"
-                                                          << i << " (id=" << counterpartyId
-                                                          << ") does not match cube name id (" << cubeTradeId);
-        }
-    }
+    QL_REQUIRE(!analytics_["dynamicCredit"] || cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
 
     ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
 
-    /***********************************************
-     * Step 0: Netting as of today
-     * a) Compute the netting set NPV as of today
-     * b) Find the final maturity of the netting set
-     */
-    LOG("Compute netting set NPVs as of today and netting set maturity");
-    // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market->asofDate();
     LOG("AsOfDate = " << QuantLib::io::iso_date(today));
 
@@ -182,7 +144,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             portfolio, cube_, cubeInterpretation_,
             market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
             quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
-	    analytics_["exposureProfilesUseCloseOutValues"]
+            analytics_["exposureProfilesUseCloseOutValues"], continueOnError_
         );
     exposureCalculator_->build();
 
@@ -238,7 +200,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], 
             flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     }
-    cvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        cvaCalculator_->build();
 
     /***************************
      * Simple allocation methods
@@ -299,7 +262,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
             flipViewLendingCurvePostfix);
     }
-    allocatedCvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        allocatedCvaCalculator_->build();
 
     /********************************************************
      * Cache average EPE and ENE

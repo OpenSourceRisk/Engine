@@ -34,7 +34,7 @@ void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
              "Fixed, Calibrated, Implied.");
         calibration = parseBool(XMLUtils::getNodeValue(n))
                           ? QuantExt::ParametricVolatility::ParameterCalibration::Fixed
-                          : QuantExt::ParametricVolatility::ParameterCalibration::Implied;
+                          : QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
     } else {
         calibration =
             QuantExt::parseParametricSmileParameterCalibration(XMLUtils::getChildValue(node, "Calibration", true));

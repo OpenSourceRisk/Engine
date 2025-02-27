@@ -40,12 +40,18 @@ void PnlAnalyticImpl::setUpConfigurations() {
     setGenerateAdditionalResults(true);
 }
 
+void PnlAnalyticImpl::buildDependencies() {
+    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager(), false);
+    if (mporAnalytic.second) {
+        mporAnalytic.second->configurations().curveConfig = inputs_->curveConfigs().get("mpor");
+        auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
+        sai->setUseSpreadedTermStructures(true);
+        addDependentAnalytic(mporLookupKey, mporAnalytic.second);
+    }
+}
+
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
-    
-    if (!analytic()->match(runTypes))
-        return;
-
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -315,15 +321,11 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      ***************************/
 
-    QuantLib::ext::shared_ptr<InMemoryReport> t0ScenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    auto t0sw = ScenarioWriter(nullptr, t0ScenarioReport);
-    t0sw.writeScenario(asofBaseScenario, true);
-    analytic()->reports()[label()]["pnl_scenario_t0"] = t0ScenarioReport;
-
-     QuantLib::ext::shared_ptr<InMemoryReport> t1ScenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    auto t1sw = ScenarioWriter(nullptr, t1ScenarioReport);
-    t1sw.writeScenario(mporBaseScenario, true);
-    analytic()->reports()[label()]["pnl_scenario_t1"] = t1ScenarioReport;    
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto sw = ScenarioWriter(nullptr, scenarioReport);
+    sw.writeScenario(asofBaseScenario, true);
+    sw.writeScenario(mporBaseScenario, false);
+    analytic()->reports()[label()]["zero_scenarios"] = scenarioReport;    
 }
 
 } // namespace analytics

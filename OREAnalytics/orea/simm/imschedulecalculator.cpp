@@ -505,7 +505,8 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
     Real netRCCalc = side == SimmSide::Call ? std::max(0.0, presentValueCalc) : std::min(0.0, presentValueCalc);
 
     // Net-to-gross ratio
-    Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? 1.0 : netRCCalc / grossRCCalc;
+    auto ngrDefault = regulation == CrifRecord::Regulation::BANX ? 0.0 : 1.0 ;
+    Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? ngrDefault : netRCCalc / grossRCCalc;
 
     // Schedule IM
     Real scheduleMarginCalc = grossMarginCalc * (0.4 + 0.6 * netToGrossCalc);

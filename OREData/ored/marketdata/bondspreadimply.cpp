@@ -167,7 +167,7 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
     return loader;
 }
 
-Real getCleanPrice(const BondBuilder::Result& b, const Date& expiry) {
+Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
 
     // TODO refactor: make this independent of bond type and pricing engine
 
@@ -181,7 +181,7 @@ Real getCleanPrice(const BondBuilder::Result& b, const Date& expiry) {
         return b.bond->cleanPrice() / 100.0;
 }
 
-Real BondSpreadImply::implySpread(const std::string& securityId, const Real cleanPrice,
+Real BondSpreadImply::implySpread(const std::string& securityId, const Real price,
                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                   const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
@@ -190,6 +190,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
+    Real priceAdj = price;
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
@@ -197,24 +198,28 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
 
     Real inflationFactor = b.inflationFactor();
 
+    if (b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty) {
+        priceAdj -= b.bond->accruedAmount(b.bond->settlementDate()) / 100.0;
+    }
+
     DLOG("implySpread for securityId " << securityId << ":");
     DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
-    DLOG("market quote            = " << cleanPrice);
+    DLOG("market quote            = " << priceAdj);
     DLOG("accrueds                = " << b.bond->accruedAmount());
     DLOG("inflation factor        = " << inflationFactor);
     DLOG("price quote method adj  = " << adj);
-    DLOG("effective market price  = " << cleanPrice * inflationFactor * adj);
+    DLOG("effective market price  = " << priceAdj * inflationFactor * adj);
 
     //check if fwd bond
     Date expiry = BondBuilder::checkForwardBond(b.securityId).first;
 
-    auto targetFunction = [&b, spreadQuote, cleanPrice, adj, inflationFactor, expiry](const Real& s) {
+    auto targetFunction = [&b, spreadQuote, priceAdj, adj, inflationFactor, expiry](const Real& s) {
         spreadQuote->setValue(s);
         if (b.modelBuilder != nullptr)
             b.modelBuilder->recalibrate();
-        Real c = getCleanPrice(b, expiry);
+        Real c = getPrice(b, expiry);
         TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
-        return c - cleanPrice * inflationFactor * adj;
+        return c - priceAdj * inflationFactor * adj;
     };
 
     // edge case: bond has a zero settlement value -> skip spread imply
@@ -230,7 +235,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     Brent brent;
     Real s = brent.solve(targetFunction, 1E-8, 0.0, 0.001);
 
-    DLOG("theoretical pricing     = " << getCleanPrice(b, expiry));
+    DLOG("theoretical pricing     = " << getPrice(b, expiry));
     return s;
 }
 

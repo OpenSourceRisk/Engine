@@ -37,7 +37,7 @@ namespace data {
 Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                             RequiredFixings& requiredFixings, const string& configuration,
                                             const QuantLib::Date& openEndDateReplacement,
-                                            const bool useXbsCurves) const {
+                                            const bool useXbsCurves, const bool attachPricer) const {
 
     auto cmsData = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
@@ -77,11 +77,14 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const QuantLib:
     if (cmsData->floors().size() > 0)
         leg.withFloors(buildScheduledVector(cmsData->floors(), cmsData->floorDates(), schedule));
 
-    // Get a coupon pricer for the leg
-    auto builder = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCouponPricerBuilder>(
-        engineFactory->builder("DurationAdjustedCMS"));
-    QL_REQUIRE(builder != nullptr, "No builder found for DurationAdjustedCmsLeg");
-    auto couponPricer = builder->engine(IndexNameTranslator::instance().oreName(index->iborIndex()->name()));
+    QuantLib::ext::shared_ptr<QuantExt::FloatingRateCouponPricer> couponPricer;
+    if (attachPricer) {
+        // Get a coupon pricer for the leg
+        auto builder = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCouponPricerBuilder>(
+            engineFactory->builder("DurationAdjustedCMS"));
+        QL_REQUIRE(builder != nullptr, "No builder found for DurationAdjustedCmsLeg");
+        couponPricer = builder->engine(IndexNameTranslator::instance().oreName(index->iborIndex()->name()));
+    }
 
     // Loop over the coupons in the leg and set pricer
     Leg result = leg;
@@ -89,7 +92,9 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const QuantLib:
         auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
         QL_REQUIRE(f != nullptr,
                    "DurationAdjustedCmsLegBuilder::buildLeg(): internal error, expected FloatingRateCoupon");
-        f->setPricer(couponPricer);
+        if (attachPricer) {
+            f->setPricer(couponPricer);
+        }
     }
 
     // build naked option leg if required
