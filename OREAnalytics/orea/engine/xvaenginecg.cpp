@@ -904,7 +904,8 @@ void XvaEngineCG::calculateDynamicDelta() {
                     std::distance(fxVegaConverter[ccyIndex - 1].optionTimes().begin(),
                                   std::upper_bound(fxVegaConverter[ccyIndex - 1].optionTimes().begin(),
                                                    fxVegaConverter[ccyIndex - 1].optionTimes().end(),
-                                                   model_->actualTimeFromReference(p.date()))));
+                                                   model_->actualTimeFromReference(p.date()) -
+                                                       model_->actualTimeFromReference(valDate))));
                 pathFxVega[ccyIndex - 1][bucket] +=
                     RandomVariable(model_->size(), 0.01) * dynamicDeltaDerivatives_[p.node()];
             }
