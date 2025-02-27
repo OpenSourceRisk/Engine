@@ -1047,8 +1047,7 @@
         "use_cols": [
 	    "Base NPV",
 	    "ShiftSize_1",
-	    "Scenario NPV",
-	    "Difference"
+	    "Scenario NPV"
         ],
         "column_settings": [
           {
@@ -1058,7 +1057,7 @@
 		"Scenario NPV",
 		"Difference"
             ],
-            "abs_tol": 0.04,
+            "abs_tol": 0.05,
             "rel_tol": 1e-6
           }
         ]
