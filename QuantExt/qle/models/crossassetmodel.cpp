@@ -279,6 +279,7 @@ void CrossAssetModel::initIntegrator(const QuantLib::ext::shared_ptr<Integrator>
     if (integrator_ == nullptr) {
         integrator_ = QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
     }
+    underlyingIntegrator_ = integrator_;
     if (piecewiseIntegrationWrapper_) {
 
         // collect relevant times from parametrizations, we don't have to sort them or make them unique,
@@ -291,7 +292,7 @@ void CrossAssetModel::initIntegrator(const QuantLib::ext::shared_ptr<Integrator>
         }
 
         // use piecewise integrator avoiding the step points
-        integrator_ = QuantLib::ext::make_shared<PiecewiseIntegral>(integrator_, allTimes, true);
+        integrator_ = QuantLib::ext::make_shared<PiecewiseIntegral>(underlyingIntegrator_, allTimes, true);
     }
 }
 
