@@ -55,6 +55,8 @@ public:
 
     void useStickyCloseOutDates(const bool b) const override;
 
+    const Handle<CrossAssetModel>& cam() const { return cam_; };
+
 protected:
     // ModelCGImpl interface implementation
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
