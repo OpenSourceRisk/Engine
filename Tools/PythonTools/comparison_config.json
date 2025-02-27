@@ -1019,6 +1019,50 @@
           }
         ]
       },
+      "xvacg-exposure.csv": {
+        "keys": [
+            "Date"
+        ],
+        "use_cols": [
+	    "EPE",
+	    "ENE"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"EPE",
+		"ENE"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
+      "xvacg-cva-sensi-scenario.csv": {
+        "keys": [
+            "TradeId",
+	    "Factor",
+	    "Upd/Down"
+        ],
+        "use_cols": [
+	    "Base NPV",
+	    "ShiftSize_1",
+	    "Scenario NPV",
+	    "Difference"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"Base NPV",
+		"ShiftSize_1",
+		"Scenario NPV",
+		"Difference"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
       "xva_zero_sensitivity.*\\.csv": {
         "keys": [
           "NettingSetId",

@@ -1,3 +1,0 @@
-#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
-SwapLeg,Swap,2024-02-01,1.002508,47493.446355,USD,47493.446355,USD,1000000.00,USD,1000000.00,CPTY,CPTY
-SwapLegFlow,Swap,2024-02-05,1.013437,97158.322120,USD,97158.322120,USD,1000000.00,USD,1000000.00,CPTY,CPTY
