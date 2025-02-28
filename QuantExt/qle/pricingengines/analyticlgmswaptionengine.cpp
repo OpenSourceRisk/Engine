@@ -191,7 +191,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "higher than fixed leg's payment frequency in "
                                "analytic lgm swaption engine");
 
-        if(floatSpreadMapping_ == simple) {
+        if(floatSpreadMapping_ == FloatSpreadMapping::simple) {
             Real annuity = 0.0;
             for (Size j = j1_; j < fixedLeg_.size(); ++j) {
                 annuity += nominal_ * fixedLeg_[j]->accrualPeriod() * c_->discount(fixedLeg_[j]->date());
@@ -220,12 +220,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 } catch (...) {
                 }
                 Real lambda1, lambda2;
-                if (floatSpreadMapping_ == proRata) {
+                if (floatSpreadMapping_ == FloatSpreadMapping::proRata) {
                     // we do not use the exact pay dates but the ratio to determine
                     // the distance to the adjacent payment dates
                     lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
                     lambda1 = 1.0 - lambda2;
-                } else if (floatSpreadMapping_ == nextCoupon) {
+                } else if (floatSpreadMapping_ == FloatSpreadMapping::nextCoupon) {
                     lambda1 = 0.0;
                     lambda2 = 1.0;
                 } else {
@@ -359,4 +359,16 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     return sum;
 }
 
+std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
+    if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon)
+        oss << "NextCoupon";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
+        oss << "ProRata";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple)
+        oss << "Simple";
+    else
+        QL_FAIL("FloatSpreadMapping type not covered");
+    return oss;
+}
+  
 } // namespace QuantExt

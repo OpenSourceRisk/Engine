@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FXSWP_EURUSD_10Y">
+        <TradeType>FxSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxSwapData>
+            <NearDate>2025-08-23</NearDate>
+            <NearBoughtCurrency>EUR</NearBoughtCurrency>
+            <NearBoughtAmount>1000000</NearBoughtAmount>
+            <NearSoldCurrency>USD</NearSoldCurrency>
+            <NearSoldAmount>1100000</NearSoldAmount>
+            <FarDate>2035-08-24</FarDate>
+            <FarBoughtAmount>1300000</FarBoughtAmount>
+            <FarSoldAmount>1000000</FarSoldAmount>
+            <Settlement>Cash</Settlement>
+        </FxSwapData>
+    </Trade>
+</Portfolio>

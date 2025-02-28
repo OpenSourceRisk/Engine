@@ -8,11 +8,12 @@ import nose
 import collections
 #collections.Callable = collections.abc.Callable
 
-examples_exempt_from_scenariogenerator_samples_overwrite = ['Example_37', 'Example_54', 'Example_55', 'Example_56', 'Example_60', 'Example_68', 'Example_70', 'Example_72']
+examples_exempt_from_scenariogenerator_samples_overwrite = ['Performance', 'Example_37', 'Example_54', 'Example_55', 'Example_56', 'Example_60', 'Example_68', 'Example_70', 'Example_72']
 
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
 sys.path.append(os.path.join(script_dir, '../'))
+from Examples.ore_examples_helper import get_list_of_legacy_examples  # noqa
 from Examples.ore_examples_helper import get_list_of_examples  # noqa
 from Examples.ore_examples_helper import get_list_ore_academy  # noqa
 from Examples.ore_examples_helper import run_example  # noqa
@@ -101,7 +102,16 @@ def add_utest(name):
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
     i = 1
-    for name in (get_list_of_examples() + get_list_ore_academy()):
+    legacyexamples=get_list_of_legacy_examples()
+    examples=get_list_of_examples()
+    academy=get_list_ore_academy()
+    allexamples = sorted(examples + academy)
+    print("Legacy:", legacyexamples)
+    print("Examples:", examples)
+    print("Academy:", academy)
+    #for name in allexamples:
+    for name in examples:
+        print("add test:", name)
         testable_name = 'test_{0}'.format(name)
         testable = add_utest(name)
         testable.__name__ = testable_name
@@ -116,4 +126,5 @@ setup_logging()
 regress_all_utests()
 
 if __name__ == '__main__':
+    print("run nose tests")
     nose.runmodule(name='__main__')
