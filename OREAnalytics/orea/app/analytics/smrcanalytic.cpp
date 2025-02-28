@@ -62,8 +62,8 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                            marketConfig);
     }
 
-    analytic()->reports()[label()]["smrc"] = summaryReport;
-    analytic()->reports()[label()]["smrcdetail"] = detailReport;
+    analytic()->addReport(label(), "smrc", summaryReport);
+    analytic()->addReport(label(), "smrcdetail", detailReport);
 }
 
 } // namespace analytics

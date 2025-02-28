@@ -74,7 +74,7 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     varReport_->calculate(reports);
     CONSOLE("OK");
     
-    analytic()->reports()[label_]["var"] = varReport;
+    analytic()->addReport(label_, "var", varReport);
 
     LOG("VaR completed");
     MEM_LOG;
@@ -191,7 +191,7 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
 
         reports->add(histPnLReport);
 
-        analytic()->reports()[label_]["historical_PnL"] = histPnLReport;
+        analytic()->addReport(label_, "historical_PnL", histPnLReport);
 }
 
 } // namespace analytics

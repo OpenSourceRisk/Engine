@@ -37,13 +37,13 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> rfReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     portfolioAnalyser_->riskFactorReport(*rfReport);
-    analytic()->reports()[label_]["risk_factors"] = rfReport;
+    analytic()->addReport(label_, "risk_factors", rfReport);
 
     // market object report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> moReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     portfolioAnalyser_->marketObjectReport(*moReport);
-    analytic()->reports()[label_]["market_objects"] = moReport;
+    analytic()->addReport(label_, "market_objects", moReport);
 
     // swap indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> siReport =
@@ -52,7 +52,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     for (const auto& si : portfolioAnalyser_->swapindices())
         siReport->next().add(si);
     siReport->end();
-    analytic()->reports()[label_]["swap_indices"] = siReport;
+    analytic()->addReport(label_, "swap_indices", siReport);
 
     // Count of cps, netting sets and trade types
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cpReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
@@ -76,9 +76,9 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     cpReport->end();
     nsReport->end();
     ttReport->end();
-    analytic()->reports()[label_]["counterparties"] = cpReport;
-    analytic()->reports()[label_]["netting_sets"] = nsReport;
-    analytic()->reports()[label_]["trade_types"] = ttReport;
+    analytic()->addReport(label_, "counterparties", cpReport);
+    analytic()->addReport(label_, "netting_sets", nsReport);
+    analytic()->addReport(label_, "trade_types", ttReport);
 
     // underlying indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> uiReport =
@@ -91,7 +91,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
         uiReport->next().add(to_string(ui.first)).add(indices);
     }
     uiReport->end();
-    analytic()->reports()[label_]["underlying_indices"] = uiReport;
+    analytic()->addReport(label_, "underlying_indices", uiReport);
 
 }
 

@@ -2734,7 +2734,7 @@
       <xs:element name="Styles" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Style" maxOccurs="unbounded">
+            <xs:element name="Style" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -2749,7 +2749,7 @@
       <xs:element name="ConversionRatios" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="ConversionRatio" maxOccurs="unbounded">
+            <xs:element name="ConversionRatio" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">

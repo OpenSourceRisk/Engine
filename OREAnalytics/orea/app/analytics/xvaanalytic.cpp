@@ -207,7 +207,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));
     if (inputs_->writeScenarios()) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        analytic()->reports()["XVA"]["scenario"] = report;
+        analytic()->addReport(LABEL, "scenario", report);
         scenarioGenerator_ =
             QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
     }
@@ -839,9 +839,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         engine.run();
 
-        analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
+        analytic()->addReport(LABEL, "xvacg-exposure", engine.exposureReport());
         if (inputs_->xvaCgSensiScenarioData())
-            analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
+            analytic()->addReport(LABEL, "xvacg-cva-sensi-scenario", engine.sensiReport());
         return;
     }
 
@@ -982,13 +982,13 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
-        analytic()->npvCubes()["XVA"]["cube"] = cube_;
-        analytic()->mktCubes()["XVA"]["scenariodata"] = *scenarioData_;
+        analytic()->npvCubes()[LABEL]["cube"] = cube_;
+        analytic()->mktCubes()[LABEL]["scenariodata"] = *scenarioData_;
         if (nettingSetCube_) {
-            analytic()->npvCubes()["XVA"]["nettingsetcube"] = nettingSetCube_;
+            analytic()->npvCubes()[LABEL]["nettingsetcube"] = nettingSetCube_;
         }
         if (cptyCube_) {
-            analytic()->npvCubes()["XVA"]["cptycube"] = cptyCube_;
+            analytic()->npvCubes()[LABEL]["cptycube"] = cptyCube_;
         }
     }
 
@@ -997,7 +997,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
-        analytic()->reports()["XVA"]["rawcube"] = report;
+        analytic()->addReport(LABEL, "rawcube", report);
     }
 
     if (runXva_) {
@@ -1027,7 +1027,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
-                    analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
+                    analytic()->addReport(LABEL, "exposure_trade_" + tradeId, report);
                 } catch (const std::exception& e) {
                     QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess_->portfolio()->trades().find(tradeId)->second;
                     map<string, string> subfields;
@@ -1046,7 +1046,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["exposure_nettingset_" + nettingSet] = exposureReport;
+                    analytic()->addReport(LABEL, "exposure_nettingset_" + nettingSet, exposureReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
                                                     e.what(), {{"nettingSetId", nettingSet}})
@@ -1057,7 +1057,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["colva_nettingset_" + nettingSet] = colvaReport;
+                    analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
                                                     e.what(), {{"nettingSetId", nettingSet}})
@@ -1068,7 +1068,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                    analytic()->reports()["XVA"]["cva_sensitivity_nettingset_" + nettingSet] = cvaSensiReport;
+                    analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
                 } catch (const std::exception& e) {
                     StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
                                                     {{"nettingSetId", nettingSet}})
@@ -1080,33 +1080,33 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
-        analytic()->reports()["XVA"]["xva"] = xvaReport;
+        analytic()->addReport(LABEL, "xva", xvaReport);
 
         if (inputs_->netCubeOutput()) {
             auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
-            analytic()->reports()["XVA"]["netcube"] = report;
+            analytic()->addReport(LABEL, "netcube", report);
         }
 
         if (inputs_->timeAveragedNettedExposureOutput()) {
             auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
                 .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
-            analytic()->reports()["XVA"]["timeAveragedNettedExposure"] = report;
+            analytic()->addReport(LABEL, "timeAveragedNettedExposure", report);
         }
 
         if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
             // Generate DIM evolution report
             auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             postProcess_->exportDimEvolution(*dimEvolutionReport);
-            analytic()->reports()["XVA"]["dim_evolution"] = dimEvolutionReport;
+            analytic()->addReport(LABEL, "dim_evolution", dimEvolutionReport);
 
             // Generate DIM regression reports
             vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                 auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 dimRegReports.push_back(rep);
-                analytic()->reports()["XVA"]["dim_regression_" + std::to_string(i)] = rep;
+                analytic()->addReport(LABEL, "dim_regression_" + std::to_string(i), rep);
             }
             postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
                                               dimRegReports);
@@ -1121,8 +1121,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
                 auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 analytic()
-                    ->reports()["XVA"]["credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i])] =
-                    rep;
+                    ->addReport("XVA", "credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i]), rep);
                 (*rep)
                     .addColumn("upperBucketBound", double(), 6)
                     .addColumn("pdf", double(), 8)

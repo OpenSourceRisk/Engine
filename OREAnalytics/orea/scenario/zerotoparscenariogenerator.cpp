@@ -49,7 +49,7 @@ QuantLib::ext::shared_ptr<Scenario> ZeroToParScenarioGenerator::next(const Date&
 
     // create a par scenario to hold the par shifts
     QuantLib::ext::shared_ptr<Scenario> parScenario =
-        addDifferenceToScenario(baseScenario_, zeroScenario, baseScenario_->asof(), baseScenario_->getNumeraire());
+        addDifferenceToScenario(baseScenario_, zeroScenario, d, baseScenario_->getNumeraire());
     parScenario->setPar(true);
 
     // get the par shifts and update the par scenario
