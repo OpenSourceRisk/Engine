@@ -459,8 +459,12 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     cvaSensitivities_.clear();
 
     std::ifstream iss(fileName);
-    std::string line;
+    if (!iss.is_open()) {
+        ALOG("Error opening cva sensitivity file " << fileName);
+	return;
+    }
 
+    std::string line;
     while (std::getline(iss, line)) {
         vector<string> tokens;
         boost::trim(line);
@@ -497,6 +501,10 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     SaCvaSensitivityLoader cvaLoader;
     cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
     saCvaNetSensitivities_ = cvaLoader.netRecords();
+
+    if (saCvaNetSensitivities().size() == 0) {
+        ALOG("Loaded " << saCvaNetSensitivities().size() << " sacva net sensitivities");
+    }
 }
 
 // XVA Explain

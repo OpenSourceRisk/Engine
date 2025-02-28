@@ -1,0 +1,15 @@
+<TodaysMarket>
+  <YieldCurves/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="TRY">Yield/TRY/TRY-IN-USD</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+  </IndexForwardingCurves>
+  <SwapIndexCurves/>
+  <FxSpots id="default">
+    <FxSpot pair="USDTRY">FX/USD/TRY</FxSpot>
+  </FxSpots>
+</TodaysMarket>
