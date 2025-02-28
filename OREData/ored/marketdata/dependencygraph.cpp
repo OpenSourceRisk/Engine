@@ -26,6 +26,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -443,13 +444,12 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
                 referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
             
-            //TODO Discount Curves??, actually the discount curves should be dependencies of the creditCurves
-            //TODO: revisit later, indec curve with index (how to get it? curveconfig or extend the spec?)
-            std::set<std::string> constituentCurves {underlying, underlying + "_5Y", underlying + "_3Y"}; // Add the index curve itself
+            std::set<std::string> constituentCurves {underlying, underlying + "_5Y", underlying + "_3Y"};
             for (const auto& c : crd->constituents()) {
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
                     constituentCurves.insert(c.name());
+                    constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name()));
                 } else {
                     DLOG("Skipping curve " << c.name() << ", having zero weight");
                 }

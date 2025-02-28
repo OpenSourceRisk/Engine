@@ -363,6 +363,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     } 
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
+        auto creditCurveName = indexTrancheSpecificCreditCurveName(cc);
         auto creditCurve = indexTrancheSpecificCreditCurve(market, cc, config);
 
         auto originalCurve = creditCurve->curve();

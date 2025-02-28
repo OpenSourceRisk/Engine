@@ -157,7 +157,7 @@ public:
                         rrGrid[1] = 0.3;
                         rrGrid[2] = 0.1;
                     } else if (seniorities[i] == CdsTier::SNRFOR) {
-                        rrGrid[0] = 0.6;
+                        rrGrid[0] = 0.7;
                         rrGrid[1] = 0.4;
                         rrGrid[2] = 0.1;
                     }

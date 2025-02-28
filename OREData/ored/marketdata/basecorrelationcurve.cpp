@@ -461,7 +461,8 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         std::vector<CdsTier> seniorities;
         for (const auto& name : basketData.remainingNames) {
-            auto mappedName = creditCurveNameMapping(name);
+            auto specificCurveName = indexTrancheSpecificCreditCurveName(name);
+            auto mappedName = creditCurveNameMapping(specificCurveName);
             const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
             QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
             recoveryRates.push_back(creditCurve->recovery()->value());
