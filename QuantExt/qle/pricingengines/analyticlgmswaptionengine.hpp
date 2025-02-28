@@ -94,6 +94,12 @@ public:
     void enableCache(const bool lgm_H_constant = true, const bool lgm_alpha_constant = false);
     void clearCache();
 
+    /*! set a shift to be added to alpha for t in [t0, t1] */
+    void setAlphaShift(const Time t0, const Time t1, const Real shift) const;
+
+    /*! reset alpha shift */
+    void resetAlphaShift() const;
+
 private:
     Real flatAmount(const Size k) const;
     Real yStarHelper(const Real y) const;
@@ -107,6 +113,9 @@ private:
     mutable std::vector<QuantLib::ext::shared_ptr<FixedRateCoupon>> fixedLeg_;
     mutable std::vector<QuantLib::ext::shared_ptr<FloatingRateCoupon>> floatingLeg_;
     mutable Real nominal_;
+
+    mutable Real alphaShiftT0_ = 0.0, alphaShiftT1_ = 0.0, alphaShift_ = 0.0;
+    mutable bool applyAlphaShift_ = false;
 };
 
 std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
