@@ -1,0 +1,44 @@
+<Conventions>
+	<AverageOIS>
+		<Id>USD-AVERAGE-OIS</Id>
+		<SpotLag>2</SpotLag>
+		<FixedTenor>6M</FixedTenor>
+		<FixedDayCounter>30/360</FixedDayCounter>
+		<FixedCalendar>US</FixedCalendar>
+		<FixedConvention>MF</FixedConvention>
+		<FixedPaymentConvention>MF</FixedPaymentConvention>
+		<Index>USD-FedFunds</Index>
+		<OnTenor>3M</OnTenor>
+		<RateCutoff>2</RateCutoff>
+	</AverageOIS>
+	<OIS>
+		<Id>USD-FedFunds-OIS</Id>
+		<SpotLag>2</SpotLag>
+		<Index>USD-FedFunds</Index>
+		<FixedDayCounter>A360</FixedDayCounter>
+		<PaymentLag>2</PaymentLag>
+		<EOM>false</EOM>
+		<FixedFrequency>Annual</FixedFrequency>
+		<FixedConvention>Following</FixedConvention>
+		<FixedPaymentConvention>Following</FixedPaymentConvention>
+		<Rule>Backward</Rule>
+	</OIS>
+	<OIS>
+		<Id>USD-OIS</Id>
+		<SpotLag>2</SpotLag>
+		<Index>USD-FedFunds</Index>
+		<FixedDayCounter>A360</FixedDayCounter>
+		<PaymentLag>2</PaymentLag>
+		<EOM>false</EOM>
+		<FixedFrequency>Annual</FixedFrequency>
+		<FixedConvention>Following</FixedConvention>
+		<FixedPaymentConvention>Following</FixedPaymentConvention>
+		<Rule>Backward</Rule>
+	</OIS>
+	<Deposit>
+		<Id>USD-ON-DEPOSIT</Id>
+		<IndexBased>true</IndexBased>
+		<Index>USD-FedFunds</Index>
+	</Deposit>
+</Conventions>
+

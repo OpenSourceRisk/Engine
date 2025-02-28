@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="DOUBLEDIGITALOPTION">
+        <TradeType>DoubleDigitalOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <DoubleDigitalOptionData>
+            <Expiry>2027-07-24</Expiry>
+            <Settlement>2027-07-26</Settlement>
+            <BinaryPayout>1000000</BinaryPayout>
+            <BinaryLevel1>1.2</BinaryLevel1>
+            <BinaryLevel2>0.009</BinaryLevel2>
+            <Type1>Call</Type1>
+            <Type2>Put</Type2>
+            <Position>Long</Position>
+            <Underlying1>
+                <Type>FX</Type>
+                <Name>TR20H-EUR-USD</Name>
+            </Underlying1>
+            <Underlying2>
+                <Type>FX</Type>
+                <Name>TR20H-JPY-USD</Name>
+            </Underlying2>
+            <PayCcy>USD</PayCcy>
+        </DoubleDigitalOptionData>
+    </Trade>
+</Portfolio>

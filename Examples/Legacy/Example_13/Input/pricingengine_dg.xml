@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <!--
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  -->
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDelta">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimes">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+     </EngineParameters>
+  </Product>
+  <!--
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  -->
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDeltaVega">Y</Parameter>
+      <Parameter name="ComputeGamma">N</Parameter>
+      <Parameter name="BucketTimesDeltaGamma">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+      <Parameter name="BucketTimesVegaOpt">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+      <Parameter name="BucketTimesVegaUnd">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <!--
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  -->
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDeltaVega">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimesDeltaGamma">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+      <Parameter name="BucketTimesVega">1.0,2.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>
