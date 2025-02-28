@@ -95,10 +95,10 @@ public:
     void clearCache();
 
     /*! set a shift to be added to alpha for t in [t0, t1] */
-    void setAlphaShift(const Time t0, const Time t1, const Real shift) const;
+    void setAlphaShift(const Time t0, const Time t1, const Real shift);
 
     /*! reset alpha shift */
-    void resetAlphaShift() const;
+    void resetAlphaShift();
 
 private:
     Real flatAmount(const Size k) const;

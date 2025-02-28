@@ -262,6 +262,7 @@
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
 #include <qle/methods/fdmlgmop.hpp>
 #include <qle/methods/fdmquantohelper.hpp>
+#include <qle/methods/lgmswaptionvegaparconverter.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>

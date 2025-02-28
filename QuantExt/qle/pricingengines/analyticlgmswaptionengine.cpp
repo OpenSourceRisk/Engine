@@ -343,17 +343,19 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     return sum;
 }
 
-void AnalyticLgmSwaptionEngine::setAlphaShift(const Time t0, const Time t1, const Real shift) const {
+void AnalyticLgmSwaptionEngine::setAlphaShift(const Time t0, const Time t1, const Real shift) {
     QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setAlphaShift(): lgm_alpha_constant is true, which is "
                                      "not allowed when setting a shift for alpha.");
     alphaShiftT0_ = t0;
     alphaShiftT1_ = t1;
     alphaShift_ = shift;
     applyAlphaShift_ = true;
+    notifyObservers();
 }
 
-void AnalyticLgmSwaptionEngine::resetAlphaShift() const {
+void AnalyticLgmSwaptionEngine::resetAlphaShift() {
     applyAlphaShift_ = false;
+    notifyObservers();
 }
 
 std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
