@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EQ_CLIQUET_SPX">
+        <TradeType>EquityCliquetOption</TradeType>
+        <!-- General Data -->
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <!-- Termsheet -->
+        <!-- The payoff on the payment date = last valuation date plus settlement
+         (see below) is given by
+         min( max( sum min( max( S(t) / S(t-1) - Moneyness, localFloor ),
+                                      localCap ), globalFloor), globalCap) -->
+        <EquityCliquetOptionData>
+            <Underlying>
+                <Type>Equity</Type>
+                <Name>.SPX</Name>
+                <IdentifierType>RIC</IdentifierType>
+            </Underlying>
+            <Currency>USD</Currency>
+            <Notional>1000000.0</Notional>
+            <LongShort>Short</LongShort>
+            <OptionType>Call</OptionType>
+            <Moneyness>1.0</Moneyness>
+            <LocalCap>0.07</LocalCap>
+            <GlobalFloor>-0.07</GlobalFloor>
+            <!-- the schedule dates are the valuation dates (no further adjustment applied) -->
+            <ScheduleData>
+                <Dates>
+                    <Dates>
+                        <Date>2023-07-17</Date>
+                        <Date>2024-07-16</Date>
+                        <Date>2025-07-16</Date>
+                        <Date>2026-07-17</Date>
+                        <Date>2027-07-17</Date>
+                        <Date>2028-07-16</Date>
+                    </Dates>
+                    <Calendar>USD</Calendar>
+                    <Convention>F</Convention>
+                </Dates>
+            </ScheduleData>
+            <!-- settlement days for the payout at last valuation date w.r.t. calendar and
+		   term date convention of the schedule's calendar -->
+            <SettlementDays>5</SettlementDays>
+            <!-- premium, relative to notional, and payment date -->
+            <Premium>0.027</Premium>
+            <PremiumPaymentDate>2023-07-17</PremiumPaymentDate>
+        </EquityCliquetOptionData>
+    </Trade>
+</Portfolio>
