@@ -23,6 +23,7 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 #include <qle/indexes/equityindex.hpp>
+#include <qle/instruments/multilegoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
@@ -53,6 +54,8 @@
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
+#include <qle/models/lgmconvolutionsolver2.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
@@ -65,6 +68,7 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
@@ -72,7 +76,7 @@
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -88,6 +92,8 @@
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
@@ -96,6 +102,7 @@
 #include <ql/methods/montecarlo/pathgenerator.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -103,6 +110,7 @@
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -124,23 +132,6 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/make_shared.hpp>
-
-#include <qle/models/lgmbackwardsolver.hpp>
-
-#include <qle/models/lgmconvolutionsolver2.hpp>
-#include <ql/indexes/ibor/euribor.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
-
-#include <qle/pricingengines/blackmultilegoptionengine.hpp>
-#include <qle/pricingengines/mcmultilegoptionengine.hpp>
-#include <ql/instruments/swaption.hpp>
-#include <qle/models/lgm.hpp>
-
-#include <qle/instruments/multilegoption.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

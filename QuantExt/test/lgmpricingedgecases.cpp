@@ -23,6 +23,7 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 #include <qle/indexes/equityindex.hpp>
+#include <qle/instruments/multilegoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
@@ -65,6 +66,7 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
@@ -72,8 +74,8 @@
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -91,6 +93,7 @@
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
@@ -123,12 +126,6 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/make_shared.hpp>
 
-#include <qle/pricingengines/blackmultilegoptionengine.hpp>
-#include <qle/pricingengines/mcmultilegoptionengine.hpp>
-#include <ql/instruments/swaption.hpp>
-#include <qle/models/lgm.hpp>
-
-#include <qle/instruments/multilegoption.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
