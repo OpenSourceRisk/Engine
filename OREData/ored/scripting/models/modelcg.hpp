@@ -239,6 +239,10 @@ public:
     // add a model parameer if not yet present, return node in any case
     std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
 
+    // linear interpolation helper method, d must not lie outside knownDates
+    std::tuple<QuantLib::Date, QuantLib::Date, std::size_t, std::size_t>
+    getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& knownDates) const;
+
 protected:
     // map with additional results provided by this model instance
     mutable std::map<std::string, boost::any> additionalResults_;
@@ -257,12 +261,12 @@ private:
     const QuantLib::Size n_;
 };
 
-bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
-bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
-
-// standalone version of ModelCG::addModelParameters()
+    // standalone version of ModelCG::addModelParameters()
 std::size_t addModelParameter(QuantExt::ComputationGraph& g, std::set<ModelCG::ModelParameter>& modelParameters,
                               const ModelCG::ModelParameter& p, const std::function<double(void)>& f);
+
+bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
+bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
 
 // output model parameter
 std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t);

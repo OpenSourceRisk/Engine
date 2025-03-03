@@ -47,19 +47,19 @@ public:
 
     std::size_t numeraire(const Date& d, const std::size_t x,
                           const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                          const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
+                          const std::string& discountCurveId = "default") const;
 
     std::size_t discountBond(const Date& d, const Date& e, const std::size_t x,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                             const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
+                             const std::string& discountCurveId = "default") const;
 
     std::size_t reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                                    const std::string& discountCurveId = "default", const Date& stateDate = Date()) const;
+                                    const std::string& discountCurveId = "default") const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     std::size_t fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
-                       const std::size_t x, const Date& stateDate = Date()) const;
+                       const std::size_t x) const;
 
 private:
     std::string qualifier_;

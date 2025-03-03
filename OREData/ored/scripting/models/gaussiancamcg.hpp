@@ -32,7 +32,7 @@ public:
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const bool sloppySimDates = false, const std::vector<Date>& stickyCloseOutDates = {});
+                  const std::vector<Date>& stickyCloseOutDates = {});
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -73,6 +73,8 @@ protected:
 
     // helper methods
     Date adjustForStickyCloseOut(const Date& d) const;
+    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const;
+    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex) const;
 
     // input parameters
     Handle<CrossAssetModel> cam_;
@@ -80,7 +82,6 @@ protected:
     std::vector<Handle<Quote>> fxSpots_;
     Size timeStepsPerYear_;
     std::vector<Size> projectedStateProcessIndices_;
-    bool sloppySimDates_;
     std::vector<Date> stickyCloseOutDates_;
 
     // updated in performCalculations()

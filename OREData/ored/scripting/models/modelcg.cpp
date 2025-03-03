@@ -33,6 +33,17 @@ void ModelCG::useStickyCloseOutDates(const bool b) const {
     QL_FAIL("ModelCG::useStickyCloseOutDates(): not supported by this model instance");
 }
 
+std::tuple<QuantLib::Date, QuantLib::Date, std::size_t, std::size_t>
+ModelCG::getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& knownDates) const {
+    auto u = std::upper_bound(knownDates.begin(), knownDates.end(), d);
+    QL_REQUIRE(u != knownDates.begin(), "getInterpolationWeights(" << d << "): outside knownDates range");
+    auto l = std::next(u, -1);
+    Real tmp = static_cast<double>(d - *l) / static_cast<double>(*u - *l);
+    std::size_t w1 = cg_const(*g_, 1.0 - tmp);
+    std::size_t w2 = cg_const(*g_, tmp);
+    return std::make_tuple(*l, *u, w1, w2);
+}
+
 ModelCG::ModelParameter::ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2,
                                         const QuantLib::Date& date, const QuantLib::Date& date2,
                                         const QuantLib::Date& date3, const std::size_t index, const std::size_t index2)
