@@ -480,9 +480,6 @@ std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Si
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return underlyingPaths_.at(d).at(indexNo);
     auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    std::cout << "d   " << d << std::endl;
-    std::cout << "d1  " << d1 << std::endl;
-    std::cout << "d2  " << d2 << std::endl;
     return cg_add(*g_, cg_mult(*g_, w1, underlyingPaths_.at(d1).at(indexNo)),
                   cg_mult(*g_, w2, underlyingPaths_.at(d2).at(indexNo)));
 }
@@ -493,9 +490,6 @@ std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyI
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return irStates_.at(d).at(ccyIndex);
     auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    std::cout << "d   " << d << std::endl;
-    std::cout << "d1  " << d1 << std::endl;
-    std::cout << "d2  " << d2 << std::endl;
     return cg_add(*g_, cg_mult(*g_, w1, irStates_.at(d1).at(ccyIndex)),
                   cg_mult(*g_, w2, irStates_.at(d2).at(ccyIndex)));
 }
