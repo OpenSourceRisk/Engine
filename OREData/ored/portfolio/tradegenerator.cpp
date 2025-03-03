@@ -132,6 +132,7 @@ bool TradeGenerator::validateDate(std::string date) {
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, Real rate, bool isPayer,
                                std::map<std::string, std::string> mapPairs) {
+    cout << indexId << endl;
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexId);
     string cal;
     string rule;
@@ -276,11 +277,10 @@ void TradeGenerator::buildEquityForward(string equityCurveId, Real quantity, str
 
 void TradeGenerator::buildCapFloor(string indexName, Real capFloorRate, Real notional, string maturity, bool isLong, bool isCap,
                                    std::map<std::string, std::string> mapPairs) {
-    auto conv = conventions_.at(indexName);
-    QuantLib::ext::shared_ptr<IborIndex> iborIndex;
-    tryParseIborIndex(indexName, iborIndex);
+    QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexName);
+
     LegData floatingLeg;
-    switch (InstrumentConventions::instance().conventions()->get(indexName)->type())
+    switch (conv->type())
     { case Convention::Type::OIS:
     {
         floatingLeg = buildOisLeg(conv, notional, maturity, isCap, mapPairs);
