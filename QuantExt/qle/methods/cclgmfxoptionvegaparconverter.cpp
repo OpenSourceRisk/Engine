@@ -51,7 +51,7 @@ CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext
 
     AnalyticCcLgmFxOptionEngine engine(model_, foreignCurrency_);
 
-    constexpr Real shift = 1E-6;
+    constexpr Real shift = 1E-4;
 
     for (Size i = 0; i < optionTimes_.size(); ++i) {
         Real baseVol = blackFormulaImpliedStdDev(

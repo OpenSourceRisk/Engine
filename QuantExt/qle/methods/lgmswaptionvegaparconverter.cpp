@@ -58,7 +58,7 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
     }
 
 
-    constexpr Real shift = 1E-6;
+    constexpr Real shift = 1E-4;
 
     for (std::size_t i = 0; i < optionTerms_.size(); ++i) {
         Real baseVol = helpers[i]->impliedVolatility(helpers[i]->modelValue(), 1E-6, 100, 0.0, 0.03);
