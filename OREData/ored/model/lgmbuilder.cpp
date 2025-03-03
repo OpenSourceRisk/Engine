@@ -320,6 +320,23 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
+    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
+
+    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
+
+    if (data_->shiftHorizon() > 0.0) {
+        Real value = -parametrization_->H(data_->shiftHorizon());
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
+                                    << " LGM model");
+        parametrization_->shift() = value;
+    }
+
+    if (data_->scaling() != 1.0) {
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
+        parametrization_->scaling() = data_->scaling();
+    }
+
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
 }
@@ -401,8 +418,6 @@ void LgmBuilder::performCalculations() const {
 
     // reset model parameters to ensure identical results on identical market data input
     model_->setParams(params_);
-    parametrization_->shift() = 0.0;
-    parametrization_->scaling() = 1.0;
 
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
@@ -491,22 +506,6 @@ void LgmBuilder::performCalculations() const {
     }
     model_->setCalibrationInfo(calibrationInfo);
 
-    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
-
-    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
-    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-    if (data_->shiftHorizon() > 0.0) {
-        Real value = -parametrization_->H(data_->shiftHorizon());
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
-                                    << " LGM model");
-        parametrization_->shift() = value;
-    }
-
-    if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
-        parametrization_->scaling() = data_->scaling();
-    }
 } // performCalculations()
 
 void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,
