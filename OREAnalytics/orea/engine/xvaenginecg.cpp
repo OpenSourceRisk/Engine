@@ -807,10 +807,10 @@ void XvaEngineCG::calculateDynamicDelta() {
 
     // set up ir and fx vega conversion matrices
 
-    const std::vector<QuantLib::Period> irVegaTerms{5 * Years, 10 * Years, 15 * Years};
-    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{15 * Years, 10 * Years, 5 * Years};
+    const std::vector<QuantLib::Period> irVegaTerms{10 * Years};
+    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{10 * Years};
 
-    const std::vector<QuantLib::Period> fxVegaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years};
+    const std::vector<QuantLib::Period> fxVegaTerms{10 * Years};
 
     std::vector<LgmSwaptionVegaParConverter> irVegaConverter(model_->currencies().size());
     std::vector<CcLgmFxOptionVegaParConverter> fxVegaConverter(model_->currencies().size() - 1);
@@ -915,19 +915,29 @@ void XvaEngineCG::calculateDynamicDelta() {
                 pathFxDelta[ccyIndex - 1] += RandomVariable(model_->size(), 0.01) * dynamicDeltaDerivatives_[p.node()];
             }
 
-            // ir vega, we want the sensi w.r.t. an absolute shift of 0.0001 in terms of normal vol
+            // ir vega, we collect the sensi w.r.t. zeta, unit shift per unit time
 
-            if (p.type() == ModelCG::ModelParameter::Type::lgm_alpha && p.date() >= valDate) {
+            if (p.type() == ModelCG::ModelParameter::Type::lgm_zeta && p.date() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
+                Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
                 std::size_t bucket = std::min<std::size_t>(
                     irVegaTerms.size() - 1,
                     std::distance(irVegaConverter[ccyIndex].optionTimes().begin(),
-                                  std::upper_bound(irVegaConverter[ccyIndex].optionTimes().begin(),
-                                                   irVegaConverter[ccyIndex].optionTimes().end(),
-                                                   model_->actualTimeFromReference(p.date()) -
-                                                       model_->actualTimeFromReference(valDate))));
-                pathIrVega[ccyIndex][bucket] +=
-                    RandomVariable(model_->size(), 0.0001) * dynamicDeltaDerivatives_[p.node()];
+                                  std::lower_bound(irVegaConverter[ccyIndex].optionTimes().begin(),
+                                                   irVegaConverter[ccyIndex].optionTimes().end(), tte)));
+                Real w1 = 0.0, w2 = 1.0;
+                if (bucket > 0) {
+                    w1 = (irVegaConverter[ccyIndex].optionTimes()[bucket] - tte) /
+                         (irVegaConverter[ccyIndex].optionTimes()[bucket] -
+                          (bucket == 0 ? 0.0 : irVegaConverter[ccyIndex].optionTimes()[bucket - 1]));
+                    w2 = 1.0 - w1;
+                    pathIrVega[ccyIndex][bucket - 1] += RandomVariable(model_->size(), w1) *
+                                                        dynamicDeltaDerivatives_[p.node()] *
+                                                        RandomVariable(model_->size(), tte);
+                }
+                pathIrVega[ccyIndex][bucket] += RandomVariable(model_->size(), w2) *
+                                                dynamicDeltaDerivatives_[p.node()] *
+                                                RandomVariable(model_->size(), tte);
             }
 
             // fx vega, we want the sensi w.r.t. an absolute shift of 0.01
@@ -937,15 +947,13 @@ void XvaEngineCG::calculateDynamicDelta() {
                 QL_REQUIRE(
                     ccyIndex > 0,
                     "XvaEngineCG::calculateDynamicDelta(): internal error, fxbs_sigma qualifier is equal to base ccy");
+                Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
                 std::size_t bucket = std::min<std::size_t>(
                     fxVegaTerms.size() - 1,
                     std::distance(fxVegaConverter[ccyIndex - 1].optionTimes().begin(),
                                   std::upper_bound(fxVegaConverter[ccyIndex - 1].optionTimes().begin(),
-                                                   fxVegaConverter[ccyIndex - 1].optionTimes().end(),
-                                                   model_->actualTimeFromReference(p.date()) -
-                                                       model_->actualTimeFromReference(valDate))));
-                pathFxVega[ccyIndex - 1][bucket] +=
-                    RandomVariable(model_->size(), 0.01) * dynamicDeltaDerivatives_[p.node()];
+                                                   fxVegaConverter[ccyIndex - 1].optionTimes().end(), tte)));
+                pathFxVega[ccyIndex - 1][bucket] += dynamicDeltaDerivatives_[p.node()];
             }
         }
 
@@ -990,10 +998,10 @@ void XvaEngineCG::calculateDynamicDelta() {
             }
 
             for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
-                // conditionalIrVega[ccy - 1][b] = tmpIrVega[b]; // no conversion
+                // conditionalIrVega[ccy][b] = tmpIrVega[b]; // no conversion
                 for (std::size_t z = 0; z < irVegaTerms.size(); ++z) {
                     conditionalIrVega[ccy][b] +=
-                        RandomVariable(model_->size(), irVegaConverter[ccy].dzerodpar()(z, b)) * tmpIrVega[z];
+                        RandomVariable(model_->size(), irVegaConverter[ccy].dzerodpar()(z, b) * 1E-4) * tmpIrVega[z];
                 }
             }
 
@@ -1015,14 +1023,11 @@ void XvaEngineCG::calculateDynamicDelta() {
                     // conditionalFxVega[ccy - 1][b] = tmpFxVega[b]; // no conversion
                     for (std::size_t z = 0; z < fxVegaTerms.size(); ++z) {
                         conditionalFxVega[ccy - 1][b] +=
-                            RandomVariable(model_->size(), fxVegaConverter[ccy - 1].dzerodpar()(z, b)) * tmpFxVega[z];
+                            RandomVariable(model_->size(), fxVegaConverter[ccy - 1].dzerodpar()(z, b) * 1E-2) *
+                            tmpFxVega[z];
                     }
                 }
 
-                // for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
-                //     std::cout << i << "," << "fxVega," << model_->currencies()[ccy] << "," << fxVegaTerms[b] << ","
-                //               << expectation(pathFxVega[ccy - 1][b]).at(0) << std::endl;
-                // }
             }
 
             // debug conditional ir delta vs. model state on time step 20
