@@ -85,7 +85,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Index Tranche");
-    //bool isCDXNAHY = false;
+    std::string indexFamilyName;
+    std::string indexSubFamilyName;
     QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("CreditIndex", qualifier_)) {
         auto refDatum = refData->getData("CreditIndex", qualifier_);
@@ -95,7 +96,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         if (creditIndexRefDatum->indexFamily() == "") {
             ALOG("IndexFamily is blank in credit index reference data for entity " << qualifier_);
         }
-        //isCDXNAHY = creditIndexRefDatum->indexFamily() == "CDX.NA.HY";
+        indexFamilyName = creditIndexRefDatum->indexFamily();
+        indexSubFamilyName = creditIndexRefDatum->subIndexFamily();
     } else {
         ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
     }
@@ -583,7 +585,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         basket->setLossModel(
             cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
-                                                         indexCdsMaturity, homogeneous, seniorities));
+                                                         indexCdsMaturity, homogeneous, seniorities, indexSubFamilyName));
 
         DLOG("Basket Notional (" << adjDetachPoint << ")" << basket->basketNotional());
         DLOG("Tranche Notional (" << adjDetachPoint << ")" << basket->trancheNotional());
@@ -646,7 +648,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
-                                                         homogeneous, seniorities));
+                                                         homogeneous, seniorities, indexSubFamilyName));
 
         auto cdoA =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,

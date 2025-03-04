@@ -41,28 +41,23 @@ class GaussianOneFactorMonteCarloLossModel : public DefaultLossModel, public Obs
 
 public:
     GaussianOneFactorMonteCarloLossModel(Handle<Quote> baseCorrelation, const std::vector<std::vector<double>>& recoveryRates,
-                                         const std::vector<double>& recoveryProbabilites, const size_t samples)
+                                         const std::vector<std::vector<double>>& recoveryProbabilites, const size_t samples)
         : baseCorrelation_(baseCorrelation), recoveryRates_(recoveryRates),
-          recoveryProbabilities_(recoveryProbabilites), cumRecoveryProbabilities_(recoveryProbabilities_.size(), 0.0),
-          nSamples_(samples) {
+          recoveryProbabilities_(recoveryProbabilites), nSamples_(samples) {
 
         registerWith(baseCorrelation);
 
-        QL_REQUIRE(recoveryRates_.empty() || recoveryRates_.front().size() == recoveryProbabilities_.size(),
+        QL_REQUIRE(recoveryRates_.empty() || recoveryRates_.size() == recoveryProbabilities_.size(),
                    "Error mismatch vector size, between recoveryRates and their respective probability");
 
         
 
-            std::partial_sum(recoveryProbabilities_.begin(), recoveryProbabilities_.end(),
-                             cumRecoveryProbabilities_.begin());
-
-        QL_REQUIRE(QuantLib::close_enough(cumRecoveryProbabilities_.back(), 1.0),
-                   "Recovery Rate probs doesnt add up to 1.");
-
-        cumRecoveryProbabilities_.back() = 1.0 + 1e-11;
+            
 
         for (size_t i = 0; i < recoveryRates_.size(); ++i) {
-            QL_REQUIRE(recoveryRates_[i].size() == recoveryProbabilities_.size(),
+            double totalRecoveryProb = std::accumulate(recoveryProbabilities_[i].begin(), recoveryProbabilities_[i].end(), 0.0);
+            QL_REQUIRE(QuantLib::close_enough(totalRecoveryProb, 1.0), "Recovery probabilities should sum to 1");
+            QL_REQUIRE(recoveryRates_[i].size() == recoveryProbabilities_[i].size(),
                        "All recoveryRates should have the same number of probs");
         }
     }
@@ -91,7 +86,7 @@ protected:
         for (size_t i = 0; i < pds.size(); ++i) {
             TLOG(i << "," << names[i] << "," << io::iso_date(d) << "," << pds[i] << "," << notionals[i]);
             for (size_t j = 0; j < recoveryRates_[i].size(); ++j) {
-                TLOG("RR " << recoveryRates_[i][j] << " with prob " << recoveryProbabilities_[j]);
+                TLOG("RR " << recoveryRates_[i][j] << " with prob " << recoveryProbabilities_[i][j]);
             }
         }
         InverseCumulativeRng<MersenneTwisterUniformRng, InverseCumulativeNormal> normal(MersenneTwisterUniformRng(123));
@@ -100,18 +95,18 @@ protected:
         // if(recoveryRates_.front().size() == 1){
 
         InverseCumulativeNormal ICN;
-        std::vector<std::vector<double>> thresholds(basket_->size(),
-                                                    std::vector<double>(recoveryProbabilities_.size(), 0.0));
+        std::vector<std::vector<double>> thresholds;
         TLOG("DefaultThresholdholds");
         for (size_t id = 0; id < pds.size(); id++) {
+            thresholds.push_back(std::vector<double>(recoveryRates_[id].size(), 0.0));
             thresholds[id][0]=(ICN(pds[id]));
             double cumRecoveryProb = 0.0;
             for (size_t j = 0; j < recoveryProbabilities_.size() - 1; ++j) {
-                cumRecoveryProb += recoveryProbabilities_[j];
+                cumRecoveryProb += recoveryProbabilities_[id][j];
                 thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
             }
             thresholds[id].push_back(QL_MIN_REAL);
-            for (size_t j = 0; j < recoveryProbabilities_.size(); ++j) {
+            for (size_t j = 0; j < recoveryProbabilities_[id].size(); ++j) {
                 TLOG("id " << id << " Threshold " << j << " " << thresholds[id][j])
             }
         }
@@ -184,8 +179,8 @@ private:
     };
     Handle<Quote> baseCorrelation_;
     std::vector<std::vector<double>> recoveryRates_;
-    std::vector<double> recoveryProbabilities_;
-    std::vector<double> cumRecoveryProbabilities_;
+    std::vector<std::vector<double>> recoveryProbabilities_;
+    
     size_t nSamples_;
 };
 

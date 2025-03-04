@@ -23,11 +23,11 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <ored/portfolio/builders/cdo.hpp>
+#include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
-#include <ored/portfolio/creditdefaultswapdata.hpp>
-#include <ored/portfolio/builders/cdo.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/syntheticcdo.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
@@ -104,7 +104,7 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to BaseCorrelationQuote");
         TLOG("Loaded quote " << q->name() << " for base correlation curve " << config.curveID());
         TLOG("Quote has term " << q->term() << " and detachment point " << fixed << setprecision(9)
-                              << q->detachmentPoint());
+                               << q->detachmentPoint());
         // Go to next quote if index name in the quote does not match the cds vol configuration name.
         if (config.quoteName() != q->cdsIndexName())
             continue;
@@ -396,6 +396,20 @@ void BaseCorrelationCurve::buildFromCorrelations(const BaseCorrelationCurveConfi
     baseCorrelation_->enableExtrapolation(config.extrapolate());
 }
 
+std::vector<double> getStochasticRecoveryParameter(const std::map<std::string, std::vector<double>> data,
+                                                   const std::string& key) {
+    auto it = data.find(key);
+    if (it != data.end()) {
+        return it->second;
+    }
+    auto fallbackIt = data.find("");
+    if (fallbackIt != data.end()) {
+        return fallbackIt->second;
+    } else {
+        return {};
+    }
+}
+
 void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config,
                                              const QuoteData& qData) const {
     LOG("Building from upfronts" << config.curveID());
@@ -429,7 +443,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto it = data.find(key);
             QL_REQUIRE(it != data.end(), "No data found for " << term << " and detachmentPoint" << dp);
             auto attachmentPointIt = qData.atp.find(dp);
-            QL_REQUIRE(attachmentPointIt != qData.atp.end(),"No attachment point found for detachmentPoint " << dp);
+            QL_REQUIRE(attachmentPointIt != qData.atp.end(), "No attachment point found for detachmentPoint " << dp);
             double attachmentPoint = attachmentPointIt->second;
             if (i == 0)
                 QL_REQUIRE(attachmentPoint == 0,
@@ -453,9 +467,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     QL_REQUIRE(detachPoints.size() == dps.size(), "Mismatch size");
 
     // Build curve calibration
-    
+
     Currency ccy = parseCurrency(config.currency());
-    
+
     for (const auto& term : terms) {
         std::vector<double> recoveryRates;
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
@@ -477,25 +491,25 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
         auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
         QL_REQUIRE(indexCreditCurve != nullptr,
-                    "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
+                   "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
         discountCurve = indexCreditCurve->rateCurve();
         indexCurve = indexCreditCurve->curve();
         indexRecovery = indexCreditCurve->recovery();
-            
+
         if (config.calibrateConstituentsToIndexSpread()) {
             auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
                 config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
 
-            auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames,
-                                                                         basketData.remainingWeights, dpts, recoveryRates);
+            auto calibrationResults = curveCalibration->calibratedCurves(
+                basketData.remainingNames, basketData.remainingWeights, dpts, recoveryRates);
 
             DLOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
             DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
             for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
                 DLOG(io::iso_date(calibrationResults.cdsMaturity[i])
-                    << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
-                    << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
-                    << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
+                     << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
+                     << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
+                     << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
             }
             if (calibrationResults.success) {
                 dpts = calibrationResults.curves;
@@ -545,9 +559,32 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             //  Build Tranche
             auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
             RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
-            GaussCopulaBucketingLossModelBuilder modelBuilder{
-                -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020", false};
-            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, seniorities);
+
+            vector<vector<double>> rrGrid;
+            vector<vector<double>> rrProb;
+            if (!config.stochasticRecovery()) {
+                for (size_t i = 0; i < recoveryRates.size(); i++) {
+                    rrGrid.push_back({recoveryRates[i]});
+                    rrProb.push_back({1.0});
+                }
+            } else if (config.rrGrids().size() == 1) {
+                for (size_t i = 0; i < recoveryRates.size(); i++) {
+                    rrGrid.push_back(config.rrGrids().begin()->second);
+                    rrProb.push_back(config.rrProbs().begin()->second);
+                }
+            } else if (config.rrGrids().size() > 1) {
+                for (const auto& seniority : seniorities) {
+                    const auto seniorityString = to_string(seniority);
+                    auto rr = getStochasticRecoveryParameter(config.rrGrids(), seniorityString);
+                    auto prob = getStochasticRecoveryParameter(config.rrProbs(), seniorityString);
+                    rrGrid.push_back(rr);
+                    rrProb.push_back(prob);
+                }
+            } else {
+                QL_FAIL("Need at least one valid recovery rate grid and probability");
+            }
+            GaussCopulaBucketingLossModelBuilder modelBuilder{-5., 5, 64, false, 372, false, true};
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrid, rrProb);
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
                 config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
@@ -567,12 +604,13 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             double mktUpfront = it->second->value();
             auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
                                    &trancheWidth](const double correlation) {
-                //TLOG("Imply BaseCorrelations: call targetfunction with correlation " << correlation);
+                // TLOG("Imply BaseCorrelations: call targetfunction with correlation " << correlation);
                 baseCorrelQuote->setValue(correlation);
                 double implyUpfront = implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
 
-                //TLOG("Imply BaseCorrelation: Correlation: " << correlation << " Upfront: " << mktUpfront << "Implied Upfront: " << implyUpfront
-                 //                    << " Error: " << mktUpfront - implyUpfront);
+                // TLOG("Imply BaseCorrelation: Correlation: " << correlation << " Upfront: " << mktUpfront << "Implied
+                // Upfront: " << implyUpfront
+                //                     << " Error: " << mktUpfront - implyUpfront);
                 return mktUpfront - implyUpfront;
             };
 

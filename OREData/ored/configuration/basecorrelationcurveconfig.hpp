@@ -65,7 +65,9 @@ public:
         bool adjustForLosses = true,
         const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
-        bool calibrateConstituentsToIndexSpread = false);
+        bool calibrateConstituentsToIndexSpread = false, bool stochasticRecovery = false,
+        const std::map<std::string, std::vector<double>>& rrGrids = {},
+        const std::map<std::string, std::vector<double>>& rrProbs = {});
     //@}
 
     //! \name Serialisation
@@ -93,6 +95,10 @@ public:
     const double indexSpread() const { return indexSpread_; }
     const std::string currency() const { return currency_; }
     const bool calibrateConstituentsToIndexSpread() const { return calibrateConstituentsToIndexSpread_; }
+    const bool stochasticRecovery() const { return stochasticRecovery_; }
+    const std::map<std::string, std::vector<double>>& rrGrids() const { return rrGrids_; }
+    const std::map<std::string, std::vector<double>>& rrProbs() const { return rrProbs_; }
+
 
     //@}
 
@@ -106,6 +112,10 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
+    bool& stochasticRecovery() { return stochasticRecovery_; }
+    std::map<std::string, std::vector<double>>& rrGrids() { return rrGrids_; }
+    std::map<std::string, std::vector<double>>& rrProbs() { return rrProbs_; }
+
     //@}
 
 private:
@@ -125,6 +135,11 @@ private:
     double indexSpread_;
     std::string currency_;
     bool calibrateConstituentsToIndexSpread_;
+    bool stochasticRecovery_;
+    std::map<std::string, std::vector<double>> rrGrids_;
+    std::map<std::string, std::vector<double>> rrProbs_;
+
+
 };
 } // namespace data
 } // namespace ore
