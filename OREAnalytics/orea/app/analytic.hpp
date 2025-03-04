@@ -102,7 +102,7 @@ public:
     virtual ~Analytic() {}
 
     //! Run only those analytic types that are inclcuded in the runTypes vector, run all if the runType vector is empty 
-    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+    virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {});
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
