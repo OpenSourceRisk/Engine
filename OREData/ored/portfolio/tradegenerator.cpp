@@ -132,7 +132,6 @@ bool TradeGenerator::validateDate(std::string date) {
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, Real rate, bool isPayer,
                                std::map<std::string, std::string> mapPairs) {
-    cout << indexId << endl;
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexId);
     string cal;
     string rule;
