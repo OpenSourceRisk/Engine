@@ -58,16 +58,14 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
     }
 
 
-    constexpr Real shift = 1E-4;
+    constexpr Real shift = 1E-7;
 
     for (std::size_t i = 0; i < optionTerms_.size(); ++i) {
         Real baseVol = helpers[i]->impliedVolatility(helpers[i]->modelValue(), 1E-6, 100, 0.0, 0.03);
-        for (Size j = 0; j <= i; ++j) {
-            engine->setAlphaShift(i == 0 ? 0.0 : optionTimes_[j - 1], optionTimes_[j], shift);
-            Real bumpedVol = helpers[i]->impliedVolatility(helpers[i]->modelValue(), 1E-6, 100, 0.0, 0.03);
-            dpardzero_(i, j) = (bumpedVol - baseVol) / shift;
-            engine->resetAlphaShift();
-        }
+        engine->setZetaShift(optionTimes_[i], shift);
+        Real bumpedVol = helpers[i]->impliedVolatility(helpers[i]->modelValue(), 1E-6, 100, 0.0, 0.03);
+        dpardzero_(i, i) = (bumpedVol - baseVol) / shift;
+        engine->resetZetaShift();
     }
 
     dzerodpar_ = inverse(dpardzero_);
