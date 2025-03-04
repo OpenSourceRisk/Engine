@@ -211,6 +211,9 @@ private:
     // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
+    // irStates per ccy index and valuationDate (including reference date)
+    std::vector<std::vector<std::size_t>> irState_;
+
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> xvaDerivatives_;
     std::vector<RandomVariable> dynamicDeltaDerivatives_;

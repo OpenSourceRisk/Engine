@@ -57,6 +57,9 @@ public:
 
     const Handle<CrossAssetModel>& cam() const { return cam_; };
 
+    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const;
+    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex) const;
+
 protected:
     // ModelCGImpl interface implementation
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
@@ -73,8 +76,6 @@ protected:
 
     // helper methods
     Date adjustForStickyCloseOut(const Date& d) const;
-    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const;
-    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex) const;
 
     // input parameters
     Handle<CrossAssetModel> cam_;
