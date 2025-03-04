@@ -99,8 +99,6 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "lgm_H";
     case ModelCG::ModelParameter::Type::lgm_Hprime:
         return o << "lgm_Hprime";
-    case ModelCG::ModelParameter::Type::lgm_alpha:
-        return o << "lgm_alpha";
     case ModelCG::ModelParameter::Type::lgm_zeta:
         return o << "lgm_zeta";
     case ModelCG::ModelParameter::Type::lgm_numeraire:
