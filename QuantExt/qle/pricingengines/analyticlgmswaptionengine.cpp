@@ -270,19 +270,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
-        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
-    }
-
-    if (applyAlphaShift_) {
-        Real lowerBound = alphaShiftT0_;
-        Real higherBound = std::min(p_->termStructure()->timeFromReference(expiry), alphaShiftT1_);
-        if (lowerBound + 42.0 * QL_EPSILON < higherBound) {
-            // int (a+h)^2 du = int a^2 du + int 2ah du + int h^2 du, we add the two latter terms here:
-            SimpsonIntegral integrator(1.0E-8, 100);
-            zetaex_ += integrator(
-                [this](const Real t) { return 2.0 * p_->alpha(t) * alphaShift_ + alphaShift_ * alphaShift_; },
-                lowerBound, higherBound);
-        }
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) +
+                  (applyZetaShift_ ? zetaShift_ * zetaShiftT_ : 0.0);
     }
 
     Brent b;
@@ -343,18 +332,17 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     return sum;
 }
 
-void AnalyticLgmSwaptionEngine::setAlphaShift(const Time t0, const Time t1, const Real shift) {
-    QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setAlphaShift(): lgm_alpha_constant is true, which is "
-                                     "not allowed when setting a shift for alpha.");
-    alphaShiftT0_ = t0;
-    alphaShiftT1_ = t1;
-    alphaShift_ = shift;
-    applyAlphaShift_ = true;
+void AnalyticLgmSwaptionEngine::setZetaShift(const Time t, const Real shift) {
+    QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setZetaShift(): lgm_alpha_constant is true, which is "
+                                     "not allowed when setting a shift for zeta.");
+    zetaShiftT_ = t;
+    zetaShift_ = shift;
+    applyZetaShift_ = true;
     notifyObservers();
 }
 
-void AnalyticLgmSwaptionEngine::resetAlphaShift() {
-    applyAlphaShift_ = false;
+void AnalyticLgmSwaptionEngine::resetZetaShift() {
+    applyZetaShift_ = false;
     notifyObservers();
 }
 
