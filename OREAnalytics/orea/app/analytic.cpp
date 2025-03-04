@@ -106,7 +106,6 @@ void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
 void Analytic::initialise() {
     if (impl() && !impl()->initialised()) {
         impl()->initialise();
-        buildConfigurations();
     }
 }
 
@@ -180,6 +179,7 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
+    buildConfigurations();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
