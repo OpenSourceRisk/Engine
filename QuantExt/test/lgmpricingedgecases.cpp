@@ -126,7 +126,6 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/make_shared.hpp>
 
-
 using namespace QuantLib;
 using namespace QuantExt;
 
