@@ -102,15 +102,16 @@ def add_utest(name):
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
     i = 1
-    legacyexamples=get_list_of_legacy_examples()
     examples=get_list_of_examples()
+    legacyexamples=get_list_of_legacy_examples()
     academy=get_list_ore_academy()
-    allexamples = sorted(examples + academy)
+    allexamples = sorted(examples + academy + legacyexamples)
     print("Legacy:", legacyexamples)
     print("Examples:", examples)
     print("Academy:", academy)
-    #for name in allexamples:
-    for name in examples:
+    for name in allexamples:
+    #for name in examples:
+    #for name in academy:
         print("add test:", name)
         testable_name = 'test_{0}'.format(name)
         testable = add_utest(name)
