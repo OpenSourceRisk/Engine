@@ -30,16 +30,6 @@ namespace data {
 
 class BondIndexBuilder {
 public:
-    BondIndexBuilder(BondData bondData, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                     QuantLib::Real bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
-
-    BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                     QuantLib::Real bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
-
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::Real bidAskAdjustment = 0.0,
@@ -47,11 +37,11 @@ public:
 
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex() const;
     void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
-    const Bond& bond() const { return bond_; };
+    const BondData& bondData() const { return bond_.bondData; };
     QuantLib::Real priceAdjustment(QuantLib::Real price);
 
 private:
-    Bond bond_;
+    BondBuilder::Result bond_;
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     RequiredFixings fixings_;
     const bool dirty_;
