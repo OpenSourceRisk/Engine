@@ -27,7 +27,24 @@ BondIndexBuilder::BondIndexBuilder(const std::string& securityId, const bool dir
                                    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                    const bool bondIssueDateFallback)
     : dirty_(dirty) {
-    bond_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
+    auto tmp = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
+    bondData_ = tmp.bondData;
+    trade_ = tmp.trade;
+    bond_ = tmp.bond;
+    buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment, bondIssueDateFallback);
+}
+
+BondIndexBuilder::BondIndexBuilder(const BondData& bondData, const bool dirty, const bool relative,
+                                   const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                   QuantLib::Real bidAskAdjustment, const bool bondIssueDateFallback)
+    : dirty_(dirty) {
+    bondData_ = bondData;
+    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+    trade_ = QuantLib::ext::make_shared<Bond>(Envelope(), bondData);
+    trade_->build(engineFactory);
+    bond_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(trade_->instrument()->qlInstrument());
+    QL_REQUIRE(bond_, "BondIndexBuilder: bond_ can not be cast to QuantLib::Bond, internal error.");
     buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment, bondIssueDateFallback);
 }
 
@@ -35,23 +52,25 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                   const bool bondIssueDateFallback) {
 
-    fixings_ = bond_.trade->requiredFixings();
+    std::cout << "check" << std::endl;
+
+    fixings_ = trade_->requiredFixings();
 
     // get the curves
-    string securityId = bond_.bondData.securityId();
+    string securityId = bondData_.securityId();
 
     Handle<YieldTermStructure> discountCurve = engineFactory->market()->yieldCurve(
-        bond_.bondData.referenceCurveId(), engineFactory->configuration(MarketContext::pricing));
+        bondData_.referenceCurveId(), engineFactory->configuration(MarketContext::pricing));
 
     Handle<DefaultProbabilityTermStructure> defaultCurve;
-    if (!bond_.bondData.creditCurveId().empty())
-        defaultCurve = securitySpecificCreditCurve(engineFactory->market(), securityId, bond_.bondData.creditCurveId(),
+    if (!bondData_.creditCurveId().empty())
+        defaultCurve = securitySpecificCreditCurve(engineFactory->market(), securityId, bondData_.creditCurveId(),
                                                    engineFactory->configuration(MarketContext::pricing))
                            ->curve();
 
     Handle<YieldTermStructure> incomeCurve;
-    if (!bond_.bondData.incomeCurveId().empty())
-        incomeCurve = engineFactory->market()->yieldCurve(bond_.bondData.incomeCurveId(),
+    if (!bondData_.incomeCurveId().empty())
+        incomeCurve = engineFactory->market()->yieldCurve(bondData_.incomeCurveId(),
                                                           engineFactory->configuration(MarketContext::pricing));
 
     Handle<Quote> recovery;
@@ -61,9 +80,9 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
     } catch (...) {
         WLOG("security specific recovery rate not found for security ID "
              << securityId << ", falling back on the recovery rate for credit curve Id "
-             << bond_.bondData.creditCurveId());
-        if (!bond_.bondData.creditCurveId().empty())
-            recovery = engineFactory->market()->recoveryRate(bond_.bondData.creditCurveId(),
+             << bondData_.creditCurveId());
+        if (!bondData_.creditCurveId().empty())
+            recovery = engineFactory->market()->recoveryRate(bondData_.creditCurveId(),
                                                              engineFactory->configuration(MarketContext::pricing));
     }
 
@@ -76,10 +95,12 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
 
     // build and return the index
     bondIndex_ = QuantLib::ext::make_shared<QuantExt::BondIndex>(
-        securityId, dirty_, relative, fixingCalendar, bond_.bond, discountCurve, defaultCurve, recovery, spread,
-        incomeCurve, conditionalOnSurvival, parseDate(bond_.bondData.issueDate()), bond_.bondData.priceQuoteMethod(),
-        bond_.bondData.priceQuoteBaseValue(), bond_.bondData.isInflationLinked(), bidAskAdjustment,
-        bondIssueDateFallback, bond_.bondData.quotedDirtyPrices());
+        securityId, dirty_, relative, fixingCalendar, bond_, discountCurve, defaultCurve, recovery, spread, incomeCurve,
+        conditionalOnSurvival, parseDate(bondData_.issueDate()), bondData_.priceQuoteMethod(),
+        bondData_.priceQuoteBaseValue(), bondData_.isInflationLinked(), bidAskAdjustment, bondIssueDateFallback,
+        bondData_.quotedDirtyPrices());
+
+    std::cout << "check done" << std::endl;
 }
 
 QuantLib::ext::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }
@@ -113,8 +134,8 @@ Real BondIndexBuilder::priceAdjustment(Real price) {
     if (price == Null<Real>())
         return price;
 
-    Real adj = bond_.bondData.priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
-                   ? 1.0 / bond_.bondData.priceQuoteBaseValue()
+    Real adj = bondData_.priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
+                   ? 1.0 / bondData_.priceQuoteBaseValue()
                    : 1.0;
     return price * adj;
 }

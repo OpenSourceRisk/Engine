@@ -133,7 +133,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     }
 
     // build bond index (absolute prices, conditional on survival set to false)
-    BondIndexBuilder bondIndexBuilder(bondData_.securityId(), useDirtyPrices_, false, NullCalendar(), false, engineFactory);
+    BondIndexBuilder bondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
     auto bondIndex = bondIndexBuilder.bondIndex();
 
     // compute initial price taking into account the possible scaling with priceQuoteBaseValue and 100.0

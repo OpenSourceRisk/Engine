@@ -30,18 +30,25 @@ namespace data {
 
 class BondIndexBuilder {
 public:
+    //! uses BondFactory, works for all bond types
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::Real bidAskAdjustment = 0.0,
                      const bool bondIssueDateFallback = false);
+    //! this only works for vanilla bonds
+    BondIndexBuilder(const BondData& bondData, const bool dirty, const bool relative, const Calendar& fixingCalendar,
+                     const bool conditionalOnSurvival, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                     QuantLib::Real bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex() const;
     void addRequiredFixings(RequiredFixings& requiredFixings, Leg leg = {});
-    const BondData& bondData() const { return bond_.bondData; };
+    const BondData& bondData() const { return bondData_; };
     QuantLib::Real priceAdjustment(QuantLib::Real price);
 
 private:
-    BondBuilder::Result bond_;
+    BondData bondData_;
+    QuantLib::ext::shared_ptr<Trade> trade_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond_;
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     RequiredFixings fixings_;
     const bool dirty_;
