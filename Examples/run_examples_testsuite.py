@@ -109,9 +109,9 @@ def regress_all_utests():
     print("Legacy:", legacyexamples)
     print("Examples:", examples)
     print("Academy:", academy)
-    for name in allexamples:
+    #for name in allexamples:
     #for name in examples:
-    #for name in academy:
+    for name in sorted(legacyexamples + academy):
         print("add test:", name)
         testable_name = 'test_{0}'.format(name)
         testable = add_utest(name)
