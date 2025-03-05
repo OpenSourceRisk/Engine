@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -19,20 +19,16 @@
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 
-#include <qle/pricingengines/blackswaptionenginedeltagamma.hpp>
-
+#include <ql/currencies/america.hpp>
+#include <ql/currencies/europe.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <qle/pricingengines/blackmultilegoptionengine.hpp>
-#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
+#include <ql/time/calendars/target.hpp>
 
-#include <qle/pricingengines/blackmultilegoptionengine.hpp>
-#include <ql/currencies/america.hpp>
-#include <ql/currencies/europe.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
@@ -45,11 +41,13 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
-#include <ql/time/calendars/target.hpp>
-
-#include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
+#include <qle/pricingengines/blackswaptionenginedeltagamma.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -98,11 +96,13 @@ BOOST_AUTO_TEST_CASE(testSwapCase) {
     {
         // Get Lgm Price
         boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-        Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), 
-            schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+        Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, 
+                          DateGeneration::Backward, false);
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
+                          schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
                 
-        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
+        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(
+                          eurYtsHandle, false, settlementDate, settlementDate);
         swap -> setPricingEngine(swapEng);
         Real swapPrice = swap -> NPV();
        
@@ -147,7 +147,8 @@ BOOST_AUTO_TEST_CASE(testSwapCase) {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
             schedule, EURIBOR6m,  0.0, Actual365Fixed());  
 
-        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
+        QuantLib::ext::shared_ptr<PricingEngine> swapEng = QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, 
+                                                                                                             false, settlementDate, settlementDate);
         swap -> setPricingEngine(swapEng);
         Real swapPrice = swap -> NPV();
 
@@ -238,7 +239,8 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
     double shift = 0.015;
 
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
-    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
+    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle,
+                                                                                     volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
@@ -263,7 +265,8 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following,
+                                                                  vola, Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);
@@ -305,7 +308,8 @@ BOOST_AUTO_TEST_CASE(testBlack76Displacement) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, 
+                                                                  vola, Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);
@@ -375,7 +379,8 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
     double shift = 0.015;
 
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
-    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
+    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, 
+                                                                                     volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
@@ -408,7 +413,8 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola,
+                                                                  Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);
@@ -458,7 +464,8 @@ BOOST_AUTO_TEST_CASE(testBlack76DisplacementLongTerm) {
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<EuropeanExercise>(exe);
         boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
-        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, vola, Actual365Fixed(), ShiftedLognormal, shift);
+        auto sqc = boost::make_shared<ConstantSwaptionVolatility>(settlementDate, NullCalendar(), Following, 
+                                                                  vola, Actual365Fixed(), ShiftedLognormal, shift);
         Handle<SwaptionVolatilityStructure> volatilityHandle(sqc);
         QuantLib::ext::shared_ptr<PricingEngine> engineMulti = QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(eurYtsHandle, volatilityHandle);
         swaptionMulti -> setPricingEngine(engineMulti);

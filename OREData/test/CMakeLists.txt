@@ -54,7 +54,6 @@ inflationcapfloor.cpp
 inflationcurve.cpp
 legdata.cpp
 localvol.cpp
-lgmbuilder.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp
 ored_commodityforward.cpp

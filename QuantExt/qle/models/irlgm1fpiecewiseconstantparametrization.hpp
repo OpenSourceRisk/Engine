@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -58,12 +58,6 @@ public:
     const Array& parameterTimes(const Size) const override;
     const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     void update() const override;
-
-    std::string printParameters(Time t) { 
-        std::ostringstream os;
-        os << "LGM Parameters: Alpha: " << alpha(t) << ", Kappa: " << kappa(t) << ", H:" << H(t) << ", Zeta:"<< zeta(t);
-        return os.str();
-    };
 
 protected:
     Real direct(const Size i, const Real x) const override;

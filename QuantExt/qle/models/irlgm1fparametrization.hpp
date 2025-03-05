@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -51,12 +51,6 @@ public:
     virtual Real Hprime2(const Time t) const;
     virtual Real hullWhiteSigma(const Time t) const;
     const Handle<TS> termStructure() const;
-
-    std::string printParameters(Time t) { 
-        std::ostringstream os;
-        os << "LGM Parameters: Alpha: " << alpha(t) << ", Kappa: " << kappa(t) << ", H:" << H(t) << ", Zeta:"<< zeta(t);
-        return os.str();
-    };
 
     /*! \f[ \int_0^t alpha^2(u) H^n(u) du \f]*/
     Real zetan(const Size n, const Time t, const QuantLib::ext::shared_ptr<Integrator>& integrator);

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -381,7 +381,8 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationPricing) {
             sw->setPricingEngine(eurSwEng2);
             Real model3 = sw->modelValue();
             
-            BOOST_TEST_MESSAGE("Swaption "<<i<<": " << model2 * 10000.00 << " bp. " << ", " << model3 * 10000.00 << " bp. " << " diff: " << (model3 - model2) * 10000.00 << " bp. ");
+            BOOST_TEST_MESSAGE("Swaption "<<i<<": " << model2 * 10000.00 << " bp. " << ", " << model3 * 10000.00 <<
+                 " bp. " << " diff: " << (model3 - model2) * 10000.00 << " bp. ");
         }
 
         BOOST_TEST_MESSAGE(" ");
@@ -389,16 +390,12 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationPricing) {
 
     {
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm1 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d1.ccLgmExact->irModel(0));
-        BOOST_TEST_MESSAGE(" T = 1: Model1 - "<< (*lgm1).parametrization()->printParameters(1));
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm2 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d2.ccLgmExact->irModel(0));
-        BOOST_TEST_MESSAGE(" T = 1: Model2 - "<< (*lgm2).parametrization()->printParameters(1));
     }
 
     {
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm1 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d1.ccLgmExact->irModel(0));
-        BOOST_TEST_MESSAGE(" T = 2: Model1 - "<< (*lgm1).parametrization()->printParameters(2));
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm2 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d2.ccLgmExact->irModel(0));
-        BOOST_TEST_MESSAGE(" T = 2: Model2 - "<< (*lgm2).parametrization()->printParameters(2));
     }
 }
 
