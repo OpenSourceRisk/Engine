@@ -90,8 +90,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         }
     }
 
-    if ((exerciseType == Exercise::European || exerciseType == Exercise::American) &&
-        settlementType == Settlement::Cash) {
+    if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
         // Get the payment date.
@@ -180,7 +179,47 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                     tradeTypeBuilder = tradeType_ + "Forward";
             }
         }
+    } else if (exerciseType == Exercise::American && settlementType == Settlement::Cash && !sameCcy) {
+        // We have an American quanto cash settled option.
 
+        // Get the payment date.
+        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        Date paymentDate = expiryDate_;
+        if (opd) {
+            if (opd->rulesBased()) {
+                const Calendar& cal = opd->calendar();
+                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+            } else {
+                const vector<Date>& dates = opd->dates();
+                QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
+                paymentDate = dates[0];
+            }
+            QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
+        }
+
+        if (paymentDate > expiryDate_) {
+            QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
+        } else {
+            if (forwardDate_ == QuantLib::Date()) {
+                LOG("Build QuantoVanillaOption for trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::European)
+                    tradeTypeBuilder = "QuantoEquityOption";
+                else if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::American)
+                    tradeTypeBuilder = "QuantoEquityOptionAmerican";
+                else if (assetClassUnderlying_ == AssetClass::COM)
+                    tradeTypeBuilder = "QuantoCommodityOption";
+                else
+                    QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
+            } else {
+                LOG("Build VanillaForwardOption for trade " << id());
+                QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+                if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
+                    tradeTypeBuilder = tradeType_ + "Forward";
+            }
+        }
     } else {
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
