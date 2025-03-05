@@ -157,9 +157,11 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
+    // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
-        bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
+        id(), currency, string(), envelope().additionalField("discount_curve", false, std::string()),
+        bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(),
+        settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);

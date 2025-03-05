@@ -29,6 +29,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, const Currency& ccy,
+                                                             const string& contractId,
                                                              const std::string& discountCurveName,
                                                              const string& creditCurveId, const string& securityId,
                                                              const string& referenceCurveId,
@@ -65,6 +66,15 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
     curves.discountCurve_ = discountCurveName.empty()
                                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+    // include contract spread, if any
+    try {
+        curves.contractSpread_ = market_->securitySpread(contractId, configuration(MarketContext::pricing));
+    } catch (...) {
+        curves.contractSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+    }
+    // include spread
+    curves.discountCurve_ = Handle<YieldTermStructure>(
+        QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(curves.discountCurve_, curves.contractSpread_));
 
     try {
         curves.conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
@@ -119,9 +129,10 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& discountCurveName,
-                                       const string& creditCurveId, const string& securityId,
-                                       const string& referenceCurveId, const string& incomeCurveId, const bool dirty) {
+CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& contractId,
+                                       const string& discountCurveName, const string& creditCurveId,
+                                       const string& securityId, const string& referenceCurveId,
+                                       const string& incomeCurveId, const bool dirty) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -129,8 +140,8 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
         cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
-    auto curves =
-        getCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
+    auto curves = getCurves(id, ccy, contractId, discountCurveName, creditCurveId, securityId, referenceCurveId,
+                            incomeCurveId, dirty);
 
     return buildMcEngine(model->lgm(0), curves.spreadedReferenceCurve_, simulationDates_, externalModelIndices,
                          curves.incomeCurve_, curves.discountCurve_, curves.conversionFactor_);

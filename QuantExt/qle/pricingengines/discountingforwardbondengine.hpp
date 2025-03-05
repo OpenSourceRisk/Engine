@@ -42,7 +42,7 @@ namespace QuantExt {
 */
 class DiscountingForwardBondEngine : public QuantExt::ForwardBond::engine {
 public:
-    DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve,
+    DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& contractSpread,
                                  const Handle<YieldTermStructure>& incomeCurve,
                                  const Handle<YieldTermStructure>& bondReferenceYieldCurve,
                                  const Handle<Quote>& bondSpread,
@@ -54,11 +54,12 @@ public:
     void calculate() const override;
     Real calculateBondNpv(Date, Date) const;
     QuantLib::ext::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
-                                                                  Date computeDate, Date settlementDate,
-                                                                  bool cashSettlement, Date cmpPaymentDate,
-                                                                  bool dirty, double conversionFactor) const;
+                                                                          Date computeDate, Date settlementDate,
+                                                                          bool cashSettlement, Date cmpPaymentDate,
+                                                                          bool dirty, double conversionFactor) const;
 
     const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
+    const Handle<Quote>& contractSpread() const { return contractSpread_; }
     const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }
     const Handle<YieldTermStructure>& bondReferenceYieldCurve() const { return bondReferenceYieldCurve_; }
     const Handle<Quote>& bondSpread() const { return bondSpread_; }
@@ -68,6 +69,7 @@ public:
 
 private:
     Handle<YieldTermStructure> discountCurve_;
+    Handle<Quote> contractSpread_;
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> bondReferenceYieldCurve_;
     Handle<Quote> bondSpread_;
