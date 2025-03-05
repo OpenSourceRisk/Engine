@@ -145,11 +145,11 @@ public:
         std::string lastTrading;      // expiry
         std::string lastDelivery;     // settlement date
         // bond future date conventions
-        std::string rootDate;         // first, end, nth weekday (e.g. 'Monday,3') taken
-        std::string expiryBasis;      // root, expiry, settle taken
-        std::string settlementBasis;  // root, expiry, settle taken
-        std::string expiryLag;        // periods taken
-        std::string settlementLag;    // periods taken
+        std::string rootDate;        // first, end, nth weekday (e.g. 'Monday,3') taken
+        std::string expiryBasis;     // root, expiry, settle taken
+        std::string settlementBasis; // root, expiry, settle taken
+        std::string expiryLag;       // periods taken
+        std::string settlementLag;   // periods taken
 
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(ore::data::XMLDocument& doc) const override;
@@ -164,10 +164,13 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
+    const Handle<Quote>& contractSettlementPrice() const { return contractSettlementPrice_; }
     const BondFutureData& bondFutureData() const { return bondFutureData_; }
+    void setContractSettlementPrice(const Handle<Quote>& price) { contractSettlementPrice_ = price; }
 
 private:
     BondFutureData bondFutureData_;
+    Handle<Quote> contractSettlementPrice_;
 };
 
 /*! Hold reference data on a constituent of a credit index.

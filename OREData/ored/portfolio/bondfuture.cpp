@@ -144,7 +144,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), parseCurrency(currency_), envelope().additionalField("discount_curve", false, string()),
+        id(), parseCurrency(currency_), contractName_, envelope().additionalField("discount_curve", false, string()),
         ctdUnderlying_.creditCurveId, securityId, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
         ctdUnderlying_.bondTrade->bondData().incomeCurveId(), settlementDirty));
 
@@ -404,8 +404,21 @@ void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
 string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry) {
 
     // get settlement price for future
-    double settlementPriceFuture;
-    //TODO get settlementPriceFuture from FutureRefData,
+    double settlementPriceFuture = 0.0;
+    if (!engineFactory->referenceData() ||
+        !engineFactory->referenceData()->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
+        ALOG("could not get BondFutureReferenceDatum for name " << contractName_
+                                                                << " settlementPriceFuture set to zero.");
+    } else {
+        auto bondFutureRefData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            engineFactory->referenceData()->getData(BondFutureReferenceDatum::TYPE, contractName_));
+        if (bondFutureRefData->contractSettlementPrice()->isValid()) {
+            settlementPriceFuture = bondFutureRefData->contractSettlementPrice()->value();
+        } else {
+            ALOG("could not get value for contractSettlementPrice for name " << contractName_
+                                                                             << " settlementPriceFuture set to zero.");
+        }
+    }
 
     double lowestValue = 1e6; // arbitray high number
     string ctdSec = string();
@@ -417,8 +430,7 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
         // get value at expiry
         QuantLib::ext::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
             QuantLib::ext::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(bond.bond->pricingEngine());
-        QL_REQUIRE(drbe != nullptr,
-                   "fwd bond spread imply not supported for non-vanilla bonds or pe != discountingriskybondrengine");
+        QL_REQUIRE(drbe != nullptr, "could not find DiscountingRiskyBondEngine, unexpected");
         double cleanBondPriceAtExpiry =
             drbe->calculateNpv(expiry, expiry, bond.bond->cashflows()).npv - bond.bond->accruedAmount(expiry) / 100.0;
 
@@ -439,8 +451,9 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
             ctdSec = sec;
         }
     }
-
     QL_REQUIRE(!ctdSec.empty(), "No CTD bond found.");
+    DLOG("BondFuture::identifyCtdBond -- selected CTD for " << id() << " is " << ctdSec);
+
     return ctdSec;
 } // BondFuture::ctdBond
 
@@ -478,7 +491,7 @@ BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<Eng
     res.bond = QuantLib::ext::shared_ptr<QuantLib::Bond>();
     res.bondTrade = QuantLib::ext::shared_ptr<ore::data::Bond>();
     res.qlInstrument = future->instrument()->qlInstrument();
-    res.oreTrade = future->instrument();
+    res.oreTrade = future;
     res.currency = future->currency();
 
     res.isInflationLinked = false;
