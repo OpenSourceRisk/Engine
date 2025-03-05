@@ -46,15 +46,20 @@ public:
     static QuantLib::ext::shared_ptr<Loader>
     implyBondSpreads(const std::map<std::string, QuantLib::ext::shared_ptr<Security>>& securities,
                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                     const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<EngineData>& engineData,
-                     const std::string& configuration, const IborFallbackConfig& iborFallbackConfig);
+                     const QuantLib::ext::shared_ptr<Market>& market,
+                     const QuantLib::ext::shared_ptr<EngineData>& engineData, const std::string& configuration,
+                     const IborFallbackConfig& iborFallbackConfig);
+
+    static void addPriceToRefData(const std::string& securityId, const Handle<Quote>& marketQuote,
+                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
 
 private:
     //! helper function that computes a single implied spread for a bond
-    static Real implySpread(const std::string& securityId, const Real cleanPrice,
+    static Real implySpread(const std::string& securityId, const Handle<Quote>& marketQuote,
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
+                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote,
+                            const std::string& configuration);
 };
 
 } // namespace data
