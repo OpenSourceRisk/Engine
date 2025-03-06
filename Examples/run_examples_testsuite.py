@@ -112,7 +112,7 @@ def regress_all_utests():
     #for name in allexamples:
     #for name in examples:
     for name in sorted(legacyexamples + academy):
-        name2 = name.replace('/', ':', 1)
+        name2 = name.replace('/', '-', 1)
         print("add test:", name, name2)
         testable = add_utest(name)
         testable_name = 'test_{0}'.format(name2)
