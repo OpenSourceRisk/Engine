@@ -270,7 +270,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
-        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) +
+                  (applyZetaShift_ ? zetaShift_ * zetaShiftT_ : 0.0);
     }
 
     Brent b;
@@ -329,6 +330,20 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
            std::exp(-(Hj_.back() - H0_) * y - 0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
     sum -= D0_ * nominal_;
     return sum;
+}
+
+void AnalyticLgmSwaptionEngine::setZetaShift(const Time t, const Real shift) {
+    QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setZetaShift(): lgm_alpha_constant is true, which is "
+                                     "not allowed when setting a shift for zeta.");
+    zetaShiftT_ = t;
+    zetaShift_ = shift;
+    applyZetaShift_ = true;
+    notifyObservers();
+}
+
+void AnalyticLgmSwaptionEngine::resetZetaShift() {
+    applyZetaShift_ = false;
+    notifyObservers();
 }
 
 std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {

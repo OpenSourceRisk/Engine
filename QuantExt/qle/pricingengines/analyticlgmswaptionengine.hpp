@@ -94,19 +94,28 @@ public:
     void enableCache(const bool lgm_H_constant = true, const bool lgm_alpha_constant = false);
     void clearCache();
 
+    /*! set a zeta shift to be added until t1, shift is given for unit time */
+    void setZetaShift(const Time t1, const Real shift);
+
+    /*! reset zeta shift */
+    void resetZetaShift();
+
 private:
     Real flatAmount(const Size k) const;
     Real yStarHelper(const Real y) const;
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
     Handle<YieldTermStructure> c_;
     mutable FloatSpreadMapping floatSpreadMapping_;
-    bool caching_, lgm_H_constant_, lgm_alpha_constant_;
+    bool caching_, lgm_H_constant_ = false, lgm_alpha_constant_ = false;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
     mutable std::vector<QuantLib::ext::shared_ptr<FixedRateCoupon>> fixedLeg_;
     mutable std::vector<QuantLib::ext::shared_ptr<FloatingRateCoupon>> floatingLeg_;
     mutable Real nominal_;
+
+    mutable Real zetaShiftT_ = 0.0, zetaShift_ = 0.0;
+    mutable bool applyZetaShift_ = false;
 };
 
 std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
