@@ -109,9 +109,8 @@ def regress_all_utests():
     print("Legacy:", legacyexamples)
     print("Examples:", examples)
     print("Academy:", academy)
-    #for name in allexamples:
-    #for name in examples:
-    for name in sorted(legacyexamples + academy):
+    for name in allexamples:
+        # For Linux/docker: Replace the '/' in testable_name and class_name 
         name2 = name.replace('/', '-', 1)
         print("add test:", name, name2)
         testable = add_utest(name)
