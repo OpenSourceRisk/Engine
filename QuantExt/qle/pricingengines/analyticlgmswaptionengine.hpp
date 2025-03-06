@@ -106,7 +106,7 @@ private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
     Handle<YieldTermStructure> c_;
     mutable FloatSpreadMapping floatSpreadMapping_;
-    bool caching_, lgm_H_constant_, lgm_alpha_constant_;
+    bool caching_, lgm_H_constant_ = false, lgm_alpha_constant_ = false;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
