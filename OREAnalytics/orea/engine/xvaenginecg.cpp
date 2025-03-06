@@ -448,16 +448,17 @@ void XvaEngineCG::buildCgPartC() {
     }
 
     // Add notes to store ir states, this is needed for dynamic delta calc (and only that)
+    // In fact, this is probably not needed.
 
-    if (dynamicDelta_) {
-        irState_.resize(model_->currencies().size(), std::vector<std::size_t>(valuationDates_.size() + 1));
-        for (Size ccy = 0; ccy < model_->currencies().size(); ++ccy) {
-            for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
-                irState_[ccy][i] =
-                    model_->getInterpolatedIrState(i == 0 ? model_->referenceDate() : valuationDates_[i - 1], ccy);
-            }
-        }
-    }
+    // if (dynamicDelta_) {
+    //     irState_.resize(model_->currencies().size(), std::vector<std::size_t>(valuationDates_.size() + 1));
+    //     for (Size ccy = 0; ccy < model_->currencies().size(); ++ccy) {
+    //         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
+    //             irState_[ccy][i] =
+    //                 model_->getInterpolatedIrState(i == 0 ? model_->referenceDate() : valuationDates_[i - 1], ccy);
+    //         }
+    //     }
+    // }
 
     timing_partc_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: add exposure nodes to graph done - graph size is "
@@ -913,14 +914,15 @@ void XvaEngineCG::calculateDynamicDelta() {
             if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
-                Real HT = model_->cam()->irlgm1f(ccyIndex)->H(T);
-                Real Ht = model_->cam()->irlgm1f(ccyIndex)->H(t);
-                Real zetat = model_->cam()->irlgm1f(ccyIndex)->zeta(t);
-                RandomVariable correction =
-                    exp(RandomVariable(model_->size(), (HT - Ht)) * values_[irState_[ccyIndex][i]] -
-                        RandomVariable(model_->size(), 0.5 * (HT * HT - Ht * Ht) * zetat));
+                // This correction is actually not needed, I think:
+                // Real HT = model_->cam()->irlgm1f(ccyIndex)->H(T);
+                // Real Ht = model_->cam()->irlgm1f(ccyIndex)->H(t);
+                // Real zetat = model_->cam()->irlgm1f(ccyIndex)->zeta(t);
+                // RandomVariable correction =
+                //     exp(RandomVariable(model_->size(), (HT - Ht)) * values_[irState_[ccyIndex][i]] +
+                //         RandomVariable(model_->size(), 0.5 * (HT * HT - Ht * Ht) * zetat));
                 pathIrDelta[ccyIndex] += RandomVariable(model_->size(), -(T - t) * 1E-4) * values_[p.node()] *
-                                         dynamicDeltaDerivatives_[p.node()] * correction;
+                                         dynamicDeltaDerivatives_[p.node()] /** correction*/;
             }
 
             // fx spot sensi as seen from val date t for a relative shift r is r * d NPV / d ln fxSpot, we use r = 0.01
