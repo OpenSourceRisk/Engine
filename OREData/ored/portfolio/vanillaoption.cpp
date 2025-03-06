@@ -82,9 +82,11 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
 
     // For Quanto, check for Cash, except for an FX underlying
-    if (settlementType == Settlement::Type::Physical) {
-        QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
-                    "Physically settled Quanto options are allowed only for an FX underlying.");
+    if (!sameCcy) {
+        if (settlementType == Settlement::Type::Physical) {
+            QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
+                       "Physically settled Quanto options are allowed only for an FX underlying.");
+        }
     }
 
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
