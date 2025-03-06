@@ -2760,9 +2760,9 @@ void applyIndexing(Leg& leg, const LegData& data, const QuantLib::ext::shared_pt
                 QL_REQUIRE(!(QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(bi)),
                            "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
-                BondIndexBuilder bondIndexBuilder(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
-                                       parseCalendar(indexing.fixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                BondIndexBuilder bondIndexBuilder(bondData.securityId(), indexing.indexIsDirty(),
+                                                  indexing.indexIsRelative(), parseCalendar(indexing.fixingCalendar()),
+                                                  indexing.indexIsConditionalOnSurvival(), engineFactory);
                 index = bondIndexBuilder.bondIndex();
                 bondIndexBuilder.addRequiredFixings(requiredFixings, leg);
             } else {
