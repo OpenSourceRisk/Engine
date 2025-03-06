@@ -6,13 +6,13 @@
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log_fullSurface.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
@@ -42,7 +42,7 @@
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">mcsimulation.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
@@ -79,7 +79,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation_fullSurface.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity_fullSurface.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario_fullSurface.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity_fullSurface.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
@@ -89,7 +89,7 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation_fullSurface.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest_fullSurface.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>

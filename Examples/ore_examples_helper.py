@@ -23,8 +23,8 @@ def get_list_of_examples():
 
 def get_list_of_legacy_examples():
     legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
-#                     if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-                     if e == 'Example_1'])
+                     if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#                     if e == 'Example_1'])
     return [ os.path.join("Legacy", e) for e in legacy ]
 
 def get_list_of_new_examples():
