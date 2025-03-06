@@ -128,6 +128,7 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
     case ModelCG::ModelParameter::Type::interpolated_irstate:
         return o << "interpolated_irstate";
     }
+    return o << "unknown";
 }
 
 std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter& p) {
