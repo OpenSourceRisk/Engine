@@ -204,11 +204,6 @@ protected:
             quantoCorr->correlation(expiryDate), 
             fxStrike);
         
-        // return approach like above but fails
-        // return QuantLib::ext::make_shared<QuantLib::QuantoEngine<QuantLib::VanillaOption,
-        // FdBlackScholesVanillaEngine>>(
-        //            gbsp, quantoHelper, tGrid, xGrid, dampingSteps, scheme);
-        
         return QuantLib::ext::make_shared<QuantLib::FdBlackScholesVanillaEngine>(gbsp, quantoHelper, tGrid, xGrid,
                                                                                dampingSteps, scheme);
     }
