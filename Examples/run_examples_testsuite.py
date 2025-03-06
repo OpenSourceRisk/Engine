@@ -89,7 +89,7 @@ class TestExamples(unittest.TestCase):
             os.chdir(current_dir)
 
 
-# For each example we want to add a test to PricerRegressionTests
+# For each example we want to add a test to the test suite
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def add_utest(name):
     def do_run_test(self):
@@ -112,11 +112,12 @@ def regress_all_utests():
     #for name in allexamples:
     #for name in examples:
     for name in sorted(legacyexamples + academy):
-        print("add test:", name)
-        testable_name = 'test_{0}'.format(name)
+        name2 = name.replace('/', ':', 1)
+        print("add test:", name, name2)
         testable = add_utest(name)
+        testable_name = 'test_{0}'.format(name2)
         testable.__name__ = testable_name
-        class_name = 'Test_{0}'.format(name)
+        class_name = 'Test_{0}'.format(name2)
         globals()[class_name] = type(class_name, (TestExamples,), {testable_name: testable})
 
 
