@@ -279,18 +279,9 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
 
     std::set<std::pair<RiskFactorKey::KeyType, std::string>> keys;
     for (auto const& k : scenario->keys()) {
-        TLOG("Recast key " << k);
         if (newCoordinates.count({k.keytype, k.name}) == 1) {
             keys.insert(std::make_pair(k.keytype, k.name));
             TLOG("Insert keys " << k.keytype << " " << k.name)
-            /*
-            auto c1 = newCoordinates.find(std::make_pair(k.keytype, k.name));
-            for(Size i = 0; i < c1->second.size(); ++i) {
-                for(Size j = 0; j < c1->second[i].size(); ++j) {
-                    TLOG("New coordinates " << i << ", " << j << " = " << c1->second[i][j]);
-                }
-            }
-            */
         } else {
             TLOG("Recast skip " << k.keytype << " " << k.name);
         }
@@ -323,7 +314,6 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
-                TLOG("Recast " << k.first << " " << k.second << " workingIndex = " << workingIndex);
                 while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
                         indices[workingIndex] = 0;
                         --workingIndex;
@@ -331,14 +321,8 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
                             indices[workingIndex]++;
                         }
                 }
-                TLOG("Working index = " << workingIndex);
-                
                 if (workingIndex >= 0) {
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
-                    TLOG("New Key coordinates" << key);
-                    for (Size i = 0; i < indices.size(); ++i) {
-                        TLOG("Index " << i << " = " << indices[i]);
-                    }
                     auto iValue = interpolatedValue(c0->second, c1->second, indices, k, scenario);
                     TLOG("Add " << key << " interpolated value = " << iValue);
                     result->add(key, iValue);
