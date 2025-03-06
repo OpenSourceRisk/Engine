@@ -34,7 +34,7 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
                              const std::string& discountCurveId) const {
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_numeraire, qualifier_, discountCurveId, d);
-    if (auto m = derivedModelParameters_.find(id); m != derivedModelParameters_.end())
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
     auto p(p_);
@@ -56,7 +56,7 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
         P0t);
 
     id.setNode(n);
-    derivedModelParameters_.insert(id);
+    cachedParameters_.insert(id);
 
     return n;
 }
@@ -68,14 +68,14 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
         return cg_const(g_, 1.0);
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_discountBond, qualifier_, discountCurveId, d, e);
-    if (auto m = derivedModelParameters_.find(id); m != derivedModelParameters_.end())
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
     std::size_t n = cg_mult(g_, numeraire(d, x, discountCurve, discountCurveId),
                             reducedDiscountBond(d, e, x, discountCurve, discountCurveId));
 
     id.setNode(n);
-    derivedModelParameters_.insert(id);
+    cachedParameters_.insert(id);
     return n;
 }
 
@@ -88,7 +88,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_reducedDiscountBond, qualifier_, discountCurveId, d,
                                e);
-    if (auto m = derivedModelParameters_.find(id); m != derivedModelParameters_.end())
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
     auto p = p_;
@@ -111,7 +111,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
                                           cg_mult(g_, cg_mult(g_, cg_const(g_, 0.5), zeta), cg_mult(g_, H, H))))));
 
     id.setNode(n);
-    derivedModelParameters_.insert(id);
+    cachedParameters_.insert(id);
     return n;
 }
 
@@ -132,7 +132,7 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
 
         // handle future fixing (this is a derived model parameter)
 
-        if (auto m = derivedModelParameters_.find(id); m != derivedModelParameters_.end())
+        if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
             return m->node();
 
         // Ibor Index
@@ -146,7 +146,7 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
         std::size_t disc2 = reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
 
         id.setNode(cg_div(g_, cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0)), cg_const(g_, dt)));
-        derivedModelParameters_.insert(id);
+        cachedParameters_.insert(id);
         return id.node();
 
     } else {

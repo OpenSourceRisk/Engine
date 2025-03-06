@@ -263,7 +263,8 @@ void GaussianCamCG::performCalculations() const {
             std::size_t zeta2 = addModelParameter(
                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, currencies_[j], {}, date2),
                 [cam, j, t2] { return cam->irlgm1f(j)->zeta(t2); });
-            std::size_t alpha = cg_sqrt(*g_, cg_mult(*g_, cg_const(*g_, 1.0 / (t2 - t)), cg_subtract(*g_, zeta2, zeta)));
+            std::size_t alpha =
+                cg_sqrt(*g_, cg_mult(*g_, cg_const(*g_, 1.0 / (t2 - t)), cg_subtract(*g_, zeta2, zeta)));
             setValue2(diffusionOnCorrelatedBrownians[i], alpha, *cam, CrossAssetModel::AssetType::IR, j,
                       CrossAssetModel::AssetType::IR, j, 0, 0);
         }
@@ -499,9 +500,15 @@ std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Si
         return underlyingPaths_.at(*effectiveSimulationDates_.rbegin()).at(indexNo);
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return underlyingPaths_.at(d).at(indexNo);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_undpath, {}, {}, d, {}, {}, indexNo);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return m->node();
     auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    return cg_add(*g_, cg_mult(*g_, w1, underlyingPaths_.at(d1).at(indexNo)),
-                  cg_mult(*g_, w2, underlyingPaths_.at(d2).at(indexNo)));
+    auto n = cg_add(*g_, cg_mult(*g_, w1, underlyingPaths_.at(d1).at(indexNo)),
+                    cg_mult(*g_, w2, underlyingPaths_.at(d2).at(indexNo)));
+    id.setNode(n);
+    cachedParameters_.insert(id);
+    return n;
 }
 
 std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyIndex) const {
@@ -509,9 +516,15 @@ std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyI
         return irStates_.at(*effectiveSimulationDates_.rbegin()).at(ccyIndex);
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return irStates_.at(d).at(ccyIndex);
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_irstate, {}, {}, d, {}, {}, ccyIndex);
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return m->node();
     auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    return cg_add(*g_, cg_mult(*g_, w1, irStates_.at(d1).at(ccyIndex)),
-                  cg_mult(*g_, w2, irStates_.at(d2).at(ccyIndex)));
+    auto n =
+        cg_add(*g_, cg_mult(*g_, w1, irStates_.at(d1).at(ccyIndex)), cg_mult(*g_, w2, irStates_.at(d2).at(ccyIndex)));
+    id.setNode(n);
+    cachedParameters_.insert(id);
+    return n;
 }
 
 std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -530,7 +543,7 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     auto cam(cam_);
     LgmCG lgmcg(
         currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
-        derivedModelParameters_);
+        cachedParameters_);
     return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d,
                         getInterpolatedIrState(adjustForStickyCloseOut(d), currencyIdx));
 }
@@ -552,7 +565,7 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[idx];
     LgmCG lgmcg(
-        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, derivedModelParameters_);
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
     return lgmcg.discountBond(s, t, getInterpolatedIrState(adjustForStickyCloseOut(s), idx),
                               Handle<YieldTermStructure>(), "default");
 }
@@ -561,7 +574,7 @@ std::size_t GaussianCamCG::numeraire(const Date& s) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[0];
     LgmCG lgmcg(
-        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, derivedModelParameters_);
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, cachedParameters_);
     return lgmcg.numeraire(s, getInterpolatedIrState(adjustForStickyCloseOut(s), 0), Handle<YieldTermStructure>(),
                            "default");
 }

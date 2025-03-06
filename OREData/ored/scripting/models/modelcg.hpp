@@ -57,26 +57,28 @@ public:
             none,                    // type not set (= model param is not initialized)
             fix,                     // fixing, historical (non-derived param) or projected (derived)
             dsc,                     // T0 ir discount
-            fwd,                     // T0 discrete ir fwd
-            fwdCompAvg,              // T0 compounded / avg ir rate
-            div,                     // T0 div yield dsc factor
-            rfr,                     // T0 rfr       dsc factor
+            fwdCompAvg,              // T0 compounded / avg ir rate (only bs)
+            div,                     // T0 div yield dsc factor (only bs)
+            rfr,                     // T0 rfr       dsc factor (only gs)
             defaultProb,             // T0 default prob
-            lgm_H,                   // lgm1f parameters
+            lgm_H,                   // lgm1f parameters (only gcam)
             lgm_Hprime,              // ...
             lgm_zeta,                // ...
-            lgm_numeraire,           // ... (derived param)
-            lgm_discountBond,        // ...
-            lgm_reducedDiscountBond, // ...
-            fxbs_sigma,              // fxbs parameters
+            fxbs_sigma,              // fxbs vol parameter (only gcam)
             logX0,                   // stoch process log initial value
             logFxSpot,               // log fx spot (initial value from T0)
             sqrtCorr,                // model sqrt correlation
             sqrtCov,                 // model sqrt covariance
             corr,                    // model correlation
             cov,                     // model cov
-            cam_corrzz,              // cam ir-ir corr
-            cam_corrzx,              // cam ir-fx corr
+            cam_corrzz,              // gcam ir-ir corr
+            cam_corrzx,              // gcam ir-fx corr
+            // types that are only used to cache calculated nodes
+            lgm_numeraire,           // lgm1f parameters (only gcam)
+            lgm_discountBond,        // 
+            lgm_reducedDiscountBond, // 
+            interpolated_undpath,    // interpolated underlying path value (only gcam)
+            interpolated_irstate     // interpolated ir state value (only gcam)
         };
 
         ~ModelParameter() = default;
@@ -115,9 +117,9 @@ public:
         QuantLib::Date date3_;
         std::size_t index_;
         std::size_t index2_;
-        // functor, only filled for primary model parameters, not derived params
+        // functor, only filled for primary model parameters, not cached parameters
         mutable std::function<double(void)> functor_;
-        // node in cg, always filled
+        // node in cg, this is filled for primary model parameters and cached parameters
         mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
     };
 
@@ -232,8 +234,8 @@ public:
     // get model parameters
     std::set<ModelCG::ModelParameter>& modelParameters() const { return modelParameters_; };
 
-    // get derived model parameters
-    std::set<ModelCG::ModelParameter>& derivedModelParameters() const { return derivedModelParameters_; };
+    // get cached parameters
+    std::set<ModelCG::ModelParameter>& cachedParameters() const { return cachedParameters_; };
 
     // add a model parameer if not yet present, return node in any case
     std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
@@ -249,9 +251,9 @@ protected:
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
 
-    // container holding model parameters and derived model parameters
+    // container holding model parameters and cached parameters
     mutable std::set<ModelCG::ModelParameter> modelParameters_;
-    mutable std::set<ModelCG::ModelParameter> derivedModelParameters_;
+    mutable std::set<ModelCG::ModelParameter> cachedParameters_;
 
 private:
     void performCalculations() const override {}
@@ -260,7 +262,7 @@ private:
     const QuantLib::Size n_;
 };
 
-    // standalone version of ModelCG::addModelParameters()
+// standalone version of ModelCG::addModelParameters()
 std::size_t addModelParameter(QuantExt::ComputationGraph& g, std::set<ModelCG::ModelParameter>& modelParameters,
                               const ModelCG::ModelParameter& p, const std::function<double(void)>& f);
 

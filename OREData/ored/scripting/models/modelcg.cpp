@@ -85,8 +85,6 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "fix";
     case ModelCG::ModelParameter::Type::dsc:
         return o << "dsc";
-    case ModelCG::ModelParameter::Type::fwd:
-        return o << "fwd";
     case ModelCG::ModelParameter::Type::fwdCompAvg:
         return o << "fwdCompAvg";
     case ModelCG::ModelParameter::Type::div:
@@ -125,8 +123,10 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "cam_corrzz";
     case ModelCG::ModelParameter::Type::cam_corrzx:
         return o << "cam_corrzx";
-    default:
-        return o << "#unknown#";
+    case ModelCG::ModelParameter::Type::interpolated_undpath:
+        return o << "interpolated_undpath";
+    case ModelCG::ModelParameter::Type::interpolated_irstate:
+        return o << "interpolated_irstate";
     }
 }
 
