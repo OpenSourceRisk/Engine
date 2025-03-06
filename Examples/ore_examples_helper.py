@@ -241,7 +241,7 @@ class OreExample(object):
         self.ax.get_yaxis().set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: '{:1.2e}'.format(float(x))))
 
-    def plot_npv(self, filename, colIdx, color, label, marker='', offset=0, filter='', filterCol=0):
+    def plot_npv(self, filename, colIdx, color, label, marker='', offset=1, filter='', filterCol=0):
         data = self.get_output_data_from_column(filename, colIdx, offset, filter, filterCol)
         self.ax.plot(range(1, len(data) + 1),
                      data,
