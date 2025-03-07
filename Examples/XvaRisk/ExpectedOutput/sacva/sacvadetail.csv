@@ -9,7 +9,7 @@
 ,InterestRate,USD,Delta,5Y,CvaHedge,0.0000,0.0074
 ,InterestRate,EUR,Vega,IRVolatility,CvaAggregate,27859.7475,1.0000
 ,InterestRate,EUR,Vega,IRVolatility,CvaHedge,0.0000,1.0000
-,InterestRate,USD,Vega,IRVolatility,CvaAggregate,35863.8939,1.0000
+,InterestRate,USD,Vega,IRVolatility,CvaAggregate,25306.0157,1.0000
 ,InterestRate,USD,Vega,IRVolatility,CvaHedge,0.0000,1.0000
 ,ForeignExchange,USD,Delta,FXSpot,CvaAggregate,32806.6055,0.1100
 ,ForeignExchange,USD,Delta,FXSpot,CvaHedge,32806.6055,0.1100
@@ -29,7 +29,7 @@ CPTY_A,InterestRate,USD,Delta,5Y,CvaAggregate,4924848.8458,0.0074
 CPTY_A,InterestRate,USD,Delta,5Y,CvaHedge,0.0000,0.0074
 CPTY_A,InterestRate,EUR,Vega,IRVolatility,CvaAggregate,27859.7475,1.0000
 CPTY_A,InterestRate,EUR,Vega,IRVolatility,CvaHedge,0.0000,1.0000
-CPTY_A,InterestRate,USD,Vega,IRVolatility,CvaAggregate,35863.8939,1.0000
+CPTY_A,InterestRate,USD,Vega,IRVolatility,CvaAggregate,25306.0157,1.0000
 CPTY_A,InterestRate,USD,Vega,IRVolatility,CvaHedge,0.0000,1.0000
 CPTY_A,ForeignExchange,USD,Delta,FXSpot,CvaAggregate,32806.6055,0.1100
 CPTY_A,ForeignExchange,USD,Delta,FXSpot,CvaHedge,32806.6055,0.1100
