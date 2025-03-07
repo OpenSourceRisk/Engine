@@ -17,6 +17,7 @@
 */
 
 #include <orea/aggregation/dimflatcalculator.hpp>
+#include <orea/aggregation/dimdirectcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dimhelper.hpp>
 #include <orea/aggregation/dynamicdeltavarcalculator.hpp>
@@ -583,14 +584,19 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
-        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
+        if (inputs_->xvaCgDynamicIM()) {
+            // cube storing dynamic IM per netting set
+            nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
+                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, 1, 0.0f);
+        }
+
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-            inputs_->xvaCgBumpSensis(), false /* true */, inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
@@ -600,6 +606,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             engine.setAggregationScenarioData(*scenarioData_);
         engine.setOffsetScenario(offsetScenario_);
         engine.setNpvOutputCube(amcCube_);
+        if(inputs_->xvaCgDynamicIM()) {
+            engine.setDynamicIMOutputCube(nettingSetCube_);
+        }
         engine.run();
 
     } else {
@@ -752,10 +761,13 @@ void XvaAnalyticImpl::runPostProcessor() {
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
-        } else {
-            LOG("dim calculator not set, create FlatDynamicInitialMarginCalculator");
-            dimCalculator_ = QuantLib::ext::make_shared<FlatDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_);
+        } else if (inputs_->dimModel() == "DynamicIM") {
+            QL_REQUIRE(nettingSetCube_ && inputs_->xvaCgDynamicIM() &&
+                           inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
+                       "dim model is set to DynamicIM, this requires amcCg=CubeGeneration, xvaCgDynamicIM=true");
+            LOG("dim calculator not set, create DirectDynamicInitialMarginCalculator");
+            dimCalculator_ = QuantLib::ext::make_shared<DirectDynamicInitialMarginCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, nettingSetCube_, currentIM);
         }
     }
 

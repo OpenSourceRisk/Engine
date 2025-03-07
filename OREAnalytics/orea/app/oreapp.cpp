@@ -1785,6 +1785,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgDynamicIM", false);
+        if (!tmp.empty())
+            setXvaCgDynamicIM(parseBool(tmp));
     }
 
     /**********************
@@ -1925,10 +1929,11 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "dimModel", false);
     if (tmp != "") {
-        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" ||
-		   tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" || tmp == "DeltaGammaVaR",
-                   "DIM model " << tmp << " not supported, "
-		   << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
+        QL_REQUIRE(
+            tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM",
+            "DIM model " << tmp << " not supported, "
+                         << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM");
         setDimModel(tmp);
     }
 

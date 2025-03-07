@@ -1408,6 +1408,10 @@ void XvaEngineCG::setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytic
     npvOutputCube_ = npvOutputCube;
 }
 
+void XvaEngineCG::setDynamicIMOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube) {
+    dynamicIMOutputCube_ = dynamicIMOutputCube;
+}
+
 void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values,
                                          std::vector<ExternalRandomVariable>& valuesExternal) const {
 

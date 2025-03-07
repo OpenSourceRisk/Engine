@@ -84,6 +84,9 @@ public:
     // set npv output cube - if not nullptr, the cube will be populated when running the engine
     void setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& npvOutputCube);
 
+    // set dynamic IM output cube - if not nullptr and dynamicDelta is true, it will be populated with netting set IM
+    void setDynamicIMOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube);
+
     // run the engine, this is required before populateNpvCube() is called or reports are retrieved
     void run();
 
@@ -133,6 +136,7 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvOutputCube_;
+    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> dynamicIMOutputCube_;
 
     // input parameters from constructor
 
