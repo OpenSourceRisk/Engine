@@ -14,18 +14,22 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
+skip_examples = [
+    "Example_39",
+    "Example_54",
+    "Example_56",
+    "Example_68",
+    "Example_70"    
+    ]
 
 def get_list_of_examples():
-#    return sorted([e for e in os.listdir(os.getcwd())
-#                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#    return get_list_of_legacy_examples()
     return get_list_of_new_examples()
 
 def get_list_of_legacy_examples():
     legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
                      if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
 #                     if e == 'Example_1'])
-    return [ os.path.join("Legacy", e) for e in legacy ]
+    return [ os.path.join("Legacy", e) for e in legacy if e not in skip_examples ]
 
 def get_list_of_new_examples():
     return ["AmericanMonteCarlo",
