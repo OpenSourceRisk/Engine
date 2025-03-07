@@ -15,8 +15,6 @@ from datetime import datetime
 from math import log
 
 skip_examples = [
-    "Example_39",
-    "Example_54",
     "Example_56",
     "Example_68",
     "Example_70"    
