@@ -1809,6 +1809,25 @@
             "rel_tol": 1e-4
           }
         ]
+      },
+      "sacva_sensitivities.csv": {
+        "keys": [
+          "NettingSet",
+          "RiskType",
+          "CvaType",
+          "MarginType",
+          "RiskFactor",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 1e-03,
+            "rel_tol": 1e-04
+          }
+        ]
       }
     }
   },
