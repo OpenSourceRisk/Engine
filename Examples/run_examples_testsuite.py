@@ -8,7 +8,16 @@ import nose
 import collections
 #collections.Callable = collections.abc.Callable
 
-examples_exempt_from_scenariogenerator_samples_overwrite = ['Performance']
+examples_exempt_from_scenariogenerator_samples_overwrite = [
+    'Performance',
+    'Legacy/Example_37',
+    'Legacy/Example_54',
+    'Legacy/Example_55',
+    'Legacy/Example_56',
+    'Legacy/Example_60',
+    'Legacy/Example_68',
+    'Legacy/Example_70',
+    'Legacy/Example_72']
 
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
