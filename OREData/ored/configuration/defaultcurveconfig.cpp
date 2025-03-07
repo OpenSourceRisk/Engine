@@ -121,13 +121,13 @@ DefaultCurveConfig::Config::Config(const Type& type, const string& discountCurve
                                    const Date& startDate, const BootstrapConfig& bootstrapConfig,
                                    QuantLib::Real runningSpread, const QuantLib::Period& indexTerm,
                                    const boost::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
-                                   const int priority)
+                                   const int priority, const std::string& seniorityTier)
     : cdsQuotes_(cdsQuotes), type_(type), discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote),
       dayCounter_(dayCounter), conventionID_(conventionID), extrapolation_(extrapolation),
       benchmarkCurveID_(benchmarkCurveID), sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar),
       spotLag_(spotLag), startDate_(startDate), bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread),
       indexTerm_(indexTerm), implyDefaultFromMarket_(implyDefaultFromMarket), allowNegativeRates_(allowNegativeRates),
-      priority_(priority) {}
+      priority_(priority), seniorityTier_(seniorityTier) {}
 
 void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
     auto prioStr = XMLUtils::getAttribute(node, "priority");

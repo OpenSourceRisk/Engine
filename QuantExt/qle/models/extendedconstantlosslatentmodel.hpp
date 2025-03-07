@@ -66,7 +66,8 @@ public:
 
     // Check vector sizes and that expected recovery matches market quoted recovery for each obligor
     void checkStochasticRecoveries() {
-        QL_REQUIRE(recoveryProbabilities_.size() == recoveryRates_.size(), "number of recovery probability vectors and market recovery rates differ");
+        QL_REQUIRE(recoveryProbabilities_.size() == recoveryRates_.size(),
+                   "number of recovery probability vectors and market recovery rates differ");
         if (recoveryProbabilities_.size() == 0)
             return;
         QL_REQUIRE(recoveryProbabilities_.size() == recoveries_.size(), "number of recovery rates and recovery probablity vectors differ");
@@ -75,11 +76,7 @@ public:
             Real expectedRecovery = 0.0;
             for (Size j = 0; j < recoveryProbabilities_[i].size(); ++j)
                 expectedRecovery += recoveryProbabilities_[i][j] * recoveryRates_[i][j];
-            if(!QuantLib::close_enough(expectedRecovery, recoveries_[i])){
-                WLOG("expected recovery (" << expectedRecovery << ") does not match market recovery (" << recoveries_[i]
-                                           << ") rate for obligor " << i);
-            }
-                
+            QL_REQUIRE(QuantLib::close_enough(expectedRecovery, recoveries_[i]), "expected recovery does not match market recovery rate for obligor " << i);
         }
     }
 

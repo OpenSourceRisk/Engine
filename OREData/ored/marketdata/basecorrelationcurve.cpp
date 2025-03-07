@@ -481,7 +481,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
             recoveryRates.push_back(creditCurve->recovery()->value());
             dpts.push_back(creditCurve->curve());
-            seniorities.push_back(parseCdsTier(creditCurve->refData().seniority));
+            if(creditCurve->refData().seniority.empty()){
+                seniorities.push_back(CdsTier::SNRFOR);
+            } else {
+                seniorities.push_back(parseCdsTier(creditCurve->refData().seniority));
+            }
+            
         }
 
         Handle<DefaultProbabilityTermStructure> indexCurve;

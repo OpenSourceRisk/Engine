@@ -25,17 +25,19 @@
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/pricingengines/midpointcdoengine.hpp>
 
-#include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
 #include <iterator>
-#include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <numeric>
+#include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
@@ -44,18 +46,15 @@
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/compositequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <qle/pricingengines/midpointindexcdsengine.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
 #include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
-#include <qle/utilities/time.hpp>
 #include <qle/utilities/creditcurves.hpp>
-#include <ored/utilities/to_string.hpp>
-#include <ored/utilities/marketdata.hpp>
-#include <numeric>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
-
+#include <qle/utilities/time.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -76,7 +75,6 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
 
 namespace ore {
 namespace data {
-
 
 void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -102,7 +100,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
     }
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     Date protectionStartDate = protectionStart_ == "" ? Date() : parseDate(protectionStart_);
     Date upfrontDate = upfrontDate_ == "" ? Date() : parseDate(upfrontDate_);
@@ -121,7 +119,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // period coupon accrual includes the maturity date.
     Actual360 standardDayCounter;
     DayCounter lastPeriodDayCounter = dayCounter == standardDayCounter ? Actual360(true) : dayCounter;
-
 
     // Set some trade variables
     npvCurrency_ = legData_.currency();
@@ -162,8 +159,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     vector<string> creditCurves;
 
-    
-
     if (basketData_.constituents().size() > 0) {
 
         const auto& constituents = basketData_.constituents();
@@ -198,8 +193,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                     totalRemainingNtl += ntl;
                 } else {
                     StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
-                                                     ("Invalid Basket: found a duplicate credit curve " + creditCurve +
-                                                      ", skip it. Check the basket data for possible errors.")
+                                                ("Invalid Basket: found a duplicate credit curve " + creditCurve +
+                                                 ", skip it. Check the basket data for possible errors.")
                                                     .c_str())
                         .log();
                 }
@@ -245,20 +240,19 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         if (!close(totalRemainingNtl, origTotalNtl) && totalRemainingNtl > origTotalNtl) {
             StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
-                                             ("Total remaining notional (" + std::to_string(totalRemainingNtl) +
-                                              ") is greater than total original notional (" +
-                                              std::to_string(origTotalNtl) +
-                                              "),  check the basket data for possible errors.")
+                                        ("Total remaining notional (" + std::to_string(totalRemainingNtl) +
+                                         ") is greater than total original notional (" + std::to_string(origTotalNtl) +
+                                         "),  check the basket data for possible errors.")
                                             .c_str())
                 .log();
         }
 
         if (!close(totalNtl, origTotalNtl)) {
             StructuredTradeErrorMessage(id(), "Synthetic CDO", "Error building trade",
-                                            ("Expected the total notional (" + std::to_string(totalNtl) + " = " +
-                                             std::to_string(totalRemainingNtl) + " + " + std::to_string(totalPriorNtl) +
-                                             ") to equal the total original notional (" + std::to_string(origTotalNtl) +
-                                             "),  check the basket data for possible errors.")
+                                        ("Expected the total notional (" + std::to_string(totalNtl) + " = " +
+                                         std::to_string(totalRemainingNtl) + " + " + std::to_string(totalPriorNtl) +
+                                         ") to equal the total original notional (" + std::to_string(origTotalNtl) +
+                                         "),  check the basket data for possible errors.")
                                             .c_str())
                 .log();
         }
@@ -352,17 +346,18 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     DLOG("Current total notional:   " << std::fixed << std::setprecision(2) << currTotalNtl);
 
     const auto& market = engineFactory->market();
-    auto cdoEngineBuilder = QuantLib::ext::dynamic_pointer_cast<CdoEngineBuilder>(engineFactory->builder("SyntheticCDO"));
+    auto cdoEngineBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CdoEngineBuilder>(engineFactory->builder("SyntheticCDO"));
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);
-    
+
     std::vector<CdsTier> seniorities;
     std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
     vector<Real> recoveryRates;
 
     if (fixedRecovery != Null<Real>()) {
         LOG("Set all recovery rates to " << fixedRecovery);
-    } 
+    }
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
         auto creditCurveName = indexTrancheSpecificCreditCurveName(cc);
@@ -372,15 +367,17 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         Real mktRecoveryRate = creditCurve->recovery()->value();
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         dpts.push_back(originalCurve);
-        const auto& ref = market->defaultCurve(cc, config)->refData();
+
         auto seniority = CdsTier::SNRFOR;
-        try {
-            seniority = parseCdsTier(ref.seniority);
-        } catch (const std::exception& e) {
-            WLOG("Error parsing seniority for credit curve " << cc << "  got " << e.what());
+        auto curve = market->defaultCurve(creditCurveName, config);
+        if (!curve.empty()) {
+            auto refInfo = creditCurve->refData();
+            if (!refInfo.seniority.empty()) {
+                seniority = parseCdsTier(refInfo.seniority);
+            }
         }
         seniorities.push_back(seniority);
-        TLOG("Trade " << id() << ", Issuer " << cc << " recovery rate: " << recoveryRates.back());
+        TLOG("Trade " << id() << ", Issuer " << cc << " with credit curve " << creditCurveName <<" and seniority " << seniorities.back() << " and  recovery rate: " << recoveryRates.back());
     }
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
@@ -388,7 +385,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     Date indexCdsStartDate = indexStartDateHint() == Date() ? schedule.dates().front() : indexStartDateHint();
     Date indexCdsMaturity = schedule.dates().back();
-    if(isIndexTranche()){
+    if (isIndexTranche()) {
         auto nameWithTenor = creditCurveIdWithTerm();
         const auto& [_, tenor] = splitCurveIdWithTenor(nameWithTenor);
         indexCdsMaturity = cdsMaturity(indexCdsStartDate, tenor, DateGeneration::CDS2015);
@@ -398,7 +395,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     ext::shared_ptr<CreditIndexConstituentCurveCalibration> curveCalibration;
     if (calibrateConstiuentCurves) {
-        // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier 
+        // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier
         // O'Kane 2008 - Modelling Single-name and Multi-name Credit Derivatives
         // Chapter 10.6
         try {
@@ -409,7 +406,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             const auto [name, period] = splitCurveIdWithTenor(indexCurveName);
 
             auto calibrationCdsMaturity = cdsMaturity(indexCdsStartDate, period, DateGeneration::CDS2015);
-            
+
             TLOG("Build index calibration for " << creditCurveIdWithTerm());
             TLOG("Index maturity " << calibrationCdsMaturity);
 
@@ -417,7 +414,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             auto discountCurveCalibration = market->defaultCurve(indexCurveName, config)->rateCurve();
             Handle<Quote> indexRecovery = market->recoveryRate(indexCurveName, config);
 
-            for(size_t i = 0; i < creditCurves.size(); ++i){
+            for (size_t i = 0; i < creditCurves.size(); ++i) {
                 DLOG("CreditCurve " << creditCurves[i] << " with recovery " << recoveryRates[i] << " with notional "
                                     << basketNotionals[i]);
             }
@@ -427,25 +424,25 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());
         }
-        
+
         auto it = engineFactory->engineData()->globalParameters().find("RunType");
-        if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && curveCalibration != nullptr) {
-            try{
+        if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" &&
+            curveCalibration != nullptr) {
+            try {
                 LOG("Calibrate curve");
                 auto result = curveCalibration->calibratedCurves(creditCurves, basketNotionals, dpts, recoveryRates);
-                if (result.success){
+                if (result.success) {
                     DLOG("Credit Curve " << creditCurves.front());
                     auto uncalibratedCurve = dpts.front();
                     auto calibratedCurve = result.curves.front();
-                    
 
                     DLOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
                     DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
                     for (size_t i = 0; i < result.cdsMaturity.size(); ++i) {
-                       DLOG(io::iso_date(result.cdsMaturity[i])
-                            << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
-                            << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
-                            << result.marketNpv[i] - result.impliedNpv[i]);
+                        DLOG(io::iso_date(result.cdsMaturity[i])
+                             << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
+                             << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
+                             << result.marketNpv[i] - result.impliedNpv[i]);
                     }
                     /*
                     TODO: DELETE DEBUG OUTPUT
@@ -455,9 +452,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                         times.insert(uncalibratedCurve->timeFromReference(maturity));
                         times.insert(uncalibratedCurve->timeFromReference(maturity+1));
                     }
-                    std::cout << "Constituent Curve Calibration results for creditCurve:" << creditCurveIdWithTerm() << std::endl;
-                    std::cout << "i,creditCurve,recoveryRate,basketNotional";
-                    for(auto& time : times){
+                    std::cout << "Constituent Curve Calibration results for creditCurve:" << creditCurveIdWithTerm() <<
+                    std::endl; std::cout << "i,creditCurve,recoveryRate,basketNotional"; for(auto& time : times){
                         std::cout << "," << time;
                     }
                     std::cout << std::endl;
@@ -471,17 +467,15 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                     }
                         */
                     dpts = std::move(result.curves);
+                } else {
+                    WLOG("Calibration failed for creditCurve:" << creditCurveIdWithTerm() << " got "
+                                                               << result.errorMessage
+                                                               << " continue without index curve calibration");
                 }
-                else{
-                    WLOG("Calibration failed for creditCurve:" << creditCurveIdWithTerm() << " got " << result.errorMessage << " continue without index curve calibration");
-                }
-            } catch(const std::exception& e)
-            {
+            } catch (const std::exception& e) {
                 WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
             }
-           
         }
-        
     }
 
     if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
@@ -490,15 +484,13 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     // Create the instruments.
     auto pool = QuantLib::ext::make_shared<Pool>();
-    
+
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition = cdoEngineBuilder->sensitivityDecomposition();
     useSensitivitySimplification_ = sensitivityDecomposition != CreditPortfolioSensitivityDecomposition::Underlying;
     Handle<DefaultProbabilityTermStructure> clientCurve;
     Handle<DefaultProbabilityTermStructure> baseCurve;
     vector<Time> baseCurveTimes;
     vector<Real> expLoss;
-
-    
 
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
@@ -566,7 +558,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     homogeneous = homogeneous && all_of(recoveryRates.begin(), recoveryRates.end(),
                                         [&recoveryRates](Real rr) { return close_enough(rr, recoveryRates[0]); });
 
-    
     // vanilla holds the representation of the CDO, i.e. 1 * [0, Detach] instrument - 1 * [0, Attach] instrument,
     // without the upfront fee payment which is added below to create the full final instrument.
     QuantLib::ext::shared_ptr<Instrument> vanilla;
@@ -574,7 +565,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // Tranche from 0 to detachment point.
     // If detachment point is 1.0, build an index CDS, i.e. [0, 100%] tranche. Otherwise an actual tranche.
     bool useIndexCDSPricer = parseBool(cdoEngineBuilder->engineParameter("useIndexCDSPricer", {}, false, "true"));
-    
+
     QuantLib::ext::shared_ptr<Instrument> cdoD;
     if (!close_enough(adjDetachPoint, 1.0) || !useIndexCDSPricer) {
         DLOG("Building detachment tranche [0," << adjDetachPoint << "].");
@@ -583,16 +574,15 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
 
-        basket->setLossModel(
-            cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
-                                                         indexCdsMaturity, homogeneous, seniorities, indexSubFamilyName));
+        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint, indexCdsMaturity,
+                                                         homogeneous, seniorities, indexSubFamilyName));
 
         DLOG("Basket Notional (" << adjDetachPoint << ")" << basket->basketNotional());
         DLOG("Tranche Notional (" << adjDetachPoint << ")" << basket->trancheNotional());
 
-        auto cdoDetach =
-            QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc,
-                                                       settlesAccrual_, protectionPaymentTime_, protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
+        auto cdoDetach = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
+            basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
+            protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
 
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
@@ -604,8 +594,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     } else {
         DLOG("Detachment point is 1.0 so building an index CDS for [0,1.0] 'tranche'.");
-        
-
 
         auto cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             side, currTotalNtl, basketNotionals, 0.0, runningRate, schedule, bdc, dayCounter, settlesAccrual_,
@@ -650,11 +638,12 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
                                                          homogeneous, seniorities, indexSubFamilyName));
 
-        auto cdoA =
-            QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
+        auto cdoA = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
+            basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
             protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
 
-        cdoA->setPricingEngine(cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
+        cdoA->setPricingEngine(
+            cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
         addProductModelEngine(*cdoEngineBuilder);
 
@@ -679,8 +668,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         Real upfrontAmount = upfrontFee_ * origTrancheNtl;
         string configuration = cdoEngineBuilder->configuration(MarketContext::pricing);
         Date lastPremiumDate = addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
-                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory,
-                                           configuration);
+                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory, configuration);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";
@@ -782,8 +770,6 @@ XMLNode* SyntheticCDO::toXML(XMLDocument& doc) const {
     return node;
 }
 
-
-
 std::string SyntheticCDO::creditCurveIdWithTerm() const {
     auto p = ore::data::splitCurveIdWithTenor(qualifier());
     if (p.second != 0 * Days || !isIndexTranche())
@@ -791,15 +777,13 @@ std::string SyntheticCDO::creditCurveIdWithTerm() const {
 
     QuantLib::Schedule s = makeSchedule(leg().schedule());
     if (s.dates().empty())
-        return p.first;    
+        return p.first;
     QuantLib::Period t = QuantExt::implyIndexTerm(
         indexStartDateHint_ == Date() ? s.dates().front() : indexStartDateHint_, s.dates().back());
     if (t != 0 * Days)
         return p.first + "_" + ore::data::to_string(t);
     return p.first;
 }
-
-
 
 } // namespace data
 } // namespace ore

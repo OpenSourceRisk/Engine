@@ -62,7 +62,7 @@ public:
                QuantLib::Real runningSpread = QuantLib::Null<Real>(),
                const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
                const boost::optional<bool>& implyDefaultFromMarket = boost::none, const bool allowNegativeRates = false,
-               const int priority = 0);
+               const int priority = 0, const std::string& seniorityTier = "");
         Config()
             : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), indexTerm_(0 * QuantLib::Days),
               allowNegativeRates_(false) {}
@@ -143,7 +143,6 @@ public:
         vector<string> multiSectionSwitchDates_;
         string initialState_;
         vector<string> states_;
-        string seniorityTier_;
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
 
@@ -166,6 +165,7 @@ public:
         bool allowNegativeRates_;
 
         int priority_ = 0;
+        string seniorityTier_;
     };
 
     //! the curve builder will try to build the configs by ascending key in the map, first success wins
