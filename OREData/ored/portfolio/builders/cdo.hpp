@@ -230,7 +230,7 @@ public:
                 const auto seniorityString = to_string(seniority);
                 std::map<std::string, vector<Real>> rrProbMap;
                 std::map<std::string, vector<Real>> rrGridMap;
-                std::string key = indexFamilyName + seniorityString;
+                std::string key = indexFamilyName + "_" + seniorityString;
                 if (rrProbMap.count(key) == 0 || rrGridMap.count(key) == 0) {
                     std::vector<std::string> qualifiers{key, seniorityString};
                     string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
@@ -305,7 +305,7 @@ public:
                 uniqueSeniorities.insert(to_string(seniority));
             }
             for (const auto& seniority : uniqueSeniorities) {
-                std::string key = indexFamily + seniority;
+                std::string key = indexFamily + "_" + seniority;
                 std::vector<std::string> qualifiers{key, seniority};
                 string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
                 auto rrGridString = modelParameter("recoveryRateGrid", qualifiers);
