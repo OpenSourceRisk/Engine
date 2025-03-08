@@ -735,8 +735,10 @@ void XvaAnalyticImpl::runPostProcessor() {
                          : analytic()->market()->fxRate(b->currency() + baseCurrency, marketConfiguration)->value());
             }
         }
+
+        DLOG("Create a '" << inputs_->dimModel() << "' Dynamic Initial Margin Calculator");
+
         if (inputs_->dimModel() == "Regression") {
-	    LOG("Create a " << inputs_->dimModel() << " Dynamic Initial Margin Calculator");
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
@@ -748,7 +750,6 @@ void XvaAnalyticImpl::runPostProcessor() {
                        "netting set cube or sensitivity storage manager not set - "
                            << "is this a single-threaded classic run storing sensis?");
             // delta 1, delta-gamma-normal 2, delta-gamma 3
-            LOG("Create a " << inputs_->dimModel() << " Initial Margin Calculator");
             Size ddvOrder;
             if (inputs_->dimModel() == "DeltaVaR")
                 ddvOrder = 1;
@@ -765,9 +766,12 @@ void XvaAnalyticImpl::runPostProcessor() {
             QL_REQUIRE(nettingSetCube_ && inputs_->xvaCgDynamicIM() &&
                            inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
                        "dim model is set to DynamicIM, this requires amcCg=CubeGeneration, xvaCgDynamicIM=true");
-            LOG("dim calculator not set, create DirectDynamicInitialMarginCalculator");
             dimCalculator_ = QuantLib::ext::make_shared<DirectDynamicInitialMarginCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, nettingSetCube_, currentIM);
+        } else {
+            WLOG("dim model not specified, create FlatDynamicInitialMarginCalculator");
+            dimCalculator_ = QuantLib::ext::make_shared<FlatDynamicInitialMarginCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_);
         }
     }
 
