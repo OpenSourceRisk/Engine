@@ -798,6 +798,35 @@ void XvaEngineCG::populateNpvOutputCube() {
     DLOG("XvaEngineCG: populate npv output cube done.");
 }
 
+void XvaEngineCG::populateDynamicIMOutputCube() {
+    if (dynamicIMOutputCube_ == nullptr || !dynamicDelta_)
+        return;
+
+    DLOG("XvaEngineCG: populate dynamic IM output cube.");
+
+    boost::timer::cpu_timer timer;
+
+    for (auto const& [ns, im] : dynamicIM_) {
+
+        auto nidx = dynamicIMOutputCube_.idsAndIndexes().find(ns);
+        QL_REQUIRE(nidx != dynamicIMOutputCube_.idsAndIndexes().end(),
+                   "XvaEngineCG::populateDynamicIMOutputCube(): netting set "
+                       << ns << " not found in output cube, this is an internal error.");
+
+        dynamicIMOutputCube_->setT0(im[0].at(0), 0);
+
+        for (Size i = 0; i < valuationDates_.size(); ++i) {
+            for (Size k = 0; k < im[i + 1].size(); ++k) {
+                dynamicIMOutputCube_->set(im[i + 1][k], nidx->second, i, k, 0);
+            }
+        }
+    }
+
+    timing_imcube_ = timer.elapsed().wall;
+
+    DLOG("XvaEngineCG: populate dynamic im output cube done.");
+}
+
 void XvaEngineCG::generateXvaReports() {
     DLOG("XvaEngineCG: Write epe report.");
     epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
@@ -817,6 +846,19 @@ void XvaEngineCG::calculateDynamicDelta() {
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
+
+    // init result container
+
+    std::set<std::string> nettingSetIds;
+    for(auto const& [id, t]: porfolio_->trades())
+        nettingSetIds.insert(t->envelope().nettingSetId());
+
+    QL_REQUIRE(nettingSetIds.size() == 1,
+               "XvaEngineCG::calculateDynamicDelta(): only one netting is supported at this time, porfolio has "
+                   << nettingSetIds.size());
+
+    for (auto const& n : nettingSetIds)
+        dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
 
     // set up ir and fx vega conversion matrices
 
@@ -1092,6 +1134,13 @@ void XvaEngineCG::calculateDynamicDelta() {
         // }
 
         // end output for debug
+
+        // set results for this valuation date
+
+        for (auto const& n : nettingSetIds) {
+            dynamicIM_[n][i] = simpleIM(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+        }
+
     } // loop over valuation dates
 
     timing_dynamicDelta_ = timer.elapsed().wall;
@@ -1314,6 +1363,8 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: Populate ASD           : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Populate NPV Outcube   : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
                                                  << " ms");
+    LOG("XvaEngineCG: Populate  IM Outcube   : " << std::fixed << std::setprecision(1) << timing_imcube_ / 1E6
+                                                 << " ms");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing_total_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: all done.");
@@ -1372,6 +1423,7 @@ void XvaEngineCG::run() {
 
     populateAsd();
     populateNpvOutputCube();
+    populateDynamicIMOutputCube();
 
     updateProgress(3, 4);
 

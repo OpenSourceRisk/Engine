@@ -108,6 +108,7 @@ private:
     void doForwardEvaluation();
     void populateAsd();
     void populateNpvOutputCube();
+    void populateDynamicIMOutputCube();
     void generateXvaReports();
     void calculateDynamicDelta();
     void calculateSensitivities();
@@ -205,8 +206,11 @@ private:
     std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
     std::vector<std::size_t> pfExposureCloseOutNodes_;
 
-    // porfolio exposure, per valuation date, as path values, multiplied by numeraire
+    // portfolio exposure, per valuation date, as path values, multiplied by numeraire
     std::vector<std::size_t> pfExposureNodesPathwiseInflated_;
+
+    // dynamic im per netting set
+    std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
 
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
@@ -230,7 +234,7 @@ private:
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
                                   timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
                                   timing_fwd_ = 0, timing_dynamicDelta_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
-                                  timing_asd_ = 0, timing_outcube_ = 0, timing_total_ = 0;
+                                  timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
 
     // output reports
