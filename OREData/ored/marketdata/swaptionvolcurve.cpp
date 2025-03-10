@@ -25,11 +25,11 @@ using namespace std;
 namespace ore {
 namespace data {
 
-SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs,
-                                   const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
-                                   const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-                                   const bool buildCalibrationInfo)
+SwaptionVolCurve::SwaptionVolCurve(
+    Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
+    const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
+    const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
+    const bool buildCalibrationInfo)
     : GenericYieldVolCurve(
           asof, loader, curveConfigs, curveConfigs.swaptionVolCurveConfig(spec.curveConfigID()), requiredSwapIndices,
           requiredVolCurves,
@@ -57,7 +57,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
               term = q->term();
               return true;
           },
-          buildCalibrationInfo),
+          buildCalibrationInfo, spec.name()),
       spec_(spec) {}
 
 } // namespace data
