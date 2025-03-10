@@ -858,8 +858,9 @@ void XvaEngineCG::calculateDynamicDelta() {
                "XvaEngineCG::calculateDynamicDelta(): only one netting is supported at this time, porfolio has "
                    << nettingSetIds.size());
 
-    for (auto const& n : nettingSetIds)
+    for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+    }
 
     // set up ir and fx vega conversion matrices
 
@@ -1361,10 +1362,10 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");
-    LOG("XvaEngineCG: Populate ASD           : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6 << " ms");
-    LOG("XvaEngineCG: Populate NPV Outcube   : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
+    LOG("XvaEngineCG: Populate ASD             : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6 << " ms");
+    LOG("XvaEngineCG: Populate NPV Outcube     : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
                                                  << " ms");
-    LOG("XvaEngineCG: Populate  IM Outcube   : " << std::fixed << std::setprecision(1) << timing_imcube_ / 1E6
+    LOG("XvaEngineCG: Populate IM Outcube      : " << std::fixed << std::setprecision(1) << timing_imcube_ / 1E6
                                                  << " ms");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing_total_ / 1E6
                                                    << " ms");
@@ -1376,7 +1377,7 @@ void XvaEngineCG::run() {
     LOG("XvaEngineCG::run(): firstRun is " << std::boolalpha << firstRun_);
     boost::timer::cpu_timer timer;
 
-    updateProgress(0, 4);
+    updateProgress(0, 5);
 
     generateTradeLevelExposure_ = npvOutputCube_ != nullptr;
 
@@ -1411,7 +1412,7 @@ void XvaEngineCG::run() {
 
     getExternalContext();
 
-    updateProgress(1, 4);
+    updateProgress(1, 5);
 
     setupValueContainers();
     doForwardEvaluation();
@@ -1420,17 +1421,20 @@ void XvaEngineCG::run() {
     // for(auto const&p : model_->modelParameters())
     //     std::cout << p << "," << p.eval() << std::endl;
 
-    updateProgress(2, 4);
+    updateProgress(2, 5);
 
     populateAsd();
     populateNpvOutputCube();
-    populateDynamicIMOutputCube();
 
-    updateProgress(3, 4);
+    updateProgress(3, 5);
 
     if (dynamicDelta_) {
         calculateDynamicDelta();
     }
+
+    populateDynamicIMOutputCube();
+
+    updateProgress(4, 5);
 
     if (mode_ == Mode::Full) {
         generateXvaReports();
@@ -1438,7 +1442,7 @@ void XvaEngineCG::run() {
         generateSensiReports();
     }
 
-    updateProgress(4, 4);
+    updateProgress(5, 5);
 
     timing_total_ = timer.elapsed().wall;
     outputTimings();
