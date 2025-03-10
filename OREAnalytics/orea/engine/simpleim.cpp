@@ -28,10 +28,24 @@ namespace analytics {
 using namespace QuantLib;
 using namespace QuantExt;
 
-RandomVariable simpleIM(const std::vector<RandomVariable>& irDelta,
-                        const std::vector<std::vector<RandomVariable>>& irVega,
-                        const std::vector<RandomVariable>& fxDelta,
-                        const std::vector<std::vector<RandomVariable>>& fxVega) {
+QuantExt::RandomVariable simpleIM(const std::vector<std::string>& currencies,
+                                  const std::vector<QuantLib::Period> irVegaTerms,
+                                  const std::vector<QuantLib::Period> fxVegaTerms,
+                                  const std::vector<QuantExt::RandomVariable>& irDelta,
+                                  const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
+                                  const std::vector<QuantExt::RandomVariable>& fxDelta,
+                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega) {
+
+
+    
+
+
+
+
+
+
+
+
 
     return RandomVariable(irDelta[0].size(), 42.0);
 }

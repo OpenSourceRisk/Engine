@@ -1140,7 +1140,8 @@ void XvaEngineCG::calculateDynamicDelta() {
         // set results for this valuation date
 
         for (auto const& n : nettingSetIds) {
-            dynamicIM_[n][i] = simpleIM(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+            dynamicIM_[n][i] = simpleIM(model_->currencies(), irVegaTerms, fxVegaTerms, conditionalIrDelta,
+                                        conditionalIrVega, conditionalFxDelta, conditionalFxVega);
         }
 
     } // loop over valuation dates
