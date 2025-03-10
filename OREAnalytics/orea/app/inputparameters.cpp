@@ -167,6 +167,11 @@ void InputParameters::setIborFallbackConfigFromFile(const std::string& fileName)
     iborFallbackConfig_->fromFile(fileName);
 }
 
+void InputParameters::setBaselTrafficLightConfig(const std::string& xml) {
+    baselTrafficLightConfig_ = QuantLib::ext::make_shared<BaselTrafficLightData>();
+    baselTrafficLightConfig_->fromXMLString(xml);
+}
+
 void InputParameters::setPricingEngine(const std::string& xml) {
     pricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     pricingEngine_->fromXMLString(xml);
