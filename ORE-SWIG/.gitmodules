@@ -1,6 +1,3 @@
 [submodule "QuantLib-SWIG"]
 	path = QuantLib-SWIG
 	url = https://github.com/OpenSourceRisk/QuantLib-SWIG.git
-[submodule "ore/ORE-SWIG/QuantLib-SWIG"]
-    path = QuantLib-SWIG
-    url = https://github.com/OpenSourceRisk/QuantLib-SWIG.git
