@@ -27,10 +27,10 @@
 namespace ore {
 namespace analytics {
 
-QuantExt::RandomVariable simpleIM(const std::vector<RandomVariable>& irDelta,
-                                  const std::vector<std::vector<RandomVariable>>& irVega,
-                                  const std::vector<RandomVariable>& fxDelta,
-                                  const std::vector<std::vector<RandomVariable>>& fxVega);
+QuantExt::RandomVariable simpleIM(const std::vector<QuantExt::RandomVariable>& irDelta,
+                                  const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
+                                  const std::vector<QuantExt::RandomVariable>& fxDelta,
+                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega);
 
 } // namespace analytics
 } // namespace ore
