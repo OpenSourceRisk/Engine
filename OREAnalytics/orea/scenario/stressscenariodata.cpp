@@ -250,6 +250,41 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             test.equityVolShifts[equity] = ext::make_shared<VolShiftData>(data);
         }
 
+        LOG("Get commodity curve shift parameters");
+        XMLNode* commodityCurves = XMLUtils::getChildNode(testCase, "CommodityCurves");
+        QL_REQUIRE(commodityCurves, "CommodityCurves node not found");
+        test.commodityCurveShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(commodityCurves, "CommodityCurve"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string commodity = XMLUtils::getAttribute(child, "commodity");
+            LOG("Loading stress parameters for commodity curve " << commodity);
+            CurveShiftData data;
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
+            data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+            data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
+                       "number of tenors (" << data.shiftTenors.size() << ") and shifts (" << data.shifts.size()
+                                            << ") does not match in commodity curve stress data for commodity = " << commodity);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in commodity curve stress data for commodity = " << commodity);
+            test.commodityCurveShifts[commodity] = ext::make_shared<CurveShiftData>(data);
+        }
+
+        LOG("Get commodity vol stress parameters");
+        XMLNode* commodityVols = XMLUtils::getChildNode(testCase, "CommodityVolatilities");
+        QL_REQUIRE(commodityVols, "CommodityVolatilities node not found");
+        test.commodityVolShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(commodityVols, "CommodityVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string commodity = XMLUtils::getAttribute(child, "commodity");
+            LOG("Loading stress parameters for Commodity vols " << commodity);
+            CommodityVolShiftData data;
+            data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
+            data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+            data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+            data.shiftMoneyness = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftMoneyness", true);
+            test.commodityVolShifts[commodity] = ext::make_shared<CommodityVolShiftData>(data);
+        }
+
         LOG("Get swaption vol stress parameters");
         XMLNode* swaptionVols = XMLUtils::getChildNode(testCase, "SwaptionVolatilities");
         QL_REQUIRE(swaptionVols, "SwaptionVols node not found");
@@ -374,6 +409,19 @@ void volShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node, const std::ma
     }
 }
 
+void commodityVolShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node, const std::map<std::string, ext::shared_ptr<StressTestScenarioData::CommodityVolShiftData>>& data,
+    const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
+auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
+for (const auto& [key, data] : data) {
+auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+XMLUtils::addAttribute(doc, childNode, identifier, key);
+XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data->shifts);
+XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data->shiftExpiries);
+XMLUtils::addGenericChildAsList(doc, childNode, "ShiftMoneyness", data->shiftMoneyness);
+}
+}
+
 
 void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node, const std::map < std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>& shiftdata,
                        const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
@@ -495,6 +543,9 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         // Equity
         spotShiftDataToXml(doc, testNode, test.equityShifts, "equity", "EquitySpot");
         volShiftDataToXml(doc, testNode, test.equityVolShifts, "equity", "EquityVolatility", "EquityVolatilities");
+        // Commodity
+        curveShiftDataToXml(doc, testNode, test.commodityCurveShifts, "commodity", "CommodityCurve", "CommodityCurves");
+        commodityVolShiftDataToXml(doc, testNode, test.commodityVolShifts, "commodity", "CommodityVolatility", "CommodityVolatilities");
         // FX
         spotShiftDataToXml(doc, testNode, test.fxShifts, "ccypair", "FxSpot");
         fxVolDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
