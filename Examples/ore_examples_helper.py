@@ -16,13 +16,39 @@ from math import log
 
 
 def get_list_of_examples():
-    return sorted([e for e in os.listdir(os.getcwd())
-                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#                   if e == 'Example_39'], key=lambda e: int(e.split('_')[1]))
+#    return sorted([e for e in os.listdir(os.getcwd())
+#                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#    return get_list_of_legacy_examples()
+    return get_list_of_new_examples()
+
+def get_list_of_legacy_examples():
+    legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
+                     if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#                     if e == 'Example_8'])
+    return [ os.path.join("Legacy", e) for e in legacy ]
+
+def get_list_of_new_examples():
+    return ["AmericanMonteCarlo",
+            "CreditRisk",
+            "CurveBuilding",
+            "Exposure",
+            "ExposureWithCollateral",
+            "InitialMargin",
+            "MarketRisk",
+            "MinimalSetup",
+            "ORE-API",
+            "ORE-Python",
+            "Performance",
+            "Products",
+            "ScriptedTrade",
+            "XvaRisk"
+            ]
 
 def get_list_ore_academy():
-    return sorted([e for e in os.listdir(os.getcwd()) if e[:11] == 'OREAcademy_'])
-
+    return ["Academy/FC003_Reporting_Currency",
+            "Academy/TA001_Equity_Option",
+            "Academy/TA002_IR_Swap"
+            ]
 
 def print_on_console(line):
     print(line)
@@ -77,6 +103,9 @@ class OreExample(object):
             elif os.path.isfile("../../../build/ore/App/ore"):
                 self.ore_exe = "../../../build/ore/App/ore"
                 self.ore_plus_exe = "../../../build/AppPlus/ore_plus"
+            elif os.path.isfile("../../../../build/ore/App/ore"):
+                self.ore_exe = "../../../../build/ore/App/ore"
+                self.ore_plus_exe = "../../../../build/AppPlus/ore_plus"
             else:
                 print_on_console("ORE executable not found.")
                 quit()
@@ -102,7 +131,8 @@ class OreExample(object):
         for line in f:
             tokens = line.split(',')
             if colidx < len(line.split(',')):
-                if (filter == '' or tokens[filterCol] == filter):
+#                if (filter == '' or tokens[filterCol] == filter):
+                if (filter == '' or (filter in tokens[filterCol])):
                     data.append(line.split(',')[colidx])
             else:
                 data.append("Error")
@@ -187,8 +217,8 @@ class OreExample(object):
         self.ax.get_yaxis().set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: '{:1.2e}'.format(float(x))))
 
-    def plot_npv(self, filename, colIdx, color, label, marker=''):
-        data = self.get_output_data_from_column(filename, colIdx)
+    def plot_npv(self, filename, colIdx, color, label, marker='', offset=0, filter='', filterCol=0):
+        data = self.get_output_data_from_column(filename, colIdx, offset, filter, filterCol)
         self.ax.plot(range(1, len(data) + 1),
                      data,
                      color=color,
@@ -253,6 +283,9 @@ class OreExample(object):
 
     def plot_line(self, xvals, yvals, color, label):
         self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
+
+    def plot_line_marker(self, xvals, yvals, color, label, marker = ''):
+        self.ax.plot(xvals, yvals, color=color, label=label, marker=marker, linewidth=2)
 
     def plot_hline(self, yval, color, label):
         plt.axhline(yval, xmin=0, xmax=1, color=color, label=label, linewidth=2)

@@ -38,7 +38,7 @@ void SaCvaAnalyticImpl::buildDependencies() {
     auto sensiAnalytic =
         AnalyticFactory::instance().build("XVA_SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
     if (sensiAnalytic.second)
-        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second, true);
 }
 
 void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -52,9 +52,6 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 	    //auto sensiAnalytic = AnalyticFactory::instance().build(analyticsLabel, inputs_).second;
         auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
         sensiAnalytic->runAnalytic(loader, {"XVA_SENSITIVITY"});
-
-	    LOG("Insert the xva sensitivity reports into the sacva analytic");
-	    analytic()->reports().insert(sensiAnalytic->reports().begin(), sensiAnalytic->reports().end());
 
 	    // Get the par cva sensitivity cube stream that we have just cached after running the sensi analytic
 
@@ -78,7 +75,7 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
         CONSOLEW("SA-CVA: Scaled CVA Sensitivity Report");
 	    auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 	    ReportWriter(inputs_->reportNaString()).writeCvaSensiReport(cvaLoader.cvaSensitivityRecords(), *cvaSensiReport);
-	    analytic()->reports()[label()]["cva_sensitivities"] = cvaSensiReport;
+	    analytic()->addReport(label(), "cva_sensitivities", cvaSensiReport);
 	    CONSOLE("OK");
     }
 
@@ -86,7 +83,7 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
     CONSOLEW("SA-CVA: SACVA Sensitivity Report");
     auto saCvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeSaCvaSensiReport(cvaSensis, *saCvaSensiReport);
-    analytic()->reports()[label()]["sacva_sensitivities"] = saCvaSensiReport;
+    analytic()->addReport(label(), "sacva_sensitivities", saCvaSensiReport);
     CONSOLE("OK");
 
     // Create the SA-CVA result reports we want to be populated by the sacva calculator below
@@ -104,8 +101,8 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
     sacva->calculate();
     CONSOLE("OK");
 
-    analytic()->reports()[label()]["sacva"] = summaryReport;
-    analytic()->reports()[label()]["sacvadetail"] = detailReport;
+    analytic()->addReport(label(), "sacva", summaryReport);
+    analytic()->addReport(label(), "sacvadetail", detailReport);
 
     LOG("SaCvaAnalyticImpl::runAnalytic done");
 }

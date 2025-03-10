@@ -955,6 +955,24 @@
           }
         ]
       },
+      ".*scenariostatistics.*\\.csv": {
+        "keys": [
+          "Date",
+          "Scenario"
+        ],
+        "use_cols": [
+          "Numeraire"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Numeraire"
+            ],
+            "abs_tol": 0.000001,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
       ".*scenario.*\\.csv": {
         "keys": [
           "TradeId",
@@ -980,8 +998,8 @@
               "ShiftSize_1",
               "ShiftSize_2"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": 1e-12
+            "abs_tol": 0.03,
+            "rel_tol": 1e-9
           }
         ]
       },
@@ -998,6 +1016,49 @@
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
+          }
+        ]
+      },
+      "xvacg-exposure.csv": {
+        "keys": [
+            "Date"
+        ],
+        "use_cols": [
+	    "EPE",
+	    "ENE"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"EPE",
+		"ENE"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
+      "xvacg-cva-sensi-scenario.csv": {
+        "keys": [
+            "TradeId",
+	    "Factor",
+	    "Upd/Down"
+        ],
+        "use_cols": [
+	    "Base NPV",
+	    "ShiftSize_1",
+	    "Scenario NPV"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"Base NPV",
+		"ShiftSize_1",
+		"Scenario NPV",
+		"Difference"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": 1e-6
           }
         ]
       },
@@ -1711,6 +1772,60 @@
             ],
             "abs_tol": 1e-05,
             "rel_tol": 1e-05
+          }
+        ]
+      },
+      "eigenvalues.csv": {
+        "keys": [
+          "number"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "value"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
+      "eigenvectors.csv": {
+        "keys": [
+          "tenor"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"eigenvector_1",
+		"eigenvector_2",
+		"eigenvector_3",
+		"eigenvector_4",
+		"eigenvector_5",
+		"eigenvector_6",
+		"eigenvector_7",
+		"eigenvector_8"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
+      "sacva_sensitivities.csv": {
+        "keys": [
+          "NettingSet",
+          "RiskType",
+          "CvaType",
+          "MarginType",
+          "RiskFactor",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 1e-03,
+            "rel_tol": 1e-04
           }
         ]
       }

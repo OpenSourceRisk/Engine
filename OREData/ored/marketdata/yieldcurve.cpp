@@ -959,7 +959,7 @@ void YieldCurve::buildZeroCurve() {
             zeroes.push_back(tempRate.equivalentRate(Continuous, NoFrequency, t));
         }
         discounts.push_back(tempRate.discountFactor(t));
-        DLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
+        TLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
                                         << setprecision(4) << zeroes.back() << " / " << discounts.back());
     }
 

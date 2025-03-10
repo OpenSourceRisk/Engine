@@ -320,6 +320,9 @@ void OREApp::analytics() {
                 b.second->toFile(fileName);
             }
         }
+        
+        if (analyticsManager_->failedAnalytics().size() > 0)
+            QL_FAIL("Failed to run analytics " + boost::algorithm::join(analyticsManager_->failedAnalytics(), ","));
 
         CONSOLE("OK");
     } catch (std::exception& e) {
@@ -2462,7 +2465,8 @@ void OREAppInputParameters::loadParameters() {
      * XVA Sensi
      *************/
 
-    if (analytics().find("XVA_SENSITIVITY") != analytics().end()) {
+    if (analytics().find("XVA_SENSITIVITY") != analytics().end() ||
+	analytics().find("SA_CVA") != analytics().end()) {
         tmp = params_->get("xvaSensitivity", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (inputPath / tmp).generic_string();
@@ -2560,14 +2564,17 @@ void OREAppInputParameters::loadParameters() {
                  string file = (inputPath / tmp).generic_string();
                  LOG("Loading granular cva sensitivity input from file" << file);
                  setCvaSensitivitiesFromFile(file);
-             } else {
-                 // Ensure that we have the XVA Sensitivity analytic configured, see above
-                 QL_REQUIRE(analytics().find("XVA_SENSITIVITY") != analytics().end(),
-                            "SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as "
-                            "an input");
-                 // XVA Sensitivity will be run as a sub analytic of SA-CVA so that we can drop it here
-                 removeAnalytic("XVA_SENSITIVITY");
              }
+	 }
+
+	 // if both above failed: run the sub-analytic
+	 if (saCvaNetSensitivities().size() == 0) {
+	     // Ensure that we have the XVA Sensitivity analytic configured, see above
+	     QL_REQUIRE(analytics().find("XVA_SENSITIVITY") != analytics().end(),
+			"SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as "
+			"an input");
+	     // XVA Sensitivity will be run as a sub analytic of SA-CVA so that we can drop it here
+	     removeAnalytic("XVA_SENSITIVITY");
          }
      }
 

@@ -16,11 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
+#include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
+#include <ored/model/utilities.hpp>
+#include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/strike.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
@@ -29,14 +33,11 @@
 #include <qle/models/marketobserver.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
-#include <ored/model/lgmbuilder.hpp>
-#include <ored/model/structuredmodelerror.hpp>
-#include <ored/model/utilities.hpp>
-#include <ored/utilities/dategrid.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/strike.hpp>
+#include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -319,6 +320,23 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
+    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
+
+    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
+
+    if (data_->shiftHorizon() > 0.0) {
+        Real value = -parametrization_->H(data_->shiftHorizon());
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
+                                    << " LGM model");
+        parametrization_->shift() = value;
+    }
+
+    if (data_->scaling() != 1.0) {
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
+        parametrization_->scaling() = data_->scaling();
+    }
+
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
 }
@@ -400,15 +418,12 @@ void LgmBuilder::performCalculations() const {
 
     // reset model parameters to ensure identical results on identical market data input
     model_->setParams(params_);
-    parametrization_->shift() = 0.0;
-    parametrization_->scaling() = 1.0;
 
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
-        (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will be aborted."));
+        (continueOnError_ ? std::string("Calculation will proceed.") : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
@@ -463,9 +478,10 @@ void LgmBuilder::performCalculations() const {
             calibrationInfo.valid = true;
         }
     } else {
-        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
-                                       " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_).log();
+        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration target function value (" +
+                                       std::to_string(error_) + ") exceeds notification threshold (" +
+                                       std::to_string(bootstrapTolerance_) + ").";
+        StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
             auto d = getBasketDetails(calibrationInfo);
@@ -490,22 +506,6 @@ void LgmBuilder::performCalculations() const {
     }
     model_->setCalibrationInfo(calibrationInfo);
 
-    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
-
-    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
-    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-    if (data_->shiftHorizon() > 0.0) {
-        Real value = -parametrization_->H(data_->shiftHorizon());
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
-                                    << " LGM model");
-        parametrization_->shift() = value;
-    }
-
-    if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
-        parametrization_->scaling() = data_->scaling();
-    }
 } // performCalculations()
 
 void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,

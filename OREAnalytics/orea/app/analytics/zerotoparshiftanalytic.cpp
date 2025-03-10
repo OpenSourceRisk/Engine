@@ -99,7 +99,7 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
                 }
         }
     }
-    analytic()->reports()[label()]["parshifts"] = report;
+    analytic()->addReport(label(), "parshifts", report);
     CONSOLE("OK");
 }
 
