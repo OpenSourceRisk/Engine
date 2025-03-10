@@ -124,6 +124,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/simpleim.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/engine/stresstest.hpp>

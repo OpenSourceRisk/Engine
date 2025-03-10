@@ -22,6 +22,7 @@
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+#include <orea/engine/simpleim.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
 
 #include <ored/report/inmemoryreport.hpp>
@@ -808,8 +809,8 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
 
     for (auto const& [ns, im] : dynamicIM_) {
 
-        auto nidx = dynamicIMOutputCube_.idsAndIndexes().find(ns);
-        QL_REQUIRE(nidx != dynamicIMOutputCube_.idsAndIndexes().end(),
+        auto nidx = dynamicIMOutputCube_->idsAndIndexes().find(ns);
+        QL_REQUIRE(nidx != dynamicIMOutputCube_->idsAndIndexes().end(),
                    "XvaEngineCG::populateDynamicIMOutputCube(): netting set "
                        << ns << " not found in output cube, this is an internal error.");
 
@@ -850,7 +851,7 @@ void XvaEngineCG::calculateDynamicDelta() {
     // init result container
 
     std::set<std::string> nettingSetIds;
-    for(auto const& [id, t]: porfolio_->trades())
+    for(auto const& [id, t]: portfolio_->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
 
     QL_REQUIRE(nettingSetIds.size() == 1,

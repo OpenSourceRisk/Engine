@@ -20,9 +20,7 @@
     \brief simple im model for dynamic im calculations
 */
 
-#pragma once
-
-#include <ore/OREAnalytics/orea/engine/simpleim.hpp>
+#include <orea/engine/simpleim.hpp>
 
 namespace ore {
 namespace analytics {
