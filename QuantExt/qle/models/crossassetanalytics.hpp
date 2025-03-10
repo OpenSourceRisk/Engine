@@ -160,6 +160,10 @@ This function covers the state-dependent part of the EQ expectation (see overall
 */
 Real eq_expectation_2(const CrossAssetModel& model, const Size k, const Time t0, const Real si_0, const Real zi_0,
                       const Real dt);
+/*
+This function covers the state-independent part of the COM expectation
+*/
+Real com_expectation_1(const CrossAssetModel& model, const Size i, const Time t0, const Real dt);
 
 /*! IR-IR Covariance
 
@@ -584,6 +588,23 @@ struct coms {
     const Size i_;
 };
 
+/*! COM diffusion component in stochastic integral */
+struct comDiffusionIntegrand {
+    comDiffusionIntegrand(const Time t, const Size i) : t_(t), i_(i) {}
+    Real eval(const CrossAssetModel& x, const Real u) const 
+    { 
+        if (x.combs(i_)->driftFreeState())
+            return x.combs(i_)->sigma(u);
+        else{
+            Real sigma = x.combs(i_)->sigmaParameter();
+            Real kappa = x.combs(i_)->kappaParameter();
+            return sigma * std::exp(-kappa*(t_-u));  
+        }
+    }
+    const Time t_;
+    const Size i_;
+};
+
 /*! IR-IR correlation component */
 struct rzz {
     rzz(const Size i, const Size j) : i_(i), j_(j) {}
@@ -749,6 +770,24 @@ struct rcc {
     rcc(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel& x, const Real) const {
         return x.correlation(CrossAssetModel::AssetType::COM, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! IR-COM correlation component, single-factor case */
+struct rzc {
+    rzc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! FX-COM correlation component, single-factor case */
+struct rxc {
+    rxc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
     }
     const Size i_, j_;
 };
