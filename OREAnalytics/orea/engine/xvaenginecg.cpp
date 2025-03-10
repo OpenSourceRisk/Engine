@@ -709,10 +709,10 @@ void XvaEngineCG::buildAsdNodes() {
 }
 
 void XvaEngineCG::populateAsd() {
-    DLOG("XvaEngineCG: populate asd.");
-
     if (asd_ == nullptr)
         return;
+
+    DLOG("XvaEngineCG: populate asd.");
 
     boost::timer::cpu_timer timer;
 
@@ -745,10 +745,10 @@ void XvaEngineCG::populateAsd() {
 }
 
 void XvaEngineCG::populateNpvOutputCube() {
-    DLOG("XvaEngineCG: populate npv output cube.");
-
     if (npvOutputCube_ == nullptr)
         return;
+
+    DLOG("XvaEngineCG: populate npv output cube.");
 
     boost::timer::cpu_timer timer;
 
