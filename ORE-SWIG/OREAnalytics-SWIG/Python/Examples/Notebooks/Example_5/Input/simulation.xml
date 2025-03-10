@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<Simulation>
+  <Parameters>
+    <Discretization>Exact</Discretization>
+    <Grid>30,2W</Grid>
+    <Calendar>EUR,USD</Calendar>
+    <DayCounter>A365</DayCounter>
+    <Sequence>SobolBrownianBridge</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>10000</Samples>
+    <!-- <CloseOutLag>0D</CloseOutLag> -->
+    <!-- <MporMode>StickyDate</MporMode> -->
+  </Parameters>
+  <CrossAssetModel>
+    <DomesticCcy>USD</DomesticCcy>
+    <Currencies>
+      <Currency>USD</Currency>
+      <Currency>EUR</Currency>
+    </Currencies>
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <InterestRateModels>
+      <LGM ccy="default">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.0050</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <!-- <Expiries> 1M, 2M, 3M, 4M, 5M, 6M, 7M, 8M, 9M, 10M, 11M</Expiries> -->
+          <!-- <Terms>   11M, 10M, 9M, 8M, 7M, 6M, 5M, 4M, 3M, 2M, 1M</Terms> -->
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InterestRateModels>
+    <ForeignExchangeModels>
+      <CrossCcyLGM foreignCcy="default">
+        <DomesticCcy>USD</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <!-- <Expiries>1M, 2M, 3M, 4M, 5M, 6M, 7M, 8M, 9M, 10M, 11M, 1Y</Expiries> -->
+          <Strikes/>
+          <!-- ATMF, +25D, -25D, 1.2345 -->
+        </CalibrationOptions>
+      </CrossCcyLGM>
+    </ForeignExchangeModels>
+    <InstantaneousCorrelations>
+      <Correlation factor1="IR:EUR" factor2="IR:USD">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:EURUSD">0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:EURUSD">0</Correlation>
+    </InstantaneousCorrelations>
+  </CrossAssetModel>
+  <Market>
+    <BaseCurrency>USD</BaseCurrency>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration curve="">
+        <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>FlatZero</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    <FxRates>
+      <CurrencyPairs>
+        <CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+    </FxRates>
+    <Indices>
+      <Index>EUR-EONIA</Index>
+      <Index>EUR-ESTER</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-SOFR</Index>
+    </Indices>
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-1Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-30Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    <SwaptionVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Keys>
+        <Key>EUR</Key>
+        <Key>USD</Key>
+      </Keys>
+      <Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+      <Terms>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</Terms>
+    </SwaptionVolatilities>
+    <FxVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+    </FxVolatilities>
+    <BenchmarkCurves>
+      <BenchmarkCurve>
+        <Currency>EUR</Currency>
+        <Name>EUR-IN-USD</Name>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+  </Market>
+</Simulation>

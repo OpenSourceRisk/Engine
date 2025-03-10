@@ -1,0 +1,38 @@
+# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
+ARG ore_version=latest
+FROM env_ore:${ore_version}
+
+MAINTAINER Quaternion Risk Management
+LABEL Description="Build OREPlus"
+
+# Install SWIG and python3
+RUN apt-get update && apt-get upgrade -y \
+  && apt-get install -f -y swig python3-dev clang \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /swig
+
+COPY ore/cmake ./cmake
+COPY oreswig/OREAnalytics-SWIG ./OREAnalytics-SWIG
+COPY oreswig/OREData-SWIG ./OREData-SWIG
+COPY oreswig/QuantExt-SWIG ./QuantExt-SWIG
+COPY oreswig/QuantLib-SWIG ./QuantLib-SWIG
+
+#ENV PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/ \
+#    PYTHON_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/python3.9
+
+RUN find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';'
+WORKDIR /swig/OREAnalytics-SWIG/Python
+RUN mkdir build.release
+WORKDIR /swig/OREAnalytics-SWIG/Python/build.release
+RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON -DORE=/swig
+RUN cmake --build . --config Release
+WORKDIR /
+RUN mkdir oreswig
+RUN mv /swig/OREAnalytics-SWIG/Python/build.release/ORE.py oreswig \
+  && mv /swig/OREAnalytics-SWIG/Python/build.release/_OREP.so oreswig
+
+ENV PYTHONPATH=/oreswig
+
+WORKDIR /swig/OREAnalytics-SWIG/Python/Examples
