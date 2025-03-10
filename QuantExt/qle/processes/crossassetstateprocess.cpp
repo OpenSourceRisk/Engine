@@ -133,7 +133,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size n_eq = model_->components(CrossAssetModel::AssetType::EQ);
     Size n_com = model_->components(CrossAssetModel::AssetType::COM);
-    //std::cout<<"n_com: "<<n_com<<std::endl;
     Real H0 = model_->irlgm1f(0)->H(t);
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
@@ -352,7 +351,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
         } else {
             // zero drift
         }
-    //std::cout<<"res[model_->pIdx(CrossAssetModel::AssetType::COM,"<< k<<", 0)]: "<<res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)]<<std::endl;
     }
     /* no drift for infdk, crlgm1f, crstate components */
     return res;

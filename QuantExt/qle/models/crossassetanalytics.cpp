@@ -576,7 +576,7 @@ Real ir_eq_covariance(const CrossAssetModel& x, const Size j, const Size k, cons
 }
 
 Real fx_eq_covariance(const CrossAssetModel& x, const Size j, const Size k, const Time t0, const Time dt) {
-    Size  i= x.ccyIndex(x.eqbs(k)->currency()); // the equity underlying currency
+    Size i= x.ccyIndex(x.eqbs(k)->currency()); // the equity underlying currency
     const Size& j_lgm = j + 1;                  // indexing of the FX currency for extracting the LGM terms
     Real Hi_b = Hz(i).eval(x, t0 + dt);
     Real Hj_b = Hz(j_lgm).eval(x, t0 + dt);
