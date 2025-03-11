@@ -55,7 +55,7 @@ private:
     double irDeltaRw_;
     double irVegaRw_;
     double irGamma_;
-    double irHvr_;
+    double irCurvatureScaling_;
     QuantLib::Matrix irVegaCorrelations_;
     QuantLib::Array irCurvatureWeights_;
     

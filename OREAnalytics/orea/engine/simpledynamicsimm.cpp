@@ -46,7 +46,7 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     irGamma_ = simmConfiguration_->correlation(CrifRecord::RiskType::IRVol, "USD", std::string(), std::string(),
                                                CrifRecord::RiskType::IRVol, "GBP", std::string(), std::string());
 
-    irHvr_ = simmConfiguration_->historicalVolatilityRatio(CrifRecord::RiskType::IRVol);
+    irCurvatureScaling_ = simmConfiguration_->curvatureMarginScaling();
 
     irVegaCorrelations_ = Matrix(irVegaTerms.size(), irVegaTerms.size(), 0.0);
     for (std::size_t i = 0; i < irVegaTerms.size(); ++i) {
@@ -66,14 +66,14 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     for (std::size_t i = 0; i < irVegaTerms.size(); ++i) {
         auto p1 = ore::data::to_string(irVegaTerms[i]);
         boost::algorithm::to_lower(p1);
-        irCurvatureWeights_[i] = simmConfiguration_->curvatureWeight(CrifRecord::RiskType::IRCurve, p1);
+        irCurvatureWeights_[i] = simmConfiguration_->curvatureWeight(CrifRecord::RiskType::IRVol, p1);
     }
 
     std::cout << "corrIrFx             = " << corrIrFx_ << std::endl;
     std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
     std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
     std::cout << "irGamma              = " << irGamma_ << std::endl;
-    std::cout << "irHvr                = " << irHvr_ << std::endl;
+    std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
     std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
     std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
 }
@@ -171,7 +171,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
         RandomVariable theta = min(RandomVariable(n_, 0.0), S / Sabs);
         RandomVariable lambda = RandomVariable(n_, 5.634896601) * (RandomVariable(n_, 1.0) + theta) - theta;
         curvatureMarginIr =
-            max(RandomVariable(n_, 0.0), S + lambda * sqrt(vegaMarginIr)) / RandomVariable(n_, irHvr_ * irHvr_);
+            max(RandomVariable(n_, 0.0), S + lambda * sqrt(vegaMarginIr)) * RandomVariable(n_, irCurvatureScaling_);
     }
 
     // SIMM_IR
