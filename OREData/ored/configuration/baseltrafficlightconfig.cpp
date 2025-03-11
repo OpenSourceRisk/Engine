@@ -89,7 +89,7 @@ void BaselTrafficLightData::fromXML(XMLNode* node) {
             std::vector<int> observationCt = splitStringToIntVector(XMLUtils::getNodeValue(observationCount));
             std::vector<int> amberLim = splitStringToIntVector(XMLUtils::getNodeValue(amberLimit));
             std::vector<int> redLim = splitStringToIntVector(XMLUtils::getNodeValue(redLimit));
-            QL_REQUIRE(observationCt.size() == amberLim.size() == redLim.size(),
+            QL_REQUIRE(observationCt.size() == amberLim.size() && amberLim.size() == redLim.size(),
                        "We must have the same number number of observation and limits.");
             baselTrafficLight_[mporDays] = {observationCt, amberLim, redLim};
         }

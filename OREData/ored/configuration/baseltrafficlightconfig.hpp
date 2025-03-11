@@ -36,6 +36,7 @@ public:
         std::vector<int> redLimit;
     };
     BaselTrafficLightData();
+    BaselTrafficLightData(const string& filename) { fromFile(filename); }
     BaselTrafficLightData(const std::map<int, ObservationData>& baselTrafficLight);
 
     void clear();

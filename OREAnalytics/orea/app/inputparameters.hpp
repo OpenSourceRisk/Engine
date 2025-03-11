@@ -102,7 +102,8 @@ public:
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
-    void setBaselTrafficLightConfig(const std::string& fileName);
+    void setBaselTrafficLightConfig(const std::string& xml);
+    void setBaselTrafficLightFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setPricingEngine(const std::string& xml);
