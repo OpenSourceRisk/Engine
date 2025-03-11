@@ -69,6 +69,13 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         irCurvatureWeights_[i] = simmConfiguration_->curvatureWeight(CrifRecord::RiskType::IRVol, p1);
     }
 
+    fxDeltaRw_ =
+        simmConfiguration_->weight(CrifRecord::RiskType::FX, std::string("GBP"), boost::none, std::string("USD"));
+
+    fxCorr_ = simmConfiguration_->correlation(CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
+                                              CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
+                                              std::string("USD"));
+
     std::cout << "corrIrFx             = " << corrIrFx_ << std::endl;
     std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
     std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
@@ -76,6 +83,8 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
     std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
     std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
+    std::cout << "fxDeltaRw            = " << fxDeltaRw_ << std::endl;
+    std::cout << "fxCorr               = " << fxCorr_ << std::endl;
 }
 
 QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::RandomVariable>& irDelta,
@@ -180,14 +189,32 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
 
     // DeltaMargin_FX
 
+    RandomVariable deltaMarginFx(n_, 0.0);
+
+    {
+        std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_,0.0));
+
+        for (std::size_t ccy = 1; ccy < currencies_.size(); ++ccy) {
+            Kb[ccy] = fxDelta[ccy - 1] * RandomVariable(n_, fxDeltaRw_);
+        }
+
+        for (std::size_t i = 1; i < currencies_.size(); ++i) {
+            deltaMarginIr += Kb[i - 1] * Kb[i - 1];
+            for (std::size_t j = 1; j < i ; ++j) {
+                deltaMarginFx += RandomVariable(n_, 2.0 * fxCorr_) * Kb[i - 1] * Kb[j - 1];
+            }
+        }
+
+        deltaMarginFx = sqrt(deltaMarginFx);
+    }
+
     // VegaMargin_FX
 
     // CurvatureMargin_FX
 
     // SIMM_FX
 
-    RandomVariable imFx(n_, 0.0);
-    // RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
+    RandomVariable imFx = deltaMarginFx /* + vegaMarginFx + curvatureMarginFx */;
 
     // SIMM_RatesFX
 

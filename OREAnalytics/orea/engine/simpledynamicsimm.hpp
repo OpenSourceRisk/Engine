@@ -52,12 +52,16 @@ private:
     // extracted from the given simm configuration, for easy and efficient use in value()
 
     double corrIrFx_;
+
     double irDeltaRw_;
     double irVegaRw_;
     double irGamma_;
     double irCurvatureScaling_;
     QuantLib::Matrix irVegaCorrelations_;
     QuantLib::Array irCurvatureWeights_;
+
+    double fxDeltaRw_;
+    double fxCorr_;
     
 };
 
