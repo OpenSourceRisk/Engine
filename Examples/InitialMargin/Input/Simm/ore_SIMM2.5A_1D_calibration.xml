@@ -2,17 +2,17 @@
 <ORE>
   <Setup>
     <Parameter name="asofDate">2020-12-28</Parameter>
-    <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/SIMM2.5A_10D_calibration</Parameter>
+    <Parameter name="inputPath">Input/Simm</Parameter>
+    <Parameter name="outputPath">Output/SIMM2.5A_1D_calibration</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">simm_market.txt</Parameter>
     <Parameter name="fixingDataFile"></Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
-    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">simm_todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile"></Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
@@ -30,8 +30,8 @@
       <Parameter name="crif">crif.csv</Parameter>
       <Parameter name="calculationCurrency">USD</Parameter>
       <Parameter name="enforceIMRegulations">Y</Parameter>
-      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporDays">1</Parameter>
       <Parameter name="simmCalibration">simm_calibration.xml</Parameter>
-    </Analytic>
+</Analytic>
   </Analytics>
 </ORE>

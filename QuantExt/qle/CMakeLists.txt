@@ -193,6 +193,7 @@ models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
 models/crossassetmodelimpliedfxvoltermstructure.cpp
+models/crossassetmodelimpliedswaptionvoltermstructure.cpp
 models/defaultableequityjumpdiffusionmodel.cpp
 models/dkimpliedyoyinflationtermstructure.cpp
 models/dkimpliedzeroinflationtermstructure.cpp
@@ -712,6 +713,7 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crossassetmodelimpliedswaptionvoltermstructure.hpp
 models/crstateparametrization.hpp
 models/defaultableequityjumpdiffusionmodel.hpp
 models/defaultlossmodel.hpp

@@ -2,17 +2,17 @@
 <ORE>
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
-    <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/dim/B2b</Parameter>
+    <Parameter name="inputPath">Input/Dim</Parameter>
+    <Parameter name="outputPath">Output/dim/C2</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
-    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">swaption_eur.xml</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">swap_usd.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
@@ -39,8 +39,8 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
-      <Parameter name="simulationConfigFile">simulation_B.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_C.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
@@ -51,8 +51,8 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">../B0/cube.csv.gz</Parameter>
-      <Parameter name="scenarioFile">../B0/scenariodata.csv.gz</Parameter>
+      <Parameter name="cubeFile">../C1/cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">../C1/scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -75,7 +75,7 @@
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <Parameter name="dimRegressionOrder">2</Parameter>
       <!-- <Parameter name="dimRegressors">USD,GBP,EUR-EURIBOR-3M,USD-LIBOR-3M,GBP-LIBOR-3M</Parameter> -->
-      <Parameter name="dimRegressors">EUR-EURIBOR-3M</Parameter>
+      <Parameter name="dimRegressors">USD,USD-LIBOR-3M</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>

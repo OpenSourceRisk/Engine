@@ -21,6 +21,9 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/indexes/ibor/euribor.hpp>
+#include <ql/time/daycounters/thirty360.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -115,14 +118,21 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         DLOG("CrossAssetModel is simulating FX vols");
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of FX vols is only supported for LGM1F ir model type.");
+	string baseCcy = model_->parametrizations()[0]->currency().code();
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
             const string pair = simMarketConfig_->fxVolCcyPairs()[k];
             DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
-            const string& domestic = pair.substr(0, 3);
-            const string& foreign = pair.substr(3);
-            QL_REQUIRE(domestic == model_->parametrizations()[0]->currency().code(), "Only DOM-FOR fx vols supported");
+            // const string& domestic = pair.substr(0, 3);
+            // const string& foreign = pair.substr(3);
+            // QL_REQUIRE(domestic == model_->parametrizations()[0]->currency().code(), "Only DOM-FOR fx vols supported");
+            const string& ccy1 = pair.substr(0, 3);
+            const string& ccy2 = pair.substr(3);
+	    QL_REQUIRE(ccy1 != ccy2, "invalid currency pair " << pair);
+	    QL_REQUIRE(ccy1 == baseCcy || ccy2 == baseCcy, "currency pair " << pair << " does not contain base");
+	    string foreign = ccy1 != baseCcy ? ccy1 : ccy2;
+	    
             Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
@@ -323,6 +333,66 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                                 std::vector<RandomVariable>(n_states_, RandomVariable(samples)));
     }
 
+    // set up CrossAssetModelImpliedSwaptionVolTermStructures
+    if (simMarketConfig_->simulateSwapVols()) {
+
+	DLOG("CrossAssetModel is simulating Swaption vols");
+
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of Swaption vols is only supported for LGM1F ir model type.");
+
+        // We need Swap conventions (index name, fixed tenor, fixed day counter) below, all part of the relevant Swap Index
+	// FIXME: Use Swaption vol curve config and the long and short SwapIndex definied there?
+        std::map<string, string> swapConventionMap
+	    = { { "EUR", "EUR-CMS-10Y"},
+		{ "USD", "USD-CMS-10Y" }
+	};
+        std::map<string, string> shortSwapConventionMap
+	    = { { "EUR", "EUR-CMS-1Y"},
+		{ "USD", "USD-CMS-1Y" }
+	};
+
+	//const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+	
+        for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
+	    const string key = simMarketConfig_->swapVolKeys()[k];
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
+
+	    QL_REQUIRE(swapConventionMap.find(key) != swapConventionMap.end(),
+		       "swaption vol key " << key << "missing associated swap convention name");  
+	    QL_REQUIRE(shortSwapConventionMap.find(key) != shortSwapConventionMap.end(),
+	     	       "swaption vol key " << key << "missing associated short swap convention name");  
+
+	    auto swapIndex = parseSwapIndex(swapConventionMap[key]);
+	    auto shortSwapIndex = parseSwapIndex(shortSwapConventionMap[key]);
+	    
+	    // Locate the index position (index curve)
+	    /*
+	    auto keyIndex = swapConvention->index();
+	    Size indexIndex = n_indices_; 
+	    for (Size j = 0; j < n_indices_; ++j) {
+	        std::string indexName = simMarketConfig_->indices()[j];
+		QuantLib::ext::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
+		if (index->currency().code() == swapIndex->iborIndex()->currency().code() &&
+		    index->tenor() == swapIndex->iborIndex()->tenor()) {
+		    indexIndex = j;
+		    break;
+		}
+	    }
+	    QL_REQUIRE(indexIndex < n_indices_, "index not located");
+	    */
+	    
+	    Size ccyIndex = model_->ccyIndex(swapIndex->currency());
+	    // Period fixedTenor = swapIndex->fixedLegTenor();
+	    // DayCounter fixedDayCounter = swapIndex->dayCounter();
+            swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
+                // model_, indices_[indexIndex], curves_[ccyIndex], fixedTenor, fixedDayCounter, ccyIndex, indexIndex));
+                model_, curves_[ccyIndex], indices_, swapIndex, shortSwapIndex));
+
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key << " done");
+        }
+    }
+
     LOG("CrossAssetModelScenarioGenerator ctor done");
 }
 
@@ -472,6 +542,28 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 for (Size j = 0; j < expiries.size(); j++) {
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
+                }
+            }
+        }
+
+        // Swaption vols
+        if (simMarketConfig_->simulateSwapVols()) {
+	    for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
+	        const string key = simMarketConfig_->swapVolKeys()[k];
+                const vector<Period>& expires = simMarketConfig_->swapVolExpiries(key);
+                const vector<Period>& terms = simMarketConfig_->swapVolTerms(key);
+
+		// ext::shared_ptr<YieldTermStructure> dts = curves_[swaptionVols_[k]->ccyIndex()];
+		// ext::shared_ptr<YieldTermStructure> fts = fwdCurves_[swaptionVols_[k]->indexIndex()];
+		// Update the implied swaption vols
+                swaptionVols_[k]->move(dates_[i], ir_state[0][0]);
+
+                for (Size j = 0; j < expires.size(); j++) {
+                    for (Size jj = 0; jj < terms.size(); jj++) {
+                        Real vol = swaptionVols_[k]->volatility(dates_[i] + expires[j], terms[jj], Null<Real>(), true);
+			Size idx = j * terms.size() + jj;
+                        scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx), vol);
+                    }
                 }
             }
         }
