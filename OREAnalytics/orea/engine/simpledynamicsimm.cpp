@@ -22,8 +22,6 @@
 
 #include <orea/engine/simpledynamicsimm.hpp>
 
-#include <ql/time/period.hpp>
-
 #include <boost/algorithm/string.hpp>
 
 namespace ore {

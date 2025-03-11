@@ -25,6 +25,7 @@
 #include <qle/math/randomvariable.hpp>
 
 #include <ql/math/matrix.hpp>
+#include <ql/time/period.hpp>
 
 namespace ore {
 namespace analytics {
