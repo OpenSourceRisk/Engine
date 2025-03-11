@@ -21,9 +21,11 @@
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/simpledynamicsimm.hpp>
 #include <orea/engine/xvaenginecg.hpp>
-#include <orea/engine/simpleim.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
+#include <orea/simm/simmbucketmapperbase.hpp>
+#include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
@@ -864,8 +866,9 @@ void XvaEngineCG::calculateDynamicDelta() {
 
     // set up ir and fx vega conversion matrices
 
-    const std::vector<QuantLib::Period> irVegaTerms{10 * Years};
-    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{10 * Years};
+    const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years, 5 * Years, 10 * Years, 20 * Years};
+    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{30 * Years, 30 * Years, 29 * Years,
+                                                              25 * Years, 20 * Years, 10 * Years};
 
     const std::vector<QuantLib::Period> fxVegaTerms{10 * Years};
 
@@ -899,7 +902,13 @@ void XvaEngineCG::calculateDynamicDelta() {
         }
     }
 
-    // calculate derivatives
+    // set up im calculator
+
+    SimpleDynamicSimm imCalculator(model_->size(), model_->currencies(), irVegaTerms, fxVegaTerms,
+                                   QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_6_5>(
+                                       QuantLib::ext::make_shared<SimmBucketMapperBase>(), 10));
+
+    // calculate derivatives and derive dynamic im from them
 
     std::vector<bool> keepNodesDerivatives(g->size(), false);
     for (auto const& [n, v] : baseModelParams_) {
@@ -1140,8 +1149,12 @@ void XvaEngineCG::calculateDynamicDelta() {
         // set results for this valuation date
 
         for (auto const& n : nettingSetIds) {
-            dynamicIM_[n][i] = simpleIM(model_->currencies(), irVegaTerms, fxVegaTerms, conditionalIrDelta,
-                                        conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+            dynamicIM_[n][i] =
+                imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+
+            // debug output
+            std::cout << i << "," << n << "," << expectation(dynamicIM_[n][i]).at(0) << std::endl;
+            // debug output
         }
 
     } // loop over valuation dates

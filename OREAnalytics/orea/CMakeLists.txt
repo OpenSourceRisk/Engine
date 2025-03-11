@@ -105,7 +105,7 @@ engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
 engine/sensitivitystoragemanager.cpp
-engine/simpleim.cpp
+engine/simpledynamicsimm.cpp
 engine/smrc.cpp
 engine/standardapproachcvacalculator.cpp
 engine/stresstest.cpp
@@ -310,7 +310,7 @@ engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
-engine/simpleim.hpp
+engine/simpledynamicsimm.hpp
 engine/smrc.hpp
 engine/standardapproachcvacalculator.hpp
 engine/stresstest.hpp
