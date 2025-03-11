@@ -22,6 +22,8 @@
 
 #include <orea/engine/simpledynamicsimm.hpp>
 
+#include <ql/time/period.hpp>
+
 #include <boost/algorithm/string.hpp>
 
 namespace ore {
@@ -76,15 +78,15 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
                                               CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
                                               std::string("USD"));
 
-    std::cout << "corrIrFx             = " << corrIrFx_ << std::endl;
-    std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
-    std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
-    std::cout << "irGamma              = " << irGamma_ << std::endl;
-    std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
-    std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
-    std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
-    std::cout << "fxDeltaRw            = " << fxDeltaRw_ << std::endl;
-    std::cout << "fxCorr               = " << fxCorr_ << std::endl;
+    // std::cout << "corrIrFx             = " << corrIrFx_ << std::endl;
+    // std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
+    // std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
+    // std::cout << "irGamma              = " << irGamma_ << std::endl;
+    // std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
+    // std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
+    // std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
+    // std::cout << "fxDeltaRw            = " << fxDeltaRw_ << std::endl;
+    // std::cout << "fxCorr               = " << fxCorr_ << std::endl;
 }
 
 QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::RandomVariable>& irDelta,

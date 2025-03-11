@@ -1153,7 +1153,7 @@ void XvaEngineCG::calculateDynamicDelta() {
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
 
             // debug output
-            std::cout << i << "," << n << "," << expectation(dynamicIM_[n][i]).at(0) << std::endl;
+            // std::cout << i << "," << n << "," << expectation(dynamicIM_[n][i]).at(0) << std::endl;
             // debug output
         }
 
