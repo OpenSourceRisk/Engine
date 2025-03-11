@@ -104,13 +104,13 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
 Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
 
 /*! convert the creditCurveId into the internal name for the index tranche credit curve*/
-std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const std::string& subFamily);
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const std::string& indexTrancheFamily);
 
 /*! Return the credit curve with the index specific recovery rate for cdo pricing model*/
 QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
                                                                         const std::string& creditCurveId,
                                                                         const std::string& configuration,
-                                                                        const std::string& subFamily);
+                                                                        const std::string& indexTrancheFamily);
 
 } // namespace data
 } // namespace ore

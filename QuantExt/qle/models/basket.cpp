@@ -42,7 +42,13 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
     QL_REQUIRE(notionals_.size() == pool_->size(), "unmatched data entry sizes in basket, "
                                                        << notionals_.size() << " notionals, " << pool_->size()
                                                        << " pool size");
-
+    basketNotional_ = attachmentAmount_ = detachmentAmount_ = 0.0;
+    for (Size i = 0; i < notionals_.size(); i++) {
+        basketNotional_ += notionals_[i];
+        attachmentAmount_ += notionals_[i] * attachmentRatio_;
+        detachmentAmount_ += notionals_[i] * detachmentRatio_;
+    }
+    trancheNotional_ = detachmentAmount_ - attachmentAmount_;
     // registrations relevant to the loss status, not to the expected
     // loss values; those are through models.
     registerWith(Settings::instance().evaluationDate());
@@ -66,13 +72,6 @@ void Basket::setLossModel(const QuantLib::ext::shared_ptr<DefaultLossModel>& los
 }
 
 void Basket::performCalculations() const {
-    basketNotional_ = attachmentAmount_ = detachmentAmount_ = 0.0;
-    for (Size i = 0; i < notionals_.size(); i++) {
-        basketNotional_ += notionals_[i];
-        attachmentAmount_ += notionals_[i] * attachmentRatio_;
-        detachmentAmount_ += notionals_[i] * detachmentRatio_;
-    }
-    trancheNotional_ = detachmentAmount_ - attachmentAmount_;
     // Calculations for status
     computeBasket(); // or we might be called from an statistic member
                      // without being intialized yet (first called)

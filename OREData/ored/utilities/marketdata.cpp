@@ -79,17 +79,17 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
 }
 
 
-std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const std::string& subFamily){
-    auto tmp = "__" + subFamily + "__" + creditCurveId;
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const std::string& indexTrancheFamily){
+    auto tmp = "__CDO_" + indexTrancheFamily + "__" + creditCurveId;
     return tmp;
 }
 
 QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
                                                                         const std::string& creditCurveId,
                                                                         const std::string& configuration,
-                                                                        const std::string& subFamily) {
+                                                                        const std::string& indexTrancheFamily) {
     Handle<QuantExt::CreditCurve> curve;
-    std::string name = indexTrancheSpecificCreditCurveName(creditCurveId, subFamily);
+    std::string name = indexTrancheSpecificCreditCurveName(creditCurveId, indexTrancheFamily);
     try {
         curve = market->defaultCurve(name, configuration);
     } catch (const std::exception&) {

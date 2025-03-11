@@ -61,12 +61,11 @@ public:
         QuantLib::BusinessDayConvention businessDayConvention, QuantLib::DayCounter dayCounter, bool extrapolate,
         const std::string& quoteName = "", const QuantLib::Date& startDate = QuantLib::Date(),
         const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
-        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
-        bool adjustForLosses = true,
+        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none, bool adjustForLosses = true,
         const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
-        bool calibrateConstituentsToIndexSpread = false, bool stochasticRecovery = false,
-        const std::map<std::string, std::vector<double>>& rrGrids = {},
+        const std::string& indexTrancheFamily = "", bool calibrateConstituentsToIndexSpread = false,
+        bool stochasticRecovery = false, const std::map<std::string, std::vector<double>>& rrGrids = {},
         const std::map<std::string, std::vector<double>>& rrProbs = {});
     //@}
 
@@ -98,7 +97,7 @@ public:
     const bool stochasticRecovery() const { return stochasticRecovery_; }
     const std::map<std::string, std::vector<double>>& rrGrids() const { return rrGrids_; }
     const std::map<std::string, std::vector<double>>& rrProbs() const { return rrProbs_; }
-
+    const std::string& indexTrancheFamily() const { return indexTrancheFamily_; }
 
     //@}
 
@@ -115,7 +114,7 @@ public:
     bool& stochasticRecovery() { return stochasticRecovery_; }
     std::map<std::string, std::vector<double>>& rrGrids() { return rrGrids_; }
     std::map<std::string, std::vector<double>>& rrProbs() { return rrProbs_; }
-
+    std::string& indexTrancheFamily() { return indexTrancheFamily_; }
     //@}
 
 private:
@@ -134,6 +133,7 @@ private:
     std::vector<MarketDatum::QuoteType> quoteTypes_;
     double indexSpread_;
     std::string currency_;
+    std::string indexTrancheFamily_;
     bool calibrateConstituentsToIndexSpread_;
     bool stochasticRecovery_;
     std::map<std::string, std::vector<double>> rrGrids_;

@@ -30,6 +30,7 @@
 
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/mcdefaultlossmodel.hpp>
@@ -68,7 +69,7 @@ public:
     virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
               const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
-              const std::string& indexFamily) = 0;
+              const std::string& indexFamily, bool checkExpectedRecovery) = 0;
 
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition() const {
         return parseCreditPortfolioSensitivityDecomposition(
@@ -123,7 +124,7 @@ public:
     virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const vector<Real>& recoveryRates, const QuantLib::RelinkableHandle<Quote>& baseCorrelation,
               bool poolIsHomogenous, const vector<vector<double>>& rrGrids,
-              const vector<vector<double>>& rrProbs) const = 0;
+              const vector<vector<double>>& rrProbs, bool checkExpectedRecovery) const = 0;
 };
 
 class GaussCopulaBucketingLossModelBuilder : public LossModelBuilder {
@@ -137,8 +138,8 @@ public:
 
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const vector<Real>& recoveryRates, const QuantLib::RelinkableHandle<Quote>& baseCorrelation,
-              bool poolIsHomogenous, const vector<vector<double>>& rrGrids,
-              const vector<vector<double>>& rrProbs) const override {
+              bool poolIsHomogenous, const vector<vector<double>>& rrGrids, const vector<vector<double>>& rrProbs,
+              bool checkExpectedRecovery) const override {
         Size poolSize = recoveryRates.size();
 
         QL_REQUIRE(recoveryRates.size() == rrGrids.size(), "Recovery rates, recovery rate grids ("
@@ -166,7 +167,7 @@ public:
         QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(
             new QuantExt::ExtendedGaussianConstantLossLM(baseCorrelation, recoveryRates, rrProbs, rrGrids,
                                                          LatentModelIntegrationType::GaussianQuadrature, poolSize,
-                                                         GaussianCopulaPolicy::initTraits()));
+                                                         GaussianCopulaPolicy::initTraits(), checkExpectedRecovery));
 
         bool homogeneous = poolIsHomogenous && homogeneousPoolWhenJustified_;
 
@@ -192,7 +193,7 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
               const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
-              const std::string& indexFamilyName) override {
+              const std::string& indexFamilyName, bool checkExpectedRecovery) override {
 
         Real gaussCopulaMin = parseReal(modelParameter("min"));
         Real gaussCopulaMax = parseReal(modelParameter("max"));
@@ -226,8 +227,10 @@ public:
         std::vector<std::vector<double>> rrProbs;
 
         if (useStochasticRecovery) {
-            for (const auto& seniority : seniorities) {
+            for (size_t i = 0; i < seniorities.size(); ++i) {
+                const auto seniority = seniorities[i];
                 const auto seniorityString = to_string(seniority);
+                const auto recoveryRate = recoveryRates[i];
                 std::map<std::string, vector<Real>> rrProbMap;
                 std::map<std::string, vector<Real>> rrGridMap;
                 std::string key = indexFamilyName + "_" + seniorityString;
@@ -235,6 +238,22 @@ public:
                     std::vector<std::string> qualifiers{key, seniorityString};
                     string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
                     string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
+                    if (rrGridString == "Markit2020") {
+                        StructuredConfigurationWarningMessage(
+                            "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
+                            "The recovery rate grid 'Markit2020' is deprecated. Please use the 'recoveryRateGrid' "
+                            "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
+                            .log();
+                        if (recoveryRate >= 0.1 && recoveryRate <= 0.55) {
+                            rrGridString =
+                                std::to_string(2.0 * recoveryRate - 0.1) + "," + std::to_string(recoveryRate) + ",0.1";
+                        } else {
+                            ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
+                                                         << " out of range [0.1, 0.55], using constant recovery");
+                            rrGridString =
+                                to_string(recoveryRate) + "," + to_string(recoveryRate) + "," + to_string(recoveryRate);
+                        }
+                    }
                     vector<string> rrProbStringTokens;
                     boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
                     rrProbMap[key] = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
@@ -255,7 +274,7 @@ public:
         GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps,
                                                           useQuadrature, nBuckets, homogeneousPoolWhenJustified,
                                                           useStochasticRecovery);
-        return modelbuilder.lossModel(recoveryRates, correlation, homogeneous, rrGrids, rrProbs);
+        return modelbuilder.lossModel(recoveryRates, correlation, homogeneous, rrGrids, rrProbs, checkExpectedRecovery);
     }
 };
 
@@ -266,7 +285,7 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
               const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
-              const std::string& indexFamily) override {
+              const std::string& indexFamily, bool checkExpectedRecovery) override {
 
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
             market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));

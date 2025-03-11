@@ -475,7 +475,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         std::vector<CdsTier> seniorities;
         for (const auto& name : basketData.remainingNames) {
-            auto specificCurveName = indexTrancheSpecificCreditCurveName(name);
+            auto specificCurveName = indexTrancheSpecificCreditCurveName(name, config.indexTrancheFamily());
             auto mappedName = creditCurveNameMapping(specificCurveName);
             const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
             QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
@@ -486,7 +486,6 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             } else {
                 seniorities.push_back(parseCdsTier(creditCurve->refData().seniority));
             }
-            
         }
 
         Handle<DefaultProbabilityTermStructure> indexCurve;
@@ -589,7 +588,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 QL_FAIL("Need at least one valid recovery rate grid and probability");
             }
             GaussCopulaBucketingLossModelBuilder modelBuilder{-5., 5, 64, false, 372, false, true};
-            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrid, rrProb);
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrid, rrProb, true);
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
                 config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,

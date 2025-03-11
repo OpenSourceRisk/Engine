@@ -27,52 +27,27 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-
-
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
-    quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()), calibrateConstituentsToIndexSpread_(false), 
-    stochasticRecovery_(false) {}
+      quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()),
+      calibrateConstituentsToIndexSpread_(false), stochasticRecovery_(false) {}
 
-BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
-    const string& curveDescription,
-    const vector<string>& detachmentPoints,
-    const vector<string>& terms,
-    Size settlementDays,
-    const Calendar& calendar,
-    BusinessDayConvention businessDayConvention,
-    DayCounter dayCounter,
-    bool extrapolate,
-    const string& quoteName,
-    const Date& startDate, 
-    const Period& indexTerm,
-    boost::optional<DateGeneration::Rule> rule,
-    bool adjustForLosses,
-    const std::vector<MarketDatum::QuoteType>& quoteTypes,
-    double indexSpread, const std::string& currency, const bool calibrateConstituentsToIndexSpread, 
-    bool stochasticRecovery,
+BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
+    const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
+    const vector<string>& terms, Size settlementDays, const Calendar& calendar,
+    BusinessDayConvention businessDayConvention, DayCounter dayCounter, bool extrapolate, const string& quoteName,
+    const Date& startDate, const Period& indexTerm, boost::optional<DateGeneration::Rule> rule, bool adjustForLosses,
+    const std::vector<MarketDatum::QuoteType>& quoteTypes, double indexSpread, const std::string& currency,
+    const std::string& indexTrancheFamily, const bool calibrateConstituentsToIndexSpread, bool stochasticRecovery,
     const std::map<std::string, std::vector<double>>& rrGrids,
     const std::map<std::string, std::vector<double>>& rrProbs)
-    : CurveConfig(curveID, curveDescription),
-      detachmentPoints_(detachmentPoints),
-      terms_(terms),
-      settlementDays_(settlementDays),
-      calendar_(calendar),
-      businessDayConvention_(businessDayConvention),
-      dayCounter_(dayCounter),
-      extrapolate_(extrapolate),
-      quoteName_(quoteName.empty() ? curveID : quoteName),
-      startDate_(startDate), 
-      indexTerm_(indexTerm),
-      rule_(rule),
-      adjustForLosses_(adjustForLosses),
-      quoteTypes_(quoteTypes),
-      indexSpread_(indexSpread),
-      currency_(currency),
-      calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread),
-      stochasticRecovery_(stochasticRecovery),
-      rrGrids_(rrGrids),
-      rrProbs_(rrProbs) {
+    : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms),
+      settlementDays_(settlementDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
+      dayCounter_(dayCounter), extrapolate_(extrapolate), quoteName_(quoteName.empty() ? curveID : quoteName),
+      startDate_(startDate), indexTerm_(indexTerm), rule_(rule), adjustForLosses_(adjustForLosses),
+      quoteTypes_(quoteTypes), indexSpread_(indexSpread), currency_(currency), indexTrancheFamily_(indexTrancheFamily),
+      calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread), stochasticRecovery_(stochasticRecovery),
+      rrGrids_(rrGrids), rrProbs_(rrProbs) {
     QL_REQUIRE(!quoteTypes_.empty(), "Required at least one valid quote type");
     for (const auto& quoteType : quoteTypes) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE,
@@ -80,34 +55,36 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     }
 }
 
-void addPriceQuotes(vector<string>& quotes, const std::string& quoteName, const std::string& term, const std::vector<string>& detachmentPoints)  {
-    const static  std::string quoteTypeStr = to_string(MarketDatum::QuoteType::PRICE);
+void addPriceQuotes(vector<string>& quotes, const std::string& quoteName, const std::string& term,
+                    const std::vector<string>& detachmentPoints) {
+    const static std::string quoteTypeStr = to_string(MarketDatum::QuoteType::PRICE);
     const std::string suffix = quoteTypeStr + "/" + quoteName + "/" + term;
 
     std::vector<string> attachmentPoints;
-    if (detachmentPoints.size() == 1 &&  detachmentPoints.front() == "*") {
+    if (detachmentPoints.size() == 1 && detachmentPoints.front() == "*") {
         attachmentPoints.push_back("*");
     } else {
         attachmentPoints.push_back("0");
-        for (size_t i=1; i<detachmentPoints.size(); ++i) {
-            attachmentPoints.push_back(detachmentPoints[i-1]);
+        for (size_t i = 1; i < detachmentPoints.size(); ++i) {
+            attachmentPoints.push_back(detachmentPoints[i - 1]);
         }
     }
-    for (size_t i = 0; i<detachmentPoints.size(); ++i) {
+    for (size_t i = 0; i < detachmentPoints.size(); ++i) {
         const auto& ap = attachmentPoints[i];
         const auto& dp = detachmentPoints[i];
         quotes.push_back("INDEX_CDS_TRANCHE/" + suffix + "/" + ap + "/" + dp);
     }
 }
 
-void addBaseCorrelationQuotes(vector<string>& quotes, const std::string & quoteName, const std::string& term, const std::vector<string>& detachmentPoints)  {
-    const static  std::string quoteTypeStr = to_string(MarketDatum::QuoteType::BASE_CORRELATION);
+void addBaseCorrelationQuotes(vector<string>& quotes, const std::string& quoteName, const std::string& term,
+                              const std::vector<string>& detachmentPoints) {
+    const static std::string quoteTypeStr = to_string(MarketDatum::QuoteType::BASE_CORRELATION);
     const std::string suffix = quoteTypeStr + "/" + quoteName + "/" + term;
-    for (size_t i = 0; i<detachmentPoints.size(); ++i) {
+    for (size_t i = 0; i < detachmentPoints.size(); ++i) {
         const auto& dp = detachmentPoints[i];
-        quotes.push_back("INDEX_CDS_TRANCHE/" + suffix +  "/" + dp);
+        quotes.push_back("INDEX_CDS_TRANCHE/" + suffix + "/" + dp);
         // Add legacy quote name
-        quotes.push_back("CDS_INDEX/" + suffix +  "/" + dp);
+        quotes.push_back("CDS_INDEX/" + suffix + "/" + dp);
     }
 }
 
@@ -172,6 +149,8 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
 
     currency_ = XMLUtils::getChildValue(node, "Currency", false);
 
+    indexTrancheFamily_ = XMLUtils::getChildValue(node, "IndexTrancheFamily", false);
+
     adjustForLosses_ = true;
     if (auto n = XMLUtils::getChildNode(node, "AdjustForLosses"))
         adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
@@ -182,11 +161,13 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     stochasticRecovery_ = XMLUtils::getChildValueAsBool(node, "StochasticRecovery", false, false);
 
     if (stochasticRecovery_) {
-        auto stochasticRecoveryModelParameterNode =  XMLUtils::getChildNode(node, "StochasticRecoveryModelParameters");
+        auto stochasticRecoveryModelParameterNode = XMLUtils::getChildNode(node, "StochasticRecoveryModelParameters");
         auto recoveryGridNode = XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryGrid");
         auto recoveryGrids = XMLUtils::getChildrenAttributesAndValues(recoveryGridNode, "Grid", "seniority", true);
-        auto recoveryProbabilityNode = XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryProbabilities}");
-        auto recoveryProbabilites = XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
+        auto recoveryProbabilityNode =
+            XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryProbabilities}");
+        auto recoveryProbabilites =
+            XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
         for (const auto& seniority : recoveryGrids) {
             QL_REQUIRE(recoveryProbabilites.find(seniority.first) != recoveryProbabilites.end(),
                        "Recovery probabilities for seniority " << seniority.first << " not found");
@@ -226,12 +207,11 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
     XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
 
-
     auto quoteTypesNode = XMLUtils::addChild(doc, node, "QuoteTypes");
     for (auto t : quoteTypes_) {
         XMLUtils::addChild(doc, quoteTypesNode, "QuoteType", to_string(t));
     }
-    
+
     if (startDate_ != Date())
         XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
 
@@ -242,28 +222,35 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IndexTerm", indexTerm_);
     }
 
-    if (indexSpread_ != Null<Real>()){
+    if (indexSpread_ != Null<Real>()) {
         XMLUtils::addChild(doc, node, "IndexSpread", indexSpread_);
     }
 
-    if (!currency_.empty()){
+    if (!currency_.empty()) {
         XMLUtils::addChild(doc, node, "Currency", currency_);
+    }
+
+    if(!indexTrancheFamily_.empty()) {
+        XMLUtils::addChild(doc, node, "IndexTrancheFamily", indexTrancheFamily_);
     }
 
     XMLUtils::addChild(doc, node, "CalibrateConstituentsToIndexSpread", calibrateConstituentsToIndexSpread_);
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
-
-    if(stochasticRecovery_){
+    
+    if (stochasticRecovery_) {
         XMLUtils::addChild(doc, node, "StochasticRecovery", stochasticRecovery_);
+        
         auto stochasticRecoveryModelParameterNode = XMLUtils::addChild(doc, node, "StochasticRecoveryModelParameters");
         auto recoveryGridNode = XMLUtils::addChild(doc, stochasticRecoveryModelParameterNode, "RecoveryGrid");
         for (const auto& [seniority, grid] : rrGrids_) {
             XMLUtils::addGenericChildAsList(doc, recoveryGridNode, "Grid", grid, "seniority", seniority);
         }
-        auto recoveryProbabilityNode = XMLUtils::addChild(doc, stochasticRecoveryModelParameterNode, "RecoveryProbabilities");
+        auto recoveryProbabilityNode =
+            XMLUtils::addChild(doc, stochasticRecoveryModelParameterNode, "RecoveryProbabilities");
         for (const auto& [seniority, probs] : rrProbs_) {
-            XMLUtils::addGenericChildAsList(doc, recoveryProbabilityNode, "Probabilities", probs, "seniority", seniority);
+            XMLUtils::addGenericChildAsList(doc, recoveryProbabilityNode, "Probabilities", probs, "seniority",
+                                            seniority);
         }
     }
 
@@ -271,4 +258,3 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
 }
 } // namespace data
 } // namespace ore
-

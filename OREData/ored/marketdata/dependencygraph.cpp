@@ -449,7 +449,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
                     constituentCurves.insert(c.name());
-                    constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name()));
+                    constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), crd->indexTrancheFamily()));
                 } else {
                     DLOG("Skipping curve " << c.name() << ", having zero weight");
                 }
