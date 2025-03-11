@@ -362,19 +362,15 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         const string& cc = creditCurves[i];
         auto creditCurveName = indexTrancheSpecificCreditCurveName(cc, indexTrancheFamily);
         auto creditCurve = indexTrancheSpecificCreditCurve(market, cc, config, indexTrancheFamily);
-
+        DLOG("Got credit curve for constituent " << cc << " with credit curve " << creditCurveName);
         auto originalCurve = creditCurve->curve();
         Real mktRecoveryRate = creditCurve->recovery()->value();
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         dpts.push_back(originalCurve);
-
         auto seniority = CdsTier::SNRFOR;
-        auto curve = market->defaultCurve(creditCurveName, config);
-        if (!curve.empty()) {
-            auto refInfo = creditCurve->refData();
-            if (!refInfo.seniority.empty()) {
-                seniority = parseCdsTier(refInfo.seniority);
-            }
+        auto refInfo = creditCurve->refData();
+        if (!refInfo.seniority.empty()) {
+            seniority = parseCdsTier(refInfo.seniority);
         }
         seniorities.push_back(seniority);
         TLOG("RunType " << runType << "Trade " << id() << ", Issuer " << cc << " with credit curve " << creditCurveName
