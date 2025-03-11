@@ -4,8 +4,8 @@ services:
   ore_plus_app:
     image: oreswig_app:${ORE_TAG}
     build:
-      context: ../../
-      dockerfile: ore/ORE-SWIG/Docker/Dockerfile-ORESWIG-App
+      context: ../../../
+      dockerfile: oreswig/Docker/Dockerfile-ORESWIG-App
       args:
         - ore_version=${ORE_TAG}
         - debian_tag=${DEBIAN_TAG}

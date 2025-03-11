@@ -4,7 +4,7 @@ services:
   env_ore_plus_swig:
     image: env_oreswig:${ORE_TAG}
     build:
-      context: ../../
-      dockerfile: ore/ORE-SWIG/Docker/Dockerfile-ORESWIG
+      context: ../../../
+      dockerfile: oreswig/Docker/Dockerfile-ORESWIG
       args:
         - ore_version=${ORE_TAG}
