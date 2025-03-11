@@ -14,10 +14,10 @@ RUN apt-get update && apt-get upgrade -y \
 WORKDIR /swig
 
 COPY ore/cmake ./cmake
-COPY oreswig/OREAnalytics-SWIG ./OREAnalytics-SWIG
-COPY oreswig/OREData-SWIG ./OREData-SWIG
-COPY oreswig/QuantExt-SWIG ./QuantExt-SWIG
-COPY oresig/QuantLib-SWIG ./QuantLib-SWIG
+COPY ore/ORE-SWIG/OREAnalytics-SWIG ./OREAnalytics-SWIG
+COPY ore/ORE-SWIG/OREData-SWIG ./OREData-SWIG
+COPY ore/ORE-SWIG/QuantExt-SWIG ./QuantExt-SWIG
+COPY ore/ORE-SWIG/QuantLib-SWIG ./QuantLib-SWIG
 
 #ENV PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/ \
 #    PYTHON_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/python3.9
