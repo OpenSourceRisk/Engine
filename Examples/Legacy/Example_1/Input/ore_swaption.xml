@@ -6,13 +6,13 @@
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log_swaption.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
-    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_swaption.xml</Parameter>
   </Setup>
   <Markets>
@@ -40,9 +40,9 @@
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
       <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
-      <Parameter name="simulationMarketFile">../../Input/simulationmarket.xml</Parameter>
+      <Parameter name="simulationMarketFile">../../../Input/simulationmarket.xml</Parameter>
       <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
