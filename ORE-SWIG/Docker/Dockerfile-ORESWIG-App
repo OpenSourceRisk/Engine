@@ -32,11 +32,11 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 
 RUN mkdir /oreswig/tests
 
-COPY oreswig/QuantLib-SWIG/Python/test /oreswig/tests/QuantLibTestSuite
+COPY ore/ORE-SWIG/QuantLib-SWIG/Python/test /oreswig/tests/QuantLibTestSuite
 # Delete the init.py otherwise nosetest will not pick up all the tests
-RUN rm oreswig/tests/QuantLibTestSuite/__init__.py
-COPY oreswig/OREAnalytics-SWIG/Python/test /oreswig/tests/ORETestSuite
-COPY oreswig/OREAnalytics-SWIG/Python/Examples /oreswig/example_scripts
+RUN rm ore/ORE-SWIG/tests/QuantLibTestSuite/__init__.py
+COPY ore/ORE-SWIG/OREAnalytics-SWIG/Python/test /oreswig/tests/ORETestSuite
+COPY ore/ORE-SWIG/OREAnalytics-SWIG/Python/Examples /oreswig/example_scripts
 # due to relative path imports in the notebooks, we need to copy utilities.py directly into the example folder
 RUN cp oreswig/example_scripts/Notebooks/utilities.py oreswig/example_scripts/Notebooks/Example_1
 RUN cp oreswig/example_scripts/Notebooks/utilities.py oreswig/example_scripts/Notebooks/Example_2
