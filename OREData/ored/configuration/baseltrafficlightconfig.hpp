@@ -43,6 +43,7 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
+    std::map<int, ObservationData>& baselTrafficLightData() { return baselTrafficLight_; }
     
 private:
     std::map<int, ObservationData> baselTrafficLight_;

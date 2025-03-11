@@ -39,6 +39,17 @@ std::vector<int> splitStringToIntVector(const std::string& str) {
     return result;
 }
 
+std::string vectorToString(const std::vector<int>& vec) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (i != 0) {
+            oss << ",";
+        }
+        oss << vec[i];
+    }
+    return oss.str();
+}
+
 BaselTrafficLightData::BaselTrafficLightData() { clear(); }
 BaselTrafficLightData::BaselTrafficLightData(const std::map<int, ObservationData>& baselTrafficLight) : 
                                                 baselTrafficLight_(baselTrafficLight) {}
@@ -46,7 +57,26 @@ BaselTrafficLightData::BaselTrafficLightData(const std::map<int, ObservationData
 void BaselTrafficLightData::clear() {
     baselTrafficLight_.clear();
 }
-
+/*
+<BaselTrafficLightConfig>
+    <Configuration>
+        <mporDays>10</mporDays>
+        <ObservationThresholds>
+            <ObservationCount>1,2,3,...,6190</ObservationCount>
+            <AmberLimit>0,0,0,...,89</AmberLimit>
+            <RedLimit>0,1,2,3...133</RedLimit>
+        </ObservationThresholds>
+    </Configuration>
+    <Configuration>
+        <mporDays>1</mporDays>
+        <ObservationThresholds>
+            <ObservationCount>1,2,3,..,2200</ObservationCount>
+            <AmberLimit>1,1,1...,30</AmberLimit>
+            <RedLimit>1,1,...41</RedLimit>
+        </ObservationThresholds>
+    </Configuration>
+</BaselTrafficLightConfig>
+*/
 void BaselTrafficLightData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BaselTrafficLightConfig");
     if (auto global = XMLUtils::getChildNode(node, "Configuration")) {
@@ -59,6 +89,8 @@ void BaselTrafficLightData::fromXML(XMLNode* node) {
             std::vector<int> observationCt = splitStringToIntVector(XMLUtils::getNodeValue(observationCount));
             std::vector<int> amberLim = splitStringToIntVector(XMLUtils::getNodeValue(amberLimit));
             std::vector<int> redLim = splitStringToIntVector(XMLUtils::getNodeValue(redLimit));
+            QL_REQUIRE(observationCt.size() == amberLim.size() == redLim.size(),
+                       "We must have the same number number of observation and limits.");
             baselTrafficLight_[mporDays] = {observationCt, amberLim, redLim};
         }
     }
@@ -66,6 +98,17 @@ void BaselTrafficLightData::fromXML(XMLNode* node) {
 
 XMLNode* BaselTrafficLightData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BaselTrafficLightConfig");
+    for (const auto& pair : baselTrafficLight_) {
+        int mporDays = pair.first;
+        const ObservationData& data = pair.second;
+        XMLNode* rdNode = XMLUtils::addChild(doc, node, "Configuration");
+        XMLUtils::addChild(doc, rdNode, "mporDays", std::to_string(mporDays));
+        XMLNode* oNode = XMLUtils::addChild(doc, rdNode, "ObservationThresholds");
+        XMLUtils::addChild(doc, oNode, "ObservationCount", vectorToString(data.observationCount));
+        XMLUtils::addChild(doc, oNode, "AmberLimit", vectorToString(data.amberLimit));
+        XMLUtils::addChild(doc, oNode, "RedLimit", vectorToString(data.redLimit));
+    }
+
     return node;
 }
 
