@@ -41,10 +41,10 @@ namespace QuantExt {
 
     References:
 
-    Hagan, Evaluating and hedging exotic swap instruments via LGM
+    [1] Hagan, Evaluating and hedging exotic swap instruments via LGM
 
-    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
-    Analysis, Palgrave Macmillan, 2015, 11.2.2
+    [2] Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+        Analysis, Palgrave Macmillan, 2015, 11.2.2
 
     \warning Cash settled swaptions are not supported
 
@@ -57,6 +57,15 @@ namespace QuantExt {
     Note that we assume H' does not change its sign, but this is a general
     requirement of the LGM parametrization anyway (see the base parametrization
     class).
+
+    The reference date of the LGM model defines t = 0. The reference date of the discountCurve
+    defines the valuation time t. If t > 0 the calculated npv is conditional on x(t) = x0
+    and inflated, i.e. we calculate
+
+    N(t, x0) E( V(T) / N(T) | x(t) = x0 )
+
+    If no discount curve is specified, the LGM model's curve is used as the discount curve.
+    In this case, the valuation time is 0 and the parameter x0 is ignored.
 
     \ingroup engines
 */
@@ -71,19 +80,22 @@ public:
     /*! Lgm model based constructor */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata,
+                              const Real x0 = 0.0);
 
     /*! CrossAsset model based constructor */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata,
+                              const Real x0 = 0.0);
 
     /*! parametrization based constructor, note that updates in the
         parametrization are not observed by the engine, you would
         have to call update() on the engine explicitly */
     AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata);
+                              const FloatSpreadMapping floatSpreadMapping = FloatSpreadMapping::proRata,
+                              const Real x0 = 0.0);
 
     void calculate() const override;
 
@@ -106,6 +118,7 @@ private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
     Handle<YieldTermStructure> c_;
     mutable FloatSpreadMapping floatSpreadMapping_;
+    mutable Real x0_;
     bool caching_, lgm_H_constant_ = false, lgm_alpha_constant_ = false;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
