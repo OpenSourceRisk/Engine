@@ -129,7 +129,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
     bool isPhysicallySettled = true;       // TODO Check
-    bool settlementDirty = true;           // TODO Check
+    bool settlementDirty = false;           // TODO Check
 
     // create quantext forward bond instrument
     ext::shared_ptr<Payoff> payoff = parsePositionType(longShort_) == Position::Long
@@ -403,6 +403,7 @@ void BondFuture::checkDates(const Date& expiry, const Date& settlement) {
 
 string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry) {
 
+    DLOG("BondFuture::identifyCtdBond called.");
     // get settlement price for future
     double settlementPriceFuture = 0.0;
     if (!engineFactory->referenceData() ||
@@ -419,8 +420,9 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
                                                                              << " settlementPriceFuture set to zero.");
         }
     }
+    DLOG("BondFuture::identifyCtdBond future " << contractName_ << " settlementPriceFuture " << settlementPriceFuture);
 
-    double lowestValue = 1e6; // arbitray high number
+    double lowestValue = QL_MAX_REAL; // arbitray high number
     string ctdSec = string();
 
     for (const auto& sec : secList_) {
@@ -446,6 +448,9 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
         // do the test, inspired by
         //  HULL: OPTIONS, FUTURES, AND OTHER DERIVATIVES, 7th Edition, page 134
         double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
+        DLOG("BondFuture::identifyCtdBond underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry
+                                                       << " conversionFactor " << conversionFactor << " Value "
+                                                       << value);
         if (value < lowestValue) {
             lowestValue = value;
             ctdSec = sec;
