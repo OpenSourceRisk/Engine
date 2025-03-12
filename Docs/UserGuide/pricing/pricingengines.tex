@@ -1863,7 +1863,7 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
-\item recoveryRateGrid: Constant (flat market recovery rate R), Markit2020 (3-pillar recovery grid $[0.1, R, 2R-0.1]$
+\item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
 \item nSimulations: number of simulations in the Monte Carlo Simulation
@@ -1875,7 +1875,19 @@ The parameters have the following meaning:
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
 \item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
+
 \end{itemize}
+It is possible to define multiple recovery rate grids and probabilities. 
+For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is `recoveryRateGrid_SNRFOR`, 
+and the corresponding probabilities are `recoveryRateProbabilities_SNRFOR`.
+
+If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
+you can add the `IndexTrancheFamily` identifier to the index credit reference data. 
+This allows you to set up independent grids for groups of credit indices, 
+such as a grid for CDX High Yields `recoveryRateGrid_CDXHY_SNRFOR`.
+
+The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values are deprecated and 
+will cause a warning. If recovery rate grid is set to Markit2020, a 3-pillar recovery grid $[0.1, R, 2R-0.1]$ is used.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -1886,7 +1898,7 @@ The parameters have the following meaning:
         <Parameter name="max">5.0</Parameter>
         <Parameter name="steps">64</Parameter>
         <Parameter name="useStochasticRecovery">Y</Parameter>
-        <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+        <Parameter name="recoveryRateGrid">0.7,0.4,0.1</Parameter>
         <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
     </ModelParameters>
     <Engine>Bucketing</Engine>
