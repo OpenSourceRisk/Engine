@@ -163,9 +163,11 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     if (stochasticRecovery_) {
         auto stochasticRecoveryModelParameterNode = XMLUtils::getChildNode(node, "StochasticRecoveryModelParameters");
         auto recoveryGridNode = XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryGrid");
+        QL_REQUIRE(recoveryGridNode, "RecoveryGrid node not found");
         auto recoveryGrids = XMLUtils::getChildrenAttributesAndValues(recoveryGridNode, "Grid", "seniority", true);
         auto recoveryProbabilityNode =
-            XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryProbabilities}");
+            XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryProbabilities");
+        QL_REQUIRE(recoveryProbabilityNode, "RecoveryProbabilities node not found");
         auto recoveryProbabilites =
             XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
         for (const auto& seniority : recoveryGrids) {
