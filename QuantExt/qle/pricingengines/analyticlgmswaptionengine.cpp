@@ -279,7 +279,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         }
     }
 
-    /* for the following calculations, see [1] 5.5 - 5.7, with the sligh generalization that we condition
+    /* for the following calculations, see [1] 5.5 - 5.7, with the slight generalization that we condition
        the npv calculation on (t, x(t)) if lgm ref date < valuation ref date, using 4.4b */
 
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
