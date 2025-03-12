@@ -208,8 +208,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
 
         RandomVariable theta = min(RandomVariable(n_, 0.0), S / Sabs);
         RandomVariable lambda = RandomVariable(n_, 5.634896601) * (RandomVariable(n_, 1.0) + theta) - theta;
-        curvatureMarginIr =
-            max(RandomVariable(n_, 0.0), S + lambda * sqrt(vegaMarginIr)) * RandomVariable(n_, irCurvatureScaling_);
+        curvatureMarginIr = max(RandomVariable(n_, 0.0), S + lambda * sqrt(curvatureMarginIr)) *
+                            RandomVariable(n_, irCurvatureScaling_);
     }
 
     // SIMM_IR
@@ -304,7 +304,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
 
         RandomVariable theta = min(RandomVariable(n_, 0.0), S / Sabs);
         RandomVariable lambda = RandomVariable(n_, 5.634896601) * (RandomVariable(n_, 1.0) + theta) - theta;
-        curvatureMarginFx = max(RandomVariable(n_, 0.0), S + lambda * sqrt(vegaMarginIr));
+        curvatureMarginFx = max(RandomVariable(n_, 0.0), S + lambda * sqrt(curvatureMarginFx));
     }
 
     // SIMM_FX
