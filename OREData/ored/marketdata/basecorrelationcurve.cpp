@@ -482,13 +482,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             if(!config.useAssumedRecovery()){                
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
             } else {
-                
                 auto assumedRecovery = std::inner_product(rrGrid.begin(), rrGrid.end(), rrProb.begin(), 0.0);
                 DLOG("Assumed recovery rate for " << name << " is " << assumedRecovery);
                 auto specificCurveName = indexTrancheSpecificCreditCurveName(name, assumedRecovery);
                 DLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery << " is " << specificCurveName);
                 auto mappedName = creditCurveNameMapping(specificCurveName);
-                auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+                creditCurve = getDefaultProbCurveAndRecovery(mappedName);
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << specificCurveName);
             } 
             if (rrGrid.empty() || rrProb.empty()) {
