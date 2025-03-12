@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <orea/simm/simmconfiguration.hpp>
+
 #include <qle/math/randomvariable.hpp>
 
 #include <ql/math/matrix.hpp>
