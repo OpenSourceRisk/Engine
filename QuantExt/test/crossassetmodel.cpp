@@ -2093,10 +2093,10 @@ struct IrFxInfCrComModelTestData {
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
         BOOST_TEST_MESSAGE("creating CAM with exact discretization");
-        modelExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::Spectral,
+        modelExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
         BOOST_TEST_MESSAGE("creating CAM with Euler discretization");
-        modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::Spectral,
+        modelEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
                                                          IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
         BOOST_TEST_MESSAGE("test date done");
     }
@@ -2185,8 +2185,8 @@ struct IrFxInfCrComModelTestData {
                 { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0 }, // INF_EUR
                 { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0 }, // INF_GBP
                 { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0, 0.0, 0.0 }, // CR
-                { 0.1, 0.5, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }, // COM1
-                { 0.1, 0.5, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0 }  // COM2
+                { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.0 }, // COM1
+                { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 1.0 }  // COM2
             };
         } else if (!infEurIsDK && infGbpIsDK) {
             tmp = {
@@ -2199,8 +2199,8 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
                 {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 1.000, 0.000, 0.000}, // CR
-                {0.100, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.200, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         } else if (infEurIsDK && !infGbpIsDK) {
             tmp = {
@@ -2213,8 +2213,8 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.400, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
-                {0.100, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.200, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         } else {
             tmp = {
@@ -2228,8 +2228,8 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
-                {0.100, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.200, 0.500, 0.000, 0.100, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         }
 
@@ -2299,7 +2299,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("get Euler state process");
     QuantLib::ext::shared_ptr<StochasticProcess> process2 = d.modelEuler->stateProcess();
 
-    Size n = 10000;                         // number of paths
+    Size n = 5000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity

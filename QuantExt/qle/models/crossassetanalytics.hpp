@@ -792,6 +792,36 @@ struct rxc {
     const Size i_, j_;
 };
 
+/*! INF-COM correlation component */
+struct ryc {
+    ryc(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
+
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::COM, j_, iOffset_, 0);
+    }
+
+    const Size i_, j_;
+    QuantLib::Size iOffset_;
+};
+
+/*! EQ-COM correlation component, single-factor case */
+struct rsc {
+    rsc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::EQ, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
+/*! CR-COM correlation component */
+struct rlc {
+    rlc(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    }
+    const Size i_, j_;
+};
+
 /*! H(t+T)-H(t) component (needed for analytical covariances of zero rates) */
 struct HTtz {
     HTtz(const Size i, const Real T) : i_(i), T_(T) {}
