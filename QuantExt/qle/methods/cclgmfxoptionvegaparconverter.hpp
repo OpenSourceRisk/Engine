@@ -37,12 +37,15 @@ public:
     const Matrix& dpardzero() const;
     const Matrix& dzerodpar() const;
 
+    const std::vector<Real>& baseImpliedVols() const;
+
 private:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     Size foreignCurrency_ = 0;
     std::vector<QuantLib::Period> optionTerms_;
 
     std::vector<Real> optionTimes_;
+    std::vector<Real> baseImpliedVols_;
     Matrix dpardzero_;
     Matrix dzerodpar_;
 };

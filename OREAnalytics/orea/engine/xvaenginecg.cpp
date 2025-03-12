@@ -1076,6 +1076,11 @@ void XvaEngineCG::calculateDynamicDelta() {
                     conditionalIrVega[ccy][b] +=
                         RandomVariable(model_->size(), irVegaConverter[ccy].dzerodpar()(z, b) * 1E-4) * tmpIrVega[z];
                 }
+
+                // multiply with atm vol for further processing in dynamic im model
+
+                conditionalIrVega[ccy][b] *=
+                    RandomVariable(model_->size(), 1E4 * irVegaConverter[ccy].baseImpliedVols()[b]);
             }
 
             if (ccy > 0) {
@@ -1099,6 +1104,11 @@ void XvaEngineCG::calculateDynamicDelta() {
                             RandomVariable(model_->size(), fxVegaConverter[ccy - 1].dzerodpar()(z, b) * 1E-2) *
                             tmpFxVega[z];
                     }
+
+                    // multiply with atm vol for further processing in dynamic im model
+
+                    conditionalFxVega[ccy - 1][b] *=
+                        RandomVariable(model_->size(), 1E2 * fxVegaConverter[ccy - 1].baseImpliedVols()[b]);
                 }
 
             }
