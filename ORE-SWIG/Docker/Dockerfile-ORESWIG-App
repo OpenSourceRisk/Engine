@@ -34,7 +34,7 @@ RUN mkdir /oreswig/tests
 
 COPY ore/ORE-SWIG/QuantLib-SWIG/Python/test /oreswig/tests/QuantLibTestSuite
 # Delete the init.py otherwise nosetest will not pick up all the tests
-RUN rm ore/ORE-SWIG/tests/QuantLibTestSuite/__init__.py
+RUN rm oreswig/tests/QuantLibTestSuite/__init__.py
 COPY ore/ORE-SWIG/OREAnalytics-SWIG/Python/test /oreswig/tests/ORETestSuite
 COPY ore/ORE-SWIG/OREAnalytics-SWIG/Python/Examples /oreswig/example_scripts
 # due to relative path imports in the notebooks, we need to copy utilities.py directly into the example folder
