@@ -853,7 +853,7 @@ void XvaEngineCG::calculateDynamicDelta() {
     // init result container
 
     std::set<std::string> nettingSetIds;
-    for(auto const& [id, t]: portfolio_->trades())
+    for (auto const& [id, t] : portfolio_->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
 
     QL_REQUIRE(nettingSetIds.size() == 1,
@@ -866,11 +866,14 @@ void XvaEngineCG::calculateDynamicDelta() {
 
     // set up ir and fx vega conversion matrices
 
-    const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years, 5 * Years, 10 * Years, 20 * Years};
+    const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
+                                                    5 * Years,  10 * Years, 20 * Years};
     const std::vector<QuantLib::Period> irVegaUnderlyingTerms{30 * Years, 30 * Years, 29 * Years,
                                                               25 * Years, 20 * Years, 10 * Years};
 
-    const std::vector<QuantLib::Period> fxVegaTerms{10 * Years};
+    const std::vector<QuantLib::Period> fxVegaTerms{1 * Months, 6 * Months, 1 * Years,
+                                                    5 * Years,  10 * Years, 20 * Years};
+    // const std::vector<QuantLib::Period> fxVegaTerms{10 * Years};
 
     std::vector<LgmSwaptionVegaParConverter> irVegaConverter(model_->currencies().size());
     std::vector<CcLgmFxOptionVegaParConverter> fxVegaConverter(model_->currencies().size() - 1);
@@ -1110,7 +1113,6 @@ void XvaEngineCG::calculateDynamicDelta() {
                     conditionalFxVega[ccy - 1][b] *=
                         RandomVariable(model_->size(), 1E2 * fxVegaConverter[ccy - 1].baseImpliedVols()[b]);
                 }
-
             }
 
             // debug conditional ir delta vs. model state on time step 20
@@ -1388,9 +1390,9 @@ void XvaEngineCG::outputTimings() {
                                                    << " ms");
     LOG("XvaEngineCG: Populate ASD             : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Populate NPV Outcube     : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
-                                                 << " ms");
+                                                   << " ms");
     LOG("XvaEngineCG: Populate IM Outcube      : " << std::fixed << std::setprecision(1) << timing_imcube_ / 1E6
-                                                 << " ms");
+                                                   << " ms");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing_total_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: all done.");
@@ -1489,7 +1491,8 @@ void XvaEngineCG::setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytic
     npvOutputCube_ = npvOutputCube;
 }
 
-void XvaEngineCG::setDynamicIMOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube) {
+void XvaEngineCG::setDynamicIMOutputCube(
+    const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube) {
     dynamicIMOutputCube_ = dynamicIMOutputCube;
 }
 
