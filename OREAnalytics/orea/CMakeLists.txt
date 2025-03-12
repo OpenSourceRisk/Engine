@@ -55,7 +55,6 @@ app/oreapp.cpp
 app/parameters.cpp
 app/portfolioanalyser.cpp
 app/reportwriter.cpp
-app/sensitivityrunner.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
@@ -246,7 +245,6 @@ app/oreapp.hpp
 app/parameters.hpp
 app/portfolioanalyser.hpp
 app/reportwriter.hpp
-app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/zerosensitivityloader.hpp

@@ -25,6 +25,7 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/ad/computationgraph.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
@@ -41,16 +42,88 @@ namespace ore {
 namespace data {
 
 using QuantLib::Date;
-using QuantLib::Real;
 using QuantLib::Integer;
 using QuantLib::Natural;
+using QuantLib::Real;
 using QuantLib::Size;
 
 class ModelCG : public QuantLib::LazyObject {
 public:
     enum class Type { MC, FD };
 
-    explicit ModelCG(const QuantLib::Size n);
+    class ModelParameter {
+    public:
+        enum class Type {
+            none,                    // type not set (= model param is not initialized)
+            fix,                     // fixing, historical (non-derived param) or projected (derived)
+            dsc,                     // T0 ir discount
+            fwdCompAvg,              // T0 compounded / avg ir rate (only bs)
+            div,                     // T0 div yield dsc factor (only bs)
+            rfr,                     // T0 rfr       dsc factor (only gs)
+            defaultProb,             // T0 default prob
+            lgm_H,                   // lgm1f parameters (only gcam)
+            lgm_Hprime,              // ...
+            lgm_zeta,                // ...
+            fxbs_sigma,              // fxbs vol parameter (only gcam)
+            logX0,                   // stoch process log initial value
+            logFxSpot,               // log fx spot (initial value from T0)
+            sqrtCorr,                // model sqrt correlation
+            sqrtCov,                 // model sqrt covariance
+            corr,                    // model correlation
+            cov,                     // model cov
+            cam_corrzz,              // gcam ir-ir corr
+            cam_corrzx,              // gcam ir-fx corr
+            // types that are only used to cache calculated nodes
+            lgm_numeraire,           // lgm1f parameters (only gcam)
+            lgm_discountBond,        // 
+            lgm_reducedDiscountBond, // 
+            interpolated_undpath,    // interpolated underlying path value (only gcam)
+            interpolated_irstate     // interpolated ir state value (only gcam)
+        };
+
+        ~ModelParameter() = default;
+        ModelParameter() = default;
+        ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2 = {},
+                       const QuantLib::Date& date = {}, const QuantLib::Date& date2 = {},
+                       const QuantLib::Date& date3 = {}, const std::size_t index = 0, const std::size_t index2 = 0);
+        ModelParameter(const ModelParameter& p) = default;
+        ModelParameter(ModelParameter&& p) = default;
+        ModelParameter& operator=(ModelParameter&& p) = default;
+
+        friend bool operator==(const ModelParameter& x, const ModelParameter& y);
+        friend bool operator<(const ModelParameter& x, const ModelParameter& y);
+
+        Type type() const { return type_; }
+        const std::string& qualifier() const { return qualifier_; }
+        const std::string& qualifier2() const { return qualifier2_; }
+        const QuantLib::Date& date() const { return date_; }
+        const QuantLib::Date& date2() const { return date2_; }
+        const QuantLib::Date& date3() const { return date2_; }
+        std::size_t index() const { return index_; }
+        std::size_t index2() const { return index2_; }
+        double eval() const { return functor_ ? functor_() : 0.0; }
+        std::size_t node() const { return node_; }
+
+        void setFunctor(const std::function<double(void)>& f) const { functor_ = f; }
+        void setNode(const std::size_t node) const { node_ = node; }
+
+    private:
+        // key, diferent types use a different subset of fields
+        Type type_ = Type::none;
+        std::string qualifier_;
+        std::string qualifier2_;
+        QuantLib::Date date_;
+        QuantLib::Date date2_;
+        QuantLib::Date date3_;
+        std::size_t index_;
+        std::size_t index2_;
+        // functor, only filled for primary model parameters, not cached parameters
+        mutable std::function<double(void)> functor_;
+        // node in cg, this is filled for primary model parameters and cached parameters
+        mutable std::size_t node_ = QuantExt::ComputationGraph::nan;
+    };
+
+    ModelCG(const QuantLib::Size n);
     virtual ~ModelCG() {}
 
     // computation graph
@@ -75,8 +148,14 @@ public:
     // the eval date
     virtual const Date& referenceDate() const = 0;
 
+    // the (actual) time from reference measured in the model
+    virtual Real actualTimeFromReference(const Date& d) const = 0;
+
     // the base ccy of the model
     virtual const std::string& baseCcy() const = 0;
+
+    // the list of supported model currencies
+    virtual const std::vector<std::string>& currencies() const = 0;
 
     // time between two dates d1 <= d2, default actact should be overriden in derived claases if appropriate
     virtual std::size_t dt(const Date& d1, const Date& d2) const;
@@ -142,8 +221,6 @@ public:
     // CG / AD part of the interface
     virtual std::size_t cgVersion() const = 0;
     virtual const std::vector<std::vector<std::size_t>>& randomVariates() const = 0; // dim / steps
-    virtual std::vector<std::pair<std::size_t, double>> modelParameters() const = 0;
-    virtual std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const = 0;
 
     // get fx spot as of today directly, i.e. bypassing the cg
     virtual Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const = 0;
@@ -154,6 +231,19 @@ public:
     // calculate the model
     void calculate() const override { LazyObject::calculate(); }
 
+    // get model parameters
+    std::set<ModelCG::ModelParameter>& modelParameters() const { return modelParameters_; };
+
+    // get cached parameters
+    std::set<ModelCG::ModelParameter>& cachedParameters() const { return cachedParameters_; };
+
+    // add a model parameer if not yet present, return node in any case
+    std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
+
+    // linear interpolation helper method, d must not lie outside knownDates
+    std::tuple<QuantLib::Date, QuantLib::Date, std::size_t, std::size_t>
+    getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& knownDates) const;
+
 protected:
     // map with additional results provided by this model instance
     mutable std::map<std::string, boost::any> additionalResults_;
@@ -161,12 +251,27 @@ protected:
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
 
+    // container holding model parameters and cached parameters
+    mutable std::set<ModelCG::ModelParameter> modelParameters_;
+    mutable std::set<ModelCG::ModelParameter> cachedParameters_;
+
 private:
     void performCalculations() const override {}
 
     // size of random variables within model
     const QuantLib::Size n_;
 };
+
+// standalone version of ModelCG::addModelParameters()
+std::size_t addModelParameter(QuantExt::ComputationGraph& g, std::set<ModelCG::ModelParameter>& modelParameters,
+                              const ModelCG::ModelParameter& p, const std::function<double(void)>& f);
+
+bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
+bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y);
+
+// output model parameter
+std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t);
+std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter& p);
 
 } // namespace data
 } // namespace ore

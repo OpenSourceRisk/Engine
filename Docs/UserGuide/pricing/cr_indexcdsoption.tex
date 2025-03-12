@@ -40,6 +40,12 @@ We distinguish two discount curves:
   curve as $P_{OIS,t}(0,t)$
 \end{itemize}
 
+Furthermore we introduce the notation $P_{*}(0,t)$ as follows:
+
+\begin{itemize}
+\item $P_{*}(0,t) := P_{OIS}(0,t)$, i.e. using the swap currency OIS curve, if the option trade is cash settled
+\item $P_{*}(0,t) := P_{OIS,t}(0,t)$, i.e. using the trade collateral OIS curve, if the option trade is physically settled
+\end{itemize}
 
 \underline{C. Calculation of the Front-End Protection Value FEP}
 
@@ -89,18 +95,17 @@ K_P = 1 - \frac{N_{td}}{N_{vd}} \left( 1 - K \right)
 since the contractual strike amount is expressed w.r.t. the trade date notional by market convention, which can be
 higher than the notional at valuation date.
 
-If the strike is given as a spread, the first step is to convert the spread strike $K_s$ to a price strike $K_p$ as
+If the strike is given as a spread, the first step is to convert the spread strike $K_s$ to a price strike $K_P$ as
 follows:
 
 \begin{equation}
-K_P = 1 + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)}{P_{OIS}(0,t_e)} (c - K_s)
+K_P = 1 + \frac{N_{td}}{N_{vd}} \cdot RA(K_s) \cdot (c - K_s)
 \end{equation}
 
 where
 
 \begin{itemize}
 \item $RA(K_s)$ is the risky strike annuity (see below)
-\item $P_{OIS}(0,t_e)$ is the discount factor for the option expiry $t_e$ computed on the swap currency OIS curve
 \item $c$ is the coupon rate of the CDS
 \end{itemize}
 
@@ -110,7 +115,7 @@ strike annuity on the notional at trade date.
 The risky strike annuity $RA(K_s)$ is calculated as follows:
 
 \begin{equation}\label{pricing:cr_indexcdsoption_strike_annuity}
-RA(K_s) = \frac{\text{NPV}_{K,cpn} + Acc_{cpn}}{N_{vd} \cdot c \cdot S(t_e)}
+RA(K_s) = \frac{\text{NPV}_{K,cpn} + Acc_{cpn}}{N_{vd} \cdot c \cdot S_K(t_e) \cdot P_{OIS}(0,t_e)}
 \end{equation}
 
 where
@@ -123,7 +128,7 @@ the actual calculation.}
   $K_S$. The NPV is calculated on a flat hazard rate curve that prices the strike CDS to zero. We use the swap currency
   OIS curve $P_{OIS}(0,t)$ for discounting.
 \item $Acc_{K,cpn}$ is the accrual rebate of the strike CDS
-\item $S(t_e)$ is the survival probability until option expiry $t_e$ computed on the flat hazard rate curve that prices
+\item $S_K(t_e)$ is the survival probability until option expiry $t_e$ computed on the flat hazard rate curve that prices
   the strike CDS to zero
 \end{itemize}
 
@@ -133,14 +138,7 @@ The FEP-adjusted forward price is calculated as
 F_p = \frac{1 - \text{NPV}}{N_{vd} \cdot P_{*}(0,t_e)} - \frac{\text{FEP}}{N_{vd} \cdot P_{OIS,t}(0,t_e)}
 \end{equation}
 
-where NPV is the value of the underlying swap. The NPV of the underlying swap is calculated
-
-\begin{itemize}
-\item using the swap currency OIS curve $P_{*}(0,t) := P_{OIS}(0,t)$ if the option trade is cash settled
-\item using the trade collateral OIS curve $P_{*}(0,t) := P_{OIS,t}(0,t)$ if the option trade is physically settled
-\end{itemize}
-
-for discounting and
+where NPV is the value of the underlying swap. We use
 
 \begin{itemize}
 \item constituent curves and recovery rates (Curve = Underlying in the pricing engine config) or
@@ -150,15 +148,13 @@ for discounting and
 as default curves / recovery rates. The Index CDS option price is now calculated as
 
 \begin{equation}
-\text{NPV}_{opt} = N_{vd} \cdot P_{OIS,t} \cdot \text{Black} \left( K_P, F_p, \sigma\sqrt{t_e}, \omega \right)
+\text{NPV}_{opt} = N_{vd} \cdot P_{OIS,t}(0, t_e) \cdot \text{Black} \left( K_P, F_p, \sigma\sqrt{t_e}, \omega \right)
 \end{equation}
 
 where
 
 \begin{itemize}
-\item $P_{OIS,t}(0, t_e)$ is the discount factor for the option expiry $t_e$ computed on the trade collateral discount
-  curve
-\item $\sigma$ is the market volatility for expiry $t_e$ and strike $K_p$
+\item $\sigma$ is the market volatility for expiry $t_e$ and strike $K_P$
 \item $\omega$ is $1$ for a call, $-1$ for a put
 \end{itemize}
 
@@ -171,7 +167,7 @@ If the input volatility is a spread-volatility the pricing proceeds depending on
 The risky annuity $RA$ is given by
 
 \begin{equation}\label{pricing:cr_indexcdsoption_risky_annuity}
-RA = \frac{\text{NPV}_{cpn} + Acc_{cpn}}{N_{vd} \cdot c}
+RA = \frac{\text{NPV}_{cpn} + Acc_{cpn}}{N_{vd} \cdot c \cdot P_{*}(0, t_e) \cdot S(t_e)}
 \end{equation}
 
 where
@@ -182,20 +178,22 @@ where
   configuration. The discounting curve is the trade collateral curve for physically settled options resp. the swap
   currency OIS curve for cash settled options.
 \item $Acc_{cpn}$ is the accrual rebate of the CDS
+\item $S(t_e)$ is the survival probability until option expiry $t_e$
 \end{itemize}
 
-The FEP-adjusted forward spread is calculated as
+The FEP-adjusted forward spread is approximated as a deterministic value
 
-\begin{equation}
-F_p = F + \frac{\text{FEP}P_{*}(0,t_e)}{RA \cdot N_{vd} \cdot P_{OIS,t}(0,t_e)}
+\begin{equation}\label{pricing:cr_indexcdsoption_Sp}
+S_p = S + \frac{\text{FEP}}{S(t_e) \cdot RA \cdot N_{vd} \cdot P_{OIS,t}(0,t_e)}
 \end{equation}
 
-where $F$ is the fair spread of the underlying index CDS and $P_{*}(0,t_e)$ is the swap currency OIS curve for cash
-settled options resp. the trade collateral curve for physically settled options. The adjusted strike spread $K_s'$ is
-calculated as
+where $S$ is the fair spread of the underlying index CDS. Note that the numerical integration engine models $S_p$ as a
+stochastic quantity on the other hand, see \ref{pricing:cr_indexcdsoption_Sp2}. The adjusted strike spread $K_s'$
+is calculated as
+
 
 \begin{equation}
-K_s' = c + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)P_{*}(0,t_e)}{RA\cdot P_{OIS}(0,t_e)} \left( K_s - c \right)
+K_s' = c + \frac{N_{td}}{N_{vd}}\frac{RA(K_s)}{S(t_e) \cdot RA} \left( K_s - c \right)
 \end{equation}
 
 where
@@ -212,8 +210,7 @@ calculated using the risky strike annuity on the notional at trade date rather t
 Finally, the option price is calculated using the Black formula
 
 \begin{equation}
-  \text{NPV}_{opt} = \frac{P_{OIS,t}(0,t_e)}{P_{*}(0,t_e)}
-                    RA\cdot N_{vd} \cdot \text{Black} \left( K_s', F_p, \sigma\sqrt{t_e}, \omega \right)
+  \text{NPV}_{opt} = P_{OIS,t}(0,t_e) \cdot S(t_e) \cdot  RA \cdot N_{vd} \cdot \text{Black} \left( K_s', F_p, \sigma\sqrt{t_e}, \omega \right)
 \end{equation}
 
 with a call (protection buyer) / put (protection seller) indicator $\omega = 1, -1$ and a volatility $\sigma$
@@ -230,7 +227,8 @@ We list two shortcomings of the Black engine compared to the numerical integrati
 
 \underline{E.2. Numerical Integration}
 
-The first step is to compute the strike adjustment payment $K^*$. In case the trade strike is given as a price strike $K_P$ this is
+The first step is to compute the strike adjustment payment $K^*$. In case the trade strike is given as a price strike
+$K_P$ this is
 
 \begin{equation}
 K^* = \frac{N_{td}}{N_{vd}}(K_P - 1)
@@ -239,7 +237,7 @@ K^* = \frac{N_{td}}{N_{vd}}(K_P - 1)
 and if the trade strike is given as a spread strike $K_s$ this is
 
 \begin{equation}
-K^* = \frac{N_{td}}{N_{vd}} \frac{RA(K_s)}{P_{OIS}(0,t_e)} \cdot ( c - K_s )
+K^* = \frac{N_{td}}{N_{vd}} \cdot RA(K_s) \cdot ( c - K_s )
 \end{equation}
 
 where $RA(K_s)$ is the risky strike annuity, see \ref{pricing:cr_indexcdsoption_strike_annuity}. As before the factor
@@ -250,42 +248,45 @@ To get the spread strike $K_s$ {\em adjusted for defaults between trade date and
 finder to solve
 
 \begin{equation}
-\frac{RA(K_s)}{P_{OIS}(0,t_e)} (c - K_s) = K^*
+RA(K_s) \cdot (c - K_s) = K^*
 \end{equation}
 
 for $K_s$. Notice that we can skip the numerical root finding if the trade strike is given as a spread strike {\em and}
 $N_{td} = N_{vd}$ (in which case $K_s$ is simply the trade strike).
 
-The FEP-adjusted forward price $F_p$ is calculated as in \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}. The FEP
-adjusted index value $V_c$ is given as
+The FEP-adjusted forward price $F_p$ is calculated as in \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}.  The FEP
+adjusted forward spread $S_p$ modeled as a lognormal variable
 
-\begin{equation}
-V_c = (S-c)\cdot a
+\begin{equation}\label{pricing:cr_indexcdsoption_Sp2}
+S_p(x) = m e^{-\frac{1}{2} \sigma^2 t_e + x \sigma \sqrt{t_e}}
 \end{equation}
 
-Here we approximate the true risky annuity by a continuous risky annuity $a$ for performance reasons. The continuous
-risky annuity is defined as
+where $\sigma$ is the pricing volatility for strike $K_s$ and $x \sim N(0,1)$ and $m$ is a free parameter which will be
+calibrated in a moment. Compare \ref{pricing:cr_indexcdsoption_Sp2} to the Black pricing
+approach \ref{pricing:cr_indexcdsoption_Sp} where we approximated $S_p$ by a deterministic value.
+
+The FEP adjusted index value $V_c(S_p)$ as a function of the FEP-adjusted forward spread $S_p$ is then given as
 
 \begin{equation}
-a = e^{-\int_{t_e}^{t_m} (r + \lambda) ds}
+V_c = (S_p - c)\cdot a
+\end{equation}
+
+We approximate the true risky annuity by a continuous risky annuity $a$ to speed up calculations. The continuous risky
+annuity is defined as
+
+\begin{equation}
+a = \int_{t_e}^{t_m} e^{-\int_{t_e}^u (r + \lambda) ds} du
 \end{equation}
 
 with interest rate $r$ and instantaneous hazard rate $\lambda$. We set $r$ to the average interest rate over the time
-interval $[t_e, t_m]$ and appxoimate $\lambda$ by the usual ``credit triangle'' $S/(1-R)$ where $R$ is the index
-recovery rate (used to bootstrap the index CDS curve). This yields
+interval $[t_e, t_m]$ from option expiry to underlying maturity and appxoimate $\lambda$ by the usual ``credit
+triangle'' $S/(1-R)$ where $R$ is the index recovery rate (used to bootstrap the index CDS curve). This yields
 
 \begin{eqnarray}
 r_A &=& \frac{\ln \left( \frac{P_{*}(0,t_m)}{P_{*}(t_e)} \right)}{t_e-t_m} \\
 w &=& \left(\frac{S}{1-R} + r \right) \cdot (t_m-t_e) \\
 a &=& \left(t_m-t_e\right) \frac{1 - e^{-w}}{w}
 \end{eqnarray}
-
-As above, the discounting curve to compute $P_{*}$ is set to
-
-\begin{itemize}
-\item the swap currency OIS curve $P_{*}(0,t) := P_{OIS}(0,t)$ if the option trade is cash settled
-\item the trade collateral OIS curve $P_{*}(0,t) := P_{OIS,t}(0,t)$ if the option trade is physically settled
-\end{itemize}
 
 For small $w$, $|w| < 10^{-6}$ we use an expansion to compute $a$ to avoid numerical problems due to $a$ being close to
 $0/0$:
@@ -294,14 +295,8 @@ $0/0$:
 a = (t_m-t_e) \left(1 - \frac{1}{2}w+\frac{1}{6}w^2-\frac{1}{24}w^3\right)
 \end{eqnarray}
 
-The FEP adjusted forward spread $S$ modeled as a lognormal variable
-
-\begin{equation}
-S(x) = m e^{-\frac{1}{2} \sigma^2 t_e + x \sigma \sqrt{t}}
-\end{equation}
-
-where $\sigma$ is the pricing volatility for strike $K_s$ and $x \sim N(0,1)$ and $m$ is a free parameter that we
-calibrate to $F_p$ (see \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}) by solving
+The free parameter $m$ from \ref{pricing:cr_indexcdsoption_Sp2} is calibrated to $F_p$
+(see \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}) by solving
 
 \begin{equation}
 \int_{-\infty}^{\infty} V_c(x,m) \, \phi(x) \, dx = 1 - F_p

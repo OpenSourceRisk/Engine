@@ -72,18 +72,19 @@ void Portfolio::fromXML(XMLNode* node) {
             StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()).log();
         }
 
-        // If trade loading failed, then insert a dummy trade with same id and envelope
+        // If trade loading failed, then insert a dummy trade with same id, envelope and trade actions
         if (failedToLoad && buildFailedTrades_) {
             try {
                 trade = TradeFactory::instance().build("Failed");
-                // this loads only type, id and envelope, but type will be set to the original trade's type
+                // this loads only type, id, envelope and trade actions, but type will be set to the original trade's type
                 trade->fromXML(nodes[i]);
                 // create a dummy trade of type "Dummy"
                 QuantLib::ext::shared_ptr<FailedTrade> failedTrade = QuantLib::ext::make_shared<FailedTrade>();
-                // copy id and envelope
+                // copy id, envelope and trade actions
                 failedTrade->id() = id;
                 failedTrade->setUnderlyingTradeType(tradeType);
                 failedTrade->setEnvelope(trade->envelope());
+                failedTrade->tradeActions() = trade->tradeActions();
                 // and add it to the portfolio
                 add(failedTrade);
                 WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
@@ -162,7 +163,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
                       << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
                       << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
     }
-    if (initialSize == failedTrades && initialSize > 0) {
+    if (emitStructuredError && initialSize == failedTrades && initialSize > 0) {
         map<string, string> subfields;
         for (auto failedTrade : trades_) {
             subfields.insert({"tradeId", failedTrade.first});

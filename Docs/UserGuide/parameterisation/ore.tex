@@ -64,7 +64,7 @@ The logMask allows filtering subsets of these categories and controlling the ver
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
 them with pricing engines as specified in {\tt pricingengine.xml}. The counterpaty information in {\tt counterparty.xml} covers
-minimal counterarty-level information needed in a few capital analytics as shown in example section \ref{example:68}.
+minimal counterarty-level information needed in a few capital analytics as shown in example sections \ref{example:marketrisk} and {\ref{example:creditrisk}.
 When parameter {\tt implyTodaysFixings} is set to Y,
 today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as
 e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
@@ -651,8 +651,7 @@ Finally, the {\tt parStressConversion} analytic carves out the generation of a s
 \label{lst:ore_parstressconversion}
 \end{listing}
 
-See the examples in sections \ref{ex:sensitivity_stress}, \ref{example:40}, \ref{example:50} and
-\ref{example:63} for demonstrations of these analytics.
+See the examples in sections \ref{example:marketrisk} for a demonstrations of these analytics.
 
 \subsubsection{Value at Risk}
 
@@ -699,7 +698,7 @@ The parameters have the following interpretation:
 \item {\tt outputFile:} Output file name
 \end{itemize}
 
-See the example in section \ref{ex:sensitivity_stress} for a demonstration.
+See the example in section \ref{example:marketrisk_parametricvar} for a demonstration.
 
 \subsubsection{P\&L, P\&L Explain, ZeroToParShift, Scenario}
 
@@ -773,7 +772,7 @@ The additonal parameters in Listing \ref{lst:ore_pnlexplain} have the following 
 \item {\tt parSensitivity}: Boolean to specify whether par sesnitivities should be used in the P\&L explanation; ``raw'' sensitivities will be used by default.
 \end{itemize}
 
-See the example in section \ref{example:62} for a demonstration of the P\&L and P\&L Explain analytics.
+See the example in section \ref{example:marketrisk_pnl} for a demonstration of the P\&L and P\&L Explain analytics.
 
 \medskip
 The {\tt pnlExplain} analytic above - when based on par sensitivities - needs market {\em par rate}
@@ -801,7 +800,7 @@ in Listing \ref{lst:ore_zerotoparshift} can be used for that purpose.
 \label{lst:ore_zerotoparshift}
 \end{listing}
 
-See the example in section \ref{example:69} for a demonstration.
+See the example in section \ref{example:marketrisk_zerotoparshift} for a demonstration.
 
 \medskip
 
@@ -824,7 +823,7 @@ n Listing \ref{lst:ore_scenario}.
 \label{lst:ore_scenario}
 \end{listing}
 
-See the example in section \ref{example:57}.
+See the example in section \ref{example:marketrisk_basescenario}.
 
 \subsubsection{Initial Margin: ISDA SIMM and IM Schedule}
 
@@ -871,7 +870,7 @@ The parameters in Listing \ref{lst:ore_simm} have the following interpretation:
 \item {\tt simmCalibration} [Optional]: SIMM model calibration (in a nutshell: risk weights and correlations) passed as a file; if provided, it overrides the version code above
 \end{itemize}
 
-See the example in section \ref{example:44}.
+See the example in section \ref{example:initialmargin}.
 
 \medskip
 The {\tt imschedule} analytic computes the basic Initial Margin calculation using the ``IM Schedule''
@@ -907,7 +906,7 @@ Note that the product class has to be in
 \end{itemize}
 in contrast to SIMM where we use the combined RatesFX product class.
 
-This analytic is also demonstrated and discussed in section \ref{example:44}.
+This analytic is also demonstrated and discussed in section \ref{example:initialmargin}.
 
 \subsubsection{XVA Stress Testing}
 
@@ -959,7 +958,7 @@ and activate the swaption volatility simulation for the stress test run.
 There is no dedicated parametrisations for the xva and exposure settings for the stress test, ORE reuses the existing
 ones for the regular exposure and xva analytics. But the xva and exposure analytic themselves can be deactivated.
 
-For an example see \ref{example:67}.
+For an example see \ref{example:xvarisk_stress}.
 
 \subsubsection{XVA Sensitivity}
 
@@ -1002,7 +1001,7 @@ scenarios  and activate the swaption volatility simulation for the stress test r
 As in the XVA Stress analytic, there is no dedicated parametrisation for the xva and exposure settings for the
 XVA Sensitivity Analytic, ORE reuses the existing ones for the regular exposure and xva analytics.
 
-For an example see \ref{example:68}.
+For an example see \ref{example:xvarisk_sensi}.
 
 \subsubsection{XVA Explain}
 
@@ -1064,7 +1063,7 @@ for building the curves or uses only the swaption ATM vols if the volatilites ar
 the effects, it is recommended to activate {\\t UseSpreadedTermStructures} in the stress tests scenarios 
 and activate the swaption volatility simulation for the stress test run (see also \cite{methods}).
 
-For an example see \ref{example:70}.
+For an example see \ref{example:xvarisk_pnl}.
 
 \begin{table}
   \scriptsize
@@ -1104,6 +1103,8 @@ addition to the setup section is a {\tt csaFile} (as in XVA analytics) and a {\t
 \caption{ORE analytic: SA-CCR}
 \label{lst:ore_saccr}
 \end{listing}
+
+For an example see \ref{example:creditrisk_saccr}.
 
 \subsubsection{CVA Capital: SA-CVA and BA-CVA}
 
@@ -1169,4 +1170,6 @@ see \ref{lst:ore_smrc}.
 \caption{ORE analytic: SMRC}
 \label{lst:ore_smrc}
 \end{listing}
+
+For an example see \ref{example:xvarisk_capital}.
 

@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="BondFuturesTRS">
+        <TradeType>TotalReturnSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <TotalReturnSwapData>
+            <UnderlyingData>
+                <Trade>
+                    <TradeType>ForwardBond</TradeType>
+                    <ForwardBondData>
+                        <BondData>
+                            <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
+                            <BondNotional>10000000.00</BondNotional>
+                        </BondData>
+                        <SettlementData>
+                            <ForwardMaturityDate>2025-08-22</ForwardMaturityDate>
+                            <Amount>10000000.00</Amount>
+                            <SettlementDirty>true</SettlementDirty>
+                        </SettlementData>
+                        <LongInForward>true</LongInForward>
+                    </ForwardBondData>
+                </Trade>
+            </UnderlyingData>
+            <!-- the return leg definition -->
+            <ReturnData>
+                <Payer>false</Payer>
+                <!-- the currency defining the trade ccy -->
+                <Currency>EUR</Currency>
+                <!-- reference schedule definition -->
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2024-08-22</StartDate>
+                        <EndDate>2029-08-23</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <FXTerms>
+                    <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+                </FXTerms>
+            </ReturnData>
+            <!-- the funding leg definition -->
+            <FundingData>
+                <LegData>
+                    <LegType>Floating</LegType>
+                    <Payer>false</Payer>
+                    <Currency>EUR</Currency>
+                    <DayCounter>A360</DayCounter>
+                    <PaymentConvention>MF</PaymentConvention>
+                    <FloatingLegData>
+                        <Index>EUR-EURIBOR-6M</Index>
+                        <Spreads>
+                            <Spread>0.000000</Spread>
+                        </Spreads>
+                        <IsInArrears>false</IsInArrears>
+                        <FixingDays>2</FixingDays>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2024-08-22</StartDate>
+                            <EndDate>2029-08-23</EndDate>
+                            <Tenor>6M</Tenor>
+                            <Calendar>TARGET</Calendar>
+                            <Convention>MF</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </FundingData>
+        </TotalReturnSwapData>
+    </Trade>
+</Portfolio>

@@ -41,6 +41,7 @@ The barrier data element is specified as in listing \ref{lst:barrier_data}
                 <Rebate>100000</Rebate>
                 <RebateCurrency>USD</RebateCurrency>
                 <RebatePayTime>atExpiry</RebatePayTime>
+                <OverrideTriggered>true</OverrideTriggered>
             </BarrierData>
 \end{minted}
 \caption{Barrier data}
@@ -132,6 +133,10 @@ Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot
   \end{itemize}
 
   Allowable Values: \emph{atExpiry}, \emph{atHit}
+
+\item OverrideTriggered [Optional]: Specifies whether a barrier was triggered before the valuation date. If given, this overrides the automatic check using fixing data.
+
+  Allowable Values: \emph{true}, \emph{false}
 
 \end{itemize}
 

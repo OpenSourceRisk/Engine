@@ -85,6 +85,7 @@ private:
     <CreditCurveId>...</CreditCurveId>
     <ReferenceCurveId>...</ReferenceCurveId>
     <IncomCurveId>...</IncomeCurveId>
+    <PriceType>...</PriceType>
     <LegData>...</LegData>
   </BondReferenceData>
 </ReferenceDatum>
@@ -106,6 +107,7 @@ public:
         string volatilityCurveId;
 	    string priceQuoteMethod;
         string priceQuoteBaseValue;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
         std::vector<LegData> legData;
         string subType;
         void fromXML(XMLNode* node) override;

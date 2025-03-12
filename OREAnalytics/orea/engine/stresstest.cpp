@@ -104,7 +104,9 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
     engine.registerProgressIndicator(
         QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
-    engine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveSample);
+    ValuationEngine::Errors errors;
+    engine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveSample, true, nullptr, nullptr,
+                     {}, false, &errors);
 
     // write stressed npv report
 
@@ -117,12 +119,15 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         auto index = cube->idsAndIndexes().find(tradeId);
         QL_REQUIRE(index != cube->idsAndIndexes().end(), "runStressTest(): tradeId not found in cube, internal error.");
-        Real npv0 = cube->getT0(index->second, 0);
+        Real npv0 = errors.t0.find(index->second) == errors.t0.end() ? cube->getT0(index->second, 0) : Null<Real>();
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
             const string& label = scenarioGenerator->scenarios()[j]->label();
             TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
-            Real npv = cube->get(index->second, 0, j, 0);
-            Real sensi = npv - npv0;
+            Real npv =
+                npv0 != Null<Real>() && errors.samples.find(std::make_pair(index->second, j)) == errors.samples.end()
+                    ? cube->get(index->second, 0, j, 0)
+                    : Null<Real>();
+            Real sensi = npv0 == Null<Real>() || npv0 == Null<Real>() ? Null<Real>() : npv - npv0;
             if (fabs(sensi) > threshold || QuantLib::close_enough(sensi, threshold)) {
                 report->next();
                 report->add(tradeId);

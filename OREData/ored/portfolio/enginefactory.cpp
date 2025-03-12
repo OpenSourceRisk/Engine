@@ -237,12 +237,12 @@ void EngineFactory::registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilde
                                        const bool allowOverwrite) {
     if (allowOverwrite)
         legBuilders_.erase(legBuilder->legType());
-    QL_REQUIRE(legBuilders_.insert(make_pair(legBuilder->legType(), legBuilder)).second,
+    QL_REQUIRE(legBuilders_.insert(std::make_pair(legBuilder->legType(), legBuilder)).second,
                "EngineFactory duplicate leg builder for '" << legBuilder->legType()
                                                            << "' - this is an internal error.");
 }
 
-QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const string& legType) {
+QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& legType) {
     auto it = legBuilders_.find(legType);
     QL_REQUIRE(it != legBuilders_.end(), "No LegBuilder for " << legType);
     return it->second;

@@ -310,7 +310,7 @@ void SMRC::tradeDetails() {
                     const auto& l = tradeCommoditySwap->legData()[t];
                     QuantLib::ext::shared_ptr<LegAdditionalData> coml = (dynamic_pointer_cast<LegAdditionalData>(l.concreteLegData()));
                     QL_REQUIRE(coml != nullptr, "internal error: CommoditySwap Leg null pointer in SMRC aggregation");
-                    if (coml->legType() == "CommodityFloating") {
+                    if (coml->legType() == LegType::CommodityFloating) {
                         QuantLib::ext::shared_ptr<CommodityFloatingLegData> comfl = (dynamic_pointer_cast<CommodityFloatingLegData>(coml));
                         QL_REQUIRE(comfl != nullptr, "internal error: CommoditySwap FloatingLeg null pointer in SMRC aggregation");
 
@@ -434,7 +434,7 @@ void SMRC::tradeDetails() {
                 QL_REQUIRE(swap != nullptr, "internal error: Swap null pointer in SMRC aggregation");
                 const string& riskweight = std::to_string(getSwapWeight(tradeDataBase.maturityDate));
                 for (auto l : swap->legData()) {
-                    if (l.legType() == "Floating") {
+                    if (l.legType() == LegType::Floating) {
                         QuantLib::ext::shared_ptr<FloatingLegData> fl = (dynamic_pointer_cast<FloatingLegData>(l.concreteLegData()));
                         QL_REQUIRE(fl != nullptr, "internal error: Swap FloatingLeg null pointer in SMRC aggregation");
                         
@@ -462,9 +462,9 @@ void SMRC::tradeDetails() {
                 const string& longShort = OptionData.longShort();
                 for (Size t = 0; t < swaption->legData().size(); t++) {
                     const auto& l = swaption->legData()[t];
-                    if (l.legType() != "Floating") {
+                    if (l.legType() != LegType::Floating) {
                         break;
-                    } else if (l.legType() == "Floating") {
+                    } else if (l.legType() == LegType::Floating) {
                         QuantLib::ext::shared_ptr<FloatingLegData> fl = (dynamic_pointer_cast<FloatingLegData>(l.concreteLegData()));
                         QL_REQUIRE(fl != nullptr, "internal error: Swaption FloatingLeg null pointer in SMRC aggregation");
 
@@ -537,7 +537,7 @@ Real SMRC::getLegAverageNotional(const QuantLib::ext::shared_ptr<Trade>& trade, 
         // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
         // include gearings and spreads; note that the swap is in a single currency.
         const auto& commoditySwap = QuantLib::ext::dynamic_pointer_cast<ore::data::CommoditySwap>(trade);
-        if (commoditySwap->legData()[legIdx].legType() == "CommodityFloating") {
+        if (commoditySwap->legData()[legIdx].legType() == LegType::CommodityFloating) {
             Real currentPrice = Null<Real>();
             Real totalQuantity = 0.0;
             Real countTimes = 0.0;
@@ -658,7 +658,7 @@ Real SMRC::getRiskWeight(const QuantLib::ext::shared_ptr<Trade>& trade) const {
         QL_REQUIRE(swap != nullptr, "internal error: FxForward null pointer in SMRC getRiskWeight");  
         Date maturityDate = trade->maturity();
         for (auto l : swap->legData()) {
-            if (l.legType() == "Floating")
+            if (l.legType() == LegType::Floating)
                 return getSwapWeight(maturityDate);
         }
         return 0;
