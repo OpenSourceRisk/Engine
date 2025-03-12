@@ -174,7 +174,9 @@ public:
         //! Treatment of the initial difference between vm collateral balance and mtm
         //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
         //! and vice-versa for over-collateralisation in case of positive mtm
-        const bool firstMporCollateralAdjustment = false);
+        const bool firstMporCollateralAdjustment = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -183,11 +185,12 @@ public:
     const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
-    //! Return list of Trade IDs in the portfolio
+    //! Return map of Trade IDs to cube trade indices
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
-    //! Return list of netting set IDs in the portfolio
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    //! Return map netting set IDs to (net-)cube netting set indices
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
     }
@@ -399,6 +402,7 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_;
+    bool continueOnError_;
 };
 
 } // namespace analytics

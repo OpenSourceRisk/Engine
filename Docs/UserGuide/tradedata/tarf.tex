@@ -1,4 +1,43 @@
 \subsubsection{Target Redemption Forward (TaRF)}
+\label{sec:tarf}
+
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A TaRF is a sequence of (FX or Equity or Commodity) forward contracts, specified by some strike(s) $K_k$ and leverage
+factors $L_k$ applicable to ranges $[A_k, B_k]$, $k=1,\ldots,K$, for the underlying price $X_i$ at a sequence of expiry
+dates $T_i$. If a $T_i$ lies in the future, the associated fixing $X_i$ is not known at the valuation date.
+
+The trade accumulates positive profits
+
+$$
+P_i = P_{i-1} + \sum_{k=1}^K N\, L_k\, \max(X_i - K_k, 0)\, 1_{A_k < X_i \leq B_k}, \qquad i \geq 1, \qquad P_0 = 0
+$$
+
+and terminates (knocks out) under some conditions on $P_i$:
+
+There are two types of knock out
+\begin{itemize}
+\item A Continuous TaRF terminates when the profit reaches or exceeds a
+pre-determined target.
+\item A Digital TaRF terminates when the number of fixing days where the
+buyer makes a profit reaches a pre-determined target.
+\end{itemize}
+
+The payment after the knock out event can be of different types
+\begin{itemize}
+\item exact: the payment is adjusted to match the pre-determined target
+\item full: the unadjusted payment is made
+\item truncated: no payment is made
+\end{itemize}
+
+Additional features include
+\begin{itemize}
+\item European Knock Ins (EKI), where no sells or buys happen if a fixing is between the strike
+and the EKI level
+\item Pivots, where different strikes apply for different ranges of the fixing
+\end{itemize}
+
+{\bf Input}}\fi
 
 The \verb+FxTaRFData+, \verb+EquityTaRFData+, \verb+CommodityTaRFData+ is the trade data container for the FxTaRF,
 EquityTaRF, CommodityTaRF trade type, listings \ref{lst:fxtarf_data} and \ref{lst:eqtarf_data} show the structure of
@@ -197,7 +236,7 @@ For CommodityTaRFs: \lstinline!Type! is set to \emph{Commodity} and \lstinline!N
       Allowable values: Any FX, Equity or Commodity underlying as specified in \ref{ss:underlying}
     \item ScheduleData: The fixing dates schedule of the TaRF.\\
       Allowable values: See \ref{ss:schedule_data}
-    \item SettelementLag [Optional]: The settlement delay. \\
+    \item SettlementLag [Optional]: The settlement delay. \\
       Allowable values: Any period definition (e.g.\ \emph{2D}, \emph{1W}, \emph{1M}, \emph{1Y}). If omitted or left blank, defaults to \emph{0D}.
     \item SettlementCalendar [Optional]: The calendar used to compute the settlement date from the corresponding fixing date. \\
       Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. If omitted or left blank, defaults to the \emph{NullCalendar} (no holidays).
@@ -215,7 +254,7 @@ The relevant fields in the \lstinline!OptionData! node for an TaRF are:
      \emph{TargetTruncated}: no payment is made
 \end{itemize}
 
-    \item RangeBoundSet: Time-varying range-bound information. Either this node or the RangeBonds node (for time-independent range bounds) must be given. If the RangeBoundSet node is given, it must contain a number of RangeBounds nodes. Either
+    \item RangeBoundSet: Time-varying range-bound information. Either this node or the RangeBounds node (for time-independent range bounds) must be given. If the RangeBoundSet node is given, it must contain a number of RangeBounds nodes. Either
      \begin{itemize}
        \item the RangeBounds subnodes except the first one must contain an attribute startDate which indicates from
          which fixing date on the values are valid. The first value is valid until the minimum startDate given in the

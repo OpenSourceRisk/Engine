@@ -36,20 +36,19 @@ public:
     BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
-        dependentAnalytics_[saccrLookupKey] = QuantLib::ext::make_shared<SaCcrAnalytic>(inputs_);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    void buildDependencies() override;
 };
 
 class BaCvaAnalytic : public Analytic {
 public:
     BaCvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<BaCvaAnalyticImpl>(inputs), {"BA_CVA"}, inputs) {}
+                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<BaCvaAnalyticImpl>(inputs), {"BA_CVA"}, inputs, analyticsManager) {}
 };
 
 } // namespace analytics

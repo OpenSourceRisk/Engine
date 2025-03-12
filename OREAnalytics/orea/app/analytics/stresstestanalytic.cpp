@@ -48,9 +48,6 @@ void StressTestAnalyticImpl::setUpConfigurations() {
 
 void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("StressTestAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -104,9 +101,9 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                   *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
                   inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
 
-    analytic()->reports()[label()]["stress"] = report;
+    analytic()->addReport(label(), "stress", report);
     if (cfReport) {
-        analytic()->reports()[label()]["stress_cashflows"] = cfReport;
+        analytic()->addReport(label(), "stress_cashflows", cfReport);
     }
 
     CONSOLE("OK");

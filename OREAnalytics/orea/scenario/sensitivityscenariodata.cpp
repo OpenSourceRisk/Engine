@@ -1058,10 +1058,11 @@ XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
     // Check that we have a CurveShiftParData node
     auto data = QuantLib::ext::dynamic_pointer_cast<CurveShiftParData>(csd);
 
-    // TODO: Fail here because fromXML requires par everywhere but maybe needs to be revisited
-    QL_REQUIRE(data, "The sensitivity configuration should have par conversion data");
-
     XMLNode* parNode = doc.allocNode("ParConversion");
+
+    if(!data)
+        return parNode;
+
     XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);
     XMLUtils::addChild(doc, parNode, "SingleCurve", data->parInstrumentSingleCurve);
     if (!data->discountCurve.empty())

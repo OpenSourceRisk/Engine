@@ -1,6 +1,28 @@
 \subsubsection{Equity Swap}
 \label{ss:equity_swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An equity swap is a swap where one of the legs has a floating rate with 
+coupon payments linked to an equity price, either a single stock or equity 
+index. 
+
+\begin{itemize}
+\item The non equity leg is either a fixed rate or a floating rate based off an 
+IBOR index.
+\item The notional amount for the equity leg can be either fixed, or resettable 
+at specified dates - this equates to a fixed quantity of shares in the underlying 
+equity.
+\item There are two types of equity coupons, Price Return and Total Return. 
+Price Return coupons pay the difference in equity price between the coupon 
+start and end dates, while a Total Return coupon also includes dividend 
+payments during the period.
+\item The equity price can optionally be converted from the equity ccy to the equity leg ccy
+  using the FX spot rate observed at the equity fixing dates.
+\end{itemize}
+
+{\bf Input}}\fi
+
 An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg - called Funding leg -  that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
 Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
 
@@ -119,7 +141,6 @@ An example is shown in listing \ref{lst:equityswap_reset}.
                     <Tenor>6M</Tenor>
                     <Calendar>EUR</Calendar>
                     <Convention>ModifiedFollowing</Convention>
-                    <TermConvention>ModifiedFollowing</TermConvention>
                     <Rule>Forward</Rule>
                 </Rules>
             </ScheduleData>

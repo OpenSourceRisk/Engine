@@ -1,5 +1,26 @@
 \subsubsection{FX Asian Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+For an FX Asian option, the payoff is determined by the averaged foreign exchange rate 
+over a pre-set period of time. At the expiration date, this product 
+gives the buyer the right, but not the obligation, to obtain a cash amount of averaged rate
+ in return for a predetermined strike rate. For this right the buyer pays 
+a premium to the seller.
+
+The payoff is
+$$
+\mbox{Quantity}\times \max(\omega\cdot(A(0,T) - K),0)
+$$
+where:
+\begin{itemize}
+\item $A(0,T)$: the arithmetic average FX rate over the Asian observation period from start 0 to end T, expressed as amount of CCY2 per one unit of CCY1.
+\item $K$: strike FX rate, expressed as amount of CCY2 per one unit of CCY1.
+\item $\omega$: 1 for a call option (ie receiving averaged FX and paying strike), -1 for a put option
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!FxAsianOptionData!  node is the trade data container for the \emph{FxAsianOption} trade type. 
 The \lstinline!FxAsianOptionData!  node includes one  \lstinline!OptionData! trade component sub-node plus elements
 specific to the FX Asian Option. 
@@ -55,22 +76,6 @@ The structure of an example \lstinline!FxAsianOptionData! node for a FX Asian Op
 \caption{FX Asian Option data}
 \label{lst:fxasianoption_data}
 \end{listing}
-
-In the above example, the holder of the FxAsianOption has a call option that gives the right but not obligation to pay 105 USD (the strike) and receive 100*[the average USDEUR FX rate during the Asian period] USD (the underlying).  
-
-If OptionType would be changed to Put, the holder of the option would have the right to  receive 105 USD (the strike) and pay 100*[the average USDEUR FX rate during the Asian period] USD (the underlying). 
-
-The payoff is: 
-$$
-Payoff = Quantity\cdot MAX(\omega\cdot(A(0,T) - K),0)
-$$
-where:
-\begin{itemize}
-\item $A(0,T)$: the arithmetic average FX rate over the Asian observation period from start 0 to end T, expressed as amount of CCY2 per one unit of CCY1.
-\item $K$: strike FX rate, expressed as amount of CCY2 per one unit of CCY1.
-\item $\omega$: 1 for a call option (ie receiving averaged FX and paying strike), -1 for a put option
-\end{itemize}
-
 
 The meanings and allowable values of the elements in the \lstinline!FxAsianOptionData!  node follow below.
 

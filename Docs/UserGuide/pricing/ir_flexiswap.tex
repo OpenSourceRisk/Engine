@@ -1,0 +1,11 @@
+\subsubsection{Flexi Swap}
+\label{pricing:ir_flexiswap}
+
+Flexi Swaps are priced following the Replication Approach described in (F. Jamshidian, 2005). The replicating basket of
+Bermudan Swaptions is priced using the method as described under Product Type ``Bermudan Swaption'', but using one
+global calibration for all swaptions derived from the flexi swap structure.
+
+Prepayment option types ``ReductionByAbsoluteAmount'' and ``ReductionUpToAbsoluteAmount'' are both treated approximately
+by generating a schedule of deterministic, lower notional bounds from them assuming that all earlier prepayment options
+were executed.
+

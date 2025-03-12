@@ -42,7 +42,7 @@ class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<QuantLib::Date>& simulationDates);
-    std::string npvName() const override;
+    std::string npvName() const override { return "__AMCCG_NPV"; }
     std::set<std::string> relevantCurrencies() const override;
     void buildComputationGraph(const bool stickyCloseOutDateRun,
                                const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
@@ -67,7 +67,6 @@ protected:
     mutable bool includeReferenceDateEvents_;
 
     // set by engine
-    std::string npvName_;
     mutable std::set<std::string> relevantCurrencies_;
 
     // cached exercise indicators to be used in sticky close-out date run

@@ -72,11 +72,17 @@ public:
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false);
 
+    void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+
 protected:
     void createVarCalculator() override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+
+    void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                            const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                            const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
 private:
     std::vector<QuantLib::Real> pnls_;

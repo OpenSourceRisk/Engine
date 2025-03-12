@@ -85,6 +85,8 @@ public:
     // result output cubes (mini-cubes, one per thread)
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
 
+    // TODO: add error reporting as in single-threaded engine
+
     // result netting cubes (might be null, if nettingSetCubeFactory is returning null)
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputNettingSetCubes() const {
         return miniNettingSetCubes_;

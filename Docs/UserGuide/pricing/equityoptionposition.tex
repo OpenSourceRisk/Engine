@@ -1,0 +1,6 @@
+\subsubsection{Equity Option Position}
+
+The price of an equity option position is derived from the prices of the underlying options, see \ref{pricing:eq_option}
+for details on how this is done. For a basket the weighting is taken into account and if equities in several currencies
+are present in the basket, the equity prices are converted to a common npv currency using the current FX Spot rates. The
+npv currency is by convention the currency of the first equity option in the basket.

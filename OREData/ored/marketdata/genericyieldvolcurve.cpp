@@ -19,6 +19,7 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -64,7 +65,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
     const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term,
                              Real& strike)>& matchSmileQuote,
     const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
-    const bool buildCalibrationInfo) {
+    const bool buildCalibrationInfo, const std::string& name) {
 
     try {
         QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase;
@@ -399,6 +400,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                         Real lastNonZeroValue = 0.0;
+                        bool foundAtLeastOneValue = false;
                         for (Size k = 0; k < spreads.size(); ++k) {
                             QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
                                 *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
@@ -415,7 +417,17 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             // update last non-zero value
                             if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
                                 lastNonZeroValue = q->value();
+                                foundAtLeastOneValue = true;
                             }
+                        }
+                        if (!foundAtLeastOneValue) {
+                            StructuredCurveWarningMessage(
+                                name, "Volatility curve building partially fails due to missing data.",
+                                "No data for entire smile " + ore::data::to_string(smileOptionTenors[i]) + "/" +
+                                    ore::data::to_string(smileUnderlyingTenors[j]) +
+                                    ". Should the list of SmileOptionTenors resp. "
+                                    "SmileSwapTenors be updated in the curve configuration?")
+                                .log();
                         }
                     }
                 }

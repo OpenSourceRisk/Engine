@@ -36,6 +36,7 @@ namespace ore {
 namespace analytics {
 
 class Analytic;
+class AnalyticsManager;
 
 //! AnalyticBuilder base class
 /*! All derived classes have to be stateless. It should not be necessary to derive classes
@@ -48,8 +49,7 @@ public:
     virtual ~AbstractAnalyticBuilder() {}
     virtual QuantLib::ext::shared_ptr<Analytic>
     build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-	  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const = 0;
+          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const = 0;
 };
 
 //! Template AnalyticBuilder class
@@ -60,9 +60,10 @@ template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
 public:
     virtual QuantLib::ext::shared_ptr<Analytic> build(
         const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const override {
-        return QuantLib::ext::make_shared<T>(inputs, offSetScenario, offsetSimMarketParams);
+        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const override {
+        auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager);
+        a->initialise();
+        return a;
     }
 };
 
@@ -86,10 +87,12 @@ public:
 
     //! Build, throws for unknown className
     std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
-    build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const;
+    build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs, 
+        const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+        const bool useCache = false) const;
 
+ private:
+    mutable std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> cachedAnalytics_;
 };
 
 } // namespace analytics

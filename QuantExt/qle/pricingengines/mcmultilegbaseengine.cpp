@@ -1137,8 +1137,9 @@ void McMultiLegBaseEngine::calculateModels(
     const std::vector<std::vector<RandomVariable>>& pathValues,
     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
     std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelUndExInto,
-    std::vector<RegressionModel>& regModelContinuationValue, std::vector<RegressionModel>& regModelOption,
-    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const {
+    std::vector<RegressionModel>& regModelRebate, std::vector<RegressionModel>& regModelContinuationValue,
+    std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto,
+    RandomVariable& pathValueOption) const {
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
@@ -1149,6 +1150,11 @@ void McMultiLegBaseEngine::calculateModels(
 
     Size counter = exerciseXvaTimes.size() - 1;
     auto previousExerciseTime = exerciseTimes.rbegin();
+
+    RandomVariable pathValueRebate;
+
+    auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+    Size rebateIndex = rebatedExercise ? rebatedExercise->rebates().size() - 1 : Null<Size>();
 
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
@@ -1197,33 +1203,58 @@ void McMultiLegBaseEngine::calculateModels(
             }
         }
 
+        // update path value rebate
+
+        if (isExerciseTime && rebatedExercise != nullptr) {
+            if (rebatedExercise->rebate(rebateIndex) != 0.0) {
+                Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
+                Real payTime = time(rebatedExercise->rebatePaymentDate(rebateIndex));
+                if (payTime >= 0.0) {
+                    pathValueRebate = lgmVectorised_[0].reducedDiscountBond(
+                                          *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
+                                      RandomVariable(calibrationSamples_, rebatedExercise->rebate(rebateIndex));
+                } else {
+                    pathValueRebate = RandomVariable(calibrationSamples_, 0.0);
+                }
+            }
+            --rebateIndex;
+        }
+
+        // update underlying exercise into and rebate regression models
+
         if (exercise_ != nullptr) {
+
             regModelUndExInto[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
             regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
                                              simulationTimes);
+
+            if (pathValueRebate.initialised()) {
+                regModelRebate[counter] = RegressionModel(
+                    *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                    regressorModel_, regressionVarianceCutoff_);
+                regModelRebate[counter].train(polynomOrder_, polynomType_, pathValueRebate, pathValuesRef,
+                                              simulationTimes);
+            }
         }
 
         if (isExerciseTime) {
 
-            // calculate rebate (exercise fees) if existent
+            // calculate exerciseValue including rebate
 
-            RandomVariable pvRebate(calibrationSamples_, 0.0);
-            if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
-                Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
-                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
-                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
-                    RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
-                        *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)),
-                        pathValues[simulationTimes_idx][0], discountCurves_[0]);
-                    pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
-                }
+            RandomVariable rebate(calibrationSamples_, 0.0);
+            if (regModelRebate[counter].isTrained()) {
+                rebate = regModelRebate[counter].apply(model_->stateProcess()->initialValues(), pathValuesRef,
+                                                       simulationTimes);
             }
 
             auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
-                                                                  pathValuesRef, simulationTimes) +
-                                 pvRebate;
+                                                                  pathValuesRef, simulationTimes) +rebate;
+
+
+            // calculate continuation value, take exercise decition and update option path value
+
             regModelContinuationValue[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
@@ -1234,7 +1265,7 @@ void McMultiLegBaseEngine::calculateModels(
                                                                               pathValuesRef, simulationTimes);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0),
-                                                pathValueUndExInto + pvRebate, pathValueOption);
+                                                pathValueUndExInto + rebate, pathValueOption);
         }
 
         if (isXvaTime) {
@@ -1487,6 +1518,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     std::vector<RegressionModel> regModelUndDirty(exerciseXvaTimes.size());          // available on xva times
     std::vector<RegressionModel> regModelUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
+    std::vector<RegressionModel> regModelRebate(exerciseXvaTimes.size());            // available on xva and ex times
     std::vector<RegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
     RandomVariable pathValueUndDirty(calibrationSamples_);
@@ -1494,13 +1526,14 @@ void McMultiLegBaseEngine::calculate() const {
     RandomVariable pathValueOption(calibrationSamples_);
 
     calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, pathValues, pathValuesRef,
-                    regModelUndDirty, regModelUndExInto, regModelContinuationValue, regModelOption, pathValueUndDirty,
-                    pathValueUndExInto, pathValueOption);
+                    regModelUndDirty, regModelUndExInto, regModelRebate, regModelContinuationValue, regModelOption,
+                    pathValueUndDirty, pathValueUndExInto, pathValueOption);
 
     // setup the models on close-out grid if required or else copy them from valuation
 
     std::vector<RegressionModel> regModelUndDirtyCloseOut(regModelUndDirty);
     std::vector<RegressionModel> regModelUndExIntoCloseOut(regModelUndExInto);
+    std::vector<RegressionModel> regModelRebateCloseOut(regModelRebate);
     std::vector<RegressionModel> regModelContinuationValueCloseOut(regModelContinuationValue);
     std::vector<RegressionModel> regModelOptionCloseOut(regModelOption);
 
@@ -1511,8 +1544,8 @@ void McMultiLegBaseEngine::calculate() const {
         // everything stays the same, we just use the lagged path values
         calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, closeOutPathValues,
                         closeOutPathValuesRef, regModelUndDirtyCloseOut, regModelUndExIntoCloseOut,
-                        regModelContinuationValueCloseOut, regModelOptionCloseOut, pathValueUndDirtyCloseOut,
-                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
+                        regModelRebateCloseOut, regModelContinuationValueCloseOut, regModelOptionCloseOut,
+                        pathValueUndDirtyCloseOut, pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
     }
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)
@@ -1530,6 +1563,7 @@ void McMultiLegBaseEngine::calculate() const {
         externalModelIndices_, optionSettlement_, cashSettlementTimes, exerciseXvaTimes, exerciseTimes, xvaTimes,
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelRebate, regModelRebateCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelContinuationValue,
                                                                           regModelContinuationValueCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelOption, regModelOptionCloseOut},
@@ -1545,13 +1579,14 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+    const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelRebate,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption, const Real resultValue,
     const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
     const bool includeTodaysCashflows, const bool includeReferenceDateEvents)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), cashSettlementTimes_(cashSettlementTimes),
       exerciseXvaTimes_(exerciseXvaTimes), exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes),
-      regModelUndDirty_(regModelUndDirty), regModelUndExInto_(regModelUndExInto),
+      regModelUndDirty_(regModelUndDirty), regModelUndExInto_(regModelUndExInto), regModelRebate_(regModelRebate),
       regModelContinuationValue_(regModelContinuationValue), regModelOption_(regModelOption), resultValue_(resultValue),
       initialState_(initialState), baseCurrency_(baseCurrency),
       reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun), includeTodaysCashflows_(includeTodaysCashflows),
@@ -1648,6 +1683,11 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
             RandomVariable exerciseValue =
                 regModelUndExInto_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
+
+            if (regModelRebate_[regModelIndex][ind].isTrained()) {
+                exerciseValue += regModelRebate_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
+            }
+
             RandomVariable continuationValue =
                 regModelContinuationValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
@@ -1694,7 +1734,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             RandomVariable futureOptionValue =
                 exerciseCounter == exerciseTimes_.size()
                     ? RandomVariable(samples, 0.0)
-                    : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                    : max(RandomVariable(samples, 0.0),
+                          regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
 
             /* Physical Settlement:
 
@@ -1725,7 +1766,6 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                     regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
                     regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
             } else {
-                exercisedValue.setAll(0.0);
                 for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
                     if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
                         exercisedValue += it->second;
@@ -1736,8 +1776,16 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                 }
             }
 
-            result[xvaCounter + 1] =
-                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, futureOptionValue));
+            // update for rebate payments
+
+            if (regModelRebate_[regModelIndex][counter].isTrained()) {
+                RandomVariable rebate =
+                    regModelRebate_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                rebate = applyFilter(rebate, exercised_[exerciseCounter]);
+                exercisedValue += rebate;
+            }
+
+            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, futureOptionValue);
 
             ++xvaCounter;
         }
@@ -1762,6 +1810,7 @@ template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::s
 
     ar& regModelUndDirty_;
     ar& regModelUndExInto_;
+    ar& regModelRebate_;
     ar& regModelContinuationValue_;
     ar& regModelOption_;
     ar& resultValue_;

@@ -80,8 +80,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     for (Size t = 0; t < legData_.size(); t++) {
         const auto& legDatum = legData_.at(t);
 
-        const string& type = legDatum.legType();
-        if (type == "CommodityFixed")
+        const LegType& type = legDatum.legType();
+        if (type == LegType::CommodityFixed)
             continue;
 
         // Build the leg and add it to legs_
@@ -101,8 +101,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         // take a copy, since we might modify the leg datum below
         auto effLegDatum = legDatum;
 
-        const string& type = effLegDatum.legType();
-        if (type != "CommodityFixed")
+        const LegType& type = effLegDatum.legType();
+        if (type != LegType::CommodityFixed)
             continue;
 
         // Update the commodity fixed leg quantities if necessary.
@@ -180,7 +180,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
-        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["currency[" + legID + "]"] = legData_[i].currency();
         if (swap)

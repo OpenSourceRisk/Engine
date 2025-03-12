@@ -77,7 +77,7 @@ public:
     //! Default destructor
     ~CrossAssetModelScenarioGenerator() {};
     std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
-    void reset() override { pathGenerator_->reset(); }
+    void reset() override;
 
 private:
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;

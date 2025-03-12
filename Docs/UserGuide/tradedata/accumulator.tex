@@ -1,5 +1,35 @@
 \subsubsection{Accumulators and Decumulators}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An Equity accumulator is an exotic product that requires the
+investor (or provides the option) to buy shares of an underlying security
+at a pre-determined strike price $K$. The product settles periodically
+(e.g. monthly) and allows the investor to accumulate a holding in the
+underlying security over the term of the contract.
+
+A potential feature of an accumulator is a knock-out, i.e. the
+contract terminates early if the underlying price exceeds some
+threshold above strike. 
+
+Another feature is leverage, i.e. the investor buys a certain number
+of shares per day when the security trades below $K$, and an enhanced
+(leveraged) number of shares when the security trades at or above $K$.
+
+The accumulator investor speculates that the security trades between
+strike price $K$ and the knock-out level thoughout the life of
+the contract.
+ 
+A decumulator is the reverse of an accumulator -- in this case, the
+investor is required to sell shares periodically at a pre-determined
+fixed price. A potential knock-out is set below the strike price (and
+below the spot price at inception). 
+
+Accumulators/decumulators are also traded on FX underlyings,
+Commodity underlyings are possible as well.
+
+{\bf Input}}\fi
+
 The \verb+FxAccumulatorData+, \verb+EquityAccumulatorData+, \verb+CommodityAccumulatorData+ is the trade data container
 for the FxAccumulator, EquityAccumulator, CommodityAccumulator trade type. The following listings and show the
 structure of example trades for an FX and Equity underlying. Here the FX accumulator is of ``type 01'' meaning that a
@@ -311,7 +341,7 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     defined settlement delay. Defaults to \emph{false}.
 \item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
     If \emph{true} the fixing at knockout settlement date is used to compute the knockout flow, otherwise the fixing at knockout date. Defaults to \emph{false}.
-\item FxIndex [Optional]: Required for composite accumulators of type 2, where the strike, knockout barrier and pay currency are different from the underlying quote currency. A node with the underlying of the FX conversion from quote currency to pay currency.
+\item FxIndex [Optional]: Required for composite accumulators of type 2, where the strike, knockout barrier and pay currency are different from the underlying quote currency. Intended for Commodity and Equity Accumulators. A node with the underlying of the FX conversion from quote currency to pay currency.
 \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign (quote) currency, \lstinline!CCY2! is the domestic (pay) currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
 \end{itemize}
 
@@ -405,7 +435,7 @@ The meanings and allowable values of the elements in the \verb+Accumulator01Data
 The script `Accumulator01' referenced in the trade above is shown in Listing \ref{lst:accumulator01_script}.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE KnockOutType == 3 OR KnockOutType == 4;
 NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
 Alive = 1;
@@ -580,7 +610,7 @@ The meanings and allowable values of the elements in the \verb+DecumulatorData+ 
 \end{itemize}
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{Basic}
+\begin{minted}[fontsize=\scriptsize]{Basic}
 REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);
 REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);
 REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);

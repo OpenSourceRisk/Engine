@@ -1,0 +1,12 @@
+\subsubsection{Equity European Barrier Option}
+\label{pricing:eq_europeanbarrieroption}
+
+Equity European Barrier Options are priced by replication.
+The strategy makes use of the following four options
+\begin{enumerate}
+\item European Equity Option with strike $K$.
+\item European Equity Option with strike $B$.
+\item Digital Equity Option with strike $K$ and payout $abs(B-K)$.
+\item Digital Equity Option with strike $K$ and payout $R$.
+\end{enumerate}
+where $K$ is the strike, $B$ is the barrier and $R$ is the rebate of the Equity European Barrier Option.

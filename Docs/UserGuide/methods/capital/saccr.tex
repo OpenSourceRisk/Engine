@@ -1,0 +1,585 @@
+\section{Counterparty Credit Risk Capital}
+
+Financial institutions either apply a {\em standardized} or an {\em advanced}
+approach for determining the \index{capital!regulatory}regulatory capital amounts to be assigned
+to their derivative activity. The advanced approach is
+accessible to institutions with an internal model method (IMM) for
+credit risk capital which is approved by the regulator. This method
+involves sophisticated analysis of future exposures by Monte Carlo
+simulation methods using real-world measure risk factor evolutions \cite{Lichters}.
+Institutions without approved IMM have to apply a standardized approach instead, which is
+simplified in that it does not require Monte Carlo exposure simulation
+but resorts to formulas suggested by the Basel Commitee for Banking
+Supervision and enforced by the respective regulator. These formulas
+attempt to conservatively approximate the credit exposures which would
+have been obtained by more sophisticated IMM approaches.
+
+The former standardized approach (Current Exposure Method) as published by the Basel Commitee for
+Banking Supervision (BCBS) in 2006 \cite{bcbs128} is summarized in section \ref{sec_cem}. 
+A revised standardized approach for counterparty credit risk\index{CCR} from
+derivative acitvity (SA-CCR) as published in 2014 \cite{bcbs279} is in
+effect from beginning of 2017.
+
+%-------------------------------------------------------------------------
+\subsection{Current Exposure Method (CEM)}\label{sec_cem}
+%-------------------------------------------------------------------------
+
+The key quantity in the current standardized approach (or current
+exposure method, CEM) is the exposure at default (EaD) or {\em
+  credit equivalent amount} which consists of two additive terms,
+current replacement cost and potential future exposure add-on, 
+$$ 
+\text{EaD} = \text{RC} + \text{Notional} \times \text{NettingFactor} \times \text{AddOn}. 
+$$
+
+The replacement cost RC is simply given by the current exposure
+which is the current positive value of the netting set after subtracting
+collateral (C) 
+$$
+\text{RC} = \max(0, \text{PV} - \text{C}).
+$$
+Replacement cost is aggregated over all derivative contracts and
+netting sets.
+
+The second term is supposed to approximately reflect the potential future exposure
+over the remaining life of the contract. It depends on the (fairly rough) product type
+classification and on time to maturity in three bands as shown in table
+\ref{tab_addon} which is in use in this form since 1988.
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|l || c | c | c | c | c |}
+\hline
+Residual & Interest & FX   & Equity & Precious & Other \\ 
+Maturity &  Rates  & Gold &    & Metals   & Commodities\\
+\hline
+\hline
+$\leq$ 1 Year & 0.0\% & 1\% & 6\% & 7\% & 10\% \\
+1-5 Years     & 0.5\% & 5\% & 8\% & 7\%   & 12\% \\
+$>$ 5 Years     & 1.5\% & 7.5\% & 10\% & 8\% & 15\% \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Add-on factor by product and time to maturity. Single
+  currency interest rate swaps are assigned a zero add-on, i.e.\ judged
+  on replacement cost basis only, if their maturity is less than one year. Forwards,
+  swaps, purchased options and derivative contracts not covered in
+  the columns above shall be treated as ``Other Commodities''. Credit
+  derivatives (total return swaps and credit default swaps) are
+  treated separately with 5\% and 10\% add-ons depending on whether
+  the reference obigation is regarded as ``qualifying'' (public sector
+  entities (!), rated investment grade or approved by the regulator). 
+N-th to default basket transactions are assigned an add-on 
+based on the  credit quality of n-th lowest credit quality in the basket. }
+\label{tab_addon}
+\end{table}
+
+The netting factor acknowledges netting also in the potential future
+exposure estimate of the netting set. If there is no netting as of today, i.e.\  
+net NPV equals gross NPV, the netting factor is equal to 1, otherwise
+it can be as low as 0.4. Additional netting benefit results from
+using a central clearing counterparty (CCP): 
+$$
+\text{NettingFactor} = \left\{\begin{array}{ll}
+\displaystyle 0.4 + 0.6 \times \frac{\max\left(\sum_i PV_i, 0\right)}{\sum_i
+  \max(PV_i,0)} & \text{bilateral netting}\\ \\
+\displaystyle 0.15 + 0.85 \times \frac{\max\left(\sum_i PV_i, 0\right)}{\sum_i
+  \max(PV_i,0)} & \text{central clearing}
+\end{array}
+\right.
+$$
+
+Finally, the notional amounts that enter into the potential future
+exposure term are understood as effective notional amounts which
+e.g.\ take into account leverage which may be expressed through
+factors in structured product payoff formulas. 
+
+\medskip
+\noindent 
+Note that CEM was valid until end of 2016.
+
+\subsection{Standardized Approach for Counterparty Credit Risk (SA-CCR)}
+
+With its 2014 publication \cite{bcbs279}, the \index{BCBS}Basel Committee for
+Banking Supervision has revised  the standardized approach. The new
+method takes collateralization into account in a more detailed way
+than before which has the potential to reduce the credit equivalent
+amounts. On the other hand, the new method attempts to mimic a more
+conservative potential exposure, the {\em effective expected positive
+exposure} \index{effective expected positive
+exposure|see{EEPE}}(EEPE) which tends to increase the resulting credit
+equivalent amounts. In summary, only a detailed impact analysis for
+specific portfolios will be able to tell whether the overall impact of
+the new method results in an increase or in a decrease of derivative capital charges.
+In the following we summarize the ingredients of the new methodology.
+
+SA-CCR in ORE currently supports the following trade types per asset class (unsupported
+types are ignored in calculations with a structured warning raised): \begin{itemize}
+  \item Foreign Exchange: \emph{Swap} (cross currency), \emph{CrossCurrencySwap}, \emph{FxBarrierOption}, \emph{FxForward}, \emph{FxOption}, \emph{FxTouchOption}
+  \item Commodity: \emph{CommodityForward}, \emph{CommoditySwap}
+  \item Interest Rate: \emph{Swap} (Vanilla IR, basis and CPI swaps not yet supported), \emph{Swaption} (European)
+  \item Equity: \emph{EquityOption}
+\end{itemize}
+
+Note for swap-type products that two legs are required.
+
+\subsubsection{Exposure at Default (EAD)}
+The EAD is still composed of a replacement cost and a potential future exposure add-on term
+but scaled up by a factor of $1.4$ which is motivated by the committee's attempt
+to mimic a different (higher) exposure measure:
+$$
+\text{EAD} = 1.4 \times (\text{RC} + \text{PFE})
+$$
+On the other hand, the replacement cost per netting set takes into account
+more details of the collateral agreement: 
+$$
+\text{RC} = \max(\text{PV} - \text{C};\; \text{TH} + \text{MTA} - \text{NICA};\; 0)
+$$
+where 
+\begin{itemize}
+\item PV is the netting set mark-to-market value,
+\item TH is the CSA's threshold amount, 
+\item MTA the CSA's minimum transfer amount, 
+\item NICA is the independent collateral \index{independent amount} amount (i.e.\ any received independent 
+amount plus initial margin amount),
+\item C is the current collateral (i.e.\ variation margin plus NICA).
+\end{itemize}
+So even if the posted collateral C matches the PV so that the first
+term on the right-hand side vanishes, the various CSA slippage
+terms can cause a positive replacement cost contribution here. This
+supposedly imitates CVA behaviour.
+
+For unmargined netting sets,
+\begin{equation*}
+\text{RC} = \max(\text{PV} - \text{C};\; 0).
+\end{equation*}
+
+\subsubsection{Potential Future Exposure (PFE)}
+The PFE term is primarily driven by the aggregate add-on factor
+which is significantly more complex than in the current standardized approach's definition:
+$$
+\text{PFE} = \text{Multiplier} \times \text{AddOn}.
+$$
+The PFE is obtained by scaling down the AddOn using a multiplier which recognises and rewards excess collateral: 
+\begin{align*}
+\text{Multiplier} &= \min\left(1; 0.05 + 0.95 \times \exp\left(\frac{\text{PV}-\text{C}}{1.9
+  \times \text{AddOn}} \right)\right)  \\
+&=1 \quad \text{if $PV \geq C$}, \\
+&<1 \quad \text{if $PV < C$ (excess collateral).} 
+\end{align*}
+The aggregate/netting set add-on is a composite
+
+\begin{equation*}
+\text{AddOn} = \sum_a \text{AddOn}^{(a)}
+\end{equation*}
+where the sum is taken over the various asset classes in the netting
+set, and AddOn$^{(a)}$ denotes the add-on factor for asset class $a$.
+The add-on factor within each asset class $a$
+
+\begin{equation}\label{sa-ccr-addon}
+\text{AddOn}^{(a)} = \sum_i \text{AddOn}^{(a)}_i
+\end{equation}
+is a sum of the hedging set add-ons (where AddOn$^{(a)}_i$ is the add-on for hedging set $i$ in asset class $a$).
+The list of possible hedging sets for each asset class is given in Table \ref{tab:hedgingset}. The asset class
+assignment is based on a trade's ``primary risk driver'', but split assignment may be required for complex trades.
+
+{
+\begin{table}[hbt]
+\begin{center}
+\scriptsize
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+Asset Class & Hedging Set & Hedging Subset \\
+\hline
+\hline
+Interest Rate & Currency & Maturity buckets (\emph{1Y}, \emph{1Y-5Y}, \emph{5Y})\\
+\hline
+Foreign Exchange & Currency pair & - \\
+\hline
+Equity & - & Qualifier \\
+\hline
+Credit & - & Qualifier \\
+\hline
+Commodity & \emph{Energy}, \emph{Metal}, \emph{Agriculture}, \emph{Other} & Qualifier/Group \\
+\hline
+\end{tabular}
+\caption{Hedging set/subset construction by asset class -- See \cite{bcbs279} paragraph 161.}
+\label{tab:hedgingset}
+\end{center}
+\end{table}
+}
+
+Note: 
+\begin{itemize}
+  \item For Interest Rate, a trade is assigned to a hedging subset
+  based on the end date of the period referenced by the underlying $E_i$.\footnote{See \cite{bcbs279} paragraph 166.}
+  \item For Commodity, similar underlyings can be grouped
+  under the same hedging subset.\footnote{See \cite{bcbs279} Example 3}
+  Currently, similar underlyings will be grouped together under the following categories:
+  \emph{Coal}, \emph{Crude oil}, \emph{Light Ends}, \emph{Middle Distillates}, \emph{Heavy Distillates},
+  \emph{Natural Gas}, \emph{Power}.
+  \item For Equity and Credit, a single hedging set is used for the entire asset class.
+  The hedging subset is then given by the underlying entity, where partial offsetting is applied across different entities, and full offset is applied within each entity.
+  \item Within each asset class, a separate hedging set is reserved for basis trades and volatility/variance trades.
+  Basis hedging sets are given in the format \lstinline!QUALIFIER1/QUALIFIER2!.
+  Volatility/variance trades are not yet supported.
+\end{itemize}
+
+As mentioned above, the potential future exposure term aims to mimic a
+particularly conservative exposure measure. This choice is built into
+the definition of the supervisory factors, quoting \cite{bcbs279}: 
+``A factor or factors specific to each asset class is used to 
+{\bf convert the effective notional amount into Effective EPE} 
+based on the measured volatility of the asset class. Each factor has 
+been calibrated to reflect the Effective EPE of a single \index{at the
+  money}at-the-money 
+linear trade of unit notional and one-year maturity. This includes the 
+estimate of realised \index{volatility!realized}volatilities assumed by supervisors for each 
+underlying asset class.''
+The supervisory factors are displayed in Table \ref{tab_saccr_vols}.
+
+\subsubsection{Trade-Specific Parameters}
+
+Before defining the hedging set add-on, AddOn$^{(a)}_i$ (\ref{sa-ccr-addon}),
+for each asset class we define the trade-specific parameters that will be used.
+
+The trade specific parameters $\delta_i$, $d_j^{(a)}$ and $MF_i^{(\text{type})}$ are defined
+(for trade $j$ and asset class $a$) as follows:
+\begin{enumerate}
+\item {\bf $d_j^{(a)}$ (trade-level adjusted notional)}
+\begin{itemize}
+\item {\bf Foreign Exchange}:\begin{itemize}
+  \item For trades where one of the legs is in the base currency: The adjusted notional is the foreign leg notional
+  converted to the base currency.
+  \item For trades where both legs are denominated in a currency other than the base currency: Both leg notionals are
+  converted to the base currency, and the larger of the 2 notionals is used as the adjusted notional.
+\end{itemize}
+\item {\bf Interest Rate, Credit}: $\text{Notional} \times \text{SD}_j$, where SD$_j$ is the supervisory duration,
+with \begin{equation*}
+ \text{SD}_j = \frac{\exp{(-0.05 \cdot S_j)} - \exp{(-0.05 \cdot E_j)}}{0.05},
+\end{equation*}
+where \begin{itemize}
+    \item $S_j$ is the start date (in years) of the period referenced by the underlying,
+    \item $E_j$ is the end date (in years) of the period referenced by the underlying.
+  \end{itemize}
+\item {\bf Equity, Commodity}: $\text{Price per unit} \times \text{No.\ of units}$
+\item Note: We index the adjusted notional by the asset class $a$ is because complex trades can be assigned
+  to multiple asset classes and hence have an adjusted notional in more than one asset class.
+\end{itemize}
+\item {\bf $\MF_j^{(\text{type})}$ (maturity factor)}
+\begin{itemize}
+\item For uncollateralized positions, this is computed from the time to
+ maturity $M_j$ (in years) of the trade: $MF_j^{(\text{unmargined})} = \sqrt{\min(\max(M_j, 2/52),1)}$. Note the
+ floor of 10 business days on $M_j$.
+\item For collateralized positions, this is computed from the margin period of
+  risk MPR (in years) used: $MF_j^{(\text{margined})} = 1.5\cdot\sqrt{\MPR}$ 
+\end{itemize}
+\item {\bf $\delta_j$ (delta adjustment for direction and non-linearity)}
+\begin{itemize}
+\item Options: In this case $\delta_j$ is an option delta (derived from
+  the Black76 formula),
+$$\delta_j = \omega \cdot \Phi\!\left(\phi \cdot \frac{\ln(P_j/K_j) +
+    0.5\,\sigma_j^2\,T_j}{\sigma_j\,\sqrt{T_j}} \right)\!,$$
+where \begin{itemize}
+    \item $\Phi(\cdot)$ is the cumulative normal distribution function,
+    \item $P_j$ is the price of the underlying (typically the forward price),
+    \item $K_j$ is the strike price of the option,
+    \item $T_j$ is the latest option exercise date,
+    \item $\omega$ is $+1$ for long calls and short puts, $-1$ for short calls and long puts,
+    \item $\phi$ is $+1$ for calls, $-1$ for puts,
+    \item $\sigma_j$ is the supervisory option volatility as defined in Table \ref{tab_saccr_vols}.
+  \end{itemize}  
+ \item CDO tranches: $\pm \frac{15}{(1+14\,A)(1+14\,D)}$ for purchased
+  (sold) protection, where A and D denote the attachment and
+  detachment point of the tranche, respectively
+\item Others: $\pm 1$ depending on whether long or short in the primary risk factor
+\end{itemize}
+\end{enumerate}
+
+\subsubsection{Hedging Set/Subset Add-On}
+
+We continue with sketching the hedging set level add-on from (\ref{sa-ccr-addon}).
+
+\subsubsection*{Interest Rate}
+
+Within currency hedging set $i$, each trade is assigned to 1 of 3 maturity buckets based on the end date of the period referenced by the trade's underlying:
+\begin{itemize}
+\item $D_1$: $<$ 1 year
+\item $D_2$: 1-5 years
+\item $D_3$: $>$ 5 years
+\end{itemize}
+
+The effective notional $D_{i, k}$ for maturity bucket $k$ of currency hedging set $i$
+\begin{equation*}
+  D_{i, k} = \sum_{j=1}^n \delta_j \times d_j^{(\text{IR})} \times \text{MF}_j^{(\text{type})}.
+\end{equation*}
+is calculated as the sum of all trades $j$ in each maturity bucket.
+
+Partial offsetting is applied when aggregating the contribution across the 3 maturity buckets,
+giving the effective notional for hedging set $i$:
+\begin{equation*}
+  \text{EffectiveNotional}_i^{(\text{IR})} = \sqrt{D_{i,1}^2 + D_{i,2}^2 + D_{i,3}^2 + 1.4 \cdot (D_{i,1}\cdot D_{i,2} + D_{i,2}\cdot D_{i,3}) 
++ 0.6 \cdot D_{i,1} \cdot D_{i,3}}
+\end{equation*}
+Each contribution is a sum over all trades in each hedging set $i$ and maturity bucket: 
+One may choose not to apply any offset across maturity buckets, in which case
+\begin{equation*}
+  \text{EffectiveNotional}_i^{(\text{IR})} = |D_{i,1}| + |D_{i,2}| + |D_{i,3}|.
+\end{equation*}
+Finally, we multiply the effective notional by the supervisory factor (see Table \ref{tab_saccr_vols}) to
+obtain the add-on:
+\begin{equation*}
+  \text{AddOn}_i^{(\text{IR})} = SF_i^{(\text{IR})} \times \text{EffectiveNotional}_i^{(\text{IR})}
+\end{equation*}
+
+\subsubsection*{Foreign Exchange}
+
+Unlike for IR instruments, FX does not use hedging subsets (i.e.\ the notional amounts are maturity independent)
+so trades within the same currency pair hedging set are allowed to fully offset each other. The effective notional
+calculation is similar to that of IR:
+\begin{equation*}
+  \text{EffectiveNotional}_i^{(\text{FX})} = \sum_{j=1}^n \delta_j \times d^{(\text{FX})}_j \times MF_j^{(\text{type})}
+\end{equation*}
+and
+\begin{equation*}
+  \text{AddOn}_i^{(\text{FX})} = SF_i^{(\text{FX})} \times \left|\text{EffectiveNotional}_i^{(\text{FX})}\right|
+\end{equation*}
+
+\subsubsection*{Credit}
+
+All credit instruments are assigned to a single hedging set, and hedging subsets are defined by each underlying
+entity/name. Trades that reference the same entity are fully offset, giving the entity-level effective notional
+amount (for hedging subset $k$):
+\begin{equation*}
+  \text{EffectiveNotional}_k^{(\text{CR})} = \sum_{j=1}^n \delta_j \times d_j^{(\text{CR})} \times MF_j^{(\text{type})}
+\end{equation*}
+Multiplying by the supervisory factor, we get the entity-level add-on (for hedging subset $k$):
+\begin{equation*}
+  \text{AddOn}_k^{(\text{CR})} = SF_k^{(\text{CR})} \times \text{EffectiveNotional}_k^{(\text{CR})}
+\end{equation*}
+For single-name entities, the supervisory factor is determined by the credit rating, while for index entities this is
+determined based on whether the index is investment grade or speculative grade (see Table \ref{tab_saccr_vols}).
+
+Finally, the asset class add-on is calculated by applying a partial offset across the entity-level add-ons:
+\begin{equation*}
+  {\text{AddOn}^{(\text{CR})} = \sqrt{ \underbrace{\left(\sum_k \rho_k^{(\text{CR})} \cdot \text{AddOn}_k^{(\text{CR})} \right)^2}_{\mbox{systematic component}} + \underbrace{\sum_k \left( 1 - \left( \rho_k^{(\text{CR})} \right)^2 \right) \cdot \left(\text{AddOn}_k^{(\text{CR})}\right)^2}_{\mbox{idiosyncratic component}} }}
+\end{equation*}
+
+\subsubsection*{Equity}
+
+The hedging set/subset construction for equities is similar to that for credit, so the same calculation applies for effective notional where a hedging subset is formed for each equity underlying:
+\begin{equation*}
+  \text{EffectiveNotional}_k^{(\text{EQ})} = \sum_{j=1}^n \delta_j \times d_j^{(\text{EQ})} \times MF_j^{(\text{type})}
+\end{equation*}
+Likewise, for the entity-level add-on:
+\begin{equation*}
+  \text{AddOn}_k^{(\text{EQ})} = SF_k^{(\text{EQ})} \times \text{EffectiveNotional}_k^{(\text{EQ})}
+\end{equation*}
+There are only 2 supervisory factors for equities, based on whether the underlying is a single name or an index
+(see Table \ref{tab_saccr_vols}).
+
+Finally, we apply partial offset once again across the entity-level add-ons to get the asset class add-on:
+\begin{equation*}
+  {\text{AddOn}^{(\text{EQ})} = \sqrt{ \underbrace{\left(\sum_k \rho_k^{(\text{EQ})} \cdot \text{AddOn}_k^{(\text{EQ})} \right)^2}_{\mbox{systematic component}} + \underbrace{\sum_k \left( 1 - \left( \rho_k^{(\text{EQ})} \right)^2 \right) \cdot \left(\text{AddOn}_k^{(\text{EQ})}\right)^2}_{\mbox{idiosyncratic component}} }}
+\end{equation*}
+
+\subsubsection*{Commodity}
+
+The Commodity asset class uses 4 hedging sets (and no offsetting is allowed between hedging sets in any asset class),
+the Commodity add-on is more specifically defined as:
+\begin{equation*}
+  \text{AddOn}^{(\text{COM})} = \text{AddOn}_\text{Energy}^{(\text{COM})} + \text{AddOn}_\text{Metal}^{(\text{COM})} + \text{AddOn}_\text{Agriculture}^{(\text{COM})} + \text{AddOn}_\text{Other}^{(\text{COM})}
+\end{equation*}
+For Commodity, the calculation of hedging set level add-ons is the same as the calculation of asset class
+add-ons for Equity and Credit. As before, we start with calculating the effective notional at the entity level
+(i.e.\ hedging subset $k$) under hedging set $i$, applying full offset across trade contributions:
+\begin{equation*}
+  \text{EffectiveNotional}_{i,k}^{(\text{COM})} = \sum_{j=1}^n \delta_j \times d_j^{(\text{COM})} \times MF_j^{(\text{type})}
+\end{equation*}
+Then we calculate the add-on for hedging subset $k$:
+\begin{equation*}
+  \text{AddOn}_{i,k}^{(\text{COM})} = SF_i^{(\text{COM})} \times \text{EffectiveNotional}_{i,k}^{(\text{COM})}
+\end{equation*}
+Finally, we get the add-on for hedging set $i$ (note the correlation terms are outside the sums as they apply to
+the hedging set, not to the hedging subset):
+\begin{equation*}
+  {\text{AddOn}_i^{(\text{COM})} = \sqrt{ \underbrace{\left( \rho_i^{(\text{COM})} \cdot \sum_k \text{AddOn}_{i,k}^{(\text{COM})} \right)^2}_{\mbox{systematic component}} + \underbrace{ \left( 1 - \left( \rho_i^{(\text{COM})} \right)^2 \right) \cdot \sum_k \left(\text{AddOn}_{i,k}^{(\text{COM})}\right)^2}_{\mbox{idiosyncratic component}} }}
+\end{equation*}
+
+{
+\begin{table}[hbt]
+\begin{center}
+\scriptsize
+\begin{tabular}{|l|c|p{1.5cm}|c|p{1.5cm}|}
+\hline
+Asset Class& Subclass & Supervisory Factor & Correlation &
+Supervisory Option Volatility\\
+\hline
+\hline
+Interest rate && 0.5 \% & N/A & 50\%\\
+\hline
+Foreign exchange && 4.0 \% & N/A & 15\%\\
+\hline
+Credit, Single Name & AAA & 0.38\% & 50\% & 100\%\\
+\cline{2-5}
+& AA & 0.38\% & 50\% & 100\%\\
+\cline{2-5}
+& A & 0.42\% & 50\% & 100\%\\
+\cline{2-5}
+& BBB & 0.54\% & 50\% & 100\%\\
+\cline{2-5}
+& BB & 1.06\% & 50\% & 100\%\\
+\cline{2-5}
+& B & 1.6\% & 50\% & 100\%\\
+\cline{2-5}
+& CCC & 6.0\% & 50\% & 100\%\\
+\hline
+Credit, Index & IG & 0.38\% & 80\% & 80\%\\
+\cline{2-5}
+& SG & 1.06\% & 80\% & 80\%\\
+\hline
+Equity, Single Name && 32\% & 50\% & 120\%\\
+\hline
+Equity, Index && 20\% & 80\% & 75\% \\
+\hline
+Commodity & Electricity & 40\% & 40\% & 150\%\\
+\cline{2-5}
+& Oil/Gas & 18\% & 40\% & 70\%\\
+\cline{2-5}
+& Metals & 18\% & 40\% & 70\%\\
+\cline{2-5}
+& Agricultural & 18\% & 40\% & 70\%\\
+\cline{2-5}
+& Other & 18\% & 40\% & 70\%\\
+\hline
+\end{tabular}\caption{Supervisory factors and option volatilities from \cite{bcbs279} Table 2.}\label{tab_saccr_vols}
+\end{center}
+\end{table}
+}
+
+\subsubsection{Capital Charge}\label{sssec_saccr_capital_charge}
+
+The CCR capital charge is then computed as 
+$$
+K = \EAD \times \underbrace{\PD \times \LGD}_{\text{Risk Weight}}
+$$
+
+In the {\em Standardized Approach}, the risk weight is given by a fixed percentage depending on the
+counterparty type and its external rating \cite{bcbs128, gregory2020}, see table \ref{tab:standard_weights}.
+\begin{table}[hbt]
+\scriptsize
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+ & AAA to AA- & A+ to A- & BBB+ to BBB- & BB+ to BB- & Below BB- & Unrated \\
+\hline
+\hline
+Sovereign & 0\% & 20\% & 50\% & 100\% & 150\% & 100\% \\
+Financials & 20\% & 30\% & 50\% & 100\% & 150\% & 100\% \\
+Corporate & 20\% & 50\% & 75\% & 100\% & 150\% & 100\% \\
+\hline
+\end{tabular}
+\caption{Example risk weights under the standardized approach for credit risk.}
+\label{tab:standard_weights}
+\end{table}
+Under the {\em Internal Ratings-based Approach (IRB)}, banks can use their internal estimates of PD
+({\em Foundation IRB}), or of PD and LGD ({\em Advanced IRB}).
+
+
+\subsubsection{Risk Weighted Assets (RWA)}
+
+RWA is calculated as a simple multiple of the capital charge 
+$$
+\RWA = 12.5 \times K
+$$
+
+\ifdefined\MethodologyOnly\else{
+\subsubsection{Implementation Details}\label{sec:saccr_implementation_details}
+
+This section describes some of the requirements and implementation of the SA-CCR capital analytic
+in ORE.
+
+\subsubsection*{Configuration Defaults}
+
+The SA-CCR capital analytic requires the following input files (with default values specific to the
+SA-CCR as outlined below; defaults that are not specific to any analytic are outlined in the
+corresponding subsection for that input file):
+\begin{enumerate}
+  \item \textbf{Netting Set Definitions} (see the User Guide for a full description of the file format)
+    \begin{itemize}
+      \item \lstinline!ActiveCSAFlag!: Defaults to \emph{False}
+      \item \lstinline!MarginPeriodOfRisk!: Defaults to \emph{2W}
+      \item \lstinline!IndependentAmountHeld!: Defaults to zero
+      \item \lstinline!ThresholdReceive!: Defaults to zero
+      \item \lstinline!MinimumTransferAmountReceive!: Defaults to zero
+      \item \lstinline!CalculateIMAmount!: Defaults to zero
+      \item \lstinline!CalculateVMAmount!: Defaults to zero
+    \end{itemize}
+  \item \textbf{Counterparty Information} (see the User Guide for a full description of the file format)
+    \begin{itemize}
+      \item \lstinline!ClearingCounterparty!: Defaults to \emph{False}
+      \item \lstinline!SaCcrRiskWeight!: Defaults to \emph{1.0}
+    \end{itemize}
+  \item \textbf{Collateral Balances} (see the User Guide for a full description of the file format)
+    \begin{itemize}
+      \item \lstinline!Currency!: Defaults to \emph{USD}
+      \item \lstinline!IndependentAmountHeld!: Defaults to zero
+      \item \lstinline!InitialMargin!: Defaults to zero
+      \item \lstinline!VariationMargin!: Defaults to zero
+    \end{itemize}
+\end{enumerate}
+
+For each trade in the portfolio XML its netting set ID and counterparty ID (specified in the
+\lstinline!Envelope! node) should have a corresponding entry in the netting set definitions
+and counterparty information files, respectively. If, for example, the corresponding netting
+set definition for the trade is missing, then an entry will be created internally with all
+the necessary inputs taking on the default values outlined above, with an appropriate warning
+provided in the log file.
+
+Similarly for the collateral balances, an entry is required for all collateralised netting sets.
+If no entry is provided for the netting set of a given trade, a default collateral balance entry
+will be assumed, with an appropriate warning message.
+
+If a configuration file is not provided at all (and hence all counterparties and netting sets are
+missing configurations), no warning messages will be given, and all entries in the configuration
+will assume the defaults.
+
+\subsubsection*{Additional Requirements/Details}
+
+Since the SA-CCR aggregation step is done at the netting set level, there can only be one
+counterparty associated to each netting set at most, i.e.\ there can only be a one-to-one or
+many-to-one mapping from netting set ID to counterparty ID. This association is determined based
+on the portfolio XML. For example, for a two-trade portfolio, we would have the following mappings
+(from netting set to counterparty):
+\begin{itemize}
+  \item One-to-one
+    \begin{enumerate}
+      \item \lstinline!NettingSetId! = ``NS\_A'', \lstinline!CounterpartyId! = ``CPTY\_A''
+      \item \lstinline!NettingSetId! = ``NS\_B'', \lstinline!CounterpartyId! = ``CPTY\_B''
+    \end{enumerate}
+  \item Many-to-one
+    \begin{enumerate}
+      \item \lstinline!NettingSetId! = ``NS\_A'', \lstinline!CounterpartyId! = ``CPTY\_A''
+      \item \lstinline!NettingSetId! = ``NS\_B'', \lstinline!CounterpartyId! = ``CPTY\_A''
+    \end{enumerate}
+  \item One-to-many (not allowed)
+    \begin{enumerate}
+      \item \lstinline!NettingSetId! = ``NS\_A'', \lstinline!CounterpartyId! = ``CPTY\_A''
+      \item \lstinline!NettingSetId! = ``NS\_A'', \lstinline!CounterpartyId! = ``CPTY\_B''
+    \end{enumerate}
+\end{itemize}
+
+\vspace{1em}
+
+For a given netting set, if the initial margin amount is set to be calculated internally (see
+\lstinline!CalculateIMAmount! in the User Guide's netting set definitions, an IM
+amount does not need to be provided in the collateral balances, and a SIMM amount will be
+calculated and used. If, however,
+an IM amount is still provided, then this provided balance will override the SIMM-generated amount.
+
+This same procedure applies to the variation margin amount. In this case, the calculated VM will be
+equivalent to a perfect collateralisation of the netting set (i.e.\ VM = netting set NPV).
+
+\vspace{1em}
+
+For clearing counterparties (see \lstinline!ClearingCounterparty! in the counterparty information (see User Guide),
+the initial margin amount will be set to zero in the collateral balance, if provided.
+}\fi % \ifdefined\MethodologyOnly

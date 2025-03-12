@@ -106,7 +106,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
     const bool stickyCloseOutDateRun, const bool reevaluateExerciseInStickyCloseOutDateRun) const {
 
     // TODO: rename _AMC_NPV_i indices (i -> valuationDates.size() + i)
-    //       handle reevaluateExercise == false: (?!)
+    //       handle reevaluateExercise == false: (via sticky states)
     QL_REQUIRE(
         !stickyCloseOutDateRun,
         "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): stickyCloseOutDateRun is not yet supported.");
@@ -231,13 +231,16 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         // set model parameters
 
-        baseModelParams_ = model_->modelParameters();
-        for (auto const& p : baseModelParams_) {
-            TLOG("setting model parameter at node " << p.first << " to value " << std::setprecision(16) << p.second);
+        baseModelParams_.clear();
+        for (auto const& p : model_->modelParameters()) {
+            double v = p.eval();
+            TLOG("setting model parameter " << p << "  at node " << p.node() << " to value " << std::setprecision(16)
+                                            << v);
+            baseModelParams_.push_back(std::make_pair(p.node(), v));
             if (useExternalComputeFramework_) {
-                valuesExternal[p.first] = ExternalRandomVariable(p.second);
+                valuesExternal[p.node()] = ExternalRandomVariable(v);
             } else {
-                values[p.first] = RandomVariable(model_->size(), p.second);
+                values[p.node()] = RandomVariable(model_->size(), v);
             }
         }
         DLOG("set " << baseModelParams_.size() << " model parameters");
@@ -293,8 +296,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         keepNodes[cg_var(*g, npv_ + "_0")] = true;
 
-        for (auto const& p : baseModelParams_)
-            keepNodes[p.first] = true;
+        for (auto const& [n, _] : baseModelParams_)
+            keepNodes[n] = true;
 
         if (generateAdditionalResults_) {
             for (auto const& r : additionalResults_) {
@@ -478,19 +481,22 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         // useCachedSensis => calculate npv from stored base npv, sensis, model params
 
-        auto modelParams = model_->modelParameters();
+        std::vector<std::pair<std::size_t, double>> modelParams;
+        for (auto const& p : model_->modelParameters()) {
+            modelParams.push_back(std::make_pair(p.node(), p.eval()));
+        }
 
         double npv = baseNpv_;
         DLOG("computing npv using baseNpv " << baseNpv_ << " and sensis.");
 
         for (Size i = 0; i < baseModelParams_.size(); ++i) {
-            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first, "internal error: modelParams["
-                                                                              << i << "] node " << modelParams[i].first
-                                                                              << " does not match baseModelParams node "
-                                                                              << baseModelParams_[i].first);
+            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first,
+                       "internal error: modelParams[" << i << "] node " << modelParams[i].first
+                                                      << ") does not match baseModelParams node "
+                                                      << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            TLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
+            TLOG("node " << modelParams[i].first << ": " << modelParams[i].second << " (current) - "
                          << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 

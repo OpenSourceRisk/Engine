@@ -1,0 +1,717 @@
+%========================================================
+\chapter{Exposure Simulation}
+%========================================================
+
+\section{Risk Factor Evolution}\label{sec:app_rfe}
+
+\subsection{Cross Asset Model}
+
+ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
+evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit. Extensions to full simulation of Commodity is planned. \\
+
+The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
+processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit, and a single-factor log-normal model for commodity curves.
+We identify a single {\em domestic} currency; its LGM process,
+which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
+$i=1,\dots,n$. 
+
+We denote the equity spot price processes with state variables $s_j$ and the index of the denominating 
+currency for the equity process as $\phi(j)$. The dividend yield corresponding to each equity process $s_j$ is denoted 
+by $q_j$.
+
+Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
+in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$
+and the credit processes in the domestic LGM measure with state variables ${C,k}$ and $y_{C,k}$ for $k=1,\ldots,K$.
+If we consider $n$ 
+foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
+$x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
+\begin{eqnarray*}
+dz_0 &=& \alpha_0\,dW_0^z \\
+dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
+\frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
+\frac{d s_j}{s_j} &=& \mu_j^S\, dt + \sigma_j^S\,dW_j^S \\
+dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
+dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\
+dz_{C,k} &=& \alpha_{C,k}(t)dW_k^C \\
+dy_{C,k} &=& H_{C,k}(t)\alpha_{C,k}(t)dW_k^C \\ \\
+\gamma_i &=&
+-\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
+\mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
+\mu_j^S &=& (r_{\phi(j)}(t) - q_j(t) + \rho_{0j}^{zs} \alpha_0 H_0 \sigma_j^S - \epsilon_{\phi(j)}
+\rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
+r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
+\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I, C\}, \qquad a, b \text{
+                              suitable indices }
+%\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
+%\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
+%\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds,
+%\qquad \alpha_i(t) = \sigma_i^{HW}(t)\,e^{\beta(t)} \\
+\end{eqnarray*}
+where we have dropped time dependencies for readability, $f_i(0,t)$ is the instantaneous forward curve in currency $i$, 
+and $\epsilon_i$ is an indicator such that $\epsilon_i = 1 - \delta_{0i}$, where $\delta$ is the Kronecker delta.
+
+\medskip Parameters $H_i(t)$ and $\alpha_i(t)$ (or alternatively $\zeta_i(t)$) are LGM model parameters which determine,
+together with the stochastic factor $z_i(t)$, the evolution of numeraire and zero bond prices in the LGM model:
+\begin{align}
+N(t) &= \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\}
+\label{lgm1f_numeraire} \\
+P(t,T,z_t)
+&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}.
+\label{lgm1f_zerobond}
+\end{align}
+
+Note that the LGM model is closely related to the Hull-White model in T-forward measure \cite{Lichters}.
+
+\medskip The parameters $H_{I,k}(t)$ and $\alpha_{I,k}(t)$ determine together with the factors $z_{I,k}(t), y_{I,k}(t)$
+the evolution of the spot Index $I(t)$ and the forward index $\hat{I}(t,T) = P_I(t,T) / P_n(t,T)$ defined as the ratio
+of the inflation linked zero bond and the nominal zero bond,
+
+\begin{eqnarray*}
+  \hat{I}(t,T) &=& \frac{\hat{I}(0,T)}{\hat{I}(0,t)} e^{(H_{I,k}(T)-H_{I,k}(t))z_{I,k}(t)+\tilde{V}(t,T)} \\
+  I(t) &=& I(0) \hat{I}(0,t)e^{H_{I,k}(t)z_{I,k}(t)-y_{I,k}(t)-V(0,t)}
+\end{eqnarray*}
+
+with, in case of domestic currency inflation,
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2} \int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}^2(s) ds \\
+         & & - \rho^{zI}_{0,k} H_0(T) \int_t^T (H_{I,k}(t)-H_{I,k}(s))\alpha_0(s)\alpha_{I,k}(s)ds \\
+  \tilde{V}(t,T) &=& V(t,T) - V(0,T) -V(0,t) \\
+         &=& -\frac{1}{2}(H_{I,k}^2(T)-H_{I,k}^2(t))\zeta_{I,k}(t,0) \\
+         & & +(H_{I,k}(T)-H_{I,k}(t)) \zeta_{I,k}(t,1) \\
+         & & +(H_0(T)H_{I,k}(T) - H_0(t)H_{I,k}(t))\zeta_{0I}(t,0) \\
+         & & -(H_0(T)-H_0(t))\zeta_{0I}(t,1) \\
+  V(0,t) &=& \frac{1}{2}H_{I,k}^2(t)\zeta_{I,k}(t,0)-H_{I,k}(t)\zeta_{I,k}(t,1)+\frac{1}{2}\zeta_{I,k}(t,2) \\
+         & & -H_0(t)H_{I,k}(t)\zeta_{0I}(t,0)+H_0(t)\zeta_{0I}(t,1) \\
+  \zeta_{I,k}(t,k) &=& \int_0^t H_{I,k}^k(s)\alpha_{I,k}^2(s) ds \\
+  \zeta_{0I}(t,k) &=& \rho^{zI}_{0,k}\int_0^t H_{I,k}^k(t) \alpha_0(s) \alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+and for foreign currency inflation in currency $i>0$, with
+
+\begin{eqnarray*}
+  \tilde{V}(t,T) &=& V(t,T) -V(0,T) + V(0,T)
+\end{eqnarray*}
+
+and
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2}\int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}(s) ds \\
+  & & -\rho^{zI}_{0,k} \int_t^T H_0(s)\alpha_0(s)(H_{I,k}(T)-H_{I,k}(s)\alpha_{I,k}(s)) ds \\
+  & & -\rho^{zI}_{i,k} \int_t^T (H_i(T)-H_i(s))\alpha_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds \\
+  & & +\rho^{xI}_{i,k} \int_t^T \sigma_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+\subsubsection*{Commodity}
+
+Each commodity component models the commodity price curve as 
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \sigma\,e^{-\kappa\,(T-t)}\, dW(t)  \label{gabillon1f}
+\end{eqnarray}
+which is a single-factor version of the Gabillon (1991) model that is e.g. described in \cite{Lichters}. It can also be seen as the Schwartz (1997) model formulated in terms of forward curve dynamics. The extension to the full Gabillon model with two factors and time-dependent multiplier
+\begin{eqnarray}
+\frac{dF(t,T)}{F(t,T)} &=& \alpha(t)\,
+\left( \sigma_S \,e^{-\kappa\,(T-t)}\, dW_S(t) + \sigma_L\,\left(1-e^{-\kappa\,(T-t)}\right)\,dW_L(t)\right) \label{gabillon2f}
+\end{eqnarray}
+for richer dynamics of the curve and accurate calibration to options will follow. 
+
+The commodity components' Wiener processes can be correlated. However, the integration of commodity components into the overall CAM assumes zero correlations between commodities and non-commodity drivers for the time being.
+
+To propagate the one-factor model, we can use an artificial (Ornstein-Uhlenbeck) spot price process
+\begin{align*}
+dX(t) &= -\kappa\,X(t)\,dt + \sigma(t)\,dW(t), \qquad X(0)=0\\
+X(t) &= X(s)\,e^{-\kappa(t-s)}+ \int_s^t \sigma\,e^{-\kappa(t-u)}\, dW(u)
+\end{align*}
+with 
+\begin{align*}
+F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
+V(t,T) &= e^{-2\kappa T}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
+\end{align*}
+Note that 
+$$
+\V[\ln F(T,T)] = \V[X(T)] 
+$$
+is the variance that is used in the pricing of a Futures Option which in turn is used in the calibration of the Schwartz model.
+
+Alternatively, one can use the drift-free state variable $Y(t)=e^{\kappa t} X(t)$ with
+\begin{align*}
+dY(t) &= \sigma \: e^{\kappa \, t} \, dW(t).
+\end{align*}
+Both choices of state dynamics are possible in ORE. 
+
+\subsection{Analytical Moments of the Risk Factor Evolution Model}\label{sec:app_analytical_moments}
+
+We follow \cite{Lichters}, chapter 16. The expectation of the interest rate process $z_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[z_i(t_0+\Delta t)] &=& z_i(t_0) + \mathbb{E}_{t_0}[\Delta z_i],
+  \qquad\mbox{with}\quad \Delta z_i = z_i(t_0+\Delta t) - z_i(t_0) \\
+  &=& z_i(t_0) -\int_{t_0}^{t_0+\Delta t} H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_{t_0}^{t_0+\Delta t}
+  H^z_0\,\alpha^z_0\,\alpha^z_i\,du \\
+  & & - \epsilon_i  \rho^{zx}_{ii}\int_{t_0}^{t_0+\Delta t} \sigma_i^x\,\alpha^z_i\,du
+\end{eqnarray*}
+
+where $\epsilon_i$ is zero for $i=0$ (domestic currency) and one otherwise.
+
+\bigskip
+
+The expectation of the FX process $x_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[\ln x_i(t_0+\Delta t)] &=& \ln x_i(t_0) +  \mathbb{E}_{t_0}[\Delta \ln x_i],
+  \qquad\mbox{with}\quad \Delta \ln x_i = \ln x_i(t_0+\Delta t) - \ln x_i(t_0) \\
+  &=& \ln x_i(t_0) + \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\\
+  &&+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  && - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2
+  (\alpha^z_0)^2\,du\right)\\
+  &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du
+  \right)\\
+  && + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du \\
+  &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t
+\end{eqnarray*}
+
+with
+
+\begin{eqnarray*}
+  \gamma_i = -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\,
+  \rho^{zx}_{ii}
+\end{eqnarray*}
+
+The expectation of the Inflation processes $z_{I,k}, y_{I,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{I,k}(t_0)$ resp. $y_{I,k}(t_0)$ since both processes are drift free.
+
+\bigskip
+
+The expectation of the equity processes $s_j$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+\begin{eqnarray*}
+\mathbb{E}_{t_0}[\ln s_j(t_0+\Delta t)] &=& \ln s_j(t_0) +  \mathbb{E}_{t_0}[\Delta \ln s_j],
+\qquad\mbox{with}\quad \Delta \ln s_j = \ln s_j(t_0+\Delta t) - \ln s_j(t_0) \\
+&=& \ln s_j(t_0) +  \ln \left[\frac{P_{\phi(j)}(0,s)}{P_{\phi(j)}(0,t)} \right] - \int_s^t 
+q_j(u) 
+du - \frac{1}{2} \int_s^t \sigma_{j}^{S}(u) \sigma_{j}^{S}(u) du\\
+&&
++\rho_{0j}^{zs} \int_s^t \alpha_0(u) H_0(u) \sigma_j^S(u) du
+- \epsilon_{\phi(j)} \rho_{j \phi(j)}^{sx} \int_s^t \sigma_j^S (u)\sigma_{\phi(j)}(u) du\\
+&&+\frac{1}{2} \left( H_{\phi(j)}^2(t) \zeta_{\phi(j)}(t) - H_{\phi(j)}^2(s) \zeta_{\phi(j)}(s)
+- \int_s^t H_{\phi(j)}^2(u) \alpha_{\phi(j)}^2(u) du \right)\\
+&&  + (H_{\phi(j)}(t) - H_{\phi(j)}(s)) z_{\phi(j)}(s) 
++\epsilon_{\phi(j)} \int_s^t \gamma_{\phi(j)} (u) (H_{\phi(j)}(t) - H_{\phi(j)}(u)) du\\
+\end{eqnarray*}
+
+The IR-IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The IR-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The FX-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&
+      \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+      && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du
+  \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+      &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+      &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+      &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+      &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du
+\end{eqnarray*}
+
+The IR-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_a, \Delta z_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_a, \Delta y_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The FX-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) H_{I,b}(s)\alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The INF-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) H_{I,b}(s)
+                                                       \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t H_{I,a}(s) \alpha_{I,a}(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The equity/equity covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[s_j] \right] &=&
+	\rho_{\phi(i) \phi(j)}^{zz}\int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_{\phi(j)} (t)\\
+	&& - H_{\phi(j)} (u)) \alpha_{\phi(i)}(u) \alpha_{\phi(j)}(u) du\\
+	&&+ \rho_{\phi(i) j}^{zs} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)}(u) \sigma_j^S(u) du\\
+	&&+ \rho_{\phi(j) i}^{zs} \int_s^t (H_{\phi(j)} (t) - H_{\phi(j)} (u)) \alpha_{\phi(j)}(u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{ss} \int_s^t \sigma_i^S(u) \sigma_j^S(u) du\\
+\end{eqnarray*}
+
+The equity/FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[x_j] \right] &=&
+	\rho_{\phi(i)0}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_0 (t) - H_0 (u)) \alpha_{\phi(i)}(u) 
+	\alpha_0(u) 
+	du\\
+	&& - \rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_j (t) - H_j (u)) \alpha_{\phi(i)} 
+	(u)\alpha_j(u) du\\
+	&& + \rho_{\phi(i)j}^{zx} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \sigma_j(u) du\\
+	&&+ \rho_{i0}^{sz} \int_s^t (H_0 (t) - H_0 (u)) \alpha_0 (u) \sigma_i^S(u) du\\
+	&&- \rho_{ij}^{sz} \int_s^t (H_j (t) - H_j (u)) \alpha_j (u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{sx} \int_s^t \sigma_i^S(u) \sigma_j(u) du\\
+\end{eqnarray*}
+
+The equity/IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_j \right] &=&
+	\rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_j (u) du\\
+	&&+ \rho_{ij}^{sz} \int_s^t \sigma_i^S (u) \alpha_j (u) du\\
+\end{eqnarray*}
+
+The equity/inflation covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_{I,j} \right] &=&
+	\rho_{\phi(i)j}^{zI} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_{I,j} (u) du\\
+	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) \alpha_{I,j} (u) du\\	
+	Cov \left[\Delta ln[s_i], \Delta y_{I,j} \right] &=&
+	\rho_{\phi(i)j}^{zI} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
+	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
+\end{eqnarray*}
+
+The expectation of the Credit processes $z_{C,k}, y_{C,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{C,k}(t_0)$ resp. $y_{C,k}(t_0)$ since both processes are drift free.
+
+The credit/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_{C,a}, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta y_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,a}(u) \alpha_{C, b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The IR/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_a, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_a, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+\end{eqnarray*}
+
+The FX/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) \alpha_{C,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) H_{C,b}(s)\alpha_{C,b}(s) ds
+\end{eqnarray*}
+
+The inflation/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{C,b}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The equity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) \alpha_{C,j} (u) du\\	
+	Cov \left[\Delta ln[s_i], \Delta y_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+\end{eqnarray*}
+
+\subsection{Change of Measure}
+
+We can change measure from LGM to the T-Forward measure by applying a shift transformation to the $H$ parameter of the domestic LGM process, as explained in \cite{Lichters} and shown in Example 12. This does not involve amending the system of SDEs above.
+
+\medskip
+\noindent
+In the following we show how to move from the LGM to the Bank Account measure when we start with the Cross Asset Model in the LGM measure. This description and the implementation in ORE is limited so far to the cross currency case.
+
+First note that the stochastic Bank Account (BA) can be written
+\begin{align*}
+B(t) &= \frac{1}{P(0,t)}\exp\left(\int_0^t (H_t-H_s)\,\alpha_s\,dW_s^B + \frac{1}{2}\int_0^t (H_t-H_s)^2\,\alpha^2_s\,ds \right)
+\end{align*} 
+with Wiener processes in the BA measure. We can express this in terms of the domestic LGM's state variable $z(t)$ and an auxiliary random variable $y(t)$
+\begin{align*}
+B(t) &= \frac{1}{P(0,t)}\exp\left(H(t)\,z(t) - y(t) + \frac{1}{2} \left(H^2(t)\,\zeta_0(t) + \zeta_2(t)\right)\right)
+\intertext{with}
+dz(t) &= \alpha(t)\,dW^B(t) - H(t)\,\alpha^2(t)\,dt \\
+dy(t) &= H(t)\,\alpha(t)\,dW^B(t) \\
+\zeta_n(t) &= \int_0^t \alpha^2(s)\,H^n(s) \,ds
+\end{align*}
+Note the drift of LGM state variable $z(t)$ in the BA measure and the auxiliary state variable $y(t)$ which is driven by the same Wiener process as $z(t)$. The instantaneous correlation of $dz$ and $dy$ is one, but the terminal correlation of $z(t)$ and $y(t)$ is less than one because of their different volatility functions. This is all we need to switch measure to BA in a pure domestic currency case.
+
+To change measure in the cross currency case we need to make changes to the SDE beyond adding an auxiliary state variable $y$ and adding a drift to the domestic LGM state. Let us write down the SDEs in the LGM and BA measure with respective drift terms that ensure martingale properties.
+
+SDE in the LGM measure
+\begin{align*}
+dz_0 &= \alpha_0\,dW_0^z \\
+dz_i &= \left(-\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + {\color{red} \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0}\right)\,dt + \alpha_i\,dW_i^z \\
+d\ln x_i &= \left(r_0 - r_i - \frac{1}{2}\sigma^2_i + {\color{red} \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i} \right)\, dt + \sigma_i\,dW_i^x \\
+\intertext{SDE in the BA measure}
+{\color{blue}dy_0}  & = {\color{blue}\alpha_0\,H_0\,d\widetilde W_0^z} \\
+dz_0 &= {\color{blue}-\alpha_0^2\,H_0\,dt} + \alpha_0\,d\widetilde W_0^z \\
+dz_i &= \left(-\alpha_i^2\,H_i-\rho_{ii}^{zx}\,\sigma_i\,\alpha_i\right)\,dt + \alpha_i\,d\widetilde W_i^z \\
+d\ln x_i &= \left(r_0 - r_i - \frac{1}{2}\sigma^2_i\right)\, dt + \sigma_i\,d\widetilde W_i^x,\qquad 
+r_i = f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t)
+\end{align*}
+
+Blue terms are {\color{blue}added}, red terms are {\color{red}removed} when moving from LGM to BA.
+
+\medskip\noindent
+
+These drift term changes lead to the following changes in conditional expectations 
+\begin{align*}
+\E[\Delta y_0] =& 0 \\
+\E[\Delta z_0] =& - {\color{blue}\int_s^t H_0\,\alpha_0^2\,du}  \\
+\E[\Delta z_i] =& - \int_s^t H_i\,\alpha_i^2\,du 
+  - \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha_i\,du
+  + {\color{red}\rho^{zz}_{0i} \int_s^t H_0\,\alpha_0\,\alpha_i\,du } \\
+\E[\Delta \ln x] 
+  =& \left(H_0(t)-H_0(s)\right) z_0(s) -\left(H_i(t)-H_i(s)\right)\,z_i(s)\\
+  &+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  & - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &+\frac12 \left(H^2_0(t)\, \zeta_0(t) -  H^2_0(s) \,\zeta_0(s) - \int_s^t H_0^2 \alpha_0^2\,du\right)\\
+  &-\frac12 \left(H^2_i(t) \,\zeta_i(t) -  H^2_i(s) \,\zeta_i(s) - \int_s^t H_i^2 \alpha_i^2\,du\right)\\
+  & + {\color{red} \rho^{zx}_{0i} \int_s^t H_0\, \alpha_0\, \sigma^x_i\,du} \\
+  &  - \int_s^t \left(H_i(t)-H_i\right)\gamma_i \,du \qquad\mbox{with}\qquad
+  \gamma_i = -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + {\color{red}\rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0}   \\
+  & + {\color{blue}\int_s^t \left(H_0(t)-H_0\right)\,\gamma_0 \,du \qquad \mbox{with}\qquad \gamma_0 = - H_0\,\alpha_0^2}
+\end{align*}
+and the following additional variances and covariances
+\begin{align*}
+\mathrm{Var}[\Delta y_0] =& \int_s^t \alpha_0^2\,H_0^2\,du \\
+\mathrm{Cov}[\Delta y_0, \Delta z_i] =& \rho^{zz}_{0i} \int_s^t \alpha_0\,H_0\,\alpha_i\,du \\
+\mathrm{Cov}[\Delta y_0, \Delta \ln x_i] =& \int_s^t \left(H_0(t)-H_0\right) \alpha_0^2\,H_0\,du \\
+&  - \rho^{zz}_{0i}\int_s^t \alpha_0\,H_0\left(H_i(t)-H_i\right)\, \alpha_i \,du \\
+&  +\rho^{zx}_{0i}\int_s^t \alpha_0 \, H_0\,\sigma^x_i \,du 
+%\mathrm{Var}[\Delta z_i] =& \int_s^t \alpha_i^2\,du \\
+%\mathrm{Var}[\Delta \ln x_i] =&
+%      \int_s^t \left(H_0(t)-H_0\right)^2 \alpha_0^2\,du \nonumber\\
+%      & -2\rho^{zz}_{0i} \int_s^t \left(H_i(t)-H_i\right) \alpha_i\left(H_0(t)-H_0\right) \alpha_0\,du
+%  \nonumber\\
+%      &+ 2\rho^{zx}_{0i}\int_s^t \left(H_0(t)-H_0\right)\alpha_0 \,\sigma^x_i\,du \nonumber\\
+%      &- 2\rho^{zx}_{ii}\int_s^t \left(H_i(t)-H_i\right)\alpha_i \,\sigma^x_i\,du\nonumber\\
+%      &+ \int_s^t \left(H_i(t)-H_i\right)^2\alpha_i^2 \,du
+%  \nonumber\\
+%      &+ \int_s^t(\sigma^x_i)^2\,du \\
+%\mathrm{Cov} [\Delta z_i, \Delta z_j] =& \rho^{zz}_{ij}\int_s^t \alpha_i\,\alpha_j\,du \\
+%\mathrm{Cov} [\Delta z_i, \Delta \ln x_j] =& \rho^{zz}_{0i}\int_s^t \left(H_0(t)-H_0\right)
+%  \alpha_0\,\alpha_i\,du \nonumber\\
+%      &- \rho^{zz}_{ij}\int_s^t \alpha_i \,\alpha_j \,\left(H_j(t)-H_j\right) \,du \nonumber\\
+%      &+\rho^{zx}_{ij}\int_s^t \alpha_i \, \sigma^x_j \,du.
+\end{align*}
+
+Example 36 illustrates the effect of the choice of measure on exposure simulations.
+
+\section{Exposures}\label{sec:app_exposure}
+
+In ORE we use the following exposure definitions
+\begin{align}
+\EE(t) = \EPE(t) &= \E^N\left[ \frac{(NPV(t)-C(t))^+}{N(t)} \right] \label{EE}\\
+\ENE(t) &= \E^N\left[ \frac{(-NPV(t)+C(t))^+}{N(t)} \right] \label{ENE}
+\end{align}
+where $\NPV(t)$ stands for the netting set NPV and $C(t)$ is the collateral balance\footnote{$C(t)>0$ means that we have
+  {\em received} collateral from the counterparty} at time $t$. Note that these exposures are expectations of values
+discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today, and expectations are taken in
+the measure associated with numeraire $N$. These are the exposures which enter into unilateral CVA and DVA calculation,
+respectively, see next section. Note that we sometimes label the expected exposure (\ref{EE}) EPE, not to be confused
+with the Basel III Expected Positive Exposure below.
+
+\medskip
+Basel III defines a number of exposures each of which is a 'derivative' of Basel's Expected Exposure:
+\begin{align}
+\intertext{Expected Exposure}
+EE_B(t) &= \E[\max(NPV(t) - C(t), 0)] \label{basel_ee}\\
+\intertext{Expected Positive Exposure}
+EPE_B(T) &= \frac{1}{T} \sum_{t<T} EE_B(t)\cdot \Delta t  \label{basel_epe} \\
+\intertext{Effective Expected Exposure, recursively defined as running maximum}
+EEE_B(t) &= \max(EEE_B(t-\Delta t), EE_B(t)) \label{basel_eee}\\
+\intertext{Effective Expected Positive Exposure}
+EEPE_B(T) &= \frac{1}{T} \sum_{t<T} EEE_B(t)\cdot \Delta t \label{basel_eepe}
+\end{align}
+The last definition, Effective EPE, is used in Basel documents since Basel II for Exposure At Default and capital
+calculation. Following \cite{bcbs128,bcbs189} the time averages in the EPE and EEPE calculations are taken over {\em the
+  first year} of the exposure evolution (or until maturity if all positions of the netting set mature before one year).
+
+\medskip
+To compute $EE_B(t)$ consistently in a risk-neutral setting, we compound (\ref{EE}) with the deterministic discount factor $P(t)$ up to horizon $t$:
+$$
+EE_B(t) = \frac{1}{P(t)} \:\EE(t)
+$$
+
+Finally, we define another common exposure measure, the {\em Potential Future Exposure} (PFE), as a (typically high)
+quantile $\alpha$ of the NPV distribution through time, similar to Value at Risk but at the upper end of the NPV
+distribution:
+
+\begin{align}
+  \PFE_\alpha(t) = \left(\inf\left\{ x | F_t(x) \geq \alpha\right\}\right)^+ \label{PFE}
+\end{align}
+
+where $F_t$ is the cumulative NPV distribution function at time $t$. Note that we also take the positive part to ensure
+that PFE is a positive measure even if the quantile yields a negative value which is possible in extreme cases.
+ 
+\section{Exposures using American Monte Carlo}
+\label{sec:app_amc}
+
+The exposure analysis implemented in ORE that is used in the bulk of the examples in this user guide, mostly vanilla portfolios, 
+is divided into two independent steps:
+
+\begin{enumerate}
+\item in a first step a list of NPVs (or a ``NPV cube'') is computed. The list is indexed by the trade ID, the
+  simulation time step and the scenario sample number. Each entry of the cube is computed using the same pricers as for
+  the T0 NPV calculation by shifting the evaluation date to the relevant time step of the simulation and updating the
+  market term structures to the relevant scenario market data. The market data scenarios are generated using a {\em risk
+    factor evolution model} which can be a cross asset model, but also be based on e.g. historical simulation.
+\item in a second step the generated NPV cube is passed to a post processor that aggregates the results to XVA figures
+  of different kinds.
+\end{enumerate}
+
+We label this approach in the following as the {\em classic} exposure analysis.
+
+The AMC module in ORE allows to replace the first step by a different approach which works faster in particular for exotic
+deals. The second step remains the same. The risk factor evolution model coincides with the pricing models for the
+single trades in this approach and is always a cross asset model operated in a pricing measure.
+
+For AMC the entries of the NPV cube are now viewed as conditional NPVs at the simulation time given the information that
+is generated by the cross asset model's driving stochastic process up to the simulation time. The conditional
+expectations are then computed using a regression analysis of some type. In our current implementation this is chosen to
+be a parametric regression analysis.
+
+The regression models are calibrated per trade during a training phase and later on evaluated in the simulation
+phase. The set of paths in the two phases is in general different w.r.t. their number, time step structure, and
+generation method (Sobol, Mersenne Twister) and seed. Typically the regressand is the (deflated) dirty {\em path} NPV of
+the trade in question, or also its underlying NPV or an option continuation value (to take exercise decisions or
+represent the physical underlying for physical exercise rights). The regressor is typically the model state. Certain
+exotic features that introduce path-dependency (e.g. a TaRN structure) may require an augmentation of the regressor
+though (e.g. by the already accumulated amount in case of the TaRN).
+
+The path NPVs are generated at their {\em natural event dates}, like the fixing date for floating rate coupons or the
+payment date for fixed cashflows. This reduces the requirements for the cross asset model to provide closed form
+expressions for the numeraire and conditional zero bonds only.
+
+Since the evaluation of the regression functions is computationally cheap the overall timings of the NPV cube generation
+are generally smaller compared to the classic approach, in particular for exotic deals like Bermudan Swaptions.
+
+From a methodology point of view an important difference between the classic and the AMC exposure analysis lies in the
+model consistency: While the conditional NPVs computed with AMC are by construction consistent with the risk factor
+evolution model driving the XVA simulation, the scenario NPVs in the classic approach are in general not consistent in
+this sense unless the market scenarios are fully implied by the cross asset model. Here ``fully implied'' means that not
+only rate curves, but also market volatility and correlation term structures like FX volatility surfaces, Swaption
+volatilities or CMS correlation term structures as well as other parameters used by the single trade pricers have to be
+deduced from the cross asset model, e.g. the mean reversion of the Hull White 1F model and a suitable model volatility
+feeding into a Bermudan Swaption pricer.
+
+We note that the generation of such implied term structures can be computationally expensive even for simple versions of
+a cross asset model like one composed from LGM IR and Black-Scholes FX components etc., and even more so for more exotic
+component flavours like Cheyette IR components, Heston FX components etc.
+
+In the current implementation only a subset of all ORE trade types can be simulated using AMC while all other trade types
+are still simulated using the classic engine. The separation of the trades and the joining of the resulting classic and AMC
+cubes is automatic. The post processing step is run on the joint cube from the classic and AMC simulations as before.
+
+Trade types supported by AMC so far:
+\begin{enumerate}
+\item Swap
+\item CrossCurrencySwap
+\item FxOption
+\item BermudanSwaption
+\item MultiLegOption
+\end{enumerate}
+
+%\subsection{Implementation Details}\label{sec:implementation_details}
+
+\subsection{AMC valuation engine and AMC pricing engines}
+
+The \verb+AMCValuationEngine+ is responsible for generating a NPV cube for a portfolio of AMC enabled trades and
+(optionally) to populate a \verb+AggregationScenarioData+ instance with simulation data for post processing, very
+similar to the classic \verb+ValuationEngine+ in ORE.
+
+The AMC valuation engine takes a cross asset model defining the risk factor evolution. This is set up identically to the
+cross asset model used in the \\ \verb+CrossAssetModelScenarioGenerator+. Similarly the same parameters for the path
+generation (given as a \verb+ScenarioGeneratorData+ instance) are used, so that it is guaranteed that both the AMC
+engine and the classic engine produce the same paths, hence can be combined to a single cube for post processing. It is
+checked, that a non-zero seed for the random number generation is used.
+
+The portfolio is build against an engine factory with specific AMC pricing engine configurations.
+The AMC engine builders are retrieved from \verb+getAmcEngineBuilders()+ and are special in that unlike usual
+engine builders they take two parameters
+
+\begin{enumerate}
+\item the cross asset model which serves as a risk factor evolution model in the AMC valuation engine
+\item the date grid used within the AMC valuation engine
+\end{enumerate}
+
+For technical reasons, the configuration also contains configurations for \\ \verb+CapFlooredIborLeg+ and \verb+CMS+
+because those are used within the trade builders (more precisely the leg builders called from these) to build the
+trade. The configuration can be the same as for T0 pricing for them, it is actually not used by the AMC pricing engines.
+
+The AMC engine builders build a smaller version of the global cross asset model only containing the model components
+required to price the specific trade. Note that no deal specific calibration of the model is performed.
+
+The AMC pricing engines perform a T0 pricing and - as a by-product - can be used as usual T0 pricing engines if a
+corresponding engine builder is supplied, see Example 39 (Exposure Simulation using American Monte Carlo).
+
+In addition the AMC pricing engines perform the necessary calculations to yield conditional NPVs on the given global
+simulation grid. How these calcuations are performed is completely the responsibility of the pricing engines, altough
+some common framework for many trade types is given by a base engine, see \ref{sec:amc_base_engine}. This way the
+approximation of conditional NPVs on the simulation grid can be taylored to each product and also each single trade,
+with regards to
+
+\begin{enumerate}
+\item the number of traning paths and the required date grid for the training (e.g. containing all relevant coupon and
+  exercise event dates of a trade)
+\item the order and type of regressoin basis functions to be used
+\item the choice of the regressor (e.g. a TaRN might require a regressor augmented by the accumulated coupon amount)
+\end{enumerate}
+
+The AMC pricing engines then provide an additional result labelled \verb+amcCalculator+ which is a class implementing
+the \verb+AmcCalculator+ interface which consists of two methods: The method \verb+simulatePath()+ takes a
+\verb+MultiPath+ instance representing one simulated path from the global risk factor evolution model and returns an
+array of conditional, deflated NPVs for this path. The method \verb+npvCurrency()+ returns the currency $c$ of the
+calculated conditional NPVs. This currency can be different from the base currency $b$ of the global risk factor
+evolution model. In this case the conditional NPVs are converted to the global base currency within the AMC valuation
+engine by multiplying them with the conversion factor
+
+\begin{equation}\label{currency_conversion_factor}
+\frac{N_c(t) X_{c,b}(t)}{N_b(t)}
+\end{equation}
+
+where $t$ is the simulation time, $N_c(t)$ is the numeraire in currency $c$, $N_b(t)$ is the numeraire in currency
+$b$ and $X_{c,b}(t)$ is the FX rate at time $t$ converting from $c$ to $b$.
+
+The technical criterion for a trade to be processed within the AMC valuation is engine is that a) it can be built
+against the AMC engine factory described above and b) it provides an additional result \verb+amcCalculator+. If a trade
+does not meet these criteria it is simulated using the classic valuation engine. The logic that does this is located in
+the overide of the method \verb+OREAppPlus::generateNPVCube()+.
+
+The AMC valuation engine can also populate an aggregation scenario data instance. This is done only if necessary,
+i.e. only if no classic simulation is performed anyway. The numeraire and fx spot values produced by the AMC valuation
+engine are identical to the classic engine. Index fixings are close, but not identical, because the AMC engine used the
+T0 curves for projection while the classic engine uses scenario simulation market curves, which are not exactly matching
+those of the T0 market. In this sense the AMC valuation engine produces more precise values compared to the classic
+engine.
+
+\subsection{The multileg option AMC base engine and derived engines}\label{sec:amc_base_engine}
+
+Example 39 (Exposure Simulation using American Monte Carlo) provides an overview of the implemented AMC engine builders.
+These builders use the following QuantExt pricing engines
+
+\begin{enumerate}
+\item \verb+McLgmSwapEngine+ for single currency swaps
+\item \verb+McCamCurrencySwapEngine+ for cross currency swaps
+\item \verb+McCamFxOptionEngine+ for fx options
+\item \verb+McLgmSwaptionEngine+ for Bermudan swaptions
+\item \verb+McMultiLegOptionEngine+ for Multileg option
+\end{enumerate}
+
+All these engine are based on a common \verb+McMultiLegBaseEngine+ which does all the computations. For this each of the
+engines sets up the following protected member variables (serving as parameters for the base engine) in their
+\verb+calculate()+ method:
+
+\begin{enumerate}
+\item \verb+leg_+: a vector of \verb+QuantLib::Leg+
+\item \verb+currency_+: a vector of \verb+QuantLib::Currency+ corresponding to the leg vector
+\item \verb+payer_+: a vector of $+1.0$ or $-1.0$ double values indicating receiver or payer legs
+\item \verb+exercise_+: a \verb+QuantLib::Exercise+ instance describing the exercise dates (may be \verb+nullptr+, if
+  the underlying represents the deal already)
+\item \verb+optionSettlement_+: a \verb+Settlement::Type+ value indicating whether the option is settled physically or
+  in cash
+\end{enumerate}
+
+A call to \verb+McMultiLegBaseEngine::calculate()+ will set the result member variables
+
+\begin{enumerate}
+\item \verb+resultValue_+: T0 NPV in the base currency of the cross asset model passed to the pricing engine
+\item \verb+underlyingValue_+: T0 NPV of the underlying (again in base ccy)
+\item *\verb+amcCalculator_+: the AMC calculator engine to be used in the AMC valuation engine
+\end{enumerate}
+
+The specific engine implementations should convert the \verb+resultValue_+ to the npv currency of the trade (as defined
+by the (ORE) trade builder) so that they can be used as regular pricing engine consistently within ORE. Note that only
+the additional \verb+amcCalculator+ result is used by the AMC valuation engine, not any of the T0 NPVs directly.
+
+\subsection{Limitations and Open Points}
+\label{sec:amc_limitations}
+
+This sections lists known limitations of the AMC simulation engine.
+
+\subsection*{Trade Features}
+
+Some trade features are not yet supported by the multileg option engine:
+
+\begin{enumerate}
+\item exercise flows (like a notional exchange common to cross currency swaptions) are not supported
+\end{enumerate}
+
+\subsection*{Flows Generation (for DIM Analysis)}
+
+At the current stage the AMC engine does not generate flows which are required for the DIM analysis in the post
+processor.
+
+\subsection*{State interpolation for exercise decisions}
+
+During the simulation phase exercise times of a specific trade are not necessarily part of the simulated time
+grid. Therefore the model state required to take the exercise decision has in to be interpolated in general on the
+simulated path. Currently this is done using a simple linear interpolation while from a pure methodology point of view a
+Brownian Bridge would be preferable. In our tests we do not see a big impact of this approximation though.
+
+\subsection*{Basis Function Selection}
+
+Currently the basis function system is generated by specifying the type of the functions and the order, see
+Example 39 (Exposure Simulation using American Monte Carlo).
+The number of independent variables varies by product type and details. Depending on
+the number of independent variables and the order the number of generated basis functions can get quite big which slows
+down the computation of regression coefficients. It would be desirable to have the option to filter the full set of
+basis functions, e.g. by explicitly enumerating them in the configuration, so that a high order can be chosen even for
+products with a relatively large number of independent variables (like e.g. FX Options or Cross Currency Swaps).
+
+\subsection{Outlook: Trade Compression}
+
+For vanilla trades where the regression is only required to produce the NPV cube entries (and not to take exercise
+decisions etc.) it is not strictly necessary to do the regression analysis on a single trade level\footnote{except
+  single trade exposures are explicitly required of course}. Although in the current implementation there is no direct
+way to do the regression analysis on whole (sub-)portfolios instead of single trades, one can represent such a
+subportfolio as a single technical trade (e.g. as a single swap or multileg option trade) to achieve a similar
+result. This might lead to better performance than the usual single trade calculation. However one should also try to
+keep the regressions as low-dimensional as possible (for performance and accuracy reasons) and therefore define the
+sub-portfolios by e.g. currency, i.e. as big as possible while at the same time keeping the associated model dimension as
+small as possible.

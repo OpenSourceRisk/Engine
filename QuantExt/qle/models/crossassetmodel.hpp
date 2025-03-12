@@ -141,7 +141,7 @@ public:
     /*! return index for credit (0 = first credit name) */
     Size crName(const std::string& name) const;
 
-    /*! return index for commodity (0 = first equity) */
+    /*! return index for commodity (0 = first comm name) */
     Size comIndex(const std::string& comName) const;
 
     /*! observer and linked calibrated model interface */
@@ -275,6 +275,7 @@ public:
 
     /*! the integrator used to calculate moments */
     const QuantLib::ext::shared_ptr<Integrator> integrator() const { return integrator_; }
+    const QuantLib::ext::shared_ptr<Integrator> underlyingIntegrator() const { return underlyingIntegrator_; }
     bool piecewiseIntegrationWrapper() const { return piecewiseIntegrationWrapper_; }
 
     /*! return (V(t), V^tilde(t,T)) in the notation of the book */
@@ -502,7 +503,7 @@ protected:
     SalvagingAlgorithm::Type salvaging_ = SalvagingAlgorithm::None;
     IrModel::Measure measure_ = IrModel::Measure::LGM;
     Discretization discretization_ = Discretization::Exact;
-    QuantLib::ext::shared_ptr<Integrator> integrator_;
+    QuantLib::ext::shared_ptr<Integrator> integrator_, underlyingIntegrator_;
     bool piecewiseIntegrationWrapper_ = true;
     mutable QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
