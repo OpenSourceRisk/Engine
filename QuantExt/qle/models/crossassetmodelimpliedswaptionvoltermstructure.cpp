@@ -47,7 +47,12 @@ CrossAssetModelImpliedSwaptionVolTermStructure::CrossAssetModelImpliedSwaptionVo
     update();
 }
 
-void CrossAssetModelImpliedSwaptionVolTermStructure::state(const Real z) { state_ = z; }
+void CrossAssetModelImpliedSwaptionVolTermStructure::state(const Real z) {
+    state_ = z;
+    engine_ =
+        ext::make_shared<AnalyticLgmSwaptionEngine>(model_, ccyIndex_, Handle<YieldTermStructure>(),
+                                                    AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata, state_);
+}
 
 void CrossAssetModelImpliedSwaptionVolTermStructure::move(const Date& d, const Real z) {
     state(z);

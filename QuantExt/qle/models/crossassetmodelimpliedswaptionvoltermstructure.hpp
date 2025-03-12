@@ -84,7 +84,7 @@ private:
     ext::shared_ptr<SwapIndex> swapIndex_;
     ext::shared_ptr<SwapIndex> shortSwapIndex_;
     const bool purelyTimeBased_;
-    const QuantLib::ext::shared_ptr<AnalyticLgmSwaptionEngine> engine_;
+    QuantLib::ext::shared_ptr<AnalyticLgmSwaptionEngine> engine_;
     Date referenceDate_;
     Real relativeTime_;
     Real state_;
