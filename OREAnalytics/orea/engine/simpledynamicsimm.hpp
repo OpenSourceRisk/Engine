@@ -64,7 +64,10 @@ private:
     QuantLib::Array irCurvatureWeights_;
 
     double fxDeltaRw_;
+    double fxVegaRw_;
     double fxCorr_;
+    QuantLib::Matrix fxVegaCorrelations_;
+    QuantLib::Array fxCurvatureWeights_;
     
 };
 
