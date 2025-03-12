@@ -305,14 +305,15 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
     if (cashSettlement) {
         forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
         results_.additionalResults["incomeCompoundingDate"] = bondSettlementDate;
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
     } else {
         forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
         results_.additionalResults["incomeCompoundingDate"] = settlementDate;
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(settlementDate);
     }
 
     results_.additionalResults["spotForwardBondValue"] = spotValue;
     results_.additionalResults["forwardForwardBondValue"] = forwardBondValue;
-    results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
 
     results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
     results_.additionalResults["forwardSettlementDate"] = settlementDate;
