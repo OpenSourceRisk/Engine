@@ -203,15 +203,15 @@ public:
     const std::set<CreditIndexConstituent>& constituents() const;
 
     const std::string& indexFamily() const { return indexFamily_; }
-    const std::string& indexTrancheFamily() const { return indexTrancheFamily_; }
+    const std::string& indexSubFamily() const { return indexSubFamily_; }
 
     void setIndexFamily(const std::string& indexFamily) { indexFamily_ = indexFamily; }
-    void setIndexTrancheFamily(const std::string& indexTrancheFamily) { indexTrancheFamily_ = indexTrancheFamily; }
+    void setIndexSubFamily(const std::string& indexSubFamily) { indexSubFamily_ = indexSubFamily; }
 
 private:
     std::set<CreditIndexConstituent> constituents_;
     std::string indexFamily_;
-    std::string indexTrancheFamily_;
+    std::string indexSubFamily_;
 };
 
 /*

@@ -338,7 +338,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     refData.dayCounter = cdsConv->dayCounter();
     refData.lastPeriodDayCounter = cdsConv->lastPeriodDayCounter();
     refData.cashSettlementDays = cdsConv->upfrontSettlementDays();
-    refData.seniority = config.seniorityTier();
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {

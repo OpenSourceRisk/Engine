@@ -68,7 +68,7 @@ public:
 
     virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
-              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
+              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<std::string>& names,
               const std::string& indexFamily, bool checkExpectedRecovery) = 0;
 
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition() const {
@@ -92,6 +92,33 @@ public:
                 (rt->second == "SensitivityDelta" || rt->second == "SensitivityDeltaGamma"));
     }
 
+    bool useAssumedRecoveries() const {
+        return parseBool(modelParameter("useAssumedRecovery", {}, false, "false"));
+    }
+
+    vector<double> recoveryGrid(const std::string& indexSubFamily, const std::string& tier) const {
+        const vector<string> qualifiers = { indexSubFamily + "_" + tier, tier };
+        string rrGridStr = modelParameter("recoveryRateGrid", qualifiers);
+        vector<string> rrGridToken;
+        boost::split(rrGridToken, rrGridStr, boost::is_any_of(","));
+        return parseVectorOfValues<Real>(rrGridToken, &parseReal);
+    }
+
+    vector<double> recoveryProbabilities(const std::string& indexSubFamily, const std::string& tier) const {
+        const vector<string> qualifiers = {indexSubFamily + "_" + tier, tier};
+        string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
+        vector<string> rrProbStringTokens;
+        boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
+        return parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
+    }
+
+    double assumedRecovery(const std::string& indexSubFamily, const std::string& tier) const {
+        auto rrGrid =  recoveryGrid(indexSubFamily, tier);
+        auto rrProbs = recoveryProbabilities(indexSubFamily, tier);
+        return std::inner_product(rrGrid.begin(), rrGrid.end(), rrProbs.begin(), 0.0);
+    }
+
+
 protected:
     virtual vector<string> keyImpl(const Currency& ccy, bool isIndex, const std::string& qualifier,
                                    const std::vector<std::string>& creditCurves,
@@ -111,6 +138,9 @@ protected:
             res.emplace_back(to_string(fixedRecovery));
         return res;
     }
+
+
+
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const Currency&, bool isIndex, const std::string& qualifier,
                const std::vector<std::string>& creditCurves,
@@ -192,7 +222,7 @@ public:
 
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
-              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
+              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<std::string>& names,
               const std::string& indexFamilyName, bool checkExpectedRecovery) override {
 
         Real gaussCopulaMin = parseReal(modelParameter("min"));
@@ -223,23 +253,33 @@ public:
         // Optional flag, set to false if omitted, i.e. we use determinsitic recovery by default
         bool useStochasticRecovery = parseBool(modelParameter("useStochasticRecovery", {}, false, "false"));
 
-        std::vector<std::vector<double>> rrGrids;
-        std::vector<std::vector<double>> rrProbs;
+        std::vector<std::vector<double>> recoveryGrids;
+        std::vector<std::vector<double>> recoveryProbabilities;
 
         if (useStochasticRecovery) {
-            for (size_t i = 0; i < seniorities.size(); ++i) {
-                const auto seniority = seniorities[i];
-                const auto seniorityString = to_string(seniority);
+            for (size_t i = 0; i < names.size(); ++i) {
+                const std::string name = names[i];
+                CdsReferenceInformation cdsInfo;
+                std::string tierString;
+                if (tryParseCdsInformation(name, cdsInfo)) {
+                    tierString = to_string(cdsInfo.tier());
+                }
                 const auto recoveryRate = recoveryRates[i];
-                std::map<std::string, vector<Real>> rrProbMap;
-                std::map<std::string, vector<Real>> rrGridMap;
-                std::string key = indexFamilyName + "_" + seniorityString;
-                if (rrProbMap.count(key) == 0 || rrGridMap.count(key) == 0) {
-                    std::vector<std::string> qualifiers{key, seniorityString};
-                    string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
-                    string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
-                    if (rrGridString == "Markit2020") {
-                        StructuredConfigurationWarningMessage(
+                std::string key = indexFamilyName + tierString;
+                std::vector<std::string> qualifiers; 
+                if(!indexFamilyName.empty() && !tierString.empty()){
+                    qualifiers.push_back(indexFamilyName + "_" + tierString);
+                }
+                if (!indexFamilyName.empty()){
+                    qualifiers.push_back(indexFamilyName);
+                }
+                if (!tierString.empty()){
+                    qualifiers.push_back(tierString);
+                }
+                string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
+                string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
+                if (rrGridString == "Markit2020") {
+                    StructuredConfigurationWarningMessage(
                             "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
                             "The recovery rate grid 'Markit2020' is deprecated. Please use the 'recoveryRateGrid' "
                             "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
@@ -253,28 +293,31 @@ public:
                             rrGridString =
                                 to_string(recoveryRate) + "," + to_string(recoveryRate) + "," + to_string(recoveryRate);
                         }
-                    }
-                    vector<string> rrProbStringTokens;
-                    boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-                    rrProbMap[key] = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
-                    vector<string> rrGridTokens;
-                    boost::split(rrGridTokens, rrGridString, boost::is_any_of(","));
-                    rrGridMap[key] = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
+                } else if (rrGridString == "Constant"){
+                    rrGridString = to_string(recoveryRate);
+                    rrProbString = "1";
                 }
-                rrGrids.push_back(rrGridMap[key]);
-                rrProbs.push_back(rrProbMap[key]);
+                vector<string> rrProbStringTokens;
+                boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
+                auto rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
+                vector<string> rrGridTokens;
+                boost::split(rrGridTokens, rrGridString, boost::is_any_of(","));
+                auto rrGrid = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
+                recoveryGrids.push_back(rrGrid);
+                recoveryProbabilities.push_back(rrProb);
             }
         } else {
             for (Size i = 0; i < recoveryRates.size(); ++i) {
                 // Use the same recovery rate probabilities across all entites
-                rrProbs.push_back({1.0});
-                rrGrids.push_back({recoveryRates[i]});
+                recoveryProbabilities.push_back({1.0});
+                recoveryGrids.push_back({recoveryRates[i]});
             }
         }
         GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps,
                                                           useQuadrature, nBuckets, homogeneousPoolWhenJustified,
                                                           useStochasticRecovery);
-        return modelbuilder.lossModel(recoveryRates, correlation, homogeneous, rrGrids, rrProbs, checkExpectedRecovery);
+        return modelbuilder.lossModel(recoveryRates, correlation, homogeneous, recoveryGrids, recoveryProbabilities,
+                                      checkExpectedRecovery);
     }
 };
 
@@ -284,8 +327,8 @@ public:
 
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const string& qualifier, const vector<Real>& recoveryRates, const Real& detachmentPoint,
-              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<CdsTier>& seniorities,
-              const std::string& indexFamily, bool checkExpectedRecovery) override {
+              const QuantLib::Date& trancheMaturity, bool homogeneous, const std::vector<std::string>& names,
+              const std::string& subIndexFamily, bool checkExpectedRecovery) override {
 
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
             market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));
@@ -317,38 +360,63 @@ public:
 
         std::vector<std::vector<double>> recoveryProbabilities, recoveryGrids;
         if (useStochasticRecovery) {
-            std::map<std::string, vector<Real>> rrProb;
-            std::map<std::string, vector<Real>> rrGrid;
-            std::set<std::string> uniqueSeniorities;
-            for (const auto& seniority : seniorities) {
-                uniqueSeniorities.insert(to_string(seniority));
-            }
-            for (const auto& seniority : uniqueSeniorities) {
-                std::string key = indexFamily + "_" + seniority;
-                std::vector<std::string> qualifiers{key, seniority};
+            for (size_t i = 0; i < names.size(); ++i) {
+                const std::string name = names[i];
+                CdsReferenceInformation cdsInfo;
+                std::string tierString;
+                if (tryParseCdsInformation(name, cdsInfo)) {
+                    tierString = to_string(cdsInfo.tier());
+                }
+                const auto recoveryRate = recoveryRates[i];
+                std::map<std::string, vector<Real>> rrProbMap;
+                std::map<std::string, vector<Real>> rrGridMap;
+                std::string key = subIndexFamily + tierString;
+                std::vector<std::string> qualifiers;
+                if (!subIndexFamily.empty() && !tierString.empty()) {
+                    qualifiers.push_back(subIndexFamily + "_" + tierString);
+                }
+                if (!subIndexFamily.empty()) {
+                    qualifiers.push_back(subIndexFamily);
+                }
+                if (!tierString.empty()) {
+                    qualifiers.push_back(tierString);
+                }
                 string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
-                auto rrGridString = modelParameter("recoveryRateGrid", qualifiers);
+                string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
+                if (rrGridString == "Markit2020") {
+                    StructuredConfigurationWarningMessage(
+                        "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
+                        "The recovery rate grid 'Markit2020' is deprecated. Please use the 'recoveryRateGrid' "
+                        "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
+                        .log();
+                    if (recoveryRate >= 0.1 && recoveryRate <= 0.55) {
+                        rrGridString =
+                            std::to_string(2.0 * recoveryRate - 0.1) + "," + std::to_string(recoveryRate) + ",0.1";
+                    } else {
+                        ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
+                                                     << " out of range [0.1, 0.55], using constant recovery");
+                        rrGridString =
+                            to_string(recoveryRate) + "," + to_string(recoveryRate) + "," + to_string(recoveryRate);
+                    }
+                } else if (rrGridString == "Constant") {
+                    rrGridString = to_string(recoveryRate);
+                    rrProbString = "1";
+                }
+
                 vector<string> rrProbStringTokens;
                 boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-                rrProb[key] = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
+                auto rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
                 vector<string> rrGridTokens;
                 boost::split(rrGridTokens, rrGridString, boost::is_any_of(","));
-                rrGrid[key] = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
-            }
-            for (Size i = 0; i < seniorities.size(); ++i) {
-                std::string key = indexFamily + to_string(seniorities[i]);
-                auto rrp = rrProb.find(key);
-                QL_REQUIRE(rrp != rrProb.end(), "No recovery rate probabilities found for key " << key);
-                auto rrg = rrGrid.find(key);
-                QL_REQUIRE(rrg != rrGrid.end(), "No recovery rate grids found for key " << key);
-                recoveryProbabilities.push_back(rrp->second);
-                recoveryGrids.push_back(rrg->second);
+                auto rrGrid = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
+                recoveryGrids.push_back(rrGridMap[key]);
+                recoveryProbabilities.push_back(rrProbMap[key]);
             }
         } else {
             for (Size i = 0; i < recoveryRates.size(); ++i) {
                 // Use the same recovery rate probabilities across all entites
-                recoveryProbabilities.push_back({1.0});
-                recoveryGrids.push_back({recoveryRates[i]});
+                recoveryGrids.push_back({1.0});
+                recoveryProbabilities.push_back({recoveryRates[i]});
             }
         }
         DLOG("Build MonteCarloModel");

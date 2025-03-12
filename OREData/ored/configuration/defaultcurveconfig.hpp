@@ -62,7 +62,7 @@ public:
                QuantLib::Real runningSpread = QuantLib::Null<Real>(),
                const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
                const boost::optional<bool>& implyDefaultFromMarket = boost::none, const bool allowNegativeRates = false,
-               const int priority = 0, const std::string& seniorityTier = "");
+               const int priority = 0);
         Config()
             : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), indexTerm_(0 * QuantLib::Days),
               allowNegativeRates_(false) {}
@@ -95,7 +95,6 @@ public:
         const bool allowNegativeRates() const { return allowNegativeRates_; }
         const string& initialState() const { return initialState_; }
         const vector<string>& states() const { return states_; }
-        const string& seniorityTier() const { return seniorityTier_; }
         //@}
 
         //! \name Setters
@@ -118,7 +117,6 @@ public:
         QuantLib::Period& indexTerm() { return indexTerm_; }
         boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
-        string& seniorityTier() { return seniorityTier_; }
         //@}
 
     private:
@@ -165,7 +163,6 @@ public:
         bool allowNegativeRates_;
 
         int priority_ = 0;
-        string seniorityTier_;
     };
 
     //! the curve builder will try to build the configs by ascending key in the map, first success wins

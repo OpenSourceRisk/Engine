@@ -64,8 +64,8 @@ public:
         boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none, bool adjustForLosses = true,
         const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
-        const std::string& indexTrancheFamily = "", bool calibrateConstituentsToIndexSpread = false,
-        bool stochasticRecovery = false, const std::map<std::string, std::vector<double>>& rrGrids = {},
+        bool calibrateConstituentsToIndexSpread = false, const bool useAssumedRecovery = false,
+        const std::map<std::string, std::vector<double>>& rrGrids = {},
         const std::map<std::string, std::vector<double>>& rrProbs = {});
     //@}
 
@@ -94,10 +94,9 @@ public:
     const double indexSpread() const { return indexSpread_; }
     const std::string currency() const { return currency_; }
     const bool calibrateConstituentsToIndexSpread() const { return calibrateConstituentsToIndexSpread_; }
-    const bool stochasticRecovery() const { return stochasticRecovery_; }
+    const bool useAssumedRecovery() const { return useAssumedRecovery_; }
     const std::map<std::string, std::vector<double>>& rrGrids() const { return rrGrids_; }
     const std::map<std::string, std::vector<double>>& rrProbs() const { return rrProbs_; }
-    const std::string& indexTrancheFamily() const { return indexTrancheFamily_; }
 
     //@}
 
@@ -111,11 +110,35 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
-    bool& stochasticRecovery() { return stochasticRecovery_; }
     std::map<std::string, std::vector<double>>& rrGrids() { return rrGrids_; }
     std::map<std::string, std::vector<double>>& rrProbs() { return rrProbs_; }
-    std::string& indexTrancheFamily() { return indexTrancheFamily_; }
     //@}
+
+    std::vector<double> rrGrid(const std::string& seniority) const {
+        auto it = rrGrids_.find(seniority);
+        if (it != rrGrids_.end()) {
+            return it->second;
+        } 
+        it = rrGrids_.find("");
+        if (it != rrGrids_.end()) {
+            return it->second;
+        }
+        return std::vector<double>();
+    }
+
+    std::vector<double> rrProb(const std::string& seniority) const {
+        auto it = rrProbs_.find(seniority);
+        if (it != rrProbs_.end()) {
+            return it->second;
+        }
+        it = rrProbs_.find("");
+        if (it != rrProbs_.end()) {
+            return it->second;
+        }
+        return std::vector<double>();
+    }
+
+    double assumedRecovery(const std::string& creditName) const;
 
 private:
     vector<string> detachmentPoints_;
@@ -133,9 +156,8 @@ private:
     std::vector<MarketDatum::QuoteType> quoteTypes_;
     double indexSpread_;
     std::string currency_;
-    std::string indexTrancheFamily_;
     bool calibrateConstituentsToIndexSpread_;
-    bool stochasticRecovery_;
+    bool useAssumedRecovery_;
     std::map<std::string, std::vector<double>> rrGrids_;
     std::map<std::string, std::vector<double>> rrProbs_;
 

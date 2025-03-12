@@ -18,6 +18,7 @@
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -30,7 +31,7 @@ namespace data {
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
       quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()),
-      calibrateConstituentsToIndexSpread_(false), stochasticRecovery_(false) {}
+      calibrateConstituentsToIndexSpread_(false), useAssumedRecovery_(false) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
@@ -38,15 +39,15 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     BusinessDayConvention businessDayConvention, DayCounter dayCounter, bool extrapolate, const string& quoteName,
     const Date& startDate, const Period& indexTerm, boost::optional<DateGeneration::Rule> rule, bool adjustForLosses,
     const std::vector<MarketDatum::QuoteType>& quoteTypes, double indexSpread, const std::string& currency,
-    const std::string& indexTrancheFamily, const bool calibrateConstituentsToIndexSpread, bool stochasticRecovery,
+    const bool calibrateConstituentsToIndexSpread, bool useAssumedRecovery,
     const std::map<std::string, std::vector<double>>& rrGrids,
     const std::map<std::string, std::vector<double>>& rrProbs)
     : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms),
       settlementDays_(settlementDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
       dayCounter_(dayCounter), extrapolate_(extrapolate), quoteName_(quoteName.empty() ? curveID : quoteName),
       startDate_(startDate), indexTerm_(indexTerm), rule_(rule), adjustForLosses_(adjustForLosses),
-      quoteTypes_(quoteTypes), indexSpread_(indexSpread), currency_(currency), indexTrancheFamily_(indexTrancheFamily),
-      calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread), stochasticRecovery_(stochasticRecovery),
+      quoteTypes_(quoteTypes), indexSpread_(indexSpread), currency_(currency),
+      calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread), useAssumedRecovery_(useAssumedRecovery),
       rrGrids_(rrGrids), rrProbs_(rrProbs) {
     QL_REQUIRE(!quoteTypes_.empty(), "Required at least one valid quote type");
     for (const auto& quoteType : quoteTypes) {
@@ -149,8 +150,6 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
 
     currency_ = XMLUtils::getChildValue(node, "Currency", false);
 
-    indexTrancheFamily_ = XMLUtils::getChildValue(node, "IndexTrancheFamily", false);
-
     adjustForLosses_ = true;
     if (auto n = XMLUtils::getChildNode(node, "AdjustForLosses"))
         adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
@@ -158,41 +157,44 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     calibrateConstituentsToIndexSpread_ =
         XMLUtils::getChildValueAsBool(node, "CalibrateConstituentsToIndexSpread", false, false);
 
-    stochasticRecovery_ = XMLUtils::getChildValueAsBool(node, "StochasticRecovery", false, false);
+    useAssumedRecovery_ = XMLUtils::getChildValueAsBool(node, "UseAssumedRecovery", false, false);
 
-    if (stochasticRecovery_) {
-        auto stochasticRecoveryModelParameterNode = XMLUtils::getChildNode(node, "StochasticRecoveryModelParameters");
-        auto recoveryGridNode = XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryGrid");
-        QL_REQUIRE(recoveryGridNode, "RecoveryGrid node not found");
-        auto recoveryGrids = XMLUtils::getChildrenAttributesAndValues(recoveryGridNode, "Grid", "seniority", true);
-        auto recoveryProbabilityNode =
-            XMLUtils::getChildNode(stochasticRecoveryModelParameterNode, "RecoveryProbabilities");
-        QL_REQUIRE(recoveryProbabilityNode, "RecoveryProbabilities node not found");
-        auto recoveryProbabilites =
-            XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
-        for (const auto& seniority : recoveryGrids) {
-            QL_REQUIRE(recoveryProbabilites.find(seniority.first) != recoveryProbabilites.end(),
-                       "Recovery probabilities for seniority " << seniority.first << " not found");
-        }
-        for (const auto& [seniority, probs] : recoveryProbabilites) {
-            std::vector<string> probTokens;
-            boost::split(probTokens, probs, boost::is_any_of(","));
-            std::vector<double> probsDouble;
-            for (const auto& p : probTokens) {
-                probsDouble.push_back(parseReal(p));
-            }
-            rrProbs_[seniority] = probsDouble;
-        }
-        for (const auto& [seniority, grid] : recoveryGrids) {
-            std::vector<string> gridTokens;
-            boost::split(gridTokens, grid, boost::is_any_of(","));
-            std::vector<double> rrGrid;
-            for (const auto& p : gridTokens) {
-                rrGrid.push_back(parseReal(p));
-            }
-            rrGrids_[seniority] = rrGrid;
-        }
+    std::map<std::string, std::string> recoveryGrids;
+    std::map<std::string, std::string> recoveryProbabilites;
+
+    auto recoveryGridNode = XMLUtils::getChildNode(node, "RecoveryGrid");
+    if (recoveryGridNode) {
+        recoveryGrids = XMLUtils::getChildrenAttributesAndValues(recoveryGridNode, "Grid", "seniority", true);
     }
+    auto recoveryProbabilityNode =
+        XMLUtils::getChildNode(node, "RecoveryProbabilities");
+    if (recoveryProbabilityNode){
+    auto recoveryProbabilites =
+        XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
+    }
+    for (const auto& seniority : recoveryGrids) {
+        QL_REQUIRE(recoveryProbabilites.find(seniority.first) != recoveryProbabilites.end(),
+                    "Recovery probabilities for seniority " << seniority.first << " not found");
+    }
+    for (const auto& [seniority, probs] : recoveryProbabilites) {
+        std::vector<string> probTokens;
+        boost::split(probTokens, probs, boost::is_any_of(","));
+        std::vector<double> probsDouble;
+        for (const auto& p : probTokens) {
+            probsDouble.push_back(parseReal(p));
+        }
+        rrProbs_[seniority] = probsDouble;
+    }
+    for (const auto& [seniority, grid] : recoveryGrids) {
+        std::vector<string> gridTokens;
+        boost::split(gridTokens, grid, boost::is_any_of(","));
+        std::vector<double> rrGrid;
+        for (const auto& p : gridTokens) {
+            rrGrid.push_back(parseReal(p));
+        }
+        rrGrids_[seniority] = rrGrid;
+    }
+    
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
@@ -232,31 +234,38 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Currency", currency_);
     }
 
-    if(!indexTrancheFamily_.empty()) {
-        XMLUtils::addChild(doc, node, "IndexTrancheFamily", indexTrancheFamily_);
-    }
-
     XMLUtils::addChild(doc, node, "CalibrateConstituentsToIndexSpread", calibrateConstituentsToIndexSpread_);
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
     
-    if (stochasticRecovery_) {
-        XMLUtils::addChild(doc, node, "StochasticRecovery", stochasticRecovery_);
-        
-        auto stochasticRecoveryModelParameterNode = XMLUtils::addChild(doc, node, "StochasticRecoveryModelParameters");
-        auto recoveryGridNode = XMLUtils::addChild(doc, stochasticRecoveryModelParameterNode, "RecoveryGrid");
-        for (const auto& [seniority, grid] : rrGrids_) {
-            XMLUtils::addGenericChildAsList(doc, recoveryGridNode, "Grid", grid, "seniority", seniority);
-        }
-        auto recoveryProbabilityNode =
-            XMLUtils::addChild(doc, stochasticRecoveryModelParameterNode, "RecoveryProbabilities");
-        for (const auto& [seniority, probs] : rrProbs_) {
-            XMLUtils::addGenericChildAsList(doc, recoveryProbabilityNode, "Probabilities", probs, "seniority",
-                                            seniority);
-        }
+    XMLUtils::addChild(doc, node, "UseAssumedRecovery", useAssumedRecovery_);
+
+    auto recoveryGridNode = XMLUtils::addChild(doc, node, "RecoveryGrid");
+    for (const auto& [seniority, grid] : rrGrids_) {
+        XMLUtils::addGenericChildAsList(doc, recoveryGridNode, "Grid", grid, "seniority", seniority);
+    }
+    
+    auto recoveryProbabilityNode = XMLUtils::addChild(doc, node, "RecoveryProbabilities");
+    for (const auto& [seniority, probs] : rrProbs_) {
+        XMLUtils::addGenericChildAsList(doc, recoveryProbabilityNode, "Probabilities", probs, "seniority", seniority);
     }
 
     return node;
 }
+
+double BaseCorrelationCurveConfig::assumedRecovery(const std::string& creditName) const{
+    CdsReferenceInformation info;
+    if (tryParseCdsInformation(creditName, info) && useAssumedRecovery_) {
+        std::string tier = to_string(info.tier());
+        auto grid = rrGrid(tier);
+        auto probs = rrProb(tier);
+        if (!grid.empty() && !probs.empty()) {
+            double assumedRecovery = std::inner_product(grid.begin(), grid.end(), probs.begin(), 0.0);
+            return assumedRecovery;
+        }
+    }
+    return Null<double>();
+}
+
 } // namespace data
 } // namespace ore

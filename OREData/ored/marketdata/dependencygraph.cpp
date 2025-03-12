@@ -445,11 +445,15 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
             
             std::set<std::string> constituentCurves {underlying, underlying + "_5Y", underlying + "_3Y"};
+            auto baseCorrelationConfig = curveConfigs_->baseCorrelationCurveConfig(underlying);
             for (const auto& c : crd->constituents()) {
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
                     constituentCurves.insert(c.name());
-                    constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), crd->indexTrancheFamily()));
+                    auto assumedRecovery = baseCorrelationConfig->assumedRecovery(c.name());
+                    if (assumedRecovery != Null<double>()) {
+                        constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), assumedRecovery));
+                    }
                 } else {
                     DLOG("Skipping curve " << c.name() << ", having zero weight");
                 }

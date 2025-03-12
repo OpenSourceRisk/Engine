@@ -88,14 +88,14 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Credit");
     additionalData_["isdaBaseProduct"] = string("Index Tranche");
-    std::string indexTrancheFamily;
+    std::string indexSubFamily;
     QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("CreditIndex", qualifier_)) {
         auto refDatum = refData->getData("CreditIndex", qualifier_);
         QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
             QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
         additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
-        indexTrancheFamily = creditIndexRefDatum->indexTrancheFamily();
+        indexSubFamily = creditIndexRefDatum->indexSubFamily();
     } else {
         ALOG("Credit index reference data missing for entity " << qualifier_ << ", isdaSubProduct left blank");
     }
@@ -351,7 +351,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);
 
-    std::vector<CdsTier> seniorities;
+    
     std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
     vector<Real> recoveryRates;
 
@@ -360,21 +360,28 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     }
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
-        auto creditCurveName = indexTrancheSpecificCreditCurveName(cc, indexTrancheFamily);
-        auto creditCurve = indexTrancheSpecificCreditCurve(market, cc, config, indexTrancheFamily);
-        DLOG("Got credit curve for constituent " << cc << " with credit curve " << creditCurveName);
+        std::string creditCurveName = cc;
+        
+        auto creditCurve = market->defaultCurve(cc, config);
+        DLOG("Got credit curve for constituent " << cc << " with credit curve name " << creditCurveName);
+        DLOG("is index tranche " << isIndexTranche());
+        DLOG("use assumed recoveries " << cdoEngineBuilder->useAssumedRecoveries());
+        if (isIndexTranche() && cdoEngineBuilder->useAssumedRecoveries()){
+            CdsReferenceInformation info;
+            QL_REQUIRE(tryParseCdsInformation(cc, info), "Failed to parse CDS tier from " << cc);
+            const auto assumedRecovery = cdoEngineBuilder->assumedRecovery(indexSubFamily, to_string(info.tier()));
+            DLOG("Assumed recovery rate for " << cc << " is " << assumedRecovery);
+            creditCurveName = indexTrancheSpecificCreditCurveName(cc, assumedRecovery);
+            DLOG("Credit curve name for constituent " << cc << " with assumed recovery " << assumedRecovery << " is " << creditCurveName);
+            creditCurve = indexTrancheSpecificCreditCurve(market, cc, config, assumedRecovery);
+            DLOG("Got credit curve with assumed recovery " << assumedRecovery << " for constituent " << cc << " with credit curve name " << creditCurveName);
+        }
         auto originalCurve = creditCurve->curve();
         Real mktRecoveryRate = creditCurve->recovery()->value();
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         dpts.push_back(originalCurve);
-        auto seniority = CdsTier::SNRFOR;
-        auto refInfo = creditCurve->refData();
-        if (!refInfo.seniority.empty()) {
-            seniority = parseCdsTier(refInfo.seniority);
-        }
-        seniorities.push_back(seniority);
         TLOG("RunType " << runType << "Trade " << id() << ", Issuer " << cc << " with credit curve " << creditCurveName
-                        << " and seniority " << seniorities.back() << " and  recovery rate: " << recoveryRates.back());
+                        << " and  recovery rate: " << recoveryRates.back());
     }
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
@@ -421,8 +428,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());
         }
-
-        
 
         if (runType != "PortfolioAnalyser" && curveCalibration != nullptr) {
                 try {
@@ -577,7 +582,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint, indexCdsMaturity,
-                                                         homogeneous, seniorities, indexTrancheFamily,
+                                                         homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 
         DLOG("Basket Notional (" << adjDetachPoint << ")" << basket->basketNotional());
@@ -639,7 +644,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
-                                                         homogeneous, seniorities, indexTrancheFamily,
+                                                         homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 
         auto cdoA = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(

@@ -121,13 +121,13 @@ DefaultCurveConfig::Config::Config(const Type& type, const string& discountCurve
                                    const Date& startDate, const BootstrapConfig& bootstrapConfig,
                                    QuantLib::Real runningSpread, const QuantLib::Period& indexTerm,
                                    const boost::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
-                                   const int priority, const std::string& seniorityTier)
+                                   const int priority)
     : cdsQuotes_(cdsQuotes), type_(type), discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote),
       dayCounter_(dayCounter), conventionID_(conventionID), extrapolation_(extrapolation),
       benchmarkCurveID_(benchmarkCurveID), sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar),
       spotLag_(spotLag), startDate_(startDate), bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread),
       indexTerm_(indexTerm), implyDefaultFromMarket_(implyDefaultFromMarket), allowNegativeRates_(allowNegativeRates),
-      priority_(priority), seniorityTier_(seniorityTier) {}
+      priority_(priority) {}
 
 void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
     auto prioStr = XMLUtils::getAttribute(node, "priority");
@@ -226,7 +226,6 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
             bootstrapConfig_.fromXML(n);
         }
-        seniorityTier_ = XMLUtils::getChildValue(node, "SeniorityTier", false);
     }
 }
 
@@ -251,9 +250,6 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
                 XMLUtils::addAttribute(doc, qNode, "optional", "true");
             XMLUtils::appendNode(quotesNode, qNode);
         }
-        if (!seniorityTier_.empty()) {
-            XMLUtils::addChild(doc, node, "SeniorityTier", seniorityTier_);
-        }
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
@@ -276,9 +272,6 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Type", "Null");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
-        if (!seniorityTier_.empty()) {
-            XMLUtils::addChild(doc, node, "SeniorityTier", seniorityTier_);
-        }
     } else {
         QL_FAIL("Unknown type in DefaultCurveConfig::toXML()");
     }

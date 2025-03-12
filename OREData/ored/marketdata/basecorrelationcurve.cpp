@@ -399,19 +399,7 @@ void BaseCorrelationCurve::buildFromCorrelations(const BaseCorrelationCurveConfi
     baseCorrelation_->enableExtrapolation(config.extrapolate());
 }
 
-std::vector<double> getStochasticRecoveryParameter(const std::map<std::string, std::vector<double>> data,
-                                                   const std::string& key) {
-    auto it = data.find(key);
-    if (it != data.end()) {
-        return it->second;
-    }
-    auto fallbackIt = data.find("");
-    if (fallbackIt != data.end()) {
-        return fallbackIt->second;
-    } else {
-        return {};
-    }
-}
+
 
 void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config,
                                              const QuoteData& qData) const {
@@ -474,29 +462,45 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     Currency ccy = parseCurrency(config.currency());
 
     for (const auto& term : terms) {
+        std::vector<std::vector<double>> rrGrids;
+        std::vector<std::vector<double>> rrProbs;
         std::vector<double> recoveryRates;
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-        std::vector<CdsTier> seniorities;
+        
+        TLOG("Building base correlation curve from price for term " << term);
         for (const auto& name : basketData.remainingNames) {
-            QuantLib::ext::shared_ptr<QuantExt::CreditCurve> creditCurve;
-            try{
-                auto specificCurveName = indexTrancheSpecificCreditCurveName(name, config.indexTrancheFamily());
+            TLOG("Retrieve credit curve for " << name);
+            auto mappedName = creditCurveNameMapping(name);
+            auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);    
+            CdsReferenceInformation info;
+            
+            QL_REQUIRE(tryParseCdsInformation(name, info), "Failed to parse CDS tier from " << name);
+            std::string seniority = to_string(info.tier());
+            auto rrGrid = config.rrGrid(seniority);
+            auto rrProb = config.rrProb(seniority);
+            DLOG("use assumed recoveries " << config.useAssumedRecovery());
+            if(!config.useAssumedRecovery()){                
+                QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
+            } else {
+                
+                auto assumedRecovery = std::inner_product(rrGrid.begin(), rrGrid.end(), rrProb.begin(), 0.0);
+                DLOG("Assumed recovery rate for " << name << " is " << assumedRecovery);
+                auto specificCurveName = indexTrancheSpecificCreditCurveName(name, assumedRecovery);
+                DLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery << " is " << specificCurveName);
                 auto mappedName = creditCurveNameMapping(specificCurveName);
-                creditCurve = getDefaultProbCurveAndRecovery(mappedName);
-                QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
-            } catch (const std::exception& e) {
-                WLOG("buildFromUpfronts, credit curve for " << name << " missing, " << e.what() << " try normal curve");
-                auto mappedName = creditCurveNameMapping(name);
-                creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+                auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+                QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << specificCurveName);
+            } 
+            if (rrGrid.empty() || rrProb.empty()) {
+                QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
+                ALOG("No recovery grid/probabilities found for " << name << " fallback to use actual recovery");
+                rrGrid = {creditCurve->recovery()->value()};
+                rrProb = {1.0};
             }
-            QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
+            rrGrids.push_back(rrGrid);
+            rrProbs.push_back(rrProb);
             recoveryRates.push_back(creditCurve->recovery()->value());
             dpts.push_back(creditCurve->curve());
-            if(creditCurve->refData().seniority.empty()){
-                seniorities.push_back(CdsTier::SNRFOR);
-            } else {
-                seniorities.push_back(parseCdsTier(creditCurve->refData().seniority));
-            }
         }
 
         Handle<DefaultProbabilityTermStructure> indexCurve;
@@ -574,32 +578,8 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             //  Build Tranche
             auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
             RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
-
-            vector<vector<double>> rrGrid;
-            vector<vector<double>> rrProb;
-            if (!config.stochasticRecovery()) {
-                for (size_t i = 0; i < recoveryRates.size(); i++) {
-                    rrGrid.push_back({recoveryRates[i]});
-                    rrProb.push_back({1.0});
-                }
-            } else if (config.rrGrids().size() == 1) {
-                for (size_t i = 0; i < recoveryRates.size(); i++) {
-                    rrGrid.push_back(config.rrGrids().begin()->second);
-                    rrProb.push_back(config.rrProbs().begin()->second);
-                }
-            } else if (config.rrGrids().size() > 1) {
-                for (const auto& seniority : seniorities) {
-                    const auto seniorityString = to_string(seniority);
-                    auto rr = getStochasticRecoveryParameter(config.rrGrids(), seniorityString);
-                    auto prob = getStochasticRecoveryParameter(config.rrProbs(), seniorityString);
-                    rrGrid.push_back(rr);
-                    rrProb.push_back(prob);
-                }
-            } else {
-                QL_FAIL("Need at least one valid recovery rate grid and probability");
-            }
             GaussCopulaBucketingLossModelBuilder modelBuilder{-5., 5, 64, false, 372, false, true};
-            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrid, rrProb, true);
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrids, rrProbs, true);
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
                 config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
