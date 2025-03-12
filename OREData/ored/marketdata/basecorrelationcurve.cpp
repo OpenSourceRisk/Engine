@@ -22,6 +22,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 
 #include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
@@ -178,9 +179,11 @@ BaseCorrelationCurve::BaseCorrelationCurve(
             }
             break;
         } catch (std::exception& e) {
-            DLOG("BaseCorrelationCurve: curve building failed :" << e.what());
+            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build from " + to_string(quoteType), e.what()).log();
+            
         } catch (...) {
-            DLOG("BaseCorrelationCurve: curve building failed: unknown error");
+            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build from " + to_string(quoteType),
+                                          "Unexpected error").log();
         }
     }
     QL_REQUIRE(baseCorrelation_ != nullptr, "BaseCorrelationCurve: curve building failed.");
@@ -475,9 +478,17 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         std::vector<CdsTier> seniorities;
         for (const auto& name : basketData.remainingNames) {
-            auto specificCurveName = indexTrancheSpecificCreditCurveName(name, config.indexTrancheFamily());
-            auto mappedName = creditCurveNameMapping(specificCurveName);
-            const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+            QuantLib::ext::shared_ptr<QuantExt::CreditCurve> creditCurve;
+            try{
+                auto specificCurveName = indexTrancheSpecificCreditCurveName(name, config.indexTrancheFamily());
+                auto mappedName = creditCurveNameMapping(specificCurveName);
+                creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+                QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
+            } catch (const std::exception& e) {
+                WLOG("buildFromUpfronts, credit curve for " << name << " missing, " << e.what() << " try normal curve");
+                auto mappedName = creditCurveNameMapping(name);
+                creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+            }
             QL_REQUIRE(creditCurve != nullptr, "buildFromUpfronts, credit curve for " << name << " missing");
             recoveryRates.push_back(creditCurve->recovery()->value());
             dpts.push_back(creditCurve->curve());
