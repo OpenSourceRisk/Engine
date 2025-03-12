@@ -192,7 +192,7 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     SummaryResults sr = {pnls.size(), 0.0, 0, 0.0, 0, {}, 0, 0, {}};
 
     sr.callValue = callValue(data);
-    sr.postValue = postValue(data);    
+    sr.postValue = postValue(data);
 
     auto pnlScenDates = hisScenGen_->filteredScenarioDates(btArgs_->backtestPeriod_);
     QL_REQUIRE(pnlScenDates.size() == pnls.size(), "Backtest::calculateSummary(): internal error, pnlScenDates ("
