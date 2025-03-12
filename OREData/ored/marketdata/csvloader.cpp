@@ -150,7 +150,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                             }
                         }
                         if (addFX.first && data_[date].insert(md).second) {
-                            DLOG("Added MarketDatum " << key);
+                            TLOG("Added MarketDatum " << key);
                         } else if (!addFX.first) {
                             DLOG("Skipped MarketDatum " << key << " - dominant FX already present.")
                         }

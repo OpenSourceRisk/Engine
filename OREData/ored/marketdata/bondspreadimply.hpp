@@ -51,7 +51,7 @@ public:
 
 private:
     //! helper function that computes a single implied spread for a bond
-    static Real implySpread(const std::string& securityId, const Real cleanPrice,
+    static Real implySpread(const std::string& securityId, const Real price,
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);

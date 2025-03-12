@@ -1,0 +1,19 @@
+<Conventions>
+  <Deposit>
+    <Id>EUR-ON-DEPOSIT-ESTER</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-ESTER</Index>
+  </Deposit>
+  <OIS>
+    <Id>EUR-ESTER-OIS</Id>
+    <SpotLag>1</SpotLag>
+    <Index>EUR-ESTER</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>1</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedPaymentConvention>MF</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+</Conventions>

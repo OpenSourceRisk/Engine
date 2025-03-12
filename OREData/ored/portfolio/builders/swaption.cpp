@@ -162,7 +162,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         DateGrid grid(referenceCalibrationGrid);
         std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
                      [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
-        // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously
+        // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously // TODO
         effStrikes.resize(effExpiries.size(), Null<Real>());
         if (strikes[0] != Null<Real>() && strikes[1] != Null<Real>()) {
             Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);

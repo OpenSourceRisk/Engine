@@ -113,6 +113,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
         // Clone the index with the relevant expiry date.
         index = index->clone(expiryDate);
+        if (maturity_ > expiryDate)
+            maturity_ = expiryDate;
     }
 
     Date paymentDate = paymentDate_;

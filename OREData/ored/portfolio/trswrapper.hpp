@@ -120,7 +120,7 @@ public:
     QuantLib::Real initialPrice_;
     QuantLib::Real portfolioInitialPrice_;
     std::string portfolioId_;
-    QuantLib::Currency initialPriceCurrency_; 
+    QuantLib::Currency initialPriceCurrency_;
     std::vector<QuantLib::Currency> assetCurrency_;
     QuantLib::Currency returnCurrency_;
     std::vector<QuantLib::Date> valuationSchedule_, paymentSchedule_;
@@ -174,6 +174,9 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+
+    // return underlying #i npv on today
+    Real getUnderlyingNPV(const Size i) const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;

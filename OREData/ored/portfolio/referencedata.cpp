@@ -63,6 +63,14 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
     calendar = XMLUtils::getChildValue(node, "Calendar", true);
     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
+    if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "clean") {
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "dirty") {
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Dirty;
+    } else {
+        DLOG("the PriceType provided is not valid. Value must be 'Clean' or 'Dirty'. Overiding to 'Clean'.");
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+    }
     priceQuoteMethod = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
     priceQuoteBaseValue = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
     subType = XMLUtils::getChildValue(node, "SubType", false);

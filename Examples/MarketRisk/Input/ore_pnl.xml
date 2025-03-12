@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2023-01-31</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">Input/Pnl</Parameter>
+    <Parameter name="outputPath">Output/Pnl</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="fixingCutoff">2023-02-14</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">inccy</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">inccy</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+    </Analytic>
+    <Analytic type="cashflow">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">flows.csv</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="pnl">
+      <Parameter name="active">Y</Parameter>
+      <!--<Parameter name="mporDate">2023-02-14</Parameter>-->
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">US</Parameter>
+      <Parameter name="curveConfigMporFile">curveconfig.xml</Parameter>
+      <Parameter name="conventionsMporFile">conventions.xml</Parameter>
+      <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="outputFileName">pnl.csv</Parameter>
+      </Analytic>
+  </Analytics>
+</ORE>

@@ -1,0 +1,94 @@
+<Portfolio>
+  <Trade id="ZeroBond_long">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId />
+      <AdditionalFields />
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY</IssuerId>
+      <CreditCurveId>USD.CSB.DEFAULT_CURVE_SHIFTED</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>USD-FedFunds</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.00</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2021-02-05</StartDate>
+            <EndDate>2052-03-01</EndDate>
+            <Tenor>32Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Zero</Rule>
+            <EndOfMonth />
+            <FirstDate />
+            <LastDate />
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+  <Trade id="ZeroBond_short">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId />
+      <AdditionalFields />
+    </Envelope>
+    <BondData>
+      <IssuerId>CPTY</IssuerId>
+      <CreditCurveId>USD.CSB.DEFAULT_CURVE_SHIFTED</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>USD-FedFunds</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.00</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2021-02-05</StartDate>
+            <EndDate>2032-03-01</EndDate>
+            <Tenor>12Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Zero</Rule>
+            <EndOfMonth />
+            <FirstDate />
+            <LastDate />
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </BondData>
+  </Trade>
+</Portfolio>

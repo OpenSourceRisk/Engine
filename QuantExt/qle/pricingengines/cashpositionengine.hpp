@@ -45,8 +45,9 @@ public:
 
     //! \name PricingEngine interface
     //@{
-    void calculate() const override { 
+    void calculate() const override {
         results_.value = arguments_.amount;
+        results_.additionalResults["Amount"] = arguments_.amount;
     }
     //@}
 };

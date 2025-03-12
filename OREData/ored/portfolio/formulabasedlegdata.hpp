@@ -32,10 +32,10 @@ namespace data {
 class FormulaBasedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FormulaBasedLegData() : LegAdditionalData("FormulaBased", false), fixingDays_(0), isInArrears_(false) {}
+    FormulaBasedLegData() : LegAdditionalData(LegType::FormulaBased, false), fixingDays_(0), isInArrears_(false) {}
     //! Constructor
     FormulaBasedLegData(const string& formulaBasedIndex, int fixingDays, bool isInArrears)
-        : LegAdditionalData("FormulaBased", false), formulaBasedIndex_(formulaBasedIndex), fixingDays_(fixingDays),
+        : LegAdditionalData(LegType::FormulaBased, false), formulaBasedIndex_(formulaBasedIndex), fixingDays_(fixingDays),
           isInArrears_(isInArrears) {
         initIndices();
     }
@@ -64,7 +64,8 @@ private:
 Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
                         const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                         const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
-                        const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                        const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                        const bool attachPricer = true);
 
 } // namespace data
 } // namespace ore

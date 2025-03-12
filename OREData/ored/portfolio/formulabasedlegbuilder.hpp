@@ -35,12 +35,12 @@ using namespace QuantLib;
 
 class FormulaBasedLegBuilder : public ore::data::LegBuilder {
 public:
-    explicit FormulaBasedLegBuilder() : LegBuilder("FormulaBased") {}
+    explicit FormulaBasedLegBuilder() : LegBuilder(LegType::FormulaBased) {}
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            ore::data::RequiredFixings& requiredFixings, const std::string& configuration,
                            const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                           const bool useXbsCurves = false) const override;
+                           const bool useXbsCurves = false, const bool attachPricer = true) const override;
 };
 
 } // namespace data

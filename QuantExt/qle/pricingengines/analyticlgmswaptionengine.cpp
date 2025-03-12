@@ -20,6 +20,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/math/solvers1d/bisection.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <boost/bind/bind.hpp>
@@ -144,10 +145,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
         const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
 
-        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
-              fixedSchedule.dates().begin();
-        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
-              floatSchedule.dates().begin();
 
         nominal_ = arguments_.swap->nominal();
 
@@ -164,6 +161,16 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
         }
+
+        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
+              fixedSchedule.dates().begin();
+
+        QL_REQUIRE(j1_ < fixedLeg_.size(), "fixed leg's periods are all before expiry.");
+
+        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
+              floatSchedule.dates().begin();
+
+        QL_REQUIRE(k1_ < floatingLeg_.size(), "floating leg's periods are all before expiry.");
 
         // compute S_i, i.e. equivalent fixed rate spreads compensating for
         // a) a possibly non-zero float spread and
@@ -184,7 +191,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "higher than fixed leg's payment frequency in "
                                "analytic lgm swaption engine");
 
-        if(floatSpreadMapping_ == simple) {
+        if(floatSpreadMapping_ == FloatSpreadMapping::simple) {
             Real annuity = 0.0;
             for (Size j = j1_; j < fixedLeg_.size(); ++j) {
                 annuity += nominal_ * fixedLeg_[j]->accrualPeriod() * c_->discount(fixedLeg_[j]->date());
@@ -213,12 +220,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 } catch (...) {
                 }
                 Real lambda1, lambda2;
-                if (floatSpreadMapping_ == proRata) {
+                if (floatSpreadMapping_ == FloatSpreadMapping::proRata) {
                     // we do not use the exact pay dates but the ratio to determine
                     // the distance to the adjacent payment dates
                     lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
                     lambda1 = 1.0 - lambda2;
-                } else if (floatSpreadMapping_ == nextCoupon) {
+                } else if (floatSpreadMapping_ == FloatSpreadMapping::nextCoupon) {
                     lambda1 = 0.0;
                     lambda2 = 1.0;
                 } else {
@@ -270,14 +277,37 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
-        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) +
+                  (applyZetaShift_ ? zetaShift_ * zetaShiftT_ : 0.0);
     }
 
     Brent b;
     Real yStar;
+
+    // Try three optimization routines to find yStar (as root of a given function yStarHelper).
+    // First, try to run the Brent solver. If it does not succeed for numerical reasons,
+    // try to find a better starting point via bisection and run the Brent again.
+    // If that fails again, try to find another starting point again, this time
+    // in an even larger interval of starting values.
     try {
-        yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
-                        0.0, 0.01);
+        try { 
+            try { // Try Brent
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                    0.0, 0.01 );
+            } catch (const std::exception& e) { // Try Brent with optimized starting point                
+                Bisection b2;
+                double startValue = b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                            -3.0, 3.0);
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                            startValue, 0.01); 
+            }
+        } catch (const std::exception& e) { // Try Brent with another optimized starting point
+            Bisection b2;
+            double startValue2=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                    -10.0, 10.0);
+            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                    startValue2, 0.01); 
+        } 
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
@@ -331,4 +361,30 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     return sum;
 }
 
+void AnalyticLgmSwaptionEngine::setZetaShift(const Time t, const Real shift) {
+    QL_REQUIRE(!lgm_alpha_constant_, "AnalyticLgmSwaptionEngine::setZetaShift(): lgm_alpha_constant is true, which is "
+                                     "not allowed when setting a shift for zeta.");
+    zetaShiftT_ = t;
+    zetaShift_ = shift;
+    applyZetaShift_ = true;
+    notifyObservers();
+}
+
+void AnalyticLgmSwaptionEngine::resetZetaShift() {
+    applyZetaShift_ = false;
+    notifyObservers();
+}
+
+std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
+    if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon)
+        oss << "NextCoupon";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
+        oss << "ProRata";
+    else if (m == AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple)
+        oss << "Simple";
+    else
+        QL_FAIL("FloatSpreadMapping type not covered");
+    return oss;
+}
+  
 } // namespace QuantExt

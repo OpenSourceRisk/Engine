@@ -67,7 +67,9 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                const bool bumpCvaSensis = false, const bool useExternalComputeDevice = false,
+                const bool bumpCvaSensis = false,
+                const bool dynamicDelta = false,
+                const bool useExternalComputeDevice = false,
                 const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
@@ -104,6 +106,7 @@ private:
     void populateAsd();
     void populateNpvOutputCube();
     void generateXvaReports();
+    void calculateDynamicDelta();
     void calculateSensitivities();
     void generateSensiReports();
     void cleanUpAfterCalcs();
@@ -118,7 +121,8 @@ private:
     void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
-    std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
+    std::pair<std::size_t, std::size_t> createPortfolioExposureNode(const std::size_t dateIndex,
+                                                                    const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
     std::size_t getAmcNpvIndexForValuationDate(const std::size_t i) const;
@@ -148,6 +152,7 @@ private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     bool bumpCvaSensis_;
+    bool dynamicDelta_;
     bool useExternalComputeDevice_;
     bool externalDeviceCompatibilityMode_;
     bool useDoublePrecisionForExternalCalculation_;
@@ -182,24 +187,36 @@ private:
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
     bool generateTradeLevelExposure_ = false;
-    // FIXME: we don't have a close-out time for the time zero valuation
-    //        we set this to the time zero npv itself for the time being
+
+    // trade level exposure, per valuation resp. close-out date, as path values (no conditional expectation)
     std::vector<std::vector<std::size_t>> amcNpvNodes_;                // valuation date npv nodes
-    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv (FIXME)
+    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv
+
+    // trade level exposure, as conditional expectation
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv
-    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv (FIXME)
+    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv
     std::vector<std::set<std::string>> tradeCurrencyGroup_;            // relevant ccys per trade
-    std::vector<std::size_t> pfExposureNodes_;
+
+    // portfolio exposure, per valuation resp. close-out date, as path values and conditional expectation
+    std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
     std::vector<std::size_t> pfExposureCloseOutNodes_;
+
+    // porfolio exposure, per valuation date, as path values, multiplied by numeraire
+    std::vector<std::size_t> pfExposureNodesPathwiseInflated_;
+
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
 
-    // regressor groups per portfolio-npv-node
+    // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
+    // irStates per ccy index and valuationDate (including reference date), probably not needed
+    // std::vector<std::vector<std::size_t>> irState_;
+
     std::vector<RandomVariable> values_;
-    std::vector<RandomVariable> derivatives_;
+    std::vector<RandomVariable> xvaDerivatives_;
+    std::vector<RandomVariable> dynamicDeltaDerivatives_;
     std::vector<ExternalRandomVariable> valuesExternal_;
 
     std::vector<std::size_t> externalOutputNodes_;
@@ -208,8 +225,8 @@ private:
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
                                   timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
-                                  timing_fwd_ = 0, timing_bwd_ = 0, timing_sensi_ = 0, timing_asd_ = 0,
-                                  timing_outcube_ = 0, timing_total_ = 0;
+                                  timing_fwd_ = 0, timing_dynamicDelta_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
+                                  timing_asd_ = 0, timing_outcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
 
     // output reports
