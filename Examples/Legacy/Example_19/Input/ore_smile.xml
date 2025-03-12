@@ -7,12 +7,12 @@
     <Parameter name="logFile">log_smile.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market_20160205_smile.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="conventionsFile">../../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket_smile.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_swaption.xml</Parameter>
   </Setup>
   <Markets>
