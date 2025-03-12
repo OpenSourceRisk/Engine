@@ -16,7 +16,7 @@ def scenarioToMarket(subdir='Dim2'):
     tree = et.parse(simulationFile)
     root = tree.getroot()
 
-    baseCcy = root.find("Market/BaseCurrency").text
+    baseCcy = root.find("Market/BaseCurrency").text.replace(' ', '')
     print("base currency:", baseCcy)
 
     #currencies = [ "EUR", "USD" ]
@@ -26,44 +26,44 @@ def scenarioToMarket(subdir='Dim2'):
     for ccy in root.findall("Market/Currencies/Currency"):
         currencies.append(ccy.text)
         if ccy.text != baseCcy:
-            fxspots.append(ccy.text + baseCcy)
+            fxspots.append(ccy.text.replace(' ', '') + baseCcy)
     print("currencies:", currencies)
     print("fxspots:", fxspots)
     
     #indices = [ "EUR-EURIBOR-6M", "EUR-EURIBOR-3M", "EUR-ESTER", "USD-LIBOR-3M", "USD-SOFR" ]
     indices = []
     for index in root.findall("Market/Indices/Index"):
-        indices.append(index.text) 
+        indices.append(index.text.replace(' ', '')) 
     print("indices:", indices)
 
     #fxvols = [ "USDEUR" ]
     fxvols = []
     for pair in root.findall("Market/FxVolatilities/CurrencyPairs/CurrencyPair"):
-        fxvols.append(pair.text) 
+        fxvols.append(pair.text.replace(' ', '')) 
     print("fxvols:", fxvols)
 
     #swaptionvols = [ "EUR" ]
     swaptionvols = []
     for ccy in root.findall("Market/SwaptionVolatilities/Currencies/Currency"):
-        swaptionvols.append(ccy.text) 
+        swaptionvols.append(ccy.text.replace(' ', '')) 
     print("swaptionvols:", swaptionvols)
 
     #curve_tenors = ["3M", "6M", "1Y", "2Y", "3Y", "4Y", "5Y", "7Y", "10Y", "12Y", "15Y", "20Y" ]
     tmp = root.find("Market/YieldCurves/Configuration/Tenors").text
-    curve_tenors = tmp.split(',')
+    curve_tenors = tmp.replace(' ', '').split(',')
     print("curve_tenors:", curve_tenors)
 
     #fxvol_expiries = [ "6M", "1Y", "2Y", "3Y", "4Y", "5Y", "7Y", "10Y" ]
     tmp = root.find("Market/FxVolatilities/Expiries").text
-    fxvol_expiries = tmp.split(',')
+    fxvol_expiries = tmp.replace(' ', '').split(',')
     print("fxvol_expiries:", fxvol_expiries)
 
     #swaption_expiries = [ "6M", "1Y", "2Y", "3Y", "5Y", "10Y", "12Y", "15Y", "20Y" ]
     #swaption_terms = [ "1Y", "2Y", "3Y", "4Y" , "5Y", "7Y", "10Y", "15Y", "20Y", "30Y"]
     tmp = root.find("Market/SwaptionVolatilities/Expiries").text
-    swaption_expiries = tmp.split(',')
+    swaption_expiries = tmp.replace(' ', '').split(',')
     tmp = root.find("Market/SwaptionVolatilities/Terms").text
-    swaption_terms = tmp.split(',')
+    swaption_terms = tmp.replace(' ', '').split(',')
     print("swaption_expiries", swaption_expiries)
     print("swaption_terms", swaption_terms)
     
@@ -88,7 +88,7 @@ def scenarioToMarket(subdir='Dim2'):
         refdate = row["#Date"]
         scenario = row["Scenario"]
 
-        marketFile = 'Output/' + subdir + '/marketdata-' + str(scenario) + '-' + refdate + '.csv'
+        marketFile = 'Input/DimValidation/marketdata-' + str(scenario) + '-' + refdate + '.csv'
         print("write market file:", marketFile)
         
         with open(marketFile, 'w', newline='') as file1:

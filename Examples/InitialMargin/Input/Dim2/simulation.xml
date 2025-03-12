@@ -210,10 +210,11 @@
     </AggregationScenarioDataCurrencies>
 
     <AggregationScenarioDataIndices>
-      <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-ESTER</Index>
-      <Index>USD-LIBOR-3M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EURIBOR-6M</Index>
       <Index>USD-SOFR</Index>
+      <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
 
   </Market>

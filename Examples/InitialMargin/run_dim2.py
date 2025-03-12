@@ -14,8 +14,14 @@ print("| Dynamic IM and MVA, with AMC and AAD                |")
 print("+-----------------------------------------------------+")
 
 oreex.print_headline("Run ORE to generate a scenario dump")
-oreex.run("Input/Dim2/ore.xml")
+#oreex.run("Input/Dim2/ore.xml")
 
-
-oreex.print_headline("Convert scenario dump into market files")
+oreex.print_headline("Convert scenario dump into series of market data files")
 utilities.scenarioToMarket('Dim2')
+
+oreex.print_headline("Run ORE on a future implied market")
+oreex.run("Input/DimValidation/ore.xml")
+
+
+
+
