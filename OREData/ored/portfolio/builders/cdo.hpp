@@ -280,25 +280,19 @@ public:
 
                 string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
                 if (rrGridString == "Markit2020") {
-                    StructuredConfigurationWarningMessage(
-                            "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
-                            "The recovery rate grid 'Markit2020' is deprecated. Please use the 'recoveryRateGrid' "
-                            "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
-                            .log();
-                        if (recoveryRate >= 0.1 && recoveryRate <= 0.55) {
-                            recoveryGrids.push_back({2 * recoveryRate - 0.1, recoveryRate, 0.1});
-                            
-                        } else {
-                            ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
-                                                         << " out of range [0.1, 0.55], using constant recovery");
-                            recoveryGrids.push_back(std::vector<double>(rrProb.size(), recoveryRate));
-                        }
+                    WLOG("The recovery rate grid 'Markit2020' is deprecated. Please use the 'recoveryRateGrid' "
+                         "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).");
+                    if (recoveryRate >= 0.1 && recoveryRate <= 0.55) {
+                        recoveryGrids.push_back({2 * recoveryRate - 0.1, recoveryRate, 0.1});
+
+                    } else {
+                        ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
+                                                     << " out of range [0.1, 0.55], using constant recovery");
+                        recoveryGrids.push_back(std::vector<double>(rrProb.size(), recoveryRate));
+                    }
                 } else if (rrGridString == "Constant"){
-                    StructuredConfigurationWarningMessage(
-                        "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
-                        "The recovery rate grid 'Constant' is deprecated. Please use the 'recoveryRateGrid' "
-                        "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
-                        .log();
+                    WLOG("The recovery rate grid 'Constant' is deprecated. Please use the 'recoveryRateGrid' "
+                         "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).");
                     recoveryGrids.push_back(std::vector<double>(rrProb.size(), recoveryRate));
                 } else {
                     vector<string> rrGridTokens;
