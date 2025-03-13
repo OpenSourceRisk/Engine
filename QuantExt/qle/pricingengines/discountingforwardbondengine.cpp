@@ -34,18 +34,17 @@
 namespace QuantExt {
 
 DiscountingForwardBondEngine::DiscountingForwardBondEngine(
-    const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& contractSpread,
-    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& bondReferenceYieldCurve,
-    const Handle<Quote>& bondSpread, const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve,
-    const Handle<Quote>& bondRecoveryRate, const Handle<Quote>& conversionFactor, Period timestepPeriod,
-    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
-    : discountCurve_(discountCurve), contractSpread_(contractSpread), incomeCurve_(incomeCurve),
-      bondReferenceYieldCurve_(bondReferenceYieldCurve), bondSpread_(bondSpread), bondDefaultCurve_(bondDefaultCurve),
-      bondRecoveryRate_(bondRecoveryRate), conversionFactor_(conversionFactor), timestepPeriod_(timestepPeriod),
+    const Handle<YieldTermStructure>& discountCurve, const Handle<YieldTermStructure>& incomeCurve,
+    const Handle<YieldTermStructure>& bondReferenceYieldCurve, const Handle<Quote>& bondSpread,
+    const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve, const Handle<Quote>& bondRecoveryRate,
+    const Handle<Quote>& conversionFactor, Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows,
+    const Date& settlementDate, const Date& npvDate)
+    : discountCurve_(discountCurve), incomeCurve_(incomeCurve), bondReferenceYieldCurve_(bondReferenceYieldCurve),
+      bondSpread_(bondSpread), bondDefaultCurve_(bondDefaultCurve), bondRecoveryRate_(bondRecoveryRate),
+      conversionFactor_(conversionFactor), timestepPeriod_(timestepPeriod),
       includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
 
-    registerWith(discountCurve_); // curve for discounting of the forward derivative contract. OIS, usually.
-    registerWith(contractSpread_);
+    registerWith(discountCurve_);           // curve for discounting of the forward derivative contract. OIS, usually.
     registerWith(incomeCurve_);             // this is a curve for compounding of the bond
     registerWith(bondReferenceYieldCurve_); // this is the bond reference curve, for discounting, usually RePo
     registerWith(bondSpread_);

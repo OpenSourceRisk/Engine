@@ -48,7 +48,7 @@ protected:
     FwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
-    virtual string keyImpl(const string& id, const Currency& ccy, const string& contractId,
+    virtual string keyImpl(const string& id, const Currency& ccy, const string& bondspreadId,
                            const std::string& discountCurveName, const string& creditCurveId, const string& securityId,
                            const string& referenceCurveId, const string& incomeCurveId, const bool dirty) override {
 
@@ -73,7 +73,7 @@ protected:
         Handle<Quote> recovery_;
     };
 
-    FwdBondEngineBuilder::Curves getCurves(const string& id, const Currency& ccy, const string& contractId,
+    FwdBondEngineBuilder::Curves getCurves(const string& id, const Currency& ccy, const string& bondspreadId,
                                            const std::string& discountCurveName, const string& creditCurveId,
                                            const string& securityId, const string& referenceCurveId,
                                            const string& incomeCurveId, const bool dirty);
@@ -86,13 +86,13 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const string& id, const Currency& ccy, const string& contractId, const std::string& discountCurveName,
+    engineImpl(const string& id, const Currency& ccy, const string& bondspreadId, const std::string& discountCurveName,
                const string& creditCurveId, const string& securityId, const string& referenceCurveId,
                const string& incomeCurveId, const bool dirty) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
-        auto curves = getCurves(id, ccy, contractId, discountCurveName, creditCurveId, securityId, referenceCurveId,
+        auto curves = getCurves(id, ccy, bondspreadId, discountCurveName, creditCurveId, securityId, referenceCurveId,
                                 incomeCurveId, dirty);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
@@ -111,7 +111,7 @@ public:
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
     virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const string& id, const Currency& ccy, const string& contractId, const std::string& discountCurveName,
+    engineImpl(const string& id, const Currency& ccy, const string& bondspreadId, const std::string& discountCurveName,
                const string& creditCurveId, const string& securityId, const string& referenceCurveId,
                const string& incomeCurveId, const bool dirty) override;
 

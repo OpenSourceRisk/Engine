@@ -131,6 +131,13 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     bool isPhysicallySettled = true;       // TODO Check
     bool settlementDirty = false;           // TODO Check
 
+    //define bondspread id, differentiate for purpose spreadimply (ctd id) or not (future id)
+    string bondSpreadId = contractName_;
+    auto it = engineFactory->engineData()->globalParameters().find("RunType");
+    if (it != engineFactory->engineData()->globalParameters().end() && it->second == "BondSpreadImply")
+        bondSpreadId = ctdId_;
+    DLOG("BondFuture::build -- bondSpreadId " << bondSpreadId);
+
     // create quantext forward bond instrument
     ext::shared_ptr<Payoff> payoff = parsePositionType(longShort_) == Position::Long
                                          ? ext::make_shared<ForwardBondTypePayoff>(Position::Long, amount)
@@ -144,7 +151,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), parseCurrency(currency_), contractName_, envelope().additionalField("discount_curve", false, string()),
+        id(), parseCurrency(currency_), bondSpreadId, envelope().additionalField("discount_curve", false, string()),
         ctdUnderlying_.creditCurveId, ctdId_, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
         ctdUnderlying_.bondTrade->bondData().incomeCurveId(), settlementDirty));
 

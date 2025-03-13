@@ -159,7 +159,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), currency, string(), envelope().additionalField("discount_curve", false, std::string()),
+        id(), currency, bondData_.securityId(), envelope().additionalField("discount_curve", false, std::string()),
         bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(),
         settlementDirty));
 
