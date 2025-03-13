@@ -98,6 +98,18 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
 }
 
 void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!shortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
+    if (!swapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(swapIndexBase_);
+    if (!proxySourceShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceShortSwapIndexBase_);
+    if (!proxySourceSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceSwapIndexBase_);
+    if (!proxyTargetShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetShortSwapIndexBase_);
+    if (!proxyTargetSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
     if (!proxySourceCurveId_.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());

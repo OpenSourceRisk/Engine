@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -292,6 +293,10 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
+    auto spec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(fxSpotID_));
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(spec->unitCcy());
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(spec->ccy());
+
     if (!fxDomesticYieldCurveID_.empty()) {
         std::vector<string> tokens;
         split(tokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
@@ -320,11 +325,8 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
 
-        vector<string> tokens;
-        boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
-        QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << fxSpotID_);
-        auto forTarget = tokens[1];
-        auto domTarget = tokens[2];
+        auto forTarget = spec->unitCcy();
+        auto domTarget = spec->ccy();
 
         // we need to include inverse ccy pairs as well
         QL_REQUIRE(baseVolatility1_.size() == 6, "invalid ccy pair length");

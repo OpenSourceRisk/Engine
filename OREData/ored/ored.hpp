@@ -401,6 +401,7 @@
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/formulaparser.hpp>

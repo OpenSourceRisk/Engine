@@ -17,13 +17,17 @@
 */
 
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -62,7 +66,7 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
         if (itc != it->second.end()) {
             switch (type) {
             case CurveSpec::CurveType::Yield: {
-                config = QuantLib::ext::make_shared<YieldCurveConfig>();
+                config = QuantLib::ext::make_shared<YieldCurveConfig>(iborFallbackConfig_);
                 break;
             }
             case CurveSpec::CurveType::Default: {
@@ -346,17 +350,99 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
     return curves;
 }
 
+ const QuantLib::ext::shared_ptr<CurveConfig>&
+CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) {
+    set<string> curves;
+    const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
+    if (it != configs_.end()) {
+        for (const auto& c : it->second) {
+            if (boost::starts_with(c.first, id))
+                curves.insert(c.first);
+        }
+    }
+
+    const auto& itu = unparsed_.find(CurveSpec::CurveType::Inflation);
+    if (itu != unparsed_.end()) {
+        for (const auto& c : itu->second) {
+            if (boost::starts_with(c.first, id))
+                curves.insert(c.first);
+        }
+    }
+
+    for (const auto& c : curves) {
+        auto cc = get(CurveSpec::CurveType::Inflation, c);
+        if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
+            if (icc->type() == type)
+                return icc;
+        }
+    }
+    return nullptr;
+}
+
+const QuantLib::ext::shared_ptr<CurveConfig>&
+CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
+    set<string> curves;
+    const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
+    if (it != configs_.end()) {
+        for (const auto& c : it->second) {
+            if (boost::starts_with(c.first, id))
+                curves.insert(c.first);
+        }
+    }
+
+    const auto& itu = unparsed_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
+    if (itu != unparsed_.end()) {
+        for (const auto& c : itu->second) {
+            if (boost::starts_with(c.first, id))
+                curves.insert(c.first);
+        }
+    }
+
+    for (const auto& c : curves) {
+        auto cc = get(CurveSpec::CurveType::Inflation, c);
+        if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc)) {
+            if (icc->type() == type)
+                return icc;
+        }
+    }
+    return nullptr;
+}
+
 std::map<CurveSpec::CurveType, std::set<string>>
 CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
     QuantLib::ext::shared_ptr<CurveConfig> cc;
     std::map<CurveSpec::CurveType, std::set<string>> ids;
-    if (!curveId.empty())
-        try {
-            cc = get(type, curveId);
-        } catch (...) {
+    if (!curveId.empty()) {
+        // special case for FX and SwapIndex - we don't have a curve config
+        if (type == CurveSpec::CurveType::FX) {
+            auto ccyPairs = parseCurrencyPair(curveId, "");
+            ids[CurveSpec::CurveType::Yield].insert(ccyPairs.first.code());
+            ids[CurveSpec::CurveType::Yield].insert(ccyPairs.second.code());
+        } else if (type == CurveSpec::CurveType::SwapIndex) {
+            QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+            auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(curveId));
+            QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << curveId);
+            std::string indexName;
+            if (auto con = QuantLib::ext::dynamic_pointer_cast<data::IRSwapConvention>(
+                    conventions->get(swapCon->conventions())))
+                indexName = con->indexName();
+            else if (auto conOisComp = QuantLib::ext::dynamic_pointer_cast<data::OisConvention>(
+                         conventions->get(swapCon->conventions())))
+                indexName = conOisComp->indexName();
+            else if (auto conOisAvg = QuantLib::ext::dynamic_pointer_cast<data::AverageOisConvention>(
+                         conventions->get(swapCon->conventions())))
+                indexName = conOisAvg->indexName();
+            if (!isGenericIborIndex(indexName))
+                ids[CurveSpec::CurveType::Yield].insert(indexName); 
+        } else {
+            try {
+                cc = get(type, curveId);
+                if (cc)
+                    ids = cc->requiredCurveIds();
+            } catch (...) {
+            }
         }
-    if (cc)
-        ids = cc->requiredCurveIds();
+    }    
     return ids;
 }
 

@@ -61,8 +61,9 @@ public:
 
     //! Return all of the market objects needed by the portfolio
     std::map<ore::data::MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const {
-        return market_->marketObjects(config);
+    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const {
+        return marketObjects_;
     }
 
     //! Return the names of swap indices needed by the portfolio
@@ -91,6 +92,7 @@ public:
 private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<DependencyMarket> market_;
+    mutable std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> marketObjects_;
     std::set<std::string> counterparties_;
     QuantLib::Date maturity_;
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;

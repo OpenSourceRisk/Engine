@@ -34,6 +34,7 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -52,6 +53,11 @@ namespace data {
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 
+class InflationCurveConfig;
+class InflationCapFloorVolatilityCurveConfig;
+enum class InflationCurveConfig::Type;
+enum class InflationCapFloorVolatilityCurveConfig::Type;
+
 //! Container class for all Curve Configurations
 /*!
   \ingroup configuration
@@ -59,7 +65,8 @@ using ore::data::XMLSerializable;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations() {}
+    CurveConfigurations(QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr)
+        : iborFallbackConfig_(iborFallbackConfig) {}
 
     //! \name Setters and Getters
     //@{
@@ -142,6 +149,12 @@ public:
 
     /*! Return the Yields curves available */
     std::set<string> yieldCurveConfigIds();
+  
+    /*! Return an inflation curveconfig based on a name lookup */
+    const QuantLib::ext::shared_ptr<CurveConfig>& findInflationCurveConfig(const string& id,
+        InflationCurveConfig::Type type);
+    const QuantLib::ext::shared_ptr<CurveConfig>& findInflationVolCurveConfig(const string& id, 
+        InflationCapFloorVolatilityCurveConfig::Type type);
 
     /*! Return all curve ids required by a given curve id of a given type */
     std::map<CurveSpec::CurveType, std::set<string>> requiredCurveIds(const CurveSpec::CurveType& type,
@@ -163,6 +176,8 @@ public:
     //@}
 
  private:
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
     ReportConfig reportConfigCommVols_;

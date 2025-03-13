@@ -53,16 +53,16 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
-    const set<string>& requiredCurveIds(const CurveSpec::CurveType& curveType) const;
-    const map<CurveSpec::CurveType, set<string>>& requiredCurveIds() const;
+    virtual set<string> requiredCurveIds(const CurveSpec::CurveType& curveType);
+    virtual map<CurveSpec::CurveType, set<string>> requiredCurveIds();
     //@}
 
     //! \name Setters
     //@{
     string& curveID() { return curveID_; }
     string& curveDescription() { return curveDescription_; }
-    set<string>& requiredCurveIds(const CurveSpec::CurveType& curveType);
-    map<CurveSpec::CurveType, set<string>>& requiredCurveIds();
+    void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const set<string>& ids);
+    void setRequiredCurveIds(const map<CurveSpec::CurveType, set<string>>& ids);
     //@}
 
     //! Return all the market quotes required for this config

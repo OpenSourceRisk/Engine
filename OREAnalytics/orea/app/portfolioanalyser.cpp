@@ -19,6 +19,7 @@
 #include <orea/app/portfolioanalyser.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
@@ -96,8 +97,26 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
             market_->fxRate("USD" + baseCcy, Market::defaultConfiguration);
             baseUsdAdded = true;
         }
-
     }
+
+    // add any curve dependencies from the marketobjects obtained
+    marketObjects_ = market_->marketObjects();
+    DLOG("Start adding dependent curves");
+    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs, baseCcy);
+    DLOG("Finished adding dependent curves");
+}
+
+std::map<ore::data::MarketObject, std::set<std::string>>
+PortfolioAnalyser::marketObjects(const boost::optional<std::string> config) const {
+    if (config)
+        return marketObjects_[*config];
+    std::map<ore::data::MarketObject, std::set<std::string>> result;
+    for (auto const& m : marketObjects_) {
+        for (auto const& e : m.second) {
+            result[e.first].insert(e.second.begin(), e.second.end());
+        }
+    }
+    return result;
 }
 
 void PortfolioAnalyser::riskFactorReport(Report& report) const {

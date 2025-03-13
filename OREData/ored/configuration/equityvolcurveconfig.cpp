@@ -80,6 +80,7 @@ void EquityVolatilityCurveConfig::populateQuotes() {
 }
 
 void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+    requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
     for (auto vc : volatilityConfig_) {
         if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->proxyVolatilityCurve());

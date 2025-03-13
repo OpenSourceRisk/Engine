@@ -161,6 +161,12 @@ void SegmentIDGetter::visit(CrossCcyYieldCurveSegment& s) {
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
+
+    string spotRateID = s.spotRateID();
+    auto md = parseMarketDatum(Date(), spotRateID, Null<Real>());
+    QuantLib::ext::shared_ptr<FXSpotQuote> fxSpotQuote = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(md);
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxSpotQuote->unitCcy());
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxSpotQuote->ccy());
 }
 
 void SegmentIDGetter::visit(ZeroSpreadedYieldCurveSegment& s) {
@@ -217,11 +223,12 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
-                                   const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
+                                   const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff,
+                                   QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff) {
+      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff), iborFallbackConfig_(iborFallbackConfig) {
     populateRequiredCurveIds();
 }
 
@@ -386,6 +393,23 @@ void YieldCurveConfig::populateRequiredCurveIds() {
     for (Size i = 0; i < curveSegments_.size(); i++) {
         curveSegments_[i]->accept(segmentIDGetter);
     }
+}
+
+set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) {
+    auto rci = CurveConfig::requiredCurveIds(curveType);
+    Date asof = Settings::instance().evaluationDate();
+    if (curveType == CurveSpec::CurveType::Yield && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
+        rci.insert(iborFallbackConfig_->fallbackData(curveID_).rfrIndex);
+
+    return rci;
+}
+
+map<CurveSpec::CurveType, set<string>> YieldCurveConfig::requiredCurveIds() {
+    auto rci = CurveConfig::requiredCurveIds();
+    Date asof = Settings::instance().evaluationDate();
+    if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
+        rci[CurveSpec::CurveType::Yield].insert(iborFallbackConfig_->fallbackData(curveID_).rfrIndex);
+    return rci;
 }
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,

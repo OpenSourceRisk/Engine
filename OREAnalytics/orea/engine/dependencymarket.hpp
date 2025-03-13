@@ -114,7 +114,10 @@ public:
     bool hasMarketObjectType(const ore::data::MarketObject& marketObjectType) const;
     std::set<std::string> marketObjectNames(const ore::data::MarketObject& marketObjectType) const;
     std::set<ore::data::MarketObject> marketObjectTypes() const;
-    std::map<ore::data::MarketObject, std::set<std::string>> marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> marketObjects() const {
+        return marketObjects_;
+    }
+
     //@}
 
 private:

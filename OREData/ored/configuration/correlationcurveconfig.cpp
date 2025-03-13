@@ -76,7 +76,10 @@ void CorrelationCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(swaptionVolatility());
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurve());
-}
+    if (correlationType_ == CorrelationCurveConfig::CorrelationType::CMSSpread &&
+        quoteType_ == MarketDatum::QuoteType::PRICE)
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(discountCurve());
+    }
 
 const vector<string>& CorrelationCurveConfig::quotes() {
 
