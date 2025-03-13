@@ -273,6 +273,11 @@ public:
                     qualifiers.push_back(tierString);
                 }
                 string rrProbString = modelParameter("recoveryRateProbabilities", qualifiers);
+                vector<string> rrProbStringTokens;
+                boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
+                auto rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
+                recoveryProbabilities.push_back(rrProb);
+
                 string rrGridString = modelParameter("recoveryRateGrid", qualifiers);
                 if (rrGridString == "Markit2020") {
                     StructuredConfigurationWarningMessage(
@@ -281,26 +286,26 @@ public:
                             "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
                             .log();
                         if (recoveryRate >= 0.1 && recoveryRate <= 0.55) {
-                            rrGridString =
-                                std::to_string(2.0 * recoveryRate - 0.1) + "," + std::to_string(recoveryRate) + ",0.1";
+                            recoveryGrids.push_back({2 * recoveryRate - 0.1, recoveryRate, 0.1});
+                            
                         } else {
                             ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
                                                          << " out of range [0.1, 0.55], using constant recovery");
-                            rrGridString =
-                                to_string(recoveryRate) + "," + to_string(recoveryRate) + "," + to_string(recoveryRate);
+                            recoveryGrids.push_back(std::vector<double>(rrProb.size(), recoveryRate));
                         }
                 } else if (rrGridString == "Constant"){
-                    rrGridString = to_string(recoveryRate);
-                    rrProbString = "1";
+                    StructuredConfigurationWarningMessage(
+                        "PricingEngine", "SyntheticCDO", "Deprecated Parameter",
+                        "The recovery rate grid 'Constant' is deprecated. Please use the 'recoveryRateGrid' "
+                        "parameter to specify the recovery rate grid explicitily (e.g. 0.7,0.4,0.1).")
+                        .log();
+                    recoveryGrids.push_back(std::vector<double>(rrProb.size(), recoveryRate));
+                } else {
+                    vector<string> rrGridTokens;
+                    boost::split(rrGridTokens, rrGridString, boost::is_any_of(","));
+                    auto rrGrid = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
+                    recoveryGrids.push_back(rrGrid);
                 }
-                vector<string> rrProbStringTokens;
-                boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-                auto rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
-                vector<string> rrGridTokens;
-                boost::split(rrGridTokens, rrGridString, boost::is_any_of(","));
-                auto rrGrid = parseVectorOfValues<Real>(rrGridTokens, &parseReal);
-                recoveryGrids.push_back(rrGrid);
-                recoveryProbabilities.push_back(rrProb);
             }
         } else {
             for (Size i = 0; i < recoveryRates.size(); ++i) {

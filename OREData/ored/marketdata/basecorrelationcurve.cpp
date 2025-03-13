@@ -582,9 +582,10 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             GaussCopulaBucketingLossModelBuilder modelBuilder{-5., 5, 64, false, 372, false, true};
             auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false, rrGrids, rrProbs, true);
 
+            Date basketRefDate = schedule.dates().empty() ? config.startDate() : schedule.dates().front();
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
-                config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
-                adjustedDetachPoint, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
+                basketRefDate, basketData.remainingNames, basketData.remainingWeights, pool, 0.0, adjustedDetachPoint,
+                QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
             // Build model with model builder
             basket->setLossModel(lossModel);
 
