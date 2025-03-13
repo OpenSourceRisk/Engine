@@ -103,6 +103,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     // Notice: the vol that is passed in to this method is in general a dummy value, which is good enough though to
     // check 2 and 3 above. To check 1, the vol is not needed at all.
 
+    //TODO Adjust Settlement Days
     auto vt = svts->volatilityType();
     auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
@@ -169,13 +170,13 @@ namespace data {
 LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
-                       const std::string& id)
+                       const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
+      calibrationErrorType_(calibrationErrorType) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
@@ -320,6 +321,23 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
+    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
+
+    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
+
+    if (data_->shiftHorizon() > 0.0) {
+        Real value = -parametrization_->H(data_->shiftHorizon());
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
+                                    << " LGM model");
+        parametrization_->shift() = value;
+    }
+
+    if (data_->scaling() != 1.0) {
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
+        parametrization_->scaling() = data_->scaling();
+    }
+
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
 }
@@ -401,8 +419,6 @@ void LgmBuilder::performCalculations() const {
 
     // reset model parameters to ensure identical results on identical market data input
     model_->setParams(params_);
-    parametrization_->shift() = 0.0;
-    parametrization_->scaling() = 1.0;
 
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
@@ -491,22 +507,6 @@ void LgmBuilder::performCalculations() const {
     }
     model_->setCalibrationInfo(calibrationInfo);
 
-    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
-
-    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
-    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-    if (data_->shiftHorizon() > 0.0) {
-        Real value = -parametrization_->H(data_->shiftHorizon());
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
-                                    << " LGM model");
-        parametrization_->shift() = value;
-    }
-
-    if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
-        parametrization_->scaling() = data_->scaling();
-    }
 } // performCalculations()
 
 void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,

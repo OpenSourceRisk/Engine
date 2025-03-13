@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append('../')
+sys.path.append('../../')
 from ore_examples_helper import OreExample
 
 import pca
