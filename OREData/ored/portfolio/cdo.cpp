@@ -377,7 +377,10 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             DLOG("Got credit curve with assumed recovery " << assumedRecovery << " for constituent " << cc << " with credit curve name " << creditCurveName);
         }
         auto originalCurve = creditCurve->curve();
-        Real mktRecoveryRate = creditCurve->recovery()->value();
+
+        Real mktRecoveryRate = creditCurve->recovery().empty() ? market->recoveryRate(cc, config)->value()
+                                                               : creditCurve->recovery()->value();
+
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         dpts.push_back(originalCurve);
         TLOG("RunType " << runType << "Trade " << id() << ", Issuer " << cc << " with credit curve " << creditCurveName

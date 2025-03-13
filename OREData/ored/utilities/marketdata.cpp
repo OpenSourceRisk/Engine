@@ -81,7 +81,7 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
 
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
     std::ostringstream oss;
-    oss << "__CDO__" << creditCurveId << "_REC_" << std::fixed << std::setprecision(2) << assumedRecoveryRate;
+    oss << "__CDO_" << creditCurveId << "_&_REC_" << std::fixed << std::setprecision(2) << assumedRecoveryRate << "_&_";
     return oss.str();
 }
 
@@ -151,6 +151,18 @@ std::string prettyPrintInternalCurveName(std::string name) {
                                  name.substr(pos2 + 11, pos3 - (pos2 + 11)) + "(" +
                                      name.substr(pos3 + 3, pos4 - (pos3 + 3)) + ")");
                     pos = pos + (pos4 - pos2 - 12);
+                    found = true;
+                }
+            }
+        }
+        else if(pos2 = name.find("__CDO_", pos); pos != std::string::npos) {
+            std::size_t pos3 = name.find("_&_REC_", pos2);
+            if (pos3 != std::string::npos) {
+                std::size_t pos4 = name.find("_&_", pos3 + 7);
+                if (pos4 != std::string::npos) {
+                    name.replace(pos2, pos4 + 3 - pos2,
+                                 name.substr(pos2 + 6, pos3 - (pos2 + 6)));
+                    pos = pos + pos3 - pos2 - 6;
                     found = true;
                 }
             }
