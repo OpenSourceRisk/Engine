@@ -20,6 +20,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/math/solvers1d/bisection.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <boost/bind/bind.hpp>
@@ -154,10 +155,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
         const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
 
-        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
-              fixedSchedule.dates().begin();
-        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
-              floatSchedule.dates().begin();
 
         nominal_ = arguments_.swap->nominal();
 
@@ -174,6 +171,16 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
         }
+
+        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
+              fixedSchedule.dates().begin();
+
+        QL_REQUIRE(j1_ < fixedLeg_.size(), "fixed leg's periods are all before expiry.");
+
+        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
+              floatSchedule.dates().begin();
+
+        QL_REQUIRE(k1_ < floatingLeg_.size(), "floating leg's periods are all before expiry.");
 
         // compute S_i, i.e. equivalent fixed rate spreads compensating for
         // a) a possibly non-zero float spread and
@@ -290,10 +297,31 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
     Brent b;
     Real yStar;
+
+    // Try three optimization routines to find yStar (as root of a given function yStarHelper).
+    // First, try to run the Brent solver. If it does not succeed for numerical reasons,
+    // try to find a better starting point via bisection and run the Brent again.
+    // If that fails again, try to find another starting point again, this time
+    // in an even larger interval of starting values.
     try {
-        yStar =
-            b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1),
-                    1.0E-6, 0.0, 0.01);
+        try { 
+            try { // Try Brent
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                    0.0, 0.01 );
+            } catch (const std::exception& e) { // Try Brent with optimized starting point                
+                Bisection b2;
+                double startValue = b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                            -3.0, 3.0);
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                            startValue, 0.01); 
+            }
+        } catch (const std::exception& e) { // Try Brent with another optimized starting point
+            Bisection b2;
+            double startValue2=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                    -10.0, 10.0);
+            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                    startValue2, 0.01); 
+        } 
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
