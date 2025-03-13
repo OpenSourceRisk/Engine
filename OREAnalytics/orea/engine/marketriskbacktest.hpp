@@ -170,6 +170,8 @@ protected:
     std::set<std::string> callTradeIds_;
     std::set<std::string> postTradeIds_;
 
+    std::map<int, ore::data::BaselTrafficLightData::ObservationData> baselTrafficLightMatrix_;
+
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size>> summaryColumns() = 0;
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size, bool>> detailColumns() = 0;
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size>> pnlColumns() = 0;

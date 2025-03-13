@@ -68,6 +68,8 @@ void MarketRiskBacktest::initialise() {
     // If there is a mismatch between call and post, then we will have to exclude trade-level PnLs from the total (scenario) PnL
     requireTradePnl_ = callTradeIds_ != postTradeIds_;
 
+    baselTrafficLightMatrix_ = btArgs_->baselTrafficLight_->baselTrafficLightData();
+
     MarketRiskReport::initialise();
 }
 
@@ -302,8 +304,11 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     // Now calculate the [red, amber] and [amber, green] bounds
     if (hisScenGen_->overlapping()) {
         try {
+            ore::data::BaselTrafficLightData::ObservationData trafficLightObs = baselTrafficLightMatrix_[hisScenGen_->mporDays()];
+
             sr.bounds = QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
-                                                           hisScenGen_->mporDays(), btArgs_->confidence_);
+                                                           hisScenGen_->mporDays(), btArgs_->confidence_,
+                                                           trafficLightObs.observationCount, trafficLightObs.amberLimit, trafficLightObs.redLimit);
         } catch (const std::exception& e) {
             ALOG("error while retrieving tabulated stop light bounds: " << e.what());
         }
