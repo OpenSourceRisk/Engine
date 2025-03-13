@@ -20,11 +20,11 @@
 
 #include <functional>
 #include <numeric>
+#include <ored/utilities/log.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/randomnumbers/inversecumulativerng.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <qle/models/defaultlossmodel.hpp>
-#include <ored/utilities/log.hpp>
 
 /* Intended to replace LossDistribution in
     ql/experimental/credit/lossdistribution, not sure its covering all the
@@ -40,8 +40,10 @@ using monte carlo simulation
 class GaussianOneFactorMonteCarloLossModel : public DefaultLossModel, public Observer {
 
 public:
-    GaussianOneFactorMonteCarloLossModel(Handle<Quote> baseCorrelation, const std::vector<std::vector<double>>& recoveryRates,
-                                         const std::vector<std::vector<double>>& recoveryProbabilites, const size_t samples)
+    GaussianOneFactorMonteCarloLossModel(Handle<Quote> baseCorrelation,
+                                         const std::vector<std::vector<double>>& recoveryRates,
+                                         const std::vector<std::vector<double>>& recoveryProbabilites,
+                                         const size_t samples)
         : baseCorrelation_(baseCorrelation), recoveryRates_(recoveryRates),
           recoveryProbabilities_(recoveryProbabilites), nSamples_(samples) {
 
@@ -50,21 +52,16 @@ public:
         QL_REQUIRE(recoveryRates_.empty() || recoveryRates_.size() == recoveryProbabilities_.size(),
                    "Error mismatch vector size, between recoveryRates and their respective probability");
 
-        
-
-            
-
         for (size_t i = 0; i < recoveryRates_.size(); ++i) {
-            double totalRecoveryProb = std::accumulate(recoveryProbabilities_[i].begin(), recoveryProbabilities_[i].end(), 0.0);
+            double totalRecoveryProb =
+                std::accumulate(recoveryProbabilities_[i].begin(), recoveryProbabilities_[i].end(), 0.0);
             QL_REQUIRE(QuantLib::close_enough(totalRecoveryProb, 1.0), "Recovery probabilities should sum to 1");
             QL_REQUIRE(recoveryRates_[i].size() == recoveryProbabilities_[i].size(),
                        "All recoveryRates should have the same number of probs");
         }
     }
 
-    void update() override {
-        notifyObservers();
-    }
+    void update() override { notifyObservers(); }
 
 protected:
     Real expectedTrancheLoss(const Date& d, Real recoveryRate = Null<Real>()) const override {
@@ -99,11 +96,11 @@ protected:
         TLOG("DefaultThresholdholds");
         for (size_t id = 0; id < pds.size(); id++) {
             thresholds.push_back(std::vector<double>(recoveryRates_[id].size(), 0.0));
-            thresholds[id][0]=(ICN(pds[id]));
+            thresholds[id][0] = (ICN(pds[id]));
             double cumRecoveryProb = 0.0;
-            for (size_t j = 0; j < recoveryProbabilities_.size() - 1; ++j) {
+            for (size_t j = 0; j < recoveryProbabilities_[id].size() - 1; ++j) {
                 cumRecoveryProb += recoveryProbabilities_[id][j];
-                thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
+                thresholds[id][j + 1] = (ICN(pds[id] * (1.0 - cumRecoveryProb)));
             }
             thresholds[id].push_back(QL_MIN_REAL);
             for (size_t j = 0; j < recoveryProbabilities_[id].size(); ++j) {
@@ -135,11 +132,11 @@ protected:
             const double marketFactor = normal.next().value * sqrtRho;
             for (size_t id = 0; id < pds.size(); id++) {
                 const double x = marketFactor + sqrtOneMinusRho * normal.next().value;
-                //TLOG("Sim " << i << " x= " << x);
+                // TLOG("Sim " << i << " x= " << x);
                 for (size_t lgd = 1; lgd < thresholds[id].size(); lgd++) {
-                    
-                    //TLOG("Threshold " << lgd << " rrThreshold= " << thresholds[id][lgd - 1] << " RecoveryRate "
-                     //                 << recoveryRates_[id][lgd - 1]);
+
+                    // TLOG("Threshold " << lgd << " rrThreshold= " << thresholds[id][lgd - 1] << " RecoveryRate "
+                    //                  << recoveryRates_[id][lgd - 1]);
                     if (x > thresholds[id][lgd] && x <= thresholds[id][lgd - 1]) {
                         // default reovery rate
                         simPD[id] += 1;
@@ -150,9 +147,9 @@ protected:
                 }
             }
             expectedLossIndex += loss;
-            
-            trancheLoss += std::max(loss - basket_->attachmentAmount(), 0.0) -
-                            std::max(loss - basket_->detachmentAmount(), 0.0);
+
+            trancheLoss +=
+                std::max(loss - basket_->attachmentAmount(), 0.0) - std::max(loss - basket_->detachmentAmount(), 0.0);
 
             zeroTrancheLoss += std::max(loss_zero_recovery - basket_->attachmentAmount(), 0.0) -
                                std::max(loss_zero_recovery - basket_->detachmentAmount(), 0.0);
@@ -165,7 +162,6 @@ protected:
         TLOG("Expected Index Loss " << expectedLossIndex / n);
         if (recoveryRate != Null<Real>()) {
             return zeroTrancheLoss / n;
-
         }
         return trancheLoss / n;
     }
@@ -175,12 +171,11 @@ protected:
     //   sole caller.
     //! Concrete models do now any updates/inits they need on basket reset
 private:
-    void resetModel() override {
-    };
+    void resetModel() override {};
     Handle<Quote> baseCorrelation_;
     std::vector<std::vector<double>> recoveryRates_;
     std::vector<std::vector<double>> recoveryProbabilities_;
-    
+
     size_t nSamples_;
 };
 
