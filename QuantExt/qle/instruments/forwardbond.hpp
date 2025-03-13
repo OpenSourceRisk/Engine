@@ -65,6 +65,7 @@ public:
     //! \name Inspectors
     //@{
     const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying() { return underlying_; }
+    Real forwardValue() const;
     //@}
 
 private:
