@@ -17,7 +17,6 @@
 */
 
 #include <ored/marketdata/bondspreadimply.hpp>
-#include <ored/marketdata/bondspreadimplymarket.hpp>
 
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
@@ -25,6 +24,7 @@
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 
@@ -32,6 +32,7 @@
 #include <ql/pricingengines/bond/bondfunctions.hpp>
 
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <qle/instruments/forwardbond.hpp>
 
 #include <regex>
 
@@ -138,7 +139,7 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
             try {
                 auto impliedSpread = QuantLib::ext::make_shared<SecuritySpreadQuote>(
                     implySpread(sec.first, sec.second->price(), referenceDataManager, engineFactory,
-                                spreadImplyMarket->spreadQuote(sec.first), configuration),
+                                spreadImplyMarket, configuration),
                     market->asofDate(), "BOND/YIELD_SPREAD/" + sec.first, sec.first);
                 generatedSpreads[sec.first] = impliedSpread;
                 LOG("spread imply succeded for security " << sec.first << ", got " << std::setprecision(10)
@@ -179,23 +180,38 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
         return drbe->calculateNpv(expiry, expiry, b.bond->cashflows()).npv - b.bond->accruedAmount(expiry) / 100.0;
     } else if (b.bond) { // this is the standard bond case
         return b.bond->cleanPrice() / 100.0;
-    } else // this is bond future case
-        return b.qlInstrument->NPV() / b.oreTrade->notional();
+    } else {// this is bond future case
+        //return b.qlInstrument->NPV() / b.oreTrade->notional();
+        auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.qlInstrument);
+        QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
+        //std::cout << "future->forwardValue() " << future->forwardValue() << std::endl;
+        return future->forwardValue();
+    }
 }
 
 Real BondSpreadImply::implySpread(const std::string& securityId, const Handle<Quote>& marketQuote,
                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                  const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote,
+                                  const QuantLib::ext::shared_ptr<BondSpreadImplyMarket>& market,
                                   const std::string& configuration) {
 
     // checks, build bond from reference data
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     Real priceAdj = marketQuote->value();
+
+    //in case of the future, we need the price for the ctd selection, hence:
     addPriceToRefData(securityId, marketQuote, referenceDataManager);
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
+    QuantLib::ext::shared_ptr<SimpleQuote>  spreadQuote = market->spreadQuote(securityId);
+
+    //in case of the future use the ctd bondspread, hence:
+    auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.oreTrade);
+    if(bondfuture){
+        std::cout << "bondfuture->ctdId() " << bondfuture->ctdId() << std::endl;
+        spreadQuote = market->spreadQuote(bondfuture->ctdId());
+    }
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
@@ -203,14 +219,17 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Handle<Qu
 
     Real inflationFactor = b.inflationFactor();
 
-    if (b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty) {
+    if (b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty && !bondfuture) {
+        //TODO make that bond // future dependent
         priceAdj -= b.bond->accruedAmount(b.bond->settlementDate()) / 100.0;
     }
 
     DLOG("implySpread for securityId " << securityId << ":");
-    // DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
+    if(!bondfuture)
+        DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
     DLOG("market quote            = " << priceAdj);
-    // DLOG("accrueds                = " << b.bond->accruedAmount());
+    if(!bondfuture)
+        DLOG("accrueds                = " << b.bond->accruedAmount());
     DLOG("inflation factor        = " << inflationFactor);
     DLOG("price quote method adj  = " << adj);
     DLOG("effective market price  = " << priceAdj * inflationFactor * adj);

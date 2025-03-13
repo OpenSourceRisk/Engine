@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/marketdata/bondspreadimplymarket.hpp>
 
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -58,7 +59,7 @@ private:
     static Real implySpread(const std::string& securityId, const Handle<Quote>& marketQuote,
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote,
+                            const QuantLib::ext::shared_ptr<BondSpreadImplyMarket>& market,
                             const std::string& configuration);
 };
 

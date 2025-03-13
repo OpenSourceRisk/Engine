@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/marketdata/bondspreadimplymarket.hpp>
 
 #include <qle/pricingengines/mclgmfwdbondengine.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -42,7 +43,17 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
 
     // include bond spread, if any
     try {
-        curves.bondSpread_ = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        auto bondspreadimplymarket = QuantLib::ext::dynamic_pointer_cast<BondSpreadImplyMarket>(market_);
+        if (bondspreadimplymarket) {
+            // this is the ctd spread -- require for bondspreadimply
+            // if the spread imply is fullfilled, this spread is stored under the contract id -> the else case
+            curves.bondSpread_ = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+            DLOG("FwdBondEngineBuilder::getCurves : id  " << id << " using ctd id " << securityId << " with spread of " << curves.bondSpread_->value());
+        } else {
+            // this is the contact spread -- required for anything else
+            curves.bondSpread_ = market_->securitySpread(contractId, configuration(MarketContext::pricing));
+            DLOG("FwdBondEngineBuilder::getCurves : id  " << id << " using contract id " << contractId << " with spread of " << curves.bondSpread_->value());
+        }
     } catch (...) {
         curves.bondSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     }
@@ -66,15 +77,15 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
     curves.discountCurve_ = discountCurveName.empty()
                                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-    // include contract spread, if any
-    try {
-        curves.contractSpread_ = market_->securitySpread(contractId, configuration(MarketContext::pricing));
-    } catch (...) {
-        curves.contractSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
-    }
-    // include spread
-    curves.discountCurve_ = Handle<YieldTermStructure>(
-        QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(curves.discountCurve_, curves.contractSpread_));
+    // // include contract spread, if any
+    // try {
+    //     curves.contractSpread_ = market_->securitySpread(contractId, configuration(MarketContext::pricing));
+    // } catch (...) {
+    //     curves.contractSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+    // }
+    // // include spread
+    // curves.discountCurve_ = Handle<YieldTermStructure>(
+    //     QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(curves.discountCurve_, curves.contractSpread_));
 
     try {
         curves.conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
