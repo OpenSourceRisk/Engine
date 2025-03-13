@@ -31,19 +31,19 @@ namespace QuantExt {
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                                                      const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
       caching_(false) {
     registerWith(model);
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
-                                                     const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+                                                     const Size ccy, const Handle<YieldTermStructure>& discountCurve,
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
       caching_(false) {
     registerWith(model);
     registerWith(c_);
@@ -51,9 +51,9 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                                                      const Handle<YieldTermStructure>& discountCurve,
-                                                     const FloatSpreadMapping floatSpreadMapping)
+                                                     const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
       caching_(false) {
     registerWith(c_);
 }
@@ -72,7 +72,7 @@ void AnalyticLgmSwaptionEngine::clearCache() {
 }
 
 Real AnalyticLgmSwaptionEngine::flatAmount(const Size k) const {
-    Date reference = p_->termStructure()->referenceDate();
+    Date reference = c_->referenceDate();
     QuantLib::ext::shared_ptr<IborIndex> index = arguments_.swap->iborIndex();
     QuantLib::ext::shared_ptr<OvernightIndex> ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
     if (ois) {
@@ -125,7 +125,17 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions are not supported ...");
 
-    Date reference = p_->termStructure()->referenceDate();
+    // we allow c_'s reference date to be different from the lgm reference date
+
+    Date reference = c_->referenceDate();
+
+    QL_REQUIRE(reference >= p_->termStructure()->referenceDate(),
+               "AnalyticLgmSwaptionEngine::calculate(): curve reference date ("
+                   << reference << ") must not lie before lgm parametrization reference date ("
+                   << p_->termStructure()->referenceDate() << ")");
+
+    if (reference == p_->termStructure()->referenceDate())
+        x0_ = 0.0;
 
     Date expiry = arguments_.exercise->dates().back();
 
@@ -149,14 +159,14 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         nominal_ = arguments_.swap->nominal();
 
         fixedLeg_.clear();
-	floatingLeg_.clear();
-	for(auto const& c: arguments_.swap->fixedLeg()) {
-	    fixedLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c));
+        floatingLeg_.clear();
+        for (auto const& c : arguments_.swap->fixedLeg()) {
+            fixedLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c));
             QL_REQUIRE(fixedLeg_.back(),
                        "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FixedRateCoupon");
         }
-	for(auto const& c: arguments_.swap->floatingLeg()) {
-	    floatingLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c));
+        for (auto const& c : arguments_.swap->floatingLeg()) {
+            floatingLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c));
             QL_REQUIRE(
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
@@ -191,13 +201,13 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "higher than fixed leg's payment frequency in "
                                "analytic lgm swaption engine");
 
-        if(floatSpreadMapping_ == FloatSpreadMapping::simple) {
+        if (floatSpreadMapping_ == FloatSpreadMapping::simple) {
             Real annuity = 0.0;
             for (Size j = j1_; j < fixedLeg_.size(); ++j) {
                 annuity += nominal_ * fixedLeg_[j]->accrualPeriod() * c_->discount(fixedLeg_[j]->date());
             }
             Real floatAmountMismatch = 0.0;
-            for(Size k=k1_; k<floatingLeg_.size();++k) {
+            for (Size k = k1_; k < floatingLeg_.size(); ++k) {
                 floatAmountMismatch +=
                     (floatingLeg_[k]->amount() - flatAmount(k)) * c_->discount(floatingLeg_[k]->date());
             }
@@ -214,7 +224,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
             Real sum1 = 0.0, sum2 = 0.0;
             for (Size rr = 0; rr < ratio && k < floatingLeg_.size(); ++rr, ++k) {
                 Real amount = Null<Real>();
-		// same strategy as in VanillaSwap::setupArguments()
+                // same strategy as in VanillaSwap::setupArguments()
                 try {
                     amount = floatingLeg_[k]->amount();
                 } catch (...) {
@@ -276,8 +286,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         }
     }
 
+    /* for the following calculations, see [1] 5.5 - 5.7, with the slight generalization that we condition
+       the npv calculation on (t, x(t)) if lgm ref date < valuation ref date, using 4.4b */
+
     if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
-        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) +
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry)) -
+                  p_->zeta(p_->termStructure()->timeFromReference(reference)) +
                   (applyZetaShift_ ? zetaShift_ * zetaShiftT_ : 0.0);
     }
 
@@ -311,9 +325,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
-        Real tte = p_->termStructure()->timeFromReference(expiry);
-        os << "tte=" << tte << ", vol=" << std::sqrt(zetaex_ / tte) << ", nominal=" << nominal_
-           << ", d=" << D0_;
+        Real tte = c_->timeFromReference(expiry);
+        os << "tte=" << tte << ", vol=" << std::sqrt(zetaex_ / tte) << ", nominal=" << nominal_ << ", d=" << D0_;
         for (Size j = 0; j < Dj_.size(); ++j)
             os << ", d" << j << "=" << Dj_[j];
         os << ", h=" << H0_;
@@ -336,11 +349,18 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Real sum = 0.0;
     for (Size j = j1_; j < fixedLeg_.size(); ++j) {
         sum += w_ * (fixedLeg_[j]->amount() - S_[j - j1_]) * Dj_[j - j1_] *
-               N(u_ * w_ * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
+               N(u_ * w_ * ((yStar + x0_) + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
-    sum += -w_ * S_m1 * D0_ * N(u_ * w_ * yStar / sqrt_zetaex);
-    sum += w_ * (nominal_ * Dj_.back() * N(u_ * w_ * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
-                 nominal_ * D0_ * N(u_ * w_ * yStar / sqrt_zetaex));
+    sum += -w_ * S_m1 * D0_ * N(u_ * w_ * (yStar + x0_) / sqrt_zetaex);
+    sum += w_ * (nominal_ * Dj_.back() * N(u_ * w_ * ((yStar + x0_) + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
+                 nominal_ * D0_ * N(u_ * w_ * (yStar + x0_) / sqrt_zetaex));
+
+    if (reference > p_->termStructure()->referenceDate()) {
+        Real Ht = p_->H(p_->termStructure()->timeFromReference(reference));
+        Real zetat = p_->zeta(p_->termStructure()->timeFromReference(reference));
+        sum *= 1.0 / c_->discount(reference) * std::exp(Ht * x0_ + 0.5 * Ht * Ht * zetat);
+    }
+
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;
@@ -386,5 +406,5 @@ std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::Flo
         QL_FAIL("FloatSpreadMapping type not covered");
     return oss;
 }
-  
+
 } // namespace QuantExt
