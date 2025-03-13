@@ -100,7 +100,7 @@ void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         impl_->runAnalytic(loader, runTypes);
         MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
-    analyticComplete_ = true;
+   git merge origin analyticComplete_ = true;
 }
 
 void Analytic::initialise() {
