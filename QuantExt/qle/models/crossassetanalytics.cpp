@@ -200,9 +200,8 @@ Real eq_expectation_2(const CrossAssetModel& x, const Size k, const Time t0, con
 
 Real com_expectation_1(const CrossAssetModel& x, const Size k, const Time t0, const Real dt) {
     Size i = x.ccyIndex(x.comModel(k)->currency());
-    Size eps_i = (i == 0) ? 0 : 1;
     Real res = integral(x, P(rzc(0, k), Hz(0), az(0), comDiffusionIntegrand(t0 + dt, k)), t0, t0 + dt);
-    if (eps_i > 0) {
+    if (i > 0) {
         res -= integral(x, P(rxc(i - 1, k), sx(i - 1), comDiffusionIntegrand(t0 + dt, k)), t0, t0 + dt);
     }
     return res;
@@ -707,13 +706,12 @@ Real ir_com_covariance(const CrossAssetModel& model, const Size i, const Size j,
 }
 
 Real fx_com_covariance(const CrossAssetModel& x, const Size j, const Size k, const Time t0, const Time dt) {
-    const Size& j_lgm = j + 1;                  // indexing of the FX currency for extracting the LGM terms
-    Real Hj_b = Hz(j_lgm).eval(x, t0 + dt);
+    Real Hj_b = Hz(j + 1).eval(x, t0 + dt);
     Real H0_b = Hz(0).eval(x, t0 + dt);
     Real res = H0_b * integral(x, P(rzc(0, k), az(0), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
     res -= integral(x, P(Hz(0), rzc(0, k), az(0), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
-    res -= Hj_b * integral(x, P(rzc(j_lgm, k), az(j_lgm), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
-    res += integral(x, P(Hz(j_lgm), rzc(j_lgm, k), az(j_lgm), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res -= Hj_b * integral(x, P(rzc(j + 1, k), az(j + 1), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res += integral(x, P(Hz(j + 1), rzc(j + 1, k), az(j + 1), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
     res += integral(x, P(rxc(j, k), sx(j), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
     return res; 
 }

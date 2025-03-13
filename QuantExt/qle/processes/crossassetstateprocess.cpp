@@ -344,7 +344,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
         auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
         if (!cm->parametrization()->driftFreeState()) {
-            // Ornstein-Uhlenbeck drift         
+            // Ornstein-Uhlenbeck drift
             Real kap = cm->parametrization()->kappaParameter();
             res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] -=
                 kap * x[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)];
