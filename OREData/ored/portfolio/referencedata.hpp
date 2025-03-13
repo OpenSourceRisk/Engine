@@ -214,6 +214,7 @@ private:
     std::string indexSubFamily_;
 };
 
+
 /*
 <ReferenceDatum id="SP500">
   <Type>EquityIndex</Type>

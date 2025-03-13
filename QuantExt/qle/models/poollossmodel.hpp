@@ -310,20 +310,14 @@ void PoolLossModel<CopulaPolicy>::updateThresholds(QuantLib::Date d, Real recove
             std::vector<Real> rrProbs = copula_->recoveryProbabilities()[i];
             q_[i] = std::vector<Real>(rrProbs.size() + 1, prob[i]);
             c_[i] = std::vector<Real>(rrProbs.size() + 1, copula_->inverseCumulativeY(q_[i][0], i));
-            
             Real sum = 0.0;
-            //TLOG("rrProbs size " << rrProbs.size());
             for (Size j = 0; j < rrProbs.size(); ++j) {
                 sum += rrProbs[j];
-                //TLOG("constituent i = " << i << " j "  <<j << " DP = " << q_[i][0]  << "rrprob[j] " << rrProbs[j] << " sum " << sum);
                 q_[i][j+1] = q_[i][0] * (1.0 - sum);
-
-                //TLOG("constituent i = " << i << " threshold j " << j << " q[i][j+1]= " << q_[i][j+1]);
-                if (q_[i][j+1] <= 1e-7)
+                if (QuantLib::close_enough(q_[i][j+1], 0.0))
                     c_[i][j+1] = QL_MIN_REAL;
                 else
                     c_[i][j+1] = copula_->inverseCumulativeY(q_[i][j+1], i); 
-                //TLOG("constituent i = " << i << " threshold j " << j << "TH " << c_[i][j+1] << " prob " << q_[i][j+1]);
             }
             QL_REQUIRE(fabs(q_[i].back()) < tiny, "expected zero qij, but found " << q_[i].back() << " for i=" << i); 
         }

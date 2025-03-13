@@ -32,7 +32,6 @@ namespace QuantExt {
 
 class CreditCurve : public QuantLib::Observer, public QuantLib::Observable {
 public:
-
     struct RefData {
         RefData() {}
         QuantLib::Date startDate = QuantLib::Null<QuantLib::Date>();
@@ -68,6 +67,5 @@ protected:
     RefData refData_;
     void update() override;
 };
-
 
 } // namespace QuantExt

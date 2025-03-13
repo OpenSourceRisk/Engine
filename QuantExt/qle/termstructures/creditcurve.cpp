@@ -17,7 +17,7 @@
 */
 
 #include <qle/termstructures/creditcurve.hpp>
-#include <boost/algorithm/string.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -35,6 +35,5 @@ const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& CreditCurve::
 const QuantLib::Handle<QuantLib::YieldTermStructure>& CreditCurve::rateCurve() const { return rateCurve_; }
 const QuantLib::Handle<QuantLib::Quote>& CreditCurve::recovery() const { return recovery_; }
 const CreditCurve::RefData& CreditCurve::refData() const { return refData_; }
-
 
 } // namespace QuantExt

@@ -1863,6 +1863,7 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
+\item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
@@ -1882,9 +1883,9 @@ For example, you can define a grid for different CDS tiers, such as SNRFOR. The 
 and the corresponding probabilities are `recoveryRateProbabilities_SNRFOR`.
 
 If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
-you can add the `IndexTrancheFamily` identifier to the index credit reference data. 
+you can add the `IndexSubFamily` identifier to the index credit reference data. 
 This allows you to set up independent grids for groups of credit indices, 
-such as a grid for CDX High Yields `recoveryRateGrid_CDXHY_SNRFOR`.
+such as a grid for CDX High Yields Tranches `recoveryRateGrid_CDX.NA.HY_SNRFOR`.
 
 The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values are deprecated and 
 will cause a warning. If recovery rate grid is set to Markit2020, a 3-pillar recovery grid $[0.1, R, 2R-0.1]$ is used.
@@ -1898,8 +1899,19 @@ will cause a warning. If recovery rate grid is set to Markit2020, a 3-pillar rec
         <Parameter name="max">5.0</Parameter>
         <Parameter name="steps">64</Parameter>
         <Parameter name="useStochasticRecovery">Y</Parameter>
+        <Parameter name="useAssumedRecovery">Y</Parameter>
         <Parameter name="recoveryRateGrid">0.7,0.4,0.1</Parameter>
         <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_SUBLT2">0.2</Parameter>
+        <Parameter name="recoveryRateProbabilities_SUBLT2">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SNRLAC">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SNRLAC">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SECDOM">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SECDOM">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SECDOM">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SECDOM">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SNRFOR">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SNRFOR">0.35,0.3,0.35</Parameter>
     </ModelParameters>
     <Engine>Bucketing</Engine>
     <EngineParameters>

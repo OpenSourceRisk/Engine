@@ -1016,6 +1016,21 @@ Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Ba
   <QuoteTypes>
   <IndexSpread>0.01</IndexSpread>
   <Currency>EUR</Currency>
+  <CalibrateConstituentsToIndexSpread>true</CalibrateConstituentsToIndexSpread>
+  <AdjustForLosses>true</AdjustForLosses>
+  <UseAssumedRecovery>true</UseAssumedRecovery>
+  <RecoveryGrid>
+    <Grid seniority="SECDOM">0.4</Grid>
+    <Grid seniority="SNRFOR">0.7, 0.40000000000000002, 0.10000000000000001</Grid>
+    <Grid seniority="SNRLAC">0.4</Grid>
+    <Grid seniority="SUBLT2">0.2</Grid>
+  </RecoveryGrid>
+  <RecoveryProbabilities>
+    <Probabilities seniority="SECDOM">1</Probabilities>
+    <Probabilities seniority="SNRFOR">0.35, 0.29999999999999999, 0.34999999999999998</Probabilities>
+    <Probabilities seniority="SNRLAC">1</Probabilities>
+    <Probabilities seniority="SUBLT2">1</Probabilities>
+  </RecoveryProbabilities>
 </BaseCorrelation>
 \end{minted}
 \caption{Base Correlation Configuration from Upfront Quotes}
@@ -1041,6 +1056,10 @@ The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configu
 \item QuoteTypes: A priority list of quote types to use for the base correlation curve. If it fails to build a base correlation from the first quote type it will try the next one.
 \item IndexSpread: The spread of the index.
 \item Currency: The currency of the base correlation curve.
+\item CalibrateConstituentsToIndexSpread: Relevant only when price quotes are used. Indicates if the constituents should be calibrated to the index spread before deriving the base correlations from the tranche prices.
+\item UseAssumedRecovery: Boolean flag to indicate whether to use specialized default curves bootstrapped with assumed recovery rates (mean of the stochastic recovery rate distribution). These curves are named \_\_CDO\_\<CurveName\>\_REC\_\<ASSUMED_RECOVERY_RATE\> and are used to derive the base correlations.
+\item RecoveryGrid: Specifies the recovery rates for different seniorities of the constituent. Use wildcard * to apply one grid for all seniorities.
+\item RecoveryProbabilities: Specifies the probabilities of the recovery rates for different seniorities. Use wildcard * to apply one grid for all seniorities.
 \end{itemize}
 
 
