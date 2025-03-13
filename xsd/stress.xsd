@@ -53,20 +53,20 @@
   <xs:complexType name="stresstest">
     <xs:all>
       <xs:element type="stresstestparshifts" name="ParShifts" minOccurs="0"/>
-      <xs:element type="discountcurves" name="DiscountCurves"/>
-      <xs:element type="indexcurves" name="IndexCurves"/>
-      <xs:element type="yieldcurves" name="YieldCurves"/>
-      <xs:element type="fxspots" name="FxSpots"/>
-      <xs:element type="stressfxvolatilities" name="FxVolatilities"/>
-      <xs:element type="swaptionvolatilities" name="SwaptionVolatilities"/>
-      <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities"/>
+      <xs:element type="discountcurves" name="DiscountCurves" minOccurs="0"/>
+      <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
+      <xs:element type="yieldcurves" name="YieldCurves" minOccurs="0"/>
+      <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
+      <xs:element type="stressfxvolatilities" name="FxVolatilities" minOccurs="0"/>
+      <xs:element type="swaptionvolatilities" name="SwaptionVolatilities" minOccurs="0"/>
+      <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities" minOccurs="0"/>
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
       <xs:element type="equityvolatilities" name="EquityVolatilities" minOccurs="0"/>
-      <xs:element type="commoditycurves" name="CommoditySpots" minOccurs="0"/>
+      <xs:element type="commodityCurves" name="CommodityCurves" minOccurs="0"/>
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
-      <xs:element type="securityspreads" name="SecuritySpreads"/>
-      <xs:element type="recoveryrates" name="RecoveryRates"/>
-      <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
+      <xs:element type="securityspreads" name="SecuritySpreads" minOccurs="0"/>
+      <xs:element type="recoveryrates" name="RecoveryRates" minOccurs="0"/>
+      <xs:element type="survivalprobabilities" name="SurvivalProbabilities" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
@@ -102,38 +102,6 @@
       </xs:choice>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="commodityCurves">
-    <xs:sequence>
-      <xs:element type="commodityCurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="commodityvolatilities">
-    <xs:sequence>
-      <xs:element type="commodityvolatility" name="CommodityVolatility" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="commodityCurve">
-    <xs:sequence>
-      <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
-      <xs:element type="xs:string" name="Shifts"/>
-      <xs:element type="xs:string" name="ShiftTenors"/>
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="commodity" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="commodityvolatility">
-    <xs:sequence>
-      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
-      <xs:element type="xs:string" name="Shifts"/>
-      <xs:element type="xs:string" name="ShiftExpiries"/>
-      <xs:element type="xs:string" name="ShiftMoneyness">
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="commodity" use="required"/>
   </xs:complexType>
 
 </xs:schema>
