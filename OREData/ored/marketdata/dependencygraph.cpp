@@ -440,23 +440,33 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::BaseCorrelation){
             const auto underlying = g[*v].name;
             DLOG("Building dependency graph for base correlation" << underlying);
-            if (referenceData_ != nullptr && referenceData_->hasData(CreditIndexReferenceDatum::TYPE, underlying)){
-            auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
-                referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
-            
-            std::set<std::string> constituentCurves {underlying, underlying + "_5Y", underlying + "_3Y"};
             auto baseCorrelationConfig = curveConfigs_->baseCorrelationCurveConfig(underlying);
-            for (const auto& c : crd->constituents()) {
-                const double weight = c.weight();
-                if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
-                    constituentCurves.insert(c.name());
-                    auto assumedRecovery = baseCorrelationConfig->assumedRecovery(c.name());
-                    if (assumedRecovery != Null<double>()) {
-                        constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), assumedRecovery));
+            if (!baseCorrelationConfig) {
+                WLOG("No base correlation curve config found for " << underlying);
+                continue;
+            }
+            if (!baseCorrelationConfig->hasQuoteTypePrice()) {
+                DLOG("Base Correlation will be build from direct base correlation quotes, no dependencies for "
+                     << underlying);
+                continue;
+            }
+            if (referenceData_ != nullptr && referenceData_->hasData(CreditIndexReferenceDatum::TYPE, underlying)) {
+                auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+                    referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
+
+                std::set<std::string> constituentCurves{underlying, underlying + "_" +
+                                                                        to_string(baseCorrelationConfig->indexTerm())};
+                for (const auto& c : crd->constituents()) {
+                    const double weight = c.weight();
+                    if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
+                        constituentCurves.insert(c.name());
+                        auto assumedRecovery = baseCorrelationConfig->assumedRecovery(c.name());
+                        if (assumedRecovery != Null<double>()) {
+                            constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), assumedRecovery));
+                        }
+                    } else {
+                        DLOG("Skipping curve " << c.name() << ", having zero weight");
                     }
-                } else {
-                    DLOG("Skipping curve " << c.name() << ", having zero weight");
-                }
                 }
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                     if (*w != *v && g[*w].obj == MarketObject::DefaultCurve &&
@@ -467,10 +477,11 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     }
                 }
                 for (const auto& creditCurve : constituentCurves) {
-                    WLOG("couldn't find required creditCurve " << creditCurve << ". This can be ignored if base correlation are given and not bootstrapped from upfronts");
+                    WLOG("couldn't find required creditCurve "
+                         << creditCurve
+                         << ". This can be ignored if base correlation are given and not bootstrapped from upfronts");
                 }
-            }
-            else{
+            } else {
                 WLOG("No reference data manager or data found for index, this could be an error, if base correlation "
                      "are bootstrapped from upfronts");
             }

@@ -91,6 +91,9 @@ public:
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
     const std::vector<MarketDatum::QuoteType>& quoteTypes() const { return quoteTypes_; }
+    const bool hasQuoteTypePrice() const { 
+        return std::find(quoteTypes_.begin(), quoteTypes_.end(), MarketDatum::QuoteType::PRICE) != quoteTypes_.end(); 
+    }
     const double indexSpread() const { return indexSpread_; }
     const std::string currency() const { return currency_; }
     const bool calibrateConstituentsToIndexSpread() const { return calibrateConstituentsToIndexSpread_; }
@@ -110,6 +113,7 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
+
     std::map<std::string, std::vector<double>>& rrGrids() { return rrGrids_; }
     std::map<std::string, std::vector<double>>& rrProbs() { return rrProbs_; }
     //@}
