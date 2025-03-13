@@ -79,20 +79,18 @@ void BaselTrafficLightData::clear() {
 */
 void BaselTrafficLightData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BaselTrafficLightConfig");
-    if (auto global = XMLUtils::getChildNode(node, "Configuration")) {
-        for (auto const c : XMLUtils::getChildrenNodes(node, "Configuration")) {
-            int mporDays = XMLUtils::getChildValueAsInt(c, "mporDays", true);
-            auto obsThreshold = XMLUtils::getChildNode(c, "ObservationThresholds");
-            auto observationCount = XMLUtils::getChildNode(obsThreshold, "ObservationCount");
-            auto amberLimit = XMLUtils::getChildNode(obsThreshold, "AmberLimit");
-            auto redLimit = XMLUtils::getChildNode(obsThreshold, "RedLimit");
-            std::vector<int> observationCt = splitStringToIntVector(XMLUtils::getNodeValue(observationCount));
-            std::vector<int> amberLim = splitStringToIntVector(XMLUtils::getNodeValue(amberLimit));
-            std::vector<int> redLim = splitStringToIntVector(XMLUtils::getNodeValue(redLimit));
-            QL_REQUIRE(observationCt.size() == amberLim.size() && amberLim.size() == redLim.size(),
-                       "We must have the same number number of observation and limits.");
-            baselTrafficLight_[mporDays] = {observationCt, amberLim, redLim};
-        }
+    for (auto const c : XMLUtils::getChildrenNodes(node, "Configuration")) {
+        int mporDays = XMLUtils::getChildValueAsInt(c, "mporDays", true);
+        auto obsThreshold = XMLUtils::getChildNode(c, "ObservationThresholds");
+        auto observationCount = XMLUtils::getChildNode(obsThreshold, "ObservationCount");
+        auto amberLimit = XMLUtils::getChildNode(obsThreshold, "AmberLimit");
+        auto redLimit = XMLUtils::getChildNode(obsThreshold, "RedLimit");
+        std::vector<int> observationCt = splitStringToIntVector(XMLUtils::getNodeValue(observationCount));
+        std::vector<int> amberLim = splitStringToIntVector(XMLUtils::getNodeValue(amberLimit));
+        std::vector<int> redLim = splitStringToIntVector(XMLUtils::getNodeValue(redLimit));
+        QL_REQUIRE(observationCt.size() == amberLim.size() && amberLim.size() == redLim.size(),
+                   "We must have the same number number of observation and limits.");
+        baselTrafficLight_[mporDays] = {observationCt, amberLim, redLim};
     }
 }
 
