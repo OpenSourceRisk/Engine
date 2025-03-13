@@ -62,6 +62,8 @@
       <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities"/>
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
       <xs:element type="equityvolatilities" name="EquityVolatilities" minOccurs="0"/>
+      <xs:element type="commoditycurves" name="CommoditySpots" minOccurs="0"/>
+      <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"/>
       <xs:element type="recoveryrates" name="RecoveryRates"/>
       <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
@@ -100,6 +102,38 @@
       </xs:choice>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="commodityCurves">
+    <xs:sequence>
+      <xs:element type="commodityCurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commodityvolatilities">
+    <xs:sequence>
+      <xs:element type="commodityvolatility" name="CommodityVolatility" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commodityCurve">
+    <xs:sequence>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:element type="xs:string" name="Shifts"/>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="commodity" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="commodityvolatility">
+    <xs:sequence>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:element type="xs:string" name="Shifts"/>
+      <xs:element type="xs:string" name="ShiftExpiries"/>
+      <xs:element type="xs:string" name="ShiftMoneyness">
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="commodity" use="required"/>
   </xs:complexType>
 
 </xs:schema>
