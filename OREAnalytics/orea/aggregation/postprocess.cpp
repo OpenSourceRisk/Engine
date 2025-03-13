@@ -268,7 +268,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     /********************************************************
      * Cache average EPE and ENE
      */
-    for (const auto& [tradeId,_]: tradeIds()) {
+    for (const auto& tradeId: portfolio_->ids()) {
         tradeEPE_[tradeId] = exposureCalculator_->epe(tradeId);
         tradeENE_[tradeId] = exposureCalculator_->ene(tradeId);
         allocatedTradeEPE_[tradeId] = exposureCalculator_->allocatedEpe(tradeId);
