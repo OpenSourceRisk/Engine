@@ -119,10 +119,10 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // identify CTD bond
     QL_REQUIRE(secList_.size() > 0, "BondFuture::build no DeliveryBasket given");
-    string securityId = secList_.front();
+    ctdId_ = secList_.front();
     if (secList_.size() > 1)
-        securityId = identifyCtdBond(engineFactory, expiry);
-    ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), securityId);
+        ctdId_ = identifyCtdBond(engineFactory, expiry);
+    ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctdId_);
 
     // hardcoded values for bondfuture vs forward bond
     double amount = 0.0;                   // strike amount is zero for bondfutures
@@ -145,7 +145,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
         id(), parseCurrency(currency_), contractName_, envelope().additionalField("discount_curve", false, string()),
-        ctdUnderlying_.creditCurveId, securityId, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
+        ctdUnderlying_.creditCurveId, ctdId_, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
         ctdUnderlying_.bondTrade->bondData().incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);

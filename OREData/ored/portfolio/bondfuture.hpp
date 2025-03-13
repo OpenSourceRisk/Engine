@@ -62,6 +62,7 @@ public:
     //! inspectors
     // const std::vector<std::string>& secList() const { return secList_; }
     const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
+    const string& ctdId() const { return ctdId_; }
     const string& currency() const { return currency_; }
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
@@ -100,6 +101,7 @@ private:
     std::string lastDelivery_; // settlement date
 
     BondBuilder::Result ctdUnderlying_;
+    std::string ctdId_;
 };
 
 struct BondFutureBuilder : public BondBuilder {
