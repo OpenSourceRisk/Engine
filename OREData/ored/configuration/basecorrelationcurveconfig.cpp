@@ -164,13 +164,14 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
 
     auto recoveryGridNode = XMLUtils::getChildNode(node, "RecoveryGrid");
     if (recoveryGridNode) {
+        DLOG("Parsing recovery grid");
         recoveryGrids = XMLUtils::getChildrenAttributesAndValues(recoveryGridNode, "Grid", "seniority", true);
     }
-    auto recoveryProbabilityNode =
-        XMLUtils::getChildNode(node, "RecoveryProbabilities");
-    if (recoveryProbabilityNode){
-    auto recoveryProbabilites =
-        XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
+    DLOG("Parsing recovery probabilities");
+    auto recoveryProbabilityNode = XMLUtils::getChildNode(node, "RecoveryProbabilities");
+    if (recoveryProbabilityNode) {
+        recoveryProbabilites =
+            XMLUtils::getChildrenAttributesAndValues(recoveryProbabilityNode, "Probabilities", "seniority", true);
     }
     for (const auto& seniority : recoveryGrids) {
         QL_REQUIRE(recoveryProbabilites.find(seniority.first) != recoveryProbabilites.end(),
@@ -252,6 +253,30 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
 
     return node;
 }
+
+    std::vector<double> BaseCorrelationCurveConfig::rrGrid(const std::string& seniority) const {
+        auto it = rrGrids_.find(seniority);
+        if (it != rrGrids_.end()) {
+            return it->second;
+        } 
+        it = rrGrids_.find("*");
+        if (it != rrGrids_.end()) {
+            return it->second;
+        }
+        return std::vector<double>();
+    }
+
+    std::vector<double> BaseCorrelationCurveConfig::rrProb(const std::string& seniority) const {
+        auto it = rrProbs_.find(seniority);
+        if (it != rrProbs_.end()) {
+            return it->second;
+        }
+        it = rrProbs_.find("*");
+        if (it != rrProbs_.end()) {
+            return it->second;
+        }
+        return std::vector<double>();
+    }
 
 double BaseCorrelationCurveConfig::assumedRecovery(const std::string& creditName) const{
     CdsReferenceInformation info;

@@ -179,17 +179,13 @@ public:
                                                                << rrGrids.size() << " and recovery rate probabilities "
                                                                << rrProbs.size() << " must have the same size.");
         for (Size i = 0; i < recoveryRates.size(); ++i) {
-            
             QL_REQUIRE(rrGrids[i].size() == rrProbs[i].size(),
                        "Recovery rate grids " << rrGrids[i].size() << " and recovery rate probabilities "
                                               << rrProbs[i].size() << " for constituent " << i
-                                              << " must have the same size.");
-            TLOG("Expected Recovery rate for constituent " << i << " is " << recoveryRates[i]);
-            TLOG("RecoveryRate Grid and Prob");
-            for(Size j = 0; j < rrGrids[i].size(); ++j) {
-                TLOG("Recovery rate grid for constituent " << i << " is " << rrGrids[i][j]);
-                TLOG("Recovery rate probability for constituent " << i << " is " << rrProbs[i][j]);
-            }
+                                                << " must have the same size.");
+            TLOG("Recovery rate grid for constituent " << i << " is " << recoveryRates[i])
+            TLOG("RRGrid " << to_string(rrGrids[i]));
+            TLOG("RRProbs " << to_string(rrProbs[i]));
         }
 
         DLOG("Build ExtendedGaussianConstantLossLM");

@@ -454,8 +454,8 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
                     referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
 
-                std::set<std::string> constituentCurves{underlying, underlying + "_" +
-                                                                        to_string(baseCorrelationConfig->indexTerm())};
+                std::set<std::string> constituentCurves{underlying, underlying + "_3Y", underlying + "_5Y",
+                                                        underlying + "_7Y", underlying + "_10Y"};
                 for (const auto& c : crd->constituents()) {
                     const double weight = c.weight();
                     if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {

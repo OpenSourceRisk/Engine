@@ -179,10 +179,10 @@ BaseCorrelationCurve::BaseCorrelationCurve(
             }
             break;
         } catch (std::exception& e) {
-            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build from " + to_string(quoteType), e.what()).log();
+            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build BaseCorrelation from " + to_string(quoteType), e.what()).log();
             
         } catch (...) {
-            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build from " + to_string(quoteType),
+            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build BaseCorrelation from " + to_string(quoteType),
                                           "Unexpected error").log();
         }
     }
@@ -479,20 +479,22 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto rrGrid = config.rrGrid(seniority);
             auto rrProb = config.rrProb(seniority);
             DLOG("use assumed recoveries " << config.useAssumedRecovery());
+            TLOG("Recovery rate grid for " << name << " is " << to_string(rrGrid));
+            TLOG("Recovery rate probabilities for " << name << " is " << to_string(rrProb));
             if(!config.useAssumedRecovery()){                
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
             } else {
                 auto assumedRecovery = std::inner_product(rrGrid.begin(), rrGrid.end(), rrProb.begin(), 0.0);
-                DLOG("Assumed recovery rate for " << name << " is " << assumedRecovery);
+                TLOG("Assumed recovery rate for " << name << " is " << assumedRecovery);
                 auto specificCurveName = indexTrancheSpecificCreditCurveName(name, assumedRecovery);
-                DLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery << " is " << specificCurveName);
+                TLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery << " is " << specificCurveName);
                 auto mappedName = creditCurveNameMapping(specificCurveName);
                 creditCurve = getDefaultProbCurveAndRecovery(mappedName);
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << specificCurveName);
             } 
             if (rrGrid.empty() || rrProb.empty()) {
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
-                ALOG("No recovery grid/probabilities found for " << name << " fallback to use actual recovery");
+                DLOG("No recovery grid/probabilities found for " << name << " fallback to use actual recovery");
                 rrGrid = {creditCurve->recovery()->value()};
                 rrProb = {1.0};
             }
