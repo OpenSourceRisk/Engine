@@ -96,7 +96,7 @@ protected:
                                 incomeCurveId, dirty);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
-            curves.discountCurve_, curves.contractSpread_, curves.incomeCurve_, curves.spreadedReferenceCurve_,
+            curves.discountCurve_, curves.incomeCurve_, curves.spreadedReferenceCurve_,
             curves.bondSpread_, curves.dpts_, curves.recovery_, curves.conversionFactor_, tsperiod);
     }
 };
