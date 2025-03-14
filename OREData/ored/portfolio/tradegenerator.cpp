@@ -143,8 +143,7 @@ map<string, string> TradeGenerator::fetchEquityRefData(string equityId) {
 }
 bool TradeGenerator::validateDate(std::string date) {
     try {
-
-        QuantLib::Date x = ore::data::parseDate(date);
+        QuantLib::Date _ = ore::data::parseDate(date);
         return true;
     } catch (QuantLib::Error e) {
         cout << date + " not a valid date format" << endl;
@@ -157,10 +156,10 @@ void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, R
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexId);
     string cal;
     string rule;
-    string floatFreq;
+    //string floatFreq;
     string startDate = to_string(today_);
     string endDate = maturity;
-    string floatDC;
+    //string floatDC;
     string convention;
     string ccy;
     LegData floatingLeg;
@@ -259,7 +258,7 @@ void TradeGenerator::buildFxForward(string payCcy, Real payNotional, string recC
     std::map<std::string, std::string> mapPairs)
 {
     Envelope env = makeEnvelope();
-    string longShort = isLong ? "Long" : "Short";
+    //string longShort = isLong ? "Long" : "Short";
     QuantLib::ext::shared_ptr<Trade> trade(
         new ore::data::FxForward(env, expiryDate, recCcy, recNotional, payCcy, payNotional));
     trade->id() = to_string(size() + 1) + "_" + payCcy + "-" + recCcy + "_FX_FORWARD";
@@ -354,7 +353,7 @@ void TradeGenerator::buildCommodityOption(string commodityId, Real quantity, str
         QuantLib::ext::dynamic_pointer_cast<CommodityCurveConfig>(curveConfigs_.commodityCurveConfig(commodityId));
     auto yieldConv = conventions_.at(comConfig->baseYieldCurveId() != "" ? comConfig->baseYieldCurveId()
                                                                          : comConfig->conventionsId());
-    string rule = "Forward";
+    //string rule = "Forward";
     string expiryDate = ore::data::to_string(maturity);
     string longShort = isLong ? "Long" : "Short";
     string putCall = isCall ? "Call" : "Put";
@@ -362,7 +361,7 @@ void TradeGenerator::buildCommodityOption(string commodityId, Real quantity, str
     TradeStrike tradeStrike(strike, currency);
     Envelope env = makeEnvelope();
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "", PremiumData());
-    string cal = "";
+    //string cal = "";
     QuantLib::ext::shared_ptr<Trade> trade(
         new ore::data::CommodityOption(env, option, commodityId, currency, quantity, tradeStrike));
     trade->id() = to_string(size() + 1) + "_" + commodityId + "_COMMODITY_OPTION";
@@ -411,10 +410,10 @@ void TradeGenerator::buildEquitySwap(string equityCurveId, string returnType, Re
     string floatFreq = floatingLeg.schedule().rules().front().tenor();
     string startDate = to_string(today_);
     string endDate = to_string(maturity);
-    string floatDC = floatingLeg.dayCounter();
+    //string floatDC = floatingLeg.dayCounter();
     string conv = floatingLeg.schedule().rules().front().convention();
     string cal = floatingLeg.schedule().rules().front().calendar();
-    string rule = floatingLeg.schedule().rules().front().rule();
+    //string rule = floatingLeg.schedule().rules().front().rule();
     Natural spotDays = 2;
     vector<double> notionals = floatingLeg.notionals();
     auto config = curveConfigs_.equityCurveConfig(equityCurveId);
@@ -445,10 +444,10 @@ void TradeGenerator::buildEquitySwap(string equityCurveId, string returnType, Re
     string floatDC = to_string(iborIndex->dayCounter());
     string conv = to_string(iborIndex->businessDayConvention());
     string cal = to_string(iborIndex->fixingCalendar());
-    string rule = "";
+    //string rule = "";
     Natural spotDays = (iborIndex->fixingDays());
     vector<double> notionals(1, notional);
-    vector<double> spreads(0, 0);
+    //vector<double> spreads(0, 0);
     vector<Real> rates(1, rate);
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, ""));
     ScheduleData equitySchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, ""));
@@ -468,7 +467,7 @@ void TradeGenerator::buildEquitySwap(string equityCurveId, string returnType, Re
 void TradeGenerator::buildEquityOption(string equityCurveId, Real quantity, string maturity, Real strike,
                                        std::map<std::string, std::string> mapPairs) {
     map<string, string> eqData = fetchEquityRefData(equityCurveId);
-    string rule = "Forward";
+    //string rule = "Forward";
     string expiryDate = ore::data::to_string(maturity);
     string longShort = mapPairs.count("longShort") == 1 ? mapPairs["longShort"] : "Long";
     string putCall = mapPairs.count("putCall") == 1 ? mapPairs["putCall"] : "Call";
