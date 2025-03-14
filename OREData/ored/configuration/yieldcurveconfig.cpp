@@ -398,7 +398,8 @@ void YieldCurveConfig::populateRequiredCurveIds() {
 set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) {
     auto rci = CurveConfig::requiredCurveIds(curveType);
     Date asof = Settings::instance().evaluationDate();
-    if (curveType == CurveSpec::CurveType::Yield && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
+    if (curveType == CurveSpec::CurveType::Yield &&
+        iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
         rci.insert(iborFallbackConfig_->fallbackData(curveID_).rfrIndex);
 
     return rci;

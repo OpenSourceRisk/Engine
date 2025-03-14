@@ -257,7 +257,7 @@ MarketObject curveTypeToMarketObject(CurveSpec::CurveType ct, const string& curv
         return it->second;
     else {
         if (ct == CurveSpec::CurveType::Yield) {
-            if (parseIborIndex(curve))
+            if (isIborIndex(curve))
                 return MarketObject::IndexCurve;
             else if (CurrencyParser::instance().isValidCurrency(curve))
 				return MarketObject::DiscountCurve;

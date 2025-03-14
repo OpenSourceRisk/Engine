@@ -79,7 +79,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             for (auto const& r : requiredIds) {
                 for (auto const& cId : r.second) {
                     // avoid self reference
-                    if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
+                    if (r.first == g[*v].curveSpec->baseType() && (cId == g[*v].curveSpec->curveConfigID() || cId == g[*v].name))
                         continue;
                     bool found = false;
                     for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
