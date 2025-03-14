@@ -81,9 +81,8 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
 
-    // For Quanto, check for European and Cash, except for an FX underlying
+    // For Quanto, check for Cash, except for an FX underlying
     if (!sameCcy) {
-        QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");
         if (settlementType == Settlement::Type::Physical) {
             QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
                        "Physically settled Quanto options are allowed only for an FX underlying.");
@@ -177,7 +176,47 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                     tradeTypeBuilder = tradeType_ + "Forward";
             }
         }
+    } else if (exerciseType == Exercise::American && settlementType == Settlement::Cash && !sameCcy) {
+        // We have an American quanto cash settled option.
 
+        // Get the payment date.
+        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        Date paymentDate = expiryDate_;
+        if (opd) {
+            if (opd->rulesBased()) {
+                const Calendar& cal = opd->calendar();
+                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+            } else {
+                const vector<Date>& dates = opd->dates();
+                QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
+                paymentDate = dates[0];
+            }
+            QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
+        }
+
+        if (paymentDate > expiryDate_) {
+            QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
+        } else {
+            if (forwardDate_ == QuantLib::Date()) {
+                LOG("Build VanillaOption for trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::European)
+                    tradeTypeBuilder = "QuantoEquityOption";
+                else if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::American)
+                    tradeTypeBuilder = "QuantoEquityOptionAmerican";
+                else if (assetClassUnderlying_ == AssetClass::COM)
+                    tradeTypeBuilder = "QuantoCommodityOption";
+                else
+                    QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
+            } else {
+                LOG("Build VanillaForwardOption for trade " << id());
+                QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+                if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
+                    tradeTypeBuilder = tradeType_ + "Forward";
+            }
+        }
     } else {
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
@@ -187,6 +226,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             } else {
                 LOG("Build QuantoVanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
