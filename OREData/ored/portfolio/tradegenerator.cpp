@@ -160,7 +160,6 @@ void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, R
     string floatFreq;
     string startDate = to_string(today_);
     string endDate = maturity;
-    Natural spotDays;
     string floatDC;
     string convention;
     string ccy;
@@ -402,6 +401,8 @@ void TradeGenerator::buildEquitySwap(string equityCurveId, string returnType, Re
             floatingLeg = buildIborLeg(convention, notional, maturity, firstLegPays, mapPairs);
             break;
         }
+        default:
+            cout << "Convention type not supported: " + to_string(convention->type()) << endl;
     }
     QuantLib::ext::shared_ptr<IborIndex> iborIndex;
     Real dividendFactor = 1;
