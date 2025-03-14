@@ -281,5 +281,17 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         }
     }
 }
+
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+getReport(const ore::analytics::Analytic::analytic_reports& reports, const std::string& analytic,
+          const std::string& report) {
+    if (auto r1 = reports.find(analytic); r1 != reports.end()) {
+        if (auto r2 = r1->second.find(report); r2 != r1->second.end()) {
+            return r2->second;
+        }
+    }
+    return QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+}
+
 }
 }
