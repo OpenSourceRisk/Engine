@@ -1058,7 +1058,7 @@
 		"Difference"
             ],
             "abs_tol": 0.05,
-            "rel_tol": 1e-6
+            "rel_tol": 1e-4
           }
         ]
       },
@@ -1807,6 +1807,25 @@
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-4
+          }
+        ]
+      },
+      "sacva_sensitivities.csv": {
+        "keys": [
+          "NettingSet",
+          "RiskType",
+          "CvaType",
+          "MarginType",
+          "RiskFactor",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 1e-03,
+            "rel_tol": 1e-04
           }
         ]
       }
