@@ -141,14 +141,19 @@ map<string, string> TradeGenerator::fetchEquityRefData(string equityId) {
     }
     return retMap;
 }
+
 bool TradeGenerator::validateDate(std::string date) {
     try {
-        QuantLib::Date _ = ore::data::parseDate(date);
-        return true;
+        QuantLib::Date oreDate = ore::data::parseDate(date);
+        if (oreDate.year()) {
+            return true;
+        }
+
     } catch (QuantLib::Error e) {
         cout << date + " not a valid date format" << endl;
-        return false;
+        
     }
+    return false;
 }
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, Real rate, bool firstLegPays,
