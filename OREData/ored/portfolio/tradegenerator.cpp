@@ -144,14 +144,13 @@ map<string, string> TradeGenerator::fetchEquityRefData(string equityId) {
     return retMap;
 }
 
-bool TradeGenerator::validateDate(std::string date) {
+bool TradeGenerator::validateDate(string date) {
     try {
         ore::data::parseDate(date);
         return true;
     } catch (QuantLib::Error e) {
-        cout << date + " not a valid date format" << endl;
+        return false;    
     }
-    return false;
 }
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, Real rate, bool firstLegPays,
@@ -567,9 +566,11 @@ LegData TradeGenerator::buildLeg(boost::shared_ptr<Convention> conv, Real notion
         leg = buildIborLeg(conv, notional, maturity, isPayer);
         break;
     }
-
-
+    default:
+        break;
     }
+    return leg;
+
 }
 
 }
