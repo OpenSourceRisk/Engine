@@ -84,6 +84,8 @@ public:
     string counterpartyId_;
 
 private:
+    string getEndDate(string maturity, string startDate, Calendar cal);
+    LegData buildLeg(boost::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer);
     string frequencyToTenor(const QuantLib::Frequency& freq);
     LegData buildCPILeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, string currency,
                         Real baseRate, Real cpiRate, bool isPayer, std::map<std::string, std::string> mapPairs = {});
