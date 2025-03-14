@@ -1057,7 +1057,8 @@ The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configu
 \item IndexSpread: The spread of the index.
 \item Currency: The currency of the base correlation curve.
 \item CalibrateConstituentsToIndexSpread: Relevant only when price quotes are used. Indicates if the constituents should be calibrated to the index spread before deriving the base correlations from the tranche prices.
-\item UseAssumedRecovery: Boolean flag to indicate whether to use specialized default curves bootstrapped with assumed recovery rates (mean of the stochastic recovery rate distribution). These curves are named \_\_CDO\_\<CurveName\>\_REC\_\<ASSUMED_RECOVERY_RATE\> and are used to derive the base correlations.
+\item UseAssumedRecovery: Boolean flag to indicate whether to use specialized default curves bootstrapped with assumed recovery rates (mean of the stochastic recovery rate distribution). These curves have following the naming convention
+\_\_CDO\_CurveName\_\&\_REC\_0.30\_\&\_ and are used to derive the base correlations.
 \item RecoveryGrid: Specifies the recovery rates for different seniorities of the constituent. Use wildcard * to apply one grid for all seniorities.
 \item RecoveryProbabilities: Specifies the probabilities of the recovery rates for different seniorities. Use wildcard * to apply one grid for all seniorities.
 \end{itemize}
