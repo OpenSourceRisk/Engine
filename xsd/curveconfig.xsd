@@ -739,6 +739,7 @@
       <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1" />
       <xs:element type="bool" name="AdjustForLosses" minOccurs="0" maxOccurs="1" />
       <xs:element type="xs:string" name="IndexTerm" minOccurs="0" />
+      <xs:element type="xs:string" name="IndexSpread" minOccurs="0" maxOccurs="1" />
       <xs:element type="xs:string" name="Currency" minOccurs="0" />
       <xs:element type="bool" name="CalibrateConstituentsToIndexSpread" minOccurs="0" />
       <xs:element type="bool" name="UseAssumedRecovery" minOccurs="0" />
