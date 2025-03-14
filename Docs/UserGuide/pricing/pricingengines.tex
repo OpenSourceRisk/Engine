@@ -1935,19 +1935,20 @@ The parameters have the following meaning:
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
 \item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
-
 \end{itemize}
+
 It is possible to define multiple recovery rate grids and probabilities. 
-For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is `recoveryRateGrid_SNRFOR`, 
-and the corresponding probabilities are `recoveryRateProbabilities_SNRFOR`.
+For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is recoveryRateGrid\_SNRFOR, 
+and the corresponding probabilities are recoveryRateProbabilities\_SNRFOR.
 
 If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
-you can add the `IndexSubFamily` identifier to the index credit reference data. 
+you can add the \emph{IndexSubFamily} identifier to the index credit reference data. 
 This allows you to set up independent grids for groups of credit indices, 
-such as a grid for CDX High Yields Tranches `recoveryRateGrid_CDX.NA.HY_SNRFOR`.
+such as a grid for CDX High Yields Tranches recoveryRateGrid\_CDX.NA.HY\_SNRFOR.
 
-The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values are deprecated and 
-will cause a warning. If recovery rate grid is set to Markit2020, a 3-pillar recovery grid $[0.1, R, 2R-0.1]$ is used.
+The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values \emph{Markit2020} and \emph{constant} are deprecated and 
+will cause a warning. With the setting \emph{Markit2020} there will be a recovery grid with three points used. The grid will be be based around the constituent's recovery. If the recovery rate 
+is greater than 10 \% and lower than 55 \%,  the grid is $[0.1, RR, 2 RR - 0.1]$, otherwise a constant recovery rate will be assumed.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
