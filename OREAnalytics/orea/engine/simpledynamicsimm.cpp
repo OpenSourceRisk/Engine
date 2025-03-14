@@ -319,6 +319,12 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
     // SIMM = SIMM_product = SIMM_RatesFX
 
     // debug output
+    // std::cout << expectation(imProductRatesFx).at(0) << "," << expectation(imIr).at(0) << ","
+    //           << expectation(deltaMarginIr).at(0) << "," << expectation(vegaMarginIr).at(0) << ","
+    //           << expectation(curvatureMarginIr).at(0) << "," << expectation(imFx).at(0) << ","
+    //           << expectation(deltaMarginFx).at(0) << "," << expectation(vegaMarginFx).at(0) << ","
+    //           << expectation(curvatureMarginFx).at(0) << std::endl;
+
     // std::cout << "SIMM_RatesFX         : " << expectation(imProductRatesFx).at(0) << std::endl;
     // std::cout << "  SIMM_Rates         : " << expectation(imIr).at(0) << std::endl;
     // std::cout << "    delta            : " << expectation(deltaMarginIr).at(0) << std::endl;

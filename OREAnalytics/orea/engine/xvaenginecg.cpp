@@ -1161,12 +1161,11 @@ void XvaEngineCG::calculateDynamicDelta() {
         // set results for this valuation date
 
         for (auto const& n : nettingSetIds) {
+            // debug (to prepare im calculator debug output)
+            // std::cout << i << ",";
+            // end debug
             dynamicIM_[n][i] =
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
-
-            // debug output
-            // std::cout << i << "," << n << "," << expectation(dynamicIM_[n][i]).at(0) << std::endl;
-            // debug output
         }
 
     } // loop over valuation dates
