@@ -440,11 +440,10 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::BaseCorrelation){
             const auto underlying = g[*v].name;
             DLOG("Building dependency graph for base correlation" << underlying);
-            auto baseCorrelationConfig = curveConfigs_->baseCorrelationCurveConfig(underlying);
-            if (!baseCorrelationConfig) {
-                WLOG("No base correlation curve config found for " << underlying);
+            if(!curveConfigs_->hasBaseCorrelationCurveConfig(underlying)){
                 continue;
             }
+            auto baseCorrelationConfig = curveConfigs_->baseCorrelationCurveConfig(underlying);
             if (!baseCorrelationConfig->hasQuoteTypePrice()) {
                 DLOG("Base Correlation will be build from direct base correlation quotes, no dependencies for "
                      << underlying);
