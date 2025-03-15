@@ -29,26 +29,16 @@ namespace data {
 
 using namespace QuantLib;
 
-std::vector<int> splitStringToIntVector(const std::string& str) {
-    std::vector<int> result;
-    std::stringstream ss(str);
-    std::string item;
-    while (std::getline(ss, item, ',')) {
-        result.push_back(std::stoi(item));
-    }
-    return result;
-}
-
-std::string vectorToString(const std::vector<int>& vec) {
-    std::ostringstream oss;
-    for (size_t i = 0; i < vec.size(); ++i) {
-        if (i != 0) {
-            oss << ",";
-        }
-        oss << vec[i];
-    }
-    return oss.str();
-}
+//std::string vectorToString(const std::vector<int>& vec) {
+//    std::ostringstream oss;
+//    for (size_t i = 0; i < vec.size(); ++i) {
+//        if (i != 0) {
+//            oss << ",";
+//        }
+//        oss << vec[i];
+//    }
+//    return oss.str();
+//}
 
 BaselTrafficLightData::BaselTrafficLightData() { clear(); }
 BaselTrafficLightData::BaselTrafficLightData(const std::map<int, ObservationData>& baselTrafficLight) : 
@@ -85,9 +75,9 @@ void BaselTrafficLightData::fromXML(XMLNode* node) {
         auto observationCount = XMLUtils::getChildNode(obsThreshold, "ObservationCount");
         auto amberLimit = XMLUtils::getChildNode(obsThreshold, "AmberLimit");
         auto redLimit = XMLUtils::getChildNode(obsThreshold, "RedLimit");
-        std::vector<int> observationCt = splitStringToIntVector(XMLUtils::getNodeValue(observationCount));
-        std::vector<int> amberLim = splitStringToIntVector(XMLUtils::getNodeValue(amberLimit));
-        std::vector<int> redLim = splitStringToIntVector(XMLUtils::getNodeValue(redLimit));
+        std::vector<int> observationCt = parseListOfValuesAsInt(XMLUtils::getNodeValue(observationCount));
+        std::vector<int> amberLim = parseListOfValuesAsInt(XMLUtils::getNodeValue(amberLimit));
+        std::vector<int> redLim = parseListOfValuesAsInt(XMLUtils::getNodeValue(redLimit));
         QL_REQUIRE(observationCt.size() == amberLim.size() && amberLim.size() == redLim.size(),
                    "We must have the same number number of observation and limits.");
         baselTrafficLight_[mporDays] = {observationCt, amberLim, redLim};
@@ -102,9 +92,12 @@ XMLNode* BaselTrafficLightData::toXML(XMLDocument& doc) const {
         XMLNode* rdNode = XMLUtils::addChild(doc, node, "Configuration");
         XMLUtils::addChild(doc, rdNode, "mporDays", std::to_string(mporDays));
         XMLNode* oNode = XMLUtils::addChild(doc, rdNode, "ObservationThresholds");
-        XMLUtils::addChild(doc, oNode, "ObservationCount", vectorToString(data.observationCount));
+        XMLUtils::addGenericChildAsList(doc, oNode, "ObservationCount", data.observationCount);
+        XMLUtils::addGenericChildAsList(doc, oNode, "AmberLimit", data.amberLimit);
+        XMLUtils::addGenericChildAsList(doc, oNode, "RedLimit", data.redLimit);
+        /*XMLUtils::addChild(doc, oNode, "ObservationCount", vectorToString(data.observationCount));
         XMLUtils::addChild(doc, oNode, "AmberLimit", vectorToString(data.amberLimit));
-        XMLUtils::addChild(doc, oNode, "RedLimit", vectorToString(data.redLimit));
+        XMLUtils::addChild(doc, oNode, "RedLimit", vectorToString(data.redLimit));*/
     }
 
     return node;

@@ -332,6 +332,18 @@ template <class T> std::vector<T> parseListOfValues(string s, std::function<T(st
     return vec;
 }
 
+template <class T> std::vector<T> parseListOfValuesAsInt(string s, std::function<T(string)> parser) {
+    boost::trim(s);
+    std::vector<T> vec;
+    boost::char_separator<char> sep(",");
+    boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+    for (auto r : tokens) {
+        boost::trim(r);
+        vec.push_back(parser(r));
+    }
+    return vec;
+}
+
 template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> str, std::function<T(string)> parser) {
     std::vector<T> vec;
     for (auto s : str) {
@@ -341,6 +353,9 @@ template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> s
 }
 
 std::vector<string> parseListOfValues(string s, const char escape = '\\', const char delim = ',',
+                                      const char quote = '\"');
+
+std::vector<int> parseListOfValuesAsInt(string s, const char escape = '\\', const char delim = ',',
                                       const char quote = '\"');
 
 enum class AmortizationType {
