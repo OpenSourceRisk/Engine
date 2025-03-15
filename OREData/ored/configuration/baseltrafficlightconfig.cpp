@@ -29,17 +29,6 @@ namespace data {
 
 using namespace QuantLib;
 
-//std::string vectorToString(const std::vector<int>& vec) {
-//    std::ostringstream oss;
-//    for (size_t i = 0; i < vec.size(); ++i) {
-//        if (i != 0) {
-//            oss << ",";
-//        }
-//        oss << vec[i];
-//    }
-//    return oss.str();
-//}
-
 BaselTrafficLightData::BaselTrafficLightData() { clear(); }
 BaselTrafficLightData::BaselTrafficLightData(const std::map<int, ObservationData>& baselTrafficLight) : 
                                                 baselTrafficLight_(baselTrafficLight) {}
