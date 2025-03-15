@@ -45,7 +45,7 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 
     std::map<int, ObservationData>& baselTrafficLightData() { return baselTrafficLight_; }
-    std::map<int, ObservationData>& setbaselTrafficLightData(std::map<int, ObservationData> baselTrafficLight) {
+    void setbaselTrafficLightData(std::map<int, ObservationData> baselTrafficLight) {
         baselTrafficLight_ = baselTrafficLight;
     }
     
