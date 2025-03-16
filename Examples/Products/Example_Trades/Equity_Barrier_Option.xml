@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EQBarrierOption">
+        <TradeType>EquityBarrierOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquityBarrierOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <ExerciseDates>
+                    <ExerciseDate>2026-08-15</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <BarrierData>
+                <Type>UpAndOut</Type>
+                <Levels>
+                    <Level>3500.00</Level>
+                </Levels>
+            </BarrierData>
+            <Name>RIC:.SPX</Name>
+            <Currency>USD</Currency>
+            <Strike>3200.00</Strike>
+            <Quantity>1000</Quantity>
+            <StartDate>2025-07-12</StartDate>
+            <Calendar>US-NYSE</Calendar>
+            <EQIndex>EQ-RIC:.SPX</EQIndex>
+        </EquityBarrierOptionData>
+    </Trade>
+</Portfolio>

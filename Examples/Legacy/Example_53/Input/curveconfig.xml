@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CurveConfiguration>
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>GBP1D</CurveId>
+      <CurveDescription>GBP discount curve bootstrapped from OIS swap rates</CurveDescription>
+      <Currency>GBP</Currency>
+      <DiscountCurve>GBP1D</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>OIS</Type>
+          <Quotes>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20220922/1D/20221103</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20221103/1D/20221215</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20221215/1D/20230202</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230202/1D/20230323</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230323/1D/20230511</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230511/1D/20230622</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230622/1D/20230803</Quote>
+          </Quotes>
+          <Conventions>GBP-OIS</Conventions>
+          <Priority>0</Priority>
+          <MinDistance>5</MinDistance>
+        </Simple>
+        <Simple>
+          <Type>OIS</Type>
+          <Quotes>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/1M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/2M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/3M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/6M</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/1Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/2Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/3Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/4Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/5Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/6Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/7Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/8Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/9Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/10Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/11Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/12Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/15Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/20Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/25Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/30Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/40Y</Quote>
+            <Quote optional="true">IR_SWAP/RATE/GBP/2D/1D/50Y</Quote>
+          </Quotes>
+          <Conventions>GBP-OIS</Conventions>
+          <Priority>1</Priority>
+        </Simple>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>DefaultLogMixedLinearCubic</InterpolationMethod>
+      <MixedInterpolationCutoff>1</MixedInterpolationCutoff>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+  </YieldCurves>
+  <SwaptionVolatilities>
+    <SwaptionVolatility>
+      <CurveId>GBP_VOL</CurveId>
+      <CurveDescription>GBP normal swaption volatilities</CurveDescription>
+      <Dimension>ATM</Dimension>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>5Y,10Y,20Y</OptionTenors>
+      <SwapTenors>5Y,10Y,20Y</SwapTenors>
+      <ShortSwapIndexBase>GBP-CMS-SONIA-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>GBP-CMS-SONIA-10Y</SwapIndexBase>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+</CurveConfiguration>

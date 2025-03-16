@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output/credit</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_creditoptions.xml</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">libor</Parameter>
+    <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="pricing">libor</Parameter>
+    <Parameter name="simulation">libor</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>
