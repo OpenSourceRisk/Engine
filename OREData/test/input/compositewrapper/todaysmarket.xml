@@ -5,8 +5,6 @@
   </Configuration>
   <YieldCurves id="default"/>
   <YieldCurves id="ois"/>
-  <YieldCurves id="xois_eur"/>
-  <YieldCurves id="inccy_swap"/>
   <DiscountingCurves id="xois_eur">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
