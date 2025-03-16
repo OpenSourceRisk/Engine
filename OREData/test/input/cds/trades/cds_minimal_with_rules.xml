@@ -14,6 +14,8 @@
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
         <Currency>EUR</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>ACT/360</DayCounter>
         <Notionals>
           <Notional>2000000.00</Notional>
         </Notionals>
