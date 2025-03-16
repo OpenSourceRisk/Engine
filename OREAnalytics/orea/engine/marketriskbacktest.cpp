@@ -304,7 +304,14 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     // Now calculate the [red, amber] and [amber, green] bounds
     if (hisScenGen_->overlapping()) {
         try {
-            ore::data::BaselTrafficLightData::ObservationData trafficLightObs = baselTrafficLightMatrix_[hisScenGen_->mporDays()];
+
+            ore::data::BaselTrafficLightData::ObservationData trafficLightObs;
+            try {
+                trafficLightObs = baselTrafficLightMatrix_[hisScenGen_->mporDays()];
+            } catch (...) {
+                LOG("Couldn't parse BaselTrafficLight for " << hisScenGen_->mporDays() << " mporDays, defaulting to 10.");
+                trafficLightObs = baselTrafficLightMatrix_[10];
+            }
 
             sr.bounds = QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
                                                            hisScenGen_->mporDays(), btArgs_->confidence_,
