@@ -649,10 +649,10 @@ public:
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
-    void xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
-    void xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
-    void xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
-    void xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
+    Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
+    Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
+    bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
     bool xvaCgUseDoublePrecisionForExternalCalculation() const {

@@ -67,17 +67,11 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                const bool bumpCvaSensis = false,
-                const bool dynamicIM = false,
-                const Size dynamicIMStepSize = 1,
-                const Size regressionOrder = 4,
-                const bool tradeLevelBreakDown = true,
-                const bool useRedBlocks = true;
-                const bool useExternalComputeDevice = false,
-                const bool externalDeviceCompatibilityMode = false,
+                const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
+                const Size regressionOrder = 4, const bool tradeLevelBreakDown = true, const bool useRedBlocks = true,
+                const bool useExternalComputeDevice = false, const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
-                const std::string& externalComputeDevice = std::string(),
-                const bool continueOnCalibrationError = true,
+                const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
                 const bool continueOnError = true, const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
@@ -162,7 +156,7 @@ private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     bool bumpCvaSensis_;
-    bool dynamicIM_;
+    bool enableDynamicIM_;
     Size dynamicIMStepSize_;
     Size regressionOrder_;
     bool tradeLevelBreakDown_;
@@ -201,8 +195,8 @@ private:
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
     // trade level exposure, per valuation resp. close-out date, as path values (no conditional expectation)
-    std::vector<std::vector<std::size_t>> amcNpvNodes_;                // valuation date npv nodes
-    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv
+    std::vector<std::vector<std::size_t>> amcNpvNodes_;         // valuation date npv nodes
+    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_; // includes time zero npv
 
     // trade level exposure, as conditional expectation
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv

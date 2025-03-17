@@ -97,7 +97,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis, const bool dynamicIM,
+                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis, const bool enableDynamicIM,
                          const Size dynamicIMStepSize, const Size regressionOrder, const bool tradeLevelBreakDown,
                          const bool useRedBlocks, const bool useExternalComputeDevice,
                          const bool externalDeviceCompatibilityMode,
@@ -108,7 +108,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
-      dynamicIM_(dynamicIM), dynamicIMStepSize_(dynamicIMStepSize), regressionOrder_(regressionOrder),
+      enableDynamicIM_(enableDynamicIM), dynamicIMStepSize_(dynamicIMStepSize), regressionOrder_(regressionOrder),
       tradeLevelBreakDown_(tradeLevelBreakDown), useRedBlocks_(useRedBlocks),
       useExternalComputeDevice_(useExternalComputeDevice),
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
@@ -425,7 +425,7 @@ void XvaEngineCG::buildCgPartC() {
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
-    if (mode_ == Mode::Full || dynamicIM_ || !tradeLevelBreakDown_) {
+    if (mode_ == Mode::Full || enableDynamicIM_ || !tradeLevelBreakDown_) {
         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
             auto [n1, n2] = createPortfolioExposureNode(i, true);
             pfExposureNodesPathwise_.push_back(n1);
@@ -458,7 +458,7 @@ void XvaEngineCG::buildCgPartC() {
     // Add notes to store ir states, this is needed for dynamic delta calc (and only that)
     // In fact, this is probably not needed.
 
-    // if (dynamicIM_) {
+    // if (enableDynamicIM_) {
     //     irState_.resize(model_->currencies().size(), std::vector<std::size_t>(valuationDates_.size() + 1));
     //     for (Size ccy = 0; ccy < model_->currencies().size(); ++ccy) {
     //         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
@@ -591,7 +591,7 @@ void XvaEngineCG::doForwardEvaluation() {
         grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     }
 
-    bool keepValuesForDerivatives = (!bumpCvaSensis_ && sensitivityData_) || dynamicIM_;
+    bool keepValuesForDerivatives = (!bumpCvaSensis_ && sensitivityData_) || enableDynamicIM_;
 
     keepNodes_ = std::vector<bool>(g->size(), false);
 
@@ -807,7 +807,7 @@ void XvaEngineCG::populateNpvOutputCube() {
 }
 
 void XvaEngineCG::populateDynamicIMOutputCube() {
-    if (dynamicIMOutputCube_ == nullptr || !dynamicIM_)
+    if (dynamicIMOutputCube_ == nullptr || !enableDynamicIM_)
         return;
 
     DLOG("XvaEngineCG: populate dynamic IM output cube.");
@@ -1461,7 +1461,7 @@ void XvaEngineCG::run() {
 
     updateProgress(3, 5);
 
-    if (dynamicIM_) {
+    if (enableDynamicIM_) {
         calculateDynamicIM();
     }
 
