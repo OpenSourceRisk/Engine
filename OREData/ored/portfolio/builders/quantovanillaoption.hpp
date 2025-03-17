@@ -196,9 +196,9 @@ protected:
             market_->fxSpot(underlyingCcy.code() + payCcy.code(), configuration(MarketContext::pricing));
         Real fxStrike = fxSpot->value() * riskFreeRate->discount(expiryDate) / payCcyRate->discount(expiryDate);
 
-        QuantLib::ext::shared_ptr<FdmQuantoHelper> quantoHelper;
+        QuantLib::ext::shared_ptr<QuantLib::FdmQuantoHelper> quantoHelper;
 
-        quantoHelper = QuantLib::ext::make_shared<FdmQuantoHelper>(
+        quantoHelper = QuantLib::ext::make_shared<QuantLib::FdmQuantoHelper>(
             *payCcyRate, *riskFreeRate, 
             *gbsp->blackVolatility(), 
             quantoCorr->correlation(expiryDate), 
