@@ -1,12 +1,12 @@
 <CurveConfiguration>
 	<FXVolatilities>
 		<FXVolatility>
-			<CurveId>EURUSD</CurveId>
+			<CurveId>USDEUR</CurveId>
 			<CurveDescription>Euro United States Dollar volatility surface</CurveDescription>
 			<Dimension>ATM</Dimension>
 			<Conventions>EUR-USD-FXOPTION</Conventions>
 			<Expiries>*</Expiries>
-			<FXSpotID>FX/EUR/USD</FXSpotID>
+			<FXSpotID>FX/USD/EUR</FXSpotID>
 			<FXForeignCurveID>Yield/EUR/EUR</FXForeignCurveID>
 			<FXDomesticCurveID>Yield/USD/USD</FXDomesticCurveID>
 			<Calendar>JoinHolidays(TARGET, US settlement)</Calendar>
@@ -20,14 +20,23 @@
 			<CurveId>EUR</CurveId>
 			<CurveDescription>EUR lognormal swaption volatilities</CurveDescription>
 			<Dimension>ATM</Dimension>
-			<VolatilityType>Lognormal</VolatilityType>
-			<OutputVolatilityType>Lognormal</OutputVolatilityType>
+			<!--
+			    <VolatilityType>Lognormal</VolatilityType>
+			    <OutputVolatilityType>Lognormal</OutputVolatilityType>
+			-->
+			<VolatilityType>Normal</VolatilityType>
 			<Extrapolation>Flat</Extrapolation>
 			<DayCounter>Actual/365 (Fixed)</DayCounter>
 			<Calendar>TARGET</Calendar>
 			<BusinessDayConvention>Following</BusinessDayConvention>
-			<OptionTenors>*</OptionTenors>
-			<SwapTenors>*</SwapTenors>
+			<!--<OptionTenors>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</OptionTenors>-->
+			<!--<SwapTenors>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</SwapTenors>-->
+			<!--
+			<OptionTenors>1M, 2M, 3M, 6M, 9M, 1Y, 18M, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y</OptionTenors>
+			<SwapTenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y</SwapTenors>
+			-->
+			<OptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</OptionTenors>
+			<SwapTenors>5Y,10Y</SwapTenors>
 			<ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
 			<SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
 			<Report/>
@@ -36,14 +45,25 @@
 			<CurveId>USD</CurveId>
 			<CurveDescription>USD lognormal swaption volatilities</CurveDescription>
 			<Dimension>ATM</Dimension>
-			<VolatilityType>Lognormal</VolatilityType>
-			<OutputVolatilityType>Lognormal</OutputVolatilityType>
+			<!--
+			    <VolatilityType>Lognormal</VolatilityType>
+			    <OutputVolatilityType>Lognormal</OutputVolatilityType>
+			-->
+			<VolatilityType>Normal</VolatilityType>
 			<Extrapolation>Flat</Extrapolation>
 			<DayCounter>Actual/365 (Fixed)</DayCounter>
 			<Calendar>JoinHolidays(US settlement, UK settlement)</Calendar>
 			<BusinessDayConvention>Following</BusinessDayConvention>
-			<OptionTenors>*</OptionTenors>
-			<SwapTenors>*</SwapTenors>
+			<!--
+			<OptionTenors>6M, 1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</OptionTenors>
+			<SwapTenors>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</SwapTenors>
+			-->
+			<!--
+			<OptionTenors>1M, 3M, 6M, 9M, 1Y, 18M, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y</OptionTenors>
+			<SwapTenors>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y</SwapTenors>
+			-->
+			<OptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</OptionTenors>
+			<SwapTenors>5Y,10Y</SwapTenors>
 			<ShortSwapIndexBase>USD-CMS-2Y</ShortSwapIndexBase>
 			<SwapIndexBase>USD-CMS-30Y</SwapIndexBase>
 			<Report/>
@@ -140,6 +160,39 @@
 			<Tolerance>0.0000000000010000</Tolerance>
 			<Extrapolation>true</Extrapolation>
 			<BootstrapConfig/>
+			<Report/>
+		</YieldCurve>
+		<YieldCurve>
+			<CurveId>EUR-EONIA</CurveId>
+			<CurveDescription>EONIA curve as spread over ESTER</CurveDescription>
+			<Currency>EUR</Currency>
+			<DiscountCurve/>
+			<Segments>
+				<IborFallback>
+					<Type>Ibor Fallback</Type>
+					<PillarChoice>LastRelevantPillarDate</PillarChoice>
+					<Priority>0</Priority>
+					<MinDistance>1</MinDistance>
+					<IborIndex>EUR-EONIA</IborIndex>
+					<RfrCurve>Yield/EUR/EUR-ESTER</RfrCurve>
+					<RfrIndex>EUR-ESTER</RfrIndex>
+				</IborFallback>
+			</Segments>
+			<InterpolationVariable>Discount</InterpolationVariable>
+			<InterpolationMethod>LogLinear</InterpolationMethod>
+			<MixedInterpolationCutoff>1</MixedInterpolationCutoff>
+			<YieldCurveDayCounter>A365</YieldCurveDayCounter>
+			<Tolerance>0.0000000000010000</Tolerance>
+			<Extrapolation>true</Extrapolation>
+			<BootstrapConfig>
+				<Accuracy>0.0000000000010000</Accuracy>
+				<GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+				<DontThrow>false</DontThrow>
+				<MaxAttempts>5</MaxAttempts>
+				<MaxFactor>2</MaxFactor>
+				<MinFactor>2</MinFactor>
+				<DontThrowSteps>10</DontThrowSteps>
+			</BootstrapConfig>
 			<Report/>
 		</YieldCurve>
 	        <YieldCurve>

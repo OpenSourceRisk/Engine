@@ -1406,10 +1406,15 @@
 	  <DayCounter>A365</DayCounter>
 	  <Compounding>Continuous</Compounding>
 	  <CompoundingFrequency>Daily</CompoundingFrequency>
+	  <!--
 	  <TenorCalendar>TARGET</TenorCalendar>
 	  <SpotLag>2</SpotLag>
 	  <SpotCalendar>TARGET</SpotCalendar>
-	  <RollConvention>Following</RollConvention>
+	  -->
+	  <TenorCalendar>NullCalendar</TenorCalendar>
+	  <SpotLag>0</SpotLag>
+	  <SpotCalendar>NullCalendar</SpotCalendar>
+	  <RollConvention>Unadjusted</RollConvention>
 	  <EOM>false</EOM>
 	</Zero>
 	<Zero>
@@ -1424,10 +1429,15 @@
 	  <DayCounter>A365</DayCounter>
 	  <Compounding>Continuous</Compounding>
 	  <CompoundingFrequency>Daily</CompoundingFrequency>
+	  <!--
 	  <TenorCalendar>US</TenorCalendar>
 	  <SpotLag>2</SpotLag>
 	  <SpotCalendar>US</SpotCalendar>
-	  <RollConvention>Following</RollConvention>
+	  -->
+	  <TenorCalendar>NullCalendar</TenorCalendar>
+	  <SpotLag>0</SpotLag>
+	  <SpotCalendar>NullCalendar</SpotCalendar>
+	  <RollConvention>Unadjusted</RollConvention>
 	  <EOM>false</EOM>
 	</Zero>
 </Conventions>

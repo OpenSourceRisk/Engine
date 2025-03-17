@@ -1,28 +1,21 @@
 <?xml version="1.0"?>
 <Simulation>
-  <!--
-	This section determines the scenario generation
-	given the model defined below.
-    -->
-    
-    <Parameters>
 
+  <Parameters>
       <Discretization>Exact</Discretization>
       <!--<Grid>42,3M</Grid>-->
-      <Grid>10,1D</Grid>
-      <Calendar>EUR,USD,GBP,CHF</Calendar>
+      <!--<Grid>52,1D</Grid>-->
+      <Grid>62,1M</Grid>
+      <Calendar>EUR,USD</Calendar>
+      <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
       <Samples>2</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
-    </Parameters>
+  </Parameters>
 
-    <!--
-	This section determines the simulation model composition
-	and the calibration of all components.
-    -->
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
@@ -60,9 +53,11 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-          <Strikes/>
+	  <!--<Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+	      <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>-->
+          <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
+          <Terms>   5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y, 5Y, 5Y</Terms>
+	  <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
           <ShiftHorizon>0.0</ShiftHorizon>
@@ -122,7 +117,7 @@
 
     <YieldCurves>
       <Configuration>
-        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+        <Tenors>1D,1W,2W,1M,2M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y,35Y,40Y</Tenors>
         <Interpolation>LogLinear</Interpolation>
         <Extrapolation>FlatZero</Extrapolation>
       </Configuration>
@@ -132,6 +127,7 @@
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-ESTER</Index>
+      <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
       <Index>USD-SOFR</Index>
       <!--
@@ -169,7 +165,7 @@
 
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
-      <!-- Alternative: ConstantVariance -->
+      <!-- Alternatives: ForwardVariance, ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
@@ -180,8 +176,8 @@
         <Currency>JPY</Currency>
 	-->
       </Currencies>
-      <Expiries>6M, 1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
-      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
+      <Terms>5Y,10Y</Terms>
     </SwaptionVolatilities>
 
     <CapFloorVolatilities/>
