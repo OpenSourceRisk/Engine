@@ -1110,6 +1110,8 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     Natural paymentLagDays = boost::apply_visitor(PaymentLagInteger(), paymentLag);
 
     DayCounter dc = parseDayCounter(data.dayCounter() == "1/1" ? "Year" : data.dayCounter());
+    // Using '1/1' daycounter sets the exponent t in 'N * (1 + r) ^ t' to 1 regardless of length of the leg
+    // This often causing large unintended exposure differences, and so we override with 'Year' instead
 
     Size numNotionals = data.notionals().size();
     Size numRates = zcFixedLegData->rates().size();
