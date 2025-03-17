@@ -1789,6 +1789,22 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgDynamicIM", false);
         if (!tmp.empty())
             setXvaCgDynamicIM(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgDynamicIMStepSize", false);
+        if (!tmp.empty())
+            setXvaCgDynamicIMStepSize(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionOrder", false);
+        if (!tmp.empty())
+            setXvaCgRegressionOrder(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
+        if (!tmp.empty())
+            setXvaCgTradeLevelBreakdown(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
+        if (!tmp.empty())
+            setXvaCgUseRedBlocks(parseBool(tmp));
     }
 
     /**********************

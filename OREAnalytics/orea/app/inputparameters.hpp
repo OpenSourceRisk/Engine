@@ -222,6 +222,10 @@ public:
     void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
     void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
+    void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
+    void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
+    void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
@@ -645,6 +649,10 @@ public:
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
+    void xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
+    void xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    void xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
+    void xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
     bool xvaCgUseDoublePrecisionForExternalCalculation() const {
@@ -1044,6 +1052,10 @@ protected:
     bool amc_ = false;
     XvaEngineCG::Mode amcCg_ = XvaEngineCG::Mode::Disabled;
     bool xvaCgDynamicIM_ = false;
+    Size xvaCgDynamicIMStepSize_ = 1;
+    Size xvaCgRegressionOrder_ = 4;
+    bool xvaCgTradeLevelBreakdown_ = true;
+    bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
     bool xvaCgExternalDeviceCompatibilityMode_ = false;
