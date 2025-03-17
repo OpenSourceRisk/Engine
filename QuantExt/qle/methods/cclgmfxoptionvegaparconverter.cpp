@@ -31,6 +31,7 @@ CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext
     dpardzero_ = Matrix(optionTerms_.size(), optionTerms_.size(), 0.0);
 
     optionTimes_.resize(optionTerms_.size());
+    baseImpliedVols_.resize(optionTerms.size());
 
     std::transform(optionTerms_.begin(), optionTerms_.end(), optionTimes_.begin(), [this](const Period& p) {
         return model_->irlgm1f(0)->termStructure()->timeFromReference(
@@ -58,6 +59,7 @@ CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext
                            Option::Type::Call, forwards[i], forwards[i],
                            engine.value(0.0, optionTimes_[i], payoffs[i], discounts[i], forwards[i]), discounts[i]) /
                        std::sqrt(optionTimes_[i]);
+        baseImpliedVols_[i] = baseVol;
         for (Size j = 0; j <= i; ++j) {
             engine.setSigmaShift(i == 0 ? 0.0 : optionTimes_[j - 1], optionTimes_[j], shift);
             Real bumpedVol =
@@ -76,5 +78,6 @@ CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext
 const std::vector<Real>& CcLgmFxOptionVegaParConverter::optionTimes() const { return optionTimes_; }
 const Matrix& CcLgmFxOptionVegaParConverter::dpardzero() const { return dpardzero_; }
 const Matrix& CcLgmFxOptionVegaParConverter::dzerodpar() const { return dzerodpar_; }
+const std::vector<Real>& CcLgmFxOptionVegaParConverter::baseImpliedVols() const { return baseImpliedVols_; }
 
 } // namespace QuantExt
