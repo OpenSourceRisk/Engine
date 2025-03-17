@@ -20,7 +20,7 @@
     \brief helper functions related to credit products
     \ingroup utilities
 */
-
+#pragma once
 #include <string>
 
 namespace ore {
