@@ -587,7 +587,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
-    bool flatTimeExtrap = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -605,11 +605,14 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Time extrapolation switched to using interpolator.");
-            flatTimeExtrap = false;
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolator;
         } else if (timeExtrapType == Extrapolation::None) {
             DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (timeExtrapType == Extrapolation::Flat) {
             DLOG("Time extrapolation has been set to flat.");
+        } else if (timeExtrapType == Extrapolation::LinearInVol) {
+            DLOG("Time extrapolation has been set to linear in volatility.");
+            timeExtrapolation = BlackVolTimeExtrapolation::LinearInVolatility;
         } else {
             DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
@@ -668,8 +671,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes,
-            vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
+            asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation);
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
@@ -686,9 +689,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         auto pSurface = optPriceSurface(cpData, asof, dayCounter_, false);
 
         DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
-        auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(pts_, yts_, cSurface, pSurface, calendar_,
-            dayCounter_, vssc.exerciseType(), flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap,
-            preferOutOfTheMoney, solverOptions);
+        auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(
+            pts_, yts_, cSurface, pSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
         volatility_ = coss->volSurface();
 
         // If data level logging, output the stripped volatilities.
@@ -836,6 +839,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurface time extrapolation is hard-coded to constant in volatility.
     BlackVarianceSurface::Extrapolation strikeExtrap = BlackVarianceSurface::ConstantExtrapolation;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -851,17 +855,29 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
         }
 
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVarianceSurface only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::UseInterpolator;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else if (timeExtrapType == Extrapolation::LinearInVol) {
+            DLOG("Time extrapolation has been set to linear in volatility.");
+            timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::LinearInVolatility;
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
+
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
              << " strike extrapolation settings are ignored");
     }
 
     DLOG("Creating BlackVarianceSurface object");
-    auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes, volatilities,
-                                                        dayCounter_, strikeExtrap, strikeExtrap);
+    auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes,
+                                                                volatilities, dayCounter_, strikeExtrap, strikeExtrap,
+                                                                timeExtrapolation);
 
     // Set the interpolation if configured properly. The default is Bilinear.
     if (!(vssc.timeInterpolation() == "Linear" && vssc.strikeInterpolation() == "Linear")) {
@@ -1062,13 +1078,14 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVolatilitySurfaceDelta time extrapolation is hard-coded to constant in volatility.
-    bool flatExtrapolation = true;
+    bool flatStrikeExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vdsc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vdsc.strikeExtrapolation());
         if (strikeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Strike extrapolation switched to using interpolator.");
-            flatExtrapolation = false;
+            flatStrikeExtrapolation = false;
         } else if (strikeExtrapType == Extrapolation::None) {
             DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (strikeExtrapType == Extrapolation::Flat) {
@@ -1078,8 +1095,18 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vdsc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVolatilitySurfaceDelta only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolator;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else if (timeExtrapType == Extrapolation::LinearInVol) {
+            DLOG("Time extrapolation has been set to linear in volatility.");
+            timeExtrapolation = BlackVolTimeExtrapolation::LinearInVolatility;
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1124,7 +1151,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     bool hasAtm = true;
     volatility_ = QuantLib::ext::make_shared<BlackVolatilitySurfaceDelta>(
         asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, spot, yts_, pyts, deltaType,
-        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
+        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatStrikeExtrapolation,
+        timeExtrapolation);
 
     DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
     volatility_->enableExtrapolation(vdsc.extrapolation());
@@ -1282,6 +1310,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
     bool flatExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vmsc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vmsc.strikeExtrapolation());
@@ -1297,8 +1326,18 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vmsc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVarianceSurfaceMoneyness only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolator;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else if (timeExtrapType == Extrapolation::LinearInVol) {
+            DLOG("Time extrapolation has been set to linear in volatility.");
+            timeExtrapolation = BlackVolTimeExtrapolation::LinearInVolatility;
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1338,15 +1377,16 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         pyts->enableExtrapolation();
 
         DLOG("Creating BlackVarianceSurfaceMoneynessForward object");
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, expiryTimes,
-                                                                               moneynessLevels, vols, dayCounter_, pyts,
-                                                                               yts_, stickyStrike, flatExtrapolation);
+        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
+            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, pyts, yts_, stickyStrike,
+            flatExtrapolation, timeExtrapolation);
 
     } else {
 
         DLOG("Creating BlackVarianceSurfaceMoneynessSpot object");
         volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(
-            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation);
+            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation,
+            timeExtrapolation);
     }
 
     DLOG("Setting BlackVarianceSurfaceMoneyness extrapolation to " << to_string(vmsc.extrapolation()));
@@ -1396,6 +1436,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to
     // constant in volatility.
     bool flatExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vapo.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vapo.strikeExtrapolation());
@@ -1411,8 +1452,18 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vapo.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("ApoFutureSurface only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolator;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else if (timeExtrapType == Extrapolation::LinearInVol) {
+            DLOG("Time extrapolation has been set to linear in volatility.");
+            timeExtrapolation = BlackVolTimeExtrapolation::LinearInVolatility;
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1430,8 +1481,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     }
 
     DLOG("Creating ApoFutureSurface object");
-    volatility_ = QuantLib::ext::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, expCalc_, baseVts,
-                                                       baseExpCalc, beta, flatExtrapolation, maxTenor);
+    volatility_ = QuantLib::ext::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, expCalc_,
+                                                               baseVts, baseExpCalc, beta, flatExtrapolation, maxTenor,
+                                                               timeExtrapolation);
 
     DLOG("Setting ApoFutureSurface extrapolation to " << to_string(vapo.extrapolation()));
     volatility_->enableExtrapolation(vapo.extrapolation());

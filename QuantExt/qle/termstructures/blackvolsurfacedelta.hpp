@@ -97,7 +97,9 @@ public:
                                 boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType = boost::none,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod =
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
-                                bool flatExtrapolation = true);
+                                bool flatStrikeExtrapolation = true,
+                                QuantLib::BlackVolTimeExtrapolation timeExtrapolation =
+                                    QuantLib::BlackVolTimeExtrapolation::FlatInVolatility);
 
     //! \name TermStructure interface
     //@{
@@ -131,6 +133,8 @@ public:
 protected:
     virtual Volatility blackVolImpl(Time t, Real strike) const override;
 
+    virtual Volatility interpolatorBlackVol(size_t i, Time t, Real strike) const;
+
 private:
     std::vector<Date> dates_;
     std::vector<Time> times_;
@@ -153,8 +157,8 @@ private:
     boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType_;
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
-    bool flatExtrapolation_;
-
+    bool flatStrikeExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
     Real switchTime_;
 
     // calculate forward for time $t$

@@ -27,11 +27,11 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
-                                                       bool upperStrikeConstExtrap, bool timeFlatExtrapolation)
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter,
-                                                                                           lowerStrikeConstExtrap,
-                                                                                           upperStrikeConstExtrap),
-      timeFlatExtrapolation_(timeFlatExtrapolation) {
+                                                       bool upperStrikeConstExtrap,
+                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
+    : BlackVarianceTermStructure(referenceDate, cal),
+      OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
+      timeExtrapolation_(timeExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
                "dates, strikes and volatilities vectors not of equal size.");
@@ -59,12 +59,26 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
 }
 
 QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
-
     QuantLib::Time tb = times().back();
-    if (timeFlatExtrapolation_ && t > tb) {
-        return getValue(tb, strike) * t / tb;
-    } else {
+    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolator) {
         return getValue(t, strike);
+    }
+    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatInVolatility) {
+        return getValue(tb, strike) * t / tb;
+    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::LinearInVolatility) {
+        // Linear extrapolation in volatility
+        Size ind1 = times_.size() - 2;
+        Size ind2 = times_.size() - 1;
+        std::array<double, 2> times, vols;
+        times[0] = times_[ind1];
+        times[1] = times_[ind2];
+        vols[0] = QuantLib::close_enough(times[0], 0.0) ? 0.0 : std::sqrt(getValue(times[0], strike) / times[0]);
+        vols[1] = QuantLib::close_enough(times[1], 0.0) ? 0.0 : std::sqrt(getValue(times[1], strike) / times[1]);
+        LinearInterpolation interpolation(times.begin(), times.end(), vols.begin());
+        double vol = std::max(interpolation(t, true), 0.0);
+        return vol * vol * t;
+    } else {
+        QL_FAIL("Unknown time extrapolation method");
     }
 };
 } // namespace QuantExt

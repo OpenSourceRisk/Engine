@@ -443,7 +443,7 @@ inline bool tryParseCurrency(const std::string& str, Currency& obj) {
 }
 
 //! Enumeration for holding various extrapolation settings
-enum class Extrapolation { None, UseInterpolator, Flat };
+enum class Extrapolation { None, UseInterpolator, Flat, LinearInVol };
 
 //! Parse Extrapolation from string
 Extrapolation parseExtrapolation(const std::string& s);

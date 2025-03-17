@@ -444,7 +444,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
-    bool flatTimeExtrap = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatInVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -462,7 +462,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType == Extrapolation::UseInterpolator) {
             TLOG("EquityVolCurve: Time extrapolation switched to using interpolator.");
-            flatTimeExtrap = false;
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolator;
         } else if (timeExtrapType == Extrapolation::None) {
             TLOG("EquityVolCurve: Time extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (timeExtrapType == Extrapolation::Flat) {
@@ -503,7 +503,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         DLOG("EquityVolCurve: Stripping equity volatility surface from the option premium surfaces");
         QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss = QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
             eqIndex, callSurface, putSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
-            flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney, solverOptions);
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
         vol_ = eoss->volSurface();
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
@@ -517,7 +517,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
                 QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
                                                                 dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                                                                flatTimeExtrap);
+                                                                timeExtrapolation);
 
             if (callSurfaceOnly) {
                 // if only a call surface provided use that
@@ -527,12 +527,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
                                                                     putData, dayCounter_, flatStrikeExtrap,
-                                                                    flatStrikeExtrap, flatTimeExtrap);
+                                                                    flatStrikeExtrap, timeExtrapolation);
 
                 QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss =
                     QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
                         eqIndex, callSurface, putSurface, calendar_, dayCounter_, Exercise::European,
-                        flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney);
+                        flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney);
                 vol_ = eoss->volSurface();
             }
         }

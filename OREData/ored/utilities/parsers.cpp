@@ -795,6 +795,8 @@ Extrapolation parseExtrapolation(const string& s) {
         return Extrapolation::UseInterpolator;
     } else if (s == "Flat") {
         return Extrapolation::Flat;
+    } else if (s == "LinearInVol") {
+        return Extrapolation::LinearInVol;
     } else {
         QL_FAIL("Extrapolation '" << s << "' not recognized");
     }
@@ -809,6 +811,8 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
         return os << "UseInterpolator";
     case Extrapolation::Flat:
         return os << "Flat";
+    case Extrapolation::LinearInVol:
+        return os << "LinearInVol";
     default:
         QL_FAIL("Unknown Extrapolation");
     }
