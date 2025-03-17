@@ -90,5 +90,10 @@ QuantLib::ext::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
     const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader);
 
+//! get a report from analytic report collection or if not present an empty report
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+getReport(const ore::analytics::Analytic::analytic_reports& reports, const std::string& analytic,
+          const std::string& report);
+
 } // analytics
 } // ore
