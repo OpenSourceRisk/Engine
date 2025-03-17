@@ -20,10 +20,9 @@
 
 #ifndef QL_PATCH_SOLARIS
 
+#include <boost/timer/timer.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <boost/timer/timer.hpp>
-
 
 using namespace QuantLib;
 using boost::timer::cpu_timer;
@@ -32,9 +31,8 @@ using std::vector;
 namespace QuantExt {
 
 IndexCdsTrancheEngine::IndexCdsTrancheEngine(const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows)
-    : discountCurve_(discountCurve),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
+                                             boost::optional<bool> includeSettlementDateFlows)
+    : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows) {
     registerWith(discountCurve);
 }
 
@@ -46,26 +44,26 @@ void IndexCdsTrancheEngine::calculate() const {
     // Upfront premium
     results_.upfrontPremiumValue = 0.0;
     Real upfrontPremiumAmount = arguments_.upfrontPayment->amount();
-    if (arguments_.upfrontPayment && !arguments_.upfrontPayment->hasOccurred(
-        discountCurve_->referenceDate(), includeSettlementDateFlows_)) {
-        results_.upfrontPremiumValue = upfrontPremiumAmount *
-            discountCurve_->discount(arguments_.upfrontPayment->date());
+    if (arguments_.upfrontPayment &&
+        !arguments_.upfrontPayment->hasOccurred(discountCurve_->referenceDate(), includeSettlementDateFlows_)) {
+        results_.upfrontPremiumValue =
+            upfrontPremiumAmount * discountCurve_->discount(arguments_.upfrontPayment->date());
     }
 
     // Accrual rebate
     results_.accrualRebateValue = 0.0;
-    if (arguments_.accrualRebate && !arguments_.accrualRebate->hasOccurred(
-        discountCurve_->referenceDate(), includeSettlementDateFlows_)) {
-        results_.accrualRebateValue = arguments_.accrualRebate->amount() *
-            discountCurve_->discount(arguments_.accrualRebate->date());
+    if (arguments_.accrualRebate &&
+        !arguments_.accrualRebate->hasOccurred(discountCurve_->referenceDate(), includeSettlementDateFlows_)) {
+        results_.accrualRebateValue =
+            arguments_.accrualRebate->amount() * discountCurve_->discount(arguments_.accrualRebate->date());
     }
 
     // Accrual rebate current
     results_.accrualRebateCurrentValue = 0.0;
     if (arguments_.accrualRebateCurrent &&
         !arguments_.accrualRebateCurrent->hasOccurred(discountCurve_->referenceDate(), includeSettlementDateFlows_)) {
-        results_.accrualRebateCurrentValue =
-            discountCurve_->discount(arguments_.accrualRebateCurrent->date()) * arguments_.accrualRebateCurrent->amount();
+        results_.accrualRebateCurrentValue = discountCurve_->discount(arguments_.accrualRebateCurrent->date()) *
+                                             arguments_.accrualRebateCurrent->amount();
     }
 
     // Final results, not updated below.
@@ -77,7 +75,7 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.remainingNotional = results_.xMax - results_.xMin;
 
     // Record the expected tranche loss up to inception and up to the end of each coupon period.
-    // FD TODO: Recheck 0's for past coupons when testing tranches with existing losses. The loss model gives 
+    // FD TODO: Recheck 0's for past coupons when testing tranches with existing losses. The loss model gives
     //          accumulated losses so we should in theory be able to use these.
     vector<Real>& etls = results_.expectedTrancheLoss;
     etls.push_back(0.0);
@@ -89,7 +87,7 @@ void IndexCdsTrancheEngine::calculate() const {
     Real inceptionTrancheNotional = arguments_.basket->trancheNotional();
     std::vector<double> effectiveNotionals;
     std::vector<Date> defaultDates;
-    
+
     std::vector<double> defaultDiscountFactors;
     std::vector<double> premiumAccrualPeriods;
     std::vector<double> premiumDiscountFactors;
@@ -107,7 +105,8 @@ void IndexCdsTrancheEngine::calculate() const {
             continue;
         }
 
-        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(arguments_.normalizedLeg[i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon =
+            QuantLib::ext::dynamic_pointer_cast<Coupon>(arguments_.normalizedLeg[i]);
         QL_REQUIRE(coupon, "IndexCdsTrancheEngine expects leg to have Coupon cashflow type.");
 
         // Relevant dates with assumption that future defaults occur at midpoint of (remaining) coupon period.
@@ -119,21 +118,20 @@ void IndexCdsTrancheEngine::calculate() const {
         defaultDates.push_back(defaultDate);
         // Expected loss on the tranche up to the end of the current period.
         Real etl = basket->expectedTrancheLoss(endDate, Null<Real>());
-        
-        
+
         // Update protection leg value
         defaultDiscountFactors.push_back(discountCurve_->discount(defaultDate));
 
         results_.protectionValue += discountCurve_->discount(defaultDate) * (etl - etls.back());
 
-        // Update the premium leg value. If settling accruals, which is standard, assume that losses are evenly 
-        // distributed over the coupon period, as per Andersen, Sidenius, Basu Nov 2003 paper for example. If not 
+        // Update the premium leg value. If settling accruals, which is standard, assume that losses are evenly
+        // distributed over the coupon period, as per Andersen, Sidenius, Basu Nov 2003 paper for example. If not
         // settling accruals, just use the tranche notional at period end.
         Real effNtl = 0.0;
-        
+
         effNtl = inceptionTrancheNotional - etl;
 
-        if(QuantLib::close_enough(basket->detachmentRatio(), 1.0)){
+        if (QuantLib::close_enough(basket->detachmentRatio(), 1.0)) {
             Real etlZR = basket->expectedTrancheLoss(endDate, 0);
             zeroRecoveryExpectedLoss.push_back(etlZR);
             effNtl += etl - etlZR;
@@ -142,21 +140,18 @@ void IndexCdsTrancheEngine::calculate() const {
         results_.premiumValue +=
             (coupon->amount() / inceptionTrancheNotional) * effNtl * discountCurve_->discount(paymentDate);
 
-        if (arguments_.settlesAccrual){
+        if (arguments_.settlesAccrual) {
             double expectedPeriodLoss = effectiveNotionals.back() - effNtl;
             double accruals = (coupon->accruedAmount(defaultDate) / inceptionTrancheNotional) * expectedPeriodLoss *
                               discountCurve_->discount(paymentDate);
             results_.premiumValue += accruals;
             accrualsDefault.push_back(accruals);
-        } else{
+        } else {
             accrualsDefault.push_back(0.0);
         }
 
         effectiveNotionals.push_back(effNtl);
 
-        
-
-        
         // Update the expected tranche loss results vector.
         etls.push_back(etl);
         premiumAccrualPeriods.push_back(coupon->accrualPeriod());
@@ -175,18 +170,18 @@ void IndexCdsTrancheEngine::calculate() const {
     }
 
     // Final tranche NPV.
-    results_.value = results_.premiumValue + results_.protectionValue +
-        results_.upfrontPremiumValue + results_.accrualRebateValue;
+    results_.value =
+        results_.premiumValue + results_.protectionValue + results_.upfrontPremiumValue + results_.accrualRebateValue;
 
-    results_.cleanNPV = results_.premiumValue + results_.protectionValue +
-                        results_.upfrontPremiumValue + results_.accrualRebateCurrentValue;
+    results_.cleanNPV = results_.premiumValue + results_.protectionValue + results_.upfrontPremiumValue +
+                        results_.accrualRebateCurrentValue;
 
     // Fair tranche spread.
     Real fairSpread = 0.0;
     Real fairSpreadClean = 0.0;
     if (results_.premiumValue != 0.0) {
-        fairSpread = -(results_.protectionValue + results_.upfrontPremiumValue) *
-                     arguments_.runningRate / (results_.premiumValue + results_.accrualRebateValue);
+        fairSpread = -(results_.protectionValue + results_.upfrontPremiumValue) * arguments_.runningRate /
+                     (results_.premiumValue + results_.accrualRebateValue);
         fairSpreadClean = -(results_.protectionValue + results_.upfrontPremiumValue) * arguments_.runningRate /
                           (results_.premiumValue + results_.accrualRebateCurrentValue);
     }
@@ -196,7 +191,7 @@ void IndexCdsTrancheEngine::calculate() const {
     timer.stop();
 
     // Populate the additional results.
-    
+
     results_.additionalResults["inceptionTrancheNotional"] = inceptionTrancheNotional;
     results_.additionalResults["effectiveNotionals"] = effectiveNotionals;
     results_.additionalResults["midpointDiscounts"] = defaultDiscountFactors;
@@ -227,6 +222,6 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["calculationTime"] = timer.elapsed().wall * 1e-9;
 }
 
-}
+} // namespace QuantExt
 
 #endif

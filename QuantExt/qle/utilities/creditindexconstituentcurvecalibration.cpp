@@ -1,12 +1,12 @@
 #include <numeric>
+#include <ql/math/solvers1d/brent.hpp>
+#include <ql/quotes/compositequote.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/instruments/indexcreditdefaultswap.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/utilities/creditcurves.hpp>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
-#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
-#include <ql/quotes/compositequote.hpp>
-#include <ql/math/solvers1d/brent.hpp>
 
 namespace QuantExt {
 
@@ -143,8 +143,7 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
             spreads.push_back(Handle<Quote>(compQuote));
         }
         Handle<DefaultProbabilityTermStructure> targetCurve = Handle<DefaultProbabilityTermStructure>(
-            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(
-                curve, curveTimes, spreads));
+            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(curve, curveTimes, spreads));
         if (curve->allowsExtrapolation()) {
             targetCurve->enableExtrapolation();
         }

@@ -27,11 +27,11 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 
-#include <qle/termstructures/credit/basecorrelationstructure.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
-#include <string_view>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/creditcurve.hpp>
+#include <string_view>
 
 namespace ore {
 namespace data {
@@ -42,17 +42,13 @@ class ReferenceDataManager;
 //! \ingroup curves
 class BaseCorrelationCurve {
 public:
-
-    
-
     BaseCorrelationCurve() {}
-    BaseCorrelationCurve(
-        QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
-        const CurveConfigurations& curveConfigs,
-        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
-        const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& creditCurves = {},
-        const std::map<std::string, std::string>& creditNameMapping = {});
+    BaseCorrelationCurve(QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
+                         const CurveConfigurations& curveConfigs,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                         const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
+                         const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& creditCurves = {},
+                         const std::map<std::string, std::string>& creditNameMapping = {});
 
     //! \name Inspectors
     //@{
@@ -71,28 +67,26 @@ private:
     };
 
     struct QuoteData {
-            struct LessReal {
-                bool operator()(const Real& lhs, const Real& rhs) const {
-                return !close_enough(lhs, rhs) && lhs < rhs;
-                }
-            };
+        struct LessReal {
+            bool operator()(const Real& lhs, const Real& rhs) const { return !close_enough(lhs, rhs) && lhs < rhs; }
+        };
 
-            struct LessDataKey {
-                bool operator()(pair<Period, Real> k_1, pair<Period, Real> k_2) const {
-                    if (k_1.first != k_2.first)
-                        return k_1.first < k_2.first;
-                    else
-                        return !close_enough(k_1.second, k_2.second) && k_1.second < k_2.second;
-                }
-            }; 
-            std::set<Period> terms;        
-            set<Real, LessReal> dps;
-            map<Real, Real, LessReal> atp;
-            map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
+        struct LessDataKey {
+            bool operator()(pair<Period, Real> k_1, pair<Period, Real> k_2) const {
+                if (k_1.first != k_2.first)
+                    return k_1.first < k_2.first;
+                else
+                    return !close_enough(k_1.second, k_2.second) && k_1.second < k_2.second;
+            }
+        };
+        std::set<Period> terms;
+        set<Real, LessReal> dps;
+        map<Real, Real, LessReal> atp;
+        map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
     };
 
     QuoteData loadQuotes(const QuantLib::Date& asof, const BaseCorrelationCurveConfig& config,
-        const MarketDatum::QuoteType quoteType, const Loader& loader) const;
+                         const MarketDatum::QuoteType quoteType, const Loader& loader) const;
 
     void buildFromCorrelations(const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
     void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
@@ -121,7 +115,7 @@ private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     mutable QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
     /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.
-    */
+     */
     AdjustForLossResults adjustForLosses(const std::vector<QuantLib::Real>& detachPoints) const;
 };
 } // namespace data

@@ -17,12 +17,12 @@
 */
 
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/marketdata/structuredcurveerror.hpp>
 
 #include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
@@ -179,11 +179,15 @@ BaseCorrelationCurve::BaseCorrelationCurve(
             }
             break;
         } catch (std::exception& e) {
-            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build BaseCorrelation from " + to_string(quoteType), e.what()).log();
-            
+            StructuredCurveWarningMessage(spec_.curveConfigID(),
+                                          "Failed to build BaseCorrelation from " + to_string(quoteType), e.what())
+                .log();
+
         } catch (...) {
-            StructuredCurveWarningMessage(spec_.curveConfigID(), "Failed to build BaseCorrelation from " + to_string(quoteType),
-                                          "Unexpected error").log();
+            StructuredCurveWarningMessage(spec_.curveConfigID(),
+                                          "Failed to build BaseCorrelation from " + to_string(quoteType),
+                                          "Unexpected error")
+                .log();
         }
     }
     QL_REQUIRE(baseCorrelation_ != nullptr, "BaseCorrelationCurve: curve building failed.");
@@ -399,8 +403,6 @@ void BaseCorrelationCurve::buildFromCorrelations(const BaseCorrelationCurveConfi
     baseCorrelation_->enableExtrapolation(config.extrapolate());
 }
 
-
-
 void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config,
                                              const QuoteData& qData) const {
     LOG("Building from upfronts" << config.curveID());
@@ -466,14 +468,14 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         std::vector<std::vector<double>> rrProbs;
         std::vector<double> recoveryRates;
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-        
+
         TLOG("Building base correlation curve from price for term " << term);
         for (const auto& name : basketData.remainingNames) {
             TLOG("Retrieve credit curve for " << name);
             auto mappedName = creditCurveNameMapping(name);
-            auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);    
+            auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
             CdsReferenceInformation info;
-            
+
             QL_REQUIRE(tryParseCdsInformation(name, info), "Failed to parse CDS tier from " << name);
             std::string seniority = to_string(info.tier());
             auto rrGrid = config.rrGrid(seniority);
@@ -481,17 +483,18 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             DLOG("use assumed recoveries " << config.useAssumedRecovery());
             TLOG("Recovery rate grid for " << name << " is " << to_string(rrGrid));
             TLOG("Recovery rate probabilities for " << name << " is " << to_string(rrProb));
-            if(!config.useAssumedRecovery()){                
+            if (!config.useAssumedRecovery()) {
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
             } else {
                 auto assumedRecovery = std::inner_product(rrGrid.begin(), rrGrid.end(), rrProb.begin(), 0.0);
                 TLOG("Assumed recovery rate for " << name << " is " << assumedRecovery);
                 auto specificCurveName = indexTrancheSpecificCreditCurveName(name, assumedRecovery);
-                TLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery << " is " << specificCurveName);
+                TLOG("Credit curve name for constituent " << name << " with assumed recovery " << assumedRecovery
+                                                          << " is " << specificCurveName);
                 auto mappedName = creditCurveNameMapping(specificCurveName);
                 creditCurve = getDefaultProbCurveAndRecovery(mappedName);
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << specificCurveName);
-            } 
+            }
             if (rrGrid.empty() || rrProb.empty()) {
                 QL_REQUIRE(creditCurve != nullptr, "No credit curve found for " << name);
                 DLOG("No recovery grid/probabilities found for " << name << " fallback to use actual recovery");

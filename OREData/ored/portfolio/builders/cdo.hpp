@@ -29,8 +29,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <ored/portfolio/creditdefaultswapdata.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/mcdefaultlossmodel.hpp>
@@ -92,12 +92,10 @@ public:
                 (rt->second == "SensitivityDelta" || rt->second == "SensitivityDeltaGamma"));
     }
 
-    bool useAssumedRecoveries() const {
-        return parseBool(modelParameter("useAssumedRecovery", {}, false, "false"));
-    }
+    bool useAssumedRecoveries() const { return parseBool(modelParameter("useAssumedRecovery", {}, false, "false")); }
 
     vector<double> recoveryGrid(const std::string& indexSubFamily, const std::string& tier) const {
-        const vector<string> qualifiers = { indexSubFamily + "_" + tier, tier };
+        const vector<string> qualifiers = {indexSubFamily + "_" + tier, tier};
         string rrGridStr = modelParameter("recoveryRateGrid", qualifiers);
         vector<string> rrGridToken;
         boost::split(rrGridToken, rrGridStr, boost::is_any_of(","));
@@ -113,7 +111,7 @@ public:
     }
 
     double assumedRecovery(const std::string& indexSubFamily, const std::string& tier) const {
-        auto rrGrid =  recoveryGrid(indexSubFamily, tier);
+        auto rrGrid = recoveryGrid(indexSubFamily, tier);
         auto rrProbs = recoveryProbabilities(indexSubFamily, tier);
         return std::inner_product(rrGrid.begin(), rrGrid.end(), rrProbs.begin(), 0.0);
     }
@@ -123,10 +121,9 @@ public:
                              const string& indexFamilyName, const bool useStochasticRecovery) {
         if (useStochasticRecovery) {
             for (size_t i = 0; i < names.size(); ++i) {
-                const std::string name = names[i];
                 CdsReferenceInformation cdsInfo;
                 std::string tierString;
-                if (tryParseCdsInformation(name, cdsInfo)) {
+                if (tryParseCdsInformation(names[i], cdsInfo)) {
                     tierString = to_string(cdsInfo.tier());
                 }
                 const auto recoveryRate = recoveryRates[i];
@@ -180,11 +177,10 @@ public:
     }
 
 protected:
-    virtual vector<string> keyImpl(const Currency& ccy, bool isIndex, const std::string& qualifier,
-                                   const std::vector<std::string>& creditCurves,
-                                   const std::vector<Handle<DefaultProbabilityTermStructure>>&,
-                                   const std::vector<double>&, const bool calibrated = false,
-                                   const Real fixedRecovery = Null<Real>()) override {
+    vector<string> keyImpl(const Currency& ccy, bool isIndex, const std::string& qualifier,
+                           const std::vector<std::string>& creditCurves,
+                           const std::vector<Handle<DefaultProbabilityTermStructure>>&, const std::vector<double>&,
+                           const bool calibrated = false, const Real fixedRecovery = Null<Real>()) override {
         vector<string> res;
         res.reserve(creditCurves.size() + 5);
         res.emplace_back(ccy.code());
@@ -199,13 +195,11 @@ protected:
         return res;
     }
 
-
-
-    virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const Currency&, bool isIndex, const std::string& qualifier,
-               const std::vector<std::string>& creditCurves,
-               const std::vector<Handle<DefaultProbabilityTermStructure>>&, const std::vector<double>&,
-               const bool calibrated = false, const Real fixedRecovery = Null<Real>()) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency&, bool isIndex, const std::string& qualifier,
+                                                        const std::vector<std::string>& creditCurves,
+                                                        const std::vector<Handle<DefaultProbabilityTermStructure>>&,
+                                                        const std::vector<double>&, const bool calibrated = false,
+                                                        const Real fixedRecovery = Null<Real>()) override;
 };
 
 class LossModelBuilder {
@@ -213,8 +207,8 @@ public:
     virtual ~LossModelBuilder() {}
     virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
     lossModel(const vector<Real>& recoveryRates, const QuantLib::RelinkableHandle<Quote>& baseCorrelation,
-              bool poolIsHomogenous, const vector<vector<double>>& rrGrids,
-              const vector<vector<double>>& rrProbs, bool checkExpectedRecovery) const = 0;
+              bool poolIsHomogenous, const vector<vector<double>>& rrGrids, const vector<vector<double>>& rrProbs,
+              bool checkExpectedRecovery) const = 0;
 };
 
 class GaussCopulaBucketingLossModelBuilder : public LossModelBuilder {
@@ -242,7 +236,7 @@ public:
             QL_REQUIRE(rrGrids[i].size() == rrProbs[i].size(),
                        "Recovery rate grids " << rrGrids[i].size() << " and recovery rate probabilities "
                                               << rrProbs[i].size() << " for constituent " << i
-                                                << " must have the same size.");
+                                              << " must have the same size.");
             TLOG("Recovery rate grid for constituent " << i << " is " << recoveryRates[i])
             TLOG("RRGrid " << to_string(rrGrids[i]));
             TLOG("RRProbs " << to_string(rrProbs[i]));
@@ -250,10 +244,10 @@ public:
 
         DLOG("Build ExtendedGaussianConstantLossLM");
 
-        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(
-            new QuantExt::ExtendedGaussianConstantLossLM(baseCorrelation, recoveryRates, rrProbs, rrGrids,
-                                                         LatentModelIntegrationType::GaussianQuadrature, poolSize,
-                                                         GaussianCopulaPolicy::initTraits(), checkExpectedRecovery));
+        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM =
+            QuantLib::ext::make_shared<QuantExt::ExtendedGaussianConstantLossLM>(
+                baseCorrelation, recoveryRates, rrProbs, rrGrids, LatentModelIntegrationType::GaussianQuadrature,
+                poolSize, GaussianCopulaPolicy::initTraits(), checkExpectedRecovery);
 
         bool homogeneous = poolIsHomogenous && homogeneousPoolWhenJustified_;
 
@@ -312,7 +306,8 @@ public:
         std::vector<std::vector<double>> recoveryGrids;
         std::vector<std::vector<double>> recoveryProbabilities;
 
-        updateRecoveryGrids(recoveryGrids, recoveryProbabilities, names, recoveryRates, indexFamilyName, useStochasticRecovery);
+        updateRecoveryGrids(recoveryGrids, recoveryProbabilities, names, recoveryRates, indexFamilyName,
+                            useStochasticRecovery);
         GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps,
                                                           useQuadrature, nBuckets, homogeneousPoolWhenJustified,
                                                           useStochasticRecovery);
@@ -360,7 +355,8 @@ public:
 
         std::vector<std::vector<double>> recoveryProbabilities, recoveryGrids;
 
-        updateRecoveryGrids(recoveryGrids, recoveryProbabilities, names, recoveryRates, subIndexFamily, useStochasticRecovery);
+        updateRecoveryGrids(recoveryGrids, recoveryProbabilities, names, recoveryRates, subIndexFamily,
+                            useStochasticRecovery);
         DLOG("Build MonteCarloModel");
         Size nSimulations = parseInteger(engineParameter("nSimulations"));
         auto model = ext::make_shared<QuantExt::GaussianOneFactorMonteCarloLossModel>(

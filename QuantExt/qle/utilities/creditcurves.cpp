@@ -11,9 +11,11 @@ namespace QuantExt {
 std::vector<Time> getCreditCurveTimes(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dpts) {
     if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedSurvivalProbabilityTermStructure>(*dpts)) {
         return getCreditCurveTimes(c->referenceCurve());
-    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(*dpts)) {
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+                   *dpts)) {
         return c->times();
-    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedHazardRateCurve<BackwardFlat>>(*dpts)) {
+    } else if (auto c =
+                   QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedHazardRateCurve<BackwardFlat>>(*dpts)) {
         return c->times();
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::SurvivalProbabilityCurve<LogLinear>>(*dpts)) {
         return c->times();

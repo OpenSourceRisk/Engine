@@ -175,7 +175,7 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     }
     for (const auto& seniority : recoveryGrids) {
         QL_REQUIRE(recoveryProbabilites.find(seniority.first) != recoveryProbabilites.end(),
-                    "Recovery probabilities for seniority " << seniority.first << " not found");
+                   "Recovery probabilities for seniority " << seniority.first << " not found");
     }
     for (const auto& [seniority, probs] : recoveryProbabilites) {
         std::vector<string> probTokens;
@@ -195,7 +195,6 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
         }
         rrGrids_[seniority] = rrGrid;
     }
-    
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
@@ -238,14 +237,14 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CalibrateConstituentsToIndexSpread", calibrateConstituentsToIndexSpread_);
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
-    
+
     XMLUtils::addChild(doc, node, "UseAssumedRecovery", useAssumedRecovery_);
 
     auto recoveryGridNode = XMLUtils::addChild(doc, node, "RecoveryGrid");
     for (const auto& [seniority, grid] : rrGrids_) {
         XMLUtils::addGenericChildAsList(doc, recoveryGridNode, "Grid", grid, "seniority", seniority);
     }
-    
+
     auto recoveryProbabilityNode = XMLUtils::addChild(doc, node, "RecoveryProbabilities");
     for (const auto& [seniority, probs] : rrProbs_) {
         XMLUtils::addGenericChildAsList(doc, recoveryProbabilityNode, "Probabilities", probs, "seniority", seniority);
@@ -254,31 +253,31 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     return node;
 }
 
-    std::vector<double> BaseCorrelationCurveConfig::rrGrid(const std::string& seniority) const {
-        auto it = rrGrids_.find(seniority);
-        if (it != rrGrids_.end()) {
-            return it->second;
-        } 
-        it = rrGrids_.find("*");
-        if (it != rrGrids_.end()) {
-            return it->second;
-        }
-        return std::vector<double>();
+std::vector<double> BaseCorrelationCurveConfig::rrGrid(const std::string& seniority) const {
+    auto it = rrGrids_.find(seniority);
+    if (it != rrGrids_.end()) {
+        return it->second;
     }
-
-    std::vector<double> BaseCorrelationCurveConfig::rrProb(const std::string& seniority) const {
-        auto it = rrProbs_.find(seniority);
-        if (it != rrProbs_.end()) {
-            return it->second;
-        }
-        it = rrProbs_.find("*");
-        if (it != rrProbs_.end()) {
-            return it->second;
-        }
-        return std::vector<double>();
+    it = rrGrids_.find("*");
+    if (it != rrGrids_.end()) {
+        return it->second;
     }
+    return std::vector<double>();
+}
 
-double BaseCorrelationCurveConfig::assumedRecovery(const std::string& creditName) const{
+std::vector<double> BaseCorrelationCurveConfig::rrProb(const std::string& seniority) const {
+    auto it = rrProbs_.find(seniority);
+    if (it != rrProbs_.end()) {
+        return it->second;
+    }
+    it = rrProbs_.find("*");
+    if (it != rrProbs_.end()) {
+        return it->second;
+    }
+    return std::vector<double>();
+}
+
+double BaseCorrelationCurveConfig::assumedRecovery(const std::string& creditName) const {
     CdsReferenceInformation info;
     if (tryParseCdsInformation(creditName, info) && useAssumedRecovery_) {
         std::string tier = to_string(info.tier());

@@ -17,10 +17,10 @@
 */
 
 #pragma once
-#include <ql/termstructures/defaulttermstructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/instrument.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -38,17 +38,17 @@ public:
     };
 
     CreditIndexConstituentCurveCalibration(const Date& indexStartDate, const Period indexTenor,
-                                            const double indexSpread, const Handle<Quote>& indexRecoveryRate,
-                                            const Handle<DefaultProbabilityTermStructure>& indexCurve,
-                                            const Handle<YieldTermStructure>& discountCurve)
+                                           const double indexSpread, const Handle<Quote>& indexRecoveryRate,
+                                           const Handle<DefaultProbabilityTermStructure>& indexCurve,
+                                           const Handle<YieldTermStructure>& discountCurve)
         : indexStartDate_(indexStartDate), indexTenors_({indexTenor}), indexSpread_(indexSpread),
           indexRecoveryRates_({indexRecoveryRate}), indexCurves_({indexCurve}), discountCurve_(discountCurve) {}
 
     CreditIndexConstituentCurveCalibration(const Date& indexStartDate, const std::vector<Period> indexTenors,
-                                            const double indexSpread,
-                                            const std::vector<Handle<Quote>>& indexRecoveryRates,
-                                            const std::vector<Handle<DefaultProbabilityTermStructure>>& indexCurves,
-                                            const Handle<YieldTermStructure>& discountCurve)
+                                           const double indexSpread,
+                                           const std::vector<Handle<Quote>>& indexRecoveryRates,
+                                           const std::vector<Handle<DefaultProbabilityTermStructure>>& indexCurves,
+                                           const Handle<YieldTermStructure>& discountCurve)
         : indexStartDate_(indexStartDate), indexTenors_(indexTenors), indexSpread_(indexSpread),
           indexRecoveryRates_(indexRecoveryRates), indexCurves_(indexCurves), discountCurve_(discountCurve) {}
 

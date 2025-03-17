@@ -16,12 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/basket.hpp>
-//#include <ql/experimental/credit/basket.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/experimental/credit/loss.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-//#include <ql/experimental/credit/defaultlossmodel.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/models/basket.hpp>
 #include <qle/models/defaultlossmodel.hpp>
 
 using namespace std;
@@ -191,11 +189,11 @@ std::vector<Probability> Basket::remainingProbabilities(const Date& d) const {
     QL_REQUIRE(d >= refDate_, "remainingProbabilities: Target date "
                                   << io::iso_date(d) << " lies before basket inception " << io::iso_date(refDate_));
     vector<Real> prob;
-    
+
     const std::vector<Size>& alive = liveList();
     for (Size i = 0; i < alive.size(); i++)
-        prob.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i])->defaultProbability(d));
-
+        prob.push_back(
+            pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i])->defaultProbability(d, true));
     return prob;
 }
 

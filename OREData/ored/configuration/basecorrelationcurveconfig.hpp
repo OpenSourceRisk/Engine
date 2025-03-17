@@ -23,14 +23,14 @@
 
 #pragma once
 
+#include <boost/optional/optional.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <boost/optional/optional.hpp>
-#include <ored/marketdata/marketdatum.hpp>
 
 namespace ore {
 namespace data {
@@ -91,8 +91,8 @@ public:
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
     const std::vector<MarketDatum::QuoteType>& quoteTypes() const { return quoteTypes_; }
-    const bool hasQuoteTypePrice() const { 
-        return std::find(quoteTypes_.begin(), quoteTypes_.end(), MarketDatum::QuoteType::PRICE) != quoteTypes_.end(); 
+    const bool hasQuoteTypePrice() const {
+        return std::find(quoteTypes_.begin(), quoteTypes_.end(), MarketDatum::QuoteType::PRICE) != quoteTypes_.end();
     }
     const double indexSpread() const { return indexSpread_; }
     const std::string currency() const { return currency_; }
@@ -102,13 +102,14 @@ public:
     std::vector<double> rrGrid(const std::string& seniority) const;
     //! Returns the recovery rate grid for the given seniority or returns an empty vector if not found
     std::vector<double> rrProb(const std::string& seniority) const;
-    //! Compute the assumed (mean) recovery rate for the given credit name using the configured recovery rate grids and probabilities
+    //! Compute the assumed (mean) recovery rate for the given credit name using the configured recovery rate grids and
+    //! probabilities
     double assumedRecovery(const std::string& creditName) const;
     //@}
 
     //! \name Setters
     //@{
-    vector<string>& terms() { return terms_;}
+    vector<string>& terms() { return terms_; }
     vector<string>& detachmentPoints() { return detachmentPoints_; }
     Size& settlementDays() { return settlementDays_; }
     Calendar& calendar() { return calendar_; }
@@ -118,8 +119,6 @@ public:
     QuantLib::Period& indexTerm() { return indexTerm_; }
 
     //@}
-
-    
 
 private:
     vector<string> detachmentPoints_;
@@ -141,8 +140,6 @@ private:
     bool useAssumedRecovery_;
     std::map<std::string, std::vector<double>> rrGrids_;
     std::map<std::string, std::vector<double>> rrProbs_;
-
-
 };
 } // namespace data
 } // namespace ore

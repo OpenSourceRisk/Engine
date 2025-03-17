@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/basketdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
@@ -37,23 +37,23 @@ namespace data {
  */
 class SyntheticCDO : public Trade {
 public:
-  SyntheticCDO() : Trade("SyntheticCDO"),
-		   attachmentPoint_(Null<Real>()), detachmentPoint_(Null<Real>()), settlesAccrual_(true),
-		   protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
-		   upfrontFee_(Null<Real>()), rebatesAccrual_(true), recoveryRate_(Null<Real>()),
-		   useSensitivitySimplification_(false) {}
-    SyntheticCDO(
-        const Envelope& env, const LegData& leg, const string& qualifier, const BasketData& basketData,
-        double attachmentPoint, double detachmentPoint, const bool settlesAccrual = true,
-        const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
-            QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
-        const string& protectionStart = string(), const string& upfrontDate = string(),
-        const Real upfrontFee = Null<Real>(), const bool rebatesAccrual = true, Real recoveryRate = Null<Real>())
+    SyntheticCDO()
+        : Trade("SyntheticCDO"), attachmentPoint_(Null<Real>()), detachmentPoint_(Null<Real>()), settlesAccrual_(true),
+          protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
+          upfrontFee_(Null<Real>()), rebatesAccrual_(true), recoveryRate_(Null<Real>()),
+          useSensitivitySimplification_(false) {}
+    SyntheticCDO(const Envelope& env, const LegData& leg, const string& qualifier, const BasketData& basketData,
+                 double attachmentPoint, double detachmentPoint, const bool settlesAccrual = true,
+                 const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                     QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
+                 const string& protectionStart = string(), const string& upfrontDate = string(),
+                 const Real upfrontFee = Null<Real>(), const bool rebatesAccrual = true,
+                 Real recoveryRate = Null<Real>())
         : Trade("SyntheticCDO", env), qualifier_(qualifier), legData_(leg), basketData_(basketData),
           attachmentPoint_(attachmentPoint), detachmentPoint_(detachmentPoint), settlesAccrual_(settlesAccrual),
           protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
           upfrontFee_(upfrontFee), rebatesAccrual_(rebatesAccrual), recoveryRate_(recoveryRate),
-	  useSensitivitySimplification_(false) {}
+          useSensitivitySimplification_(false) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
@@ -77,12 +77,11 @@ public:
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
-   
+
     /*! Get credit curve id with term suffix "_5Y". If the creditCurveId contains such a suffix already
        this is used. Otherwise we try to imply it from the schedule. If that is not possible, the
        creditCurveId without tenor is returned. */
     std::string creditCurveIdWithTerm() const;
-
 
     /*! IndexTerms and IndexCDSCurvenames used to calibrate the constituent curves*/
     std::vector<std::pair<Period, std::string>> curveCalibrationBasket() const;
@@ -95,29 +94,22 @@ public:
     const QuantLib::Date& indexStartDateHint() const { return indexStartDateHint_; }
 
     double currentTrancheNotional() const {
-         auto additionalResults = instrument_->additionalResults();
-         auto it = additionalResults.find("CurrentNotional");
-         if(it != additionalResults.end()){
-             return boost::any_cast<double>(it->second);
-         } else{
+        auto additionalResults = instrument_->additionalResults();
+        auto it = additionalResults.find("CurrentNotional");
+        if (it != additionalResults.end()) {
+            return boost::any_cast<double>(it->second);
+        } else {
             return Null<double>();
-         }
+        }
     }
 
-    double fairUpfront(bool clean) const { 
+    double fairUpfront() const {
         auto additionalResults = instrument_->additionalResults();
         double npv = instrument_->NPV();
-        if (clean){
-
-        } 
         return npv / currentTrancheNotional();
-
     }
 
 private:
-
-    bool isIndexTranche() const { return qualifier_.size() == 13 && qualifier_.substr(0, 3) == "RED"; }
-
     string qualifier_;
     LegData legData_;
     BasketData basketData_;
@@ -130,7 +122,7 @@ private:
     double upfrontFee_;
     bool rebatesAccrual_;
     Real recoveryRate_;
-    
+
     // Need these stored in case we use the simplification and need to recontribute the total sensitivities
     // to the underlyings in the basket.
     std::map<std::string, double> basketConstituents_;
