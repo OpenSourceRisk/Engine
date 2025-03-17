@@ -41,12 +41,15 @@ public:
     const Matrix& dpardzero() const;
     const Matrix& dzerodpar() const;
 
+    const std::vector<Real>& baseImpliedVols() const;
+
 private:
     QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;
     std::vector<QuantLib::Period> optionTerms_, underlyingTerms_;
     QuantExt::ext::shared_ptr<SwapIndex> index_;
 
     std::vector<Real> optionTimes_;
+    std::vector<Real> baseImpliedVols_;
     Matrix dpardzero_;
     Matrix dzerodpar_;
 };
