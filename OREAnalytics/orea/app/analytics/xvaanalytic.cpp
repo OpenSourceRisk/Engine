@@ -268,11 +268,11 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
     initCubeDepth();
 
     // May have been set already
-    if (scenarioData_.empty()) {
+    if (scenarioData_ == nullptr) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
-        scenarioData_.linkTo(
-            QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_));
-        simMarket_->aggregationScenarioData() = *scenarioData_;
+        scenarioData_ =
+            QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
+        simMarket_->aggregationScenarioData() = scenarioData_;
     }
 
     // We can skip the cube initialization if the mt val engine is used, since it builds its own cubes
@@ -467,7 +467,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
             cptyCubeFactory, "xva-simulation", offsetScenario_);
 
-        engine.setAggregationScenarioData(*scenarioData_);
+        engine.setAggregationScenarioData(scenarioData_);
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
@@ -562,11 +562,11 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     LOG("XVA: amcRun");
 
-    if (scenarioData_.empty()) {
+    if (scenarioData_ == nullptr) {
         LOG("XVA: Create asd " << grid_->valuationDates().size() << " x " << samples_);
-        scenarioData_.linkTo(
-            QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_));
-        simMarket_->aggregationScenarioData() = *scenarioData_;
+        scenarioData_ =
+            QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
+        simMarket_->aggregationScenarioData() = scenarioData_;
     }
 
     initCubeDepth();
@@ -604,8 +604,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
-        if (!scenarioData_.empty())
-            engine.setAggregationScenarioData(*scenarioData_);
+        engine.setAggregationScenarioData(scenarioData_);
         engine.setOffsetScenario(offsetScenario_);
         engine.setNpvOutputCube(amcCube_);
         if(inputs_->xvaCgDynamicIM()) {
@@ -631,8 +630,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->amcIndividualTrainingOutput());
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
-            if (!scenarioData_.empty())
-                amcEngine.aggregationScenarioData() = *scenarioData_;
+            amcEngine.aggregationScenarioData() = scenarioData_;
             amcEngine.buildCube(amcPortfolio_, amcCube_);
         } else {
             auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
@@ -664,8 +662,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
-            if (!scenarioData_.empty())
-                amcEngine.aggregationScenarioData() = *scenarioData_;
+            amcEngine.aggregationScenarioData() = scenarioData_;
             amcEngine.buildCube(amcPortfolio_);
             amcCube_ = QuantLib::ext::make_shared<JointNPVCube>(amcEngine.outputCubes());
         }
@@ -742,7 +739,7 @@ void XvaAnalyticImpl::runPostProcessor() {
 
         if (inputs_->dimModel() == "Regression") {
             dimCalculator_ = QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimRegressionOrder, dimRegressors, dimLocalRegressionEvaluations,
                 dimLocalRegressionBandwidth, currentIM);
         } else if (inputs_->dimModel() == "DeltaVaR" ||
@@ -762,18 +759,18 @@ void XvaAnalyticImpl::runPostProcessor() {
             QuantLib::ext::shared_ptr<DimHelper> dimHelper = QuantLib::ext::make_shared<DimHelper>(
                 model_, nettingSetCube_, sensitivityStorageManager_, inputs_->curveSensiGrid(), dimHorizonCalendarDays);
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, dimQuantile,
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
         } else if (inputs_->dimModel() == "DynamicIM") {
             QL_REQUIRE(nettingSetCube_ && inputs_->xvaCgDynamicIM() &&
                            inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
                        "dim model is set to DynamicIM, this requires amcCg=CubeGeneration, xvaCgDynamicIM=true");
             dimCalculator_ = QuantLib::ext::make_shared<DirectDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, nettingSetCube_, currentIM);
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, nettingSetCube_, currentIM);
         } else {
             WLOG("dim model not specified, create FlatDynamicInitialMarginCalculator");
             dimCalculator_ = QuantLib::ext::make_shared<FlatDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_);
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_);
         }
     }
 
@@ -788,7 +785,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     auto market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
 
     postProcess_ = QuantLib::ext::make_shared<PostProcess>(
-        analytic()->portfolio(), netting, balances, market, marketConfiguration, cube_, *scenarioData_, analytics,
+        analytic()->portfolio(), netting, balances, market, marketConfiguration, cube_, scenarioData_, analytics,
         baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
@@ -867,8 +864,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = QuantLib::ext::make_shared<CubeInterpretation>(
-        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
-        grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
+        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), grid_,
+        inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
         LOG("XVA: Build simulation market");
@@ -989,7 +986,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         QL_REQUIRE(inputs_->cube(), "XVA without EXPOSURE requires an NPV cube as input");
         cube_ = inputs_->cube();
         QL_REQUIRE(inputs_->mktCube(), "XVA without EXPOSURE requires a market cube as input");
-        scenarioData_.linkTo(inputs_->mktCube());
+        scenarioData_ = inputs_->mktCube();
         if (inputs_->nettingSetCube())
             nettingSetCube_ = inputs_->nettingSetCube();
         if (inputs_->cptyCube())
@@ -1003,7 +1000,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Return the cubes to serialalize
     if (inputs_->writeCube()) {
         analytic()->npvCubes()[LABEL]["cube"] = cube_;
-        analytic()->mktCubes()[LABEL]["scenariodata"] = *scenarioData_;
+        analytic()->mktCubes()[LABEL]["scenariodata"] = scenarioData_;
         if (nettingSetCube_) {
             analytic()->npvCubes()[LABEL]["nettingsetcube"] = nettingSetCube_;
         }
