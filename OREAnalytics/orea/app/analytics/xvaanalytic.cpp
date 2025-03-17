@@ -766,7 +766,7 @@ void XvaAnalyticImpl::runPostProcessor() {
                            inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
                        "dim model is set to DynamicIM, this requires amcCg=CubeGeneration, xvaCgDynamicIM=true");
             dimCalculator_ = QuantLib::ext::make_shared<DirectDynamicInitialMarginCalculator>(
-                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, *scenarioData_, nettingSetCube_, currentIM);
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, nettingSetCube_, currentIM);
         } else {
             WLOG("dim model not specified, create FlatDynamicInitialMarginCalculator");
             dimCalculator_ = QuantLib::ext::make_shared<FlatDynamicInitialMarginCalculator>(
