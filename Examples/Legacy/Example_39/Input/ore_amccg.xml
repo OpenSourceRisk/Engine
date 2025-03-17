@@ -48,7 +48,7 @@
       <Parameter name="amcCg">CubeGeneration</Parameter>
       <!-- external device config -->
       <Parameter name="xvaCgUseExternalComputeDevice">false</Parameter>
-      <Parameter name="xvaCgExternalDeviceCompatibilityMode">true</Parameter>
+      <Parameter name="xvaCgExternalDeviceCompatibilityMode">false</Parameter>
       <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">false</Parameter>
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
       <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
