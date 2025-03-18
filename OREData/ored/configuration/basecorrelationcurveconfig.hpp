@@ -23,13 +23,14 @@
 
 #pragma once
 
+#include <boost/optional/optional.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <boost/optional/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -55,20 +56,17 @@ public:
 
     //! Detailed constructor
     BaseCorrelationCurveConfig(
-        const string& curveID,
-        const string& curveDescription,
-        const vector<string>& detachmentPoints,
-        const vector<string>& terms,
-        QuantLib::Size settlementDays,
-        const QuantLib::Calendar& calendar,
-        QuantLib::BusinessDayConvention businessDayConvention,
-        QuantLib::DayCounter dayCounter,
-        bool extrapolate,
-        const std::string& quoteName = "",
-        const QuantLib::Date& startDate = QuantLib::Date(),
+        const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
+        const vector<string>& terms, QuantLib::Size settlementDays, const QuantLib::Calendar& calendar,
+        QuantLib::BusinessDayConvention businessDayConvention, QuantLib::DayCounter dayCounter, bool extrapolate,
+        const std::string& quoteName = "", const QuantLib::Date& startDate = QuantLib::Date(),
         const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
-        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
-        bool adjustForLosses = true);
+        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none, bool adjustForLosses = true,
+        const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
+        const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
+        bool calibrateConstituentsToIndexSpread = false, const bool useAssumedRecovery = false,
+        const std::map<std::string, std::vector<double>>& rrGrids = {},
+        const std::map<std::string, std::vector<double>>& rrProbs = {});
     //@}
 
     //! \name Serialisation
@@ -92,6 +90,21 @@ public:
     const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
+    const std::vector<MarketDatum::QuoteType>& quoteTypes() const { return quoteTypes_; }
+    const bool hasQuoteTypePrice() const {
+        return std::find(quoteTypes_.begin(), quoteTypes_.end(), MarketDatum::QuoteType::PRICE) != quoteTypes_.end();
+    }
+    const double indexSpread() const { return indexSpread_; }
+    const std::string currency() const { return currency_; }
+    const bool calibrateConstituentsToIndexSpread() const { return calibrateConstituentsToIndexSpread_; }
+    const bool useAssumedRecovery() const { return useAssumedRecovery_; }
+    //! Returns the recovery rate grid for the given seniority or returns an empty vector if not found
+    std::vector<double> rrGrid(const std::string& seniority) const;
+    //! Returns the recovery rate grid for the given seniority or returns an empty vector if not found
+    std::vector<double> rrProb(const std::string& seniority) const;
+    //! Compute the assumed (mean) recovery rate for the given credit name using the configured recovery rate grids and
+    //! probabilities
+    double assumedRecovery(const std::string& creditName) const;
     //@}
 
     //! \name Setters
@@ -104,6 +117,7 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
+
     //@}
 
 private:
@@ -119,6 +133,13 @@ private:
     QuantLib::Period indexTerm_;
     boost::optional<QuantLib::DateGeneration::Rule> rule_;
     bool adjustForLosses_;
+    std::vector<MarketDatum::QuoteType> quoteTypes_;
+    double indexSpread_;
+    std::string currency_;
+    bool calibrateConstituentsToIndexSpread_;
+    bool useAssumedRecovery_;
+    std::map<std::string, std::vector<double>> rrGrids_;
+    std::map<std::string, std::vector<double>> rrProbs_;
 };
 } // namespace data
 } // namespace ore

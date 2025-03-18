@@ -26,6 +26,7 @@
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace std;
 using QuantLib::Currency;
@@ -74,6 +75,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"YY_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR},
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
+        {"INDEX_CDS_TRANCHE", MarketDatum::InstrumentType::INDEX_CDS_TRANCHE},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
@@ -89,7 +91,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     }
 }
 
-static MarketDatum::QuoteType parseQuoteType(const string& s) {
+MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
         {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
         {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
@@ -676,12 +678,35 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION, "Invalid quote type for " << datumName);
+        bool validType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
+        QL_REQUIRE(validType, "Invalid quote type for " << datumName);
+        WLOG("Deprecated MarketDatum::InstrumentType::CDS_INDEX, "
+             "please use INDEX_CDS_TRANCHE/BASE_CORRELATION/IndexName/Term/DetachPoint "
+             "or INDEX_CDS_TRANCHE/PRICE/IndexName/Term/AttachPoint/DetachPoint instead");
+        MarketDatum::InstrumentType newType = MarketDatum::InstrumentType::INDEX_CDS_TRANCHE;
+        std::string newDatumName =
+            to_string(newType) + "/" + tokens[1] + "/" + tokens[2] + "/" + tokens[3] + "/" + tokens[4];
         const string& cdsIndexName = tokens[2];
         Period term = parsePeriod(tokens[3]);
         Real detachmentPoint = parseReal(tokens[4]);
+        return QuantLib::ext::make_shared<BaseCorrelationQuote>(value, asof, newDatumName, quoteType, cdsIndexName,
+                                                                term, 0.0, detachmentPoint);
+    }
+
+    case MarketDatum::InstrumentType::INDEX_CDS_TRANCHE: {
+        bool validQuoteType =
+            quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE;
+        QL_REQUIRE(validQuoteType, "unexpected quote type " << quoteType << " for " << datumName
+                                                            << ", allowed values are BASE_CORRELATION or PRICE");
+        bool isBaseCorrelationQuote = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
+        QL_REQUIRE(tokens.size() == 5 && isBaseCorrelationQuote || tokens.size() == 6,
+                   "5 tokens expected for BASECORRELAITON or 6 tokens for PRICE, got datum " << datumName);
+        const string& cdsIndexName = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        Real attachmentPoint = isBaseCorrelationQuote ? 0.0 : parseReal(tokens[4]);
+        Real detachmentPoint = isBaseCorrelationQuote ? parseReal(tokens[4]) : parseReal(tokens[5]);
         return QuantLib::ext::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
-                                                        detachmentPoint);
+                                                                attachmentPoint, detachmentPoint);
     }
 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {

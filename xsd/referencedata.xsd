@@ -49,6 +49,7 @@
   <xs:complexType name="creditIndexReferenceDatum">
     <xs:sequence>
       <xs:element name="IndexFamily" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="IndexSubFamily" minOccurs="0" maxOccurs="1" />
       <xs:element name="Underlying" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:all>
