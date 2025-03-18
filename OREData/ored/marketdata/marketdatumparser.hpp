@@ -36,6 +36,11 @@ using QuantLib::Date;
 using QuantLib::Real;
 using std::string;
 
+//! Function to parse a market datum quote type
+/*! \ingroup marketdata
+ */
+MarketDatum::QuoteType parseQuoteType(const string& s);
+
 //! Function to parse a market datum
 /*! \ingroup marketdata
  */
