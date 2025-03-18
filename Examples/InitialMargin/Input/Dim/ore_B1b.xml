@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input/Dim</Parameter>
     <Parameter name="outputPath">Output/dim/B1b</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="marketDataFile">../../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
     <Parameter name="curveConfigFile">../../../Input/curveconfig.xml</Parameter>
