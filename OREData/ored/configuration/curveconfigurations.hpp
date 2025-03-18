@@ -55,8 +55,8 @@ using ore::data::XMLSerializable;
 
 class InflationCurveConfig;
 class InflationCapFloorVolatilityCurveConfig;
-enum class InflationCurveConfig::Type;
-enum class InflationCapFloorVolatilityCurveConfig::Type;
+enum class InflationCurveConfig::Type : int;
+enum class InflationCapFloorVolatilityCurveConfig::Type : int; 
 
 //! Container class for all Curve Configurations
 /*!
