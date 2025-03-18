@@ -53,11 +53,6 @@ namespace data {
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 
-class InflationCurveConfig;
-class InflationCapFloorVolatilityCurveConfig;
-enum class InflationCurveConfig::Type : int;
-enum class InflationCapFloorVolatilityCurveConfig::Type : int; 
-
 //! Container class for all Curve Configurations
 /*!
   \ingroup configuration
