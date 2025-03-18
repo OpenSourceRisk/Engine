@@ -115,7 +115,8 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
 
         // BlackVarianceCurve will make a local copy of vols and dates
         interpolators_.push_back(QuantLib::ext::make_shared<BlackVarianceCurve>(
-            referenceDate, dates, vols, dayCounter, forceMonotoneVariance, timeExtrapolation != BlackVolTimeExtrapolation::FlatInVolatility)); 
+            referenceDate, dates, vols, dayCounter, forceMonotoneVariance,
+            timeExtrapolation == BlackVolTimeExtrapolation::FlatInVolatility));
     }
 
     // register
@@ -232,14 +233,13 @@ Volatility BlackVolatilitySurfaceDelta::blackVolImpl(Time t, Real strike) const 
             strike = forward(tme);
         }
     }
-    return blackVolSmile(t)->volatility(strike);
+    return blackVolSmile(tme)->volatility(strike);
 }
 
 Volatility BlackVolatilitySurfaceDelta::interpolatorBlackVol(Size i, Time t, Real strike) const {
-    if (t <= times_.back() || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolator) {
+    if (t <= times_.back() || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolator ||
+        timeExtrapolation_ == BlackVolTimeExtrapolation::FlatInVolatility) {
         return interpolators_[i]->blackVol(t, strike, true);
-    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::FlatInVolatility) {
-        return interpolators_[i]->blackVol(times_.back(), strike, true);
     } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::LinearInVolatility) {
         // Linear extrapolation in volatility space
         size_t ind1 = times_.size() - 2;
