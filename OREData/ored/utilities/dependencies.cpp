@@ -276,7 +276,8 @@ MarketObject curveTypeToMarketObject(CurveSpec::CurveType ct, const string& curv
                 return MarketObject::ZeroInflationCapFloorVol;
             else
                 return MarketObject::YoYInflationCapFloorVol;
-        }
+        } else
+            QL_FAIL("Cannot convert curve type " << ct << " to market object");
     }
 
 }
