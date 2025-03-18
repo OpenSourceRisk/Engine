@@ -158,7 +158,7 @@ Real getStrike(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
 }
 
 bool isFixedLeg(const ore::data::LegData& legData) {
-    return (legData.legType() == "Fixed" || legData.legType() == "Cashflow" || legData.legType() == "CommodityFixed");
+    return (legData.legType() == ore::data::LegType::Fixed|| legData.legType() == ore::data::LegType::Cashflow || legData.legType() == ore::data::LegType::CommodityFixed);
 }
 
 QuantLib::Period getCMSIndexPeriod(const std::string& index) {
@@ -1268,16 +1268,17 @@ Real SaccrTradeData::Impl::getMaturity(const shared_ptr<Trade>& trade) const {
     return M;
 }
 
-optional<Real> SaccrTradeData::Impl::getSupervisoryDuration(const AssetClass& assetClass,
-                                                            const optional<Real>& startDate,
-                                                            const optional<Real>& endDate) const {
+QuantLib::ext::optional<Real>
+SaccrTradeData::Impl::getSupervisoryDuration(const AssetClass& assetClass,
+                                             const QuantLib::ext::optional<Real>& startDate,
+                                             const QuantLib::ext::optional<Real>& endDate) const {
 
-    optional<Real> supervisoryDuration = boost::none;
+    QuantLib::ext::optional<Real> supervisoryDuration = boost::none;
 
     if (assetClass == AssetClass::IR || assetClass == AssetClass::Credit) {
         QL_REQUIRE(startDate.has_value() && endDate.has_value(),
                    "SaccrTradeData::Impl::getSupervisoryDuration() : start and end date cannot be null");
-        return (exp(-0.05 * startDate.get()) - exp(-0.05 * endDate.get())) / 0.05;
+        return (std::exp(-0.05 * startDate.get()) - std::exp(-0.05 * endDate.get())) / 0.05;
     }
 
     return supervisoryDuration;
@@ -1458,10 +1459,10 @@ vector<Contribution> SaccrTradeData::Impl::calculateSingleOptionContribution(con
         const auto& legData = swaption->legData();
         Real strike = Null<Real>();
         for (const auto& ld : legData) {
-            if (ld.legType() == "Floating") {
+            if (ld.legType() == ore::data::LegType::Floating) {
                 auto floatingLeg = dynamic_pointer_cast<ore::data::FloatingLegData>(ld.concreteLegData());
                 underlyingData = getUnderlyingData(floatingLeg->index(), OREAssetClass::IR);
-            } else if (ld.legType() == "Fixed") {
+            } else if (ld.legType() == ore::data::LegType::Fixed) {
                 auto fixedLeg = dynamic_pointer_cast<ore::data::FixedLegData>(ld.concreteLegData());
                 auto rates = fixedLeg->rates();
                 QL_REQUIRE(rates.size() == 1,
@@ -1538,11 +1539,11 @@ Real SaccrTradeData::Impl::getLastExerciseDate(const OptionData& optionData) con
 }
 
 tuple<Real, string, optional<Real>> SaccrTradeData::Impl::getLegAverageNotional(Size legIdx,
-                                                                                const string& legType) const {
+                                                                                const ore::data::LegType& legType) const {
     Real avgNotional = 0.0;
     Real countTimes = 0.0;
     const Leg& leg = trade_->legs()[legIdx];
-    bool useCurrentPrice = legType.find("Equity") != string::npos || legType.find("Commodity") != string::npos;
+    bool useCurrentPrice = legType == ore::data::LegType::CommodityFloating || legType == ore::data::LegType::Equity;
     Real avgWeightedQuantity = 0.0;
     const QuantLib::Date& today = QuantLib::Settings::instance().evaluationDate();
     optional<Real> currentPrice;
@@ -1651,7 +1652,7 @@ string SaccrTradeData::Impl::getBucket(const Contribution& contribution) const {
 
     } else if (assetClass == AssetClass::Credit) {
         // For single name: SubAsset Class for Credit Single Name, e.g., AAA, AA...IG
-        // For index: Concatenation of “Index -“ and SubAsset Class, e.g., Index - IG, Index - SG
+        // For index: Concatenation of ï¿½Index -ï¿½ and SubAsset Class, e.g., Index - IG, Index - SG
         // TODO
         /// SNRFOR -> IG, AAA-A
         // PREFT1 -> IG, A, BBB
@@ -1682,7 +1683,7 @@ Real SaccrTradeData::Impl::getMaturityFactor(Real maturity) const {
         Size tradeCount = tradeData_.lock()->tradeCount(nettingSetDetails());
         if (tradeCount > 5000 && !cp->isClearingCP())
             MPORinWeeks = 4.0;
-        maturityFactor = 1.5 * sqrt(MPORinWeeks / 52.0);
+        maturityFactor = 1.5 * std::sqrt(static_cast<double>(MPORinWeeks) / 52.0);
     } else {
         const Real m = std::max(maturity, 2.0 / 52.0);
         maturityFactor = std::sqrt(std::min(m, 1.0));
@@ -1726,7 +1727,7 @@ vector<Contribution> CommoditySpreadOptionSaccrImpl::calculateImplContributions(
 
     vector<Contribution> contributions;
     for (Size i = 0; i < commSpreadOption->legs().size(); i++) {
-        string legType = commSpreadOption->csoData().legData()[i].legType();
+        auto legType = commSpreadOption->csoData().legData()[i].legType();
 
         // Get CommodityFloating leg underlying name
         const auto& legData = commSpreadOption->csoData().legData().at(i).concreteLegData();
@@ -1949,8 +1950,8 @@ set<string> CapFloorSaccrImpl::getTradeTypes() const { return {"CapFloor"}; }
 
 vector<Contribution> CapFloorSaccrImpl::calculateImplContributions() const {
     auto capFloor = dynamic_pointer_cast<ore::data::CapFloor>(trade_);
-    string legType = capFloor->leg().legType();
-    QL_REQUIRE(legType == "Floating", name() << "::calculateImplContribution() Only Floating legs supported for now.");
+    auto legType = capFloor->leg().legType();
+    QL_REQUIRE(legType == ore::data::LegType::Floating, name() << "::calculateImplContribution() Only Floating legs supported for now.");
 
     const auto& [notional, notionalCcy, currentPrice] = getLegAverageNotional(0, legType);
 
@@ -2322,7 +2323,7 @@ vector<Contribution> SwapSaccrImpl::calculateImplContributions() const {
         const auto& [legCurrentNotional, legCcy, currentPrice] = getLegAverageNotional(i, legData.legType());
         Real legNotional = legCurrentNotional * legMultiplier;
         Real delta = legNotional > 0.0 ? 1.0 : -1.0;
-        legNotional = abs(legNotional);
+        legNotional = std::abs(legNotional);
 
         Contribution contrib(underlyingData, legCcy, legNotional, delta);
 

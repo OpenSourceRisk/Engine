@@ -390,7 +390,7 @@ void SaccrCalculator::aggregate() {
 
         const Real V = NPV_[nettingSetDetails];
         const Real A = addOn_[nettingSetDetails];
-        multiplier_[nettingSetDetails] = std::min(1.0, 0.05 + 0.95 * exp((V - C) / (2.0 * 0.95 * A)));
+        multiplier_[nettingSetDetails] = std::min(1.0, 0.05 + 0.95 * std::exp((V - C) / (2.0 * 0.95 * A)));
         PFE_[nettingSetDetails] = multiplier_[nettingSetDetails] * addOn_[nettingSetDetails];
         const constexpr Real alpha = 1.4;
         Real ead = alpha * (RC_[nettingSetDetails] + PFE_[nettingSetDetails]);

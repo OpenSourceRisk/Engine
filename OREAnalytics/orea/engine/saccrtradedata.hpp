@@ -334,7 +334,7 @@ public:
 
     std::string getBucket(const SaccrTradeData::Contribution& contribution) const;
     std::tuple<QuantLib::Real, std::string, QuantLib::ext::optional<QuantLib::Real>>
-    getLegAverageNotional(QuantLib::Size legIdx, const std::string& legType) const;
+    getLegAverageNotional(QuantLib::Size legIdx, const ore::data::LegType& legType) const;
 
     void setTradeData(const QuantLib::ext::weak_ptr<SaccrTradeData>& tradeData) { tradeData_ = tradeData; }
     void setTrade(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) { trade_ = trade; }
