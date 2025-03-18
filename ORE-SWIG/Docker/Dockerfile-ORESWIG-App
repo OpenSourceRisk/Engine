@@ -12,7 +12,7 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install matplotlib pandas nose nose_xunitmp datacompy jupyter jsondiff xmldiff numpy scipy ipywidgets --break-system-packages
+RUN pip3 install matplotlib pandas nose nose_xunitmp datacompy jupyter jsondiff xmldiff numpy scipy ipywidgets
 
 WORKDIR /
 RUN mkdir /oreswig
