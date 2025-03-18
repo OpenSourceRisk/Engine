@@ -342,51 +342,36 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                    "Simulation of Swaption vols is only supported for LGM1F ir model type.");
 
         // We need Swap conventions (index name, fixed tenor, fixed day counter) below, all part of the relevant Swap Index
-	// FIXME: Use Swaption vol curve config and the long and short SwapIndex definied there?
+	// FIXME: Get access to the Swaption vol curve config and the long and short SwapIndex definied there
         std::map<string, string> swapConventionMap
 	    = { { "EUR", "EUR-CMS-30Y"},
-		{ "USD", "USD-CMS-SOFR-30Y" }
+		{ "USD", "USD-CMS-SOFR-30Y" },
+		{ "GBP", "GBP-CMS-30Y" },
+		{ "CHF", "CHF-CMS-30Y" },
+		{ "JPY", "JPY-CMS-30Y" }
 	};
         std::map<string, string> shortSwapConventionMap
 	    = { { "EUR", "EUR-CMS-1Y"},
-		{ "USD", "USD-CMS-SOFR-1Y" }
+		{ "USD", "USD-CMS-SOFR-1Y" },
+		{ "GBP", "GBP-CMS-1Y" },
+		{ "CHF", "CHF-CMS-1Y" },
+		{ "JPY", "JPY-CMS-1Y" }
 	};
 
-	//const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-	
         for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
 	    const string key = simMarketConfig_->swapVolKeys()[k];
             DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
 
 	    QL_REQUIRE(swapConventionMap.find(key) != swapConventionMap.end(),
-		       "swaption vol key " << key << "missing associated swap convention name");  
+		       "swaption vol key " << key << " missing associated swap convention name");  
 	    QL_REQUIRE(shortSwapConventionMap.find(key) != shortSwapConventionMap.end(),
-	     	       "swaption vol key " << key << "missing associated short swap convention name");  
+	     	       "swaption vol key " << key << " missing associated short swap convention name");  
 
 	    auto swapIndex = parseSwapIndex(swapConventionMap[key]);
 	    auto shortSwapIndex = parseSwapIndex(shortSwapConventionMap[key]);
-	    
-	    // Locate the index position (index curve)
-	    /*
-	    auto keyIndex = swapConvention->index();
-	    Size indexIndex = n_indices_; 
-	    for (Size j = 0; j < n_indices_; ++j) {
-	        std::string indexName = simMarketConfig_->indices()[j];
-		QuantLib::ext::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
-		if (index->currency().code() == swapIndex->iborIndex()->currency().code() &&
-		    index->tenor() == swapIndex->iborIndex()->tenor()) {
-		    indexIndex = j;
-		    break;
-		}
-	    }
-	    QL_REQUIRE(indexIndex < n_indices_, "index not located");
-	    */
-	    
+	    	    
 	    Size ccyIndex = model_->ccyIndex(swapIndex->currency());
-	    // Period fixedTenor = swapIndex->fixedLegTenor();
-	    // DayCounter fixedDayCounter = swapIndex->dayCounter();
             swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
-                // model_, indices_[indexIndex], curves_[ccyIndex], fixedTenor, fixedDayCounter, ccyIndex, indexIndex));
                 model_, curves_[ccyIndex], indices_, swapIndex, shortSwapIndex));
 
             DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key << " done");

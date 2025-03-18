@@ -92,7 +92,7 @@
     </Analytic>
     <Analytic type="xvaStress">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="marketConfigFile">stressmarket.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
       <Parameter name="writeCubes">N</Parameter>
