@@ -71,7 +71,8 @@ private:
     Handle<YieldTermStructure> flatRateDiv(Real dividend);
     Handle<QuantLib::SwaptionVolatilityStructure> flatRateSvs(Volatility forward, VolatilityType type = ShiftedLognormal,
                                                               Real shift = 0.0);
-    Handle<QuantExt::CreditCurve> flatRateDcs(Volatility forward);
+    Handle<QuantExt::CreditCurve> flatRateDcs(Volatility forward, const Handle<YieldTermStructure>& yts,
+                                              const Handle<Quote>& recoveryRate);
     Handle<OptionletVolatilityStructure> flatRateCvs(Volatility vol, VolatilityType type = Normal, Real shift = 0.0);
     Handle<QuantExt::CorrelationTermStructure> flatCorrelation(Real correlation = 0.0);
     Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex,

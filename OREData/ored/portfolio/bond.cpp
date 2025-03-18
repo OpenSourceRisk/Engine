@@ -409,8 +409,8 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
 
     Result res;
     res.bond = qlBond;
-    res.bondTrade = bond;
-
+    res.trade = bond;
+    res.bondData = data;
     if (data.isInflationLinked()) {
         res.isInflationLinked = true;
     }

@@ -27,7 +27,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-
+#include <ored/portfolio/referencedata.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
@@ -86,9 +86,12 @@ public:
         //! Description of curve compositions
         const QuantLib::ext::shared_ptr<const CurveConfigurations>& curveConfigs,
         //! Ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig())
-        : asof_(asof), params_(params), curveConfigs_(curveConfigs),
-          iborFallbackConfig_(iborFallbackConfig){};
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        //! Reference data config required for base correlations
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr)
+
+        : asof_(asof), params_(params), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig), 
+        referenceData_(referenceData){};
 
     // data structure for a vertex in the graph
     struct Node {
@@ -121,6 +124,7 @@ private:
     const QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
     const QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
     const IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
 };
 
 } // namespace data

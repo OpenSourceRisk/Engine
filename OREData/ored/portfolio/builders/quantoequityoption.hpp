@@ -39,5 +39,16 @@ public:
         : QuantoEuropeanOptionEngineBuilder("BlackScholes", {"QuantoEquityOption"}, AssetClass::EQ) {}
 };
 
+//! Engine Builder for Quanto American Equity Option Options
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class QuantoEquityAmericanOptionEngineBuilder : public QuantoAmericanOptionEngineBuilder {
+public:
+    QuantoEquityAmericanOptionEngineBuilder()
+        : QuantoAmericanOptionEngineBuilder("BlackScholesMerton", {"QuantoEquityOptionAmerican"}, AssetClass::EQ) {}
+};
+
 } // namespace data
 } // namespace ore
