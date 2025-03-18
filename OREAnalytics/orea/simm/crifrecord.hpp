@@ -196,6 +196,7 @@ struct CrifRecord {
         UK,
         AMFQ,
         BANX,
+        OJK,
         Included,
         Unspecified,
         Excluded,

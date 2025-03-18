@@ -99,6 +99,8 @@ void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                "expected barrier style American, got " << barrier_.style());
     QL_REQUIRE(barrier_.levels().size() == 1,
                "WindowBarrierOption: exactly one barrier level required, got " << barrier_.levels().size());
+    QL_REQUIRE(!barrier_.overrideTriggered(),
+               "WindowBarrierOption: OverrideTriggered not supported by this instrument type.");
     if (barrier_.type() == "UpAndOut")
         barrierType = "4";
     else if (barrier_.type() == "UpAndIn")

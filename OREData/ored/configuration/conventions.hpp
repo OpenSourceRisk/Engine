@@ -760,15 +760,25 @@ public:
     //! Default constructor
     BMABasisSwapConvention() {}
     //! Detailed constructor
-    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex);
+    BMABasisSwapConvention(const string& id, const string& index, const string& bmaIndex);
     //@}
 
     //! \name Inspectors
     //@{
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
-    const string& liborIndexName() const { return strLiborIndex_; }
+    const string& indexName() const { return strIndex_; }
     const string& bmaIndexName() const { return strBmaIndex_; }
+    const Calendar& bmaPaymentCalendar() const { return bmaPaymentCalendar_; }
+    BusinessDayConvention bmaPaymentConvention() const { return bmaPaymentConvention_; }
+    Natural bmaPaymentLag() const { return bmaPaymentLag_; }
+    const Calendar& indexPaymentCalendar() const { return indexPaymentCalendar_; }
+    BusinessDayConvention indexPaymentConvention() const { return indexPaymentConvention_; }
+    Natural indexPaymentLag() const { return indexPaymentLag_; }
+    Natural indexSettlementDays() const { return indexSettlementDays_; }
+    const Period& indexPaymentPeriod() const { return indexPaymentPeriod_; }
+    BusinessDayConvention indexConvention() const { return indexConvention_; }
+    Natural overnightLockoutDays() const { return overnightLockoutDays_; }
     //@}
 
     //! \name Serialisation
@@ -779,9 +789,30 @@ public:
     //@}
 
 private:
+    Calendar bmaPaymentCalendar_;
+    BusinessDayConvention bmaPaymentConvention_;
+    Natural bmaPaymentLag_;
+    Calendar indexPaymentCalendar_;
+    BusinessDayConvention indexPaymentConvention_;
+    Natural indexPaymentLag_;
+    Natural indexSettlementDays_;
+    Period indexPaymentPeriod_;
+    BusinessDayConvention indexConvention_;
+    Natural overnightLockoutDays_;
+
     // Strings to store the inputs
-    string strLiborIndex_;
+    string strIndex_;
     string strBmaIndex_;
+    string strBmaPaymentCalendar_;
+    string strBmaPaymentConvention_;
+    string strBmaPaymentLag_;
+    string strIndexPaymentCalendar_;
+    string strIndexPaymentConvention_;
+    string strIndexPaymentLag_;
+    string strIndexSettlementDays_;
+    string strIndexPaymentPeriod_;
+    string strIndexConvention_;
+    string strOvernightLockoutDays_;
 };
 
 //! Container for storing FX Spot quote conventions

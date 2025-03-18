@@ -41,6 +41,9 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     DLOG("ScriptedTrade::build() called for trade " << id());
 
+    auto rt = engineFactory->engineData()->globalParameters().find("RunType");
+    isPfAnalyserRun_ = rt != engineFactory->engineData()->globalParameters().end() && rt->second == "PortfolioAnalyser";
+
     auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
 
     QL_REQUIRE(builder, "no builder found for ScriptedTrade");
@@ -141,7 +144,7 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
 }
 
 QuantLib::Real ScriptedTrade::notional() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return 0.0;
     // try to get the notional from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
@@ -162,7 +165,7 @@ QuantLib::Real ScriptedTrade::notional() const {
 }
 
 std::string ScriptedTrade::notionalCurrency() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return npvCurrency_;
     // try to get the notional ccy from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));

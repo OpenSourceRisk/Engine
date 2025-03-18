@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EQ_WorstOfBasketSwap">
+        <TradeType>EquityWorstOfBasketSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquityWorstOfBasketSwapData>
+            <LongShort>Long</LongShort>
+            <Currency>EUR</Currency>
+            <Quantity>1955000</Quantity>
+            <InitialFixedRate>0.015</InitialFixedRate>
+            <!-- <InitialFixedPayDate>2021-02-12</InitialFixedPayDate> -->
+            <Underlyings>
+                <Underlying>
+                    <Type>Equity</Type>
+                    <Name>.STOXX50E</Name>
+                    <IdentifierType>RIC</IdentifierType>
+                </Underlying>
+                <Underlying>
+                    <Type>Equity</Type>
+                    <Name>.SPX</Name>
+                    <IdentifierType>RIC</IdentifierType>
+                </Underlying>
+            </Underlyings>
+            <InitialPrices>
+                <InitialPrice>3481.44</InitialPrice>
+                <InitialPrice>3714.24</InitialPrice>
+            </InitialPrices>
+            <!-- <KnockInPayDate>2023-02-14</KnockInPayDate> -->
+            <FloatingPeriodSchedule>
+                <Dates>
+                    <Dates>
+                        <Date>2024-07-25</Date>
+                        <Date>2025-01-22</Date>
+                        <Date>2025-07-25</Date>
+                        <Date>2026-01-22</Date>
+                        <Date>2026-07-27</Date>
+                    </Dates>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>MF</Convention>
+                </Dates>
+            </FloatingPeriodSchedule>
+            <!--     <FixedDeterminationSchedule>
+            <DerivedSchedule>
+              <BaseSchedule>FloatingPeriodSchedule</BaseSchedule>
+              <Shift>0D</Shift>
+              <Calendar>TARGET</Calendar>
+              <Convention>MF</Convention>
+            </DerivedSchedule>
+          </FixedDeterminationSchedule>
+          <KnockOutDeterminationSchedule>
+            <DerivedSchedule>
+              <BaseSchedule>FloatingPeriodSchedule</BaseSchedule>
+              <Shift>0D</Shift>
+              <Calendar>TARGET</Calendar>
+              <Convention>MF</Convention>
+            </DerivedSchedule>
+          </KnockOutDeterminationSchedule> -->
+            <FloatingPayDates>
+                <Dates>
+                    <Dates>
+                        <Date>2024-08-08</Date>
+                        <Date>2025-02-05</Date>
+                        <Date>2025-08-08</Date>
+                        <Date>2026-02-05</Date>
+                        <Date>2026-08-10</Date>
+                    </Dates>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>MF</Convention>
+                </Dates>
+            </FloatingPayDates>
+            <!--     <KnockInDeterminationSchedule>
+            <DerivedSchedule>
+              <BaseSchedule>FloatingPeriodSchedule</BaseSchedule>
+              <Shift>0D</Shift>
+              <Calendar>TARGET</Calendar>
+              <Convention>MF</Convention>
+            </DerivedSchedule>
+          </KnockInDeterminationSchedule> -->
+            <!--     <FixedPayDates>
+            <DerivedSchedule>
+              <BaseSchedule>FloatingPayDates</BaseSchedule>
+              <Shift>0D</Shift>
+              <Calendar>TARGET</Calendar>
+              <Convention>MF</Convention>
+            </DerivedSchedule>
+          </FixedPayDates> -->
+            <KnockOutLevels>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+                <KnockOutLevel>1.0</KnockOutLevel>
+            </KnockOutLevels>
+            <FixedTriggerLevels>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+                <FixedTriggerLevel>0.75</FixedTriggerLevel>
+            </FixedTriggerLevels>
+            <BermudanKnockIn>false</BermudanKnockIn>
+            <KnockInLevel>0.75</KnockInLevel>
+            <FixedRate>0.04</FixedRate>
+            <AccumulatingFixedCoupons>true</AccumulatingFixedCoupons>
+            <AccruingFixedCoupons>false</AccruingFixedCoupons>
+            <FloatingIndex>EUR-EURIBOR-3M</FloatingIndex>
+            <FloatingSpread>0.002</FloatingSpread>
+            <FloatingDayCountFraction>Actual/360</FloatingDayCountFraction>
+            <FloatingFixingSchedule>
+                <DerivedSchedule>
+                    <BaseSchedule>FloatingPeriodSchedule</BaseSchedule>
+                    <Shift>-2D</Shift>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>MF</Convention>
+                </DerivedSchedule>
+            </FloatingFixingSchedule>
+            <!-- <Strike>1.0</Strike> -->
+        </EquityWorstOfBasketSwapData>
+    </Trade>
+</Portfolio>

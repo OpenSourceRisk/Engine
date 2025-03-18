@@ -16,27 +16,31 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/compositeinstrumentwrapper.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxdoublebarrieroption.hpp>
 #include <ored/portfolio/fxkikobarrieroption.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
+#include <qle/utilities/barrier.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <qle/indexes/fxindex.hpp>
-#include <qle/instruments/multiccycompositeinstrument.hpp>
+
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
@@ -78,6 +82,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(barriers_[1].style().empty() || barriers_[1].style() == "American",
                "only american barrier style supported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxBarrierOption");
+    QL_REQUIRE(!barriers_[0].overrideTriggered() && !barriers_[1].overrideTriggered(),
+               "FxKIKOBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
@@ -173,9 +179,9 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 ALOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
-                    knockedIn = checkBarrier(fixing, knockInType, knockInLevel);
+                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel);
                 if (!knockedOut)
-                    knockedOut = checkBarrier(fixing, knockOutType, knockOutLevel);
+                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel);
             }
             d = cal.advance(d, 1, Days);
         }
@@ -292,19 +298,6 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
-    }
-}
-
-bool FxKIKOBarrierOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
     }
 }
 

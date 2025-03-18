@@ -23,11 +23,13 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/cashflows/scaledcoupon.hpp> 
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
@@ -59,6 +61,74 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
         return QuantLib::Settlement::ParYieldCurve; // ql < 1.14 behaviour
 }
 } // namespace
+
+// This helper functionality checks for constant definitions of the given 
+// notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
+// Additional to this, the gearing must be equal to one on all floating legs.
+// Finally, the floating legs must be of type IborCoupon, OvernightIndexedCoupon or AverageONIndexedCoupon.
+// If all those conditions are met, the trade is called standard.
+bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
+{
+
+    // Fields to be checked on the fixed legs
+    Real constNotional = Null<Real>();
+    Real constRate = Null<Real>();
+
+    // Fields to be checked on the floating legs
+    Real constSpread = Null<Real>();
+
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (auto const& c : legs[i]) { 
+           
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
+                    return false;
+
+                if (!QuantLib::close_enough(cpn->gearing() , 1.00))
+                    return false;
+   
+                if(constSpread == Null<Real>())
+                    constSpread = cpn->spread();
+                else if (!QuantLib::close_enough(cpn->spread(), constSpread))
+                    return false;
+                
+                if (                    
+                    !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) 
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))                
+                )
+                    return false; // The trade must then be a non-standard type like e.g. CMS coupon
+
+                continue;
+            }
+
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
+                if(constNotional == Null<Real>()) 
+                    constNotional = cpn->nominal();
+                else if (!QuantLib::close_enough(cpn->nominal(), constNotional))
+                    return false;
+   
+                if(constRate == Null<Real>())
+                    constRate = cpn->rate();
+                else if (!QuantLib::close_enough(cpn->rate(), constRate))
+                    return false;
+                
+                continue;
+            }
+
+            return false; // Coupon could not be cast to one of the two main types
+        }
+    }
+
+    // Both legs and fields must have been there at least once
+    if(constNotional == Null<Real>() || constRate == Null<Real>() || constSpread == Null<Real>())
+        return false; 
+
+    // If no non-constant field and no other subtlety was found return true
+    return true;
+}
 
 void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -280,17 +350,35 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // for European swaptions that are not handled by the black pricer, we fall back to the numeric Bermudan pricer
     if (exerciseType_ == Exercise::European &&
         QuantExt::BlackMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages)) {
-        builderType = "EuropeanSwaption";
+        if(areStandardLegs(underlying_->legs()))
+            builderType = "EuropeanSwaption";
+        else
+            builderType = "EuropeanSwaption_NonStandard";
     } else {
         QL_REQUIRE(
             QuantExt::NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(*swaption, builderPrecheckMessages),
             "Swaption::build(): instrument is not handled by the available engines: " +
                 boost::join(builderPrecheckMessages, ", "));
+       
         if (exerciseType_ == Exercise::European || exerciseType_ == Exercise::Bermudan)
-            builderType = "BermudanSwaption";
+        {           
+            if(areStandardLegs(underlying_->legs()))
+                builderType = "BermudanSwaption";
+            else
+                builderType = "BermudanSwaption_NonStandard";
+        }
         else if (exerciseType_ == Exercise::American)
-            builderType = "AmericanSwaption";
+        { 
+            if(areStandardLegs(underlying_->legs()))
+                builderType = "AmericanSwaption";
+            else
+                builderType = "AmericanSwaption_NonStandard";
+        }
     }
+
+    string pricingProductType = envelope().additionalField("pricing_product_type", false);
+    if (!pricingProductType.empty()) 
+        builderType = pricingProductType;
 
     DLOG("Getting builder for '" << builderType << "', got " << builderPrecheckMessages.size()
                                  << " builder precheck messages:");
@@ -498,7 +586,7 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < std::min(legData_.size(), legs_.size()); ++i) {
         string legID = to_string(i + 1);
-        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         for (Size j = 0; j < legs_[i].size(); ++j) {

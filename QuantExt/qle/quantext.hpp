@@ -255,12 +255,14 @@
 #include <qle/math/stoplightbounds.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/brownianbridgepathinterpolator.hpp>
+#include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
 #include <qle/methods/fdmblackscholesmesher.hpp>
 #include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
 #include <qle/methods/fdmlgmop.hpp>
 #include <qle/methods/fdmquantohelper.hpp>
+#include <qle/methods/lgmswaptionvegaparconverter.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
@@ -339,6 +341,7 @@
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/marketobserver.hpp>
+#include <qle/models/mcdefaultlossmodel.hpp>
 #include <qle/models/modelbuilder.hpp>
 #include <qle/models/modelimpliedpricetermstructure.hpp>
 #include <qle/models/modelimpliedyieldtermstructure.hpp>
@@ -593,8 +596,11 @@
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/barrier.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
+#include <qle/utilities/creditcurves.hpp>
+#include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>

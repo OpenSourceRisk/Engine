@@ -89,7 +89,8 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Currency domCcy = parseCurrency(domesticCurrency_);
     Real level = barrier_.levels()[0].value();
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    
+    std::optional<bool> overrideTriggered = barrier_.overrideTriggered();
+
     Natural payLag = 0;
     BusinessDayConvention payConvention = Unadjusted;
     Calendar payCalendar = NullCalendar();
@@ -169,7 +170,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Calendar cal = ore::data::parseCalendar(calendar_);
 
     auto buildBarrierOptionWrapperInstr = [this, type, level, engineFactory, domCcy, fgnCcy, flipResults, positionType,
-                                           market, barrierType, rebate, fxIndex, cal,
+                                           market, barrierType, overrideTriggered, rebate, fxIndex, cal,
                                            start](const Date& expiryDate, const Date& payDate) {
         QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
         Leg leg;
@@ -213,9 +214,10 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
         auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
-            cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-        
+            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start,
+            fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+            overrideTriggered);
+
         maturity_ = std::max(lastPremiumDate, payDate);
         maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date" : "Pay Date";
 
@@ -262,19 +264,6 @@ Real FxTouchOption::strike() const {
     }
 
     return strike;
-}
-
-bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
 }
 
 void FxTouchOption::fromXML(XMLNode* node) {

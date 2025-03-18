@@ -185,12 +185,12 @@ public:
     const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
-    //! Return list of Trade IDs in the portfolio
+    //! Return map of Trade IDs to cube trade indices
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
     const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
-    //! Return list of netting set IDs in the portfolio
+    //! Return map netting set IDs to (net-)cube netting set indices
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
     }

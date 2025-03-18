@@ -63,6 +63,14 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
     calendar = XMLUtils::getChildValue(node, "Calendar", true);
     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
+    if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "clean") {
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "dirty") {
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Dirty;
+    } else {
+        DLOG("the PriceType provided is not valid. Value must be 'Clean' or 'Dirty'. Overiding to 'Clean'.");
+        quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+    }
     priceQuoteMethod = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
     priceQuoteBaseValue = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
     subType = XMLUtils::getChildValue(node, "SubType", false);
@@ -214,6 +222,7 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     QL_REQUIRE(cird, "Expected a CreditIndexReferenceData node.");
 
     indexFamily_ = XMLUtils::getChildValue(cird, "IndexFamily", false);
+    indexSubFamily_ = XMLUtils::getChildValue(cird, "IndexSubFamily", false);
 
     constituents_.clear();
 
@@ -231,6 +240,7 @@ XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
 
     XMLUtils::addChild(doc, cird, "IndexFamily", indexFamily_);
+    XMLUtils::addChild(doc, cird, "IndexSubFamily", indexSubFamily_);
 
     for (auto c : constituents_) {
         auto cNode = c.toXML(doc);

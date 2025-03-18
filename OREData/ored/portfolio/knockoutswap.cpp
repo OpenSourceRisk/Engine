@@ -35,16 +35,16 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 
     QL_REQUIRE(legData_.size() == 2, "Expected exactly two legs, got " << legData_.size());
 
-    std::set<std::string> legTypes;
+    std::set<LegType> legTypes;
     for (auto const& ld : legData_) {
 	legTypes.insert(ld.legType());
     }
 
-    QL_REQUIRE(legTypes.size() == 2 && *legTypes.begin() == "Fixed" && *std::next(legTypes.begin(), 1) == "Floating",
+    QL_REQUIRE(legTypes.size() == 2 && *legTypes.begin() == LegType::Fixed && *std::next(legTypes.begin(), 1) == LegType::Floating,
 	       "Expected one 'Floating' and one 'Fixed' type");
 
-    const LegData& fixedLegData = legData_[0].legType() == "Fixed" ? legData_[0] : legData_[1];
-    const LegData& floatLegData = legData_[0].legType() == "Fixed" ? legData_[1] : legData_[0];
+    const LegData& fixedLegData = legData_[0].legType() == LegType::Fixed ? legData_[0] : legData_[1];
+    const LegData& floatLegData = legData_[0].legType() == LegType::Fixed ? legData_[1] : legData_[0];
 
     auto floatAddData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(floatLegData.concreteLegData());
     auto fixedAddData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(fixedLegData.concreteLegData());
@@ -106,6 +106,9 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 				<< index->currency().code() << "' of index '" << index->name() << "'");
 
     currencies_.emplace_back("Currency", "PayCurrency", fixedLegData.currency());
+
+    QL_REQUIRE(!barrierData_.overrideTriggered(),
+               "KnockOutSwap::build(): OverrideTriggered not supported by this instrument type.");
 
     QL_REQUIRE(barrierData_.style().empty() || barrierData_.style() == "European",
 	       "Expected European barrier style, got '" << barrierData_.style() << "'");

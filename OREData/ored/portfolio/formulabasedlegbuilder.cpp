@@ -25,7 +25,8 @@ namespace data {
 
 Leg FormulaBasedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                      RequiredFixings& requiredFixings, const string& configuration,
-                                     const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+                                     const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves,
+                                     const bool attachPricer) const {
     auto formulaData = QuantLib::ext::dynamic_pointer_cast<FormulaBasedLegData>(data.concreteLegData());
     QL_REQUIRE(formulaData, "Wrong LegType, expected Formula");
     string formula = formulaData->formulaBasedIndex();
@@ -35,7 +36,7 @@ Leg FormulaBasedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::s
     std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>> indexMaps;
     auto formulaIndex =
         makeFormulaBasedIndex(formula, engineFactory->market(), configuration, indexMaps, cal);
-    Leg result = makeFormulaBasedLeg(data, formulaIndex, engineFactory, indexMaps, openEndDateReplacement);
+    Leg result = makeFormulaBasedLeg(data, formulaIndex, engineFactory, indexMaps, openEndDateReplacement, attachPricer);
     // add required fixing dates
     for (auto const& m : indexMaps) {
         for (auto const& c : result) {

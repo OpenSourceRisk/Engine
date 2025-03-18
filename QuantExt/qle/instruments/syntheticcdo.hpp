@@ -140,7 +140,12 @@ public:
     Rate protectionValue() const;
     Real premiumLegNPV() const;
     Real protectionLegNPV() const;
-    //! Returns the recovery rate for fixed recovery CDO, otherwise returns Null<Real>() 
+    Real accrualRebateNPV() const;
+    Real accrualRebateNPVCurrent() const;
+    Real upfrontPremiumValue() const;
+    Real cleanNPV() const;
+
+    //! Returns the recovery rate for fixed recovery CDO, otherwise returns Null<Real>()
     Real recoveryRate() const { return recoveryRate_; }
     /*!
       Total outstanding tranche notional, not wiped out
@@ -196,6 +201,9 @@ private:
     mutable Real remainingNotional_;
     mutable Size error_;
     mutable std::vector<Real> expectedTrancheLoss_;
+    mutable Real accrualRebateNPV_;
+    mutable Real accrualRebateNPVCurrent_;
+    mutable Real cleanNPV_;
 };
 
 class SyntheticCDO::arguments : public virtual PricingEngine::arguments {
@@ -229,6 +237,9 @@ public:
     Real upfrontPremiumValue;
     Real accrualRebateValue;
     Real accrualRebateCurrentValue;
+    Real accrualRebateNPV_;
+    Real accrualRebateNPVCurrent_;
+    Real cleanNPV;
     Real remainingNotional;
     Real xMin, xMax;
     Size error;

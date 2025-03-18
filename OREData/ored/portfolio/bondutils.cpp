@@ -27,7 +27,8 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
                                    std::string& calendar, std::string& issueDate, std::string& priceQuoteMethod,
                                    string& priceQuoteBaseValue, std::string& creditCurveId, std::string& creditGroup,
                                    std::string& referenceCurveId, std::string& incomeCurveId,
-                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons, 
+                                   std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices,
                                    const std::string& name,
                                    const QuantLib::ext::shared_ptr<BondReferenceDatum>& bondRefData,
                                    const std::string& startDate, const std::string& endDate) {
@@ -110,6 +111,13 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
                                         "modifified end date cannot be applied to multiple legs/schedules")
                 .log();
 	}
+    }
+    if (!quotedDirtyPrices) {
+        quotedDirtyPrices = bondRefData->bondData().quotedDirtyPrices;
+        if (!quotedDirtyPrices) {
+            quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+            DLOG("the PriceType is being defaulted to 'Clean'.");
+        }
     }
       
     DLOG("populating bond data from reference data done.");

@@ -12,6 +12,7 @@
 #include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
+#include <orea/aggregation/dimdirectcalculator.hpp>
 #include <orea/aggregation/dimflatcalculator.hpp>
 #include <orea/aggregation/dimhelper.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
@@ -62,7 +63,6 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/reportwriter.hpp>
-#include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/app/zerosensitivityloader.hpp>
@@ -126,6 +126,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/simpledynamicsimm.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/engine/stresstest.hpp>

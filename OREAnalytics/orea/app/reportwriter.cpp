@@ -2206,7 +2206,6 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     
     QL_REQUIRE(t0NpvReport->rows() == t0NpvLaggedReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1NpvLaggedReport->rows(), "different number of rows in npv reports");
-    QL_REQUIRE(t0NpvReport->rows() == t1NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(t0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);

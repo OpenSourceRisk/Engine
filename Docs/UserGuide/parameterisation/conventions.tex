@@ -464,6 +464,52 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{BMA / SIFMA Basis Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{BMABasisSwap} is used to store conventions for BMA / SIFMA Basis Swap quotes. The structure of this
+node is shown in Listing \ref{lst:ois_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BMABasisSwap>
+  <Id> </Id>
+  <Index> </Index>
+  <BMAIndex> </BMAIndex>
+  <BMAPaymentCalendar> </BMAPaymentCalendar>
+  <BMAPaymentConvention> </BMAPaymentConvention>
+  <BMAPaymentLag> </BMAPaymentLag>
+  <IndexPaymentCalendar> </IndexPaymentCalendar>
+  <IndexPaymentConvention> </IndexPaymentConvention>
+  <IndexPaymentLag> </IndexPaymentLag>
+  <IndexSettlementDays> </IndexSettlementDays>
+  <IndexPaymentPeriod> </IndexPaymentPeriod>
+  <OvernightLockoutDays> </OvernightLockoutDays>
+</BMABasisSwap>
+\end{minted}
+\caption{BMA / SIFMA Basis conventions}
+\label{lst:bma_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+
+\begin{itemize}
+\item Index: The name of an ibor, term rate or overnight index, e.g. USD-LIBOR-3M, USD-SOFR-3M, USD-SOFR
+\item BMAIndex: The name of a BMA / SIFMA index, e.g. USD-SIFMA
+\item BmaPaymentCalendar [Optional]: The payment calendar of the BMA / SIFMA leg. If not specified, defaults to BMA index fixing calendar.
+\item BmaPaymentConvention [Optional]: The payment convention of the BMA / SIFMA leg. If not specified, defaults to Following.
+\item BmaPaymentLag [Optional]: The payment lag of the BMA / SIFMA leg. If not specified, defaults to $0$.
+\item IndexPaymentCalendar [Optional]: The payment calendar of the reference leg. If not specified, defaults to index fixing calendar.
+\item IndexPaymentConvention [Optional]: The payment convention of the reference leg. If not specified, defaults to Following.
+\item IndexPaymentLag [Optional]: The payment lag of the reference leg. If not specified, defaults to $0$.
+\item IndexSettlementDays [Optional]: The settlement days of the reference leg. If not specified, defaults to bma index fixing days.
+\item IndexPaymentPeriod [Optional]: The payment period of the reference leg. If not specified, defaults to bma index
+  tenor if reference index is overnight, otherwise to reference index tenor.
+\item OvernightLockoutDays [Optional]: Lockout days (rate cutoff) for the reference leg, if index is overnight.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
@@ -1145,6 +1191,7 @@ A node with name \lstinline!CDS! is used to store conventions for credit default
   <PaymentConvention>...</PaymentConvention>
   <Rule>...</Rule>
   <DayCounter>...</DayCounter>
+  <LastPeriodDayCounter>...</LastPeriodDayCounter>
   <SettlesAccrual>...</SettlesAccrual>
   <PaysAtDefaultTime>...</PaysAtDefaultTime>
 </CDS>
@@ -1176,6 +1223,11 @@ The date generation rule for the fee leg on the CDS. The ISDA standard is \lstin
 
 \item \lstinline!DayCounter!:
 The day counter for fee leg payments on the CDS. The ISDA standard is \lstinline!A360! but any valid day counter from Table \ref{tab:daycount} is allowed.
+
+\item \lstinline!LastPeriodDayCounter! [optional]: The day counter for the last fee leg payment on the CDS. The ISDA
+  standard is \lstinline!A360 (Incl Last)! but any valid day counter from Table \ref{tab:daycount} is allowed. If not
+  given, the following fallback rule applies: If DayCounter is \lstinline!A360!, LastPeriodDayCounter is set to
+  \lstinline!A360 (Incl Last)!, otherwise LastPeriodDayCounter is set to the same value as DayCounter.
 
 \item \lstinline!SettlesAccrual!:
 A boolean value indicating if an accrued fee is due on the occurrence of a credit event. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. In general, this is set \lstinline!true!.

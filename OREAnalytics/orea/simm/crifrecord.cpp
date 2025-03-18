@@ -136,6 +136,7 @@ const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::val
     Regulation::BACEN, "BACEN")(Regulation::SANT, "SANT")(
     Regulation::SFC, "SFC")(Regulation::UK, "UK")(
     Regulation::AMFQ, "AMFQ")(Regulation::BANX, "BANX")(
+    Regulation::OJK, "OJK")(
     Regulation::Included, "Included")(Regulation::Unspecified, "Unspecified")(
     Regulation::Excluded, "Excluded")(Regulation::Invalid, "Invalid");
 // clang-format on

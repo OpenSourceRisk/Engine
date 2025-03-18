@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Inflation_ZC_Cap_AUCPI">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Long</LongShort>
+            <LegData>
+                <LegType>CPI</LegType>
+                <Payer>false</Payer>
+                <Currency>AUD</Currency>
+                <Notionals>
+                    <Notional>1000000</Notional>
+                    <Exchanges>
+                        <NotionalFinalExchange>true</NotionalFinalExchange>
+                    </Exchanges>
+                </Notionals>
+                <DayCounter>Year</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <ScheduleData>
+                    <Dates>
+                        <Calendar>AUD</Calendar>
+                        <Dates>
+                            <Date>2032-09-13</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <CPILegData>
+                    <Index>AUCPI</Index>
+                    <Rates>
+                        <Rate>1</Rate>
+                    </Rates>
+                    <BaseCPI>114.4</BaseCPI>
+                    <StartDate>2027-09-14</StartDate>
+                    <ObservationLag>3M</ObservationLag>
+                    <Interpolated>false</Interpolated>
+                    <SubtractInflationNotional>true</SubtractInflationNotional>
+                </CPILegData>
+            </LegData>
+            <Caps>
+                <Cap>0.01</Cap>
+            </Caps>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

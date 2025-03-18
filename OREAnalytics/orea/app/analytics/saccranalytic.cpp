@@ -43,8 +43,6 @@ void SaCcrAnalyticImpl::setUpConfigurations() {
 
 void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                 const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
 
     LOG("SaCcrAnalytic::runAnalytic called");
 
@@ -143,8 +141,8 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
         saCcrReport->toFile(saCcrPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString());
     }
 
-    analytic()->reports()[label()]["saccr"] = saCcrReport;
-    analytic()->reports()[label()]["saccr_detail"] = saccrDetailReport;
+    analytic()->addReport(label(), "saccr", saCcrReport);
+    analytic()->addReport(label(), "saccr_detail", saccrDetailReport);
 }
 
 }

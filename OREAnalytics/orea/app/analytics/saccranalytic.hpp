@@ -43,9 +43,8 @@ public:
 class SaCcrAnalytic : public Analytic {
 public:
     SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs) {}
+                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs, analyticsManager) {}
 
     const QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator() const { return saccrCalculator_; }
     const QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData() const { return saccrTradeData_; }

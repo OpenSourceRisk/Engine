@@ -54,9 +54,9 @@ Leg makeBondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Da
                    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex) {
 
     Leg returnLeg =
-        QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bond().bondData().bondNotional(),
+        QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bondData().bondNotional(),
                              bondIndexBuilder.bondIndex(), fxIndex).withInitialPrice(initialPrice);
-    modifyBondTRSLeg(returnLeg, parseDate(bondIndexBuilder.bond().bondData().issueDate()));
+    modifyBondTRSLeg(returnLeg, parseDate(bondIndexBuilder.bondData().issueDate()));
     return returnLeg;
 }
 
@@ -92,7 +92,7 @@ void BondTrsUnderlyingBuilder::build(
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
-    BondIndexBuilder bondIndexBuilder(*t, true, false, NullCalendar(), true, engineFactory);
+    BondIndexBuilder bondIndexBuilder(t->bondData().securityId(), true, false, NullCalendar(), true, engineFactory);
     underlyingIndex = bondIndexBuilder.bondIndex();
 
     underlyingMultiplier = t->bondData().bondNotional();
@@ -106,7 +106,7 @@ void BondTrsUnderlyingBuilder::build(
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing), assetCurrency,
                fundingCurrency, fxIndices);
 
-    auto leg = QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bond().bondData().bondNotional(),
+    auto leg = QuantExt::BondTRSLeg(valuationDates, paymentDates, bondIndexBuilder.bondData().bondNotional(),
                                     bondIndexBuilder.bondIndex(), fxIndex)
                    .withInitialPrice(initialPrice);
 
@@ -351,7 +351,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         BondIndexBuilder bondIndexBuilder(t->bonds()[i].securityId, true, false, 
             NullCalendar(), true, engineFactory, t->bidAskAdjustments()[i], true);
 
-        auto assetCurr = bondIndexBuilder.bond().bondData().currency();
+        auto assetCurr = bondIndexBuilder.bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                                   assetCurr, fundingCurrency, fxIndices);
 
@@ -406,7 +406,6 @@ void DerivativeTrsUnderlyingBuilder::build(
     IndexNameTranslator::instance().add(indexName, indexName);
     underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
     indexQuantities[indexName] = 1.0;
-    underlyingMultiplier = 1.0;
     
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);
