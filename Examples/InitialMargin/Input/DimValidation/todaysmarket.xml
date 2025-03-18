@@ -62,6 +62,7 @@
 		<Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
 		<Index name="EUR-EURIBOR-6M">Yield/EUR/EUR-EURIBOR-6M</Index>
 		<Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
 		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
 	</IndexForwardingCurves>
 	<SwapIndexCurves id="default">
@@ -97,6 +98,7 @@
 	</FxVolatilities>
 	<SwaptionVolatilities id="default">
 		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="EUR-EURIBOR-3M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
 		<SwaptionVolatility key="USD">SwaptionVolatility/USD/USD</SwaptionVolatility>
 	</SwaptionVolatilities>
 	<YieldVolatilities id="default"/>

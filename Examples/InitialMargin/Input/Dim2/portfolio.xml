@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <!--
   <Trade id="Swap_Euribor">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -70,7 +69,6 @@
 	</LegData>
     </SwapData>
   </Trade>
-  -->
   <!--
   <Trade id="Swap_EUR">
     <TradeType>Swap</TradeType>
@@ -141,7 +139,8 @@
 	</LegData>
     </SwapData>
   </Trade>
-
+  -->
+  <!--
   <Trade id="Swap_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -328,7 +327,7 @@
     </SwapData>
   </Trade>
   -->
-
+  <!--
   <Trade id="EuropeanSwaptionCash">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -408,5 +407,5 @@
       </LegData>
     </SwaptionData>
   </Trade>
-
+  -->
 </Portfolio>

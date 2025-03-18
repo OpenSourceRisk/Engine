@@ -31,6 +31,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/instruments/vanillaswap.hpp>
+#include <ql/cashflows/rateaveraging.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -51,7 +52,8 @@ public:
                                                    const ext::shared_ptr<SwapIndex>& shortSwapIndex,
 						   BusinessDayConvention bdc = Following,
 						   const DayCounter& dc = DayCounter(),
-                                                   const bool purelyTimeBased = false);
+                                                   const bool purelyTimeBased = false,
+						   RateAveraging::Type averagingMethod = RateAveraging::Compound);
 
     void referenceDate(const Date& d);
     void referenceTime(const Time t);
@@ -77,6 +79,10 @@ public:
 
     Size ccyIndex() const { return ccyIndex_; }
 private:
+    ext::shared_ptr<FixedVsFloatingSwap> makeSwap(Date startDate, Date endDate, ext::shared_ptr<SwapIndex> swapIndex,
+                                                  ext::shared_ptr<IborIndex> iborIndex, Rate fixedRate,
+                                                  Swap::Type type = Swap::Payer, Real nominal = 10000.0) const;
+
     const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     const Size ccyIndex_; // position in the scenario's and model's vector of currencies
     ext::shared_ptr<YieldTermStructure> impliedDiscountCurve_; 
@@ -84,6 +90,7 @@ private:
     ext::shared_ptr<SwapIndex> swapIndex_;
     ext::shared_ptr<SwapIndex> shortSwapIndex_;
     const bool purelyTimeBased_;
+    RateAveraging::Type averagingMethod_;
     QuantLib::ext::shared_ptr<AnalyticLgmSwaptionEngine> engine_;
     Date referenceDate_;
     Real relativeTime_;

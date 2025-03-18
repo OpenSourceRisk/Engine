@@ -3,15 +3,15 @@
 
   <Parameters>
       <Discretization>Exact</Discretization>
-      <!--<Grid>42,3M</Grid>-->
+      <!--<Grid>41,3M</Grid>-->
       <!--<Grid>52,1D</Grid>-->
-      <Grid>62,1M</Grid>
+      <Grid>121,1M</Grid>
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>2</Samples>
+      <Samples>3</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>
@@ -21,11 +21,6 @@
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
-      <!--
-      <Currency>GBP</Currency>
-      <Currency>CHF</Currency>
-      <Currency>JPY</Currency>
-      -->
     </Currencies>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
@@ -53,8 +48,6 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-	  <!--<Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	      <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>-->
           <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
           <Terms>   5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y,5Y, 5Y, 5Y</Terms>
 	  <Strikes/>
@@ -91,12 +84,6 @@
 
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
-      <!--
-      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
-      <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
-      <Correlation factor1="IR:EUR" factor2="CR:CPTY_A">0.0</Correlation>
-      <Correlation factor1="CR:CPTY_A" factor2="CR:CPTY_B">0.8</Correlation>
-      -->
     </InstantaneousCorrelations>
 
   </CrossAssetModel>
@@ -108,11 +95,6 @@
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
-      <!--
-      <Currency>GBP</Currency>
-      <Currency>CHF</Currency>
-      <Currency>JPY</Currency>
-      -->
     </Currencies>
 
     <YieldCurves>
@@ -124,18 +106,13 @@
     </YieldCurves>
 
     <Indices>
-      <Index>EUR-EURIBOR-6M</Index>
-      <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-ESTER</Index>
       <Index>EUR-EONIA</Index>
-      <Index>USD-LIBOR-3M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EURIBOR-6M</Index>
       <Index>USD-SOFR</Index>
-      <!--
-      <Index>GBP-LIBOR-6M</Index>
-      <Index>GBP-LIBOR-3M</Index>
-      <Index>CHF-LIBOR-6M</Index>
-      <Index>JPY-LIBOR-6M</Index>
-      -->
+      <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>
     </Indices>
     
     <SwapIndices>
@@ -169,29 +146,20 @@
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
-	<!--
         <Currency>USD</Currency>
-        <Currency>GBP</Currency>
-        <Currency>CHF</Currency>
-        <Currency>JPY</Currency>
-	-->
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
-      <Terms>5Y,10Y</Terms>
+      <Terms>1Y,5Y,10Y</Terms>
     </SwaptionVolatilities>
 
     <CapFloorVolatilities/>
     
     <FxVolatilities>
       <Simulate>true</Simulate>
-      <!-- Alternative: ForwardVariance -->
+      <!-- Alternatives: ForwardVariance, ConstantVariance -->
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
-	<!--
-        <CurrencyPair>GBPEUR</CurrencyPair>
-        <CurrencyPair>JPYEUR</CurrencyPair>
-	-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
@@ -207,9 +175,11 @@
 
     <AggregationScenarioDataIndices>
       <Index>EUR-ESTER</Index>
+      <Index>EUR-EONIA</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>USD-SOFR</Index>
+      <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
 

@@ -345,11 +345,11 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 	// FIXME: Use Swaption vol curve config and the long and short SwapIndex definied there?
         std::map<string, string> swapConventionMap
 	    = { { "EUR", "EUR-CMS-30Y"},
-		{ "USD", "USD-CMS-30Y" }
+		{ "USD", "USD-CMS-SOFR-30Y" }
 	};
         std::map<string, string> shortSwapConventionMap
 	    = { { "EUR", "EUR-CMS-1Y"},
-		{ "USD", "USD-CMS-2Y" }
+		{ "USD", "USD-CMS-SOFR-1Y" }
 	};
 
 	//const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();

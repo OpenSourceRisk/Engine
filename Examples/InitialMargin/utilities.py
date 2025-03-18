@@ -6,7 +6,7 @@ import numpy as np
 import csv
 from lxml import etree as et
 
-def scenarioToMarket(simulationXml, scenarioFile, outputDir):
+def scenarioToMarket(simulationXml, scenarioFile, filterSample, outputDir):
 
     ###############################################################################################
     # Scan the simulation.xml to extract data structures
@@ -66,10 +66,9 @@ def scenarioToMarket(simulationXml, scenarioFile, outputDir):
     swaption_terms = tmp.replace(' ', '').split(',')
     print("swaption_expiries", swaption_expiries)
     print("swaption_terms", swaption_terms)
-    
-    
-    #############################################################################
-    # Load the scenariodump.csv into a dataframe and map to ORE market data files
+
+    ###############################################################################
+    # Load the scenariodump.csv into a dataframe and map to an ORE market data file
 
     print("read scenario file:", scenarioFile)
     data = pd.read_csv(scenarioFile)
@@ -79,28 +78,30 @@ def scenarioToMarket(simulationXml, scenarioFile, outputDir):
     print("scenarios:", scenarios)
     print("reference dates:", referenceDates)
 
-    # delete market scenario files since we append below
-    for s in scenarios:
-        file = outputDir + '/marketdata-' + str(s) + '.csv'
-        if os.path.isfile(file):
-            print ("remove file:", file)
-            os.remove(file)
+    # delete market file since we append below
+    file = outputDir + '/marketdata.csv'
+    if os.path.isfile(file):
+        print ("remove file:", file)
+        os.remove(file)
         
     # Convert each row into a market data file for the row's reference date and scenario
-    # Actually, append all data per scenario into a single market data file
+    # Actually, append all data (dates) per scenario into a single market data file
+
+    marketFile = outputDir + '/marketdata.csv'
 
     for index, row in data.iterrows():
 
         refdate = row["#Date"]
-        scenario = row["Scenario"]
-
-        #marketFile = outputDir + '/marketdata-' + str(scenario) + '-' + refdate + '.csv'
-        marketFile = outputDir + '/marketdata-' + str(scenario) + '.csv'
-        print("append to market file:", marketFile)
+        scenario = int(row["Scenario"])
         
-        #with open(marketFile, 'w', newline='') as file1:
+        if scenario != filterSample :
+            continue
+            
+        print("append", refdate, "to market file", marketFile)
+        
         with open(marketFile, 'a', newline='') as file1:
                 writer = csv.writer(file1, delimiter=',')
+                writer.writerow(["#Sample=" + str(filterSample)])
 
                 # Discount curve data
                 for ccy in currencies:
@@ -149,8 +150,6 @@ def scenarioToMarket(simulationXml, scenarioFile, outputDir):
                             value = row[key]
                             orekey = "SWAPTION/RATE_NVOL/" + ccy + "/" + swaption_expiries[i] + "/" + swaption_terms[j] + "/ATM"
                             writer.writerow([refdate, orekey, value])
-                            #orekey = "SWAPTION/RATE_NVOL/" + ccy + "/" + swaption_expiries[i] + "/" + swaption_terms[j] + "/ATM"
-                            #writer.writerow([refdate, orekey, 0.0065])
 
     return referenceDates
 
@@ -172,12 +171,13 @@ def scenarioToFixings(gzFileName, asofDates, filterSample, outputDir):
     # We expect that the 'filterSample' argument follows the rawcube convention, so we
     # subtract 1 to match with the content in scenariodata here.
     # The file appendix uses the argument filterSample, to match the market data file convention.
-    fixingFile = outputDir + '/fixings-' + str(filterSample) + '.csv'
+    fixingFile = outputDir + '/fixings.csv'
     print("write to fixing file:", fixingFile)
     with open(fixingFile, 'w', newline='') as file1:
         writer = csv.writer(file1, delimiter=',')
         with gzip.open(gzFileName, mode='rt') as file:
             reader = csv.reader(file, delimiter = ',', quotechar="'")
+            writer.writerow(["#Sample=" + str(filterSample)])
             for row in reader:
                 if (row[0].startswith('#') and len(row)==2):
                     type = row[0].strip('#').strip(' ')
