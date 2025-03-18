@@ -5,7 +5,7 @@ ARG debian_tag=latest
 
 FROM env_oreswig:${ore_version} as env_oreswig
 FROM env_ore:${ore_version} as env_ore
-FROM debian:trixie
+FROM debian:${debian_tag}
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip vim \
