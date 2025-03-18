@@ -28,15 +28,15 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
-          <Calibrate>Y</Calibrate>
+          <Calibrate>N</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <!-- Hagan, HullWhite -->
-          <ParamType>Piecewise</ParamType>
-          <!-- Constant, Piecewise -->
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <!-- <TimeGrid/> -->
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
-          <!-- <InitialValue>0.01</InitialValue>-->
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.00001</InitialValue>
+          <!--<ParamType>Piecewise</ParamType>-->
+          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
+          <!--<InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>-->
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
@@ -63,10 +63,13 @@
         <DomesticCcy>EUR</DomesticCcy>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
-          <Calibrate>Y</Calibrate>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+          <Calibrate>N</Calibrate>
+          <!--<ParamType>Piecewise</ParamType>-->
+          <!--<InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>-->
+          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
+          <ParamType>Constant</ParamType>
+	  <TimeGrid/>
+          <InitialValue>0.00001</InitialValue>
         </Sigma>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
@@ -75,12 +78,6 @@
         </CalibrationOptions>
       </CrossCcyLGM>
     </ForeignExchangeModels>
-
-    <EquityModels/>
-
-    <CommodityModels/>
-
-    <CreditModels/>
 
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
@@ -134,12 +131,6 @@
       </SwapIndex>
     </SwapIndices>
     
-    <DefaultCurves/>
-
-    <Equities/>
-
-    <Commodities/>
-
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <!-- Alternatives: ForwardVariance, ConstantVariance -->
@@ -152,8 +143,6 @@
       <Terms>1Y,5Y,10Y</Terms>
     </SwaptionVolatilities>
 
-    <CapFloorVolatilities/>
-    
     <FxVolatilities>
       <Simulate>true</Simulate>
       <!-- Alternatives: ForwardVariance, ConstantVariance -->
@@ -164,10 +153,6 @@
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
     
-    <EquityVolatilities/>
-
-    <CommodityVolatilities/>
-
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
