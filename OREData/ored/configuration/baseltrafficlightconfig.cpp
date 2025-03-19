@@ -86,9 +86,6 @@ XMLNode* BaselTrafficLightData::toXML(XMLDocument& doc) const {
         XMLUtils::addGenericChildAsList(doc, oNode, "ObservationCount", data.observationCount);
         XMLUtils::addGenericChildAsList(doc, oNode, "AmberLimit", data.amberLimit);
         XMLUtils::addGenericChildAsList(doc, oNode, "RedLimit", data.redLimit);
-        /*XMLUtils::addChild(doc, oNode, "ObservationCount", vectorToString(data.observationCount));
-        XMLUtils::addChild(doc, oNode, "AmberLimit", vectorToString(data.amberLimit));
-        XMLUtils::addChild(doc, oNode, "RedLimit", vectorToString(data.redLimit));*/
     }
 
     return node;
