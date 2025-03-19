@@ -1663,7 +1663,6 @@
     <AtmType>AtmDeltaNeutral</AtmType> 
     <DeltaType>PaFwd</DeltaType> 
   </FxOption> 
-  <!--
   <CommodityFuture>
     <Id>COMDTY_WTI_USD</Id>
     <AnchorDay>
@@ -1676,5 +1675,4 @@
     <BusinessDayConvention>Preceding</BusinessDayConvention>
     <IsAveraging>false</IsAveraging>
   </CommodityFuture>
-  -->
 </Conventions>

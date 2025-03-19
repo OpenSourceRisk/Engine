@@ -13,7 +13,7 @@
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_parsensi.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_stress.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
