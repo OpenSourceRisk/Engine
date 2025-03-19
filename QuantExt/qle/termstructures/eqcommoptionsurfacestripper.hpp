@@ -69,7 +69,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatInVolatility,
+        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
         bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
 
     //! \name LazyObject interface
@@ -153,7 +153,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatInVolatility,
+        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
         bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
 
 protected:
@@ -179,7 +179,7 @@ public:
         const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const QuantLib::Calendar& calendar,
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
-        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatInVolatility,
+        QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
         bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
 
 protected:

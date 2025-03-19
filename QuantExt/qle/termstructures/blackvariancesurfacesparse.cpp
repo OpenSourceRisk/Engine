@@ -17,7 +17,7 @@
 */
 
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
-
+#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 using namespace std;
 using namespace QuantLib;
 
@@ -60,23 +60,15 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
 
 QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
     QuantLib::Time tb = times().back();
-    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolator) {
+    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
         return getValue(t, strike);
     }
-    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatInVolatility) {
-        return getValue(tb, strike) * t / tb;
-    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::LinearInVolatility) {
-        // Linear extrapolation in volatility
-        Size ind1 = times_.size() - 2;
-        Size ind2 = times_.size() - 1;
-        std::array<double, 2> times, vols;
-        times[0] = times_[ind1];
-        times[1] = times_[ind2];
-        vols[0] = QuantLib::close_enough(times[0], 0.0) ? 0.0 : std::sqrt(getValue(times[0], strike) / times[0]);
-        vols[1] = QuantLib::close_enough(times[1], 0.0) ? 0.0 : std::sqrt(getValue(times[1], strike) / times[1]);
-        LinearInterpolation interpolation(times.begin(), times.end(), vols.begin());
-        double vol = std::max(interpolation(t, true), 0.0);
-        return vol * vol * t;
+    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceFlat(t, strike, times_, varianceSurface);
+    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceInVolatility(t, strike, times_, varianceSurface);
     } else {
         QL_FAIL("Unknown time extrapolation method");
     }

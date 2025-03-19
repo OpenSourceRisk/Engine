@@ -42,7 +42,7 @@ public:
                                const QuantLib::DayCounter& dayCounter, bool lowerStrikeConstExtrap = true,
                                bool upperStrikeConstExtrap = true, 
                                QuantLib::BlackVolTimeExtrapolation timeExtrapolation
-                                = QuantLib::BlackVolTimeExtrapolation::FlatInVolatility);
+                                = QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
 
     enum class TimeInterpolationMethod { Linear, Flat };
     //! \name TermStructure interface

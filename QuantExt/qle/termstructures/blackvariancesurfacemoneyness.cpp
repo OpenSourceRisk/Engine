@@ -19,6 +19,7 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 #include <ql/termstructures/yield/forwardcurve.hpp>
 #include <ql/utilities/dataformatters.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
@@ -111,22 +112,12 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
 }
 
 Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {
-    if (t <= times_.back() || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolator) {
+    if (t <= times_.back() || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
         return varianceSurface_(t, m, true);
-    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::FlatInVolatility) {
-        return varianceSurface_(times_.back(), m, true) * t / times_.back();
-    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::LinearInVolatility) {
-        Size ind1 = times_.size() - 2;
-        Size ind2 = times_.size() - 1;
-        std::array<Real, 2> times;
-        times[0] = times_[ind1];
-        times[1] = times_[ind2];
-        std::array<Real, 2> vols;
-        vols[0] = close_enough(times[0], 0.0) ? 0.0 : std::sqrt(varianceSurface_(times[0], m, true) / times[0]);
-        vols[1] = close_enough(times[1], 0.0) ? 0.0 : std::sqrt(varianceSurface_(times[1], m, true) / times[1]);
-        LinearInterpolation interpolation(times.begin(), times.end(), vols.begin());
-        Real v = interpolation(t);
-        return v * v * t;
+    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) {
+        return timeExtrapolatationBlackVarianceFlat(t, m, times_, varianceSurface_);
+    } else if (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
+        return timeExtrapolatationBlackVarianceInVolatility(t, m, times_, varianceSurface_);
     } else {
         QL_FAIL("Unknown time extrapolation method");
     }

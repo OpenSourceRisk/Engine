@@ -99,7 +99,7 @@ public:
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatStrikeExtrapolation = true,
                                 QuantLib::BlackVolTimeExtrapolation timeExtrapolation =
-                                    QuantLib::BlackVolTimeExtrapolation::FlatInVolatility);
+                                    QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
 
     //! \name TermStructure interface
     //@{
@@ -132,8 +132,6 @@ public:
 
 protected:
     virtual Volatility blackVolImpl(Time t, Real strike) const override;
-
-    virtual Volatility interpolatorBlackVol(size_t i, Time t, Real strike) const;
 
 private:
     std::vector<Date> dates_;
