@@ -1471,7 +1471,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="Commodity_Swap_NYMEX_FF">
+  <Trade id="Commodity_Swap">
     <TradeType>CommoditySwap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -1535,39 +1535,28 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="Commodity_APO_NYMEX_CL">
-    <TradeType>CommodityAveragePriceOption</TradeType>
+  <Trade id="CommodityOption">
+    <TradeType>CommodityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <CommodityAveragePriceOptionData>
+    <CommodityOptionData>
       <OptionData>
-        <LongShort>Short</LongShort>
-        <Settlement>Cash</Settlement>
+        <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
-        <PremiumAmount>7342.8</PremiumAmount>
-        <PremiumCurrency>USD</PremiumCurrency>
-        <PremiumPayDate>2019-03-29</PremiumPayDate>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2020-01-31</ExerciseDate>
+          <ExerciseDate>2021-12-31</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>COMDTY_WTI_USD</Name>
       <Currency>USD</Currency>
-      <Quantity>6144</Quantity>
-      <Strike>64.55</Strike>
-      <PriceType>FutureSettlement</PriceType>
-      <StartDate>2020-01-01</StartDate>
-      <EndDate>2020-01-31</EndDate>
-      <PaymentCalendar>US-NYSE</PaymentCalendar>
-      <PaymentLag>5</PaymentLag>
-      <PaymentConvention>Following</PaymentConvention>
-      <PricingCalendar>US-NYSE</PricingCalendar>
-      <CommodityQuantityFrequency>PerCalculationPeriod</CommodityQuantityFrequency>
-      <CommodityPayRelativeTo>CalculationPeriodEndDate</CommodityPayRelativeTo>
-      <FutureMonthOffset>0</FutureMonthOffset>
-    </CommodityAveragePriceOptionData>
+      <Strike>50.01</Strike>
+      <Quantity>500000</Quantity>
+    </CommodityOptionData>
   </Trade>
 </Portfolio>
