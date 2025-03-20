@@ -61,11 +61,12 @@ private:
     bool isInArrears_;
 };
 
-Leg makeFormulaBasedLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
-                        const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                        const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
-                        const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                        const bool attachPricer = true);
+Leg makeFormulaBasedLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::FormulaBasedIndex>& formulaBasedIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps,
+    const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine = nullptr);
 
 } // namespace data
 } // namespace ore
