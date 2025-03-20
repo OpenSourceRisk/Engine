@@ -190,8 +190,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetShortSwapIndexBase_ = XMLUtils::getChildValue(target, "ShortSwapIndexBase");
         proxyTargetSwapIndexBase_ = XMLUtils::getChildValue(target, "SwapIndexBase");
 
-        populateRequiredCurveIds();
-
     } else {
         // read in quote-based config
         if (allowSmile_) {
@@ -306,6 +304,7 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {

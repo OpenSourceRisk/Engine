@@ -265,20 +265,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     if (node.built)
         return;
 
-    if (node.curveSpec == nullptr) {
-
-        // not spec-based node, this can only be a SwapIndexCurve
-
-        QL_REQUIRE(node.obj == MarketObject::SwapIndexCurve,
-                   "market object '" << node.obj << "' (" << node.name << ") without curve spec, this is unexpected.");
-        const string& swapIndexName = node.name;
-        const string& discountIndex = node.mapping;
-        addSwapIndex(swapIndexName, discountIndex, configuration);
-        DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-        requiredSwapIndices_[configuration][swapIndexName] =
-            swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
-
-    } else {
+    if (node.curveSpec != nullptr) {
 
         // spec-based node
 
@@ -802,12 +789,29 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             break;
         }
 
+        case CurveSpec::CurveType::SwapIndex: {
+
+            QL_REQUIRE(node.obj == MarketObject::SwapIndexCurve, "market object '"
+                                                                     << node.obj << "' (" << node.name
+                                                                     << ") without curve spec, this is unexpected.");
+            const string& swapIndexName = node.name;
+            const string& discountIndex = node.mapping;
+            addSwapIndex(swapIndexName, discountIndex, configuration);
+            DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+            requiredSwapIndices_[configuration][swapIndexName] =
+                swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
+            break;
+        }
+
         default: {
             QL_FAIL("Unhandled spec " << *spec);
         }
 
         } // switch(specName)
-    }     // else-block (spec based node)
+    } // else-block (spec based node)
+    else {
+        QL_FAIL("No spec found");
+    }
 
     node.built = true;
 } // TodaysMarket::buildNode()
