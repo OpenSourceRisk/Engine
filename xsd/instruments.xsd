@@ -4531,7 +4531,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="Barriers">
+      <xs:element name="Barriers" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="barrierData" name="BarrierData" maxOccurs="unbounded"/>
