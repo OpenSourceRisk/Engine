@@ -200,7 +200,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // calibrate the default-adjusted forward spread m to the forward price
 
-        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
+        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 16);
 
         auto target = [this, &Vc, &simpson, exerciseTime, maturityTime, averageInterestRate, stdDev,
                        forwardPrice](Real m) {
