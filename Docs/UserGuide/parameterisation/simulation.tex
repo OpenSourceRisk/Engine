@@ -617,6 +617,13 @@ There are two methods in ORE for equity volatility simulation:
 \item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
+Commodity volatilities are taken as ATM slice by default. To simulate commodity volatility surface with smile a set of {\tt <Moneyness> } must be supplied.
+There are two methods in ORE for commodity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
 Swaption volatilities are taken to be a surface by default.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}

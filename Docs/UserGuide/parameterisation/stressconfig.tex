@@ -49,6 +49,7 @@ Two weighting schemas are supported for FX volatility shifts:
 \label{lst:stress_config_fxvol_explicit}
 \end{listing}
 
+For commodity volatility currently only single shift per expiry is supported, which implies same shift size for all moneyness levels provided.
 
 \begin{listing}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -117,6 +118,14 @@ improve the alignment of the scenario sim market and t0 curves.
     <FxVolatilities>
       ...
     </FxVolatilities>
+    <CommodityCurves>
+      <CommodityCurve commodity="NYMEX:CL">
+        <Currency>USD</Currency>
+        <ShiftType>Relative</ShiftType>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ShiftTenors>1D,1W,2W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,12M,13M,14M,15M,16M,17M,18M,19M,20M,21M,22M,23M,24M</ShiftTenors>
+      </CommodityCurve>
+    </CommodityCurves>
     <SwaptionVolatilities>
       <SwaptionVolatility ccy="EUR">
         <ShiftType>Absolute</ShiftType>
@@ -140,6 +149,14 @@ improve the alignment of the scenario sim market and t0 curves.
         <Shifts>0.001,0.001,0.001,0.001,0.001,0.001</Shifts>
       </CapFloorVolatility>
     </CapFloorVolatilities>
+    <CommodityVolatilities>
+      <CommodityVolatility commodity="NYMEX:CL">
+        <ShiftType>Relative</ShiftType>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+        <ShiftExpiries>2W, 1M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y</ShiftExpiries>
+        <ShiftMoneyness>1.0</ShiftMoneyness>
+      </CommodityVolatility>
+    </CommodityVolatilities>
   </StressTest>
   <StressTest id="twist">
     ...
