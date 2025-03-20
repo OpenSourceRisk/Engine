@@ -293,9 +293,6 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-    auto spec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(fxSpotID_));
-    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(spec->unitCcy());
-    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(spec->ccy());
 
     if (!fxDomesticYieldCurveID_.empty()) {
         std::vector<string> tokens;
@@ -325,6 +322,7 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
 
+        auto spec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(fxSpotID_));
         auto forTarget = spec->unitCcy();
         auto domTarget = spec->ccy();
 
