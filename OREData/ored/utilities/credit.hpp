@@ -26,7 +26,7 @@
 namespace ore {
 namespace data {
 
-bool isIndexCDS(std::string_view redCode) { return redCode.size() == 13 && redCode.substr(0, 3) == "RED"; }
+inline bool isIndexCDS(std::string_view redCode) { return redCode.size() == 13 && redCode.substr(0, 3) == "RED"; }
 
 } // namespace data
 } // namespace ore
