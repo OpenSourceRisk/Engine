@@ -97,9 +97,9 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis, const bool enableDynamicIM,
-                         const Size dynamicIMStepSize, const Size regressionOrder, const bool tradeLevelBreakDown,
-                         const bool useRedBlocks, const bool useExternalComputeDevice,
+                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
+                         const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
+                         const bool tradeLevelBreakDown, const bool useRedBlocks, const bool useExternalComputeDevice,
                          const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
@@ -621,11 +621,13 @@ void XvaEngineCG::doForwardEvaluation() {
     for (auto const& n : asdNumeraire_)
         keepNodes_[n] = true;
 
-    for (auto const& n : asdFx_)
-        keepNodes_[n] = true;
+    for (auto const& v : asdFx_)
+        for (auto const& n : v)
+            keepNodes_[n] = true;
 
-    for (auto const& n : asdIndex_)
-        keepNodes_[n] = true;
+    for (auto const& v : asdIndex_)
+        for (auto const& n : v)
+            keepNodes_[n] = true;
 
     if (keepValuesForDerivatives) {
         for (auto const n : g->redBlockDependencies()) {
@@ -648,8 +650,10 @@ void XvaEngineCG::doForwardEvaluation() {
                               false, ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
             externalOutputNodes_.insert(externalOutputNodes_.end(), pfExposureNodes_.begin(), pfExposureNodes_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdNumeraire_.begin(), asdNumeraire_.end());
-            externalOutputNodes_.insert(externalOutputNodes_.end(), asdFx_.begin(), asdFx_.end());
-            externalOutputNodes_.insert(externalOutputNodes_.end(), asdIndex_.begin(), asdIndex_.end());
+            for (auto const& v : asdFx_)
+                externalOutputNodes_.insert(externalOutputNodes_.end(), v.begin(), v.end());
+            for (auto const& v : asdIndex_)
+                externalOutputNodes_.insert(externalOutputNodes_.end(), v.begin(), v.end());
             if (tradeLevelBreakDown_) {
                 for (auto const& n : tradeExposureNodes_) {
                     externalOutputNodes_.insert(externalOutputNodes_.end(), n.begin(), n.end());
@@ -682,32 +686,43 @@ void XvaEngineCG::buildAsdNodes() {
     if (asd_ == nullptr && npvOutputCube_ == nullptr)
         return;
 
+    asdNumeraire_.resize(valuationDates_.size());
+    asdFx_.resize(simMarketData_->additionalScenarioDataCcys().size(),
+                  std::vector<std::size_t>(valuationDates_.size()));
+    asdIndex_.resize(simMarketData_->additionalScenarioDataIndices().size(),
+                     std::vector<std::size_t>(valuationDates_.size()));
+
+    std::size_t dateIndex = 0;
     for (auto const& date : valuationDates_) {
 
         // numeraire
-        asdNumeraire_.push_back(model_->numeraire(date));
+        asdNumeraire_[dateIndex] = model_->numeraire(date);
 
         // see above, we have set the numeraire node now, the rest is needed for asd only
         if (asd_ == nullptr)
             continue;
 
         // fx spots
+        std::size_t ccyIndex = 0;
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
             if (ccy != simMarketData_->baseCcy()) {
-                asdFx_.push_back(
-                    model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>()));
+                asdFx_[ccyIndex++][dateIndex] =
+                    model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>());
             }
         }
 
         // index fixings
+        std::size_t indIndex = 0;
         for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
-            asdIndex_.push_back(model_->eval(ind, date, Null<Date>()));
+            asdIndex_[indIndex++][dateIndex] = model_->eval(ind, date, Null<Date>());
         }
 
         // set credit states: TODO not yet provided in model_
         QL_REQUIRE(simMarketData_->additionalScenarioDataNumberOfCreditStates() == 0,
                    "XvaEngineCG::buildAsdNodes(): credit states currently not provided by GaussianCamCG, we have "
                    "implement this!");
+
+        ++dateIndex;
     }
 
     DLOG("XvaEngineCG: building asd nodes done ("
@@ -731,19 +746,23 @@ void XvaEngineCG::populateAsd() {
         }
 
         // set fx spots
+        std::size_t ccyIndex = 0;
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
             if (ccy != simMarketData_->baseCcy()) {
                 for (std::size_t i = 0; i < model_->size(); ++i) {
-                    asd_->set(k, i, values_[asdFx_[k]][i], AggregationScenarioDataType::FXSpot, ccy);
+                    asd_->set(k, i, values_[asdFx_[ccyIndex][k]][i], AggregationScenarioDataType::FXSpot, ccy);
                 }
+                ++ccyIndex;
             }
         }
 
         // set index fixings
+        std::size_t indIndex = 0;
         for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
             for (std::size_t i = 0; i < model_->size(); ++i) {
-                asd_->set(k, i, values_[asdIndex_[k]][i], AggregationScenarioDataType::IndexFixing, ind);
+                asd_->set(k, i, values_[asdIndex_[indIndex][k]][i], AggregationScenarioDataType::IndexFixing, ind);
             }
+            ++indIndex;
         }
     }
 
@@ -940,9 +959,8 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // run backward derivatives from n, note: we use eps = 0 in grads_ here!
 
-        backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter,
-                            keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
-                            RandomVariableOpCode::ConditionalExpectation,
+        backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter, keepNodesDerivatives,
+                            ops_, opNodeRequirements_, keepNodes_, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
 
         // collect and aggregate the derivatives of interest (pathwise values)
@@ -1017,8 +1035,7 @@ void XvaEngineCG::calculateDynamicIM() {
                                                         dynamicIMDerivatives_[p.node()] *
                                                         RandomVariable(model_->size(), tte);
                 }
-                pathIrVega[ccyIndex][bucket] += RandomVariable(model_->size(), w2) *
-                                                dynamicIMDerivatives_[p.node()] *
+                pathIrVega[ccyIndex][bucket] += RandomVariable(model_->size(), w2) * dynamicIMDerivatives_[p.node()] *
                                                 RandomVariable(model_->size(), tte);
             }
 

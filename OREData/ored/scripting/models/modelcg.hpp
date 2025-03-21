@@ -98,7 +98,7 @@ public:
         const std::string& qualifier2() const { return qualifier2_; }
         const QuantLib::Date& date() const { return date_; }
         const QuantLib::Date& date2() const { return date2_; }
-        const QuantLib::Date& date3() const { return date2_; }
+        const QuantLib::Date& date3() const { return date3_; }
         std::size_t index() const { return index_; }
         std::size_t index2() const { return index2_; }
         double eval() const { return functor_ ? functor_() : 0.0; }
