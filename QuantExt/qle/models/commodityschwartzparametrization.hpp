@@ -84,16 +84,14 @@ public:
     //! Inspector for today's price curve
     Handle<QuantExt::PriceTermStructure> priceCurve() { return priceCurve_; }
     //! Variance V(t,T) used in the computation of F(t,T)
-    Real VtT(Real t, Real T);
+    virtual Real VtT(Real t, Real T);
 
     bool driftFreeState() const { return driftFreeState_; }
     
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size i, const Real y) const override;
-
-private:
-
+    
     const Handle<QuantExt::PriceTermStructure> priceCurve_;
     const Handle<Quote> fxSpotToday_;
     std::string comName_;
