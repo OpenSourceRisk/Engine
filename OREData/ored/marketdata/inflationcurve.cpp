@@ -27,6 +27,7 @@
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <algorithm>
@@ -197,12 +198,29 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
                 config->useLastAvailableFixingAsBaseDate(), asof, curveObsLag, config->frequency(), index);
 
-            curve_ = QuantLib::ext::make_shared<PiecewiseZeroInflationCurve<Linear>>(
-                asof, baseDate, curveObsLag, config->frequency(), config->dayCounter(), instruments, seasonality,
-                config->tolerance());
+            if (config->interpolationVariable() == InflationCurveConfig::InterpolationVariable::ZeroRate) {
+
+                curve_ = QuantLib::ext::make_shared<PiecewiseZeroInflationCurve<Linear>>(
+                    asof, baseDate, curveObsLag, config->frequency(), config->dayCounter(), instruments, seasonality,
+                    config->tolerance());
+                auto zr =
+                    QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
+                        QL_EPSILON);
+                DLOG("Zero rate at base date " << baseDate << " is " << zr);
+
+            } else {
+                auto baseFixing = index->fixing(baseDate, true);
+                curve_ = QuantLib::ext::make_shared<PiecewiseCPIInflationCurve<Linear>>(
+                    asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
+                    seasonality, config->tolerance());
+                auto zr =
+                    QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
+                        QL_EPSILON);
+                DLOG("Zerorate at base date " << baseDate << " is " << zr);
+            }
 
             // force bootstrap so that errors are thrown during the build, not later
-            QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
+            
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
