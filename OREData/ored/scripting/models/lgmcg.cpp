@@ -84,7 +84,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
                                        const std::string& discountCurveId) const {
     e = std::max(d, e);
     if (d == e)
-        return numeraire(d, x, discountCurve, discountCurveId);
+        return cg_div(g_, cg_const(g_, 1.0), numeraire(d, x, discountCurve, discountCurveId));
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_reducedDiscountBond, qualifier_, discountCurveId, d,
                                e);
