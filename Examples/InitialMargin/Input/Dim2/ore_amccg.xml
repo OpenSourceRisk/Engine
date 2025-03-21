@@ -48,7 +48,7 @@
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
       <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
       <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_amccg.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
       <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
