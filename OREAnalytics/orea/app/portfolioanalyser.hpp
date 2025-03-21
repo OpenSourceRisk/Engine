@@ -39,7 +39,7 @@ public:
                       const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                       const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
-                      bool recordSecuritySpecificCreditCurves = false);
+                      bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
     //! Check if the portfolio has risk factors of a given type
     bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {

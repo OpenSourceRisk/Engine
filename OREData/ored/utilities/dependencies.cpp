@@ -20,6 +20,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dependencies.hpp>
@@ -322,7 +323,8 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 }
 
 void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
-		const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy) {
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
+    const string& baseCcyDiscountCurve) {
     for (const auto& [config, mp] : *objects) {
         std::map<CurveSpec::CurveType, std::set<string>> dependencies;
         for (const auto& [o, s] : mp) {
@@ -337,6 +339,13 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     // to curve config Id's. In the loop below the dependencies obtained from the curveconfig
                     // should be valid curve config Id's
                     switch (o) {
+                    case MarketObject::DiscountCurve: {
+                        if (config == Market::inCcyConfiguration)
+                            cId = swapIndexDiscountCurve(c, baseCcy);
+                        else
+                            cId = currencyToDiscountCurve(c, baseCcy, baseCcyDiscountCurve, curveConfigs);
+                        break;
+                    }
                     case MarketObject::SwaptionVol: {
                         // the name may be an Index, in this case, look for a SwaptionVolatility curve in the currency
                         QuantLib::ext::shared_ptr<IborIndex> ind;
@@ -421,6 +430,26 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
             dependencies = newDependencies;
             ++i;
         }
+    }
+}
+
+string currencyToDiscountCurve(const string& ccy, const string& baseCcy, const string& baseCcyDiscountCurve,
+                               const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs) {
+    if (ccy == baseCcy) {
+        // if a discount curve has been provided use that
+        if (!baseCcyDiscountCurve.empty())
+            return baseCcyDiscountCurve;
+
+        // Use the discount curve of the standard swap in the given currency
+        string discCurve = swapIndexDiscountCurve(ccy, baseCcy);
+
+        // If we can't get a base currency discount curve, we should stop
+        QL_REQUIRE(!discCurve.empty(), "ConfigurationBuilder cannot get a discount curve for base currency " << ccy);
+
+        return discCurve;
+    } else {
+        buildCollateralCurveConfig(ccy + "-IN-" + baseCcy, baseCcy, baseCcyDiscountCurve, curveConfigs);
+        return ccy + "-IN-" + baseCcy;
     }
 }
 
@@ -518,6 +547,71 @@ string swapIndexDiscountCurve(const string& ccy, const string& baseCcy, const st
     }
 
     return indexName;
+}
+
+void buildCollateralCurveConfig(const string& id, const string& baseCcy, const ::string& baseCcyDiscountCurve,
+                                const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs) {
+
+    vector<string> tokens;
+    if (!isCollateralCurve(id, tokens))
+        return;
+
+    if (!curveConfigs->hasYieldCurveConfig(id)) {
+        string ccy = tokens[0];
+        string base = tokens[2];
+        string baseCurve = (base == baseCcy && !baseCcyDiscountCurve.empty()) ? baseCcyDiscountCurve : swapIndexDiscountCurve(base);
+        set<string> baseDiscountCcys = getCollateralisedDiscountCcy(base, curveConfigs);
+
+        DLOG("Curve configuration missing for discount curve " << id
+                                                               << ", attempting to generate from available curves");
+
+        set<string> baseCcys = getCollateralisedDiscountCcy(ccy, curveConfigs);
+
+        string commonDiscount = "";
+        // Look for a common discount curve curve to use as a cross
+        auto it = baseCcys.begin();
+        while (it != baseCcys.end() && commonDiscount == "") {
+            auto pos = baseDiscountCcys.find(*it);
+            if (pos != baseDiscountCcys.end()) {
+                commonDiscount = *pos;
+            }
+            it++;
+        }
+
+        if (commonDiscount == "") {
+            DLOG("Cannot create a discount curve config for currency " + ccy);
+        } else {
+            vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments;
+            segments.push_back(QuantLib::ext::make_shared<DiscountRatioYieldCurveSegment>(
+                "Discount Ratio", baseCurve, baseCcy, ccy + "-IN-" + commonDiscount, ccy,
+                baseCcy + "-IN-" + commonDiscount, baseCcy));
+
+            QuantLib::ext::shared_ptr<YieldCurveConfig> ycc = QuantLib::ext::make_shared<YieldCurveConfig>(
+                id, ccy + " collateralised in " + baseCcy, ccy, "", segments);
+
+            curveConfigs->add(CurveSpec::CurveType::Yield, id, ycc);
+        }
+    }
+}
+
+set<string> getCollateralisedDiscountCcy(const string& ccy,
+                                         const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs) {
+    set<string> discountCcys;
+    set<string> ids = curveConfigs->yieldCurveConfigIds();
+    for (auto id : ids) {
+        vector<string> tokens;
+        if (isCollateralCurve(id, tokens) && tokens[0] == ccy)
+            discountCcys.insert(tokens[2]);
+    }
+
+    return discountCcys;
+}
+
+const bool isCollateralCurve(const string& id, vector<string>& tokens) {
+    boost::split(tokens, id, boost::is_any_of("-"));
+    if (tokens.size() == 3 && tokens[1] == "IN")
+        return true;
+    return false;
 }
 	
 } // namespace data

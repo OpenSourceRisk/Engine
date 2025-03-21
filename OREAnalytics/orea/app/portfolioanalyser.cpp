@@ -33,7 +33,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const IborFallbackConfig& iborFallbackConfig,
-                                     bool recordSecuritySpecificCreditCurves)
+                                     bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
     : portfolio_(p) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
@@ -102,7 +102,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
     // add any curve dependencies from the marketobjects obtained
     marketObjects_ = market_->marketObjects();
     DLOG("Start adding dependent curves");
-    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs, baseCcy);
+    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs, baseCcy, baseCcyDiscountCurve);
     DLOG("Finished adding dependent curves");
 }
 
