@@ -46,7 +46,7 @@ class InflationCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
 
-    enum class InterpolationVariable { ZeroRate, PriceIndex }
+    enum class InterpolationVariable { ZeroRate, PriceIndex };
 
     InflationCurveConfig() {}
     InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
