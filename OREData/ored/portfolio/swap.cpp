@@ -68,7 +68,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
-        if (legData_[i].legType() == "Equity")
+        if (legData_[i].legType() == LegType::Equity)
             currencies[i] = parseCurrencyWithMinors(legData_[i].currency());
         else
             currencies[i] = parseCurrency(legData_[i].currency());
@@ -112,7 +112,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     // identify equity underlyings
 
     for (Size i = 0; i < numLegs; ++i) {
-        if (legData_[i].legType() == "Equity") {
+        if (legData_[i].legType() == LegType::Equity) {
             eqNames.insert(QuantLib::ext::dynamic_pointer_cast<EquityLegData>(legData_[i].concreteLegData())->eqName());
         }
     }
@@ -121,7 +121,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
 
-    static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
+    static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};
 
     bool useXbsCurves = true;
     for(Size i=0;i<numLegs;++i) {
@@ -182,8 +182,10 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
+        std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(),
-                                        useXbsCurves);
+                                        useXbsCurves, true, &productModelEngines);
+        addProductModelEngine(productModelEngines);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
 
         // add notional leg, if applicable
@@ -264,15 +266,15 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
     Real fixedBps = 0.0;
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
-        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         if (!isXCCY_) {
             if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Floating")
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Floating)
                     floatingNpv = swap->legNPV(i);            
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Fixed") {
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
                     additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));
                     fixedBps = swap->legBPS(i);
                 }
@@ -365,25 +367,25 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
     Size nFixed = 0;
     Size nFloating = 0;
     for (Size i = 0; i < legData.size(); ++i) {
-        std::string type = legData[i].legType();
-        if (type == "Fixed" ||
-            type == "ZeroCouponFixed" ||
-            type == "Cashflow"||
-            type == "CommodityFixed")
+        const LegType& type = legData[i].legType();
+        if (type == LegType::Fixed ||
+            type == LegType::ZeroCouponFixed ||
+            type == LegType::Cashflow ||
+            type == LegType::CommodityFixed)
             nFixed++;
-        else if (type == "Floating" ||
-                 type == "CPI" ||
-                 type == "YY" ||
-                 type == "CMS" ||
-                 type == "DigitalCMS" ||
-                 type == "CMSSpread" ||
-                 type == "DigitalCMSSpread" ||
-                 type == "CMB" ||
-                 type == "Equity"||
-                 type == "DurationAdjustedCMS"||
-                 type == "FormulaBased"||
-                 type =="CommodityFloating"||
-                 type =="EquityMargin")
+        else if (type ==  LegType::Floating ||
+                 type ==  LegType::CPI ||
+                 type ==  LegType::YY ||
+                 type ==  LegType::CMS ||
+                 type ==  LegType::DigitalCMS ||
+                 type ==  LegType::CMSSpread ||
+                 type ==  LegType::DigitalCMSSpread ||
+                 type ==  LegType::CMB ||
+                 type ==  LegType::Equity ||
+                 type ==  LegType::DurationAdjustedCMS ||
+                 type ==  LegType::FormulaBased ||
+                 type == LegType::CommodityFloating ||
+                 type == LegType::EquityMargin)
             nFloating++;
         else {
             ALOG("leg type " << type << " not mapped for trade " << tradeId);

@@ -38,8 +38,6 @@ public:
         const QuantLib::ext::shared_ptr<Scenario>& offsetScenario = nullptr,
         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic::Impl(inputs), offsetScenario_(offsetScenario), offsetSimMarketParams_(offsetSimMarketParams) {
-        QL_REQUIRE(!((offsetScenario_ == nullptr) ^ (offsetSimMarketParams_ == nullptr)),
-                   "Need offsetScenario and corresponding simMarketParameter");
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -47,6 +45,15 @@ public:
     void setUpConfigurations() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+        
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+        
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
@@ -80,7 +87,7 @@ protected:
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     QuantLib::ext::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
-    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> scenarioData_;
     QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     QuantLib::ext::shared_ptr<PostProcess> postProcess_;
@@ -100,10 +107,11 @@ static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
 class XvaAnalytic : public Analytic {
 public:
     explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                         const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
                          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<XvaAnalyticImpl>(inputs, offSetScenario, offsetSimMarketParams),
-                   xvaAnalyticSubAnalytics, inputs, false, false, false, false) {}
+                   xvaAnalyticSubAnalytics, inputs, analyticsManager, false, false, false, false) {}
 };
 
 } // namespace analytics

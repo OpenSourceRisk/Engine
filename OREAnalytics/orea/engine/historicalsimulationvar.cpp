@@ -45,10 +45,45 @@ void HistoricalSimulationVarReport::createVarCalculator() {
     varCalculator_ = QuantLib::ext::make_shared<HistoricalSimulationVarCalculator>(pnls_);
 }
 
+void HistoricalSimulationVarReport::createAdditionalReports(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+
+    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
+
+    // prepare report
+    report->addColumn("Portfolio", string())
+        .addColumn("RiskClass", string())
+        .addColumn("RiskType", string())
+        .addColumn("PLDate1", Date())
+        .addColumn("PLDate2", Date())
+        .addColumn("PLAmount", double(), 6);
+}
+
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
+}
+
+void HistoricalSimulationVarReport::writeAdditionalReports(
+    const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+    const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+    const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
+    QL_REQUIRE(reports->reports().size()== 2, "HistoricalSimulationVarReport::writeAdditionalReports - 2 reports expected for HistoricalSimulationVar");
+    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
+    auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
+    auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
+
+    // Loop through all samples
+    for (Size s = 0; s < histPnlGen_->cube()->samples(); ++s) {
+        report->next();
+        report->add(tg->portfolioId());
+        report->add(to_string(rg->riskClass()));
+        report->add(to_string(rg->riskType()));
+        report->add(hisScenGen_->startDates()[s]);
+        report->add(hisScenGen_->endDates()[s]);
+        report->add(pnls_.at(s));
+    }
 }
 
 Real HistoricalSimulationVarCalculator::var(Real confidence, const bool isCall, 

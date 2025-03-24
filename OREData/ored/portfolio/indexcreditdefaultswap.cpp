@@ -61,7 +61,7 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
 
-    QL_REQUIRE(swap_.leg().legType() == "Fixed", "IndexCreditDefaultSwap requires Fixed leg");
+    QL_REQUIRE(swap_.leg().legType() == LegType::Fixed, "IndexCreditDefaultSwap requires Fixed leg");
     QuantLib::ext::shared_ptr<FixedLegData> fixedLegData =
         QuantLib::ext::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
 
@@ -71,6 +71,17 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     legs_[0] = flb.buildLeg(swap_.leg(), engineFactory, requiredFixings_, configuration);
 
     Schedule schedule = makeSchedule(swap_.leg().schedule());
+
+    
+
+    if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS2015 || schedule.rule() == DateGeneration::CDS)) {
+        Date protectionStart = swap_.protectionStart();
+        Date tradeDate = swap_.tradeDate();
+        protectionStart = protectionStart != Date() ? protectionStart: schedule[0];
+        tradeDate = tradeDate != Date() ? tradeDate : protectionStart - 1;
+        schedule = removeCDSPeriodsBeforeStartDate(schedule, tradeDate + 1);
+    }
+
     BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
 
@@ -189,8 +200,9 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     if (swap_.upfrontFee() == Null<Real>()) {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, fixedLegData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
-            lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
+            QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
+            swap_.cashSettlementDays());
     } else {
         cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, swap_.upfrontFee(), fixedLegData->rates().front(), schedule,
@@ -246,7 +258,7 @@ const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData(
                                    instrument_->qlInstrument()->result<Real>("accrualRebateNPV");
     additionalData_["isPayer[1]"] = !swap_.leg().isPayer();
     additionalData_["isPayer[2]"] = swap_.leg().isPayer();
-    additionalData_["legType[2]"] = swap_.leg().legType();
+    additionalData_["legType[2]"] = ore::data::to_string(swap_.leg().legType());
     additionalData_["legType[1]"] = std::string("Protection");
     additionalData_["currentNotional[1]"] = additionalData_["currentNotional[2]"];
     additionalData_["originalNotional[1]"] = additionalData_["originalNotional[2]"];

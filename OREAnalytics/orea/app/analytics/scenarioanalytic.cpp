@@ -31,10 +31,6 @@ void ScenarioAnalyticImpl::setUpConfigurations() {
 
 void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("ScenarioAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
@@ -53,7 +49,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
-    analytic()->reports()[label()]["scenario"] = report;
+    analytic()->addReport(label(), "scenario", report);
 }
 
 } // namespace analytics

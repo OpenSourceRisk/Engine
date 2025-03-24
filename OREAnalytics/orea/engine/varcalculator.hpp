@@ -50,16 +50,21 @@ public:
         const bool breakdown = false);
 
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};
 
     const std::vector<Real>& p() const { return p_; }
 
-protected:
+ protected:
     QuantLib::ext::shared_ptr<VarCalculator> varCalculator_;
     
     virtual void createVarCalculator() = 0;
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                          const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                          const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+
+    virtual void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
 
     std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
 

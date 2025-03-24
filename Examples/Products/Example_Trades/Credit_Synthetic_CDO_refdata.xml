@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+	<Trade id="CDO_06_10">
+		<TradeType>SyntheticCDO</TradeType>
+		<Envelope>
+			<CounterParty>CPTY</CounterParty>
+			<NettingSetId>NS</NettingSetId>
+			<AdditionalFields>
+				<valuation_date>2025-02-10</valuation_date>
+				<party_id>party</party_id>
+			</AdditionalFields>
+		</Envelope>
+		<CdoData>
+			<Qualifier>RED:2I65BYEG6</Qualifier>
+			<SettlesAccrual>Y</SettlesAccrual>
+			<PaysAtDefaultTime>Y</PaysAtDefaultTime>
+			<ProtectionStart>2025-02-20</ProtectionStart>
+			<UpfrontDate>2025-02-20</UpfrontDate>
+			<UpfrontFee>0.0</UpfrontFee>
+			<AttachmentPoint>0.06</AttachmentPoint>
+			<DetachmentPoint>0.09</DetachmentPoint>
+			<LegData>
+				<LegType>Fixed</LegType>
+				<Payer>true</Payer>
+				<Currency>USD</Currency>
+				<Notionals>
+					<Notional>300000.0</Notional>
+				</Notionals>
+				<DayCounter>A360</DayCounter>
+				<PaymentConvention>F</PaymentConvention>
+				<FixedLegData>
+					<Rates>
+						<Rate>0.01</Rate>
+					</Rates>
+				</FixedLegData>
+				<ScheduleData>
+					<Rules>
+					        <StartDate>20250220</StartDate>
+						<EndDate>20341220</EndDate>
+						<Tenor>3M</Tenor>
+						<Calendar>US</Calendar>
+						<Convention>F</Convention>
+						<Rule>CDS2015</Rule>
+					</Rules>
+				</ScheduleData>
+			</LegData>
+		</CdoData>
+	</Trade>
+</Portfolio>

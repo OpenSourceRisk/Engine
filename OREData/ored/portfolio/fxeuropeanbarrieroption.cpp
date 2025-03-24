@@ -54,6 +54,8 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     QL_REQUIRE(barrier_.levels().size() == 1, "Invalid number of barrier levels");
     QL_REQUIRE(barrier_.style().empty() || barrier_.style() == "European", "Only european barrier style suppported");
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxEuropeanBarrierOption");
+    QL_REQUIRE(!barrier_.overrideTriggered(),
+               "FxEuropeanBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);

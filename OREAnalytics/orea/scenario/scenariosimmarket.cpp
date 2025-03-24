@@ -249,6 +249,7 @@ void ScenarioSimMarket::addYieldCurve(const QuantLib::ext::shared_ptr<Market>& i
                                              ? initMarket->discountCurve(key, configuration)
                                              : initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
+    QL_REQUIRE(!tenors.empty(), "yield curve tenors must not be empty");
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
     // include today
 
@@ -444,6 +445,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DayCounter dc = wrapperIndex->dayCounter();
                         vector<Time> yieldCurveTimes(1, 0.0);        // include today
                         vector<Date> yieldCurveDates(1, asof_);
+                        QL_REQUIRE(!parameters->yieldCurveTenors(name).empty(),
+                                   "yield curve tenors must not be empty");
                         QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
                                    "yield curve tenors must not include t=0");
                         for (auto& tenor : parameters->yieldCurveTenors(name)) {
@@ -1199,6 +1202,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         auto wrapper = initMarket->defaultCurve(name, configuration);
                         vector<Handle<Quote>> quotes;
 
+                        QL_REQUIRE(!parameters->defaultTenors(name).empty(),
+                                   "default curve tenors must not be empty");
                         QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days,
                                    "default curve tenors must not include t=0");
 
@@ -2072,6 +2077,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Time> zeroCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
+                        QL_REQUIRE(!parameters->zeroInflationTenors(name).empty(),
+                                   "zero inflation tenors must not be empty");
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
 
@@ -2258,8 +2265,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
+                        QL_REQUIRE(!parameters->yoyInflationTenors(name).empty(),
+                                   "yoy inflation tenors must not be empty");
                         QL_REQUIRE(parameters->yoyInflationTenors(name).front() > 0 * Days,
-                                   "zero inflation tenors must not include t=0");
+                                   "yoy inflation tenors must not include t=0");
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
                             Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
@@ -2651,9 +2660,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (!isSurface) {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
                                 if (useSpreadedTermStructures_) {
+                                    // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     newVol =
                                         Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<SpreadedBlackVolatilityCurve>(
-                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], true));
+                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], !parameters->simulateCommodityVolATMOnly()));
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,

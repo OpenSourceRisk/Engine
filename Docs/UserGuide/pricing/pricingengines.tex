@@ -6,6 +6,22 @@
 The pricing engine configuration file {\tt pricingengine.xml} is provided to select pricing models and
 pricing engines by product type.
 
+In case of swaptions, an additional field in the envelope of the trade definition can be used to override the pricing product type.
+Otherwise, the latter is derived from the trade type and economics automatically.
+
+\begin{longlisting}
+    \begin{minted}[fontsize=\footnotesize]{xml}
+        <Envelope>
+        <CounterParty>CPTY_A</CounterParty>
+        <NettingSetId>CPTY_A</NettingSetId>
+        <AdditionalFields>
+            <pricing_product_type>European_NonStandard</pricing_product_type>
+        </AdditionalFields>
+        </Envelope>
+    \end{minted}
+    \caption{Explicitly given pricing product type in the envelope.}
+\end{longlisting}
+
 %--------------------------------------------------------
 \subsection{Product Type: Ascot}
 %--------------------------------------------------------
@@ -303,7 +319,7 @@ The parameters have the following meaning:
 %--------------------------------------------------------
 \subsection{Product Type: EuropeanSwaption}
 %--------------------------------------------------------
-
+\label{sec:EuropeanSwaption_pt}
 Used by trade type: Swaption, for European exercise on vanilla underlying coupon types
 
 Available Model/Engine pairs:
@@ -531,9 +547,35 @@ LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to 
 details.
 
 %--------------------------------------------------------
+\subsection{Product Type: EuropeanSwaption NonStandard}
+%--------------------------------------------------------
+
+\label{sec:EuropeanSwaption_ns_pt}
+A pricing product type very similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
+
+The ``NonStandard'' product type accessed here represents the case of swaptions that do not fullfill
+the standard case of a fixed-against-floating swaption. 
+
+In detail, a swaption is defined to be ``Standard'' if the following three conditions hold.
+
+\begin{itemize}
+    \item There must be precisely one fixed leg and one floating leg. This condition is necessary since a higher number of legs would
+        make it possible to replicate a varying leg with many constant legs.
+    \item On the fixed leg the values for notional and rate must be constant.
+    \item On the floating leg, the values for notional and spread must be constant. 
+    Additional to this, the gearing must be equal to one at all times.
+\end{itemize}
+
+All details from subsection \ref{sec:EuropeanSwaption_pt} are valid here as well.
+
+Generally, in pricingengine.xml both product types (i.e. Standard and NonStandard) can be assigned different pricing models configurations e.g.
+calibration strategy and pricing models. The user might want to apply the Delta-Gamma-adjusted method for the NonStandard Swaption.
+
+%--------------------------------------------------------
 \subsection{Product Type: BermudanSwaption}
 %--------------------------------------------------------
 
+\label{sec:BermudanSwaption_pt}
 Used by trade type: Swaption, for Bermudan exercise or European exercise on non-vanilla underlying coupon types
 
 Available Model/Engine pairs:
@@ -732,9 +774,18 @@ LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to 
 details.
 
 %--------------------------------------------------------
+\subsection{Product Type: BermudanSwaption NonStandard}
+%--------------------------------------------------------
+
+A pricing product type very similar to ``Bermudan Swaption'' in \ref{sec:BermudanSwaption_pt}. 
+The difference between the two types is analogue to the European case, i.e. the difference is 
+as between European Swaption in \ref{sec:EuropeanSwaption_pt} and European Swaption NonStandard in \ref{sec:EuropeanSwaption_ns_pt}.
+
+%--------------------------------------------------------
 \subsection{Product Type: AmericanSwaption}
 %--------------------------------------------------------
 
+\label{sec:AmericanSwaption_pt}.
 Used by trade type: Swaption, for American exercise on vanilla underlying coupon types
 
 Available Model/Engine pairs:
@@ -931,6 +982,14 @@ The parameters have the following meaning:
 
 LGM/AMC builds a McMultiLegOptionEngine for use in AMC simulations. We refer to the AMC module documentation for further
 details.
+
+%--------------------------------------------------------
+\subsection{Product Type: AmericanSwaption NonStandard}
+%--------------------------------------------------------
+
+A pricing product type very similar to ``American Swaption'' in \ref{sec:AmericanSwaption_pt}. 
+The difference between the two types is analogue to the European case, i.e. the difference is 
+as between European Swaption in \ref{sec:EuropeanSwaption_pt} and European Swaption NonStandard in \ref{sec:EuropeanSwaption_ns_pt}.
 
 %--------------------------------------------------------
 \subsection{Product Type: BondRepo}
@@ -1848,12 +1907,14 @@ Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (T
 
 Used by trade type: SyntheticCDO
 
-Available Model/Engine pairs: GaussCopula/Bucketing
+Available Model/Engine pairs: GaussCopula/Bucketing and GaussCopula/MonteCarlo
 
 Engine description:
 
 GaussCopula/Bucketing builds a IndexCdsTrancheEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing}
+\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing} It uses a Bucketing Algorithm  to compute the expected tranche loss
+
+GaussCopula/MonteCarlo builds a IndexCdsTrancheEngine. The expected tranche loss is computed using a Monte Carlo simulation.
 
 The parameters have the following meaning:
 
@@ -1861,17 +1922,33 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
-\item recoveryRateGrid: Constant (flat market recovery rate R), Markit2020 (3-pillar recovery grid $[0.1, R, 2R-0.1]$
+\item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
+\item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
+\item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item useLossDistWhenJustified: whether to use QuantLib::LossDist for determinisitc recovery instead of HulWhiteBucketing
 \item homogeneousPoolWhenJustified: whether to use homogeneous pool if possible, applies to QuantLib::LossDist
 \item useQuadrature: whether to use quadrature
 \item calibrateConstituentCurves: whether to calibrate constituent curves to index level
-\item calibrationIndexTerms: terms for constituent curve calibration
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
+\item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
 \end{itemize}
+
+It is possible to define multiple recovery rate grids and probabilities. 
+For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is recoveryRateGrid\_SNRFOR, 
+and the corresponding probabilities are recoveryRateProbabilities\_SNRFOR.
+
+If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
+you can add the \emph{IndexSubFamily} identifier to the index credit reference data. 
+This allows you to set up independent grids for groups of credit indices, 
+such as a grid for CDX High Yields Tranches recoveryRateGrid\_CDX.NA.HY\_SNRFOR.
+
+The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values \emph{Markit2020} and \emph{constant} are deprecated and 
+will cause a warning. With the setting \emph{Markit2020} there will be a recovery grid with three points used. The grid will be be based around the constituent's recovery. If the recovery rate 
+is greater than 10 \% and lower than 55 \%,  the grid is $[0.1, RR, 2 RR - 0.1]$, otherwise a constant recovery rate will be assumed.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -1882,8 +1959,19 @@ The parameters have the following meaning:
         <Parameter name="max">5.0</Parameter>
         <Parameter name="steps">64</Parameter>
         <Parameter name="useStochasticRecovery">Y</Parameter>
-        <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+        <Parameter name="useAssumedRecovery">Y</Parameter>
+        <Parameter name="recoveryRateGrid">0.7,0.4,0.1</Parameter>
         <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_SUBLT2">0.2</Parameter>
+        <Parameter name="recoveryRateProbabilities_SUBLT2">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SNRLAC">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SNRLAC">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SECDOM">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SECDOM">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SECDOM">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SECDOM">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SNRFOR">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SNRFOR">0.35,0.3,0.35</Parameter>
     </ModelParameters>
     <Engine>Bucketing</Engine>
     <EngineParameters>
@@ -1894,6 +1982,8 @@ The parameters have the following meaning:
         <Parameter name="calibrateConstituentCurves">N</Parameter>
         <Parameter name="calibrationIndexTerms">3Y,5Y</Parameter>
         <Parameter name="SensitivityTemplate">CR_Semianalytical</Parameter>
+        <Parameter name="useIndexCDSPricer">Y</Parameter>
+        <Parameter name="useIndexCurveForIndexCDS">N</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -5115,4 +5205,7 @@ In addition to product specific settings there is also a block with global param
   a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
   types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
   able to compute analytical or AAD first order sensitivities.
+\item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines 
+  file is referenced. Might also be left empty. This is used by some trade constructions to adapt to certain monte carlo
+  types. E.g. Pricer would not be attached to coupons which can be computed in AMC without a leg / coupon pricer
 \end{itemize}

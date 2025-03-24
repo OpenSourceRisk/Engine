@@ -7,6 +7,7 @@ aggregation/creditmigrationhelper.cpp
 aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
+aggregation/dimdirectcalculator.cpp
 aggregation/dimflatcalculator.cpp
 aggregation/dimhelper.cpp
 aggregation/dimregressioncalculator.cpp
@@ -55,7 +56,6 @@ app/oreapp.cpp
 app/parameters.cpp
 app/portfolioanalyser.cpp
 app/reportwriter.cpp
-app/sensitivityrunner.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
@@ -105,6 +105,7 @@ engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
 engine/sensitivitystoragemanager.cpp
+engine/simpledynamicsimm.cpp
 engine/smrc.cpp
 engine/standardapproachcvacalculator.cpp
 engine/stresstest.cpp
@@ -196,6 +197,7 @@ aggregation/creditmigrationhelper.hpp
 aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
+aggregation/dimdirectcalculator.hpp
 aggregation/dimflatcalculator.hpp
 aggregation/dimhelper.hpp
 aggregation/dimregressioncalculator.hpp
@@ -246,7 +248,6 @@ app/oreapp.hpp
 app/parameters.hpp
 app/portfolioanalyser.hpp
 app/reportwriter.hpp
-app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/zerosensitivityloader.hpp
@@ -309,6 +310,7 @@ engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
+engine/simpledynamicsimm.hpp
 engine/smrc.hpp
 engine/standardapproachcvacalculator.hpp
 engine/stresstest.hpp

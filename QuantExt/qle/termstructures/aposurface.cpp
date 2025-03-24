@@ -33,7 +33,8 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>
                                    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& expCalc,
                                    const Handle<BlackVolTermStructure>& baseVts,
                                    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseExpCalc, Real beta,
-                                   bool flatStrikeExtrapolation, const boost::optional<Period>& maxTenor)
+                                   bool flatStrikeExtrapolation, const boost::optional<Period>& maxTenor,
+                                   QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, baseVts->calendar(), baseVts->businessDayConvention(),
                                    baseVts->dayCounter()),
       index_(index), baseExpCalc_(baseExpCalc), vols_(moneynessLevels.size()) {
@@ -100,9 +101,9 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>
     }
 
     // Initialise the underlying helping volatility structure.
-    vts_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, apoTimes, moneynessLevels, vols,
-                                                                    baseVts->dayCounter(), pyts, yts, stickyStrike,
-                                                                    flatStrikeExtrapolation);
+    vts_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
+        calendar_, spot, apoTimes, moneynessLevels, vols, baseVts->dayCounter(), pyts, yts, stickyStrike,
+        flatStrikeExtrapolation, timeExtrapolation);
 
     vts_->enableExtrapolation();
 

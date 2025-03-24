@@ -144,7 +144,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
     // build the dependency graph for all configurations and  build all FX Spots
     timer.start();
-    DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_);
+    DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_, referenceData_);
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_->configurations()) {
@@ -546,8 +546,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredBaseCorrelationCurves_.find(baseCorrelationSpec->name());
             if (itr == requiredBaseCorrelationCurves_.end()) {
                 DLOG("Building BaseCorrelation for asof " << asof_);
-                QuantLib::ext::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve = QuantLib::ext::make_shared<BaseCorrelationCurve>(
-                    asof_, *baseCorrelationSpec, *loader_, *curveConfigs_, referenceData_);
+                QuantLib::ext::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
+                    QuantLib::ext::make_shared<BaseCorrelationCurve>(
+                        asof_, *baseCorrelationSpec, *loader_, *curveConfigs_, referenceData_, requiredYieldCurves_,
+                        requiredDefaultCurves_, params_->mapping(MarketObject::DefaultCurve, configuration));
                 itr =
                     requiredBaseCorrelationCurves_.insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
                         .first;

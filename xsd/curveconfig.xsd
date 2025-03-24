@@ -64,6 +64,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -85,6 +86,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -104,6 +106,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -723,20 +726,63 @@
 
   <xs:complexType name="baseCorrelation">
     <xs:all>
-      <xs:element type="xs:string" name="CurveId"/>
-      <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="xs:string" name="Terms"/>
-      <xs:element type="xs:string" name="DetachmentPoints"/>
-      <xs:element type="xs:float" name="SettlementDays"/>
-      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bool" name="AdjustForLosses" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
+      <xs:element type="xs:string" name="CurveId" />
+      <xs:element type="xs:string" name="CurveDescription" />
+      <xs:element type="xs:string" name="Terms" />
+      <xs:element type="xs:string" name="DetachmentPoints" />
+      <xs:element type="xs:float" name="SettlementDays" />
+      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1" />
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1"
+        maxOccurs="1" />
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1" />
+      <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1" />
+      <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1" />
+
+      <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1" />
+      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1" />
+      <xs:element type="bool" name="AdjustForLosses" minOccurs="0" maxOccurs="1" />
+      <xs:element type="xs:string" name="IndexTerm" minOccurs="0" />
+      <xs:element type="xs:string" name="IndexSpread" minOccurs="0" maxOccurs="1" />
+      <xs:element type="xs:string" name="Currency" minOccurs="0" />
+      <xs:element type="bool" name="CalibrateConstituentsToIndexSpread" minOccurs="0" />
+      <xs:element type="bool" name="UseAssumedRecovery" minOccurs="0" />
+      <xs:element name="RecoveryGrid" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Grid" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="seniority" type="xs:string" use="required" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="RecoveryProbabilities" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Probabilities" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="seniority" type="xs:string" use="required" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="QuoteTypes" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="QuoteType" type="xs:string" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 
@@ -848,6 +894,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="xs:string" name="MaxTenor" minOccurs="0"/>
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>

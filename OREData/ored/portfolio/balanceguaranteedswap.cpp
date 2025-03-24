@@ -87,10 +87,10 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     Currency currency = parseCurrency(ccy_str);
 
     Size fixedLegIndex, floatingLegIndex;
-    if (swap_[0].legType() == "Floating" && swap_[1].legType() == "Fixed") {
+    if (swap_[0].legType() == LegType::Floating && swap_[1].legType() == LegType::Fixed) {
         floatingLegIndex = 0;
         fixedLegIndex = 1;
-    } else if (swap_[1].legType() == "Floating" && swap_[0].legType() == "Fixed") {
+    } else if (swap_[1].legType() == LegType::Floating && swap_[0].legType() == LegType::Fixed) {
         floatingLegIndex = 1;
         fixedLegIndex = 0;
     } else {
