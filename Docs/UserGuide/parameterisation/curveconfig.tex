@@ -693,6 +693,9 @@ elements are the following:
 \item {\tt Frequency}: The frequency of index fixings.
 \item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
   given, it is defaulted to the first market rate.
+\item {\\tt InterpolationVariable}: [Optional] The variable on which the interpolation of the zero inflation curve is
+  performed. The allowable values {\tt ZeroRate} and {\tt PriceIndex}. If not provided, the default value is {\tt
+  ZeroRate}. Ignored for year on year inflation curves.
 \end{itemize}
 
 The optional seasonality block defines a multiplicative seasonality and contains the following elements:
