@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -39,60 +39,72 @@ namespace ore {
 namespace data {
 
 using namespace ore::data;
+using namespace std;
 using std::map;
-using std::string;
+
 class TradeGenerator : public Portfolio {
 public:
-    TradeGenerator(std::string curveconfigFile = "", std::string counterpartyId = "", std::string nettingSetId = "");
+    TradeGenerator(string counterpartyId = "", string nettingSetId = "");
+    TradeGenerator(QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs, string refDataFile = "",
+                   string counterpartyId = "", string nettingSetId = "");
+        
+    TradeGenerator(QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs,
+                   QuantLib::ext::shared_ptr<BasicReferenceDataManager> refDataManager, string counterpartyId = "",
+                   string nettingSetId = "")
+        : curveConfigs_(curveConfigs), referenceData_(refDataManager), counterpartyId_(counterpartyId),
+          nettingSetId_(nettingSetId) {
+        addConventions();
+    }
     virtual ~TradeGenerator() {}
-    void addCurveConfigs(std::string curveConfigFile);
-    void addReferenceData(std::string refDataFile);
-    void setNettingSet(std::string nettingSetId);
-    void setCounterpartyId(std::string counterpartyId);
-    bool validateDate(std::string date);
-    void buildSwap(string indexId, Real notional, string maturity, Real rate, bool firstLegPays,
-                   std::map<std::string, std::string> mapPairs = {});
+    void addCurveConfigs(string curveConfigFile);
+    void addReferenceData(string refDataFile);
+    void setNettingSet(string nettingSetId);
+    void setCounterpartyId(string counterpartyId);
+    bool validateDate(string date);
+    void buildSwap(string indexId, Real notional, string maturity, Real rate, bool firstLegPays, string tradeId = "",
+                   std::map<string, string> mapPairs = {});
     void buildSwap(string indexId, Real notional, string maturity, string recIndexId, Real spread, bool firstLegPays,
-                   std::map<std::string, std::string> mapPairs = {});
+                   string tradeId = "", std::map<string, string> mapPairs = {});
     void buildFxForward(string payCcy, Real payNotional, string recCcy, Real recNotional, string expiryDate,
-                        bool isLong, std::map<std::string, std::string> mapPairs = {});
+                        bool isLong, string tradeId = "", std::map<string, string> mapPairs = {});
     void buildFxOption(string payCcy, Real payNotional, string recCcy, Real recNotional, string expiryDate, bool isLong,
-                       bool isCall, std::map<std::string, std::string> mapPairs = {});
+                       bool isCall, string tradeId = "", std::map<string, string> mapPairs = {});
     void buildCapFloor(string indexName, Real capFloorRate, Real notional, string maturity, bool isLong, bool isCap,
-                       std::map<std::string, std::string> mapPairs = {});
-    void buildEquityOption(string equityCurveId, Real quantity, string maturity, Real strike,
-                           std::map<std::string, std::string> mapPairs = {});
-    void buildEquityForward(string equityCurveId, Real quantity, string maturity, Real strike,
-                            std::map<std::string, std::string> mapPairs = {});
+                       string tradeId = "", std::map<string, string> mapPairs = {});
+    void buildEquityOption(string equityCurveId, Real quantity, string maturity, Real strike, string tradeId = "",
+                           std::map<string, string> mapPairs = {});
+    void buildEquityForward(string equityCurveId, Real quantity, string maturity, Real strike, string tradeId = "",
+                            std::map<string, string> mapPairs = {});
     void buildEquitySwap(string equityCurveId, string returnType, Real quantity, string indexId, Real notional,
-                         string maturity, bool firstLegPays, std::map<std::string, std::string> mapPairs = {});
+                         string maturity, bool firstLegPays, string tradeId = "", std::map<string, string> mapPairs = {});
     void buildEquitySwap(string equityCurveId, string returnType, Real quantity, Real rate, Real notional,
-                         string maturity, bool firstLegPays, std::map<std::string, std::string> mapPairs = {});
+                         string maturity, bool firstLegPays, string tradeId = "",
+                         std::map<string, string> mapPairs = {});
     void buildCommoditySwap(string commodityId, string maturity, Real quantity, Real fixedPrice, string indexId,
-                            string floatType, bool firstLegPays);
+                            string floatType, bool firstLegPays, string tradeId = "");
     void buildCommodityOption(string commodityId, Real quantity, string maturity, Real strike, string priceType,
-                              bool isLong, bool isCall);
-    void buildCommodityForward(string commodityId, Real quantity, string maturity, Real strike,
-                               bool isLong);
+                              bool isLong, bool isCall, string tradeId = "");
+    void buildCommodityForward(string commodityId, Real quantity, string maturity, Real strike, bool isLong,
+                               string tradeId = "");
     void buildInflationSwap(string inflationIndex, Real notional, string maturity, string floatIndex, Real baseRate,
-                            Real cpiRate, bool firstLegPays);
+                            Real cpiRate, bool firstLegPays, string tradeId = "");
     Date today_;
     map<string, QuantLib::ext::shared_ptr<Convention>> conventions_;
-    CurveConfigurations curveConfigs_;
-    BasicReferenceDataManager referenceData_;
-    string nettingSetId_;
+    QuantLib::ext::shared_ptr <CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr <BasicReferenceDataManager> referenceData_;
     string counterpartyId_;
+    string nettingSetId_;
 
 private:
     string getEndDate(string maturity, string startDate, Calendar cal);
     LegData buildLeg(boost::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer);
     string frequencyToTenor(const QuantLib::Frequency& freq);
     LegData buildCPILeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, string currency,
-                        Real baseRate, Real cpiRate, bool isPayer, std::map<std::string, std::string> mapPairs = {});
+                        Real baseRate, Real cpiRate, bool isPayer, std::map<string, string> mapPairs = {});
     LegData buildOisLeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer,
-                        std::map<std::string, std::string> mapPairs = {});
+                        std::map<string, string> mapPairs = {});
     LegData buildIborLeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer,
-                         std::map<std::string, std::string> mapPairs = {});
+                         std::map<string, string> mapPairs = {});
     map<string, string> fetchEquityRefData(string equityId);
     Envelope makeEnvelope();
     void addConventions();
