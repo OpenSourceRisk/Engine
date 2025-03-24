@@ -20,11 +20,13 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 
+#include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
@@ -137,6 +139,47 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     for (const auto& [tradeId, trade] : portfolio->trades()) {
         BOOST_CHECK_SMALL(trade->instrument()->NPV(), 0.01);
     }
+}
+
+BOOST_AUTO_TEST_CASE(testCPIInterpolatedZcInflationCurve) {
+    Date asof = {29, Oct, 2020};
+    BOOST_TEST_MESSAGE("Testing UK RPI zero coupon inflation curve bootstrap on date " << io::iso_date(asof) << " interpolated in CPI");
+
+    // Create the market arguments. The fixing file on the release date depends on the publication roll setting.
+    string marketFile = "market_" + to_string(io::iso_date(asof)) + ".txt";
+    string fixingsFile = "fixings_" + to_string(io::iso_date(asof)) + ".txt";
+    
+    string conventionsFile = "conventions.xml";
+    TodaysMarketArguments tma(asof, "ukrpi_cpi_interpolation", marketFile, fixingsFile, conventionsFile);
+
+    // Check that the market builds without error.
+    QuantLib::ext::shared_ptr<TodaysMarket> market;
+    BOOST_REQUIRE_NO_THROW(market = QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters,
+        tma.loader, tma.curveConfigs, false, true, false));
+
+    // Portfolio containing 2 AU CPI zero coupon swaps, AUD 10M, that should price at 0, i.e. NPV < AUD 0.01.
+    // Similar to the fixing file, the helpers on the release date depend on the publication roll setting.
+    string portfolioFile = "ukrpi_cpi_interpolation/portfolio_" + to_string(io::iso_date(asof)) + ".xml";
+
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->fromFile(TEST_INPUT_FILE("ukrpi_cpi_interpolation/pricingengine.xml"));
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = QuantLib::ext::make_shared<Portfolio>();
+    portfolio->fromFile(TEST_INPUT_FILE(portfolioFile));
+    portfolio->build(factory);
+
+    BOOST_CHECK_EQUAL(portfolio->size(), 3);
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        BOOST_CHECK_SMALL(trade->instrument()->NPV(), 0.01);
+    }
+
+    auto index = market->zeroInflationIndex("UKRPI");
+    auto curve = index->zeroInflationTermStructure();
+    BOOST_CHECK(!curve.empty());
+    auto cpiCurve =  ext::dynamic_pointer_cast<InterpolatedCPIInflationCurve<Linear>>(*curve);
+    BOOST_CHECK(cpiCurve != nullptr);
+    BOOST_CHECK(!cpiCurve->data().empty());
+    BOOST_CHECK_EQUAL(cpiCurve->baseCPI(), cpiCurve->data().front());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

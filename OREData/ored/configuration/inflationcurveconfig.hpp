@@ -55,8 +55,8 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance, 
                          const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate, 
                          const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
-                         const vector<double>& overrideSeasonalityFactors = std::vector<double>()
-                         const InterpolationVariable& InterpolationVariable = ZeroRate);
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const InterpolationVariable& interpolationVariable = InterpolationVariable::ZeroRate);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

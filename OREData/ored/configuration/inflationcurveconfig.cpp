@@ -34,13 +34,15 @@ InflationCurveConfig::InflationCurveConfig(
     const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
     const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
     const Frequency& seasonalityFrequency,
-    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors)
+    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors,
+    const InterpolationVariable& interpolationVariable)
     : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
       type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
       lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
-      seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors) {
+      seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors),
+      interpolationVariable_(interpolationVariable) {
     quotes_ = swapQuotes;
     quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
     populateRequiredCurveIds();
