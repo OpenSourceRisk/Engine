@@ -22,15 +22,15 @@
 
 #include <qle/indexes/inflationindexwrapper.hpp>
 
+#include <algorithm>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
-#include <ql/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/utilities/inflation.hpp>
-#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
@@ -210,7 +210,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
             } else {
                 auto baseFixing = index->fixing(baseDate, true);
-                curve_ = QuantLib::ext::make_shared<PiecewiseCPIInflationCurve<Linear>>(
+                curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
                     asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
                     seasonality, config->tolerance());
                 auto zr =

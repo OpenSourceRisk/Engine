@@ -20,6 +20,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 
+#include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
+
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(testCPIInterpolatedZcInflationCurve) {
     auto index = market->zeroInflationIndex("UKRPI");
     auto curve = index->zeroInflationTermStructure();
     BOOST_CHECK(!curve.empty());
-    auto cpiCurve =  ext::dynamic_pointer_cast<InterpolatedCPIInflationCurve<Linear>>(*curve);
+    auto cpiCurve =  ext::dynamic_pointer_cast<QuantExt::InterpolatedCPIInflationCurve<Linear>>(*curve);
     BOOST_CHECK(cpiCurve != nullptr);
     BOOST_CHECK(!cpiCurve->data().empty());
     BOOST_CHECK_EQUAL(cpiCurve->baseCPI(), cpiCurve->data().front());

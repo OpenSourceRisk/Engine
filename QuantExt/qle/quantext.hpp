@@ -520,8 +520,12 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/implieddefaulttermstructure.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpicurve.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/inflationtraits.hpp>
+#include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
+#include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>

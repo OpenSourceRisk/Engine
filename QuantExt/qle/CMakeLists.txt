@@ -373,6 +373,7 @@ termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
+termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
 termstructures/oiccbasisswaphelper.cpp
@@ -942,8 +943,12 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
+termstructures/inflation/inflationtraits.hpp
+termstructures/inflation/interpolatedcpiinflationcurve.hpp
+termstructures/inflation/piecewisecpiinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
