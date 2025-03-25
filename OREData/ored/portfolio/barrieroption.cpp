@@ -150,14 +150,14 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType), spot,
             barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_, tradeMultiplier(),
-            tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered());
+            tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
     else
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
             index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers,
-            barrier_.overrideTriggered());
+            barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
 
     instrument_ = instWrapper;
 
@@ -234,8 +234,16 @@ void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::Engin
 
     spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
     fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
+    std::string indexName = fxIndex_->name();
+    std::string indexFamilyName = fxIndex_->familyName();
 
-    BarrierOption::build(ef); 
+    std::string lowIndexName =
+        indexName.replace(indexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_LOW");
+    std::string highIndexName =
+        indexName.replace(indexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_HIGH");
+    fxIndexLows_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+    fxIndexHighs_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+    BarrierOption::build(ef);
 }
 
 void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {

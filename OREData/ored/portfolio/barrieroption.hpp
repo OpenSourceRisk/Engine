@@ -56,6 +56,8 @@ public:
 
     // index of the underlying
     virtual QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() = 0;
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getLowIndex() { return nullptr; }
+    virtual QuantLib::ext::shared_ptr<QuantLib::Index> getHighIndex() { return nullptr; }
 
     // strike of underlying option
     virtual const QuantLib::Real strike() = 0;
@@ -140,6 +142,8 @@ public:
 private:
     std::string fxIndexStr_;
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexLows_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexHighs_;
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
     QuantLib::Real boughtAmount_;
     QuantLib::Real soldAmount_;

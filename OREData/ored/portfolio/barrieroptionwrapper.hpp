@@ -52,19 +52,21 @@ public:
                          const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
                              std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
                          const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
-                         const std::optional<bool>& overrideTriggered = std::nullopt)
+                         const std::optional<bool>& overrideTriggered = std::nullopt,
+                         const QuantLib::ext::shared_ptr<QuantLib::Index>& indexLows = nullptr, 
+                         const QuantLib::ext::shared_ptr<QuantLib::Index>& indexHighs = nullptr)
         : OptionWrapper(inst, isLongOption, std::vector<QuantLib::Date>(1, exerciseDate),
                         std::vector<QuantLib::Date>(1, settlementDate), isPhysicalDelivery,
                         std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier,
                         undMultiplier, additionalInstruments, additionalMultipliers),
           spot_(spot), barrierType_(barrierType), rebate_(rebate), ccy_(ccy), startDate_(startDate), index_(index),
-          overrideTriggered_(overrideTriggered) {
+          overrideTriggered_(overrideTriggered), indexLows_(indexLows), indexHighs_(indexHighs) {
         calendar_ = index ? index->fixingCalendar() : calendar;
         reset();
     }
 
     const std::map<std::string, boost::any>& additionalResults() const override;
-    virtual bool checkBarrier(Real, bool) const = 0;
+    //virtual bool checkBarrier(Real, bool) const = 0;
 
 protected:
     QuantLib::Real NPV() const override;
@@ -76,6 +78,10 @@ protected:
     QuantLib::ext::shared_ptr<QuantLib::Index> index_;
     QuantLib::Calendar calendar_;
     std::optional<bool> overrideTriggered_;
+    QuantLib::ext::shared_ptr<QuantLib::Index> indexLows_;
+    QuantLib::ext::shared_ptr<QuantLib::Index> indexHighs_;
+
+    virtual bool strikeAtBarrier(Real strike) const = 0;
 };
 
 class SingleBarrierOptionWrapper : public BarrierOptionWrapper {
@@ -93,17 +99,21 @@ public:
         const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
             std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
         const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
-        const std::optional<bool>& overrideTriggered = std::nullopt)
+        const std::optional<bool>& overrideTriggered = std::nullopt,
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexLows, 
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexHighs)
         : BarrierOptionWrapper(inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
                                barrierType, spot, rebate, ccy, startDate, index, calendar, multiplier, undMultiplier,
-                               additionalInstruments, additionalMultipliers, overrideTriggered),
+                               additionalInstruments, additionalMultipliers, overrideTriggered, indexLows, indexHighs),
           barrier_(barrier) {}
 
-    bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
 protected:
-    Real barrier_;
+    Real barrier_;    
+    bool strikeAtBarrier(Real strike) const override;
+    bool checkBarrier(Real spot) const;
+    
 };
 
 class DoubleBarrierOptionWrapper : public BarrierOptionWrapper {
@@ -122,24 +132,27 @@ public:
         const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
             std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
         const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
-        const std::optional<bool>& overrideTriggered = std::nullopt)
+        const std::optional<bool>& overrideTriggered = std::nullopt,
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexLows = nullptr, 
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexHighs = nullptr)
         : BarrierOptionWrapper(
               inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
               (barrierType == DoubleBarrier::Type::KnockOut ? Barrier::Type::UpOut : Barrier::Type::UpIn), spot, rebate,
               ccy, startDate, index, calendar, multiplier, undMultiplier, additionalInstruments, additionalMultipliers,
-              overrideTriggered),
+              overrideTriggered, indexLows, indexHighs),
           barrierLow_(barrierLow), barrierHigh_(barrierHigh) {
         QL_REQUIRE(barrierType == DoubleBarrier::Type::KnockOut || barrierType == DoubleBarrier::Type::KnockIn,
                    "Invalid barrier type " << barrierType << ". Only KnockOut and KnockIn are supported.");
         QL_REQUIRE(barrierLow < barrierHigh, "barrierLow has to be less than barrierHigh");
     }
-
-    bool checkBarrier(Real spot, bool isTouchingOnly) const override;
     bool exercise() const override;
 
 protected:
     Real barrierLow_;
     Real barrierHigh_;
+    bool strikeAtBarrier(Real strike) const override;
+    bool checkBarrier(Real spotLow, Real spotHigh) const;
+
 };
 
 } // namespace data

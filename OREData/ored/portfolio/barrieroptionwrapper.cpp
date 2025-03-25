@@ -69,11 +69,10 @@ Real BarrierOptionWrapper::NPV() const {
         auto vanillaOption = QuantLib::ext::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
         if (vanillaOption) {
             auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+            if (payoff && strikeAtBarrier(payoff->strike()) && 
+                          ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
                            (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
-                const bool isTouchingOnly = true;
-                if (checkBarrier(payoff->strike(), isTouchingOnly))
-                    npv = 0;
+                npv = 0;
             }
         }
         return npv + addNPV;
@@ -92,10 +91,9 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
         auto vanillaOption = QuantLib::ext::dynamic_pointer_cast<VanillaOption>(activeUnderlyingInstrument_);
         if (vanillaOption) {
             auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(vanillaOption->payoff());
-            if (payoff && ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
+            if (payoff && strikeAtBarrier(payoff->strike()) && 
+              ((barrierType_ == Barrier::DownOut && payoff->optionType() == Option::Put) ||
                            (barrierType_ == Barrier::UpOut && payoff->optionType() == Option::Call))) {
-                const bool isTouchingOnly = true;
-                if (checkBarrier(payoff->strike(), isTouchingOnly))
                     return emptyMap;
             }
         }
@@ -104,12 +102,12 @@ const std::map<std::string, boost::any>& BarrierOptionWrapper::additionalResults
     }
 }
 
-bool SingleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
-    if (isTouchingOnly)
-        return close_enough(spot, barrier_);
-    else {
+bool SingleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
+    return close_enough(strike, barrier_);
+}
+
+bool SingleBarrierOptionWrapper::checkBarrier(Real spot) const {
         return ::QuantExt::checkBarrier(spot, barrierType_, barrier_);
-    }
 }
 
 bool SingleBarrierOptionWrapper::exercise() const {
@@ -124,10 +122,14 @@ bool SingleBarrierOptionWrapper::exercise() const {
         } else if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
-
-            QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndex =
-                QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(index_);
-
+            QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndex;
+            if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::DownIn && indexLows_) {
+                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_);
+            } else if (barrierType_ == Barrier::UpOut || barrierType_ == Barrier::UpIn && indexHighs_) {
+                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_);
+            } else {
+                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(index_);
+            }
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
@@ -144,8 +146,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
                         // consistent with previous implemention, however maybe we should use fixing
                         // and be strict on needed fixings being present
                         auto fxInd = QuantLib::ext::dynamic_pointer_cast<QuantExt::FxIndex>(eqfxIndex);
-                        const bool isTouchingOnly = false;
-                        trigger = checkBarrier(fixing, isTouchingOnly);
+                        trigger = checkBarrier(fixing);
                         if (trigger)
                             exerciseDate_ = d;
                     }
@@ -160,8 +161,7 @@ bool SingleBarrierOptionWrapper::exercise() const {
         if (overrideTriggered_) {
             trigger = *overrideTriggered_;
         } else {
-            const bool isTouchingOnly = false;
-            trigger = checkBarrier(spot_->value(), isTouchingOnly);
+            trigger = checkBarrier(spot_->value());
             if (trigger)
                 exerciseDate_ = today;
         }
@@ -171,12 +171,15 @@ bool SingleBarrierOptionWrapper::exercise() const {
     return trigger;
 }
 
-bool DoubleBarrierOptionWrapper::checkBarrier(Real spot, bool isTouchingOnly) const {
-    if (isTouchingOnly)
-        return close_enough(spot, barrierLow_) || close_enough(spot, barrierHigh_);
-    else
-        return spot <= barrierLow_ || spot >= barrierHigh_;
+bool DoubleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
+    return close_enough(strike, barrierLow_) || close_enough(strike, barrierHigh_);
 }
+
+bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh) const {
+    return spotLow <= barrierLow_ || spotHigh >= barrierHigh_;
+}
+
+
 
 bool DoubleBarrierOptionWrapper::exercise() const {
     bool trigger = false;
@@ -190,25 +193,43 @@ bool DoubleBarrierOptionWrapper::exercise() const {
         } else if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
-
-            
             QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndex =
                 QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(index_);
-
+            auto indexL = indexLows_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_) : nullptr;
+            auto indexH = indexHighs_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_) : nullptr;;
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
-                    Real fixing = eqfxIndex->pastFixing(d);
-                    if (fixing == Null<Real>()) {
+                    double dailyLow, dailyHigh = 0.0;
+
+                    if (indexL == nullptr || indexH == nullptr){
+                        dailyLow = dailyHigh = eqfxIndex->pastFixing(d);
+                    } else {
+                        dailyLow =  indexL->pastFixing(d);
+                        dailyHigh = indexH->pastFixing(startDate_);
+                    }
+                    
+                    if (dailyLow == Null<Real>()) {
                         StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
-                    } else {
-                        const bool isTouchingOnly = false;
-                        trigger = checkBarrier(fixing, isTouchingOnly);
+                        continue;
+                    } 
+                    if (dailyHigh == Null<Real>()) {
+                        StructuredMessage(
+                            StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
+                            "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
+                                ", Skipping this date, assuming no trigger",
+                            std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
+                            .log();
+                        continue;
+                    }
+                    
+                    else {
+                        trigger = checkBarrier(dailyLow, dailyHigh);
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -221,8 +242,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
         if (overrideTriggered_) {
             trigger = *overrideTriggered_;
         } else {
-            const bool isTouchingOnly = false;
-            trigger = checkBarrier(spot_->value(), isTouchingOnly);
+            trigger = checkBarrier(spot_->value(), spot_->value());
             if (trigger)
                 exerciseDate_ = today;
         }
