@@ -21,5 +21,17 @@ benchmark, using a Dynamic Delta VaR calculation under scenarios.
 
 Run this batch with <code>python run_dim.py</code>
 
+
+### Dynamic SIMM using AAD Sensitivities under AMC
+
+This batch demonstrades a SIMM calculation under AMC scenarios with sensitivities
+computed using AAD. This fast dynamic SIMM is validated against
+(significantly slower) full SIMM calculations along a small number of MC paths.
+As test portfolio we start with the same IR/FX portfolio as above, adding
+Bermudan Swaption and FX TaRF to demonstrate the wider product scope of
+Dynamic SIMM in ORE. We furthermore compare results to the regression DIM.
+
+Run this batch with <code>python run_dim2.py</code>
+
 See the user guide for a discussion of each case and expected results.
 
