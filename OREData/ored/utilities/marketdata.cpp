@@ -328,8 +328,8 @@ std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<Quant
         WLOG("fxIndexNameForDailyLowsOrHighs: could not get ore name for fx index " << fxIndex->name());
         return std::string();
     }
-    std::string lowHigh = lows ? "_LOWS" : "_HIGHS";
-    return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_LOWS");
+    std::string lowHigh = lows ? "_LOW" : "_HIGH";
+    return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + lowHigh);
 }
 
 std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
