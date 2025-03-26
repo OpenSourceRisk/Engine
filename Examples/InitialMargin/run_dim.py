@@ -17,15 +17,15 @@ print("+-----------------------------------------------------+")
 # Case A: Single Currency Swap in Domestic Currency
 
 oreex.print_headline("Run ORE (case A (swap eur), zero order regression)")
-oreex.run("Input/ore_A0.xml")
+oreex.run("Input/Dim/ore_A0.xml")
 oreex.print_headline("Run ORE (case A (swap eur), 1st order regression)")
-oreex.run("Input/ore_A1.xml")
+oreex.run("Input/Dim/ore_A1.xml")
 oreex.print_headline("Run ORE (case A (swap eur), 2nd order regression)")
-oreex.run("Input/ore_A2.xml")
+oreex.run("Input/Dim/ore_A2.xml")
 oreex.print_headline("Run ORE (case A (swap eur), flat extrapolation of t0 IM)")
-oreex.run("Input/ore_A4.xml")
+oreex.run("Input/Dim/ore_A4.xml")
 oreex.print_headline("Run ORE (case A (swap eur), Dynamic Delta VaR)")
-oreex.run("Input/ore_A5.xml")
+oreex.run("Input/Dim/ore_A5.xml")
 
 oreex.print_headline("Plot results")
 
@@ -56,19 +56,19 @@ oreex.save_plot_to_file()
 # Case B: European Swaption
 
 oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=300)")
-oreex.run("Input/ore_B0.xml")
+oreex.run("Input/Dim/ore_B0.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=100)")
-oreex.run("Input/ore_B0b.xml")
+oreex.run("Input/Dim/ore_B0b.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=300)")
-oreex.run("Input/ore_B1.xml")
+oreex.run("Input/Dim/ore_B1.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=100)")
-oreex.run("Input/ore_B1b.xml")
+oreex.run("Input/Dim/ore_B1b.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=300)")
-oreex.run("Input/ore_B2.xml")
+oreex.run("Input/Dim/ore_B2.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=100)")
-oreex.run("Input/ore_B2b.xml")
+oreex.run("Input/Dim/ore_B2b.xml")
 oreex.print_headline("Run ORE (case B (swaption eur), Dynamic Delta VaR)")
-oreex.run("Input/ore_B3.xml")
+oreex.run("Input/Dim/ore_B3.xml")
 
 oreex.print_headline("Plot results")
 
@@ -99,9 +99,9 @@ oreex.save_plot_to_file()
 # Case C: Single Currency Swap in Foreign Currency
 
 oreex.print_headline("Run ORE (case C (swap usd), 1st order regression)")
-oreex.run("Input/ore_C1.xml")
+oreex.run("Input/Dim/ore_C1.xml")
 oreex.print_headline("Run ORE (case C (swap usd), 2nd order regression)")
-oreex.run("Input/ore_C2.xml")
+oreex.run("Input/Dim/ore_C2.xml")
 
 oreex.print_headline("Plot results")
 
@@ -115,9 +115,9 @@ oreex.save_plot_to_file()
 # Case D: Cross Currency Swap
 
 oreex.print_headline("Run ORE (case D (swap eur-usd), 1st order regression)")
-oreex.run("Input/ore_D1.xml")
+oreex.run("Input/Dim/ore_D1.xml")
 oreex.print_headline("Run ORE (case D (swap eur-usd), 2nd order regression)")
-oreex.run("Input/ore_D2.xml")
+oreex.run("Input/Dim/ore_D2.xml")
 
 oreex.print_headline("Plot results")
 
@@ -131,13 +131,13 @@ oreex.save_plot_to_file()
 # Case E: FX Option
 
 oreex.print_headline("Run ORE: Case FX Option, zero order regression")
-oreex.run("Input/ore_E0.xml")
+oreex.run("Input/Dim/ore_E0.xml")
 oreex.print_headline("Run ORE: case FX Option, first order regression")
-oreex.run("Input/ore_E1.xml")
+oreex.run("Input/Dim/ore_E1.xml")
 oreex.print_headline("Run ORE: Case FX Option, second order regression")
-oreex.run("Input/ore_E2.xml")
+oreex.run("Input/Dim/ore_E2.xml")
 oreex.print_headline("Run ORE: Case FX Option, Dynamic Delta VaR")
-oreex.run("Input/ore_E3.xml")
+oreex.run("Input/Dim/ore_E3.xml")
 
 oreex.print_headline("Plot results")
 

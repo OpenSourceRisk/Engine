@@ -336,7 +336,7 @@ void Trade::addProductModelEngine(
 void Trade::updateProductModelEngineAdditionalData() {
     Size counter = 0;
     for (auto const& [p, m, e] : productModelEngine_) {
-        std::string suffix = productModelEngine_.size() > 1 ? "_" + std::to_string(counter) : std::string();
+        std::string suffix = productModelEngine_.size() > 1 ? "[" + std::to_string(counter) + "]" : std::string();
         if (p.size() == 1) {
             additionalData_["PricingConfigProductType" + suffix] = *p.begin();
         } else {

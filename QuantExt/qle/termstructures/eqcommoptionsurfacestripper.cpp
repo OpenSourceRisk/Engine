@@ -81,27 +81,16 @@ map<Real, Option::Type, decltype(comp)> createStrikes(Real forward, const vector
 
 namespace QuantExt {
 
-OptionSurfaceStripper::OptionSurfaceStripper(
-    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
-    : callSurface_(callSurface),
-      putSurface_(putSurface),
-      calendar_(calendar),
-      dayCounter_(dayCounter),
-      type_(type),
-      lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
-      upperStrikeConstExtrap_(upperStrikeConstExtrap),
-      timeFlatExtrapolation_(timeFlatExtrapolation),
-      preferOutOfTheMoney_(preferOutOfTheMoney),
-      solverOptions_(solverOptions),
+OptionSurfaceStripper::OptionSurfaceStripper(const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
+                                             const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
+                                             const Calendar& calendar, const DayCounter& dayCounter,
+                                             Exercise::Type type, bool lowerStrikeConstExtrap,
+                                             bool upperStrikeConstExtrap,
+                                             QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                             bool preferOutOfTheMoney, Solver1DOptions solverOptions)
+    : callSurface_(callSurface), putSurface_(putSurface), calendar_(calendar), dayCounter_(dayCounter), type_(type),
+      lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap),
+      timeExtrapolation_(timeExtrapolation), preferOutOfTheMoney_(preferOutOfTheMoney), solverOptions_(solverOptions),
       havePrices_(QuantLib::ext::dynamic_pointer_cast<OptionPriceSurface>(callSurface_)) {
 
     QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(),
@@ -213,7 +202,7 @@ void OptionSurfaceStripper::performCalculations() const {
     // Populate the variance surface.
     volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
         callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
-        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeFlatExtrapolation_);
+        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolation_);
 }
 
 vector<Real> OptionSurfaceStripper::strikes(const Date& expiry, bool isCall) const {
@@ -312,17 +301,12 @@ QuantLib::ext::shared_ptr<BlackVolTermStructure> OptionSurfaceStripper::volSurfa
 EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
     const Handle<QuantExt::EquityIndex2>& equityIndex,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
+    const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-        upperStrikeConstExtrap, timeFlatExtrapolation, preferOutOfTheMoney, solverOptions), equityIndex_(equityIndex) {
+                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
+      equityIndex_(equityIndex) {
     registerWith(equityIndex_);
 }
 
@@ -341,21 +325,14 @@ Real EquityOptionSurfaceStripper::forward(const Date& date) const {
 }
 
 CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
-    const Handle<PriceTermStructure>& priceCurve,
-    const Handle<YieldTermStructure>& discountCurve,
+    const Handle<PriceTermStructure>& priceCurve, const Handle<YieldTermStructure>& discountCurve,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation,
-    bool preferOutOfTheMoney,
-    Solver1DOptions solverOptions)
+    const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
+    const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
-        upperStrikeConstExtrap, timeFlatExtrapolation, preferOutOfTheMoney, solverOptions),
-        priceCurve_(priceCurve), discountCurve_(discountCurve) {
+                            upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
+      priceCurve_(priceCurve), discountCurve_(discountCurve) {
     registerWith(priceCurve_);
     registerWith(discountCurve_);
 }

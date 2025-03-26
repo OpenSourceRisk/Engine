@@ -82,6 +82,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // The isPayer flag in the leg data is ignored.
     Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
 
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
+
     if (legData_.legType() == LegType::Floating) {
 
         QuantLib::ext::shared_ptr<FloatingLegData> floatData =
@@ -119,11 +121,13 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 (mcType == engineFactory->engineData()->globalParameters().end()) ||
                 (mcType->second != "American")
             );
-            
+
             legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
                                 ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
-                                           engineFactory->configuration(MarketContext::pricing),
-                                           Null<Date>(), false, attachLegPrcier));
+                                           engineFactory->configuration(MarketContext::pricing), Null<Date>(), false,
+                                           attachLegPrcier, &productModelEngines));
+            addProductModelEngine(productModelEngines);
+
             // if both caps and floors are given, we have to use a payer leg, since in this case
             // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
             // and a short cap while we have documented a collar to be a short floor and long cap
@@ -152,7 +156,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             ALOG("CapFloor trade " << id() << " on sub periods Ibor (index = '" << underlyingIndex
                                    << "') built, will ignore sub periods feature");
             builder = engineFactory->builder(tradeType_);
-            legs_.push_back(makeIborLeg(legData_, index, engineFactory));
+            legs_.push_back(makeIborLeg(legData_, index, engineFactory, true, Null<Date>(), &productModelEngines));
+            addProductModelEngine(productModelEngines);
 
             // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
             if (floors_.size() > 1) {
@@ -208,7 +213,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         tmpLegData.concreteLegData() = tmpFloatData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
                             ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
-                                       engineFactory->configuration(MarketContext::pricing)));
+                                       engineFactory->configuration(MarketContext::pricing), Null<Date>(), false, true,
+                                       &productModelEngines));
+        addProductModelEngine(productModelEngines);
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
@@ -242,7 +249,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         tmpLegData.concreteLegData() = tmpCmsData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
                             ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
-                                       engineFactory->configuration(MarketContext::pricing)));
+                                       engineFactory->configuration(MarketContext::pricing), Null<Date>(), false, true,
+                                       &productModelEngines));
+        addProductModelEngine(productModelEngines);
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
@@ -276,7 +285,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         tmpLegData.concreteLegData() = tmpFloatData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
                             ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
-                                       engineFactory->configuration(MarketContext::pricing)));
+                                       engineFactory->configuration(MarketContext::pricing), Null<Date>(), false, true,
+                                       &productModelEngines));
+        addProductModelEngine(productModelEngines);
         // if both caps and floors are given, we have to use a payer leg, since in this case
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
