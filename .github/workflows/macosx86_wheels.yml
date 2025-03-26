@@ -5,33 +5,26 @@ on:
 
 jobs:
   wheels-macos:
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
-    - name: Checkout ORE-SWIG
-      uses: actions/checkout@v4
-    - name: get QuantLib-SWIG
-      run: |
-        git submodule update --init
     - name: Checkout ORE
       uses: actions/checkout@v4
-      with:
-          repository: OpenSourceRisk/Engine
-          path: './ORE'
-          fetch-depth: 0
     - name: get QuantLib
       run: |
-        cd ORE
+        git submodule update --init
+    - name: get QuantLib-SWIG
+      run: |
+        cd ORE-SWIG
         git submodule update --init
     - name: Install Boost
       run: |
-        curl -O -L https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
-        tar xfz boost_1_80_0.tar.gz
-        cd boost_1_80_0
+        curl -O -L https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
+        tar xfz boost_1_84_0.tar.gz
+        cd boost_1_84_0
         ./bootstrap.sh
         ./b2 toolset=clang-darwin target-os=darwin architecture=x86 cxxflags="-arch x86_64" cflags="-arch x86_64" linkflags="-arch x86_64" abi=sysv binary-format=mach-o install
     - name: Build ORE CMake
       run: |
-        cd ORE
         mkdir build
         cd build
         cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64 -DORE_USE_ZLIB=ON -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
@@ -41,8 +34,8 @@ jobs:
       run: |
         pwd
         python -m pip install setuptools
-        cp wheels/oreanalytics-config.macos OREAnalytics-SWIG/oreanalytics-config
-        cd OREAnalytics-SWIG/SWIG
+        cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/OREAnalytics-SWIG/oreanalytics-config
+        cd ORE-SWIG/OREAnalytics-SWIG/SWIG
         chmod +x oreanalytics.i
         cd ..
         cd Python
@@ -60,7 +53,7 @@ jobs:
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
       with:
-        package-dir: /Users/runner/work/ORE-SWIG/ORE-SWIG/OREAnalytics-SWIG/Python
+        package-dir: ${{ github.workspace }}/ORE-SWIG/OREAnalytics-SWIG/Python
     - name: Save wheels as artifacts
       uses: actions/upload-artifact@v4
       with:
