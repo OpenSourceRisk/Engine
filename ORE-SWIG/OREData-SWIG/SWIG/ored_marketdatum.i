@@ -830,7 +830,7 @@ class BaseCorrelationQuote : public MarketDatum {
     BaseCorrelationQuote(Real value, Date asofDate, const std::string& name,
                          MarketDatum::QuoteType quoteType,
                          const std::string cdsIndexName,
-                         Period term, Real detachmentPoint);
+                         Period term, Real attachmentPoint, Real detachmentPoint);
     const std::string& cdsIndexName() const;
     Real detachmentPoint() const;
     Period term() const;
