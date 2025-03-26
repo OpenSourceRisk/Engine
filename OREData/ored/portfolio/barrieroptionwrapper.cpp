@@ -122,18 +122,24 @@ bool SingleBarrierOptionWrapper::exercise() const {
         } else if (startDate_ != Date() && startDate_ < today) {
             QL_REQUIRE(index_, "no index provided");
             QL_REQUIRE(calendar_ != Calendar(), "no calendar provided");
-            QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndex;
-            if (barrierType_ == Barrier::DownOut || barrierType_ == Barrier::DownIn && indexLows_) {
-                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_);
-            } else if (barrierType_ == Barrier::UpOut || barrierType_ == Barrier::UpIn && indexHighs_) {
-                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_);
-            } else {
-                eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(index_);
-            }
+            QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(index_);
+            QuantLib::ext::shared_ptr<QuantExt::EqFxIndexBase> eqfxIndexLowHigh =
+                barrierType_ == Barrier::DownOut || barrierType_ == Barrier::DownIn
+                    ? QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_)
+                    : QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_);
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
-                    Real fixing = eqfxIndex->pastFixing(d);
+                    
+                    Real fixing = Null<Real>();
+                    if (eqfxIndexLowHigh == nullptr) {
+                        fixing = eqfxIndex->pastFixing(d);
+                    } else {
+                        fixing = eqfxIndexLowHigh->pastFixing(d);
+                        if (fixing == Null<Real>()) {
+                            fixing = eqfxIndex->pastFixing(d);
+                        }
+                    }
                     if (fixing == Null<Real>()) {
                         StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
@@ -142,10 +148,6 @@ bool SingleBarrierOptionWrapper::exercise() const {
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     } else {
-                        // This is so we can use pastIndex and not fail on a missing fixing to be
-                        // consistent with previous implemention, however maybe we should use fixing
-                        // and be strict on needed fixings being present
-                        auto fxInd = QuantLib::ext::dynamic_pointer_cast<QuantExt::FxIndex>(eqfxIndex);
                         trigger = checkBarrier(fixing);
                         if (trigger)
                             exerciseDate_ = d;
@@ -179,8 +181,6 @@ bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh) const
     return spotLow <= barrierLow_ || spotHigh >= barrierHigh_;
 }
 
-
-
 bool DoubleBarrierOptionWrapper::exercise() const {
     bool trigger = false;
     Date today = Settings::instance().evaluationDate();
@@ -200,35 +200,30 @@ bool DoubleBarrierOptionWrapper::exercise() const {
             if (eqfxIndex) {
                 Date d = calendar_.adjust(startDate_);
                 while (d < today && !trigger) {
-                    double dailyLow, dailyHigh = 0.0;
+                    double dailyLow, dailyHigh = Null<Real>();
 
-                    if (indexL == nullptr || indexH == nullptr){
-                        dailyLow = dailyHigh = eqfxIndex->pastFixing(d);
+                    if (indexL == nullptr){
+                        dailyLow = eqfxIndex->pastFixing(d);
                     } else {
                         dailyLow =  indexL->pastFixing(d);
+                        dailyLow = dailyLow == Null<Real>() ? eqfxIndex->pastFixing(d) : dailyLow;
+                    }
+                    
+                    if (indexH == nullptr){
+                        dailyHigh = eqfxIndex->pastFixing(d);
+                    } else {                      
                         dailyHigh = indexH->pastFixing(startDate_);
-                    }
-                    
-                    if (dailyLow == Null<Real>()) {
-                        StructuredMessage(
-                            StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
-                            "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
-                                ", Skipping this date, assuming no trigger",
-                            std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
-                            .log();
-                        continue;
+                        dailyHigh = dailyHigh == Null<Real>() ? eqfxIndex->pastFixing(d) : dailyHigh;
                     } 
-                    if (dailyHigh == Null<Real>()) {
+                    
+                    if (dailyLow == Null<Real>() || dailyHigh == Null<Real>()) {
                         StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
                                 ", Skipping this date, assuming no trigger",
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
-                        continue;
-                    }
-                    
-                    else {
+                    }else{
                         trigger = checkBarrier(dailyLow, dailyHigh);
                     }
                     d = calendar_.advance(d, 1, Days);

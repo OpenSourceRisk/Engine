@@ -100,8 +100,8 @@ public:
             std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>(),
         const std::vector<Real>& additionalMultipliers = std::vector<Real>(),
         const std::optional<bool>& overrideTriggered = std::nullopt,
-        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexLows, 
-        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexHighs)
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexLows = nullptr, 
+        const QuantLib::ext::shared_ptr<QuantLib::Index>& indexHighs = nullptr)
         : BarrierOptionWrapper(inst, isLongOption, exerciseDate, settlementDate, isPhysicalDelivery, undInst,
                                barrierType, spot, rebate, ccy, startDate, index, calendar, multiplier, undMultiplier,
                                additionalInstruments, additionalMultipliers, overrideTriggered, indexLows, indexHighs),

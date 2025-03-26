@@ -18,6 +18,7 @@
 #include <ored/portfolio/barrieroptionwrapper.hpp>
 #include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/barrieroption.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -145,26 +146,34 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     QuantLib::ext::shared_ptr<QuantLib::Index> index = getIndex();
     const QuantLib::Handle<QuantLib::Quote>& spot = spotQuote();
-    if (barrier_.levels().size() < 2)
+    if (barrier_.levels().size() < 2) {
         instWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType), spot,
             barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_, tradeMultiplier(),
-            tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
-    else
+            tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(),
+            getLowIndex(), getHighIndex());
+    } else {
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
             index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers,
             barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
-
+    }
     instrument_ = instWrapper;
 
     Calendar fixingCal = index ? index->fixingCalendar() : calendar_;
     if (startDate_ != Null<Date>() && !indexFixingName().empty()) {
+        auto lowIndex = getLowIndex();
+        auto highIndex = getHighIndex();
         for (Date d = fixingCal.adjust(startDate_); d <= expiryDate; d = fixingCal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, indexFixingName(), payDate);
+            
+            if (lowIndex != nullptr)
+                requiredFixings_.addFixingDate(d, IndexNameTranslator::instance().oreName(lowIndex->name()), payDate, false, false);
+            if (highIndex != nullptr)
+                requiredFixings_.addFixingDate(d, IndexNameTranslator::instance().oreName(highIndex->name()), payDate, false, false);
         }
     }
 
@@ -234,20 +243,35 @@ void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::Engin
 
     spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
     fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
-    std::string indexName = fxIndex_->name();
-    std::string indexFamilyName = fxIndex_->familyName();
 
-    std::string lowIndexName =
-        indexName.replace(indexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_LOW");
-    std::string highIndexName =
-        indexName.replace(indexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_HIGH");
-    fxIndexLows_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
-    fxIndexHighs_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+    if (!fxIndexDailyHighsStr_.empty()) {
+        fxIndexLows_ =
+            ef->market()->fxIndex(fxIndexDailyLowsStr_, ef->configuration(MarketContext::pricing)).currentLink();
+    } else if (!fxIndexStr_.empty() && fxIndex_ != nullptr) {
+        const std::string indexName = indexFixingName();
+        const std::string indexFamilyName = fxIndex_->familyName();
+        std::string lowIndexName = indexName;
+        lowIndexName.replace(lowIndexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_LOW");
+        fxIndexLows_ = ef->market()->fxIndex(lowIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+    }
+
+    if (!fxIndexDailyHighsStr_.empty()) {
+        fxIndexHighs_ =
+            ef->market()->fxIndex(fxIndexDailyHighsStr_, ef->configuration(MarketContext::pricing)).currentLink();
+    } else if (!fxIndexStr_.empty() && fxIndex_ != nullptr) {
+        const std::string indexName = indexFixingName();
+        const std::string indexFamilyName = fxIndex_->familyName();
+        std::string highIndexName = indexName;
+        highIndexName.replace(highIndexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_HIGH");
+        fxIndexHighs_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+    }
     BarrierOption::build(ef);
 }
 
 void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
     fxIndexStr_ = XMLUtils::getChildValue(node, "FXIndex", false);
+    fxIndexDailyLowsStr_ = XMLUtils::getChildValue(node, "FXIndexDailyLows", false);
+    fxIndexDailyHighsStr_ = XMLUtils::getChildValue(node, "FXIndexDailyHighs", false);
     boughtCurrency_ = XMLUtils::getChildValue(node, "BoughtCurrency", true);
     soldCurrency_ = XMLUtils::getChildValue(node, "SoldCurrency", true);
     boughtAmount_ = XMLUtils::getChildValueAsDouble(node, "BoughtAmount", true);
@@ -257,6 +281,10 @@ void FxOptionWithBarrier::additionalFromXml(XMLNode* node) {
 void FxOptionWithBarrier::additionalToXml(XMLDocument& doc, XMLNode* node) const {
     if (!fxIndexStr_.empty())
         XMLUtils::addChild(doc, node, "FXIndex", fxIndexStr_);
+    if (!fxIndexDailyLowsStr_.empty())
+        XMLUtils::addChild(doc, node, "FXIndexDailyLows", fxIndexDailyLowsStr_);
+    if (!fxIndexDailyHighsStr_.empty())
+        XMLUtils::addChild(doc, node, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     XMLUtils::addChild(doc, node, "BoughtCurrency", boughtCurrency_);
     XMLUtils::addChild(doc, node, "BoughtAmount", boughtAmount_);
     XMLUtils::addChild(doc, node, "SoldCurrency", soldCurrency_);
