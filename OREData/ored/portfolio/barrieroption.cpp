@@ -243,28 +243,22 @@ void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::Engin
 
     spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
     fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
-
-    if (!fxIndexDailyHighsStr_.empty()) {
+    DLOG("Trying to get index name for daily lows: " << fxIndex_->name());
+    std::string indexNameDailyLows =
+        !fxIndexDailyLowsStr_.empty() ? fxIndexDailyLowsStr_ : fxIndexNameForDailyLows(fxIndex_);
+    DLOG("Got index name for daily lows: " << indexNameDailyLows);
+    if (!indexNameDailyLows.empty()) {
         fxIndexLows_ =
-            ef->market()->fxIndex(fxIndexDailyLowsStr_, ef->configuration(MarketContext::pricing)).currentLink();
-    } else if (!fxIndexStr_.empty() && fxIndex_ != nullptr) {
-        const std::string indexName = indexFixingName();
-        const std::string indexFamilyName = fxIndex_->familyName();
-        std::string lowIndexName = indexName;
-        lowIndexName.replace(lowIndexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_LOW");
-        fxIndexLows_ = ef->market()->fxIndex(lowIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+            ef->market()->fxIndex(indexNameDailyLows, ef->configuration(MarketContext::pricing)).currentLink();
     }
 
-    if (!fxIndexDailyHighsStr_.empty()) {
+    std::string indexNameDailyHighs = 
+        !fxIndexDailyHighsStr_.empty() ? fxIndexDailyHighsStr_ : fxIndexNameForDailyHighs(fxIndex_);
+    if (!indexNameDailyHighs.empty()) {
         fxIndexHighs_ =
-            ef->market()->fxIndex(fxIndexDailyHighsStr_, ef->configuration(MarketContext::pricing)).currentLink();
-    } else if (!fxIndexStr_.empty() && fxIndex_ != nullptr) {
-        const std::string indexName = indexFixingName();
-        const std::string indexFamilyName = fxIndex_->familyName();
-        std::string highIndexName = indexName;
-        highIndexName.replace(highIndexName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + "_HIGH");
-        fxIndexHighs_ = ef->market()->fxIndex(highIndexName, ef->configuration(MarketContext::pricing)).currentLink();
+            ef->market()->fxIndex(indexNameDailyHighs, ef->configuration(MarketContext::pricing)).currentLink();
     }
+
     BarrierOption::build(ef);
 }
 
