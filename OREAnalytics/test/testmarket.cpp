@@ -351,12 +351,6 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     capFloorCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateCvs(0.0045, Normal);
     capFloorCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateCvs(0.0040, Normal);
 
-    // build default curves
-    defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] = flatRateDcs(0.1);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] = flatRateDcs(0.2);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer0")] = flatRateDcs(0.0);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] = flatRateDcs(0.0);
-
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
@@ -364,6 +358,20 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)); 
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
+
+    // build default curves
+    defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] =
+        flatRateDcs(0.1, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "dc")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] =
+        flatRateDcs(0.2, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer0")] =
+        flatRateDcs(0.0, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer0")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
+        flatRateDcs(0.0, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")]);
 
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve0")] = flatRateYts(0.05);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve1")] = flatRateYts(0.05);
@@ -515,10 +523,12 @@ TestMarket::flatRateSvs(Volatility forward, VolatilityType type, Real shift) {
     return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
 }
 
-Handle<QuantExt::CreditCurve> TestMarket::flatRateDcs(Volatility forward) {
+Handle<QuantExt::CreditCurve> TestMarket::flatRateDcs(Volatility forward, const Handle<YieldTermStructure>& yts,
+                                                      const Handle<Quote>& recoveryRate) {
     QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dcs(
             new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
-    return Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
+    return Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+        Handle<DefaultProbabilityTermStructure>(dcs), yts, recoveryRate));
 }
 
 Handle<OptionletVolatilityStructure> TestMarket::flatRateCvs(Volatility vol, VolatilityType type, Real shift) {
@@ -944,9 +954,11 @@ void TestMarketParCurves::createDefaultCurve(const string& name, const string& c
     Handle<YieldTermStructure> baseDiscount = this->discountCurve(ccy, Market::defaultConfiguration);
     defaultRateHelpersMap_[name] =
         parRateCurveHelpers(name, parTenor, defaultRateHelperValuesMap_[name], baseDiscount, this);
+    Handle<Quote> recoveryRate = this->recoveryRate(name, Market::defaultConfiguration);
 
-    defaultCurves_[make_pair(Market::defaultConfiguration, name)] = Handle<QuantExt::CreditCurve>(
-        QuantLib::ext::make_shared<QuantExt::CreditCurve>(parRateCurve(asof_, defaultRateHelpersMap_[name])));
+    defaultCurves_[make_pair(Market::defaultConfiguration, name)] =
+        Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+            parRateCurve(asof_, defaultRateHelpersMap_[name]), baseDiscount, recoveryRate));
 }
 
 void TestMarketParCurves::createCdsVolCurve(const string& name, const vector<Period>& parTenor,

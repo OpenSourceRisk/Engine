@@ -193,6 +193,7 @@ models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
 models/crossassetmodelimpliedfxvoltermstructure.cpp
+models/crossassetmodelimpliedswaptionvoltermstructure.cpp
 models/defaultableequityjumpdiffusionmodel.cpp
 models/dkimpliedyoyinflationtermstructure.cpp
 models/dkimpliedzeroinflationtermstructure.cpp
@@ -419,6 +420,8 @@ time/yearcounter.cpp
 utilities/barrier.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
+utilities/creditcurves.cpp
+utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -712,6 +715,7 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crossassetmodelimpliedswaptionvoltermstructure.hpp
 models/crstateparametrization.hpp
 models/defaultableequityjumpdiffusionmodel.hpp
 models/defaultlossmodel.hpp
@@ -758,6 +762,7 @@ models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
+models/mcdefaultlossmodel.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/marketobserver.hpp
@@ -1018,6 +1023,8 @@ time/yearcounter.hpp
 utilities/barrier.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
+utilities/creditcurves.hpp
+utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp

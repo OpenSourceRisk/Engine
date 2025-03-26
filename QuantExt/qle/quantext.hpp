@@ -341,6 +341,7 @@
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/marketobserver.hpp>
+#include <qle/models/mcdefaultlossmodel.hpp>
 #include <qle/models/modelbuilder.hpp>
 #include <qle/models/modelimpliedpricetermstructure.hpp>
 #include <qle/models/modelimpliedyieldtermstructure.hpp>
@@ -598,6 +599,8 @@
 #include <qle/utilities/barrier.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
+#include <qle/utilities/creditcurves.hpp>
+#include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>

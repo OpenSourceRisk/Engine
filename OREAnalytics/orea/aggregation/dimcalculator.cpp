@@ -86,7 +86,7 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         for (Size j = 0; j < datesLoopSize_; ++j) {
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
-                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k, scenarioData_);
                 Real mporFlow =
                     cubeInterpretation_->storeFlows() ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;

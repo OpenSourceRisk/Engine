@@ -35,6 +35,7 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
     dpardzero_ = Matrix(optionTerms_.size(), optionTerms_.size(), 0.0);
 
     optionTimes_.resize(optionTerms_.size());
+    baseImpliedVols_.resize(optionTerms_.size());
 
     std::transform(optionTerms_.begin(), optionTerms_.end(), optionTimes_.begin(), [this](const Period& p) {
         return model_->termStructure()->timeFromReference(model_->termStructure()->referenceDate() + p);
@@ -57,7 +58,6 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
         helpers.back()->setPricingEngine(engine);
     }
 
-
     constexpr Real shift = 1E-7;
 
     for (std::size_t i = 0; i < optionTerms_.size(); ++i) {
@@ -66,6 +66,7 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
         Real bumpedVol = helpers[i]->impliedVolatility(helpers[i]->modelValue(), 1E-6, 100, 0.0, 0.03);
         dpardzero_(i, i) = (bumpedVol - baseVol) / shift;
         engine->resetZetaShift();
+        baseImpliedVols_[i] = baseVol;
     }
 
     dzerodpar_ = inverse(dpardzero_);
@@ -74,5 +75,6 @@ LgmSwaptionVegaParConverter::LgmSwaptionVegaParConverter(const QuantLib::ext::sh
 const std::vector<Real>& LgmSwaptionVegaParConverter::optionTimes() const { return optionTimes_; }
 const Matrix& LgmSwaptionVegaParConverter::dpardzero() const { return dpardzero_; }
 const Matrix& LgmSwaptionVegaParConverter::dzerodpar() const { return dzerodpar_; }
+const std::vector<Real>& LgmSwaptionVegaParConverter::baseImpliedVols() const { return baseImpliedVols_; }
 
 } // namespace QuantExt

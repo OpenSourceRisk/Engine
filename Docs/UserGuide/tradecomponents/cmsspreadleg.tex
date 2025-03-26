@@ -3,7 +3,7 @@
 
 A CMS Spread leg consists of coupons that are linked to differences (spreads)
 of CMS index fixings with different maturities. When these are capped and/or floored,
-then the leg contains a sequence of CMS SPread Options with payoff
+then the leg (assuming NakedOption \emph{true}) contains a sequence of CMS Spread Options with payoff
 $$
 N\cdot\left[(\CMS_m -\CMS_n - K)\right]^+ = N\cdot \max(0,\CMS_m-\CMS_n - K)
 $$

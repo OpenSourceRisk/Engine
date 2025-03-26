@@ -1432,6 +1432,7 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
               <xs:complexType>

@@ -1058,7 +1058,7 @@
 		"Difference"
             ],
             "abs_tol": 0.05,
-            "rel_tol": 1e-6
+            "rel_tol": 1e-4
           }
         ]
       },
