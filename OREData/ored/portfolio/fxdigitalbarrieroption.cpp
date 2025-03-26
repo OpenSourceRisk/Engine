@@ -226,16 +226,16 @@ XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, fxNode, "Calendar", calendar_);
     if (fxIndex_ != "")
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+    if (!fxIndexDailyLowsStr_.empty())
+        XMLUtils::addChild(doc, node, "FXIndexDailyLows", fxIndexDailyLowsStr_);
+    if (!fxIndexDailyHighsStr_.empty())
+        XMLUtils::addChild(doc, node, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     XMLUtils::addChild(doc, fxNode, "Strike", strike_);
     XMLUtils::addChild(doc, fxNode, "PayoffAmount", payoffAmount_);
     if (payoffCurrency_ != "")
         XMLUtils::addChild(doc, fxNode, "PayoffCurrency", payoffCurrency_);
     XMLUtils::addChild(doc, fxNode, "ForeignCurrency", foreignCurrency_);
     XMLUtils::addChild(doc, fxNode, "DomesticCurrency", domesticCurrency_);
-    if (!fxIndexDailyLowsStr_.empty())
-        XMLUtils::addChild(doc, node, "FXIndexDailyLows", fxIndexDailyLowsStr_);
-    if (!fxIndexDailyHighsStr_.empty())
-        XMLUtils::addChild(doc, node, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     return node;
 }
 
