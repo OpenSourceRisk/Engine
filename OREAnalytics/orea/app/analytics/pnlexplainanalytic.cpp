@@ -22,6 +22,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
+#include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/zerotoparscenariogenerator.hpp>
@@ -40,6 +41,17 @@ void PnlExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 }
 
+void PnlExplainAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
+    if (pnlAnalytic.second)
+        addDependentAnalytic(pnlLookupKey, pnlAnalytic.second, true);
+}
+
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
     
@@ -51,12 +63,16 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     auto pnlexplainAnalytic = static_cast<PnlExplainAnalytic*>(analytic());
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
     auto pnlAnalytic = dependentAnalytic(pnlLookupKey);
+    pnlAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    pnlAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     pnlAnalytic->runAnalytic(loader);
-    auto pnlReport = pnlAnalytic->reports().at("PNL").at("pnl");
+    auto pnlReport = pnlAnalytic->getReport("PNL", "pnl");
 
     auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
 
@@ -68,14 +84,14 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QuantLib::ext::shared_ptr<InMemoryReport> sensireport;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parSensiAnalysis;
     if (inputs_->parSensi()) {
-        sensireport = sensiAnalytic->reports().at("SENSITIVITY").at("par_sensitivity");
+        sensireport = sensiAnalytic->getReport("SENSITIVITY", "par_sensitivity");
         auto sensiImpl = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get());
         parSensiAnalysis = sensiImpl->parAnalysis();
     } else {
-        sensireport = sensiAnalytic->reports().at("SENSITIVITY").at("sensitivity");
+        sensireport = sensiAnalytic->getReport("SENSITIVITY", "sensitivity");
     }
 
-    analytic()->reports()[label_]["sensitivity"] = sensireport;
+    analytic()->addReport(label_, "sensitivity", sensireport);
     QuantLib::ext::shared_ptr<SensitivityStream> ss = ext::make_shared<SensitivityReportStream>(sensireport);
     ss = QuantLib::ext::make_shared<FilteredSensitivityStream>(ss, 1e-6);
 
@@ -97,10 +113,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     auto t1Scenario = pnlImpl->t1Scenario();
 
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> scenarios;
-    if (!inputs_->historicalScenarioReader()) {
-        analytic()->reports()[label_]["pnl_scenario_t0"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t0");
-        analytic()->reports()[label_]["pnl_scenario_t1"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t1");
-
+    if (!inputs_->scenarioReader()) {
         vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>> histScens = {t0Scenario, t1Scenario};
 
         QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
@@ -127,12 +140,22 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             zeroScenarios->setGenerateDifferenceScenarios(t0SimMarket->useSpreadedTermStructures());
             
             QL_REQUIRE(parSensiAnalysis, "Par Sensi Analysis required");
-            scenarios = QuantLib::ext::make_shared<ZeroToParScenarioGenerator>(zeroScenarios, t0SimMarket,
+            auto parScenarios = QuantLib::ext::make_shared<ZeroToParScenarioGenerator>(zeroScenarios, t0SimMarket,
                                                                                parSensiAnalysis->parInstruments());
+            
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());                        
+            auto sw = ScenarioWriter(nullptr, parScenarioReport);
+            sw.writeScenario(parScenarios->baseScenario(), true);
+            for (auto d : parScenarios->endDates())
+                sw.writeScenario(parScenarios->next(d), false);
+            
+            analytic()->addReport(label(), "par_scenarios", parScenarioReport);
+            scenarios = parScenarios;
         } else
             scenarios = zeroScenarios;
     } else {
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, pnlDates,
+        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, pnlDates,
                                                           analytic()->configurations().simMarketParams,
                                                           analytic()->configurations().todaysMarketParams);
         scenarios->baseScenario() = t0Scenario;
@@ -151,11 +174,11 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Call PNL Explain calculation");
     CONSOLEW("Risk: PNL Explain Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
-    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     reports->add(pnlReport);
 
     pnlExplainReport->calculate(reports);
-    analytic()->reports()[label_]["pnl_explain"] = pnlReport;
+    analytic()->addReport(label_, "pnl_explain", pnlReport);
 }
 
 } // namespace analytics

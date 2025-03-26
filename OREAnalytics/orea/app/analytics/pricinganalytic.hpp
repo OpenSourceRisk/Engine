@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/pricinganalytic.hpp
+    \brief Pricing Analytic
 */
 
 #pragma once
@@ -52,9 +52,10 @@ static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
-                   inputs) {}
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
+                   analyticsManager) {}
 };
  
 } // namespace analytics

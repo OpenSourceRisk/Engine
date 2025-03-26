@@ -36,12 +36,11 @@ public:
     //! Default constructor
     BarrierData() : initialized_(false), rebate_(0.0) {}
     //! Constructor
-    BarrierData(std::string barrierType, std::vector<double> levels, double rebate,
-                std::vector<ore::data::TradeBarrier> tradeBarriers,
-                const boost::optional<string>& strictComparison = boost::none, std::string style = ""
-                )
+    BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
+                const std::vector<ore::data::TradeBarrier>& tradeBarriers, const std::string& style = std::string(),
+                const std::optional<string>& strictComparison = std::nullopt, const std::optional<bool>& overrideTriggered = std::nullopt)
         : initialized_(true), type_(barrierType), levels_(levels), rebate_(rebate), tradeBarriers_(tradeBarriers),
-          strictComparison_(strictComparison), style_(style) {}
+          style_(style), strictComparison_(strictComparison), overrideTriggered_(overrideTriggered) {}
 
     //! \name Inspectors
     //@{
@@ -49,10 +48,11 @@ public:
     double rebate() const { return rebate_; }
     const std::string& rebateCurrency() const { return rebateCurrency_; }
     const std::string& rebatePayTime() const { return rebatePayTime_; }
-    std::vector<ore::data::TradeBarrier> levels() const { return tradeBarriers_; }
+    const std::vector<ore::data::TradeBarrier>& levels() const { return tradeBarriers_; }
     const std::string& style() const { return style_; }
     bool initialized() const { return initialized_; }
-    const boost::optional<string>& strictComparison() const { return strictComparison_; }
+    const std::optional<string>& strictComparison() const { return strictComparison_; }
+    const std::optional<bool> overrideTriggered() const { return overrideTriggered_; }
     //@}
 
     //! \name Serialisation
@@ -69,8 +69,9 @@ private:
     std::vector<ore::data::TradeBarrier> tradeBarriers_;
     std::string rebateCurrency_;
     std::string rebatePayTime_;
-    boost::optional<std::string> strictComparison_;
     std::string style_;
+    std::optional<string> strictComparison_;
+    std::optional<bool> overrideTriggered_;
 };
 } // namespace data
 } // namespace oreplus

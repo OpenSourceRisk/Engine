@@ -111,21 +111,20 @@ void TodaysMarket::initialise(const Date& asof) {
     // Fixings
 
     if (loadFixings_) {
-        // Apply them now in case a curve builder needs them
+        // Index fixings - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
         timer.start();
         applyFixings(loader_->loadFixings());
         timings["1 load fixings"] = timer.elapsed().wall;
         LOG("Todays Market Loading Fixing done.");
+
+        // Dividends - apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Dividends");
+        timer.start();
+        applyDividends(loader_->loadDividends());
+        timings["2 load dividends"] = timer.elapsed().wall;
+        LOG("Todays Market Loading Dividends done.");
     }
-
-    // Dividends - apply them now in case a curve builder needs them
-
-    LOG("Todays Market Loading Dividends");
-    timer.start();
-    applyDividends(loader_->loadDividends());
-    timings["2 load dividends"] = timer.elapsed().wall;
-    LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
     timer.start();
@@ -145,7 +144,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
     // build the dependency graph for all configurations and  build all FX Spots
     timer.start();
-    DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_);
+    DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_, referenceData_);
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_->configurations()) {
@@ -181,7 +180,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             timer.start();
             Graph& g = dependencies_[configuration.first];
-            IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+            IndexMap index = boost::get(boost::vertex_index, g);
             std::vector<Vertex> order;
             try {
                 boost::topological_sort(g, std::back_inserter(order));
@@ -547,8 +546,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredBaseCorrelationCurves_.find(baseCorrelationSpec->name());
             if (itr == requiredBaseCorrelationCurves_.end()) {
                 DLOG("Building BaseCorrelation for asof " << asof_);
-                QuantLib::ext::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve = QuantLib::ext::make_shared<BaseCorrelationCurve>(
-                    asof_, *baseCorrelationSpec, *loader_, *curveConfigs_, referenceData_);
+                QuantLib::ext::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
+                    QuantLib::ext::make_shared<BaseCorrelationCurve>(
+                        asof_, *baseCorrelationSpec, *loader_, *curveConfigs_, referenceData_, requiredYieldCurves_,
+                        requiredDefaultCurves_, params_->mapping(MarketObject::DefaultCurve, configuration));
                 itr =
                     requiredBaseCorrelationCurves_.insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
                         .first;
@@ -614,6 +615,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QuantLib::ext::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                     QuantLib::ext::make_shared<InflationCapFloorVolCurve>(asof_, *infcapfloorspec, *loader_, *curveConfigs_,
                                                                   requiredYieldCurves_, requiredInflationCurves_);
+                calibrationInfo_->cpiVolCalibrationInfo[infcapfloorspec->name()] = inflationCapFloorVolCurve->calibrationInfo();
                 itr = requiredInflationCapFloorVolCurves_
                           .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
                           .first;
@@ -721,6 +723,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 recoveryRates_[make_pair(configuration, node.name)] = itr->second->recoveryRate();
             if (!itr->second->cpr().empty())
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
+            if (!itr->second->conversionFactor().empty())
+                conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
             break;
         }
 
@@ -843,7 +847,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     Vertex node = nullptr;
 
     Graph& g = tmp->second;
-    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+    IndexMap index = boost::get(boost::vertex_index, g);
 
     VertexIterator v, vend;
     bool found = false;

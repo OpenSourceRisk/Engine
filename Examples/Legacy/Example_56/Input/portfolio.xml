@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="Swap_20">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.02</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20151028</StartDate>
+            <EndDate>20351028</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <Spreads>
+            <Spread>0.000000</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20151028</StartDate>
+            <EndDate>20351028</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <!-- <Trade id="Swp"> -->
+  <!--   <TradeType>ScriptedTrade</TradeType> -->
+  <!--   <Envelope> -->
+  <!--     <CounterParty>CPTY_A</CounterParty> -->
+  <!--     <NettingSetId>CPTY_A</NettingSetId> -->
+  <!--     <AdditionalFields/> -->
+  <!--   </Envelope> -->
+  <!--   <ScriptedTradeData> -->
+  <!--     <ScriptName>Swap</ScriptName> -->
+  <!--     <Data> -->
+  <!--       <Number> -->
+  <!--         <Name>Notional</Name> -->
+  <!--         <Value>10000000</Value> -->
+  <!--       </Number> -->
+  <!--       <Number> -->
+  <!--         <Name>FixedRatePayer</Name> -->
+  <!--         <Value>1</Value> -->
+  <!--       </Number> -->
+  <!--       <Currency> -->
+  <!--         <Name>PayCurrency</Name> -->
+  <!--         <Value>EUR</Value> -->
+  <!--       </Currency> -->
+  <!--       <Daycounter> -->
+  <!--         <Name>FixedDayCounter</Name> -->
+  <!--         <Value>30/360</Value> -->
+  <!--       </Daycounter> -->
+  <!--       <Number> -->
+  <!--         <Name>FixedRate</Name> -->
+  <!--         <Value>0.02</Value> -->
+  <!--       </Number> -->
+  <!--       <Event> -->
+  <!--         <Name>FixedLegSchedule</Name> -->
+  <!--         <ScheduleData> -->
+  <!--           <Rules> -->
+  <!--             <StartDate>2016-03-01</StartDate> -->
+  <!--             <EndDate>2036-03-01</EndDate> -->
+  <!--             <Tenor>1Y</Tenor> -->
+  <!--             <Calendar>TARGET</Calendar> -->
+  <!--             <Convention>Following</Convention> -->
+  <!--             <TermConvention>Following</TermConvention> -->
+  <!--             <Rule>Forward</Rule> -->
+  <!--             <EndOfMonth/> -->
+  <!--             <FirstDate/> -->
+  <!--             <LastDate/> -->
+  <!--           </Rules> -->
+  <!--         </ScheduleData> -->
+  <!--       </Event> -->
+  <!--       <Daycounter> -->
+  <!--         <Name>FloatDayCounter</Name> -->
+  <!--         <Value>A360</Value> -->
+  <!--       </Daycounter> -->
+  <!--       <Index> -->
+  <!--         <Name>FloatIndex</Name> -->
+  <!--         <Value>EUR-EURIBOR-6M</Value> -->
+  <!--       </Index> -->
+  <!--       <Number> -->
+  <!--         <Name>FloatSpread</Name> -->
+  <!--         <Value>0.0000</Value> -->
+  <!--       </Number> -->
+  <!--       <Event> -->
+  <!--         <Name>FloatLegSchedule</Name> -->
+  <!--         <ScheduleData> -->
+  <!--           <Rules> -->
+  <!--             <StartDate>2016-03-01</StartDate> -->
+  <!--             <EndDate>2036-03-01</EndDate> -->
+  <!--             <Tenor>6M</Tenor> -->
+  <!--             <Calendar>TARGET</Calendar> -->
+  <!--             <Convention>Following</Convention> -->
+  <!--             <TermConvention>Following</TermConvention> -->
+  <!--             <Rule>Forward</Rule> -->
+  <!--             <EndOfMonth/> -->
+  <!--             <FirstDate/> -->
+  <!--             <LastDate/> -->
+  <!--           </Rules> -->
+  <!--         </ScheduleData> -->
+  <!--       </Event> -->
+  <!--       <Event> -->
+  <!--         <Name>FixingSchedule</Name> -->
+  <!--         <DerivedSchedule> -->
+  <!--           <BaseSchedule>FloatLegSchedule</BaseSchedule> -->
+  <!--           <Shift>-2D</Shift> -->
+  <!--           <Calendar>TARGET</Calendar> -->
+  <!--           <Convention>F</Convention> -->
+  <!--         </DerivedSchedule> -->
+  <!--       </Event> -->
+  <!--     </Data> -->
+  <!--   </ScriptedTradeData> -->
+  <!-- </Trade> -->
+</Portfolio>

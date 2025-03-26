@@ -192,7 +192,8 @@ QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib
         QuantLib::ext::shared_ptr<data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
-        QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
+        QL_REQUIRE(swap->legData()[0].legType() == LegType::Floating && swap->legData()[1].legType() == LegType::Fixed,
+                   "Leg mixup");
         if (fixedFreqs.find(fixFreq) == fixedFreqs.end())
             fixedFreqs[fixFreq] = 1;
         else
@@ -295,7 +296,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(Q
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->swapVolKeys() = ccys;
-    parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDecayMode("ForwardVariance");
 
     parameters->setFxVolExpiries("",
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
@@ -364,7 +365,7 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     if (withCloseOutGrid)
         calculators.push_back(QuantLib::ext::make_shared<MPORCalculator>(npvCalc));
     BOOST_TEST_MESSAGE("mporStickyDate "<<mporStickyDate);
-    valEngine.buildCube(portfolio, cube, calculators, mporStickyDate);
+    valEngine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, mporStickyDate);
     t.stop();
     double elapsed = t.elapsed().wall * 1e-9;
     
@@ -597,16 +598,16 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         vector<vector<Real>> defaultValue;
         
         std::string fileName;
-        Handle<AggregationScenarioData> asd;
+        QuantLib::ext::shared_ptr<AggregationScenarioData> asd;
         QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter;
         if (withCloseOutGrid[k]) {
             fileName = "scenarioData_closeout.csv";
-            asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, asd, dateGrid);
+            asd = loadAggregationScenarioData(fileName);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, dateGrid);
         } else {
             fileName = "scenarioData.csv";
-            asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false, asd);
+            asd = loadAggregationScenarioData(fileName);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false);
         }
 
         if (!withCompounding){
@@ -618,21 +619,26 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         vector<string> regressors = {"EUR-EURIBOR-6M"};
         QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<InputParameters>();
         QuantLib::ext::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
-            QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, *asd,
-                                                                         0.99, 14, 2, regressors);
+            QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
+                inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
 
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
-        for (Size i = 0; i<cube->dates().size(); i++)     
-            BOOST_TEST_MESSAGE("defaultValue at "<< QuantLib::io::iso_date(dateGrid->valuationDates()[i])<<": "<<cubeInterpreter->getDefaultNpv(cube, 0, i, 0));      
+        for (Size i = 0; i<cube->dates().size(); i++)
+            BOOST_TEST_MESSAGE("defaultValue at " << QuantLib::io::iso_date(dateGrid->valuationDates()[i]) << ": "
+                                                  << cubeInterpreter->getDefaultNpv(cube, 0, i, 0));
 
         for (Size i = 0; i<cube->dates().size(); i++){
             if (withCloseOutGrid[k]){
                 if (i != cube->dates().size()-1)
-                    BOOST_TEST_MESSAGE("closeOutValue at "<< QuantLib::io::iso_date(dateGrid->closeOutDates()[i])<<": "<<cubeInterpreter->getCloseOutNpv(cube, 0, i, 0));
+                    BOOST_TEST_MESSAGE("closeOutValue at " << QuantLib::io::iso_date(dateGrid->closeOutDates()[i])
+                                                           << ": "
+                                                           << cubeInterpreter->getCloseOutNpv(cube, 0, i, 0, asd));
             }
             else{
                 if (i != cube->dates().size()-1)
-                    BOOST_TEST_MESSAGE("closeOutValue at "<< QuantLib::io::iso_date(dateGrid->valuationDates()[i])<<": "<<cubeInterpreter->getCloseOutNpv(cube, 0, i, 0));
+                    BOOST_TEST_MESSAGE("closeOutValue at " << QuantLib::io::iso_date(dateGrid->valuationDates()[i])
+                                                           << ": "
+                                                           << cubeInterpreter->getCloseOutNpv(cube, 0, i, 0, asd));
             }
             
         }
@@ -648,11 +654,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
                 calcTypeStr = "NoLag";
             else
                 QL_FAIL("Collateral calculation type not covered");
-            BOOST_TEST_MESSAGE("Calculation type: "<< calcTypeStr); 
+            BOOST_TEST_MESSAGE("Calculation type: "<< calcTypeStr);
 
-            QuantLib::ext::shared_ptr<ExposureCalculator> exposureCalculator = QuantLib::ext::make_shared<ExposureCalculator>(portfolio, cube, cubeInterpreter,
-                                                                    initMarket, false, "EUR", "Market",
-                                                                    0.99, calcType, false, false);
+            QuantLib::ext::shared_ptr<ExposureCalculator> exposureCalculator =
+                QuantLib::ext::make_shared<ExposureCalculator>(portfolio, cube, cubeInterpreter, asd, initMarket, false,
+                                                               "EUR", "Market", 0.99, calcType, false, false);
             exposureCalculator->build();
             nettingSetDefaultValue = exposureCalculator->nettingSetDefaultValue();
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
@@ -660,10 +666,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
             QuantLib::ext::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
                 QuantLib::ext::make_shared<NettedExposureCalculator>(
-                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager, collateralBalances,
-                    nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
-                    nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
-                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified);
+                    portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager,
+                    collateralBalances, nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
+                    nettingSetMporNegativeFlow, asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
+                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified,
+                    false);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()

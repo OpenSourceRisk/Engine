@@ -85,6 +85,7 @@ private:
     <CreditCurveId>...</CreditCurveId>
     <ReferenceCurveId>...</ReferenceCurveId>
     <IncomCurveId>...</IncomeCurveId>
+    <PriceType>...</PriceType>
     <LegData>...</LegData>
   </BondReferenceData>
 </ReferenceDatum>
@@ -104,8 +105,9 @@ public:
         string referenceCurveId;
         string incomeCurveId;
         string volatilityCurveId;
-	string priceQuoteMethod;
+	    string priceQuoteMethod;
         string priceQuoteBaseValue;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
         std::vector<LegData> legData;
         string subType;
         void fromXML(XMLNode* node) override;
@@ -201,12 +203,15 @@ public:
     const std::set<CreditIndexConstituent>& constituents() const;
 
     const std::string& indexFamily() const { return indexFamily_; }
+    const std::string& indexSubFamily() const { return indexSubFamily_; }
 
     void setIndexFamily(const std::string& indexFamily) { indexFamily_ = indexFamily; }
+    void setIndexSubFamily(const std::string& indexSubFamily) { indexSubFamily_ = indexSubFamily; }
 
 private:
     std::set<CreditIndexConstituent> constituents_;
     std::string indexFamily_;
+    std::string indexSubFamily_;
 };
 
 
@@ -415,10 +420,10 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const vector<QuantLib::ext::shared_ptr<Trade>>& getTrades() const { return tradecomponents_; }
+    vector<QuantLib::ext::shared_ptr<Trade>> getTrades() const;
 
 private:
-    vector<QuantLib::ext::shared_ptr<Trade>> tradecomponents_;
+    std::string tradecomponents_;
 };
 
 

@@ -244,7 +244,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
     // FX, EQ, COMM indcies
     for (Size k = 0; k < indices_.size(); ++k) {
-        paths[referenceDate_][k].setAll(process->initialValues().at(indexPositionInProcess_[k]));
+        paths[referenceDate_][k].setAll(std::exp(process->initialValues().at(indexPositionInProcess_[k])));
     }
 
     // IR states per currency (they are all just 0)
@@ -488,9 +488,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     Size camIndex = infIndexPositionInCam_[indexNo];
     Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate + lag);
     Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate + lag);
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = infIndices_[indexNo].second->interpolated();
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = infIndices_[indexNo].first.infIsInterpolated();
     Real baseFixing =
         infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
     RandomVariable result(size());
@@ -562,13 +560,19 @@ RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Dat
 RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Date& t,
                                         const Handle<YieldTermStructure>& targetCurve) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[idx])->parametrization());
+    Handle<YieldTermStructure> effectiveTargetCurve;
+    if (!targetCurve.empty()) {
+        effectiveTargetCurve = targetCurve;
+    } else {
+        effectiveTargetCurve = curves_[idx];
+    }
     return lgmv.discountBond(timeFromReference(s), curves_.front()->timeFromReference(t), irStates_.at(s)[idx],
-                             targetCurve);
+                             effectiveTargetCurve);
 }
 
 RandomVariable GaussianCam::getNumeraire(const Date& s) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[0])->parametrization());
-    return lgmv.numeraire(timeFromReference(s), irStates_.at(s)[0]);
+    return lgmv.numeraire(timeFromReference(s), irStates_.at(s)[0], curves_.front());
 }
 
 Real GaussianCam::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
@@ -665,10 +669,11 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
         // train coefficients
 
-        coeff = regressionCoefficients(amount, state,
-                                       multiPathBasisSystem(state.size(), mcParams_.regressionOrder,
-                                                            mcParams_.polynomType, std::min(size(), trainingSamples())),
-                                       filter, RandomVariableRegressionMethod::QR);
+        coeff =
+            regressionCoefficients(amount, state,
+                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                        {}, std::min(size(), trainingSamples())),
+                                   filter, RandomVariableRegressionMethod::QR);
         DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                  << " (got model state size " << nModelStates << " and " << nAddReg
                                  << " additional regressors, coordinate transform " << coordinateTransform.columns()
@@ -694,7 +699,7 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
     return conditionalExpectation(state,
                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       std::min(size(), trainingSamples())),
+                                                       {}, std::min(size(), trainingSamples())),
                                   coeff);
 }
 

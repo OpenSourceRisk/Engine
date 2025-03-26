@@ -1,7 +1,31 @@
 \subsubsection{Convertible Bond}
 \label{ss:convertible_bond}
 
-A convertible bond is set up using a {\tt ConvertibleBondData} block as shown in listing
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A convertible bond is a bond, that can be converted to a prespecified number of shares. The shares are usually from the
+bond issuer, but it is also possible that the shares are from a different issuer (exchangeables). In addition, the share
+currency can be different from the bond currency in both cases (cross-currency convertibles).
+
+The bond might be callable by the issuer (typically in American style) and / or puttable by the investor (typcially in
+Bermudan style). The issuer calls can be ``hard calls'', which are call rights in the traditional sense, as opposed to
+``soft calls'' which can only the exercised if the equity price observed on (and possibly during a period before) the
+exercise date is above a prespecified threshold. If a soft call is exercised, the investor has the right to convert the
+bond into shares instead of accepting the payment from the issuer call (``forced conversion'').
+
+For a detachable or stripped convertible bond the optionality can be traded separately from the bond. We set the NPV for
+a detachable convertible bond to the difference of the convertible bond npv and the bond floor npv, where the bond floor
+denotes the underyling vanilla bond stripped of any optionality.
+
+Additional features of convertible bonds include dividend protection, contingent conversion, mandatory conversion,
+conversion ratio resets, make-whole calls, dividend-forfeit clauses, copay clauses.
+
+Refer to \cite{Spiegeleer_convertible_handbook} and \cite{Bloomberg_OVCV} for a deeper dive into the convertible bond
+universe.
+
+{\bf Input}}\fi
+
+A convertible bond is set up in ORE using a {\tt ConvertibleBondData} block as shown in listing
 \ref{lst:convertiblebonddata1}. The bond details are read from reference data in this case. 
 
 A convertible bond is a bond, that can be converted into a prespecified number of shares, given by:
@@ -156,10 +180,10 @@ where $X_t$ converts one equity ccy unit to bond ccy
   
   Allowable values: Any positive real number.
 
-\item NofMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
-  TriggerRatios must be observed on n of the m days before the exercise dates for the call to be active. Only applicable
-  to Calls, not to Puts. Optional, defaults to ``0-of-0'' \\
-  Allowable values: x-of-y with x, y non-negative integers, ``0-of-0'' disables the trigger
+\item NOfMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
+  TriggerRatios must be observed on n of the m calendar days in the period before (and including) a call date. Only applicable
+  to Calls, not to Puts. Optional, defaults to ``1-of-1'' \\
+  Allowable values: x-of-y with x, y non-negative integers, ``1-of-1'' corresponds to a vanilla call specification
 
 \item MakeWhole: A list of make whole conditions. Optional. Possible subnodes are:
   \begin{itemize}
@@ -214,9 +238,9 @@ where $X_t$ converts one equity ccy unit to bond ccy
       <Soft>false</Soft>
     </Soft>
     <TriggerRatios/>
-    <NofMTriggers>
+    <NOfMTriggers>
       <NOfMTrigger>20-of-30</NOfMTrigger>
-    </NofMTriggers>
+    </NOfMTriggers>
   </CallData>
 \end{minted}
 \caption{Convertible bond call data example 1}

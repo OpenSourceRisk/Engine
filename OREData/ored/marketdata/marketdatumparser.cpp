@@ -26,6 +26,7 @@
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace std;
 using QuantLib::Currency;
@@ -74,6 +75,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"YY_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR},
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
+        {"INDEX_CDS_TRANCHE", MarketDatum::InstrumentType::INDEX_CDS_TRANCHE},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
@@ -89,7 +91,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     }
 }
 
-static MarketDatum::QuoteType parseQuoteType(const string& s) {
+MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
         {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
         {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
@@ -104,8 +106,9 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"NULL", MarketDatum::QuoteType::NONE},
-        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY}};
+        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY},
+        {"CONVERSION_FACTOR", MarketDatum::QuoteType::CONVERSION_FACTOR},
+        {"NULL", MarketDatum::QuoteType::NONE}};
 
     if (s == "RATE_GVOL")
         LOG("Use of deprecated quote type RATE_GVOL");
@@ -322,13 +325,13 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         boost::variant<QuantLib::Date, QuantLib::Period> end = parseDateOrPeriod(tokens[5 + offset]);
 
         if (start.type() == typeid(QuantLib::Period) && end.type() == typeid(QuantLib::Period)) {
-            Period fwdStart = QuantLib::ext::get<QuantLib::Period>(start);
-            Period term = QuantLib::ext::get<QuantLib::Period>(end);
+            Period fwdStart = boost::get<QuantLib::Period>(start);
+            Period term = boost::get<QuantLib::Period>(end);
             return QuantLib::ext::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor,
                                                  indexName);
         } else if (start.type() == typeid(QuantLib::Date) && end.type() == typeid(QuantLib::Date)) {
-            Date startDate = QuantLib::ext::get<QuantLib::Date>(start);
-            Date maturityDate = QuantLib::ext::get<QuantLib::Date>(end);
+            Date startDate = boost::get<QuantLib::Date>(start);
+            Date maturityDate = boost::get<QuantLib::Date>(end);
             return QuantLib::ext::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor,
                                                  indexName);
         } else {
@@ -669,16 +672,41 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
         else if (quoteType == MarketDatum::QuoteType::PRICE)
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
+        else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR)
+            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID);
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION, "Invalid quote type for " << datumName);
+        bool validType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
+        QL_REQUIRE(validType, "Invalid quote type for " << datumName);
+        WLOG("Deprecated MarketDatum::InstrumentType::CDS_INDEX, "
+             "please use INDEX_CDS_TRANCHE/BASE_CORRELATION/IndexName/Term/DetachPoint "
+             "or INDEX_CDS_TRANCHE/PRICE/IndexName/Term/AttachPoint/DetachPoint instead");
+        MarketDatum::InstrumentType newType = MarketDatum::InstrumentType::INDEX_CDS_TRANCHE;
+        std::string newDatumName =
+            to_string(newType) + "/" + tokens[1] + "/" + tokens[2] + "/" + tokens[3] + "/" + tokens[4];
         const string& cdsIndexName = tokens[2];
         Period term = parsePeriod(tokens[3]);
         Real detachmentPoint = parseReal(tokens[4]);
+        return QuantLib::ext::make_shared<BaseCorrelationQuote>(value, asof, newDatumName, quoteType, cdsIndexName,
+                                                                term, 0.0, detachmentPoint);
+    }
+
+    case MarketDatum::InstrumentType::INDEX_CDS_TRANCHE: {
+        bool validQuoteType =
+            quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE;
+        QL_REQUIRE(validQuoteType, "unexpected quote type " << quoteType << " for " << datumName
+                                                            << ", allowed values are BASE_CORRELATION or PRICE");
+        bool isBaseCorrelationQuote = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
+        QL_REQUIRE(tokens.size() == 5 && isBaseCorrelationQuote || tokens.size() == 6,
+                   "5 tokens expected for BASECORRELAITON or 6 tokens for PRICE, got datum " << datumName);
+        const string& cdsIndexName = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        Real attachmentPoint = isBaseCorrelationQuote ? 0.0 : parseReal(tokens[4]);
+        Real detachmentPoint = isBaseCorrelationQuote ? parseReal(tokens[4]) : parseReal(tokens[5]);
         return QuantLib::ext::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
-                                                        detachmentPoint);
+                                                                attachmentPoint, detachmentPoint);
     }
 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {

@@ -139,11 +139,6 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
 QuantLib::ext::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
-QL_DEPRECATED
-QuantLib::ext::shared_ptr<ZeroInflationIndex>
-parseZeroInflationIndex(const string& s, bool isInterpolated,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
-
 //! Convert std::string to QuantExt::BondIndex
 /*!
  \ingroup utilities

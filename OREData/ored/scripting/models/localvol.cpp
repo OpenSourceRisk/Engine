@@ -36,7 +36,7 @@ LocalVol::LocalVol(const Size paths, const std::string& currency, const Handle<Y
                    const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
                    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
     : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams, simulationDates,
-               iborFallbackConfig) {}
+               iborFallbackConfig, SalvagingAlgorithm::None) {}
 
 LocalVol::LocalVol(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -46,9 +46,10 @@ LocalVol::LocalVol(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+    const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig) {}
+                       correlations, mcParams, simulationDates, iborFallbackConfig, salvagingAlgorithm) {}
 
 void LocalVol::performCalculations() const {
 
@@ -86,7 +87,7 @@ void LocalVol::performCalculations() const {
 
     // compute the sqrt correlation
 
-    Matrix sqrtCorr = pseudoSqrt(correlation, SalvagingAlgorithm::Spectral);
+    Matrix sqrtCorr = pseudoSqrt(correlation, getSalvagingAlgorithm());
 
     // precompute the deterministic part of the drift on each time step
 

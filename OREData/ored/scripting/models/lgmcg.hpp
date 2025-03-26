@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/scripting/models/modelcg.hpp>
+
 #include <qle/ad/computationgraph.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -37,10 +39,8 @@ class LgmCG {
 public:
     LgmCG(const std::string& qualifier, QuantExt::ComputationGraph& g,
           const std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()>& p,
-          std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters,
-          const bool sloppySimDates = false, const std::set<Date>& effSimDates = {})
-        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters),
-          effSimDates_(effSimDates) {}
+          std::set<ModelCG::ModelParameter>& modelParameters, std::set<ModelCG::ModelParameter>& cachedParameters)
+        : qualifier_(qualifier), g_(g), p_(p), modelParameters_(modelParameters), cachedParameters_(cachedParameters) {}
 
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_(); }
 
@@ -64,8 +64,8 @@ private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;
     std::function<QuantLib::ext::shared_ptr<IrLgm1fParametrization>()> p_;
-    std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameters_;
-    std::set<Date> effSimDates_;
+    std::set<ModelCG::ModelParameter>& modelParameters_;
+    std::set<ModelCG::ModelParameter>& cachedParameters_;
 };
 
 } // namespace ore::data

@@ -1,5 +1,7 @@
 \subsubsection{Composite Trade}
 
+A composite trade is a hybrid position consisting of multiple component trades. As such it inherits the characteristics of the trades defined within it. Examples of Composite Trades include combinations of vanilla options like straddles.
+
 The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component trades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
 Listing \ref{lst:compositetrade_data}.
 
@@ -31,9 +33,10 @@ Listing \ref{lst:compositetrade_data}.
 		  <NotionalCalculation>Sum</NotionalCalculation>
 		  <PortfolioBasket>true</PortfolioBasket>
 		  <BasketName>NAME</BasketName>
+          <IndexQuantity>100</IndexQuantity>
 		</CompositeTradeData>
 	\end{minted}
-	\caption{Composite trade data with Reference Data}
+	\caption{Composite trade data with Portfolio Reference Data}
 \end{listing}
 
 The meanings and allowable values of the elements in the \lstinline!CompositeTradeData!  node follow below.
@@ -60,4 +63,5 @@ The meanings and allowable values of the elements in the \lstinline!CompositeTra
     Allowable values: Boolean true or false.
     \item BasketName [Optional]: The portfolio Id. \\
     Allowable values: Any string. Note that if PortfolioBasket is True then there must be a BasketName. We look up the Basket within the reference data.
+    \item IndexQuantity [Optional]: Number of shares of the index.
 \end{itemize}

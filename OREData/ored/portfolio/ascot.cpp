@@ -79,6 +79,7 @@ void Ascot::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& eng
         QuantLib::ext::make_shared<QuantExt::Ascot>(type, exercise, bond_.data().bondData().bondNotional(), cb, fundingLeg);
     qlAscot->setPricingEngine(builder->engine(id(), bond_.data().bondData().currency()));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     Real multiplier = (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
     instrument_ =
@@ -91,6 +92,7 @@ void Ascot::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& eng
 
     notional_ = bond_.data().bondData().bondNotional();
     maturity_ = bond_.maturity();
+    maturityType_ = "Bond Maturity Date";
 }
 
 void Ascot::fromXML(XMLNode* node) {

@@ -66,8 +66,6 @@ public:
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
         boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
-        const std::string& portfolioId() const { return portfolioId_; }
-        void setPortfolioId(std::string portfolioId) { portfolioId_ = portfolioId; }
 
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
@@ -80,7 +78,6 @@ public:
             paymentCalendar_;
         std::vector<std::string> paymentDates_;
         Real initialPrice_;
-        std::string portfolioId_;
         std::string initialPriceCurrency_;
         std::vector<std::string> fxTerms_; // FX index strings
 	boost::optional<bool> payUnderlyingCashFlowsImmediately_;
@@ -175,9 +172,11 @@ protected:
     AdditionalCashflowData additionalCashflowData_;
     std::string creditRiskCurrency_;
     std::map<std::string, SimmCreditQualifierMapping> creditQualifierMapping_;
-    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     std::string portfolioId_;
+    bool portfolioDeriv_;
+    double indexQuantity_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

@@ -21,6 +21,9 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/indexes/ibor/euribor.hpp>
+#include <ql/time/daycounters/thirty360.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -34,10 +37,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory, QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
     Date today, QuantLib::ext::shared_ptr<DateGrid> grid, QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
-    const std::string& configuration)
+    const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration) {
+      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples) {
 
     LOG("CrossAssetModelScenarioGenerator ctor called");
     
@@ -48,6 +51,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
     n_ccy_ = model_->components(CrossAssetModel::AssetType::IR);
+    n_fx_ = model->components(CrossAssetModel::AssetType::FX);
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
@@ -56,6 +60,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_survivalweights_ = simMarketConfig_->additionalScenarioDataSurvivalWeights().size();
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
+    n_states_ = model->stateProcess()->size();
 
     // Cache yield curve keys
     discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
@@ -92,7 +97,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     if (n_com_ > 0) {
         commodityCurveKeys_.reserve(n_com_ * simMarketConfig_->commodityCurveTenors("").size());
         for (Size j = 0; j < n_com_; j++) {
-            std::string name = simMarketConfig_->commodityNames()[j];
+            std::string name = model_->com(j)->name();
             ten_com_.push_back(simMarketConfig_->commodityCurveTenors(name));
             Size n_ten = ten_com_.back().size();
             for (Size k = 0; k < n_ten; k++)
@@ -113,14 +118,21 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         DLOG("CrossAssetModel is simulating FX vols");
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of FX vols is only supported for LGM1F ir model type.");
+	string baseCcy = model_->parametrizations()[0]->currency().code();
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
             const string pair = simMarketConfig_->fxVolCcyPairs()[k];
             DLOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
-            const string& domestic = pair.substr(0, 3);
-            const string& foreign = pair.substr(3);
-            QL_REQUIRE(domestic == model_->parametrizations()[0]->currency().code(), "Only DOM-FOR fx vols supported");
+            // const string& domestic = pair.substr(0, 3);
+            // const string& foreign = pair.substr(3);
+            // QL_REQUIRE(domestic == model_->parametrizations()[0]->currency().code(), "Only DOM-FOR fx vols supported");
+            const string& ccy1 = pair.substr(0, 3);
+            const string& ccy2 = pair.substr(3);
+	    QL_REQUIRE(ccy1 != ccy2, "invalid currency pair " << pair);
+	    QL_REQUIRE(ccy1 == baseCcy || ccy2 == baseCcy, "currency pair " << pair << " does not contain base");
+	    string foreign = ccy1 != baseCcy ? ccy1 : ccy2;
+	    
             Size index = model->ccyIndex(parseCurrency(foreign)); // will throw if foreign not there
             QL_REQUIRE(index > 0, "Invalid index for ccy " << foreign << " should be > 0");
             // fxVols_ are indexed by ccyPairs
@@ -276,6 +288,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }
         zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        ts->enableCache();
     }
 
     // Same logic here as for the zeroInfCurves above.
@@ -296,6 +309,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of INF DK or JY model for YoY curves is only supported for LGM1F ir model type.");
         yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+        ts->enableCache();
     }
 
     for (Size j = 0; j < n_cr_; ++j) {
@@ -310,6 +324,60 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    // if we have an amcPathDataOutput create the PathData
+    if (!amcPathDataOutput.empty()) {
+        pathData_.fxBuffer.resize(n_fx_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+        pathData_.irStateBuffer.resize(n_ccy_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+        pathData_.pathTimes = std::vector<Real>(std::next(grid->timeGrid().begin(), 1), grid->timeGrid().end());
+        pathData_.paths.resize(pathData_.pathTimes.size(),
+                                std::vector<RandomVariable>(n_states_, RandomVariable(samples)));
+    }
+
+    // set up CrossAssetModelImpliedSwaptionVolTermStructures
+    if (simMarketConfig_->simulateSwapVols()) {
+
+	DLOG("CrossAssetModel is simulating Swaption vols");
+
+        QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
+                   "Simulation of Swaption vols is only supported for LGM1F ir model type.");
+
+        // We need Swap conventions (index name, fixed tenor, fixed day counter) below, all part of the relevant Swap Index
+	// FIXME: Get access to the Swaption vol curve config and the long and short SwapIndex definied there
+        std::map<string, string> swapConventionMap
+	    = { { "EUR", "EUR-CMS-30Y"},
+		{ "USD", "USD-CMS-SOFR-30Y" },
+		{ "GBP", "GBP-CMS-30Y" },
+		{ "CHF", "CHF-CMS-30Y" },
+		{ "JPY", "JPY-CMS-30Y" }
+	};
+        std::map<string, string> shortSwapConventionMap
+	    = { { "EUR", "EUR-CMS-1Y"},
+		{ "USD", "USD-CMS-SOFR-1Y" },
+		{ "GBP", "GBP-CMS-1Y" },
+		{ "CHF", "CHF-CMS-1Y" },
+		{ "JPY", "JPY-CMS-1Y" }
+	};
+
+        for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
+	    const string key = simMarketConfig_->swapVolKeys()[k];
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
+
+	    QL_REQUIRE(swapConventionMap.find(key) != swapConventionMap.end(),
+		       "swaption vol key " << key << " missing associated swap convention name");  
+	    QL_REQUIRE(shortSwapConventionMap.find(key) != shortSwapConventionMap.end(),
+	     	       "swaption vol key " << key << " missing associated short swap convention name");  
+
+	    auto swapIndex = parseSwapIndex(swapConventionMap[key]);
+	    auto shortSwapIndex = parseSwapIndex(shortSwapConventionMap[key]);
+	    	    
+	    Size ccyIndex = model_->ccyIndex(swapIndex->currency());
+            swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
+                model_, curves_[ccyIndex], indices_, swapIndex, shortSwapIndex));
+
+            DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key << " done");
+        }
+    }
+
     LOG("CrossAssetModelScenarioGenerator ctor done");
 }
 
@@ -321,14 +389,39 @@ void copyPathToArray(const MultiPath& p, Size t, Size a, Array& target) {
 } // namespace
 
 std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
+    ++currentSample_;
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
 
+    if (!amcPathDataOutput_.empty()) {
+        for (Size k = 0; k < n_fx_; ++k) {
+            for (Size j = 0; j < timeGrid_.size(); ++j) {
+                pathData_.fxBuffer[k][j][currentSample_ - 1] =
+                    std::exp(sample.value[model_->pIdx(CrossAssetModel::AssetType::FX, k)][j]);
+            }
+        }
+
+        for (Size k = 0; k < n_ccy_; ++k) {
+            for (Size j = 0; j < timeGrid_.size(); ++j) {
+                pathData_.irStateBuffer[k][j][currentSample_ - 1] =
+                    sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, k)][j];
+            }
+        }
+
+        for (Size k = 0; k < n_states_; ++k) {
+            for (Size j = 0; j < pathData_.pathTimes.size(); ++j) {
+                pathData_.paths[j][k].set(currentSample_ - 1, sample.value[k][j + 1]);
+            }
+        }
+    }
+
     std::vector<Array> ir_state(n_ccy_);
-    for (Size j = 0; j < n_ccy_; ++j)
+    for (Size j = 0; j < n_ccy_; ++j) {
         ir_state[j] = Array(model_->irModel(j)->n());
+    }
 
     Array ir_state_aux(model_->irModel(0)->n_aux());
 
@@ -434,6 +527,28 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 for (Size j = 0; j < expiries.size(); j++) {
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
+                }
+            }
+        }
+
+        // Swaption vols
+        if (simMarketConfig_->simulateSwapVols()) {
+	    for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
+	        const string key = simMarketConfig_->swapVolKeys()[k];
+                const vector<Period>& expires = simMarketConfig_->swapVolExpiries(key);
+                const vector<Period>& terms = simMarketConfig_->swapVolTerms(key);
+
+		// ext::shared_ptr<YieldTermStructure> dts = curves_[swaptionVols_[k]->ccyIndex()];
+		// ext::shared_ptr<YieldTermStructure> fts = fwdCurves_[swaptionVols_[k]->indexIndex()];
+		// Update the implied swaption vols
+                swaptionVols_[k]->move(dates_[i], ir_state[0][0]);
+
+                for (Size j = 0; j < expires.size(); j++) {
+                    for (Size jj = 0; jj < terms.size(); jj++) {
+                        Real vol = swaptionVols_[k]->volatility(dates_[i] + expires[j], terms[jj], Null<Real>(), true);
+			Size idx = j * terms.size() + jj;
+                        scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx), vol);
+                    }
                 }
             }
         }
@@ -572,8 +687,30 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                               survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
             scenarios[i]->add(recoveryRateKeys_[k], rr);
         }
+
     }
+
+
+    if (totalSamples_ == currentSample_ && !amcPathDataOutput_.empty()) {
+        LOG("Serialize paths, fx and irState buffers to'" << amcPathDataOutput_ << "'");
+        std::ofstream os(amcPathDataOutput_, std::ios::binary);
+        boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+        oa << pathData_;
+        os.close();
+    }
+
     return scenarios;
 }
+
+void CrossAssetModelScenarioGenerator::reset() {
+
+    pathGenerator_->reset();
+
+    for (auto const& [x, b, m, t] : zeroInfCurves_)
+        t->clearCache();
+    for (auto const& [x, b, m, t] : yoyInfCurves_)
+        t->clearCache();
+}
+
 } // namespace analytics
 } // namespace ore

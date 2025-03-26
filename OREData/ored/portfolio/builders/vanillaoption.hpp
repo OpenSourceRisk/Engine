@@ -136,7 +136,7 @@ public:
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
                            const Date& expiryDate, const bool useFxSpot) override {
-        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
+        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate) + "/" + (useFxSpot ? "1" : "0");
     }
 
     Date expiryDate_;

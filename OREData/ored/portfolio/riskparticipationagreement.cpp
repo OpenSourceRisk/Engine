@@ -92,11 +92,12 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
        - two legs in different currencies with arbitrary coupons allowed, no optionData though
     */
 
-    std::set<std::string> legTypes;
+    std::set<LegType> legTypes;
     std::set<bool> legPayers;
     bool hasCapFloors = false, hasIborInArrears = false;
     for (auto const& l : underlying_) {
-        QL_REQUIRE(l.legType() == "Fixed" || l.legType() == "Floating" || l.legType() == "Cashflow",
+        QL_REQUIRE(l.legType() == LegType::Fixed || l.legType() == LegType::Floating ||
+                   l.legType() == LegType::Cashflow,
                    "RiskParticipationAgreement: leg type " << l.legType()
                                                            << " not supported, expected Fixed, Floating, Cashflow");
         legTypes.insert(l.legType());
@@ -104,7 +105,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
         if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(l.concreteLegData())) {
             hasCapFloors = hasCapFloors || !c->caps().empty();
             hasCapFloors = hasCapFloors || !c->floors().empty();
-            hasIborInArrears = hasIborInArrears || (c->isInArrears() && !isOvernightIndex(c->index()));
+            hasIborInArrears =
+                hasIborInArrears || ((c->isInArrears() && *c->isInArrears()) && !isOvernightIndex(c->index()));
         }
     }
 
@@ -113,8 +115,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
         productVariant = "RiskParticipationAgreement_Vanilla_XCcy";
         QL_REQUIRE(!optionData_, "XCcy Risk Participation Agreement does not allow for OptionData");
     } else if (underlying_.size() == 2 &&
-               (legTypes == std::set<std::string>{"Fixed", "Floating"} ||
-                legTypes == std::set<std::string>{"Cashflow", "Floating"}) &&
+               (legTypes == std::set<LegType>{LegType::Fixed, LegType::Floating} ||
+                legTypes == std::set<LegType>{LegType::Cashflow, LegType::Floating}) &&
                legPayers == std::set<bool>{false, true} && !hasCapFloors && !hasIborInArrears && !optionData_) {
         productVariant = "RiskParticipationAgreement_Vanilla";
     } else {
@@ -197,10 +199,12 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 namespace {
@@ -288,11 +292,13 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
 
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 void RiskParticipationAgreement::fromXML(XMLNode* node) {

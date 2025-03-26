@@ -225,11 +225,10 @@ QuantLib::ext::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Qu
 }
 
 QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
-    QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    auto index = QuantLib::ext::make_shared<QuantExt::EquityIndex2>(tokens[1], NullCalendar(), Currency());
+    QL_REQUIRE(boost::starts_with(s, "EQ-"), "equity index expected to be of the form EQ-*");
+    string eqi = s;
+    eqi.erase(0, 3);
+    auto index = QuantLib::ext::make_shared<QuantExt::EquityIndex2>(eqi, NullCalendar(), Currency());
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
 }
@@ -580,19 +579,12 @@ class ZeroInflationIndexParserBase {
 public:
     virtual ~ZeroInflationIndexParserBase() {}
     virtual QuantLib::ext::shared_ptr<ZeroInflationIndex> build(const Handle<ZeroInflationTermStructure>& h) const = 0;
-    virtual QL_DEPRECATED QuantLib::ext::shared_ptr<ZeroInflationIndex>
-    build(bool isInterpolated, const Handle<ZeroInflationTermStructure>& h) const = 0;
 };
 
 template <class T> class ZeroInflationIndexParser : public ZeroInflationIndexParserBase {
 public:
     QuantLib::ext::shared_ptr<ZeroInflationIndex> build(const Handle<ZeroInflationTermStructure>& h) const override {
         return QuantLib::ext::make_shared<T>(h);
-    }
-
-    QL_DEPRECATED QuantLib::ext::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
-                                                const Handle<ZeroInflationTermStructure>& h) const override {
-        return QuantLib::ext::make_shared<T>(isInterpolated, h);
     }
 };
 
@@ -604,11 +596,6 @@ public:
         return QuantLib::ext::make_shared<T>(frequency_, false, h);
     }
     
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
-                                                const Handle<ZeroInflationTermStructure>& h) const override {
-        return QuantLib::ext::make_shared<T>(frequency_, false, isInterpolated, h);
-    }
-
 private:
     Frequency frequency_;
 };
@@ -659,65 +646,6 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
     auto it = m.find(s);
     if (it != m.end()) {
         auto index = it->second->build(h);
-        IndexNameTranslator::instance().add(index->name(), s);
-        return index;
-    } else {
-        QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
-    }
-}
-
-
-QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
-    bool isInterpolated,
-    const Handle<ZeroInflationTermStructure>& h) {
-    
-    const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-
-    // If conventions are non-null and we have provided a convention of type InflationIndex with a name equal to the 
-    // string s, we use that convention to construct the inflation index.
-    if (conventions) {
-        pair<bool, QuantLib::ext::shared_ptr<Convention>> p = conventions->get(s, Convention::Type::ZeroInflationIndex);
-        if (p.first) {
-            auto c = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndexConvention>(p.second);
-            auto index = QuantLib::ext::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(), isInterpolated,
-                c->frequency(), c->availabilityLag(), c->currency(), h);
-            IndexNameTranslator::instance().add(index->name(), s);
-            return index;
-        }
-    }
-
-    static map<string, QuantLib::ext::shared_ptr<ZeroInflationIndexParserBase>> m = {
-        {"AUCPI", QuantLib::ext::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
-        {"AU CPI", QuantLib::ext::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
-        {"BEHICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<BEHICP>>()},
-        {"BE HICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<BEHICP>>()},
-        {"EUHICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<EUHICP>>()},
-        {"EU HICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<EUHICP>>()},
-        {"EUHICPXT", QuantLib::ext::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
-        {"EU HICPXT", QuantLib::ext::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
-        {"FRHICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRHICP>>()},
-        {"FR HICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRHICP>>()},
-        {"FRCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRCPI>>()},
-        {"FR CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRCPI>>()},
-        {"UKRPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
-        {"UK RPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
-        {"USCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
-        {"US CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
-        {"ZACPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<ZACPI>>()},
-        {"ZA CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<ZACPI>>()},
-        {"SECPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<SECPI>>()},
-        {"DKCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<DKCPI>>()},
-        {"CACPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<CACPI>>()},
-        {"ESCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<ESCPI>>()},
-        {"DECPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<DECPI>>()},
-        {"DE CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<DECPI>>()}
-    };
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        QL_DEPRECATED_DISABLE_WARNING
-        auto index = it->second->build(isInterpolated, h);
-        QL_DEPRECATED_ENABLE_WARNING
         IndexNameTranslator::instance().add(index->name(), s);
         return index;
     } else {

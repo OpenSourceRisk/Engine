@@ -50,25 +50,28 @@ using QuantLib::Null;
 namespace ore {
 namespace analytics {
 
-IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calculationCcy,
+IMScheduleCalculator::IMScheduleCalculator(const QuantLib::ext::shared_ptr<Crif>& crif, const string& calculationCcy,
                                            const QuantLib::ext::shared_ptr<ore::data::Market> market,
                                            const bool determineWinningRegulations, const bool enforceIMRegulations,
                                            const bool quiet,
-                                           const map<SimmSide, set<NettingSetDetails>>& hasSEC,
-                                           const map<SimmSide, set<NettingSetDetails>>& hasCFTC)
-    : crif_(crif), calculationCcy_(calculationCcy), market_(market), quiet_(quiet),
-      hasSEC_(hasSEC), hasCFTC_(hasCFTC) {
+                                           const map<SimmSide, set<NettingSetDetails>>& hasSEC)
+    : calculationCcy_(calculationCcy), market_(market), quiet_(quiet), hasSEC_(hasSEC) {
 
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
+    if (!crif) {
+        WLOG("IMScheduleCalculator(): CRIF input is null");
+        return;
+    }
 
     QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
     QuantLib::DayCounter dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA);
 
     // Collect Schedule CRIF records
-    Crif tmp;
-    for (const CrifRecord& cr : crif_) {
-        const bool isSchedule = cr.imModel == "Schedule";
+    timer_.start("Cleaning up CRIF input");
+    for (const auto& scr : *crif) {
+        CrifRecord cr = scr.toCrifRecord();
+        const bool isSchedule = cr.imModel == CrifRecord::IMModel::Schedule;
 
         if (!isSchedule) {
             if (determineWinningRegulations) {
@@ -92,18 +95,20 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
         } else if (postRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.postRegulations.empty()) {
             postRegsIsEmpty_.at(cr.nettingSetDetails) = false;
         }
-
-        tmp.addRecord(cr);
     }
-    crif_ = tmp;
-
+    timer_.stop("Cleaning up CRIF input");
 
     // Separate out CRIF records by regulations and collect per-trade data
     LOG("IMScheduleCalculator: Collecting CRIF trade data");
-    for (const auto& crifRecord : crif_)
-        collectTradeData(crifRecord, enforceIMRegulations);
+    timer_.start("Collecting trade data");
+    for (const auto& slimCrifRecord : *crif) {
+        if (slimCrifRecord.imModel() == CrifRecord::IMModel::Schedule)
+            collectTradeData(slimCrifRecord.toCrifRecord(), enforceIMRegulations);
+    }
+    timer_.stop("Collecting trade data");
 
     // Remove (or modify) trades with incomplete data
+    timer_.start("Cleaning up incomplete trade data");
     for (auto& sv : nettingSetRegTradeData_) {
         const SimmSide& side = sv.first;
 
@@ -111,7 +116,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
             const NettingSetDetails& nsd = nv.first;
 
             for (auto& rv : nv.second) {
-                const string& regulation = rv.first;
+                const CrifRecord::Regulation& regulation = rv.first;
                 auto& tradeDataMap = rv.second;
 
                 // Remove (or modify) trades with incomplete Schedule data
@@ -158,15 +163,17 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
                     tradeData.presentValueCalc = tradeData.presentValueUsd / usdSpot;
                     tradeData.grossMarginCalc = tradeData.grossMarginUsd / usdSpot;
                     if (side == SimmSide::Call)
-                        tradeData.collectRegulations = regulation;
-                    if (side == SimmSide::Post)
-                        tradeData.postRegulations = regulation;
+                        tradeData.collectRegulations = {regulation};
+                    else
+                        tradeData.postRegulations = {regulation};
                 }
             }
         }
     }
+    timer_.stop("Cleaning up incomplete trade data");
 
     // Some additional processing depending on the regulations applicable to each netting set
+    timer_.start("Processing CRIF regulations");
     for (auto& sv : nettingSetRegTradeData_) {
         const SimmSide& side = sv.first;
     
@@ -175,19 +182,18 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
 
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTCGlobal = hasCFTC_.at(side).find(nettingDetails) != hasCFTC_.at(side).end();
             const bool hasSECGlobal = hasSEC_.at(side).find(nettingDetails) != hasSEC_.at(side).end();
-            const bool hasCFTCLocal = s.second.count("CFTC") > 0;
-            const bool hasSECLocal = s.second.count("SEC") > 0;
+            const bool hasCFTCLocal = s.second.count(CrifRecord::Regulation::CFTC) > 0;
+            const bool hasSECLocal = s.second.count(CrifRecord::Regulation::SEC) > 0;
 
-            if ((hasSECLocal && hasCFTCLocal) || (hasCFTCGlobal && hasSECGlobal)) {
+            if ((hasSECLocal && hasCFTCLocal) || hasSECGlobal) {
                 if (!hasSECLocal && !hasCFTCLocal)
                     continue;
 
                 if (hasCFTCLocal) {
                     // At this point, we expect to have CFTC trade data at least for the netting set
-                    const map<string, IMScheduleTradeData>& tradeDataMapCFTC = s.second.at("CFTC");
-                    map<string, IMScheduleTradeData>& tradeDataMapSEC = s.second["SEC"];
+                    const map<string, IMScheduleTradeData>& tradeDataMapCFTC = s.second.at(CrifRecord::Regulation::CFTC);
+                    map<string, IMScheduleTradeData>& tradeDataMapSEC = s.second[CrifRecord::Regulation::SEC];
                     for (const auto& kv : tradeDataMapCFTC) {
                         // Only add CFTC records to SEC if the record was not already in SEC,
                         // i.e. we skip over CRIF records with regulations specified as e.g. "..., CFTC, SEC, ..."
@@ -201,10 +207,11 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.
             // If netting set only has "Unspecified", then no regulations were ever specified, so all trades are
             // included.
-            if (s.second.count("Unspecified") > 0 && s.second.size() > 1)
-                s.second.erase("Unspecified");
+            if (s.second.count(CrifRecord::Regulation::Unspecified) > 0 && s.second.size() > 1)
+                s.second.erase(CrifRecord::Regulation::Unspecified);
         }
     }
+    timer_.stop("Processing CRIF regulations");
 
     // Calculate the higher level margins
     LOG("IMScheduleCalculator: Populating higher level results")
@@ -215,7 +222,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
             const NettingSetDetails& nsd = nv.first;
 
             for (const auto& rv : nv.second) {
-                const string& regulation = rv.first;
+                const CrifRecord::Regulation& regulation = rv.first;
                 populateResults(nsd, regulation, side);
             }
         }
@@ -233,11 +240,11 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
             for (const auto& nv : sv.second) {
                 const NettingSetDetails& nsd = nv.first;
                 Real winningMargin = std::numeric_limits<Real>::min();
-                map<string, Real> nettingSetMargins;
+                map<CrifRecord::Regulation, Real> nettingSetMargins;
                 vector<Real> margins;
 
                 for (const auto& rv : nv.second) {
-                    const string& regulation = rv.first;
+                    const CrifRecord::Regulation& regulation = rv.first;
                     const IMScheduleResults& schResult = rv.second;
                     const Real& im = schResult.get(ProductClass::All).scheduleIM;
 
@@ -247,20 +254,14 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
                 }
 
                 // Determine winning regulations, i.e. regulations under which we find the highest margin amount
-                vector<string> winningRegulations;
+                set<CrifRecord::Regulation> winningRegulations;
                 for (const auto& kv : nettingSetMargins) {
                     if (close_enough(kv.second, winningMargin))
-                        winningRegulations.push_back(kv.first);
+                        winningRegulations.insert(kv.first);
                 }
 
-                // In the case of multiple winning regulations, pick one based on the priority in the list
-                //const Regulation winningRegulation = getWinningRegulation(winningRegulations);
-                string winningRegulation = winningRegulations.size() > 1
-                                               ? to_string(getWinningRegulation(winningRegulations))
-                                               : winningRegulations.at(0);
-
                 // Populate internal list of winning regulators
-                winningRegulations_[side][nsd] = ore::data::to_string(winningRegulation);
+                winningRegulations_[side][nsd] = getWinningRegulation(winningRegulations);
             }
         }
 
@@ -268,7 +269,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
     }
 }
 
-const string& IMScheduleCalculator::winningRegulations(const SimmSide& side,
+const CrifRecord::Regulation& IMScheduleCalculator::winningRegulations(const SimmSide& side,
                                                        const NettingSetDetails& nettingSetDetails) const {
     const auto& subWinningRegs = winningRegulations(side);
     QL_REQUIRE(subWinningRegs.find(nettingSetDetails) != subWinningRegs.end(),
@@ -277,19 +278,19 @@ const string& IMScheduleCalculator::winningRegulations(const SimmSide& side,
     return subWinningRegs.at(nettingSetDetails);
 }
 
-const map<NettingSetDetails, string>& IMScheduleCalculator::winningRegulations(const SimmSide& side) const {
+const map<NettingSetDetails, CrifRecord::Regulation>& IMScheduleCalculator::winningRegulations(const SimmSide& side) const {
     QL_REQUIRE(winningRegulations_.find(side) != winningRegulations_.end(),
                "IMScheduleCalculator::winningRegulations(): Could not find list of"
                    << side << " schedule IM winning regulations");
     return winningRegulations_.at(side);
 }
 
-const map<SimmConfiguration::SimmSide, map<NettingSetDetails, string>>&
+const map<SimmConfiguration::SimmSide, map<NettingSetDetails, CrifRecord::Regulation>>&
 IMScheduleCalculator::winningRegulations() const {
     return winningRegulations_;
 }
 
-const map<string, IMScheduleResults>& IMScheduleCalculator::imScheduleSummaryResults(const SimmSide& side, const NettingSetDetails& nsd) const {
+const map<CrifRecord::Regulation, IMScheduleResults>& IMScheduleCalculator::imScheduleSummaryResults(const SimmSide& side, const NettingSetDetails& nsd) const {
     const auto& subResults = imScheduleSummaryResults(side);
     QL_REQUIRE(subResults.find(nsd) != subResults.end(),
                "IMScheduleCalculator::imScheduleSummaryResults(): Could not find netting set in the "
@@ -297,19 +298,19 @@ const map<string, IMScheduleResults>& IMScheduleCalculator::imScheduleSummaryRes
     return subResults.at(nsd);
 }
 
-const map<NettingSetDetails, map<string, IMScheduleResults>>& IMScheduleCalculator::imScheduleSummaryResults(const SimmSide& side) const {
+const map<NettingSetDetails, map<CrifRecord::Regulation, IMScheduleResults>>& IMScheduleCalculator::imScheduleSummaryResults(const SimmSide& side) const {
     QL_REQUIRE(imScheduleResults_.find(side) != imScheduleResults_.end(),
                "IMScheduleCalculator::imScheduleSummaryResults(): Could not find " << side
                                                                                    << " IM in the IM Schedule results");
     return imScheduleResults_.at(side);
 }
 
-const map<SimmConfiguration::SimmSide, map<NettingSetDetails, map<string, IMScheduleResults>>>&
+const map<SimmConfiguration::SimmSide, map<NettingSetDetails, map<CrifRecord::Regulation, IMScheduleResults>>>&
 IMScheduleCalculator::imScheduleSummaryResults() const {
     return imScheduleResults_;
 };
 
-const pair<string, IMScheduleResults>& IMScheduleCalculator::finalImScheduleSummaryResults(const SimmSide& side,
+const pair<CrifRecord::Regulation, IMScheduleResults>& IMScheduleCalculator::finalImScheduleSummaryResults(const SimmSide& side,
                                                                                            const NettingSetDetails& nsd) const {
     const auto& subResults = finalImScheduleSummaryResults(side);
     QL_REQUIRE(subResults.find(nsd) != subResults.end(),
@@ -318,7 +319,7 @@ const pair<string, IMScheduleResults>& IMScheduleCalculator::finalImScheduleSumm
     return subResults.at(nsd);
 }
 
-const map<NettingSetDetails, pair<string, IMScheduleResults>>& IMScheduleCalculator::finalImScheduleSummaryResults(const SimmSide& side) const {
+const map<NettingSetDetails, pair<CrifRecord::Regulation, IMScheduleResults>>& IMScheduleCalculator::finalImScheduleSummaryResults(const SimmSide& side) const {
     QL_REQUIRE(finalImScheduleResults_.find(side) != finalImScheduleResults_.end(),
                "IMScheduleCalculator::finalImScheduleSummaryResults(): Could not find "
                    << side << " IM in the final IM Schedule results");
@@ -395,6 +396,9 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
     QL_REQUIRE(cr.riskType == RiskType::PV || cr.riskType == RiskType::Notional,
                "Unexpected risk type found in CRIF " << cr.riskType << " for trade ID " << cr.tradeId);
 
+    Real amount = cr.riskType == RiskType::Notional ? std::fabs(cr.amount) : cr.amount;
+    Real amountUsd = cr.riskType == RiskType::Notional ? std::fabs(cr.amountUsd) : cr.amountUsd;
+
     for (const auto& side : {SimmSide::Call, SimmSide::Post}) {
         const NettingSetDetails& nettingSetDetails = cr.nettingSetDetails;
 
@@ -405,15 +409,17 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
         if (postRegsIsEmpty_.find(cr.nettingSetDetails) != postRegsIsEmpty_.end())
             postRegsIsEmpty = postRegsIsEmpty_.at(cr.nettingSetDetails);
 
-        string regsString;
-        if (enforceIMRegulations)
-            regsString = side == SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
-        set<string> regs = parseRegulationString(regsString);
+        set<CrifRecord::Regulation> regs;
+        if (enforceIMRegulations) {
+            regs = side == SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
+        }
+        if (regs.empty())
+            regs.insert(CrifRecord::Regulation::Unspecified);
 
-        for (const string& r : regs) {
-            if (r == "Unspecified" && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty)) {
+        for (const CrifRecord::Regulation& r : regs) {
+            if (r == CrifRecord::Regulation::Unspecified && enforceIMRegulations && !(collectRegsIsEmpty && postRegsIsEmpty)) {
                 continue;
-            } else if (r != "Excluded") {
+            } else if (r != CrifRecord::Regulation::Excluded) {
                 // Keep a record of trade IDs for each regulation
                 tradeIds_[side][nettingSetDetails][r].insert(cr.tradeId);
 
@@ -433,24 +439,32 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
                         QL_REQUIRE(tradeData.missingPVData(), "Adding PV data for trade that already has PV data, i.e. "
                                                               "multiple PV records found for the same trade: "
                                                                   << tradeData.tradeId);
-                        tradeData.presentValue = cr.amount;
-                        tradeData.presentValueUsd = cr.amountUsd;
+                        tradeData.presentValue = amount;
+                        tradeData.presentValueUsd = amountUsd;
                         tradeData.presentValueCcy = cr.amountCurrency;
                     } else {
                         QL_REQUIRE(tradeData.missingNotionalData(),
                                    "Adding Notional data for trade that already has PV data, i.e. "
                                    "multiple Notional records found for the same trade: "
                                        << tradeData.tradeId);
-                        tradeData.notional = cr.amount;
-                        tradeData.notionalUsd = cr.amountUsd;
+                        tradeData.notional = amount;
+                        tradeData.notionalUsd = amountUsd;
                         tradeData.notionalCcy = cr.amountCurrency;
                     }
                 } else {
-                    const string collectRegs = side == SimmSide::Call ? cr.collectRegulations : "";
-                    const string postRegs = side == SimmSide::Post ? cr.postRegulations : "";
+                    set<CrifRecord::Regulation> collectRegs, postRegs;
+                    if (enforceIMRegulations) {
+                        if (side == SimmSide::Call)
+                            collectRegs = cr.collectRegulations;
+                        if (side == SimmSide::Post)
+                            postRegs = cr.postRegulations;
+                    } else {
+                        collectRegs.insert(Regulation::Unspecified);
+                        postRegs.insert(Regulation::Unspecified);
+                    }
                     tradeDataMap.insert(
                         {cr.tradeId, IMScheduleTradeData(cr.tradeId, cr.nettingSetDetails, cr.riskType, cr.productClass,
-                                                         cr.amount, cr.amountCurrency, cr.amountUsd,
+                                                         amount, cr.amountCurrency, amountUsd,
                                                          parseDate(cr.endDate), calculationCcy_, collectRegs, postRegs)});
                 }
             }
@@ -458,7 +472,7 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
     }
 }
 
-void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDetails, const string& regulation,
+void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDetails, const CrifRecord::Regulation& regulation,
                                            const SimmSide& side) {
 
     LOG("IMScheduleCalculator: Populating " << side << " IM for netting set [" << nettingSetDetails
@@ -491,20 +505,19 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
     Real netRCCalc = side == SimmSide::Call ? std::max(0.0, presentValueCalc) : std::min(0.0, presentValueCalc);
 
     // Net-to-gross ratio
-    Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? 1.0 : netRCCalc / grossRCCalc;
+    auto ngrDefault = regulation == CrifRecord::Regulation::BANX ? 0.0 : 1.0 ;
+    Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? ngrDefault : netRCCalc / grossRCCalc;
 
     // Schedule IM
     Real scheduleMarginCalc = grossMarginCalc * (0.4 + 0.6 * netToGrossCalc);
 
     // Populate higher level results
-    imScheduleResults_.at(side)
-        .at(nettingSetDetails)
-        .at(regulation)
-        .add(ProductClass::All, calculationCcy_, grossMarginCalc, grossRCCalc, netRCCalc, netToGrossCalc,
-             scheduleMarginCalc);
+    imScheduleResults_[side][nettingSetDetails][regulation].add(ProductClass::All, calculationCcy_, grossMarginCalc,
+                                                                grossRCCalc, netRCCalc, netToGrossCalc,
+                                                                scheduleMarginCalc);
 }
 
-void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDetails, string>>& winningRegs) {
+void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDetails, CrifRecord::Regulation>>& winningRegs) {
 
     LOG("IMScheduleCalculator: Populating final winning regulators' IM");
 
@@ -517,11 +530,11 @@ void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingS
         for (const auto& nv : sv.second) {
             const NettingSetDetails& nsd = nv.first;
             
-            const string& reg = winningRegulations(side, nsd);
+            const CrifRecord::Regulation& reg = winningRegulations(side, nsd);
             // If no results found for winning regulator, i.e IM was calculated from SIMM only, use empty results
             const IMScheduleResults& results =
                 nv.second.find(reg) == nv.second.end() ? IMScheduleResults(calculationCcy_) : nv.second.at(reg);
-            finalImScheduleResults_[side][nsd] = make_pair(reg, results);
+            finalImScheduleResults_[side][nsd] = std::make_pair(reg, results);
             winningRegulations_[side][nsd] = reg;
         }
     }
@@ -531,7 +544,7 @@ void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingS
         const SimmSide& side = sv.first;
         for (const auto& nv : sv.second) {
             for (const auto& rv : nv.second) {
-                const string& regulation = rv.first;
+                const CrifRecord::Regulation& regulation = rv.first;
                 for (const auto& td : rv.second) {
                     // For every trade data obj, try to add this back to the finalTradeData_ map
                     const string& tradeId = td.first;
@@ -552,9 +565,9 @@ void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingS
                                 std::tie(tradeData.presentValueCcy, tradeData.presentValueUsd, tradeData.notionalCcy,
                                             tradeData.notionalUsd)) {
                                 if (side == SimmSide::Call) {
-                                    tdd.collectRegulations = combineRegulations(tdd.collectRegulations, regulation);
+                                    tdd.collectRegulations.insert(regulation);
                                 } else {
-                                    tdd.postRegulations = combineRegulations(tdd.postRegulations, regulation);
+                                    tdd.postRegulations.insert(regulation);
                                 }
                                 foundMatch = true;
                                 break;
@@ -573,7 +586,7 @@ void IMScheduleCalculator::populateFinalResults() {
     populateFinalResults(winningRegulations_);
 }
 
-void IMScheduleCalculator::add(const SimmSide& side, const NettingSetDetails& nsd, const string& regulation,
+void IMScheduleCalculator::add(const SimmSide& side, const NettingSetDetails& nsd, const CrifRecord::Regulation& regulation,
                                const ProductClass& pc, const string& calcCcy, const Real& grossIM, const Real& grossRC,
                                const Real& netRC, const Real& ngr, const Real& scheduleIM) {
     

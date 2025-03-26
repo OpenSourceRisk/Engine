@@ -399,10 +399,9 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
                         "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
-    QuantLib::ext::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        QuantLib::ext::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, engineData,
-                                                simMarketData, sensiData,
-                                                false, nullptr, nullptr, false, nullptr);
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> zeroAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, engineData, simMarketData, sensiData, false, false,
+        nullptr, nullptr, false, nullptr);
     ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, Market::defaultConfiguration);
     parAnalysis.alignPillars();
     zeroAnalysis->overrideTenors(true);
@@ -513,8 +512,8 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     // CDS Vol sensis (compare with zero sensi)
     for (auto d_it : initParMarket->cdsVolRateHelperValuesMap()) {
         string name = d_it.first;
-        Real shiftSize = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftSize;
-        ShiftType shiftType = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftType;
+        Real shiftSize = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name]->shiftSize;
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->cdsVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->cdsVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -528,8 +527,8 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     // Equity Vol sensis (compare with zero sensi)
     for (auto d_it : initParMarket->equityVolRateHelperValuesMap()) {
         string name = d_it.first;
-        Real shiftSize = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftSize;
-        ShiftType shiftType = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftType;
+        Real shiftSize = zeroAnalysis->sensitivityData()->equityVolShiftData()[name]->shiftSize;
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->equityVolShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->equityVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->equityVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -543,15 +542,15 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     // Swaption Vol sensis (compare with zero sensi)
     for (auto d_it : initParMarket->swaptionVolRateHelperValuesMap()) {
         string name = d_it.first;
-        Real shiftSize = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftSize;
-        ShiftType shiftType = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftType;
+        Real shiftSize = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name]->shiftSize;
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->swaptionVolRateHelperTenorsMap().find(name)->second;
         vector<Period> swapTenorVec = initParMarket->swaptionVolRateHelperSwapTenorsMap().find(name)->second;
-        vector<Real> strikeSpreadVec = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftStrikes;
+        vector<Real> strikeSpreadVec = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name]->shiftStrikes;
         vector<Handle<Quote>> parValVecBase = initParMarket->swaptionVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
         Size j = swapTenorVec.size();
-        Size k = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftStrikes.size();
+        Size k = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name]->shiftStrikes.size();
 
         for (Size i = 0; i < parValVecBase.size(); i++) {
             Size strike = i % k;
@@ -574,8 +573,8 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     // Base correlations sensis (compare with zero sensi)
     for (auto d_it : initParMarket->baseCorrRateHelperValuesMap()) {
         string name = d_it.first;
-        Real shiftSize = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftSize;
-        ShiftType shiftType = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftType;
+        Real shiftSize = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name]->shiftSize;
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->baseCorrRateHelperTenorsMap().find(name)->second;
         vector<string> lossLevelVec = initParMarket->baseCorrLossLevelsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->baseCorrRateHelperValuesMap().find(name)->second;

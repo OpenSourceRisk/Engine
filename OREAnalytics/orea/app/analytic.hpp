@@ -26,12 +26,14 @@
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/timer.hpp>
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <orea/app/inputparameters.hpp>
@@ -42,6 +44,8 @@
 
 namespace ore {
 namespace analytics {
+
+class AnalyticsManager;
 
 class Analytic {
 public:
@@ -84,6 +88,8 @@ public:
              const std::set<std::string>& analyticTypes,
              //! Any inputs required by this Analytic
              const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+             //! Pointer to the analytics manager
+             const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
              //! Flag to indicate whether a simulation config file is required for this analytic
              bool simulationConfig = false,
              //! Flag to indicate whether a sensitivity config file is required for this analytic
@@ -101,19 +107,22 @@ public:
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations(const bool = false){};
-    virtual void setUpConfigurations();
+    void initialise();
     
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
-    virtual void buildPortfolio();
+    virtual void buildPortfolio(const bool emitStructuredError = true);
     virtual void marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
+    virtual void enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio);
+    virtual bool requiresMarketData() const { return true; }
 
     //! Inspectors
     const std::string label() const;
     const std::set<std::string>& analyticTypes() const { return types_; }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
+    const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager() const { return analyticsManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
     // To allow SWIG wrapping
     QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
@@ -127,12 +136,27 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
 
-    //! Result reports
-    analytic_reports& reports() { return reports_; };
+    //! Analytic results
+    analytic_reports reports();
+    void addReport(const std::string& key, const std::string& subKey,
+        const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+        reports_[key][subKey] = report;
+    }
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key, const std::string& subKey) {
+        auto it = reports_.find(key);
+        if (it != reports_.end()) {
+			auto it2 = it->second.find(subKey);
+			if (it2 != it->second.end())
+				return it2->second;
+		}
+        QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
+    }
+
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
-    
+    QuantLib::ext::shared_ptr<ParSensitivityCubeStream>& parCvaSensiCubeStream() { return parCvaSensiCubeStream_; }
+
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
@@ -146,6 +170,13 @@ public:
     std::set<QuantLib::Date> marketDates() const;
 
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
+    
+    const Timer& getTimer();
+    void startTimer(const std::string& key) { timer_.start(key); }
+    boost::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
+        return timer_.stop(key, returnTimer);
+    }
+    void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
 protected:
     std::unique_ptr<Impl> impl_;
@@ -154,6 +185,8 @@ protected:
     std::set<std::string> types_;
     //! contains all the input parameters for the run
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    //! the analytics manger, used for sharing analytics
+    QuantLib::ext::weak_ptr<AnalyticsManager> analyticsManager_;
 
     Configurations configurations_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
@@ -164,11 +197,17 @@ protected:
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
     analytic_stresstests stressTests_;
-
+    QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
+  
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
+
+    Timer timer_;
+
+private:
+    bool analyticComplete_ = false;
 };
 
 class Analytic::Impl {
@@ -181,6 +220,10 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes = {}) = 0;
     
+    void initialise();
+    const bool initialised() { return initialised_; };
+    virtual void buildDependencies(){};
+    virtual void buildConfigurations(){};
     virtual void setUpConfigurations(){};
 
     //! build an engine factory
@@ -203,11 +246,11 @@ public:
     }
     template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
     QuantLib::ext::shared_ptr<Analytic> dependentAnalytic(const std::string& key) const;
-    const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
+    const std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>>& dependentAnalytics() const {
         return dependentAnalytics_;
     }
-    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
-        dependentAnalytics_[key] = analytic;
+    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic, const bool incDependentReports = false) {
+        dependentAnalytics_[key] = std::make_pair(analytic, incDependentReports);
     }
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
     virtual std::vector<QuantLib::Date> additionalMarketDates() const { return {}; }
@@ -218,11 +261,13 @@ protected:
     //! label for logging purposes primarily
     std::string label_;
 
-    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> dependentAnalytics_;
+    //! map to dependent analytics, holds a bool if we want to report intermeditate reports
+    std::map<std::string, std::pair<QuantLib::ext::shared_ptr<Analytic>, bool>> dependentAnalytics_;
 
 private:
     Analytic* analytic_;
     bool generateAdditionalResults_ = false;
+    bool initialised_ = false;
 };
 
 /*! Market analytics
@@ -244,14 +289,15 @@ public:
 
 class MarketDataAnalytic : public Analytic {
 public:
-    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
+    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs, analyticsManager) {}
 };
 
 template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::Impl::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
-    QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second);
+    QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second.first);
     QL_REQUIRE(analytic, "Could not cast analytic for key " << key);
     return analytic;
 }

@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
+
 #include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
@@ -28,7 +30,7 @@ namespace ore {
 namespace analytics {
 
 SimpleScenario::SimpleScenario(Date asof, const std::string& label, Real numeraire,
-                               const boost::shared_ptr<SharedData>& sharedData)
+                               const QuantLib::ext::shared_ptr<SharedData>& sharedData)
     : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),
       label_(label), numeraire_(numeraire) {}
 
@@ -55,7 +57,7 @@ void SimpleScenario::add(const RiskFactorKey& key, Real value) {
 Real SimpleScenario::get(const RiskFactorKey& key) const {
     auto i = sharedData_->keyIndex.find(key);
     QL_REQUIRE(i != sharedData_->keyIndex.end(), "SimpleScenario does not provide data for key " << key);
-    return data_[i->second];
+    return isAbsolute() ? sanitizeScenarioValue(key.keytype, isPar(), data_[i->second]) : data_[i->second];
 }
 
 QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {

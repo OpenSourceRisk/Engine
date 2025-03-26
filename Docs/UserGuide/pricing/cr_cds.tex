@@ -1,0 +1,97 @@
+\subsubsection{Credit Default Swap}
+\label{pricing:cr_cds}
+
+CDS are priced by discounting premium payments adjusted for default probability, 
+and the recovery rate. Mid-point approximation is used (i.e. it is assumed the 
+default, if it happens, occurs in the middle of a premium period, in between 
+two premium payments)
+
+The net present value of a CDS from a protection-seller perspective can be 
+expressed:
+\begin{align*}
+\NPV=& N \cdot\sum_{i=1}^n K\cdot S(t_i)\cdot\delta(t_{i-1},t_i)\cdot P(t_i)\\
+&- N\cdot \sum_{i=1}^n \left(LGD - K \frac{\delta(t_{i-1}, t_i)}{2} \right)
+\cdot (S(t_{i-1}) - S(t_i)) \cdot P\left(t_{i-1} + \frac{t_i-t_{i-1}}{2}\right)
+\end{align*}
+where:
+\begin{itemize}
+\item $K$: the CDS premium rate
+\item $S(t_i)$: the survival probability  up to cash flow time $t_i$ as seen 
+at valuation time 
+\item $P\left(t_{i-1} + \frac{t_i-t_{i-1}}{2}\right)$: the discount factor at the mid-point 
+between times $t_{i-1}$ and $t_i$
+\item $\delta(t_{i-1},t_i)$: the daycount fraction in years for the period from 
+$t_{i-1}$ to $t_i$
+\item $LGD$: loss given default
+\end{itemize}
+
+The first line of the $\NPV$ expression reflects the premium payments weighted 
+with the survival probability for each full period. The second line reflects that 
+if default occurs, the protection seller pays the $LGD$ (times notional), but receives 
+half of the premium (the accrued spread for the time up to default in the middle 
+of the period); the cash flow is discounted back from the middle of the period 
+where the default occurs, and each flow is weighted with the probability of default 
+in this period
+$$
+\mbox{ProbDefault}(t_{i-1},t_i) = S(t_{i-1}) - S(t_i).
+$$
+
+In a standard CDS, the $LGD$ is equal to $1-R$ where the recovery rate $R$ is 
+determined once a credit event has been deemed to have occured. The recovery 
+rate for a given reference entity and debt tier is determined in a credit event auction.
+
+In a fixed recovery CDS, the recovery rate $R$ is specified at trade inception in the 
+contract terms.
+
+Per ISDA Standard Model, the Real Recovery Rate is used for conversion from ParSpread to Upfront with piecewise constant hazard rate. 
+The Assumed Recovery Rate is used for the conventional spread/upfront conversion using a flat hazard rate within the ISDA standard model.
+The CDS Real Recovery Rate (also known as the Composite Recovery Rate) is a consensus value that is calculated daily based on observable CDS market data submitted 
+by sell-side bank contributors. It is used for default curve building and pricing except for the conventional spread / upfront conversion mentioned before.
+The Assumed Recovery Rate (also known as standard recovery rates) is based on a matrix of recovery rate levels defined by ISDA according to Contract Region/ISDA Transaction Type/CDS Tier Recovery factors.
+These rates do not fluctuate on a daily basis as they reference the ISDA recovery rate matrix fixings.
+
+\subsubsection{Asset Backed Credit Default Swap}
+\label{pricing:cr_abcds}
+
+The pricing of an ABCDS follows the approach of section \ref{pricing:cr_cds} closely,
+with the generalization that changing notional amounts are possible in each period.
+The ABCDS pricing assumes a deterministic notional schedule that follows the expected
+notional reductions according to the underlying security's realised and expected future prepayments.
+
+\subsubsection{Index Credit Default Swap}
+\label{pricing:cr_index_cds}
+
+There are two pricing approaches for Index Credit Default Swaps. The first approach uses the credit curve of index itself and follow the approach of section \ref{pricing:cr_cds}. 
+The second approach is a looking through / bottom up approach 
+and calculate the protection leg as the notional weighted sum of the underlying basket constituents using each constituent's credit curve and recovery.
+
+With the second approach we have a natural breakdown of the 
+credit sensitivities to each constituent while on the other hand the pricing is may not consitent to the market (using the index curve).
+In the index curve approach we can decompose the index sensitivities into the credit sensitivity for each constituent using a
+weighting schema. 
+
+Let $CR01_{Index,T}$ be the credit sensitivities of the index curve on the tenor $T$, the decomposed sensitivity for constituent $i=1,...,n$ is 
+then given by
+
+$$ CR01_{i, T} = w_i \, CR01_{Index,T}$$
+
+with $\sum_{j=1}^n w_i = 1$.
+
+There are three weighting schemas:
+
+In the \emph{notional weighted} schema the weight is given derived from the notionals $N_i$ of the index constituents, $w_i = \frac{N_i}{\sum_{j=1}^n N_j}$. 
+
+In the \emph{delta weighted} schema the weight is derived from a simplified credit delta. Assuming a zero bond with maturity of the index cds $t_m$ for each constituent,
+the approximate credit delta is given by
+
+$$ \delta_i = N_i \: t_m \: S_i(t_m) $$
+
+with $S_i(t_m)$ being the survival probability up to maturity of constituent $i$. 
+The approximated credit delta will be normalized to weights $w_i = \frac{\delta_i}{\sum_{j=1}^n \delta_j}$.
+
+The third schema \emph{expected loss weighted} uses as similar approach as the \emph{delta weighted} schema, but instead of the normalized credit delta is uses the expected loss
+
+$$EL_i = N_i \: (1 \, - \, S_i(t_m)) \: (1 \, - \, RR_i).$$
+
+
+

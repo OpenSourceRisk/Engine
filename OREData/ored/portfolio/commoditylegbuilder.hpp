@@ -32,25 +32,30 @@ namespace data {
 
 class CommodityFixedLegBuilder : public ore::data::LegBuilder {
 public:
-    CommodityFixedLegBuilder() : LegBuilder("CommodityFixed") {}
+    CommodityFixedLegBuilder() : LegBuilder(LegType::CommodityFixed) {}
 
-    QuantLib::Leg buildLeg(const ore::data::LegData& data,
+    QuantLib::Leg
+    buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
-                           const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                           const bool useXbsCurves = false) const override;
+                           const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                           const bool attachPricer = true,
+                           std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine =
+                               nullptr) const override;
 };
 
 class CommodityFloatingLegBuilder : public ore::data::LegBuilder {
 public:
     CommodityFloatingLegBuilder()
-        : LegBuilder("CommodityFloating"), allAveraging_(false) {}
+        : LegBuilder(LegType::CommodityFloating), allAveraging_(false) {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
-                           const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                           const bool useXbsCurves = false) const override;
+                           const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                           const bool attachPricer = true,
+                           std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine =
+                               nullptr) const override;
 
     //! Inspect the \c allAveraging_ flag
     bool allAveraging() const { return allAveraging_; }

@@ -1,5 +1,31 @@
 \subsubsection{Credit Linked Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A credit linked swap is a swap where the payments are contingent on credit events occuring for a reference CDS. There
+are three classes of payments.
+
+\begin{itemize}
+\item Payments that are made only if no credit event has occured for a reference CDS until the payment date. If a credit
+  event occurs within a coupon period the accrued amount until the credit event date might have to be paid or not,
+  dependent on the terms of the trade. The accrual payment is done on the credit event date (with a small settlement
+  delay in practice).
+\item Payments that are made in case a credit {\em has} occured, the amount is then weighted by either
+  \begin{itemize}
+  \item the actual recovery rate $RR$ associated to the credit event or
+  \item the loss given default rate $1-RR$ based on the actual recovery rate or
+  \item a fixed (digital) recovery rate $RR$, agreed upon in the trade terms or
+  \item a fixed loss given default rate $1-RR$
+  \end{itemize}
+  These payments can be agreed to be made on the default date (with a small settlement delay in practice), on the period
+  end date for the respective payment or on the trade maturity.
+\item Payments that are made independently of any credit events occuring for the reference CDS.
+\end{itemize}
+
+The underlying swap legs can pay any kind of coupon (fixed rate, Ibor, CMS, ...) or fixed amounts.
+
+{\bf Input}}\fi
+
 A credit linked swap, trade type \lstinline!CreditLinkedSwap!, is set up using a \lstinline!CreditLinkedSwapData! block
 as shown in listing \ref{lst:creditlinkedswap}. The elements have the following meaning:
 

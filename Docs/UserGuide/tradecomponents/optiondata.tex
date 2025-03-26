@@ -17,6 +17,7 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
   <NoticeConvention>F</NoticePeriod>
   <Settlement>Cash</Settlement>
   <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
+  <MidCouponExercise>false</MidCouponExercise>
   <PayOffAtExpiry>true</PayOffAtExpiry>
   <ExerciseFees>
     <ExerciseFee type="Percentage">0.0020</ExerciseFee>
@@ -157,12 +158,19 @@ Ascot &  \emph{Call} has payout: $$ \max(0, convertiblePrice - Strike) $$ \emph{
 \emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
 \emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
 
-\item PayOffAtExpiry [Optional]: Relevant for options with early
-  exercise, i.e. the exercise occurs before expiry; \emph{true}
-  indicates payoff at expiry, whereas \emph{false}  indicates payoff
-  at exercise. Defaults to \emph{true}  if left blank or omitted. 
+\item MidCouponExercise [Optional]: Relevant for Swaptions and CallableSwaps.   
+If \emph{false}, the exercise-into underlying comprises all coupons with accrual start date greater or equal to notification date. I.e. one exercises into the next coupon, not the current one.\\
+If \emph{true}, the exercise-into underlying 
+comprises all coupons with accrual end date greater than the effective exercise date which is computed from the notification date by adding the notice period. 
+The accrual paid for such coupons on exercise is calculated from the effective exercise date to the accrual end date (short coupon).
 
-Allowable values: \emph{true}, \emph{false} .
+Allowable values: \emph{true}, \emph{false}. If omitted, defaults to \emph{false} for European and Bermudan swaptions/callableswaps and \emph{true} for American swaptions/callableswaps.
+
+\item PayOffAtExpiry [Optional]: Relevant for options with early
+  exercise, i.e. the exercise occurs before expiry; \emph{true} indicates payoff at expiry, whereas \emph{false}
+  indicates payoff at exercise. Defaults to \emph{true} if left blank or omitted.
+
+Allowable values: \emph{true}, \emph{false}.
 
 Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be set to \emph{false} as only payoff at exercise is supported.
 

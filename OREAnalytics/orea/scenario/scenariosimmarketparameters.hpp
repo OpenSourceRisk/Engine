@@ -239,6 +239,7 @@ public:
 
     // Commodity volatility data getters
     bool commodityVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityVolatility); }
+    bool simulateCommodityVolATMOnly() const { return commodityVolSimulateATMOnly_; }
     const std::string& commodityVolDecayMode() const { return commodityVolDecayMode_; }
     std::vector<std::string> commodityVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::CommodityVolatility);
@@ -270,9 +271,11 @@ public:
     void setDiscountCurveNames(vector<string> names);
     void setYieldCurveNames(vector<string> names);
     map<string, string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
+    void setYieldCurveCurrency(const string& key, const string& ccy) { yieldCurveCurrencies_[key] = ccy;}
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
     void setIndices(vector<string> names);
     map<string, string>& swapIndices() { return swapIndices_; }
+    void setSwapIndex(const std::string& key, const std::string& ind) { swapIndices_[key] = ind; }
     string& interpolation() { return interpolation_; }
     string& extrapolation() { return extrapolation_; }
 
@@ -281,12 +284,12 @@ public:
 
     void setSimulateSwapVols(bool simulate);
     void setSwapVolIsCube(const string& key, bool isCube);
-    bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
+    void setSimulateSwapVolATMOnly(const bool b) { swapVolSimulateATMOnly_ = b; }
     void setSwapVolTerms(const string& key, const vector<Period>& p);
     void setSwapVolKeys(vector<string> names);
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
-    string& swapVolDecayMode() { return swapVolDecayMode_; }
+    void setSwapVolDecayMode(const std::string& s) { swapVolDecayMode_ = s; }
     void setSwapVolSmileDynamics(const string& key, const string& smileDynamics);
   
     void setSimulateYieldVols(bool simulate);
@@ -371,6 +374,7 @@ public:
     void setAdditionalScenarioDataIndices(const vector<string>& asdi) { additionalScenarioDataIndices_ = asdi; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
     void setAdditionalScenarioDataCcys(const vector<string>& ccys) { additionalScenarioDataCcys_ = ccys; }
+    void setAdditionalScenarioDataNumberOfCreditStates(QuantLib::Size n) {additionalScenarioDataNumberOfCreditStates_ = n; }
     void setSecuritySpreadsSimulate(bool simulate);
     void setSecurities(vector<string> names);
     void setRecoveryRates(vector<string> names);
@@ -379,6 +383,11 @@ public:
     void setSimulateCprs(bool simulate);
     bool simulateCprs() const { return paramsSimulate(RiskFactorKey::KeyType::CPR); }
     const vector<string>& cprs() const { return cprs_; }
+
+    void setConversionFactors(const vector<string>& names);
+    void setSimulateConversionFactors(bool simulate);
+    bool simulateConversionFactors() const { return paramsSimulate(RiskFactorKey::KeyType::ConversionFactor); }
+    const vector<string>& conversionFactors() const { return conversionFactors_; }
 
     void setSimulateBaseCorrelations(bool simulate);
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -399,6 +408,7 @@ public:
 
     // Commodity volatility data setters
     void setCommodityVolSimulate(bool simulate);
+    void setSimulateCommodityVolATMOnly(bool simulateATMOnly) { commodityVolSimulateATMOnly_ = simulateATMOnly; }
     std::string& commodityVolDecayMode() { return commodityVolDecayMode_; }
     void setCommodityVolNames(vector<string> names);
     std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) {
@@ -510,6 +520,8 @@ private:
     bool cprSimulate_;
     vector<string> cprs_;
 
+    vector<string> conversionFactors_;
+
     vector<Period> baseCorrelationTerms_;
     vector<Real> baseCorrelationDetachmentPoints_;
 
@@ -520,6 +532,7 @@ private:
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
 
     // Commodity volatility data
+    bool commodityVolSimulateATMOnly_ = false;
     std::string commodityVolDecayMode_;
     std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;

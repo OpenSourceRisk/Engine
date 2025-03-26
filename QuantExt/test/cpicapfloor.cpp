@@ -240,9 +240,10 @@ struct CommonVars {
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
         baseZeroRate = zciisData[0].rate / 100.0;
+        Date baseDate =
+            QuantExt::ZeroInflation::curveBaseDate(false, evaluationDate, observationLag, ii->frequency(), ii);
         QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-            new PiecewiseZeroInflationCurve<Linear>(evaluationDate, calendar, dcZCIIS, observationLag, ii->frequency(),
-                                                    baseZeroRate, helpers));
+            new PiecewiseZeroInflationCurve<Linear>(evaluationDate, baseDate, observationLag, ii->frequency(), dcZCIIS, helpers));
         pCPIts->recalculate();
         cpiUK.linkTo(pCPIts);
         hii.linkTo(ii);
@@ -300,27 +301,15 @@ struct CommonVars {
 
 class FlatZeroInflationTermStructure : public ZeroInflationTermStructure {
 public:
-    FlatZeroInflationTermStructure(const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter,
-                                   Rate zeroRate, const Period& observationLag, Frequency frequency, bool indexIsInterp,
-                                   const Handle<YieldTermStructure>& ts)
-        : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency),
-          zeroRate_(zeroRate), indexIsInterp_(indexIsInterp) {}
+    FlatZeroInflationTermStructure(const Date& referenceDate, const Date& baseDate, const DayCounter& dayCounter,
+                                   const Period& observationLag, Frequency frequency, const Real& zeroRate)
+        : ZeroInflationTermStructure(referenceDate, baseDate, observationLag, frequency, dayCounter), zeroRate_(zeroRate) {}
 
     Date maxDate() const override { return Date::maxDate(); }
-    // Base date consistent with observation lag, interpolation and frequency
-    Date baseDate() const override {
-        Date base = referenceDate() - observationLag();
-        if (!indexIsInterp_) {
-            std::pair<Date, Date> ips = inflationPeriod(base, frequency());
-            base = ips.first;
-        }
-        return base;
-    }
 
 private:
     Rate zeroRateImpl(Time t) const override { return zeroRate_; }
     Real zeroRate_;
-    bool indexIsInterp_;
 };
 
 } // namespace
@@ -344,7 +333,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
     QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
         QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
-                                                                                        common.ii, blackEngine);
+                                                                                        common.ii, false, blackEngine);
 
     // attach the implied vol surface to the engine
     blackEngine->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(cpiVolSurface));
@@ -444,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
     QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
         QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
-                                                                                        common.ii, blackEngine);
+                                                                                        common.ii, false, blackEngine);
 
     // attach the implied vol surface to the engine
     blackEngine->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(cpiVolSurface));
@@ -524,7 +513,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
     QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
         QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
-                                                                                        common.ii, blackEngine);
+                                                                                        common.ii, false, blackEngine);
 
     std::vector<Period> optionTenors = cpiVolSurface->maturities();
     std::vector<Real> strikes = cpiVolSurface->strikes();
@@ -539,7 +528,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
     }
     QuantLib::ext::shared_ptr<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
         QuantLib::ext::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
-            optionTenors, strikes, quotes, common.hii.currentLink(), cpiVolSurface->settlementDays(),
+            optionTenors, strikes, quotes, common.hii.currentLink(), false, cpiVolSurface->settlementDays(),
             cpiVolSurface->calendar(), cpiVolSurface->businessDayConvention(), cpiVolSurface->dayCounter(),
             cpiVolSurface->observationLag());
 
@@ -568,17 +557,18 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     // Make sure we use the correct index publication frequency and interpolation, consistent with the index we want to
     // project. We therefore create the index first, then the term structure, then relink the curve. Otherwise time
     // calculations will be inconsistent, and ATM strikes do not generate equal put/call or cap/floor prices.
+    Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, common.evaluationDate, observationLag,
+                                                           index->frequency(), *index);
     QuantLib::ext::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
-        QuantLib::ext::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, index->fixingCalendar(), dc,
-                                                           inflationRate, observationLag, index->frequency(),
-                                                           false, discountCurve);
+        QuantLib::ext::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, baseDate, dc,
+                                                                   observationLag, index->frequency(), inflationRate);
     inflationCurve.linkTo(inflationCurvePtr);
     // Make sure we use the same observation lag as in the inflation curve, and same index publication frequency and
     // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to
     // the instrument's lag.
     Handle<CPIVolatilitySurface> inflationVol(QuantLib::ext::make_shared<ConstantCPIVolatility>(
-        inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
-        inflationCurve->frequency(), false));
+        inflationBlackVol, 0, index->fixingCalendar(), bdc, dc, inflationCurve->observationLag(), inflationCurve->frequency(),
+        false));
 
     QuantLib::ext::shared_ptr<PricingEngine> engine =
         QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);

@@ -26,8 +26,9 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const std::string& calibration, const std::vector<std::vector<Real>>& calibrationStrikes)
-    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear),
+    const std::string& calibration, const std::vector<std::vector<Real>>& calibrationStrikes,
+    const Handle<YieldTermStructure>& baseCurve)
+    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
       calibration_(calibration),
       calibrationStrikes_(calibrationStrikes.empty() ? std::vector<std::vector<Real>>(processes.size())
                                                      : calibrationStrikes) {
@@ -36,13 +37,12 @@ BlackScholesModelBuilder::BlackScholesModelBuilder(
                                            << processes.size() << ")");
 }
 
-BlackScholesModelBuilder::BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
-                                                   const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                                   const std::set<Date>& simulationDates,
-                                                   const std::set<Date>& addDates, const Size timeStepsPerYear,
-                                                   const std::string& calibration,
-                                                   const std::vector<Real>& calibrationStrikes)
-    : BlackScholesModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear),
+BlackScholesModelBuilder::BlackScholesModelBuilder(
+    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+    const std::string& calibration, const std::vector<Real>& calibrationStrikes,
+    const Handle<YieldTermStructure>& baseCurve)
+    : BlackScholesModelBuilderBase(curve, process, simulationDates, addDates, timeStepsPerYear, baseCurve),
       calibration_(calibration), calibrationStrikes_(1, calibrationStrikes) {}
 
 std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>

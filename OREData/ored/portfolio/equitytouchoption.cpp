@@ -14,22 +14,26 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/equitytouchoption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
-#include <ored/portfolio/equitytouchoption.hpp>
+#include <ored/portfolio/builders/equitytouchoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/equitytouchoption.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+
+#include <qle/indexes/equityindex.hpp>
+#include <qle/utilities/barrier.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/swap.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <qle/indexes/equityindex.hpp>
+
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
@@ -67,7 +71,6 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
-    Date today = Settings::instance().evaluationDate();
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Parse trade data
@@ -109,28 +112,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     QL_REQUIRE(calendar_ != "", "No calendar provided");
 
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex = parseEquityIndex(eqIndex_);
-
-    // check if the barrier has been triggered already
-    bool triggered = false;
     Calendar cal = eqIndex->fixingCalendar();
-    if (startDate_ != "" && start < today) {
-
-        Date d = start;
-
-        while (d < today && !triggered) {
-
-            Real fixing = eqIndex->pastFixing(d);
-
-            if (fixing == 0.0 || fixing == Null<Real>()) {
-                ALOG("Got invalid Equity fixing for index " << eqIndex_ << " on " << d
-                                                            << "Skipping this date, assuming no trigger");
-            } else {
-                triggered = checkBarrier(fixing, barrierType, level);
-            }
-
-            d = cal.advance(d, 1, Days);
-        }
-    }
 
     // set pricing engines
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -139,6 +121,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QuantLib::ext::dynamic_pointer_cast<EquityTouchOptionEngineBuilder>(builder);
     barrier->setPricingEngine(eqTouchOptBuilder->engine(assetName, ccy, type_));
     setSensitivityTemplate(*eqTouchOptBuilder);
+    addProductModelEngine(*eqTouchOptBuilder);
     if (type_ == "One-Touch") {
         // if a one-touch option is triggered it becomes a simple forward cashflow
         // which we price as a swap
@@ -146,7 +129,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
+        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string(), {}));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
@@ -158,13 +141,16 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
+    Date settlementDate = expiryDate;
     instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-        barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
-        payoffAmount_, additionalInstruments, additionalMultipliers);
+        barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start,
+        eqIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+        barrier_.overrideTriggered());
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))
@@ -173,19 +159,6 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-}
-
-bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
 }
 
 void EquityTouchOption::fromXML(XMLNode* node) {

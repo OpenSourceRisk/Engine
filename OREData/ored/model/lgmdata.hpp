@@ -85,7 +85,7 @@ public:
             std::vector<std::string> optionTerms = std::vector<std::string>(),
             std::vector<std::string> optionStrikes = std::vector<std::string>(),
             const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping inputFloatSpreadMapping =
-                QuantExt::AnalyticLgmSwaptionEngine::proRata)
+	    QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata)
         : IrModelData("LGM", qualifier, calibrationType), revType_(revType), volType_(volType), calibrateH_(calibrateH),
           hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA), aType_(aType), aTimes_(aTimes),
           aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling), optionExpiries_(optionExpiries),
@@ -147,7 +147,7 @@ private:
     mutable std::vector<std::string> optionTerms_;
     mutable std::vector<std::string> optionStrikes_;
     QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping floatSpreadMapping_ =
-        QuantExt::AnalyticLgmSwaptionEngine::proRata;
+        QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata;
 };
 
 //! Enum parsers
@@ -158,7 +158,6 @@ QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(
 //! Enum to string
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
-std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
 
 /*! LGM reversion transformation.
     

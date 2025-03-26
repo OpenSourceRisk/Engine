@@ -300,8 +300,10 @@ void CommodityAveragePriceOption::buildStandardOption(const QuantLib::ext::share
                                flow->index()->isFuturesIndex(), flow->pricingDate());
     commOption.build(engineFactory);
     setSensitivityTemplate(commOption.sensitivityTemplate());
+    addProductModelEngine(commOption.productModelEngine());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
+    maturityType_ = "Commodity Option Maturity Date";
 }
 
 void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const Leg& leg,
@@ -314,6 +316,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
 
     // Populate relevant Trade members
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), apoFlow->date());
+    maturityType_ = maturity_ == apoFlow->date() ? "Payment Date" : "Option's Latest Premium Date";
     
     Date lastApoFixingDate = apoFlow->indices().rbegin()->first;
 
@@ -372,6 +375,8 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
     if (barrierData_.initialized()) {
+        QL_REQUIRE(!barrierData_.overrideTriggered(),
+                   "CommodityAveragePriceOption::build(): OverrideTriggered not supported by this instrument type.");
         QL_REQUIRE(barrierData_.levels().size() == 1, "Commodity APO: Expected exactly one barrier level.");
         barrierLevel = barrierData_.levels().front().value();
         barrierType = parseBarrierType(barrierData_.type());
@@ -394,6 +399,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
     apo->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
 
     // position type and trade multiplier
     Position::Type positionType = parsePositionType(optionData_.longShort());

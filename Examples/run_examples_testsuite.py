@@ -8,9 +8,21 @@ import nose
 import collections
 #collections.Callable = collections.abc.Callable
 
+examples_exempt_from_scenariogenerator_samples_overwrite = [
+    'Performance',
+    'Legacy/Example_37',
+    'Legacy/Example_54',
+    'Legacy/Example_55',
+    'Legacy/Example_56',
+    'Legacy/Example_60',
+    'Legacy/Example_68',
+    'Legacy/Example_70',
+    'Legacy/Example_72']
+
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
 sys.path.append(os.path.join(script_dir, '../'))
+from Examples.ore_examples_helper import get_list_of_legacy_examples  # noqa
 from Examples.ore_examples_helper import get_list_of_examples  # noqa
 from Examples.ore_examples_helper import get_list_ore_academy  # noqa
 from Examples.ore_examples_helper import run_example  # noqa
@@ -50,8 +62,10 @@ class TestExamples(unittest.TestCase):
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
     def runAndRegressExample(self, name):
-        if not name.endswith('Example_54'):
-            os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
+        os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
+        for exname in examples_exempt_from_scenariogenerator_samples_overwrite:
+            if name.endswith(exname):
+                os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         ret = run_example(name)
         os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
@@ -84,7 +98,7 @@ class TestExamples(unittest.TestCase):
             os.chdir(current_dir)
 
 
-# For each example we want to add a test to PricerRegressionTests
+# For each example we want to add a test to the test suite
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def add_utest(name):
     def do_run_test(self):
@@ -97,11 +111,21 @@ def add_utest(name):
 # https://stackoverflow.com/questions/2798956/python-unittest-generate-multiple-tests-programmatically
 def regress_all_utests():
     i = 1
-    for name in (get_list_of_examples() + get_list_ore_academy()):
-        testable_name = 'test_{0}'.format(name)
+    examples=get_list_of_examples()
+    legacyexamples=get_list_of_legacy_examples()
+    academy=get_list_ore_academy()
+    allexamples = sorted(examples + academy + legacyexamples)
+    print("Legacy:", legacyexamples)
+    print("Examples:", examples)
+    print("Academy:", academy)
+    for name in allexamples:
+        # For Linux/docker: Replace the '/' in testable_name and class_name 
+        name2 = name.replace('/', '-', 1)
+        print("add test:", name, name2)
         testable = add_utest(name)
+        testable_name = 'test_{0}'.format(name2)
         testable.__name__ = testable_name
-        class_name = 'Test_{0}'.format(name)
+        class_name = 'Test_{0}'.format(name2)
         globals()[class_name] = type(class_name, (TestExamples,), {testable_name: testable})
 
 
@@ -112,4 +136,5 @@ setup_logging()
 regress_all_utests()
 
 if __name__ == '__main__':
+    print("run nose tests")
     nose.runmodule(name='__main__')

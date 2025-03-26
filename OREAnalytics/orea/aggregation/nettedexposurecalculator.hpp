@@ -44,23 +44,32 @@ using namespace std;
 */
 class NettedExposureCalculator {
 public:
-    NettedExposureCalculator(
-        const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
-        const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
-        const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-        const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
-        const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
-        const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
-        const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
-        const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
-        const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
-        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
-        const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
-        const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
-        // Marginal Allocation
-        const bool marginalAllocation, const Real marginalAllocationLimit,
-        const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
-        const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode);
+    NettedExposureCalculator(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                             const QuantLib::ext::shared_ptr<Market>& market,
+                             const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency,
+                             const string& configuration, const Real quantile,
+                             const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+                             const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+                             const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
+                             const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
+                             const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
+                             const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
+                             const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
+                             const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+                             const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+                             const bool applyInitialMargin,
+                             const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+                             const bool fullInitialCollateralisation,
+                             // Marginal Allocation
+                             const bool marginalAllocation, const Real marginalAllocationLimit,
+                             const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
+                             const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
+                             const MporCashFlowMode mporCashFlowMode,
+                             //  in case of a positive mtm keep the undercollateralization (difference between initial
+                             //  vm margin and mtm)  constant during first mpor period,
+                             //  analog for overcollaterializations in case of negative mtm.
+                             const bool firstMporCollateralAdjustment,
+			     const bool exposureProfilesUseCloseOutValues = false);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -82,6 +91,8 @@ public:
     vector<Real>& expectedCollateral(const string& nid) { return expectedCollateral_[nid]; }
     vector<Real>& colvaIncrements(const string& nid) { return colvaInc_[nid]; }
     vector<Real>& collateralFloorIncrements(const string& nid) { return eoniaFloorInc_[nid]; }
+    vector<Real>& epe_b_timeWeighted(const string& nid) { return epe_bTimeWeighted_[nid]; }
+    vector<Real>& eepe_b_timeWeighted(const string& nid) { return eepe_bTimeWeighted_[nid]; }
     Real& epe_b(const string& nid) { return epe_b_[nid]; }
     Real& eepe_b(const string& nid) { return eepe_b_[nid]; }
     Real& colva(const string& nid) { return colva_[nid]; }
@@ -93,6 +104,16 @@ public:
     map<string, vector<vector<Real>>> nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
     map<string, vector<vector<Real>>> nettingSetMporNegativeFlow() { return nettingSetMporNegativeFlow_; }
+
+    //! nettingSetId -> { +- 1/T int_0^T max(+- V(t), 0) dt } before and after collateral
+    struct TimeAveragedExposure {
+        Real positiveExposureBeforeCollateral = 0.0;
+        Real negativeExposureBeforeCollateral = 0.0;
+        Real positiveExposureAfterCollateral = 0.0;
+        Real negativeExposureAfterCollateral = 0.0;
+    };
+    const std::map<std::string, std::vector<TimeAveragedExposure>>& timeAveragedNettedExposure() const;
+
 protected:
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<Market> market_;
@@ -131,10 +152,13 @@ protected:
     map<string, std::vector<Real>> expectedCollateral_;
     map<string, std::vector<Real>> colvaInc_;
     map<string, std::vector<Real>> eoniaFloorInc_;
+    map<string, std::vector<Real>> epe_bTimeWeighted_;
+    map<string, std::vector<Real>> eepe_bTimeWeighted_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
     map<string, Real> colva_;
     map<string, Real> collateralFloor_;
+    std::map<string, std::vector<TimeAveragedExposure>> timeAveragedNettedExposure_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 
     QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
@@ -145,6 +169,8 @@ protected:
 
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
+    bool firstMporCollateralAdjustment_ = false;
+    bool exposureProfilesUseCloseOutValues_ = false;
 };
 
 } // namespace analytics

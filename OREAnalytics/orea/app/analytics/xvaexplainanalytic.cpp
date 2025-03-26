@@ -28,36 +28,56 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/utilities.hpp>
 namespace ore {
 namespace analytics {
 
-void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData>& data, const RiskFactorKey& key,
+void curveShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
                     double shift, const std::vector<Period>& tenors) {
     if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftTenors = tenors;
         shiftData.shifts = std::vector<double>(tenors.size(), 0.0);
-        data[key.name] = shiftData;
+        data[key.name] = ext::make_shared<StressTestScenarioData::CurveShiftData>(shiftData);
     }
-    data[key.name].shifts[key.index] = shift;
+    data[key.name]->shifts[key.index] = shift;
 }
 
-void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& volData, const RiskFactorKey& key,
+void volShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::VolShiftData>>& volData,
+                  const RiskFactorKey& key,
                   double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::VolShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftExpiries = tenors;
         shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::VolShiftData>(shiftData);
     }
-    volData[key.name].shifts[key.index] = shift;
+    volData[key.name]->shifts[key.index] = shift;
 }
 
-void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData>& volData,
+void fxVolShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>& volData,
+                    const RiskFactorKey& key,
+                  double shift, const std::vector<QuantLib::Period>& tenors) {
+    if (volData.count(key.name) == 0) {
+        StressTestScenarioData::FXVolShiftData shiftData;
+        shiftData.mode = StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftExpiries = tenors;
+        shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
+        volData[key.name] = ext::make_shared<StressTestScenarioData::FXVolShiftData>(shiftData);
+    }
+    QL_REQUIRE(volData[key.name]->mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit,
+               "Internal error, for XvA Explain use only explicit fx vol stress data, contact dev");
+    volData[key.name]->shifts[key.index] = shift;
+}
+
+void swaptionVolShiftData(std::map < std::string,
+                          ext::shared_ptr<StressTestScenarioData::SwaptionVolShiftData>>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
 
@@ -72,18 +92,19 @@ void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::Swaption
                 shiftData.shifts[std::make_pair(expiry, term)] = 0;
             }
         }
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::SwaptionVolShiftData>(shiftData);
     }
     auto& shiftData = volData[key.name];
 
-    size_t expiryIndex = key.index / shiftData.shiftTerms.size();
-    size_t termIndex = key.index % shiftData.shiftTerms.size();
-    auto expiry = shiftData.shiftExpiries[expiryIndex];
-    auto term = shiftData.shiftTerms[termIndex];
-    shiftData.shifts[std::make_pair(expiry, term)] = shift;
+    size_t expiryIndex = key.index / shiftData->shiftTerms.size();
+    size_t termIndex = key.index % shiftData->shiftTerms.size();
+    auto expiry = shiftData->shiftExpiries[expiryIndex];
+    auto term = shiftData->shiftTerms[termIndex];
+    shiftData->shifts[std::make_pair(expiry, term)] = shift;
 }
 
-void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloorVolShiftData>& volData,
+void capFloorVolShiftData(std::map < std::string,
+                          ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
     if (volData.count(key.name) == 0) {
@@ -95,18 +116,19 @@ void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloor
         for (const auto& expiry : shiftData.shiftExpiries) {
             shiftData.shifts[expiry] = std::vector<double>(shiftData.shiftStrikes.size(), 0.0);
         }
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::CapFloorVolShiftData>(shiftData);
     }
-    size_t expiryIndex = key.index / volData[key.name].shiftStrikes.size();
-    size_t strikeIndex = key.index % volData[key.name].shiftStrikes.size();
-    auto expiry = volData[key.name].shiftExpiries[expiryIndex];
-    volData[key.name].shifts[expiry][strikeIndex] = shift;
+    size_t expiryIndex = key.index / volData[key.name]->shiftStrikes.size();
+    size_t strikeIndex = key.index % volData[key.name]->shiftStrikes.size();
+    auto expiry = volData[key.name]->shiftExpiries[expiryIndex];
+    volData[key.name]->shifts[expiry][strikeIndex] = shift;
 }
 
-StressTestScenarioData::SpotShiftData spotShiftData(const RiskFactorKey& key, double shift) {
-    StressTestScenarioData::SpotShiftData shiftData;
-    shiftData.shiftType = ShiftType::Absolute;
-    shiftData.shiftSize = shift;
+ext::shared_ptr<StressTestScenarioData::SpotShiftData> spotShiftData(const RiskFactorKey& key, double shift) {
+    ext::shared_ptr<StressTestScenarioData::SpotShiftData> shiftData =
+        ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    shiftData->shiftType = ShiftType::Absolute;
+    shiftData->shiftSize = shift;
     return shiftData;
 }
 
@@ -117,13 +139,13 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
     size_t cvaColumn = xvaReport->columnPosition("CVA");
     for (size_t i = 0; i < xvaReport->rows(); ++i) {
 
-        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn)[i]);
+        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn, i));
 
-        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn)[i]);
+        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn, i));
 
-        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn)[i]);
+        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn, i));
 
-        const double cva = boost::get<double>(xvaReport->data(cvaColumn)[i]);
+        const double cva = boost::get<double>(xvaReport->data(cvaColumn, i));
 
         const auto key = XvaReportKey{tradeId, nettingset};
         if (scenario != "BASE" && scenario != "t1") {
@@ -131,7 +153,7 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
                 auto rfKey = parseRiskFactorKey(scenario);
                 fullRevalScenarioCva_[rfKey][key] = cva;
                 keyTypes_.insert(rfKey.keytype);
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 StructuredAnalyticsErrorMessage("XvaExplain", "Unexpected RiskFactor",
                                                 scenario + "is not a valid riskfactor, skip it in xva explain report");
             }
@@ -192,24 +214,28 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
     CONSOLE("OK");
     
-    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
+    auto stressAnalytic =
+        AnalyticFactory::instance().build("XVA_STRESS", inputs_, analytic()->analyticsManager(), false).second;
+    auto stImpl = static_cast<XvaStressAnalyticImpl*>(stressAnalytic->impl().get());
+    stImpl->setStressScenarios(zeroScenarioData);
+
     stressAnalytic->configurations().asofDate = inputs_->asof();
     stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
     stressAnalytic->runAnalytic(loader);
     CONSOLEW("XVA_EXPLAIN: Write Reports");
-    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
-    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
+    auto xvaReport = stressAnalytic->getReport("XVA_STRESS", "xva");
+    analytic()->addReport(label(), "xvaExplain_details", xvaReport);
     XvaExplainResults xvaData(xvaReport);
 
-    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>();
+    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
-    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
+    analytic()->addReport(label(), "xvaExplain", xvaExplainReport);
 
-    auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>();
+    auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
-    analytic()->reports()[label()]["xvaExplain_summary"] = xvaExplainSummaryReport;
+    analytic()->addReport(label(), "xvaExplain_summary", xvaExplainSummaryReport);
     CONSOLE("OK");
 }
 
@@ -219,26 +245,47 @@ QuantLib::ext::shared_ptr<StressTestScenarioData>
 XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const {
 
     CONSOLEW("XVA_EXPLAIN: Compute t0 par rates");
-    ParScenarioAnalytic todayParAnalytic(inputs_);
-    todayParAnalytic.configurations().asofDate = inputs_->asof();
-    todayParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    todayParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    todayParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-    todayParAnalytic.runAnalytic(loader);
-    auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic.impl().get())->parRates();
+    auto todayParAnalytic = 
+        AnalyticFactory::instance().build("PAR_SCENARIO", inputs_, analytic()->analyticsManager(), false).second;
+    todayParAnalytic->configurations().asofDate = inputs_->asof();
+    todayParAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    todayParAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    todayParAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+    todayParAnalytic->runAnalytic(loader);
+    auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic->impl().get())->parRates();
     CONSOLE("OK");
 
     CONSOLEW("XVA_EXPLAIN: Compute t1 par rates");
-    ParScenarioAnalytic mporParAnalytic(inputs_);
+    auto mporParAnalytic =
+        AnalyticFactory::instance().build("PAR_SCENARIO", inputs_, analytic()->analyticsManager(), false).second;
     Settings::instance().evaluationDate() = mporDate_;
-    mporParAnalytic.configurations().asofDate = mporDate_;
-    mporParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    mporParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    mporParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-    mporParAnalytic.runAnalytic(loader);
+    mporParAnalytic->configurations().asofDate = mporDate_;
+    mporParAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    mporParAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    mporParAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+    mporParAnalytic->runAnalytic(loader);
     CONSOLE("OK");
     CONSOLEW("XVA_EXPLAIN: Generate Stresstests");
-    auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic.impl().get())->parRates();
+    auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic->impl().get())->parRates();
+
+    // Write out par rates
+    QuantLib::ext::shared_ptr<SimpleScenario> todayScenario = 
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "today", 1.0);
+    for (const auto& [key, value] : todaysRates)
+        todayScenario->add(key, value);
+    
+    QuantLib::ext::shared_ptr<SimpleScenario> mporScenario =
+        QuantLib::ext::make_shared<SimpleScenario>(inputs_->asof(), "mpor", 1.0);
+    for (const auto& [key, value] : mporRates)
+        mporScenario->add(key, value);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto sw = ScenarioWriter(nullptr, scenarioReport);
+    sw.writeScenario(todayScenario, true);
+    sw.writeScenario(mporScenario, false);
+    analytic()->reports()[label()]["par_scenarios"] = scenarioReport;
+
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;
     const auto& sensitivityData = analytic()->configurations().sensiScenarioData;
@@ -321,8 +368,8 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
                 break;
             }
             case RiskFactorKey::KeyType::FXVolatility: {
-                volShiftData(fullRevalScenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
-                volShiftData(scenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                fxVolShiftData(fullRevalScenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                fxVolShiftData(scenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
                 inScope = true;
                 break;
             }
@@ -343,16 +390,13 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
                 break;
             }
             if (inScope) {
-                scenarioData->data().push_back(scenario);
+                scenarioData->setData(scenario);
             }
         }
     }
-    scenarioData->data().push_back(fullRevalScenario);
+    scenarioData->setData(fullRevalScenario);
     return scenarioData;
 }
-
-XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false, false) {}
 
 } // namespace analytics
 } // namespace ore

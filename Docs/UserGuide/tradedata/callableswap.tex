@@ -1,10 +1,19 @@
 \subsubsection{Callable Swap}\label{ss:callable_swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Callable Swap can be terminated by one of the parties on specific dates and thus can
+be decomposed into a swap and a physically settled swaption, the latter representing the call
+right. The underlying swap must be fixed versus float and may have varying notional, rates,
+and spreads during its lifetime.
+
+{\bf Input}}\fi
+
 The \lstinline!CallableSwapData! node is the trade data container for the \emph{CallableSwap} trade type. A Callable Swap is a
  swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each leg described by a \lstinline!LegData! trade component sub-node as described in section
 \ref{ss:leg_data}.  
 
-There must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
+Unless MidCouponExercise is \emph{true}, there must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
 
 The \lstinline!CallableSwapData! node also contains an \lstinline!OptionData! node which describes
 the exercise dates and specifies which party holds the call right, see \ref{ss:option_data}. An example structure of a
@@ -18,6 +27,7 @@ the exercise dates and specifies which party holds the call right, see \ref{ss:o
       <LongShort>Short</LongShort>
       <Style>Bermudan</Style>
       <Settlement>Physical</Settlement>
+      <MidCouponExercise>true<MidCouponExercise>
       <ExerciseDates>
         <ExerciseDate>2031-10-01</ExerciseDate>
         <ExerciseDate>2032-10-01</ExerciseDate>
@@ -53,7 +63,7 @@ The meanings and allowable values of the elements in the \lstinline!CallableSwap
   specify the dates on which one of the counterparties may terminate the swap. The counterpart holding the call right is
   specified by the {\tt LongShort} flag. The Settlement should be set to \emph{Physical} always. See also the OptionData
   node outlined for a Swaption - see \ref{ss:swaption}, which is identical for a CallableSwap with the exception of the
-  requirement that Settlement must be \emph{Physical}. A callable swap can be marked as exercised as explained in
+  requirement that Settlement must be \emph{Physical}, and that the leg directions on a CallableSwap are from the perspective of the client, whereas they are from the perspective of the party that is long on a Swaption. A callable swap can be marked as exercised as explained in
   \ref{ss:swaption} using the \lstinline!ExerciseData! node within OptionData.
 
 \item LegData: This is a trade component sub-node described in section \ref{ss:leg_data} outlining each leg of the

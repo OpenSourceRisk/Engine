@@ -1,9 +1,5 @@
-\ifdefined\RiskCatalogue\newcommand{\simsection}{\section}\fi
-\ifdefined\RiskCatalogue\newcommand{\simsubsection}{\subsection}\fi
-\ifdefined\UserGuide\newcommand{\simsection}{\subsection}\fi
-\ifdefined\UserGuide\newcommand{\simsubsection}{\subsubsection}\fi
 %--------------------------------------------------------
-\simsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
+\subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------
 
 This file determines the behaviour of the risk factor simulation (scenario generation) module.
@@ -24,7 +20,7 @@ It is structured in three blocks of data.
 
 Each of the three blocks is sketched in the following.
 
-\simsubsection{Parameters}\label{sec:sim_params}
+\subsubsection{Parameters}\label{sec:sim_params}
 
 Let us discuss this section using the following example
 
@@ -72,7 +68,7 @@ to use if one of the {\em Forward } related methods is chosen.
 \item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
 
-\simsubsection{Model}\label{sec:sim_model}
+\subsubsection{Model}\label{sec:sim_model}
 
 The {\tt CrossAssetModel} section determines the cross asset model's number of currencies covered, composition, and each
 component's calibration. It is currently made of 
@@ -604,7 +600,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 
 Any risk factor pair not specified explicitly here will be assumed to have zero correlation. Note that the commodity components can have non-zero correlations among each other, but correlations to all other CAM components must remain set to zero for the time being.
 
-\simsubsection{Market}\label{sec:sim_market}
+\subsubsection{Market}\label{sec:sim_market}
 
 The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
 simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
@@ -621,7 +617,14 @@ There are two methods in ORE for equity volatility simulation:
 \item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
-Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+Commodity volatilities are taken as ATM slice by default. To simulate commodity volatility surface with smile a set of {\tt <Moneyness> } must be supplied.
+There are two methods in ORE for commodity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
+Swaption volatilities are taken to be a surface by default.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
@@ -692,10 +695,8 @@ For Default Curve, there is a similar choice for the extrapolation:
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-    <Cube>
-     <SimulateATMOnly>false</SimulateATMOnly>
-     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
-    </Cube>
+    <SimulateATMOnly>false</SimulateATMOnly>
+    <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
     <DayCounter ccy="EUR">ACT/ACT</DayCounter> 
   </SwaptionVolatilities> 

@@ -26,6 +26,7 @@
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
+#include <orea/app/analytics/portfoliodetailsanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
@@ -37,6 +38,11 @@
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
+#include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/sacvaanalytic.hpp>
+#include <orea/app/analytics/saccranalytic.hpp>
+#include <orea/app/analytics/bacvaanalytic.hpp>
+#include <orea/app/analytics/smrcanalytic.hpp>
 
 #include <ored/utilities/databuilders.hpp>
 
@@ -62,6 +68,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("PARCONVERSION", {}, ParConversionAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL", {}, PnlAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL_EXPLAIN", {}, PnlExplainAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PORTFOLIO_DETAILS", {}, PortfolioDetailsAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PRICING", pricingAnalyticSubAnalytics, PricingAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO", {}, ScenarioAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_STATISTICS", {}, ScenarioStatisticsAnalytic, false);
@@ -74,6 +81,11 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_STRESS", {}, XvaStressAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_SENSITIVITY", {}, XvaSensitivityAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_EXPLAIN", {}, XvaExplainAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("CALIBRATION", {}, CalibrationAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SA_CVA", {}, SaCvaAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SA_CCR", {}, SaCcrAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("BA_CVA", {}, BaCvaAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SMRC", {}, SmrcAnalytic, false);
     }
 }
 

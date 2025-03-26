@@ -101,7 +101,7 @@ public:
         const std::string& portfolioFilter,
         const std::vector<QuantLib::Real>& p,
         const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
+        const SalvagingAlgorithm::Type varSalvagingAlgorithm, boost::optional<ore::data::TimePeriod> period,
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
     
     ParametricVarReport(
@@ -111,12 +111,14 @@ public:
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
         const std::vector<QuantLib::Real>& p,
         const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
+        const SalvagingAlgorithm::Type varSalvagingAlgorithm, boost::optional<ore::data::TimePeriod> period,
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
 
     void createVarCalculator() override;
     
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
+
+    void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override {};
 
 protected:    
     const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
@@ -124,7 +126,12 @@ protected:
 
     //! The parameters to use for calculating the parametric VAR benchmark
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
-    bool salvageCovarianceMatrix_ = true;
+    //bool salvageCovarianceMatrix_ = true;  --> hence default spectral
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::Spectral;
+
+    void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override {};
 };
 
 ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& method);

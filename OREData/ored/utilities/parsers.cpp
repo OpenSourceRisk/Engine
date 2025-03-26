@@ -22,21 +22,27 @@
     \ingroup utilities
 */
 
-#include <boost/algorithm/string.hpp>
-#include <map>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/time/yearcounter.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <qle/instruments/cashflowresults.hpp>
-#include <qle/time/yearcounter.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/integrals/kronrodintegral.hpp>
+#include <ql/math/integrals/segmentintegral.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <map>
 #include <regex>
 
 using namespace QuantLib;
@@ -612,10 +618,15 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month> m = {{"Jan", Month::January}, {"Feb", Month::February}, {"Mar", Month::March},
-                                   {"Apr", Month::April},   {"May", Month::May},      {"Jun", Month::June},
-                                   {"Jul", Month::July},    {"Aug", Month::August},   {"Sep", Month::September},
-                                   {"Oct", Month::October}, {"Nov", Month::November}, {"Dec", Month::December}};
+    static map<string, Month> m = {
+        {"Jan", Month::January},     {"Feb", Month::February},      {"Mar", Month::March},
+        {"Apr", Month::April},       {"May", Month::May},           {"Jun", Month::June},
+        {"Jul", Month::July},        {"Aug", Month::August},        {"Sep", Month::September},
+        {"Oct", Month::October},     {"Nov", Month::November},      {"Dec", Month::December},
+        {"January", Month::January}, {"February", Month::February}, {"March", Month::March},
+        {"April", Month::April},     {"May", Month::May},           {"June", Month::June},
+        {"July", Month::July},       {"August", Month::August},     {"September", Month::September},
+        {"October", Month::October}, {"November", Month::November}, {"December", Month::December}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -711,7 +722,7 @@ AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},     {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM},   {"IR", AssetClass::IR},
                                                    {"INF", AssetClass::INF},   {"CR", AssetClass::CR},
-                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
+                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}, {"PORTFOLIO_DETAILS", AssetClass::PORTFOLIO_DETAILS}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -738,6 +749,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "BOND";
     case AssetClass::BOND_INDEX:
         return os << "BOND_INDEX";
+    case AssetClass::PORTFOLIO_DETAILS:
+        return os << "PORTFOLIO_DETAILS";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1508,6 +1521,72 @@ std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
     }
 
     return os;
+}
+
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
+    static map<string, SalvagingAlgorithm::Type> m = {{"None", SalvagingAlgorithm::None},
+                                                      {"Spectral", SalvagingAlgorithm::Spectral},
+                                                      {"Hypersphere", SalvagingAlgorithm::Hypersphere},
+                                                      {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
+                                                      {"Higham", SalvagingAlgorithm::Higham}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SalvagingAlgorithm type \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
+
+    if (type == SalvagingAlgorithm::None) {
+        os << "None";
+    } else if (type == SalvagingAlgorithm::Spectral) {
+        os << "Spectral";
+    } else if (type == SalvagingAlgorithm::Hypersphere) {
+        os << "Hypersphere";
+    } else if (type == SalvagingAlgorithm::LowerDiagonal) {
+        os << "LowerDiagonal";
+    } else if (type == SalvagingAlgorithm::Higham) {
+        os << "Higham";
+    } else {
+        QL_FAIL("SalvagingAlgorithm::Type ("
+                << static_cast<int>(type)
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
+    }
+
+    return os;
+}
+
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
+    std::vector<std::string> pair = {p.first, p.second};
+    return pair;
+}
+
+QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s) {
+    if (s.empty())
+        return nullptr;
+    vector<string> tokens;
+    boost::split(tokens, s, boost::is_any_of(","));
+    QL_REQUIRE(!tokens.empty(), "parseIntegrationPolicy(" << s << "): no tokens found.");
+    if (tokens[0] == "Simpson") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<SimpsonIntegral>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                           parseInteger(tokens[3]));
+    } else if (tokens[0] == "Segment") {
+        QL_REQUIRE(tokens.size() == 2, "parseIntegrationPolicy(" << s << "): expected 2 tokens.");
+        return QuantLib::ext::make_shared<SegmentIntegral>(parseReal(tokens[1]));
+    } else if (tokens[0] == "GaussKronrodNonAdaptive") {
+        QL_REQUIRE(tokens.size() == 4, "parseIntegrationPolicy(" << s << "): expected 4 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodNonAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]),
+                                                                   parseReal(tokens[3]));
+    } else if (tokens[0] == "GaussKronrodAdaptive") {
+        QL_REQUIRE(tokens.size() == 3, "parseIntegrationPolicy(" << s << "): expected 3 tokens.");
+        return QuantLib::ext::make_shared<GaussKronrodAdaptive>(parseReal(tokens[1]), parseInteger(tokens[2]));
+    } else {
+        QL_FAIL("parseIntegrationPolicy(" << s << "): not recognized");
+    }
 }
 
 } // namespace data

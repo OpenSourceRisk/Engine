@@ -62,6 +62,7 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
     // payment after expiry.
     maturity_ = expiryDate_;
+    maturityType_ = "Expiry Date";
 
     // Populate the index_ in case the option is automatic exercise.
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
@@ -152,6 +153,7 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
         setSensitivityTemplate(*compositeBuilder);
+        addProductModelEngine(*compositeBuilder);
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());
@@ -160,9 +162,11 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        maturity_ =
-            std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                            -bsInd, ccy, engineFactory, configuration));
+        Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                             -bsInd, ccy, engineFactory, configuration);
+        maturity_ = std::max(maturity_, latestPremiumDate);
+        if (maturity_ == latestPremiumDate)
+            maturityType_ = "Latest Premium Date";
 
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
