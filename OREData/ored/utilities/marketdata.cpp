@@ -316,7 +316,7 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
 }
 
 std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
-    if(fxIndex == nullptr){
+    if (fxIndex == nullptr) {
         WLOG("fxIndexNameForDailyLowsOrHighs: fxIndex is null, can not derive index name for lows");
         return std::string();
     }
@@ -328,6 +328,12 @@ std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<Quant
         WLOG("fxIndexNameForDailyLowsOrHighs: could not get ore name for fx index " << fxIndex->name());
         return std::string();
     }
+    // Dont support generic indices
+    if (!isFxIndex(oreName)) {
+        return std::string();
+    }
+
+    DLOG("Got oreName " << oreName);
     std::string lowHigh = lows ? "_LOW" : "_HIGH";
     return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + lowHigh);
 }
