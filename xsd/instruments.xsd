@@ -1490,6 +1490,8 @@
       <xs:element type="xs:float" name="PayoffAmount"/>
       <xs:element type="date" name="StartDate" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyLows"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyHighs"  minOccurs="0"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>

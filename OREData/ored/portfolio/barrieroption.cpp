@@ -167,13 +167,14 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     if (startDate_ != Null<Date>() && !indexFixingName().empty()) {
         auto lowIndex = getLowIndex();
         auto highIndex = getHighIndex();
+        const std::string indexNameLows = lowIndex ? IndexNameTranslator::instance().oreName(lowIndex->name()) : "";
+        const std::string indexNameHighs = highIndex ? IndexNameTranslator::instance().oreName(highIndex->name()) : "";
         for (Date d = fixingCal.adjust(startDate_); d <= expiryDate; d = fixingCal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, indexFixingName(), payDate);
-            
-            if (lowIndex != nullptr)
-                requiredFixings_.addFixingDate(d, IndexNameTranslator::instance().oreName(lowIndex->name()), payDate, false, false);
-            if (highIndex != nullptr)
-                requiredFixings_.addFixingDate(d, IndexNameTranslator::instance().oreName(highIndex->name()), payDate, false, false);
+            if (!indexNameLows.empty())
+                requiredFixings_.addFixingDate(d, indexNameLows, payDate, false, false);
+            if (!indexNameHighs.empty())
+                requiredFixings_.addFixingDate(d, indexNameHighs, payDate, false, false);
         }
     }
 

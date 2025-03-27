@@ -132,18 +132,20 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // Check if the barrier has been triggered already
     Calendar cal = ore::data::parseCalendar(calendar_);
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex, fxIndexLows, fxIndexHighs;
+    std::string indexNameDailyLows, indexNameDailyHighs;
     if (!fxIndex_.empty()) {
         fxIndex = buildFxIndex(fxIndex_, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
-        std::string indexNameDailyLows =
-            !fxIndexDailyLowsStr_.empty() ? fxIndexDailyLowsStr_ : fxIndexNameForDailyLows(fxIndex);
+        indexNameDailyLows = !fxIndexDailyLowsStr_.empty() ? fxIndexDailyLowsStr_ : fxIndexNameForDailyLows(fxIndex);
+        DLOG("Got index name for daily lows: " << indexNameDailyLows << " and explicit index " << fxIndexDailyLowsStr_);
         if (!indexNameDailyLows.empty()) {
             fxIndexLows = buildFxIndex(indexNameDailyLows, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
                                        engineFactory->configuration(MarketContext::pricing));
         }
 
-        std::string indexNameDailyHighs =
+        indexNameDailyHighs =
             !fxIndexDailyHighsStr_.empty() ? fxIndexDailyHighsStr_ : fxIndexNameForDailyHighs(fxIndex);
+            DLOG("Got index name for daily highs: " << indexNameDailyHighs << " and explicit index " << fxIndexDailyHighsStr_);
         if (!indexNameDailyHighs.empty()) {
             fxIndexHighs = buildFxIndex(indexNameDailyHighs, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
                                         engineFactory->configuration(MarketContext::pricing));
@@ -191,6 +193,10 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
+            if (!indexNameDailyLows.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyLows, expiryDate, false, false);
+            if (!indexNameDailyHighs.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyHighs, expiryDate, false, false);
         }
     }
 }
@@ -209,8 +215,8 @@ void FxDigitalBarrierOption::fromXML(XMLNode* node) {
     payoffCurrency_ = XMLUtils::getChildValue(fxNode, "PayoffCurrency", false); // optional
     foreignCurrency_ = XMLUtils::getChildValue(fxNode, "ForeignCurrency", true);
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
-    fxIndexDailyLowsStr_ = XMLUtils::getChildValue(node, "FXIndexDailyLows", false);
-    fxIndexDailyHighsStr_ = XMLUtils::getChildValue(node, "FXIndexDailyHighs", false);
+    fxIndexDailyLowsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyLows", false);
+    fxIndexDailyHighsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyHighs", false);
 }
 
 XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
@@ -227,9 +233,9 @@ XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
     if (fxIndex_ != "")
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
     if (!fxIndexDailyLowsStr_.empty())
-        XMLUtils::addChild(doc, node, "FXIndexDailyLows", fxIndexDailyLowsStr_);
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyLows", fxIndexDailyLowsStr_);
     if (!fxIndexDailyHighsStr_.empty())
-        XMLUtils::addChild(doc, node, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     XMLUtils::addChild(doc, fxNode, "Strike", strike_);
     XMLUtils::addChild(doc, fxNode, "PayoffAmount", payoffAmount_);
     if (payoffCurrency_ != "")
