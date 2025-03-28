@@ -292,6 +292,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedswaptionvoltermstructure.hpp>
 #include <qle/models/crstateparametrization.hpp>
 #include <qle/models/defaultableequityjumpdiffusionmodel.hpp>
 #include <qle/models/defaultlossmodel.hpp>

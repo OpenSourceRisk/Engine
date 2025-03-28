@@ -74,6 +74,7 @@ public:
     const Real& tolerance() const { return tolerance_; }
     const bool& useLastAvailableFixingAsBaseDate() const { return useLastAvailableFixingAsBaseDate_; }
     const InterpolationVariable& interpolationVariable() const { return interpolationVariable_; }
+    const std::string InterpolationMethod() const { return interpolationMethod_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
@@ -92,6 +93,7 @@ public:
     Real& baseRate() { return baseRate_; }
     Real& tolerance() { return tolerance_; }
     bool& useLastAvailableFixingAsBaseDate() { return useLastAvailableFixingAsBaseDate_; }
+    std::string& interpolationMethod() { return interpolationMethod_; }
     InterpolationVariable& interpolationVariable() { return interpolationVariable_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }

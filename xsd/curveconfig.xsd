@@ -631,6 +631,7 @@
       <xs:element type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

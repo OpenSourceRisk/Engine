@@ -31,6 +31,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -209,10 +210,23 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 DLOG("Zero rate at base date " << baseDate << " is " << zr);
 
             } else {
+
+
+
                 auto baseFixing = index->fixing(baseDate, true);
-                curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
-                    asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
-                    seasonality, config->tolerance());
+                if (config->interpolationMethod().empty() || config->interpolationMethod() == "Linear"){
+                
+                    curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
+                        asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
+                        seasonality, config->tolerance());
+                } else if (config->interpolationMethod() == "LogLinear"){
+                    curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<LogLinear>>(
+                        asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
+                        seasonality, config->tolerance());
+                } else {
+                    QL_FAIL("Interpolation method " << config->interpolationMethod()
+                                                    << " not supported for ZC cpi inflation curve, use Linear or LogLinear");
+                }
                 auto zr =
                     QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
                         QL_EPSILON);

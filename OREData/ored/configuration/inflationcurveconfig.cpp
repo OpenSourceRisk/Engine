@@ -97,6 +97,8 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         interpolationVariable_ = InterpolationVariable::PriceIndex;
     }
 
+    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false, "Linear");
+
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
 
@@ -152,6 +154,10 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, node, "InterpolationVariable",
                        interpolationVariable_ == InterpolationVariable::PriceIndex ? "PriceIndex" : "ZeroRate");
+
+    if (!interpolationMethod_.empty()) {
+        XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
+    } 
 
     if (useLastAvailableFixingAsBaseDate_)
         XMLUtils::addChild(doc, node, "UseLastFixingDate", to_string(useLastAvailableFixingAsBaseDate_));
