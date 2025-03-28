@@ -109,15 +109,13 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 \item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
 
 Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
-
-\item FXIndexDailyLows[Optional]: Refers to an FX Index that tracks the daily low quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix ``_LOW'' to the FXIndex source (e.g., ``FX-SOURCE_LOW-CCY1-CCY2''). If no fixings are available for the index, the system will fall back to using the fixings from the FXIndex.
+\item \lstinline!FXIndexDailyLows! [Optional]: Refers to an FX Index that tracks the daily low quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_LOW} to the FXIndex source (e.g. \emph{FX-SOURCE\_LOW-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
 
 Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
 
-\item FXIndexDailyLows[Optional]: \item FXIndexDailyLows[Optional]: Refers to an FX Index that tracks the daily high quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix ``_HIGH'' to the FXIndex source (e.g., ``FX-SOURCE_HIGH-CCY1-CCY2''). If no fixings are available for the index, the system will fall back to using the fixings from the FXIndex.
+\item \lstinline!FXIndexDailyHighs! [Optional]: Refers to an FX Index that tracks the daily high quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_HIGH} to the FXIndex source (e.g. \emph{FX-SOURCE\_HIGH-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
 
 Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
-
 \item Strike: The FX strike price, expressed as the amount in DomesticCurrency per one unit of ForeignCurrency. 
 
 Allowable values:  Any positive real number.
