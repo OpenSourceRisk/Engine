@@ -24,6 +24,7 @@ app/analytics/analyticfactory.cpp
 app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
+app/analytics/crifanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
@@ -147,10 +148,14 @@ scenario/stressscenariogenerator.cpp
 scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
+simm/crifgenerator.cpp
 simm/crifloader.cpp
+simm/crifmarket.cpp
 simm/crifrecord.cpp
+simm/crifrecordgenerator.cpp
 simm/imschedulecalculator.cpp
 simm/imscheduleresults.cpp
+simm/portfoliomodifier.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
@@ -184,6 +189,7 @@ simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
 simm/simmresults.cpp
+simm/simmtradedata.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
@@ -213,6 +219,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
+app/analytics/crifanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/parscenarioanalytic.hpp
@@ -357,10 +364,14 @@ scenario/stressscenariogenerator.hpp
 scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
+simm/crifgenerator.hpp
 simm/crifloader.hpp
+simm/crifmarket.hpp
 simm/crifrecord.hpp
+simm/crifrecordgenerator.hpp
 simm/imschedulecalculator.hpp
 simm/imscheduleresults.hpp
+simm/portfoliomodifier.hpp
 simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
@@ -396,6 +407,7 @@ simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
+simm/simmtradedata.hpp
 simm/utilities.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
