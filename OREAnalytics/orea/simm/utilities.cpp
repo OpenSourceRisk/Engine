@@ -480,24 +480,24 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     if (QuantLib::ext::dynamic_pointer_cast<ore::data::ScriptedTrade>(trade)) {
         return parseProductClass(
             QuantLib::ext::static_pointer_cast<ore::data::ScriptedTrade>(trade)->simmProductClass());
-    // } else if (trade->tradeType() == "Bond") {
-    //     return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::Bond>(trade));
-    // } else if (trade->tradeType() == "BondPosition") {
-    //     bool hasCreditRisk = false;
-    //     bool hasConvertibleBond = false;
-    //     for (auto const& b : QuantLib::ext::dynamic_pointer_cast<const ore::data::BondPosition>(trade)->bonds()) {
-    //         hasCreditRisk = hasCreditRisk || b.hasCreditRisk;
-    //         hasConvertibleBond = hasConvertibleBond || b.builderLabel == "ConvertibleBond";
-    //     }
-    //     if (hasConvertibleBond)
-    //         return CrifRecord::ProductClass::Equity;
-    //     else if (hasCreditRisk)
-    //         return CrifRecord::ProductClass::Credit;
-    //     else
-    //         return CrifRecord::ProductClass::RatesFX;
-    // } else if (trade->tradeType() == "ConvertibleBond") {
-    //     return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::ConvertibleBond>(trade),
-    //                             CrifRecord::ProductClass::Equity);
+    } else if (trade->tradeType() == "Bond") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::Bond>(trade));
+    } else if (trade->tradeType() == "BondPosition") {
+        bool hasCreditRisk = false;
+        bool hasConvertibleBond = false;
+        for (auto const& b : QuantLib::ext::dynamic_pointer_cast<const ore::data::BondPosition>(trade)->bonds()) {
+            hasCreditRisk = hasCreditRisk || b.hasCreditRisk;
+            hasConvertibleBond = hasConvertibleBond || b.builderLabel == "ConvertibleBond";
+        }
+        if (hasConvertibleBond)
+            return CrifRecord::ProductClass::Equity;
+        else if (hasCreditRisk)
+            return CrifRecord::ProductClass::Credit;
+        else
+            return CrifRecord::ProductClass::RatesFX;
+    } else if (trade->tradeType() == "ConvertibleBond") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::ConvertibleBond>(trade),
+                                CrifRecord::ProductClass::Equity);
     } else if (trade->tradeType() == "BondOption") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondOption>(trade));
     } else if (trade->tradeType() == "BondTRS") {
@@ -540,8 +540,9 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         if (auto it = tradeProductClassMap.find(trade->tradeType()); it != tradeProductClassMap.end())
             return it->second;
         else {
-            QL_FAIL("simm/scheduleProductClassFromOreTradeType: tradeType '" << trade->tradeType()
-                                                                             << "' not recognised");
+            ALOG("simm/scheduleProductClassFromOreTrade: tradeType '" << trade->tradeType() << "' not recognised, "
+                                                                      << "returning 'Empty' product class");
+            return CrifRecord::ProductClass::Empty;
         }
     }
 }
