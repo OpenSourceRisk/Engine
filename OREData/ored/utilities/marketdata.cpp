@@ -23,7 +23,8 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-
+#include <ored/utilities/indexnametranslator.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <ql/time/imm.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -312,6 +313,37 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
     Date refDate(1, expiryMonth, expiryYear);
     Date immDate = IMM::nextDate(refDate, false);
     return immDate;
+}
+
+std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
+    if (fxIndex == nullptr) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: fxIndex is null, can not derive index name for lows");
+        return std::string();
+    }
+    std::string oreName;
+    std::string indexFamilyName = fxIndex->familyName();
+    try {
+        oreName = IndexNameTranslator::instance().oreName(fxIndex->name());
+    } catch (const std::exception& e) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: could not get ore name for fx index " << fxIndex->name());
+        return std::string();
+    }
+    // Dont support generic indices
+    if (!isFxIndex(oreName)) {
+        return std::string();
+    }
+
+    DLOG("Got oreName " << oreName);
+    std::string lowHigh = lows ? "_LOW" : "_HIGH";
+    return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + lowHigh);
+}
+
+std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, true);
+}
+
+std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, false);
 }
 
 } // namespace data

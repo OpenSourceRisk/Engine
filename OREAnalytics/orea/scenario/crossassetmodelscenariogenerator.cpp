@@ -341,34 +341,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                    "Simulation of Swaption vols is only supported for LGM1F ir model type.");
 
-        // We need Swap conventions (index name, fixed tenor, fixed day counter) below, all part of the relevant Swap Index
-	// FIXME: Get access to the Swaption vol curve config and the long and short SwapIndex definied there
-        std::map<string, string> swapConventionMap
-	    = { { "EUR", "EUR-CMS-30Y"},
-		{ "USD", "USD-CMS-SOFR-30Y" },
-		{ "GBP", "GBP-CMS-30Y" },
-		{ "CHF", "CHF-CMS-30Y" },
-		{ "JPY", "JPY-CMS-30Y" }
-	};
-        std::map<string, string> shortSwapConventionMap
-	    = { { "EUR", "EUR-CMS-1Y"},
-		{ "USD", "USD-CMS-SOFR-1Y" },
-		{ "GBP", "GBP-CMS-1Y" },
-		{ "CHF", "CHF-CMS-1Y" },
-		{ "JPY", "JPY-CMS-1Y" }
-	};
-
         for (Size k = 0; k < simMarketConfig_->swapVolKeys().size(); k++) {
 	    const string key = simMarketConfig_->swapVolKeys()[k];
             DLOG("Set up CrossAssetModelImpliedSwaptionVolTermStructures for key " << key);
 
-	    QL_REQUIRE(swapConventionMap.find(key) != swapConventionMap.end(),
-		       "swaption vol key " << key << " missing associated swap convention name");  
-	    QL_REQUIRE(shortSwapConventionMap.find(key) != shortSwapConventionMap.end(),
-	     	       "swaption vol key " << key << " missing associated short swap convention name");  
-
-	    auto swapIndex = parseSwapIndex(swapConventionMap[key]);
-	    auto shortSwapIndex = parseSwapIndex(shortSwapConventionMap[key]);
+	    string swapIndexBaseName = initMarket_->swapIndexBase(key);
+	    string shortSwapIndexBaseName = initMarket_->shortSwapIndexBase(key);
+	    DLOG("SwapIndexBases for key " << key << " : " << shortSwapIndexBaseName << " " << swapIndexBaseName);
+	    auto swapIndex = parseSwapIndex(swapIndexBaseName);
+	    auto shortSwapIndex = parseSwapIndex(shortSwapIndexBaseName);
 	    	    
 	    Size ccyIndex = model_->ccyIndex(swapIndex->currency());
             swaptionVols_.push_back(QuantLib::ext::make_shared<CrossAssetModelImpliedSwaptionVolTermStructure>(
