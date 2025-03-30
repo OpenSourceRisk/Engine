@@ -57,7 +57,10 @@ public:
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,
         //! the reference calibration grid
-        const std::string& referenceCalibrationGrid = "");
+        const std::string& referenceCalibrationGrid = "",
+        //! id of the builder
+        const std::string& id = "unknown"
+    );
 
     //! Return calibration error
     Real error() const;
@@ -78,6 +81,7 @@ public:
     void setCalibrationDone() const;
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
@@ -91,6 +95,7 @@ private:
     const QuantLib::ext::shared_ptr<EqBsData> data_;
     const std::string referenceCalibrationGrid_;
     const QuantLib::Currency baseCcy_;
+    const std::string id_;
 
     // computed
     Real error_;
