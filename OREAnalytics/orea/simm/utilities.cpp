@@ -540,9 +540,8 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         if (auto it = tradeProductClassMap.find(trade->tradeType()); it != tradeProductClassMap.end())
             return it->second;
         else {
-            ALOG("simm/scheduleProductClassFromOreTrade: tradeType '" << trade->tradeType() << "' not recognised, "
-                                                                      << "returning 'Empty' product class");
-            return CrifRecord::ProductClass::Empty;
+            QL_FAIL("simm/scheduleProductClassFromOrePlusTrade: tradeType '" << trade->tradeType()
+                                                                             << "' not recognised");
         }
     }
 }
