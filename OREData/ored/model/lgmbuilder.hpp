@@ -54,7 +54,7 @@ public:
     LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
-               const bool setCalibrationInfo = false, const std::string& id = "unknwon", 
+               const bool setCalibrationInfo = false, const std::string& id = "unknown",
                BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::RelativePriceError);
     //! Return calibration error
     Real error() const;
