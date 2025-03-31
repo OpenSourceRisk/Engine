@@ -991,7 +991,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
-            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
+            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate && p.date2() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
                 // This correction is actually not needed, I think:
