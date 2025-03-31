@@ -881,7 +881,7 @@ void XvaEngineCG::calculateDynamicIM() {
         nettingSetIds.insert(t->envelope().nettingSetId());
 
     QL_REQUIRE(nettingSetIds.size() == 1,
-               "XvaEngineCG::calculateDynamicDelta(): only one netting is supported at this time, porfolio has "
+               "XvaEngineCG::calculateDynamicIM(): only one netting is supported at this time, porfolio has "
                    << nettingSetIds.size());
 
     for (auto const& n : nettingSetIds) {
@@ -1011,7 +1011,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 QL_REQUIRE(
                     ccyIndex > 0,
-                    "XvaEngineCG::calculateDynamicDelta(): internal error, logFxSpot qualifier is equal to base ccy");
+                    "XvaEngineCG::calculateDynamicIM(): internal error, logFxSpot qualifier is equal to base ccy");
                 pathFxDelta[ccyIndex - 1] += RandomVariable(model_->size(), 0.01) * dynamicIMDerivatives_[p.node()];
             }
 
@@ -1045,7 +1045,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 QL_REQUIRE(
                     ccyIndex > 0,
-                    "XvaEngineCG::calculateDynamicDelta(): internal error, fxbs_sigma qualifier is equal to base ccy");
+                    "XvaEngineCG::calculateDynamicIM(): internal error, fxbs_sigma qualifier is equal to base ccy");
                 Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
                 std::size_t bucket = std::min<std::size_t>(
                     fxVegaTerms.size() - 1,
@@ -1409,8 +1409,8 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << timing_poprv_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << timing_fwd_ / 1E6 << " ms");
-    LOG("XvaEngineCG: DynamicDelta             : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
-                                                   << " ms");
+    LOG("XvaEngineCG: DynamicIM             : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
+                                                << " ms");
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");
