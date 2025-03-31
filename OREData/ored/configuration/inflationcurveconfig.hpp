@@ -46,6 +46,8 @@ class InflationCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
 
+    enum class InterpolationVariable { ZeroRate, PriceIndex };
+
     InflationCurveConfig() {}
     InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
                          const Type type, const vector<string>& quotes, const string& conventions,
@@ -53,7 +55,8 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance, 
                          const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate, 
                          const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
-                         const vector<double>& overrideSeasonalityFactors = std::vector<double>());
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const InterpolationVariable& interpolationVariable = InterpolationVariable::ZeroRate);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -70,6 +73,8 @@ public:
     const Real& baseRate() const { return baseRate_; }
     const Real& tolerance() const { return tolerance_; }
     const bool& useLastAvailableFixingAsBaseDate() const { return useLastAvailableFixingAsBaseDate_; }
+    const InterpolationVariable& interpolationVariable() const { return interpolationVariable_; }
+    const std::string InterpolationMethod() const { return interpolationMethod_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
@@ -88,6 +93,8 @@ public:
     Real& baseRate() { return baseRate_; }
     Real& tolerance() { return tolerance_; }
     bool& useLastAvailableFixingAsBaseDate() { return useLastAvailableFixingAsBaseDate_; }
+    std::string& interpolationMethod() { return interpolationMethod_; }
+    InterpolationVariable& interpolationVariable() { return interpolationVariable_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
@@ -113,6 +120,7 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
     vector<double> overrideSeasonalityFactors_;
+    InterpolationVariable interpolationVariable_ = InterpolationVariable::ZeroRate;
 };
 } // namespace data
 } // namespace ore
