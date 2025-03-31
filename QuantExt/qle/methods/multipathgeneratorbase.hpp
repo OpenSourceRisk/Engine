@@ -187,7 +187,7 @@ protected:
  */
 class MultiPathGeneratorT0Only : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>&);
+    explicit MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>&);
     const Sample<MultiPath>& next() const override;
     void reset() override;
 
