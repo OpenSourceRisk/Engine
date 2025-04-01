@@ -44,7 +44,7 @@ The relevant fields in the \lstinline!OptionData! node for an IndexCDSOption are
 \begin{itemize}
 \item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. \emph{Long} meaning that the holder has the option to enter into the underlying index CDS.
 
-\item \lstinline!OptionType! [Optional] \emph{Put/Call} is optional and not used. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection.
+\item \lstinline!OptionType! [Optional] \emph{Put/Call} is optional and not used. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. The \lstinline!Payer! field is from the perspective of the party that is long. 
 
 \item  \lstinline!Style!  Must be set to \emph{European} as this is the only supported exercise for \lstinline!IndexCreditDefaultSwapOption!. 
 

@@ -97,9 +97,9 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis, const bool enableDynamicIM,
-                         const Size dynamicIMStepSize, const Size regressionOrder, const bool tradeLevelBreakDown,
-                         const bool useRedBlocks, const bool useExternalComputeDevice,
+                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
+                         const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
+                         const bool tradeLevelBreakDown, const bool useRedBlocks, const bool useExternalComputeDevice,
                          const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
@@ -621,11 +621,13 @@ void XvaEngineCG::doForwardEvaluation() {
     for (auto const& n : asdNumeraire_)
         keepNodes_[n] = true;
 
-    for (auto const& n : asdFx_)
-        keepNodes_[n] = true;
+    for (auto const& v : asdFx_)
+        for (auto const& n : v)
+            keepNodes_[n] = true;
 
-    for (auto const& n : asdIndex_)
-        keepNodes_[n] = true;
+    for (auto const& v : asdIndex_)
+        for (auto const& n : v)
+            keepNodes_[n] = true;
 
     if (keepValuesForDerivatives) {
         for (auto const n : g->redBlockDependencies()) {
@@ -648,8 +650,10 @@ void XvaEngineCG::doForwardEvaluation() {
                               false, ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
             externalOutputNodes_.insert(externalOutputNodes_.end(), pfExposureNodes_.begin(), pfExposureNodes_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdNumeraire_.begin(), asdNumeraire_.end());
-            externalOutputNodes_.insert(externalOutputNodes_.end(), asdFx_.begin(), asdFx_.end());
-            externalOutputNodes_.insert(externalOutputNodes_.end(), asdIndex_.begin(), asdIndex_.end());
+            for (auto const& v : asdFx_)
+                externalOutputNodes_.insert(externalOutputNodes_.end(), v.begin(), v.end());
+            for (auto const& v : asdIndex_)
+                externalOutputNodes_.insert(externalOutputNodes_.end(), v.begin(), v.end());
             if (tradeLevelBreakDown_) {
                 for (auto const& n : tradeExposureNodes_) {
                     externalOutputNodes_.insert(externalOutputNodes_.end(), n.begin(), n.end());
@@ -682,32 +686,43 @@ void XvaEngineCG::buildAsdNodes() {
     if (asd_ == nullptr && npvOutputCube_ == nullptr)
         return;
 
+    asdNumeraire_.resize(valuationDates_.size());
+    asdFx_.resize(simMarketData_->additionalScenarioDataCcys().size(),
+                  std::vector<std::size_t>(valuationDates_.size()));
+    asdIndex_.resize(simMarketData_->additionalScenarioDataIndices().size(),
+                     std::vector<std::size_t>(valuationDates_.size()));
+
+    std::size_t dateIndex = 0;
     for (auto const& date : valuationDates_) {
 
         // numeraire
-        asdNumeraire_.push_back(model_->numeraire(date));
+        asdNumeraire_[dateIndex] = model_->numeraire(date);
 
         // see above, we have set the numeraire node now, the rest is needed for asd only
         if (asd_ == nullptr)
             continue;
 
         // fx spots
+        std::size_t ccyIndex = 0;
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
             if (ccy != simMarketData_->baseCcy()) {
-                asdFx_.push_back(
-                    model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>()));
+                asdFx_[ccyIndex++][dateIndex] =
+                    model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>());
             }
         }
 
         // index fixings
+        std::size_t indIndex = 0;
         for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
-            asdIndex_.push_back(model_->eval(ind, date, Null<Date>()));
+            asdIndex_[indIndex++][dateIndex] = model_->eval(ind, date, Null<Date>());
         }
 
         // set credit states: TODO not yet provided in model_
         QL_REQUIRE(simMarketData_->additionalScenarioDataNumberOfCreditStates() == 0,
                    "XvaEngineCG::buildAsdNodes(): credit states currently not provided by GaussianCamCG, we have "
                    "implement this!");
+
+        ++dateIndex;
     }
 
     DLOG("XvaEngineCG: building asd nodes done ("
@@ -731,19 +746,23 @@ void XvaEngineCG::populateAsd() {
         }
 
         // set fx spots
+        std::size_t ccyIndex = 0;
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
             if (ccy != simMarketData_->baseCcy()) {
                 for (std::size_t i = 0; i < model_->size(); ++i) {
-                    asd_->set(k, i, values_[asdFx_[k]][i], AggregationScenarioDataType::FXSpot, ccy);
+                    asd_->set(k, i, values_[asdFx_[ccyIndex][k]][i], AggregationScenarioDataType::FXSpot, ccy);
                 }
+                ++ccyIndex;
             }
         }
 
         // set index fixings
+        std::size_t indIndex = 0;
         for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
             for (std::size_t i = 0; i < model_->size(); ++i) {
-                asd_->set(k, i, values_[asdIndex_[k]][i], AggregationScenarioDataType::IndexFixing, ind);
+                asd_->set(k, i, values_[asdIndex_[indIndex][k]][i], AggregationScenarioDataType::IndexFixing, ind);
             }
+            ++indIndex;
         }
     }
 
@@ -862,14 +881,16 @@ void XvaEngineCG::calculateDynamicIM() {
         nettingSetIds.insert(t->envelope().nettingSetId());
 
     QL_REQUIRE(nettingSetIds.size() == 1,
-               "XvaEngineCG::calculateDynamicDelta(): only one netting is supported at this time, porfolio has "
+               "XvaEngineCG::calculateDynamicIM(): only one netting is supported at this time, porfolio has "
                    << nettingSetIds.size());
 
     for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
     }
 
-    // set up ir and fx vega conversion matrices
+    // sensi bucketing configuration
+
+    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 30 * Years};
 
     const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
@@ -878,6 +899,16 @@ void XvaEngineCG::calculateDynamicIM() {
 
     const std::vector<QuantLib::Period> fxVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
+
+    // set up ir delta times
+
+    std::vector<double> irDeltaTimes;
+    for (auto const& p : irDeltaTerms) {
+        Date d = model_->referenceDate() + p;
+        irDeltaTimes.push_back(model_->actualTimeFromReference(d));
+    }
+
+    // set up ir and fx vega conversion matrices
 
     std::vector<LgmSwaptionVegaParConverter> irVegaConverter(model_->currencies().size());
     std::vector<CcLgmFxOptionVegaParConverter> fxVegaConverter(model_->currencies().size() - 1);
@@ -911,7 +942,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
     // set up im calculator
 
-    SimpleDynamicSimm imCalculator(model_->size(), model_->currencies(), irVegaTerms, fxVegaTerms,
+    SimpleDynamicSimm imCalculator(model_->size(), model_->currencies(), irDeltaTerms, irVegaTerms, fxVegaTerms,
                                    QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_6_5>(
                                        QuantLib::ext::make_shared<SimmBucketMapperBase>(), 10));
 
@@ -921,8 +952,6 @@ void XvaEngineCG::calculateDynamicIM() {
     for (auto const& [n, v] : baseModelParams_) {
         keepNodesDerivatives[n] = true;
     }
-
-    constexpr Size valDateStep = 10;
 
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
@@ -940,9 +969,8 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // run backward derivatives from n, note: we use eps = 0 in grads_ here!
 
-        backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter,
-                            keepNodesDerivatives, ops_, opNodeRequirements_, keepNodes_,
-                            RandomVariableOpCode::ConditionalExpectation,
+        backwardDerivatives(*g, values_, dynamicIMDerivatives_, grads_, RandomVariable::deleter, keepNodesDerivatives,
+                            ops_, opNodeRequirements_, keepNodes_, RandomVariableOpCode::ConditionalExpectation,
                             ops_[RandomVariableOpCode::ConditionalExpectation]);
 
         // collect and aggregate the derivatives of interest (pathwise values)
@@ -952,7 +980,9 @@ void XvaEngineCG::calculateDynamicIM() {
         for (auto const& c : model_->currencies())
             currencyLookup[c] = index++;
 
-        std::vector<RandomVariable> pathIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+        std::vector<std::vector<RandomVariable>> pathIrDelta(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
         std::vector<RandomVariable> pathFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
         std::vector<std::vector<RandomVariable>> pathIrVega(
             model_->currencies().size(),
@@ -963,7 +993,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         for (auto const& p : model_->modelParameters()) {
 
-            // debug output: expected path derivatives for all model parameters for time step 20 (5y 20221-02-05)
+            // debug output: expected path derivatives for all model parameters for time step 20 (5y 2021-02-05)
 
             // if (i == 0) {
             //     std::cout << p << "," << expectation(dynamicIMDerivatives_[p.node()]).at(0) << std::endl;
@@ -973,7 +1003,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
-            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate) {
+            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate && p.date2() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
                 // This correction is actually not needed, I think:
@@ -983,8 +1013,20 @@ void XvaEngineCG::calculateDynamicIM() {
                 // RandomVariable correction =
                 //     exp(RandomVariable(model_->size(), (HT - Ht)) * values_[irState_[ccyIndex][i]] +
                 //         RandomVariable(model_->size(), 0.5 * (HT * HT - Ht * Ht) * zetat));
-                pathIrDelta[ccyIndex] += RandomVariable(model_->size(), -(T - t) * 1E-4) * values_[p.node()] *
-                                         dynamicIMDerivatives_[p.node()] /** correction*/;
+                std::size_t bucket = std::min<std::size_t>(
+                    irDeltaTerms.size() - 1,
+                    std::distance(irDeltaTimes.begin(), std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T)));
+                Real w1 = 0.0, w2 = 1.0;
+                if (bucket > 0) {
+                    w1 = (irDeltaTimes[bucket] - T) /
+                         (irDeltaTimes[bucket] - (bucket == 0 ? 0.0 : irDeltaTimes[bucket - 1]));
+                    w2 = 1.0 - w1;
+                    pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
+                                                         values_[p.node()] *
+                                                         dynamicIMDerivatives_[p.node()] /** correction*/;
+                }
+                pathIrDelta[ccyIndex][bucket] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w2) *
+                                                 values_[p.node()] * dynamicIMDerivatives_[p.node()] /** correction*/;
             }
 
             // fx spot sensi as seen from val date t for a relative shift r is r * d NPV / d ln fxSpot, we use r = 0.01
@@ -993,7 +1035,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 QL_REQUIRE(
                     ccyIndex > 0,
-                    "XvaEngineCG::calculateDynamicDelta(): internal error, logFxSpot qualifier is equal to base ccy");
+                    "XvaEngineCG::calculateDynamicIM(): internal error, logFxSpot qualifier is equal to base ccy");
                 pathFxDelta[ccyIndex - 1] += RandomVariable(model_->size(), 0.01) * dynamicIMDerivatives_[p.node()];
             }
 
@@ -1017,8 +1059,7 @@ void XvaEngineCG::calculateDynamicIM() {
                                                         dynamicIMDerivatives_[p.node()] *
                                                         RandomVariable(model_->size(), tte);
                 }
-                pathIrVega[ccyIndex][bucket] += RandomVariable(model_->size(), w2) *
-                                                dynamicIMDerivatives_[p.node()] *
+                pathIrVega[ccyIndex][bucket] += RandomVariable(model_->size(), w2) * dynamicIMDerivatives_[p.node()] *
                                                 RandomVariable(model_->size(), tte);
             }
 
@@ -1028,7 +1069,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 QL_REQUIRE(
                     ccyIndex > 0,
-                    "XvaEngineCG::calculateDynamicDelta(): internal error, fxbs_sigma qualifier is equal to base ccy");
+                    "XvaEngineCG::calculateDynamicIM(): internal error, fxbs_sigma qualifier is equal to base ccy");
                 Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
                 std::size_t bucket = std::min<std::size_t>(
                     fxVegaTerms.size() - 1,
@@ -1041,7 +1082,9 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // calculate conditional expectations on the aggregated sensis and convert to par if applicable
 
-        std::vector<RandomVariable> conditionalIrDelta(model_->currencies().size(), RandomVariable(model_->size()));
+        std::vector<std::vector<RandomVariable>> conditionalIrDelta(
+            model_->currencies().size(),
+            std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
 
         std::vector<RandomVariable> conditionalFxDelta(model_->currencies().size() - 1, RandomVariable(model_->size()));
 
@@ -1063,14 +1106,16 @@ void XvaEngineCG::calculateDynamicIM() {
             if (g->predecessors(n0).empty())
                 continue;
 
-            // ir delta
-
-            std::vector<const RandomVariable*> args;
-            args.push_back(&pathIrDelta[ccy]);
+            std::vector<const RandomVariable*> args(1); // first entry is populated below with each regressand
             for (std::size_t p = 1; p < g->predecessors(n0).size(); ++p)
                 args.push_back(&values_[g->predecessors(n0)[p]]);
 
-            conditionalIrDelta[ccy] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+            // ir delta
+
+            for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+                args[0] = &pathIrDelta[ccy][b];
+                conditionalIrDelta[ccy][b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+            }
 
             // ir vega (including par conversion)
 
@@ -1136,9 +1181,11 @@ void XvaEngineCG::calculateDynamicIM() {
         // output for debug: expected ir delta, fx delta, fx vega over all time steps
 
         // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
-        //     std::cout << i << "," << "irDelta," << QuantLib::io::iso_date(valDate) << "," <<
-        //     model_->currencies()[ccy]
-        //               << "," << expectation(conditionalIrDelta[ccy]).at(0) << std::endl;
+        //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+        //         std::cout << i << "," << "irDelta," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy] << "," << irDeltaTerms[b] << ","
+        //                   << expectation(conditionalIrDelta[ccy][b]).at(0) << std::endl;
+        //     }
         // }
 
         // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
@@ -1173,7 +1220,7 @@ void XvaEngineCG::calculateDynamicIM() {
             // end debug
             dynamicIM_[n][i] =
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
-            for (Size j = i + 1; j < std::min(i + valDateStep, valuationDates_.size() + 1); ++j) {
+            for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
             }
         }
@@ -1392,8 +1439,8 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << timing_poprv_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Forward eval             : " << std::fixed << std::setprecision(1) << timing_fwd_ / 1E6 << " ms");
-    LOG("XvaEngineCG: DynamicDelta             : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
-                                                   << " ms");
+    LOG("XvaEngineCG: DynamicIM             : " << std::fixed << std::setprecision(1) << timing_dynamicIM_ / 1E6
+                                                << " ms");
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");

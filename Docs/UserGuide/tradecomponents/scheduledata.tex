@@ -143,15 +143,18 @@ Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
 
-\item \lstinline!FirstDate! [Optional]: Date for initial stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
-  overwrites the first date of the schedule that is otherwise built from IMM dates.
+\item \lstinline!FirstDate! [Optional]: Date for initial stub period, determining the end date of the first period.  If omitted the first period will follow the date generation rule.  
+Note that for date generation rules \emph{CDS} and \emph{CDS2015}, the
+   FirstDate has no impact and the schedule is built from IMM dates.
 
-Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. The FirstDate cannot be before the StartDate of the Schedule, and cannot be after the EndDate of the Schedule.
 
-\item \lstinline!LastDate! [Optional]: Date for final stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
-  overwrites the last date of the schedule that is otherwise built from IMM dates.
 
-Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item \lstinline!LastDate! [Optional]: Date for final stub period, determining the start date of the last period. If omitted the last period will follow the date generation rule.
+For date generation rules \emph{CDS} and \emph{CDS2015}, the
+LastDate has no impact and the schedule is built from IMM dates.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. The LastDate cannot be after the EndDate of the Schedule, and cannot be before the StartDate of the Schedule.
 
 \item \lstinline!RemoveFirstDate! [Optional]: If true the first date will be removed from the schedule. Useful to define a payment schedule using the rules for a calculation schedule.
 
