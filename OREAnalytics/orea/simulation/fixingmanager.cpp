@@ -113,7 +113,9 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
 
     // Now cache the original fixings so we can re-write on reset()
     for (auto const& m : fixingMap_) {
+        QL_DEPRECATED_DISABLE_WARNING
         fixingCache_[m.first] = IndexManager::instance().getHistory(m.first->name());
+        QL_DEPRECATED_ENABLE_WARNING
     }
 }
 

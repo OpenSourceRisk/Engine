@@ -299,9 +299,11 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
     if (fixingTriangulation_) {
         // check reverse
         string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
-        if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
-            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];
-
+        QL_DEPRECATED_DISABLE_WARNING
+        if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate)){
+            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];;
+        }
+        QL_DEPRECATED_ENABLE_WARNING
         // Now we search for a pair of quotes that we can combine to construct the quote required.
         // We only search for a pair of quotes a single step apart.
         //
@@ -316,6 +318,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
 
         // Loop over all the possible Indexes
         vector<string> availIndexes = IndexManager::instance().histories();
+        QL_DEPRECATED_DISABLE_WARNING
         for (auto i : availIndexes) {
             if (boost::starts_with(i, familyName_)) {
                 // check for a fixing
@@ -364,6 +367,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                 }
             }
         }
+        QL_DEPRECATED_ENABLE_WARNING
     }
     return fixing;
 }

@@ -98,7 +98,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     Brent b;
     Real lambdaStar;
     try {
-        lambdaStar = b.solve(QuantLib::ext::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, QuantLib::ext::placeholders::_1),
+        lambdaStar = b.solve(std::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, std::placeholders::_1),
                              1.0E-6, 0.0, 0.01);
     } catch (const std::exception& e) {
         QL_FAIL("AnalyticLgmCdsOptionEngine, failed to compute lambdaStar, " << e.what());
