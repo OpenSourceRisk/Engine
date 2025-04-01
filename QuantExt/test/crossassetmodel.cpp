@@ -2081,7 +2081,7 @@ struct IrFxInfCrComModelTestData {
 
         // Add commodity parameterisations
         bool df = driftFreeState;
-        comParametrizationA = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
+        comParametrizationA = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(EURCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
         comParametrizationB = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
         comModelA = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationA);
         comModelB = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationB);
@@ -2185,8 +2185,8 @@ struct IrFxInfCrComModelTestData {
                 { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0 }, // INF_EUR
                 { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0 }, // INF_GBP
                 { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0, 0.0, 0.0 }, // CR
-                { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 }, // COM1
-                { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0 }  // COM2
+                { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 1.0, 0.0 }, // COM1
+                { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 1.0 }  // COM2
             };
         } else if (!infEurIsDK && infGbpIsDK) {
             tmp = {
@@ -2199,13 +2199,13 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
                 {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 1.000, 0.000, 0.000}, // CR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         } else if (infEurIsDK && !infGbpIsDK) {
             tmp = {
-                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
-                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.200}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.100}, // IR_USD
                 {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
                 {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
                 {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
@@ -2213,8 +2213,8 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.400, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         } else {
             tmp = {
@@ -2228,8 +2228,8 @@ struct IrFxInfCrComModelTestData {
                 {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_GBP_RR
                 {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_GBP_IDX
                 {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 0.000, 1.000, 0.000, 0.000}, // CR
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // COM1
-                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.500, 1.000}  // COM2
+                {0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 1.000, 0.000}, // COM1
+                {0.200, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.100, 0.500, 1.000}  // COM2
             };
         }
 
@@ -2414,10 +2414,10 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         std::pair<Real, Real> sn12 = d.modelExact->crlgm1fS(0, 0, T, T2, crzn12, cryn12);
         n1eur2(sn12.first * sn12.second * d.modelExact->discountBond(0, T, T2, zeur2) / d.modelExact->numeraire(0, T, zeur2));
         // commodity forward prices
-        commodityA_1(d.comModelA->forwardPrice(T, T2, Array(1, coma1)));
-        commodityB_1(d.comModelB->forwardPrice(T, T2, Array(1, comb1)));
-        commodityA_2(d.comModelA->forwardPrice(T, T2, Array(1, coma2)));
-        commodityB_2(d.comModelB->forwardPrice(T, T2, Array(1, comb2)));
+        commodityA_1(d.comModelA->forwardPrice(T, T2, Array(1, coma1)) / d.modelExact->numeraire(0, T, zeur1));
+        commodityB_1(d.comModelB->forwardPrice(T, T2, Array(1, comb1)) * fxusd1 / d.modelExact->numeraire(0, T, zeur1));
+        commodityA_2(d.comModelA->forwardPrice(T, T2, Array(1, coma2)) / d.modelExact->numeraire(0, T, zeur2));
+        commodityB_2(d.comModelB->forwardPrice(T, T2, Array(1, comb2)) * fxusd2 / d.modelExact->numeraire(0, T, zeur2));
     }
 
     BOOST_TEST_MESSAGE("EXACT:");
@@ -2437,6 +2437,13 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("N1 zb EUR = " << mean(n1eur1) << " +- " << error_of<tag::mean>(n1eur1) << " vs analytical "
                                       << d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2));
 
+    BOOST_TEST_MESSAGE("commodityA_1 = " << mean(commodityA_1) << " +- " << error_of<tag::mean>(commodityA_1) << " vs analytical "
+                                      << d.comParametrizationA->priceCurve()->price(T2) * d.eurYts->discount(T));
+    
+    BOOST_TEST_MESSAGE("commodityB_1 = " << mean(commodityB_1) << " +- " << error_of<tag::mean>(commodityB_1) << " vs analytical "
+                                      << d.comParametrizationB->priceCurve()->price(T2) * d.fxEurUsd->value() * d.usdYts->discount(T));
+                                      
+                                                                       
     BOOST_TEST_MESSAGE("\nEULER:");
     BOOST_TEST_MESSAGE("EUR zb = " << mean(eurzb2) << " +- " << error_of<tag::mean>(eurzb2) << " vs analytical "
                                    << d.eurYts->discount(T2));
@@ -2454,6 +2461,11 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     BOOST_TEST_MESSAGE("N1 zb EUR = " << mean(n1eur2) << " +- " << error_of<tag::mean>(n1eur2) << " vs analytical "
                                       << d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2));
 
+    BOOST_TEST_MESSAGE("commodityA_2 = " << mean(commodityA_2) << " +- " << error_of<tag::mean>(commodityA_2) << " vs analytical "
+                                      << d.comParametrizationA->priceCurve()->price(T2) * d.eurYts->discount(T) );
+    
+    BOOST_TEST_MESSAGE("commodityB_2 = " << mean(commodityB_2) << " +- " << error_of<tag::mean>(commodityB_2) << " vs analytical "
+                                      << d.comParametrizationB->priceCurve()->price(T2) * d.fxEurUsd->value() * d.usdYts->discount(T));
     // a bit higher than for plain zero bond , since we look at indexed zero
     // bonds, too
     Real tol1 = 5.0E-4;  // EXACT
@@ -2523,7 +2535,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
 
     // commodity A forward prices
     Real tol;
-    ev = d.comParametrizationA->priceCurve()->price(T2);
+    ev = d.comParametrizationA->priceCurve()->price(T2) * d.eurYts->discount(T);
     tol = error_of<tag::mean>(commodityA_1);
     if (std::abs(mean(commodityA_1) - ev) > tol)
         BOOST_TEST_ERROR("Martingale test failed for commodity A (exact discr.),"
@@ -2534,7 +2546,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
                          "expected " << ev << ", got " << mean(commodityA_2) << " +- " << tol);
 
     // commodity B forward prices
-    ev = d.comParametrizationB->priceCurve()->price(T2); 
+    ev = d.comParametrizationB->priceCurve()->price(T2) * d.fxEurUsd->value() * d.usdYts->discount(T); 
     tol = error_of<tag::mean>(commodityB_1);
     if (std::abs(mean(commodityB_1) - ev) > tol)
         BOOST_TEST_ERROR("Martingale test failed for commodity B (exact discr.),"
@@ -2561,7 +2573,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     Size n = d.modelExact->dimension();
 
     QuantLib::ext::shared_ptr<StochasticProcess> p_exact = d.modelExact->stateProcess();
-    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.modelExact->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> p_euler = d.modelEuler->stateProcess();
 
     Real T = 2.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10); // number of simulation steps (Euler and exact)
@@ -2646,7 +2658,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 10.1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 10.5E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)

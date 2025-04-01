@@ -43,6 +43,7 @@
 #include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <typeindex>
@@ -60,8 +61,9 @@ using ore::data::XMLSerializable;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations(QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr)
-        : iborFallbackConfig_(iborFallbackConfig) {}
+    CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr)
+        : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig) {}
 
     //! \name Setters and Getters
     //@{
@@ -171,6 +173,7 @@ public:
     //@}
 
  private:
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     ReportConfig reportConfigEqVols_;

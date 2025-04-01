@@ -37,7 +37,9 @@ public:
                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            ore::data::RequiredFixings& requiredFixings, const std::string& configuration,
                            const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>(),
-                           const bool useXbsCurves = false, const bool attachPricer = true) const override;
+                           const bool useXbsCurves = false, const bool attachPricer = true,
+                           std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine =
+                               nullptr) const override;
 };
 
 } // namespace data

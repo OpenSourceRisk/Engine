@@ -1907,12 +1907,14 @@ Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (T
 
 Used by trade type: SyntheticCDO
 
-Available Model/Engine pairs: GaussCopula/Bucketing
+Available Model/Engine pairs: GaussCopula/Bucketing and GaussCopula/MonteCarlo
 
 Engine description:
 
 GaussCopula/Bucketing builds a IndexCdsTrancheEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing}
+\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing} It uses a Bucketing Algorithm  to compute the expected tranche loss
+
+GaussCopula/MonteCarlo builds a IndexCdsTrancheEngine. The expected tranche loss is computed using a Monte Carlo simulation.
 
 The parameters have the following meaning:
 
@@ -1920,17 +1922,33 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
-\item recoveryRateGrid: Constant (flat market recovery rate R), Markit2020 (3-pillar recovery grid $[0.1, R, 2R-0.1]$
+\item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
+\item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
+\item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item useLossDistWhenJustified: whether to use QuantLib::LossDist for determinisitc recovery instead of HulWhiteBucketing
 \item homogeneousPoolWhenJustified: whether to use homogeneous pool if possible, applies to QuantLib::LossDist
 \item useQuadrature: whether to use quadrature
 \item calibrateConstituentCurves: whether to calibrate constituent curves to index level
-\item calibrationIndexTerms: terms for constituent curve calibration
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
+\item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
 \end{itemize}
+
+It is possible to define multiple recovery rate grids and probabilities. 
+For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is recoveryRateGrid\_SNRFOR, 
+and the corresponding probabilities are recoveryRateProbabilities\_SNRFOR.
+
+If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
+you can add the \emph{IndexSubFamily} identifier to the index credit reference data. 
+This allows you to set up independent grids for groups of credit indices, 
+such as a grid for CDX High Yields Tranches recoveryRateGrid\_CDX.NA.HY\_SNRFOR.
+
+The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values \emph{Markit2020} and \emph{constant} are deprecated and 
+will cause a warning. With the setting \emph{Markit2020} there will be a recovery grid with three points used. The grid will be be based around the constituent's recovery. If the recovery rate 
+is greater than 10 \% and lower than 55 \%,  the grid is $[0.1, RR, 2 RR - 0.1]$, otherwise a constant recovery rate will be assumed.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -1941,8 +1959,19 @@ The parameters have the following meaning:
         <Parameter name="max">5.0</Parameter>
         <Parameter name="steps">64</Parameter>
         <Parameter name="useStochasticRecovery">Y</Parameter>
-        <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+        <Parameter name="useAssumedRecovery">Y</Parameter>
+        <Parameter name="recoveryRateGrid">0.7,0.4,0.1</Parameter>
         <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_SUBLT2">0.2</Parameter>
+        <Parameter name="recoveryRateProbabilities_SUBLT2">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SNRLAC">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SNRLAC">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_SECDOM">0.4</Parameter>
+        <Parameter name="recoveryRateProbabilities_SECDOM">1.0</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SECDOM">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SECDOM">0.35,0.3,0.35</Parameter>
+        <Parameter name="recoveryRateGrid_CDX.NA.HY_SNRFOR">0.5,0.3,0.1</Parameter>
+        <Parameter name="recoveryRateProbabilities_CDX.NA.HY_SNRFOR">0.35,0.3,0.35</Parameter>
     </ModelParameters>
     <Engine>Bucketing</Engine>
     <EngineParameters>
@@ -1953,6 +1982,8 @@ The parameters have the following meaning:
         <Parameter name="calibrateConstituentCurves">N</Parameter>
         <Parameter name="calibrationIndexTerms">3Y,5Y</Parameter>
         <Parameter name="SensitivityTemplate">CR_Semianalytical</Parameter>
+        <Parameter name="useIndexCDSPricer">Y</Parameter>
+        <Parameter name="useIndexCurveForIndexCDS">N</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}

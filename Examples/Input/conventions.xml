@@ -1662,7 +1662,7 @@
     <Id>FX-CHF-JPY-OPTION-CONVENTIONS</Id> 
     <AtmType>AtmDeltaNeutral</AtmType> 
     <DeltaType>PaFwd</DeltaType> 
-  </FxOption> 
+  </FxOption>
   <!--
   <CommodityFuture>
     <Id>COMDTY_WTI_USD</Id>

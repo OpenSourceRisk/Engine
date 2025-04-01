@@ -78,7 +78,7 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 break;
             }
             case CurveSpec::CurveType::BaseCorrelation: {
-                config = QuantLib::ext::make_shared<BaseCorrelationCurveConfig>();
+                config = QuantLib::ext::make_shared<BaseCorrelationCurveConfig>(refDataManager_);
                 break;
             }
             case CurveSpec::CurveType::FX: {
