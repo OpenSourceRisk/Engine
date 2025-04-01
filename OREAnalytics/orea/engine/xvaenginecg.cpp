@@ -1006,13 +1006,6 @@ void XvaEngineCG::calculateDynamicIM() {
             if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate && p.date2() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
-                // This correction is actually not needed, I think:
-                // Real HT = model_->cam()->irlgm1f(ccyIndex)->H(T);
-                // Real Ht = model_->cam()->irlgm1f(ccyIndex)->H(t);
-                // Real zetat = model_->cam()->irlgm1f(ccyIndex)->zeta(t);
-                // RandomVariable correction =
-                //     exp(RandomVariable(model_->size(), (HT - Ht)) * values_[irState_[ccyIndex][i]] +
-                //         RandomVariable(model_->size(), 0.5 * (HT * HT - Ht * Ht) * zetat));
                 std::size_t bucket = std::min<std::size_t>(
                     irDeltaTerms.size() - 1,
                     std::distance(irDeltaTimes.begin(), std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T)));
@@ -1022,11 +1015,10 @@ void XvaEngineCG::calculateDynamicIM() {
                          (irDeltaTimes[bucket] - (bucket == 0 ? 0.0 : irDeltaTimes[bucket - 1]));
                     w2 = 1.0 - w1;
                     pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
-                                                         values_[p.node()] *
-                                                         dynamicIMDerivatives_[p.node()] /** correction*/;
+                                                         values_[p.node()] * dynamicIMDerivatives_[p.node()];
                 }
                 pathIrDelta[ccyIndex][bucket] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w2) *
-                                                 values_[p.node()] * dynamicIMDerivatives_[p.node()] /** correction*/;
+                                                 values_[p.node()] * dynamicIMDerivatives_[p.node()];
             }
 
             // fx spot sensi as seen from val date t for a relative shift r is r * d NPV / d ln fxSpot, we use r = 0.01
@@ -1216,7 +1208,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         for (auto const& n : nettingSetIds) {
             // debug (to prepare im calculator debug output)
-            std::cout << i << ",";
+            // std::cout << i << ",";
             // end debug
             dynamicIM_[n][i] =
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
