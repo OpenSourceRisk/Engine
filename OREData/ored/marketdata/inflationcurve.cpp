@@ -232,10 +232,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                             .withConvention(Unadjusted)
                                             .withCalendar(conv->fixCalendar())
                                             .backwards();
+                    QL_DEPRECATED_DISABLE_WARNING
                     YearOnYearInflationSwap tmp(YearOnYearInflationSwap::Payer, 1000000.0, schedule, 0.02,
                                                 conv->dayCounter(), schedule, zc_to_yoy_conversion_index,
                                                 conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
                                                 conv->fixConvention());
+                    QL_DEPRECATED_ENABLE_WARNING
                     for (auto& c : tmp.yoyLeg()) {
                         auto cpn = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(c);
                         QL_REQUIRE(cpn, "yoy inflation coupon expected, could not cast");
@@ -263,10 +265,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
             Date baseDate =
                 QuantExt::ZeroInflation::curveBaseDate(false, asof, curveObsLag, config->frequency(), index);
-            curve_ =
+            QL_DEPRECATED_DISABLE_WARNING
+                curve_ =
                 QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                     asof, baseDate, baseRate, curveObsLag, config->frequency(), interpolatedIndex_, config->dayCounter(),
                     instruments, {}, config->tolerance()));
+            QL_DEPRECATED_ENABLE_WARNING
             // force bootstrap so that errors are thrown during the build, not later
             QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }

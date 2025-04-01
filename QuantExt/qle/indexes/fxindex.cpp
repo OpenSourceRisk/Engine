@@ -125,8 +125,9 @@ void FxIndex::initialise() {
     name_ = tmp.str();
 
     oreName_ = "FX-" + familyName_ + "-" + sourceCurrency_.code() + "-" + targetCurrency_.code();
-
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(name()));
+    QL_DEPRECATED_ENABLE_WARNING
     registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);

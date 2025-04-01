@@ -133,11 +133,13 @@ void FixingManager::update(Date d) {
 
 //! Reset fixings to t0 (today)
 void FixingManager::reset() {
+    QL_DEPRECATED_DISABLE_WARNING
     if (modifiedFixingHistory_) {
         for (auto& kv : fixingCache_)
             IndexManager::instance().setHistory(kv.first->name(), kv.second);
         modifiedFixingHistory_ = false;
     }
+    QL_DEPRECATED_ENABLE_WARNING
     fixingsEnd_ = today_;
 }
 

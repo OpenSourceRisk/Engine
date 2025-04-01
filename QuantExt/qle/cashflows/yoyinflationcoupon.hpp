@@ -40,6 +40,16 @@ class YoYInflationCoupon : public QuantLib::YoYInflationCoupon {
 public:
     YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                        Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                       const Period& observationLag, CPI::InterpolationType interpolation, const DayCounter& dayCounter,
+                       Real gearing = 1.0, Spread spread = 0.0, const Date& refPeriodStart = Date(),
+                       const Date& refPeriodEnd = Date(), bool addInflationNotional = false);
+
+    /*! \deprecated Use the overload that passes an interpolation type instead.
+                        Deprecated in version 1.36.
+    */
+    [[deprecated("Use the overload that passes an interpolation type instead")]]
+    YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                       Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
                        const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
                        Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                        bool addInflationNotional = false);
@@ -62,6 +72,19 @@ public:
     CappedFlooredYoYInflationCoupon(const ext::shared_ptr<YoYInflationCoupon>& underlying, Rate cap = Null<Rate>(),
                                     Rate floor = Null<Rate>(), bool addInflationNotional = false);
 
+
+
+    CappedFlooredYoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                                    Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                                    const Period& observationLag, CPI::InterpolationType interpolation,
+                                    const DayCounter& dayCounter, Real gearing = 1.0,
+                                    Spread spread = 0.0, const Rate cap = Null<Rate>(), const Rate floor = Null<Rate>(),
+                                    const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+                                    bool addInflationNotional = false);
+
+
+    /*! \deprecated Use the overload that passes an interpolation type instead. */
+    [[deprecated("Use the overload that passes an interpolation type instead")]]
     CappedFlooredYoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                                     Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
                                     const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
@@ -84,7 +107,12 @@ private:
 class yoyInflationLeg {
 public:
     yoyInflationLeg(Schedule schedule, Calendar cal, ext::shared_ptr<YoYInflationIndex> index,
-                    const Period& observationLag);
+                    const Period& observationLag, CPI::InterpolationType interpolation);
+    
+                    /*! \deprecated Use the overload that passes an interpolation type instead. */
+    [[deprecated("Use the overload that passes an interpolation type instead")]]
+    yoyInflationLeg(Schedule schedule, Calendar cal, ext::shared_ptr<YoYInflationIndex> index,
+                        const Period& observationLag);
     yoyInflationLeg& withNotionals(Real notional);
     yoyInflationLeg& withNotionals(const std::vector<Real>& notionals);
     yoyInflationLeg& withPaymentDayCounter(const DayCounter&);
@@ -107,6 +135,7 @@ private:
     Schedule schedule_;
     ext::shared_ptr<YoYInflationIndex> index_;
     Period observationLag_;
+    CPI::InterpolationType interpolation_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
