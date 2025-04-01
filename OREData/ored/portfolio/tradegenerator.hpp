@@ -44,18 +44,16 @@ using std::map;
 
 class TradeGenerator : public Portfolio {
 public:
-    TradeGenerator(string counterpartyId = "", string nettingSetId = "");
-    TradeGenerator(QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs, string refDataFile = "",
-                   string counterpartyId = "", string nettingSetId = "");
-        
-    TradeGenerator(QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs,
-                   QuantLib::ext::shared_ptr<BasicReferenceDataManager> refDataManager, string counterpartyId = "",
+    
+    TradeGenerator(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfig, const QuantLib::ext::shared_ptr < BasicReferenceDataManager>& refData, string counterpartyId = "",
                    string nettingSetId = "")
-        : curveConfigs_(curveConfigs), referenceData_(refDataManager), counterpartyId_(counterpartyId),
+        : curveConfigs_(curveConfig), referenceData_(refData), counterpartyId_(counterpartyId),
           nettingSetId_(nettingSetId) {
-        addConventions();
+        setup();
     }
+    TradeGenerator(string counterpartyId = "", string nettingSetId = "") { setup(); }
     virtual ~TradeGenerator() {}
+    void setup();
     void addCurveConfigs(string curveConfigFile);
     void addReferenceData(string refDataFile);
     void setNettingSet(string nettingSetId);

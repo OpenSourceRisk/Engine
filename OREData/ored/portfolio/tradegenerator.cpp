@@ -59,14 +59,9 @@ namespace data {
 using namespace ore::data;
 using std::map;
 
-TradeGenerator::TradeGenerator(string counterpartyId, string nettingSetId) {
+
+void TradeGenerator::setup() {  
     today_ = Settings::instance().evaluationDate();
-    if (counterpartyId != "") {
-        setCounterpartyId(counterpartyId);
-    }
-    if (nettingSetId != "") {
-        setNettingSet(nettingSetId);
-    }
     addConventions();
 }
 
