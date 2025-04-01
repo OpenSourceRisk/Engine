@@ -63,7 +63,8 @@ namespace analytics {
 typedef ore::analytics::CrifRecord::RiskType RiskType;
 
 CrifGenerator::CrifGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
-                             const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper, const SimmTradeData& tradeData,
+                             const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
+			     const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                              const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting,
                              const std::string& currency, QuantLib::Real usdSpot,
                              const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter,
@@ -73,7 +74,7 @@ CrifGenerator::CrifGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>&
     : simmConfiguration_(simmConfiguration), nameMapper_(nameMapper), tradeData_(tradeData), crifMarket_(crifMarket),
       xccyDiscounting_(xccyDiscounting), currency_(currency), fieldGetter_(fieldGetter), usdSpot_(usdSpot),
       referenceData_(referenceData), curveConfigs_(curveConfigs), discountIndex_(discountIndex),
-      hasNettingSetDetails_(tradeData.hasNettingSetDetails()) {
+      hasNettingSetDetails_(tradeData->hasNettingSetDetails()) {
 
     QL_REQUIRE(checkCurrency(currency_), "Expected a valid base currency for crif generation but got " << currency_);
     QL_REQUIRE(!isSimmNonStandardCurrency(currency_),
@@ -102,7 +103,7 @@ CrifGenerator::generateCrif(const QuantLib::ext::shared_ptr<ore::analytics::Sens
 
     // Populate all trade IDs.
 
-    allTradeIds_ = tradeData_.simmTradeIds();
+    allTradeIds_ = tradeData_->simmTradeIds();
 
     LOG("Process sensitivity stream");
 
@@ -144,7 +145,7 @@ std::vector<ore::analytics::CrifRecord> CrifGenerator::processSensitivityStream(
     std::size_t processedRecords = 0;
     ss.reset();
 
-    const auto& ids = tradeData_.simmTradeIds();
+    const auto& ids = tradeData_->simmTradeIds();
 
     vector<boost::optional<CrifRecord>> crifRecords;
     map<string, CrifRecord> fxRiskRecords, riskFxCalcCurrency;
@@ -276,20 +277,20 @@ CrifRecord CrifGenerator::createZeroRiskFxRecord(const std::string& tradeId) con
 CrifRecord CrifGenerator::createZeroAmountCrifRecord(const string& tradeId, const CrifRecord::RiskType riskType,
                                                      const CrifRecord::IMModel& imModel, const std::string& qualifer,
                                                      bool includeEndDate) const {
-    SimmTradeData::TradeAttributes ta;
-    const bool hasAttributes = tradeData_.hasAttributes(tradeId);
+    QuantLib::ext::shared_ptr<SimmTradeData::TradeAttributes> ta;
+    const bool hasAttributes = tradeData_->hasAttributes(tradeId);
     if (hasAttributes)
-        ta = tradeData_.getAttributes(tradeId);
+        ta = tradeData_->getAttributes(tradeId);
 
-    string tradeType = hasAttributes ? ta.getTradeType() : "";
+    string tradeType = hasAttributes ? ta->getTradeType() : "";
 
     const auto& simmCollectRegs = set<CrifRecord::Regulation>();
     const auto& simmPostRegs = set<CrifRecord::Regulation>();
 
-    string enddate = includeEndDate && hasAttributes ? ta.getEndDate() : "";
+    string enddate = includeEndDate && hasAttributes ? ta->getEndDate() : "";
 
-    CrifRecord cr(tradeId, tradeType, tradeData_.nettingSetDetails(tradeId),
-                  hasAttributes ? ta.getSimmProductClass() : CrifRecord::ProductClass::Empty, riskType, qualifer, "",
+    CrifRecord cr(tradeId, tradeType, tradeData_->nettingSetDetails(tradeId),
+                  hasAttributes ? ta->getSimmProductClass() : CrifRecord::ProductClass::Empty, riskType, qualifer, "",
                   "", "", currency_, 0.0, 0.0, imModel, simmCollectRegs, simmPostRegs, enddate);
 
     if (fieldGetter_) {

@@ -66,7 +66,8 @@ public:
         cross currency basis risk against cross currency interest rate swap instruments.
     */
     CrifGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
-                  const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper, const SimmTradeData& tradeData,
+                  const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
+		  const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                   const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting = false,
                   const std::string& currency = "USD", QuantLib::Real usdSpot = 1.0,
                   const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter = nullptr,
@@ -101,7 +102,7 @@ private:
 
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
     QuantLib::ext::shared_ptr<SimmNameMapper> nameMapper_;
-    SimmTradeData tradeData_;
+    QuantLib::ext::shared_ptr<SimmTradeData> tradeData_;
     QuantLib::ext::shared_ptr<CrifMarket> crifMarket_;
     bool xccyDiscounting_;
     std::string currency_;

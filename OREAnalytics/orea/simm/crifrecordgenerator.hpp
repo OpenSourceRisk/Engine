@@ -21,6 +21,7 @@
  */
 
 #pragma once
+
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/simm/crifrecord.hpp>
@@ -94,7 +95,8 @@ using ore::analytics::RiskFactorKey;
 class CrifRecordGenerator {
 public:
     CrifRecordGenerator(const QuantLib::ext::shared_ptr<ore::analytics::CrifConfiguration>& config,
-                        const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper, const SimmTradeData& simmTradeData,
+                        const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
+			const QuantLib::ext::shared_ptr<SimmTradeData>& simmTradeData,
                         const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting,
                         const std::string& currency, QuantLib::Real usdSpot,
                         const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter,
@@ -110,7 +112,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ore::analytics::CrifConfiguration> config_;
     QuantLib::ext::shared_ptr<SimmNameMapper> nameMapper_;
-    SimmTradeData tradeData_;
+    QuantLib::ext::shared_ptr<SimmTradeData> tradeData_;
     QuantLib::ext::shared_ptr<CrifMarket> crifMarket_;
     bool xccyDiscounting_;
     std::string currency_;
@@ -251,13 +253,14 @@ protected:
         return data;
     }
 
-    double CdsAtmVol(const std::string& tradeId, const std::string& optionExpiry) const;
+    virtual double CdsAtmVol(const std::string& tradeId, const std::string& optionExpiry) const;
 };
 
 class SimmRecordGenerator : public CrifRecordGenerator {
 public:
     SimmRecordGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
-                        const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper, const SimmTradeData& tradeData,
+                        const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
+			const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                         const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting = false,
                         const std::string& currency = "USD", QuantLib::Real usdSpot = 1.0,
                         const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter = nullptr,

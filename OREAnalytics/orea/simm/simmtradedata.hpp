@@ -42,6 +42,15 @@ using std::vector;
 using std::pair;
 using std::string;
 
+#define TRY_AND_CATCH(expr, tradeId, tradeType, context, emitStructuredError)                                          \
+    try {                                                                                                              \
+        expr;                                                                                                          \
+    } catch (const std::exception& e) {                                                                                \
+            ore::data::StructuredTradeErrorMessage(                                                                    \
+                tradeId, tradeType, "Error while setting simm trade data (" + std::string(context) + ")", e.what())    \
+                .log();                                                                                                \
+    }
+
 namespace ore {
 namespace analytics {
 class SimmBucketMapper;
@@ -56,11 +65,13 @@ public:
     class TradeAttributes {
     public:
         TradeAttributes() {}
-
+        virtual ~TradeAttributes() {}
+      
         const string& getTradeType() const { return tradeType_; }
         const string& getOriginalTradeType() const { return originalTradeType_; }
         const string& getTradeCurrency() const { return tradeCurrency_; }
         const CrifRecord::ProductClass& getSimmProductClass() const { return simmProductClass_; }
+        const CrifRecord::ProductClass& getScheduleProductClass() const { return scheduleProductClass_; }
         const std::set<CrifRecord::Regulation>& getSimmCollectRegulations() const { return simmCollectRegulations_; }
         const std::set<CrifRecord::Regulation>& getSimmPostRegulations() const { return simmPostRegulations_; }
         double getNotional() const { return notional_; }
@@ -95,12 +106,12 @@ public:
         void setXccyResettable(const string& s) { xccyResettable_ = s; }
 
         /*! Set relevant extended attributes for each trade type */
-        void setExtendedAttributes(const QuantLib::ext::shared_ptr<ore::data::Trade> trade,
+        virtual void setExtendedAttributes(const QuantLib::ext::shared_ptr<ore::data::Trade> trade,
                                    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                                    const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper,
                                    const bool emitStructuredError = true);
         
-    private:
+    protected:
         string tradeType_, originalTradeType_;
         string tradeCurrency_;
         CrifRecord::ProductClass simmProductClass_;
@@ -138,6 +149,8 @@ public:
     SimmTradeData(const string& defaultPortfolioId, const string& defaultCounterpartyId)
         : defaultPortfolioId_(defaultPortfolioId), defaultCounterpartyId_(defaultCounterpartyId),
           hasNettingSetDetails_(false), referenceData_(nullptr) {}
+
+    virtual ~SimmTradeData() {}
 
     //! Return the set of all trade IDs in the container
     std::set<pair<string, QuantLib::Size>> get() const;
@@ -179,7 +192,7 @@ public:
     bool empty() const;
 
     //! Clear the trade data
-    void clear();
+    virtual void clear();
 
     //! Return true if the \p tradeId has additional attributes
     bool hasAttributes(const string& tradeId) const;
@@ -187,29 +200,24 @@ public:
     /*! Set the additional \p attributes for a given \p tradeId. If attributes already
         exists for \p tradeId, they are overwritten.
     */
-    void setAttributes(const string& tradeId, const TradeAttributes& attributes);
-
-    //! Set the original trade info for the trade ID (for proxied trades, e.g. UseCounteparty)
-    //void setOriginalTrade(const string& tradeId, const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
+    void setAttributes(const string& tradeId, const QuantLib::ext::shared_ptr<TradeAttributes>& attributes);
 
     /*! Get the additional \p attributes for a given \p tradeId.
 
         \warning This method throws if there are no additional attributes for the given
                  \p tradeId so use \c hasAttributes method before the call if in doubt
     */
-    TradeAttributes getAttributes(const string& tradeId) const;
+    const QuantLib::ext::shared_ptr<TradeAttributes>& getAttributes(const string& tradeId) const;
 
     //! Indicate whether the trades are using netting set details instead of just netting set ID
     const bool hasNettingSetDetails() const { return hasNettingSetDetails_; }
 
-    bool hasSimmExemptionOverrides() const { return !simmExemptionOverrides_.empty(); }
-    const vector<string>& simmExemptionOverrides() const { return simmExemptionOverrides_; }
-
     const std::set<string>& simmTradeIds() const { return simmTradeIds_; }
 
-private:
-    void processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                          const QuantLib::ext::shared_ptr<ore::data::Market>& market);
+protected:
+    virtual void processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+				  const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+				  const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio = nullptr);
 
     struct ISDATradeTaxonomy {
         std::string assetClass;
@@ -256,10 +264,6 @@ private:
     //! Vector of SIMM tradeIds
     std::set<string> simmTradeIds_;
 
-    //! Indicate whether there is at least one IM Schedule trade in the portfolio
-    //! Regulations for which SIMM exemptions should not apply, i.e. SIMM is calculated for trades under these regs
-    vector<string> simmExemptionOverrides_;
-
     //! Indicate whether the trades are using netting set details instead of just netting set ID
     bool hasNettingSetDetails_;
 
@@ -267,7 +271,7 @@ private:
         This container should be empty for most trade IDs and contain exceptional elements
         that are required during CRIF generation for certain trades.
     */
-    map<string, TradeAttributes> tradeAttributes_;
+    map<string, QuantLib::ext::shared_ptr<TradeAttributes>> tradeAttributes_;
 
     //! For proxied trades like UseCounterparty, where we need the original trade info
     map<string, QuantLib::ext::shared_ptr<ore::data::Trade>> originalTrades_;

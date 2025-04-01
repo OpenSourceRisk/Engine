@@ -356,7 +356,8 @@ CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>&
                           const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, double usdSpot) {
     startTimer("computeCrif()");
     if (portfolio != nullptr && portfolio->size() > 0) {
-        SimmTradeData tradeData(portfolio, market(), inputs->refDataManager(), inputs->simmBucketMapper());
+        auto tradeData = QuantLib::ext::make_shared<SimmTradeData>(portfolio, market(), inputs->refDataManager(),
+								   inputs->simmBucketMapper());
         CrifGenerator crifGenerator(inputs->getSimmConfiguration(), inputs->simmNameMapper(), tradeData, crifMarket,
                                     inputs->xbsParConversion(), baseCurrency(), usdSpot, nullptr,
                                     inputs->refDataManager(), inputs->curveConfigs().get());

@@ -240,7 +240,7 @@ ostream& operator<<(ostream& os, const VolatilityDataCrif::Key& key) {
 
 CrifRecordGenerator::CrifRecordGenerator(const QuantLib::ext::shared_ptr<ore::analytics::CrifConfiguration>& config,
                                          const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
-                                         const SimmTradeData& simmTradeData,
+                                         const QuantLib::ext::shared_ptr<SimmTradeData>& simmTradeData,
                                          const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting,
                                          const std::string& currency, QuantLib::Real usdSpot,
                                          const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter,
@@ -269,7 +269,7 @@ ore::analytics::CrifRecord CrifRecordGenerator::record(const SensitivityRecord& 
                                                        const std::string& qualifier, const std::string& bucket,
                                                        const std::string& label1, const std::string& label2,
                                                        double sensitivity) {
-    const ore::data::NettingSetDetails& tradeNettingSetDetails = tradeData_.nettingSetDetails(sr.tradeId);
+    const ore::data::NettingSetDetails& tradeNettingSetDetails = tradeData_->nettingSetDetails(sr.tradeId);
     return CrifRecord(sr.tradeId, "", tradeNettingSetDetails, CrifRecord::ProductClass::Empty, riskType, qualifier,
                       bucket, label1, label2, currency_, sensitivity, usdSpot_ * sensitivity);
 }
@@ -669,7 +669,7 @@ double CrifRecordGenerator::CdsAtmVol(const std::string& tradeId, const std::str
 
 SimmRecordGenerator::SimmRecordGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                                          const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
-                                         const SimmTradeData& tradeData,
+                                         const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                                          const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting,
                                          const std::string& currency, QuantLib::Real usdSpot,
                                          const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter,
@@ -691,6 +691,46 @@ CrifRecordData SimmRecordGenerator::baseCorrelationImpl(const ore::analytics::Se
     CrifRecordData data;
     ALOG("SimmRecordGenerator: Base correlation sensitivity not covered, returning empty CRIF record data");
     return data;
+}
+
+ore::analytics::CrifRecord SimmRecordGenerator::record(const SensitivityRecord& sr, CrifRecord::RiskType riskType,
+                                                       const std::string& qualifier, const std::string& bucket,
+                                                       const std::string& label1, const std::string& label2,
+                                                       double sensitivity) {
+    const std::string tradeId = sr.tradeId;
+    CrifRecord::ProductClass productClass = CrifRecord::ProductClass::Empty;
+    if (tradeData_->hasAttributes(tradeId))
+        productClass = tradeData_->getAttributes(tradeId)->getSimmProductClass();
+
+    map<string, string> additionalFields;
+    set<CrifRecord::Regulation> simmCollectRegs;
+    set<CrifRecord::Regulation> simmPostRegs;
+
+    auto tc = tradeCache_.find(tradeId);
+
+    if (tc != tradeCache_.end()) {
+        additionalFields = tc->second.additionalFields;
+        simmCollectRegs = tc->second.simmCollectRegs;
+        simmPostRegs = tc->second.simmPostRegs;
+    } else {
+
+        // Get additional fields for inclusion in CRIF if field getter is not null
+        if (fieldGetter_) {
+            additionalFields = fieldGetter_->fields(tradeId);
+            additionalFields.erase("im_model");
+        }
+
+        if (tradeData_->hasAttributes(tradeId)) {
+            simmCollectRegs = tradeData_->getAttributes(tradeId)->getSimmCollectRegulations();
+            simmPostRegs = tradeData_->getAttributes(tradeId)->getSimmPostRegulations();
+        }
+
+        tradeCache_[tradeId] = TradeCache{additionalFields, simmCollectRegs, simmPostRegs};
+    }
+    const ore::data::NettingSetDetails& tradeNettingSetDetails = tradeData_->nettingSetDetails(tradeId);
+    return CrifRecord(tradeId, tradeData_->getAttributes(tradeId)->getTradeType(), tradeNettingSetDetails, productClass,
+                      riskType, qualifier, bucket, label1, label2, currency_, sensitivity, usdSpot_ * sensitivity,
+                      CrifRecord::IMModel::SIMM, simmCollectRegs, simmPostRegs, "", additionalFields);
 }
 
 ore::analytics::CrifRecord::RiskType
@@ -725,46 +765,6 @@ SimmRecordGenerator::riskTypeImpl(const ore::analytics::RiskFactorKey::KeyType& 
         return CrifRecord::RiskType::Empty;
     }
 }
-
-ore::analytics::CrifRecord SimmRecordGenerator::record(const SensitivityRecord& sr, CrifRecord::RiskType riskType,
-                                                       const std::string& qualifier, const std::string& bucket,
-                                                       const std::string& label1, const std::string& label2,
-                                                       double sensitivity) {
-    const std::string tradeId = sr.tradeId;
-    CrifRecord::ProductClass productClass = CrifRecord::ProductClass::Empty;
-    if (tradeData_.hasAttributes(tradeId))
-        productClass = tradeData_.getAttributes(tradeId).getSimmProductClass();
-
-    map<string, string> additionalFields;
-    set<CrifRecord::Regulation> simmCollectRegs;
-    set<CrifRecord::Regulation> simmPostRegs;
-
-    auto tc = tradeCache_.find(tradeId);
-
-    if (tc != tradeCache_.end()) {
-        additionalFields = tc->second.additionalFields;
-        simmCollectRegs = tc->second.simmCollectRegs;
-        simmPostRegs = tc->second.simmPostRegs;
-    } else {
-
-        // Get additional fields for inclusion in CRIF if field getter is not null
-        if (fieldGetter_) {
-            additionalFields = fieldGetter_->fields(tradeId);
-            additionalFields.erase("im_model");
-        }
-
-        if (tradeData_.hasAttributes(tradeId)) {
-            simmCollectRegs = tradeData_.getAttributes(tradeId).getSimmCollectRegulations();
-            simmPostRegs = tradeData_.getAttributes(tradeId).getSimmPostRegulations();
-        }
-
-        tradeCache_[tradeId] = TradeCache{additionalFields, simmCollectRegs, simmPostRegs};
-    }
-    const ore::data::NettingSetDetails& tradeNettingSetDetails = tradeData_.nettingSetDetails(tradeId);
-    return CrifRecord(tradeId, tradeData_.getAttributes(tradeId).getTradeType(), tradeNettingSetDetails, productClass,
-                      riskType, qualifier, bucket, label1, label2, currency_, sensitivity, usdSpot_ * sensitivity,
-                      CrifRecord::IMModel::SIMM, simmCollectRegs, simmPostRegs, "", additionalFields);
-}
-
+  
 } // namespace analytics
 } // namespace ore

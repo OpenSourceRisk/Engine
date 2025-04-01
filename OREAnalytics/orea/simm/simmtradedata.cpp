@@ -59,15 +59,6 @@
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 
-#define TRY_AND_CATCH(expr, tradeId, tradeType, context, emitStructuredError)                                          \
-    try {                                                                                                              \
-        expr;                                                                                                          \
-    } catch (const std::exception& e) {                                                                                \
-            ore::data::StructuredTradeErrorMessage(                                                                    \
-                tradeId, tradeType, "Error while setting simm trade data (" + std::string(context) + ")", e.what())    \
-                .log();                                                                                                \
-    }
-
 using ore::data::LegType;
 using ore::data::BondTRS;
 // using oreplus::data::SensiTrade;
@@ -216,28 +207,6 @@ void SimmTradeData::TradeAttributes::setScheduleProductClass(const CrifRecord::P
     scheduleProductClass_ = pc;
 }
 
-/*
-void SimmTradeData::TradeAttributes::setSimmCollectRegulations(const set<CrifRecord::Regulation>& regs) {
-    simmCollectRegulations_ = regs;
-}
-
-void SimmTradeData::TradeAttributes::setSimmPostRegulations(const set<CrifRecord::Regulation>& regs) {
-    simmPostRegulations_ = regs;
-}
-
-void SimmTradeData::TradeAttributes::setScheduleCollectRegulations(const set<CrifRecord::Regulation>& regs) {
-    scheduleCollectRegulations_ = regs;
-}
-
-void SimmTradeData::TradeAttributes::setSchedulePostRegulations(const set<CrifRecord::Regulation>& regs) {
-    schedulePostRegulations_ = regs;
-}
-
-void SimmTradeData::TradeAttributes::addNotionalLabel(const NotionalLabel& notionalLabel) {
-    notionalLabels_.push_back(notionalLabel);
-}
-*/
-
 void SimmTradeData::TradeAttributes::setNotional(double d) { notional_ = d; }
 
 void SimmTradeData::TradeAttributes::setNotionalCurrency(const string& s) { notionalCurrency_ = s; }
@@ -251,15 +220,17 @@ void SimmTradeData::TradeAttributes::setEndDate(const string& s) { endDate_ = s;
 void SimmTradeData::TradeAttributes::setPresentValueUSD(double d) { presentValueUSD_ = d; }
 
 void SimmTradeData::TradeAttributes::setNotionalUSD(double d) { notionalUSD_ = d; }
+
 void SimmTradeData::processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                                     const QuantLib::ext::shared_ptr<ore::data::Market>& market) {
+                                     const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+				     const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio) {
     for (auto [tradeId, t] : portfolio->trades()) {
         bool emitStructuredError = true;
         try {
             // add trade to container
             const map<string, string>& additionalFields = t->envelope().additionalFields();
 
-            TradeAttributes tmp;
+	    auto tmp = QuantLib::ext::make_shared<TradeAttributes>();
 
 	    auto simmPC = CrifRecord::ProductClass::Empty;
             auto schedulePC = CrifRecord::ProductClass::Empty;
@@ -284,29 +255,29 @@ void SimmTradeData::processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>&
 
             } else {
 
-                if (tmp.getTradeType().empty()) {
+                if (tmp->getTradeType().empty()) {
                     if (auto it = additionalFields.find("external_trade_type"); it != additionalFields.end())
-                        tmp.setTradeType(it->second);
+                        tmp->setTradeType(it->second);
                     else
-                        tmp.setTradeType(t->tradeType());
+                        tmp->setTradeType(t->tradeType());
                 }
 
-                tmp.setExtendedAttributes(t, market, bucketMapper_, emitStructuredError);
+                tmp->setExtendedAttributes(t, market, bucketMapper_, emitStructuredError);
 
-                TRY_AND_CATCH(tmp.setTradeCurrency(getTradeCurrency(t, referenceData_)), tradeId, t->tradeType(),
+                TRY_AND_CATCH(tmp->setTradeCurrency(getTradeCurrency(t, referenceData_)), tradeId, t->tradeType(),
                               "setTradeCurrency", emitStructuredError);
-                tmp.setSimmProductClass(simmPC);
-                tmp.setScheduleProductClass(schedulePC);
+                tmp->setSimmProductClass(simmPC);
+                tmp->setScheduleProductClass(schedulePC);
                 ISDATradeTaxonomy tradeTaxonomy;
                 TRY_AND_CATCH(tradeTaxonomy = deriveISDATradeTaxonomy(t), tradeId, t->tradeType(), "tradeTaxonomy",
                               emitStructuredError);
-                tmp.setAssetClass(tradeTaxonomy.assetClass);
-                tmp.setBaseProduct(tradeTaxonomy.baseProduct);
-                tmp.setSubProduct(tradeTaxonomy.subProduct);
+                tmp->setAssetClass(tradeTaxonomy.assetClass);
+                tmp->setBaseProduct(tradeTaxonomy.baseProduct);
+                tmp->setSubProduct(tradeTaxonomy.subProduct);
                 std::string xccyResetting;
                 TRY_AND_CATCH(xccyResetting = tradeIsXccyResetting(t), tradeId, t->tradeType(), "xccyResetting",
                               emitStructuredError);
-                tmp.setXccyResettable(xccyResetting);
+                tmp->setXccyResettable(xccyResetting);
             }
 
             // set final trade attributes
@@ -416,7 +387,7 @@ void SimmTradeData::clear() {
 
 bool SimmTradeData::hasAttributes(const string& tradeId) const { return tradeAttributes_.count(tradeId) > 0; }
 
-void SimmTradeData::setAttributes(const string& tradeId, const TradeAttributes& attributes) {
+void SimmTradeData::setAttributes(const string& tradeId, const QuantLib::ext::shared_ptr<TradeAttributes>& attributes) {
     tradeAttributes_[tradeId] = attributes;
 }
 
@@ -424,7 +395,7 @@ void SimmTradeData::setAttributes(const string& tradeId, const TradeAttributes& 
 //    originalTrades_[tradeId] = trade;
 //}
 
-SimmTradeData::TradeAttributes SimmTradeData::getAttributes(const string& tradeId) const {
+const QuantLib::ext::shared_ptr<SimmTradeData::TradeAttributes>& SimmTradeData::getAttributes(const string& tradeId) const {
     auto it = tradeAttributes_.find(tradeId);
     QL_REQUIRE(it != tradeAttributes_.end(), "There are no additional trade attributes for trade " << tradeId);
     return it->second;
