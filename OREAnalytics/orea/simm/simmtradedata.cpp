@@ -182,22 +182,22 @@ void SimmTradeData::TradeAttributes::setExtendedAttributes(
 
 }
 
-SimmTradeData::SimmTradeData(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                             const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-                             const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
-                             const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper)
-    : referenceData_(referenceData), bucketMapper_(bucketMapper) {
-
-    hasNettingSetDetails_ = portfolio->hasNettingSetDetails();
-
-    processPortfolio(portfolio, market);
+void SimmTradeData::init() {
+    if (!initialised_) {
+        hasNettingSetDetails_ = portfolio_->hasNettingSetDetails();
+        processPortfolio(portfolio_, market_, auxiliaryPortfolio_);
+        initialised_ = true;
+    }
 }
+  
+void SimmTradeData::TradeAttributes::setTradeType(const string tradeType) {
+    tradeType_ = tradeType; }
 
-void SimmTradeData::TradeAttributes::setTradeType(const string tradeType) { tradeType_ = tradeType; }
+void SimmTradeData::TradeAttributes::setOriginalTradeType(const string tradeType) {
+    originalTradeType_ = tradeType; }
 
-void SimmTradeData::TradeAttributes::setOriginalTradeType(const string tradeType) { originalTradeType_ = tradeType; }
-
-void SimmTradeData::TradeAttributes::setTradeCurrency(const string& tradeCurrency) { tradeCurrency_ = tradeCurrency; }
+void SimmTradeData::TradeAttributes::setTradeCurrency(const string& tradeCurrency) {
+    tradeCurrency_ = tradeCurrency; }
 
 void SimmTradeData::TradeAttributes::setSimmProductClass(const CrifRecord::ProductClass& pc) {
     simmProductClass_ = pc;
@@ -224,6 +224,7 @@ void SimmTradeData::TradeAttributes::setNotionalUSD(double d) { notionalUSD_ = d
 void SimmTradeData::processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                      const QuantLib::ext::shared_ptr<ore::data::Market>& market,
 				     const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio) {
+    DLOG("SimmTradeData::processPortfolio called");
     for (auto [tradeId, t] : portfolio->trades()) {
         bool emitStructuredError = true;
         try {
@@ -383,6 +384,7 @@ void SimmTradeData::clear() {
     counterpartyIds_.clear();
     simmTradeIds_.clear();
     tradeAttributes_.clear();
+    initialised_ = false;
 }
 
 bool SimmTradeData::hasAttributes(const string& tradeId) const { return tradeAttributes_.count(tradeId) > 0; }
@@ -391,13 +393,11 @@ void SimmTradeData::setAttributes(const string& tradeId, const QuantLib::ext::sh
     tradeAttributes_[tradeId] = attributes;
 }
 
-//void SimmTradeData::setOriginalTrade(const string& tradeId, const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
-//    originalTrades_[tradeId] = trade;
-//}
-
 const QuantLib::ext::shared_ptr<SimmTradeData::TradeAttributes>& SimmTradeData::getAttributes(const string& tradeId) const {
+    QL_REQUIRE(initialised_, "SimmTradeData not initalised yet");
     auto it = tradeAttributes_.find(tradeId);
     QL_REQUIRE(it != tradeAttributes_.end(), "There are no additional trade attributes for trade " << tradeId);
+    QL_REQUIRE(it->second, "TradeAttributes pointer is null");
     return it->second;
 }
 

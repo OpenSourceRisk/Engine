@@ -143,7 +143,10 @@ public:
     SimmTradeData(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                   const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                   const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-		  const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper = nullptr);
+                  const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper = nullptr,
+                  const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio = nullptr)
+        : referenceData_(referenceData), bucketMapper_(bucketMapper), portfolio_(portfolio), market_(market),
+          auxiliaryPortfolio_(auxiliaryPortfolio) {}
 
     //! Constructor with a specific default portfolio and counterparty ID
     SimmTradeData(const string& defaultPortfolioId, const string& defaultCounterpartyId)
@@ -152,6 +155,8 @@ public:
 
     virtual ~SimmTradeData() {}
 
+    void init();
+  
     //! Return the set of all trade IDs in the container
     std::set<pair<string, QuantLib::Size>> get() const;
 
@@ -197,11 +202,6 @@ public:
     //! Return true if the \p tradeId has additional attributes
     bool hasAttributes(const string& tradeId) const;
 
-    /*! Set the additional \p attributes for a given \p tradeId. If attributes already
-        exists for \p tradeId, they are overwritten.
-    */
-    void setAttributes(const string& tradeId, const QuantLib::ext::shared_ptr<TradeAttributes>& attributes);
-
     /*! Get the additional \p attributes for a given \p tradeId.
 
         \warning This method throws if there are no additional attributes for the given
@@ -215,6 +215,11 @@ public:
     const std::set<string>& simmTradeIds() const { return simmTradeIds_; }
 
 protected:
+    /*! Set the additional \p attributes for a given \p tradeId. If attributes already
+        exists for \p tradeId, they are overwritten.
+    */
+    void setAttributes(const string& tradeId, const QuantLib::ext::shared_ptr<TradeAttributes>& attributes);
+
     virtual void processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
 				  const QuantLib::ext::shared_ptr<ore::data::Market>& market,
 				  const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio = nullptr);
@@ -279,6 +284,12 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
 
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> bucketMapper_;
+
+    // Used to fill TradeAttributes via init() and virtual processPortfolio()
+    bool initialised_ = false;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<Portfolio> auxiliaryPortfolio_;
 };
 
 } // namespace analytics
