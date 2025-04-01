@@ -35,6 +35,7 @@ app/analytics/saccranalytic.cpp
 app/analytics/sacvaanalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
+app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
@@ -225,6 +226,7 @@ app/analytics/saccranalytic.hpp
 app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
+app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp

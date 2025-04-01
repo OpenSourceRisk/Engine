@@ -143,11 +143,19 @@ void SensitivityAnalysis::generateSensitivities() {
             "configuration '"
             << marketConfiguration_ << "'");
 
-        simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            market_, simMarketData_, marketConfiguration_,
-            curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-            todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-            sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
+        if (offsetScenario_ == nullptr) {
+            simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                market_, simMarketData_, marketConfiguration_,
+                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_);
+        } else {
+            simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                market_, offsetSimMarketParams_, marketConfiguration_,
+                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+                sensitivityData_->useSpreadedTermStructures(), continueOnError_, overrideTenors_, iborFallbackConfig_, true, offsetScenario_);
+        }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
         for (Size i = 0; i < sensiTemplateIds.size(); ++i) {
@@ -209,12 +217,19 @@ void SensitivityAnalysis::generateSensitivities() {
         market_ =
             QuantLib::ext::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_, true, true,
                                                         false, referenceData_, false, iborFallbackConfig_, false);
-
-        simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            market_, simMarketData_, marketConfiguration_,
-            curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
-            todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
-            sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
+        if (offsetScenario_ == nullptr) {
+            simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                market_, simMarketData_, marketConfiguration_,
+                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
+        } else {
+            simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                market_, offsetSimMarketParams_, marketConfiguration_,
+                curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+                todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), continueOnError_,
+                sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_, true, offsetScenario_);
+        }
 
         std::vector<QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>> scenarioGenerators(sensiTemplateIds.size());
         for (Size i = 0; i < sensiTemplateIds.size(); ++i) {

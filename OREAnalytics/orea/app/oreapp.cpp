@@ -1614,6 +1614,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xvaStress", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA_STRESS");
+    
+    tmp = params_->get("sensitivityStress", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("SENSITIVITY_STRESS");
 
     tmp = params_->get("xvaSensitivity", "active", false);
     if (!tmp.empty() && parseBool(tmp))
@@ -2159,6 +2163,39 @@ void OREAppInputParameters::loadParameters() {
             string file = (inputPath / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setXvaStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+    }
+
+    /*************
+     * Sensitivity Stress
+     *************/
+
+     if (analytics().find("SENSITIVITY_STRESS") != analytics().end()) {
+        tmp = params_->get("sensitivityStress", "marketConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity stress test scenario sim market parameters from file" << file);
+            setSensitivityStressSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity stress testing not loaded");
+        }
+
+        tmp = params_->get("sensitivityStress", "stressConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity stress test scenario data from file" << file);
+            setSensitivityStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity Stress scenario data not loaded");
+        }
+
+        tmp = params_->get("sensitivityStress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensitivityStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
         }

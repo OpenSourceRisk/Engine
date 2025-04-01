@@ -373,6 +373,14 @@ public:
     void setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName);
     void setXvaStressWriteCubes(const bool writeCubes) { xvaStressWriteCubes_ = writeCubes; }
 
+    // Setters for sensitivityStress
+    void setSensitivityStressSimMarketParams(const std::string& xml);
+    void setSensitivityStressSimMarketParamsFromFile(const std::string& f);
+    void setSensitivityStressScenarioData(const std::string& s);
+    void setSensitivityStressScenarioDataFromFile(const std::string& s);
+    void setSensitivityStressSensitivityScenarioData(const std::string& xml);
+    void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
+
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
     void setXvaSensiSimMarketParamsFromFile(const std::string& fileName);
@@ -771,6 +779,11 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaStressSensitivityScenarioData() const {
         return xvaStressSensitivityScenarioData_;
     }
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensitivityStressSimMarketParams() const { return sensitivityStressSimMarketParams_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& sensitivityStressScenarioData() const { return sensitivityStressScenarioData_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityStressSensitivityScenarioData() const {
+        return sensitivityStressSensitivityScenarioData_;
+    }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1164,6 +1177,9 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
 
@@ -1298,6 +1314,7 @@ private:
     std::string stressTestFileName_;
     std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
+    std::string sensitivityStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
     std::string parConversionOutputFileName_;
