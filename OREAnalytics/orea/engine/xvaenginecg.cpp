@@ -880,10 +880,6 @@ void XvaEngineCG::calculateDynamicIM() {
     for (auto const& [id, t] : portfolio_->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
 
-    QL_REQUIRE(nettingSetIds.size() == 1,
-               "XvaEngineCG::calculateDynamicIM(): only one netting is supported at this time, porfolio has "
-                   << nettingSetIds.size());
-
     for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
     }
