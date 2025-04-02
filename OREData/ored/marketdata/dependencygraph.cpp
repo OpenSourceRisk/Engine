@@ -81,6 +81,8 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     // avoid self reference
                     if (r.first == g[*v].curveSpec->baseType() && (cId == g[*v].curveSpec->curveConfigID() || cId == g[*v].name))
                         continue;
+                    if (r.first == CurveSpec::CurveType::FX)
+                        continue; // FXSpots are dealt with in advance
                     bool found = false;
                     for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                         if (*w != *v && g[*w].curveSpec && r.first == g[*w].curveSpec->baseType() &&
