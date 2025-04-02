@@ -26,6 +26,7 @@
 #include <boost/optional/optional.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounter.hpp>

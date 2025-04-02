@@ -20,6 +20,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/credit.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -29,7 +30,8 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
+BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager)
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
       quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()),
       calibrateConstituentsToIndexSpread_(false), useAssumedRecovery_(false), refDataManager_(refDataManager) {}
@@ -42,7 +44,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     const std::vector<MarketDatum::QuoteType>& quoteTypes, double indexSpread, const std::string& currency,
     const bool calibrateConstituentsToIndexSpread, bool useAssumedRecovery,
     const std::map<std::string, std::vector<double>>& rrGrids,
-    const std::map<std::string, std::vector<double>>& rrProbs)
+    const std::map<std::string, std::vector<double>>& rrProbs,
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager)
     : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms),
       settlementDays_(settlementDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
       dayCounter_(dayCounter), extrapolate_(extrapolate), quoteName_(quoteName.empty() ? curveID : quoteName),
@@ -112,9 +115,9 @@ map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurve
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
                     constituentCurves.insert(c.name());
-                    auto assumedRecovery = assumedRecovery(c.name());
-                    if (assumedRecovery != Null<double>()) {
-                        constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), assumedRecovery));
+                    auto ar = assumedRecovery(c.name());
+                    if (ar != Null<double>()) {
+                        constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), ar));
                     }
                 } else {
                     DLOG("Skipping curve " << c.name() << ", having zero weight");
@@ -123,14 +126,6 @@ map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurve
         }
     }
     return rci;
-}
-
-void BaseCorrelationCurveConfig::populateRequiredCurveIds() {
-    static std::vector<std::string> calibrationTerms{"3Y", "5Y"};
-    if (isIndexCDS(curveID_)) {
-        for (const std::string& term : calibrationTerms)
-            requiredCurveIds_[CurveSpec::CurveType::Default].insert(curveID_ + "_" + term);
-    }
 }
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
