@@ -1004,10 +1004,11 @@ void XvaEngineCG::calculateDynamicIM() {
                 Real T = model_->actualTimeFromReference(p.date());
                 std::size_t bucket = std::min<std::size_t>(
                     irDeltaTerms.size() - 1,
-                    std::distance(irDeltaTimes.begin(), std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T)));
+                    std::distance(irDeltaTimes.begin(),
+                                  std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T - t)));
                 Real w1 = 0.0, w2 = 1.0;
                 if (bucket > 0) {
-                    w1 = (irDeltaTimes[bucket] - T) /
+                    w1 = (irDeltaTimes[bucket] - (T - t)) /
                          (irDeltaTimes[bucket] - (bucket == 0 ? 0.0 : irDeltaTimes[bucket - 1]));
                     w2 = 1.0 - w1;
                     pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
