@@ -350,7 +350,7 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
     return curves;
 }
 
- const QuantLib::ext::shared_ptr<CurveConfig>&
+const QuantLib::ext::shared_ptr<CurveConfig>&
 CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) {
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
@@ -372,9 +372,8 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     for (const auto& c : curves) {
         auto cc = get(CurveSpec::CurveType::Inflation, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
-            InflationCurveConfig::Type t = icc->type();
-            if (t == type)
-                return icc;
+            if (icc->type() == type)
+                return cc;
         }
     }
     return nullptr;
@@ -403,7 +402,7 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
         auto cc = get(CurveSpec::CurveType::InflationCapFloorVolatility, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc)) {
             if (icc->type() == type)
-                return icc;
+                return cc;
         }
     }
     return nullptr;
