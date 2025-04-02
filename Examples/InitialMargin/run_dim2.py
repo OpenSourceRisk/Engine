@@ -118,3 +118,12 @@ oreex.setup_plot("simm_evolution")
 oreex.plot("DimValidation/simm_evolution.csv", 0, 4, 'b', "SIMM")
 oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time Steps")
 oreex.save_plot_to_file()
+
+oreex.print_headline("Run ORE for Dynamic SIMM with AMC/CG")
+oreex.run("Input/Dim2/ore_amccg.xml")
+
+oreex.setup_plot("dim_comparison")
+oreex.plot("DimValidation/simm_evolution.csv", 0, 4, 'b', "SIMM")
+oreex.plot("Dim2/AmcCg/dim_evolution.csv", 0, 4, 'r', "Dynamic SIMM with AMC/CG")
+oreex.decorate_plot(title="DIM Evolution", ylabel="IM", xlabel="Time Steps")
+oreex.save_plot_to_file()
