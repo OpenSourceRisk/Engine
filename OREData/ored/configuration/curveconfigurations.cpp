@@ -372,7 +372,8 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     for (const auto& c : curves) {
         auto cc = get(CurveSpec::CurveType::Inflation, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
-            if (icc->type() == type)
+            InflationCurveConfig::Type t = icc->type();
+            if (t == type)
                 return icc;
         }
     }
