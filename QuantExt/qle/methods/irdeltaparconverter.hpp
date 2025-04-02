@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ql/indexes/swapindex.hpp>
+#include <ql/math/matrix.hpp>
 
 namespace QuantExt {
 
