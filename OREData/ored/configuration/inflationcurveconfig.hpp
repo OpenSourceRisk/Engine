@@ -83,7 +83,7 @@ public:
 
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
-    Type& type() { return type_; }
+    Type type() { return type_; }
     string& conventions() { return conventions_; }
     bool& extrapolate() { return extrapolate_; }
     Calendar& calendar() { return calendar_; }
