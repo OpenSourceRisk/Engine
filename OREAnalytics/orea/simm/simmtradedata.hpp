@@ -250,9 +250,6 @@ protected:
     */
     map<string, QuantLib::ext::shared_ptr<TradeAttributes>> tradeAttributes_;
 
-    //! For proxied trades like UseCounterparty, where we need the original trade info
-    map<string, QuantLib::ext::shared_ptr<ore::data::Trade>> originalTrades_;
-
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
 
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> bucketMapper_;
