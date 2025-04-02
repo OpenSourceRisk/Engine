@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <orea/simm/simmtradedata.hpp>
@@ -8,10 +21,6 @@
 
 #include <ored/portfolio/trs.hpp>
 #include <ored/utilities/parsers.hpp>
-
-//#include <orepcredit/ored/portfolio/assetbackedcreditdefaultswap.hpp>
-//#include <orepproxy/ored/portfolio/imscheduletrade.hpp>
-//#include <orepproxy/ored/portfolio/sensitrade.hpp>
 
 #include <orea/simm/simmbucketmapper.hpp>
 #include <ored/portfolio/ascot.hpp>
@@ -69,119 +78,6 @@ namespace analytics {
 
 using namespace QuantLib;
 
-namespace {
-
-string getTradeCurrency(const QuantLib::ext::shared_ptr<ore::data::Trade>& t,
-                        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refData) {
-
-    // for composite trades we try to get the trade currency from the underlying trades
-
-    if (t->tradeType() == "CompositeTrade") {
-        std::set<string> underlyingCurrencies;
-        auto c = QuantLib::ext::dynamic_pointer_cast<ore::data::CompositeTrade>(t);
-        QL_REQUIRE(c, "internal error: could not cast CompositeTrade to trade class");
-        for (auto const& u : c->trades()) {
-            string ccy = getTradeCurrency(u, refData);
-            if (!ccy.empty())
-                underlyingCurrencies.insert(ccy);
-        }
-        if (underlyingCurrencies.empty()) {
-            return "";
-        } else if (underlyingCurrencies.size() == 1) {
-            return *underlyingCurrencies.cbegin();
-        } else {
-            string ccys;
-            for (auto const& c : underlyingCurrencies)
-                ccys += c + ",";
-            if (!ccys.empty())
-                ccys.pop_back();
-            ore::data::StructuredTradeErrorMessage(
-                t->id(), t->tradeType(), "Ambiguous SIMM CreditQ trade currencies for composite trade",
-                "Found currencies " + ccys + ", will use " + (*underlyingCurrencies.cbegin()))
-                .log();
-            return *underlyingCurrencies.cbegin();
-        }
-    }
-
-    // handle non-composite trade types
-
-    if (t->tradeType() == "CreditDefaultSwap" || t->tradeType() == "Bond" || t->tradeType() == "ConvertibleBond" ||
-        t->tradeType() == "ForwardBond" || t->tradeType() == "IndexCreditDefaultSwap" ||
-        t->tradeType() == "IndexCreditDefaultSwapOption" || t->tradeType() == "BondOption" ||
-        t->tradeType() == "BondRepo" || t->tradeType() == "RiskParticipationAgreement" || t->tradeType() == "Ascot" ||
-        t->tradeType() == "AssetBackedCreditDefaultSwap" || t->tradeType() == "CreditLinkedSwap" ||
-        t->tradeType() == "CrossCurrencySwap" || t->tradeType() == "InflationSwap") {
-        QL_REQUIRE(!t->legCurrencies().empty(),
-                   "Expected legCurrencies to be populated for trade type " << t->tradeType());
-        return t->legCurrencies()[0];
-    } else if (t->tradeType() == "BondTRS") {
-        auto bondTrs = QuantLib::ext::dynamic_pointer_cast<BondTRS>(t);
-        QL_REQUIRE(bondTrs, "internal error: could not cast BondTRS to trade class");
-        return bondTrs->bondData().currency();
-    } else if (t->tradeType() == "TotalReturnSwap" || t->tradeType() == "ContractForDifference") {
-        auto trsT = QuantLib::ext::dynamic_pointer_cast<ore::data::TRS>(t);
-        QL_REQUIRE(trsT, "internal error: could not cast TRS to trade class");
-        return trsT->creditRiskCurrency();
-    } else if (t->tradeType() == "SyntheticCDO") {
-        QL_REQUIRE(!t->legCurrencies().empty(),
-                   "Expected legCurrencies to be populated for trade type " << t->tradeType());
-        return t->legCurrencies()[0];
-    } else if (t->tradeType() == "Swap") {
-        auto tmp = QuantLib::ext::dynamic_pointer_cast<ore::data::Swap>(t);
-        QL_REQUIRE(tmp, "getTradeCurrency: internal error, could not cast to Swap");
-        for (const auto& leg : tmp->legData()) {
-            if (leg.legType() == LegType::CMB) {
-                auto cmbData = QuantLib::ext::dynamic_pointer_cast<ore::data::CMBLegData>(leg.concreteLegData());
-                QL_REQUIRE(cmbData, "getTradeCurrency: internal error, could to cast to CMBLegData.");
-                return getCmbLegCreditRiskCurrency(*cmbData, refData);
-            }
-        }
-        QL_REQUIRE(!t->legCurrencies().empty(),
-                   "Expected legCurrencies to be populated for trade type " << t->tradeType());
-        return t->legCurrencies()[0];
-    } else {
-        return "";
-    }
-}
-
-} // namespace
-
-void SimmTradeData::TradeAttributes::setExtendedAttributes(
-    const QuantLib::ext::shared_ptr<ore::data::Trade> trade, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-    const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper, const bool emitStructuredError) {
-
-    // mtm value and currency
-    setPresentValue(QuantLib::Null<Real>());
-    setPresentValueCurrency("");
-    TRY_AND_CATCH(setPresentValue(trade->instrument()->NPV()), trade->id(), getTradeType(), "setPresentValue",
-                  emitStructuredError);
-    TRY_AND_CATCH(setPresentValueCurrency(trade->npvCurrency()), trade->id(), getTradeType(), "setPresentValueCurrency",
-                  emitStructuredError);
-
-    // trade date
-    const map<string, string>& additionalFields = trade->envelope().additionalFields();
-    auto itTradeDate = additionalFields.find("trade_date");
-    setTradeDate(itTradeDate != additionalFields.end() ? itTradeDate->second : "");
-
-    // end date
-    setEndDate(ore::data::to_string(trade->maturity()));
-
-    // notional and trade currency
-    TRY_AND_CATCH(setNotional(trade->notional()), trade->id(), trade->tradeType(), "setNotional", emitStructuredError);
-    TRY_AND_CATCH(setNotionalCurrency(trade->notionalCurrency()), trade->id(), trade->tradeType(),
-                  "setNotionalCurrency", emitStructuredError);
-
-    // notional2 and currency, underlying, settlement type, strike are taken from trade details
-
-    QuantLib::Real notional = getNotional();
-    string notionalCcy = getNotionalCurrency();
-    if (notional != Null<Real>() && !notionalCcy.empty())
-        TRY_AND_CATCH(
-            setNotionalUSD(notionalCcy == "USD" ? notional : market->fxRate(notionalCcy + "USD")->value() * notional),
-            trade->id(), trade->tradeType(), "setNotionalUSD", emitStructuredError);
-
-}
-
 void SimmTradeData::init() {
     if (!initialised_) {
         hasNettingSetDetails_ = portfolio_->hasNettingSetDetails();
@@ -192,12 +88,6 @@ void SimmTradeData::init() {
   
 void SimmTradeData::TradeAttributes::setTradeType(const string tradeType) {
     tradeType_ = tradeType; }
-
-void SimmTradeData::TradeAttributes::setOriginalTradeType(const string tradeType) {
-    originalTradeType_ = tradeType; }
-
-void SimmTradeData::TradeAttributes::setTradeCurrency(const string& tradeCurrency) {
-    tradeCurrency_ = tradeCurrency; }
 
 void SimmTradeData::TradeAttributes::setSimmProductClass(const CrifRecord::ProductClass& pc) {
     simmProductClass_ = pc;
@@ -220,6 +110,34 @@ void SimmTradeData::TradeAttributes::setEndDate(const string& s) { endDate_ = s;
 void SimmTradeData::TradeAttributes::setPresentValueUSD(double d) { presentValueUSD_ = d; }
 
 void SimmTradeData::TradeAttributes::setNotionalUSD(double d) { notionalUSD_ = d; }
+
+void SimmTradeData::TradeAttributes::setExtendedAttributes(
+    const QuantLib::ext::shared_ptr<ore::data::Trade> trade, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+    const QuantLib::ext::shared_ptr<SimmBucketMapper>& bucketMapper, const bool emitStructuredError) {
+
+    // mtm value and currency
+    setPresentValue(QuantLib::Null<Real>());
+    setPresentValueCurrency("");
+    TRY_AND_CATCH(setPresentValue(trade->instrument()->NPV()), trade->id(), getTradeType(), "setPresentValue",
+                  emitStructuredError);
+    TRY_AND_CATCH(setPresentValueCurrency(trade->npvCurrency()), trade->id(), getTradeType(), "setPresentValueCurrency",
+                  emitStructuredError);
+
+    // end date
+    setEndDate(ore::data::to_string(trade->maturity()));
+
+    // notional and trade currency
+    TRY_AND_CATCH(setNotional(trade->notional()), trade->id(), trade->tradeType(), "setNotional", emitStructuredError);
+    TRY_AND_CATCH(setNotionalCurrency(trade->notionalCurrency()), trade->id(), trade->tradeType(),
+                  "setNotionalCurrency", emitStructuredError);
+
+    QuantLib::Real notional = getNotional();
+    string notionalCcy = getNotionalCurrency();
+    if (notional != Null<Real>() && !notionalCcy.empty())
+        TRY_AND_CATCH(
+            setNotionalUSD(notionalCcy == "USD" ? notional : market->fxRate(notionalCcy + "USD")->value() * notional),
+            trade->id(), trade->tradeType(), "setNotionalUSD", emitStructuredError);
+}
 
 void SimmTradeData::processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                      const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -263,23 +181,11 @@ void SimmTradeData::processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>&
                         tmp->setTradeType(t->tradeType());
                 }
 
-                tmp->setExtendedAttributes(t, market, bucketMapper_, emitStructuredError);
+		tmp->setExtendedAttributes(t, market, bucketMapper_, emitStructuredError);
 
-                TRY_AND_CATCH(tmp->setTradeCurrency(getTradeCurrency(t, referenceData_)), tradeId, t->tradeType(),
-                              "setTradeCurrency", emitStructuredError);
                 tmp->setSimmProductClass(simmPC);
                 tmp->setScheduleProductClass(schedulePC);
-                ISDATradeTaxonomy tradeTaxonomy;
-                TRY_AND_CATCH(tradeTaxonomy = deriveISDATradeTaxonomy(t), tradeId, t->tradeType(), "tradeTaxonomy",
-                              emitStructuredError);
-                tmp->setAssetClass(tradeTaxonomy.assetClass);
-                tmp->setBaseProduct(tradeTaxonomy.baseProduct);
-                tmp->setSubProduct(tradeTaxonomy.subProduct);
-                std::string xccyResetting;
-                TRY_AND_CATCH(xccyResetting = tradeIsXccyResetting(t), tradeId, t->tradeType(), "xccyResetting",
-                              emitStructuredError);
-                tmp->setXccyResettable(xccyResetting);
-            }
+	    }
 
             // set final trade attributes
 
@@ -399,50 +305,6 @@ const QuantLib::ext::shared_ptr<SimmTradeData::TradeAttributes>& SimmTradeData::
     QL_REQUIRE(it != tradeAttributes_.end(), "There are no additional trade attributes for trade " << tradeId);
     QL_REQUIRE(it->second, "TradeAttributes pointer is null");
     return it->second;
-}
-
-SimmTradeData::ISDATradeTaxonomy
-SimmTradeData::deriveISDATradeTaxonomy(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
-    ISDATradeTaxonomy taxonomy;
-    taxonomy.assetClass = "";
-    taxonomy.baseProduct = "";
-    taxonomy.subProduct = "";
-
-    auto itac = trade->additionalData().find("isdaAssetClass");
-    if (itac != trade->additionalData().end())
-        taxonomy.assetClass = boost::any_cast<std::string>(itac->second);
-    auto itbp = trade->additionalData().find("isdaBaseProduct");
-    if (itbp != trade->additionalData().end())
-        taxonomy.baseProduct = boost::any_cast<std::string>(itbp->second);
-    auto itsp = trade->additionalData().find("isdaSubProduct");
-    if (itsp != trade->additionalData().end())
-        taxonomy.subProduct = boost::any_cast<std::string>(itsp->second);
-    
-    return taxonomy;
-}
-
-std::string SimmTradeData::tradeIsXccyResetting(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
-    // leave the field empty if the trade is not a x-ccy swap
-    std::string resetting = "";
-    if (trade) {
-        auto swap = QuantLib::ext::dynamic_pointer_cast<ore::data::Swap>(trade);
-        if (swap) {
-            // Beside the specific tradetype for x-ccy swaps it is also possible to represent a x-ccy swap as a normal
-            // swap therefore check if we have at least two legs with two different currencies
-            std::set<std::string> uniqueCurrencies(swap->legCurrencies().begin(), swap->legCurrencies().end());
-            if (uniqueCurrencies.size() > 1) {
-                resetting = "false";
-                // We have a x-ccy swap now check if there is a resetting leg
-                for (const auto& leg : swap->legData()) {
-                    if (!leg.isNotResetXCCY()) {
-                        resetting = "true";
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    return resetting;
 }
 
 } // namespace analytics

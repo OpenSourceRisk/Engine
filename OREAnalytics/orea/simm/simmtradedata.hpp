@@ -68,12 +68,11 @@ public:
         virtual ~TradeAttributes() {}
       
         const string& getTradeType() const { return tradeType_; }
-        const string& getOriginalTradeType() const { return originalTradeType_; }
-        const string& getTradeCurrency() const { return tradeCurrency_; }
         const CrifRecord::ProductClass& getSimmProductClass() const { return simmProductClass_; }
         const CrifRecord::ProductClass& getScheduleProductClass() const { return scheduleProductClass_; }
         const std::set<CrifRecord::Regulation>& getSimmCollectRegulations() const { return simmCollectRegulations_; }
         const std::set<CrifRecord::Regulation>& getSimmPostRegulations() const { return simmPostRegulations_; }
+        // We add these to support populating a CRIF for IM Schedule calcs 
         double getNotional() const { return notional_; }
         const string& getNotionalCurrency() const { return notionalCurrency_; }
         QuantLib::Real getPresentValue() const { return presentValue_; }
@@ -81,17 +80,11 @@ public:
         const string& getEndDate() const { return endDate_; }
         double getPresentValueUSD() const { return presentValueUSD_; }
         double getNotionalUSD() const { return notionalUSD_; }
-        const string& getTradeDate() const { return tradeDate_; }
-        const std::string& getAssetClass() const { return assetClass_; }
-        const std::string& getBaseProduct() const { return baseProduct_; }
-        const std::string& getSubProduct() const { return subProduct_; }
-        const std::string& getXccyResettable() const { return xccyResettable_; }
 
         void setTradeType(const string tradeType);
-        void setOriginalTradeType(const string tradeType);
-        void setTradeCurrency(const string& tradeCurrency);
         void setSimmProductClass(const CrifRecord::ProductClass& pc);
         void setScheduleProductClass(const CrifRecord::ProductClass& pc);
+        // We add these to support populating a CRIF for IM Schedule calcs 
         void setNotional(double d);
         void setNotionalCurrency(const string& s);
         void setPresentValue(double d);
@@ -99,25 +92,21 @@ public:
         void setEndDate(const string& s);
         void setPresentValueUSD(double d);
         void setNotionalUSD(double d);
-        void setTradeDate(const string& s) { tradeDate_ = s; }
-        void setAssetClass(const string& s)  { assetClass_ = s; }
-        void setBaseProduct(const string& s)  { baseProduct_ = s; }
-        void setSubProduct(const string& s)  { subProduct_ = s; }
-        void setXccyResettable(const string& s) { xccyResettable_ = s; }
 
-        /*! Set relevant extended attributes for each trade type */
-        virtual void setExtendedAttributes(const QuantLib::ext::shared_ptr<ore::data::Trade> trade,
-                                   const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-                                   const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper,
-                                   const bool emitStructuredError = true);
-        
+        /*! Set relevant extended attributes for each trade type, relevant for IM Schedule */
+        virtual void
+        setExtendedAttributes(const QuantLib::ext::shared_ptr<ore::data::Trade> trade,
+                              const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                              const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& bucketMapper,
+                              const bool emitStructuredError = true);
+
     protected:
-        string tradeType_, originalTradeType_;
-        string tradeCurrency_;
+        string tradeType_;
         CrifRecord::ProductClass simmProductClass_;
         CrifRecord::ProductClass scheduleProductClass_;
         std::set<CrifRecord::Regulation> simmCollectRegulations_;
         std::set<CrifRecord::Regulation> simmPostRegulations_;
+        // We add these to support populating a CRIF for IM Schedule calculation
         double notional_ = 0.0;
         string notionalCurrency_;
         double presentValue_ = 0.0;
@@ -125,13 +114,6 @@ public:
         string endDate_;
         double presentValueUSD_ = 0.0;
         double notionalUSD_ = 0.0;
-        // additional fields to show up in CRIFs for the purpose of trade/CRIF matching
-        // use strings in all cases so that we can indicate missing data
-        string tradeDate_;
-        std::string assetClass_;
-        std::string baseProduct_;
-        std::string subProduct_;
-        std::string xccyResettable_;
     };
 
     //! Default constructor giving an empty string default portfolio and counterparty ID
@@ -223,16 +205,6 @@ protected:
     virtual void processPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
 				  const QuantLib::ext::shared_ptr<ore::data::Market>& market,
 				  const QuantLib::ext::shared_ptr<Portfolio>& auxiliaryPortfolio = nullptr);
-
-    struct ISDATradeTaxonomy {
-        std::string assetClass;
-        std::string baseProduct;
-        std::string subProduct;
-    };
-
-    ISDATradeTaxonomy deriveISDATradeTaxonomy(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
-
-    std::string tradeIsXccyResetting(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
 
     /*! Add a \p tradeId with associated \p portfolioId and \p counterpartyId to the container
 
