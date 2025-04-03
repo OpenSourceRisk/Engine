@@ -372,7 +372,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     for (const auto& c : curves) {
         auto cc = get(CurveSpec::CurveType::Inflation, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
-            InflationCurveConfig::Type t = icc->type();
+            InflationCurveConfig::Type t = icc->getType();
             if (t == type)
                 return cc;
         }
@@ -402,7 +402,7 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
     for (const auto& c : curves) {
         auto cc = get(CurveSpec::CurveType::InflationCapFloorVolatility, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc)) {
-            InflationCapFloorVolatilityCurveConfig::Type t = icc->type();
+            InflationCapFloorVolatilityCurveConfig::Type t = icc->getType();
             if (t == type)
                 return cc;
         }
