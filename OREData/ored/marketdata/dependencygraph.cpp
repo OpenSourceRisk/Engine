@@ -86,7 +86,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     bool found = false;
                     for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                         if (*w != *v && g[*w].curveSpec && r.first == g[*w].curveSpec->baseType() &&
-                            (cId == g[*w].curveSpec->curveConfigID() || (g[*w].obj == MarketObject::DiscountCurve && g[*w].name == cId))) {
+                            (cId == g[*w].curveSpec->curveConfigID() || g[*w].name == cId)) {
                            // we also handle the special case for discount curves, the dependency is of form (CurveSpec::CurveType::Yield, ccy)
                             g.add_edge(*v, *w);
                             TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "

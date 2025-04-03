@@ -77,9 +77,13 @@ void CorrelationCurveConfig::populateRequiredCurveIds() {
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurve());
     if (correlationType_ == CorrelationCurveConfig::CorrelationType::CMSSpread &&
-        quoteType_ == MarketDatum::QuoteType::PRICE)
-        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(discountCurve());
+        quoteType_ == MarketDatum::QuoteType::PRICE) {
+        if (!index1().empty())
+            requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(index1());
+        if (!index2().empty())
+            requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(index2());
     }
+}
 
 const vector<string>& CorrelationCurveConfig::quotes() {
 
