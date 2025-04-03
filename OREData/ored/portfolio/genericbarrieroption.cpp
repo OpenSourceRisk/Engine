@@ -22,7 +22,6 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/optional/optional_io.hpp>
 
 namespace ore {
 namespace data {
@@ -36,6 +35,7 @@ namespace data {
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);\n"
       "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);\n"
+      "        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierStrictComparison);\n"
       "        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];\n"
       "\n"
       "        NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;\n"
@@ -49,75 +49,82 @@ namespace data {
       "            FOR k IN (1, SIZE(Underlyings), 1) DO\n"
       "              U = Underlyings[k](BarrierMonitoringDates[d]);\n"
       "\n"
-      "              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;\n"           
-      "              IF {BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                 {BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "    	           IF KnockedOut == 0 THEN\n"
-      "                  KnockedIn = 1;\n"
-      "                  Triggered = 1;\n"
-      "  	           END;\n"
-      "              END;\n"
+      "              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;\n"       
+      "              IF {BarrierStrictComparison[i] == 0} THEN\n"       
+      "                IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "    	             IF KnockedOut == 0 THEN\n"
+      "                    KnockedIn = 1;\n"
+      "                    Triggered = 1;\n"
+      "  	             END;\n"
+      "                END;\n"
       "\n"  
-      "                 IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                     {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "                     IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
-      "                        IF KnockedOut == 0 THEN\n"
-      "                             IF BarrierRebatePayTimes[i] == 0 THEN\n"
-      "                                 rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
-      "                             ELSE\n"
-      "                                 rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
-      "                             END;\n"
-      "                         END;\n"
-      "                         KnockedOut = 1;\n"
+      "                IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "                   IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
+      "                     IF KnockedOut == 0 THEN\n"
+      "                       IF BarrierRebatePayTimes[i] == 0 THEN\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
+      "                       ELSE\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
+      "                       END;\n"
       "                     END;\n"
-      "                 END;\n"
-      "              ELSE\n"
-      "                 IF {BarrierStrictComparison[i] == 2} THEN\n"
-      "                     IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "    	                    IF KnockedOut == 0 THEN\n"
-      "                             KnockedIn = 1;\n"
-      "  	                    END;\n"
-      "                     END;\n"
-      "\n"  
-      "                     IF {BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "                         IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
-      "                             IF KnockedOut == 0 THEN\n"
-      "                                 IF BarrierRebatePayTimes[i] == 0 THEN\n"
-      "                                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
-      "                                 ELSE\n"
-      "                                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
-      "                                 END;\n"
-      "                             END;\n"
-      "                             KnockedOut = 1;\n"
-      "                         END;\n"
-      "                     END;\n"
-      "                 ELSE\n"
-      "                     IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "    	                    IF KnockedOut == 0 THEN\n"
-      "                             KnockedIn = 1;\n"
-      "  	                    END;\n"
-      "                     END;\n"
-      "\n"  
-      "                     IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "                         IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
-      "                             IF KnockedOut == 0 THEN\n"
-      "                                 IF BarrierRebatePayTimes[i] == 0 THEN\n"
-      "                                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
-      "                                 ELSE\n"
-      "                                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
-      "                                 END;\n"
-      "                             END;\n"
-      "                             KnockedOut = 1;\n"
-      "                         END;\n"
-      "                     END;\n"
+      "                     KnockedOut = 1;\n"
+      "                     Triggered = 1;\n"
       "                   END;\n"
-      "                   KnockedOut = 1;\n"
-      "                   Triggered = 1;\n"
-      "                 END;\n"
+      "                END;\n"
+      "\n"
+      "              END;\n"
+      "\n"
+      "              IF {BarrierStrictComparison[i] == 1} THEN\n"       
+      "                IF {BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "    	             IF KnockedOut == 0 THEN\n"
+      "                    KnockedIn = 1;\n"
+      "                    Triggered = 1;\n"
+      "  	             END;\n"
+      "                END;\n"
+      "\n"  
+      "                IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "                   IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
+      "                     IF KnockedOut == 0 THEN\n"
+      "                       IF BarrierRebatePayTimes[i] == 0 THEN\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
+      "                       ELSE\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
+      "                       END;\n"
+      "                     END;\n"
+      "                     KnockedOut = 1;\n"
+      "                     Triggered = 1;\n"
+      "                   END;\n"
+      "                END;\n"
+      "\n"
+      "              END;\n"
+      "              IF {BarrierStrictComparison[i] == 2} THEN\n"       
+      "                IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "    	             IF KnockedOut == 0 THEN\n"
+      "                    KnockedIn = 1;\n"
+      "                    Triggered = 1;\n"
+      "  	             END;\n"
+      "                END;\n"
+      "\n"  
+      "                IF {BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "                   IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN\n"
+      "                     IF KnockedOut == 0 THEN\n"
+      "                       IF BarrierRebatePayTimes[i] == 0 THEN\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );\n"
+      "                       ELSE\n"
+      "                         rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );\n"
+      "                       END;\n"
+      "                     END;\n"
+      "                     KnockedOut = 1;\n"
+      "                     Triggered = 1;\n"
+      "                   END;\n"
+      "                END;\n"
+      "\n"
       "              END;\n"
       "\n"
       "            END;\n"
@@ -143,32 +150,32 @@ namespace data {
       "	       TransatlanticTriggered = 0;\n"
       "        FOR k IN (1, SIZE(Underlyings), 1) DO\n"
       "          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;\n"
-      "          IF { TransatlanticBarrierStrictComparison == 1 } THEN\n"
-      "             IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR\n"
-      "                 { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "                 { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "                 { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
-      "                 TransatlanticActive = 0;\n"
-      "	                TransatlanticTriggered = 1;\n"
-      "             END;\n"
-      "        ELSE\n"
-      "             IF { TransatlanticBarrierStrictComparison == 2 } THEN\n"
-      "                 IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN\n"
-      "                     TransatlanticActive = 0;\n"
-      "	                    TransatlanticTriggered = 1;\n"
-      "                 END;\n"
-      "             ELSE\n"
-      "                 IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
-      "                     TransatlanticActive = 0;\n"
-      "	                    TransatlanticTriggered = 1;\n"
-      "                 END;\n"
-      "             END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 0} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "               TransatlanticActive = 0;\n"
+      "	             TransatlanticTriggered = 1;\n"
+      "            END;\n"
+      "          END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 1} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "               TransatlanticActive = 0;\n"
+      "	             TransatlanticTriggered = 1;\n"
+      "            END;\n"
+      "          END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 2} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN\n"
+      "               TransatlanticActive = 0;\n"
+      "	             TransatlanticTriggered = 1;\n"
+      "            END;\n"
       "          END;\n"
       "        END;\n"
       "\n"
@@ -214,29 +221,29 @@ namespace data {
       "        TransatlanticActive = 1;\n"
       "        FOR k IN (1, SIZE(Underlyings), 1) DO\n"
       "          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;\n"
-      "          IF { TransatlanticBarrierStrictComparison == 1 } THEN\n"
-      "             IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR\n"
-      "                 { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR\n"
-      "                 { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "                 { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
-      "                 TransatlanticActive = 0;\n"
-      "             END;\n"
-      "        ELSE\n"
-      "             IF { TransatlanticBarrierStrictComparison == 2 } THEN\n"
-      "                 IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
-      "                     { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
-      "                     { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN\n"
-      "                     TransatlanticActive = 0;\n"
-      "                 END;\n"
-      "             ELSE\n"
-      "                 IF  { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
-      "                     { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
-      "                     { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
-      "                     { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
-      "                     TransatlanticActive = 0;\n"
-      "                 END;\n"
-      "             END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 0} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "              TransatlanticActive = 0;\n"
+      "           END;\n"
+      "          END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 1} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
+      "              TransatlanticActive = 0;\n"
+      "           END;\n"
+      "          END;\n"
+      "          IF {TransatlanticBarrierStrictComparison[k] == 2} THEN\n"
+      "            IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR\n"
+      "               { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR\n"
+      "               { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN\n"
+      "              TransatlanticActive = 0;\n"
+      "           END;\n"
       "          END;\n"
       "        END;\n"
       "\n"
@@ -289,36 +296,36 @@ namespace data {
       "            FOR k IN (1, SIZE(Underlyings), 1) DO\n"
       "              U = Underlyings[k](BarrierMonitoringDates[d]);\n"
       "              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;\n"
-      "              IF {BarrierStrictComparison[i] == 1} THEN\n"
-      "                 IF {BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                     {BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "                     IsKnockedIn = 1;"
-      "                 END;\n"
-      "                 IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                     {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "                     IsKnockedOut = 1;"
-      "                 END;\n"
-      "             ELSE\n"
-      "                 IF {BarrierStrictComparison[i] == 2} THEN\n"
-      "                     IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "                         IsKnockedIn = 1;"
-      "                     END;\n"
-      "                     IF {BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "                         IsKnockedOut = 1;"
-      "                     END;\n"
-      "                 ELSE\n"
-      "                     IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
-      "                         IsKnockedIn = 1;"
-      "                     END;\n"
-      "                     IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
-      "                         {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
-      "                         IsKnockedOut = 1;"
-      "                     END;\n"
-      "                 END;\n"
-      "             END;\n"
+      "              IF {BarrierStrictComparison[i] == 0} THEN\n" 
+      "                IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedIn = 1;"
+      "                END;\n"
+      "                IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedOut = 1;"
+      "                END;\n"
+      "              END;\n"
+      "              IF {BarrierStrictComparison[i] == 1} THEN\n" 
+      "                IF {BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedIn = 1;"
+      "                END;\n"
+      "                IF {BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedOut = 1;"
+      "                END;\n"
+      "              END;\n"
+      "              IF {BarrierStrictComparison[i] == 2} THEN\n" 
+      "                IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedIn = 1;"
+      "                END;\n"
+      "                IF {BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR\n"
+      "                   {BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN\n"
+      "                  IsKnockedOut = 1;"
+      "                END;\n"
+      "              END;\n"
       "            END;\n"
       "\n"
       "            IF {IsKnockedIn == 1} THEN\n"
@@ -420,9 +427,10 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     std::vector<std::string> transatlanticBarrierLevel(underlyings_.size(), "0");
     std::string transatlanticBarrierRebate = "0.0";
     std::string transatlanticBarrierRebateCurrency = payCurrency_;
-    std::string transatlanticBarrierStrictComparison;
+    std::vector<std::string> transatlanticBarrierStrictComparison(underlyings_.size(), "0");
     if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         transatlanticBarrierType.clear();
+        transatlanticBarrierStrictComparison.clear();
         for (auto const& n : transatlanticBarrier_) {
             if (n.type() == "DownAndIn")
                 transatlanticBarrierType.push_back("1");
@@ -436,6 +444,11 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                 QL_FAIL("Transatlantic BarrierType (" << n.type()
                                                       << ") must be DownAndIn, UpAndIn, DownAndOut, UpAndOut");
             }
+            if (n.strictComparison()) {
+                transatlanticBarrierStrictComparison.push_back(n.strictComparison().value());
+            } else {
+                transatlanticBarrierStrictComparison.push_back("0");
+            }
         }
         QL_REQUIRE(transatlanticBarrierType.size() == 1 || transatlanticBarrierType.size() == underlyings_.size(),
                    "Transatlantic Barrier must have only 1 Barrier block or 1 block for each underlyings, got "
@@ -448,9 +461,8 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
             QL_REQUIRE(transatlanticBarrier_[0].levels().size() == underlyings_.size(),
                        "Transatlantic Barrier must have exactly 1 level for each underlying, got "
                            << transatlanticBarrier_[0].levels().size());
-            for (const auto& l : transatlanticBarrier_[0].levels()) {
+            for (const auto& l : transatlanticBarrier_[0].levels())
                 transatlanticBarrierLevel.push_back(boost::lexical_cast<std::string>(l.value()));
-            }
         } else {
             QL_REQUIRE(transatlanticBarrierType.size() == underlyings_.size(),
                        "Transatlantic Barrier must have exactly 1 level for each underlying, got "
@@ -471,13 +483,9 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
             }       
         }
         transatlanticBarrierRebate = boost::lexical_cast<std::string>(transatlanticBarrier_[0].rebate());
-        if (!transatlanticBarrier_[0].rebateCurrency().empty())
+        if (!transatlanticBarrier_[0].rebateCurrency().empty()) {
             transatlanticBarrierRebateCurrency = transatlanticBarrier_[0].rebateCurrency();
-        if (transatlanticBarrier_[0].strictComparison()) {
-            transatlanticBarrierStrictComparison = transatlanticBarrier_[0].strictComparison().value();
-        } else {
-            transatlanticBarrierStrictComparison = "0";
-        }
+        }   
     }
     numbers_.emplace_back("Number", "TransatlanticBarrierType", transatlanticBarrierType);
     numbers_.emplace_back("Number", "TransatlanticBarrierStrictComparison", transatlanticBarrierStrictComparison);
@@ -534,9 +542,9 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                              ScheduleData(ScheduleRules(barrierMonitoringStartDate_, barrierMonitoringEndDate_, "1D",
                                                         getUnderlyingCalendar(factory).name(), "F", "F", "Forward")));
     }
-    std::vector<std::string> barrierStrictComparison;
+
     std::vector<std::string> barrierTypes, barrierLevels, barrierRebates, barrierRebateCurrencies,
-        barrierRebatePayTimes;
+        barrierRebatePayTimes, barrierStrictComparison;
     bool hasKi = false, hasKo = false;
     for (auto const& b : barriers_) {
         QL_REQUIRE(!b.overrideTriggered(),
@@ -561,7 +569,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         QL_REQUIRE(b.levels().size() == underlyings_.size(), "Barrier must have exactly number of levels as underlyings, got " << b.levels().size());
         for (const auto& l : b.levels()) {
             barrierLevels.push_back(boost::lexical_cast<std::string>(l.value()));
-        }     
+        } 
         barrierRebates.push_back(boost::lexical_cast<std::string>(b.rebate()));
         barrierRebateCurrencies.push_back(b.rebateCurrency().empty() ? payCurrency_ : b.rebateCurrency());
         std::string rebatePayTime;
@@ -575,8 +583,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         barrierRebatePayTimes.push_back(rebatePayTime);
         if (b.strictComparison()) {
             barrierStrictComparison.push_back(b.strictComparison().value());
-        } 
-        else {
+        } else {
             barrierStrictComparison.push_back("0");
         }
     }

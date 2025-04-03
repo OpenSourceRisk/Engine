@@ -1419,7 +1419,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="0"/>
       <xs:enumeration value="1"/>
-	  <xs:enumeration value="2"/>
+      <xs:enumeration value="2"/>
     </xs:restriction>
   </xs:simpleType>
 
