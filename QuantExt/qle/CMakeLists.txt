@@ -174,6 +174,7 @@ methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
+methods/irdeltaparconverter.cpp
 methods/lgmswaptionvegaparconverter.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -686,6 +687,7 @@ methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
+methods/irdeltaparconverter.hpp
 methods/lgmswaptionvegaparconverter.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp

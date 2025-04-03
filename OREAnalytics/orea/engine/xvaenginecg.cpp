@@ -37,6 +37,7 @@
 #include <qle/ad/ssaform.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
+#include <qle/methods/irdeltaparconverter.hpp>
 #include <qle/methods/lgmswaptionvegaparconverter.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
@@ -886,7 +887,11 @@ void XvaEngineCG::calculateDynamicIM() {
 
     // sensi bucketing configuration
 
-    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 30 * Years};
+    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years, 30 * Years};
+    const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
+        IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap, IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap};
 
     const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
@@ -896,26 +901,28 @@ void XvaEngineCG::calculateDynamicIM() {
     const std::vector<QuantLib::Period> fxVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
 
-    // set up ir delta times
+    // set up ir delta, vega and fx vega conversion matrices
 
-    std::vector<double> irDeltaTimes;
-    for (auto const& p : irDeltaTerms) {
-        Date d = model_->referenceDate() + p;
-        irDeltaTimes.push_back(model_->actualTimeFromReference(d));
-    }
-
-    // set up ir and fx vega conversion matrices
-
+    std::vector<IrDeltaParConverter> irDeltaConverter(model_->currencies().size());
     std::vector<LgmSwaptionVegaParConverter> irVegaConverter(model_->currencies().size());
     std::vector<CcLgmFxOptionVegaParConverter> fxVegaConverter(model_->currencies().size() - 1);
 
     for (std::size_t ccyIndex = 0; ccyIndex < model_->currencies().size(); ++ccyIndex) {
+
+        irDeltaConverter[ccyIndex] =
+            IrDeltaParConverter(irDeltaTerms, irDeltaInstruments,
+                                *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])),
+                                [this](const Date& d) { return model_->actualTimeFromReference(d); });
 
         irVegaConverter[ccyIndex] = LgmSwaptionVegaParConverter(
             model_->cam()->lgm(ccyIndex), irVegaTerms, irVegaUnderlyingTerms,
             *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])));
 
         // debug output
+
+        // std::cout << "ir delta " << model_->currencies()[ccyIndex] << ":" << std::endl;
+        // std::cout << "dpardzero = \n" << irDeltaConverter[ccyIndex].dpardzero() << std::endl;
+        // std::cout << "dzerodpar = \n" << irDeltaConverter[ccyIndex].dzerodpar() << std::endl;
 
         // std::cout << "ir vega " << model_->currencies()[ccyIndex] << ":" << std::endl;
         // std::cout << "dpardzero = \n" << irVegaConverter[ccyIndex].dpardzero() << std::endl;
@@ -1004,12 +1011,14 @@ void XvaEngineCG::calculateDynamicIM() {
                 Real T = model_->actualTimeFromReference(p.date());
                 std::size_t bucket = std::min<std::size_t>(
                     irDeltaTerms.size() - 1,
-                    std::distance(irDeltaTimes.begin(),
-                                  std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T - t)));
+                    std::distance(irDeltaConverter[ccyIndex].times().begin(),
+                                  std::lower_bound(irDeltaConverter[ccyIndex].times().begin(),
+                                                   irDeltaConverter[ccyIndex].times().end(), T - t)));
                 Real w1 = 0.0, w2 = 1.0;
                 if (bucket > 0) {
-                    w1 = (irDeltaTimes[bucket] - (T - t)) /
-                         (irDeltaTimes[bucket] - (bucket == 0 ? 0.0 : irDeltaTimes[bucket - 1]));
+                    w1 = (irDeltaConverter[ccyIndex].times()[bucket] - (T - t)) /
+                         (irDeltaConverter[ccyIndex].times()[bucket] -
+                          (bucket == 0 ? 0.0 : irDeltaConverter[ccyIndex].times()[bucket - 1]));
                     w2 = 1.0 - w1;
                     pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
                                                          values_[p.node()] * dynamicIMDerivatives_[p.node()];
@@ -1071,6 +1080,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // calculate conditional expectations on the aggregated sensis and convert to par if applicable
 
+        std::vector<RandomVariable> tmpIrDelta(irDeltaTerms.size(), RandomVariable(model_->size()));
         std::vector<std::vector<RandomVariable>> conditionalIrDelta(
             model_->currencies().size(),
             std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
@@ -1103,7 +1113,15 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                 args[0] = &pathIrDelta[ccy][b];
-                conditionalIrDelta[ccy][b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                tmpIrDelta[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+            }
+
+            for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+                // conditionalIrDelta[ccy][b] = tmpIrDelta[b]; // no conversion
+                for (std::size_t z = 0; z < irDeltaTerms.size(); ++z) {
+                    conditionalIrDelta[ccy][b] +=
+                        RandomVariable(model_->size(), irDeltaConverter[ccy].dzerodpar()(z, b)) * tmpIrDelta[z];
+                }
             }
 
             // ir vega (including par conversion)
