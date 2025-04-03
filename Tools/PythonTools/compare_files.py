@@ -53,147 +53,7 @@ def create_df(file, col_types=None):
 
     if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
-        return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2)
-    # elif file_extension == '.json':
-    #     if filename == 'simm.json':
-    #         with open(file, 'r') as json_file:
-    #             simm_json = json.load(json_file)
-    #             if 'simmReport' in simm_json:
-
-    #                 logger.debug('Creating DataFrame from simm json file %s.', file)
-    #                 simm_df = pd.DataFrame(simm_json['simmReport'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 simm_df['portfolio'].replace('', np.nan, inplace=True)
-
-    #                 return simm_df
-
-    #             else:
-    #                 logger.warning('Expected simm json file %s to contain the field simmReport.', file)
-    #                 return None
-    #     if filename == 'npv.json':
-    #         with open(file, 'r') as json_file:
-    #             npv_json = json.load(json_file)
-    #             if 'npv' in npv_json:
-
-    #                 logger.debug('Creating DataFrame from npv json file %s.', file)
-    #                 npv_df = pd.DataFrame(npv_json['npv'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 npv_df['nettingSetId'].replace('', np.nan, inplace=True)
-
-    #                 return npv_df
-
-    #             else:
-    #                 logger.warning('Expected npv json file %s to contain the field npv.', file)
-    #                 return None
-    #     if filename == 'flownpv.json':
-    #         with open(file, 'r') as json_file:
-    #             flownpv_json = json.load(json_file)
-    #             if 'cashflowNpv' in flownpv_json:
-    #                 logger.debug('Creating DataFrame from flownpv json file %s.', file)
-    #                 flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
-    #                 flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
-    #                 flownpv_df.drop(columns='jobId', inplace=True)
-    #                 return flownpv_df
-
-    #             else:
-    #                 logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
-    #                 return None
-    #     if filename == 'saccr.json':
-    #         with open(file, 'r') as json_file:
-    #             saccr_json = json.load(json_file)
-    #             if 'saccr' in saccr_json:
-    #                 logger.debug('Creating DataFrame from saccr json file %s.', file)
-    #                 saccr_df = pd.DataFrame(saccr_json['saccr'])
-
-    #                 saccr_cols = {
-    #                     'assetClass': 'AssetClass',
-    #                     'hedgingSet': 'HedgingSet',
-    #                     'nettingSetId': 'NettingSet',
-    #                     'addOn': 'AddOn',
-    #                     'cC': 'CC',
-    #                     'eAD': 'EAD',
-    #                     'multiplier': 'Multiplier',
-    #                     'npv': 'NPV',
-    #                     'pfe': 'PFE',
-    #                     'rC': 'RC',
-    #                     'rW': 'RW'
-    #                 }
-
-    #                 for col in ['addOn', 'cC', 'eAD', 'multiplier', 'npv', 'pfe', 'rC', 'assetClass', 'hedgingSet', 'nettingSetId']:
-    #                     saccr_df[col].replace('', np.nan, inplace=True)
-
-    #                 for col in ['rW']:
-    #                     saccr_df[col].replace(0.0, np.nan, inplace=True)
-
-    #                 saccr_df.rename(columns=saccr_cols, inplace=True)
-    #                 return saccr_df
-    #             else:
-    #                 logger.warning('Expected saccr json file %s to contain the field saccr', file)
-    #                 return None
-    #     if filename == 'frtb.json':
-    #         with open(file, 'r') as json_file:
-    #             frtb_json = json.load(json_file)
-    #             if 'frtb' in frtb_json:
-    #                 logger.debug('Creating DataFrame from frtb json file %s.', file)
-    #                 frtb_df = pd.DataFrame(frtb_json['frtb'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 # npv_df['nettingSetId'].replace('', np.nan, inplace=True)
-
-    #                 frtb_cols = {
-    #                     'bucket': 'Bucket',
-    #                     'capitalRequirement': 'CapitalRequirement',
-    #                     'correlationScenario': 'CorrelationScenario',
-    #                     'frtbCharge': 'FrtbCharge',
-    #                     'risk_class': 'RiskClass'
-    #                 }
-    #                 for col in frtb_cols.keys():
-    #                     frtb_df[col].replace('', np.nan, inplace=True)
-    #                 frtb_df.rename(columns=frtb_cols, inplace=True)
-    #                 frtb_df.drop(columns='jobId', inplace=True)
-    #                 return frtb_df
-    #             else:
-    #                 logger.warning('Expected frtb json file %s to contain the field frtb', file)
-    #                 return None
-    #     if filename == 'bacva.json':
-    #         with open(file, 'r') as json_file:
-    #             bacva_json = json.load(json_file)
-    #             if 'bacva' in bacva_json:
-    #                 logger.debug('Creating DataFrame from bacva json file %s.', file)
-    #                 bacva_df = pd.DataFrame(bacva_json['bacva'])
-
-    #                 bacva_cols = {
-    #                     'analytic': 'Analytic',
-    #                     'counterparty': 'Counterparty',
-    #                     'nettingSetId': 'NettingSet',
-    #                     'value': 'Value',
-    #                 }
-
-    #                 for col in ['analytic', 'counterparty', 'nettingSetId']:
-    #                     bacva_df[col].replace('', np.nan, inplace=True)
-
-    #                 for col in ['value']:
-    #                     bacva_df[col].replace(0.0, np.nan, inplace=True)
-
-    #                 bacva_df.rename(columns=bacva_cols, inplace=True)
-    #                 return bacva_df
-    #             else:
-    #                 logger.warning('Expected bacva json file %s to contain the field bacva', file)
-    #                 # return None   
+        return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2, escapechar='\\')
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
@@ -253,11 +113,10 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     _, ext_2 = os.path.splitext(file_2)
 
     if comp_config is None:
-        if ext_1 == '.csv':
-            raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
-        if ext_2 == '.csv':
-            raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
-        if ext_1 == '.xml' and ext_2 == '.xml':
+        if ext_1 == '.csv' and ext_2 == '.csv':
+            # compare csv without a comparison config
+            result = compare_files_df(name, file_1, file_2)
+        elif ext_1 == '.xml' and ext_2 == '.xml':
             result = compare_files_xml(name, file_1, file_2)
         else:
             # If there was no configuration then fall back to a straight file comparison.
@@ -275,7 +134,7 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     return result
 
 
-def compare_files_df(name, file_1, file_2, config):
+def compare_files_df(name, file_1, file_2, config=None):
     # Compare files using dataframes and a configuration.
 
     logger = logging.getLogger(__name__)
@@ -284,8 +143,10 @@ def compare_files_df(name, file_1, file_2, config):
 
     # We can force the type of specific columns here.
     col_types = None
-    if 'col_types' in config:
+    if config is not None and 'col_types' in config:
         col_types = config['col_types']
+    else:
+        col_types
 
     # Read the files in to dataframes
     df_1 = create_df(file_1, col_types)
@@ -307,13 +168,13 @@ def compare_files_df(name, file_1, file_2, config):
             df.rename(columns={first_col_name: first_col_name[1:]}, inplace=True)
 
     # If we are asked to rename columns, try to do it here.
-    if 'rename_cols' in config:
+    if config is not None and 'rename_cols' in config:
         logger.debug('Applying column renaming, %s, to both DataFrames', str(config['rename_cols']))
         for idx, df in enumerate([df_1, df_2]):
             df.rename(columns=config['rename_cols'], inplace=True)
 
     # Possibly drop some rows where specified column values are not above the threshold.
-    if 'drop_rows' in config:
+    if config is not None and 'drop_rows' in config:
 
         criteria_cols = config['drop_rows']['cols']
         threshold = config['drop_rows']['threshold']
@@ -328,12 +189,12 @@ def compare_files_df(name, file_1, file_2, config):
         df_2 = df_2[pd.DataFrame(abs(df_2[criteria_cols]) > threshold).all(axis=1)]
 
     # We must know the key(s) on which the comparison is to be performed.
-    if 'keys' not in config:
+    if config is not None and 'keys' not in config:
         logger.warning('The comparison configuration must contain a keys field.')
         return False
 
     # Get the keys and do some checks.
-    keys = config['keys']
+    keys = config['keys'] if config is not None else list(set(list(df_1.columns) + list(df_2.columns)))
 
     # Check keys are not empty
     if not keys or any([elem == '' for elem in keys]):
@@ -355,7 +216,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # We check for columns that would be used as keys but are not always necessary, 
     # e.g. netting set details, collect_regulations, post_regulations
-    if 'optional_keys' in config:
+    if config is not None and 'optional_keys' in config:
         optional_keys = config['optional_keys']
 
         # Check that optional keys are non-empty strings
@@ -374,7 +235,7 @@ def compare_files_df(name, file_1, file_2, config):
         missing_okeys = []
         for okey in optional_keys:
             if okey in df_1.columns and okey in df_2.columns:
-                keys.append(okey)
+                keys = keys + [okey]
             elif (okey in df_1.columns and not okey in df_2.columns) or (okey not in df_1.columns and okey in df_2.columns):
                 missing_okeys.append(okey)
 
@@ -386,7 +247,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
     # DataFrames have all of the explicitly listed columns to use.
-    if 'use_cols' in config:
+    if config is not None and 'use_cols' in config:
 
         use_cols = copy.deepcopy(config['use_cols'])
         logger.debug('We will only use the columns, %s, in the comparison.', str(use_cols))
@@ -439,7 +300,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # Certain groups of columns may need special tolerances for their comparison. Deal with them first.
     cols_compared = set()
-    if 'column_settings' in config:
+    if config is not None and 'column_settings' in config:
 
         for col_group_config in config['column_settings']:
 
@@ -637,7 +498,7 @@ def validate_json_diff(json_1, json_2, json_diff: dict, config: dict, path: str)
 
         for key, diff in json_diff.items():
             # Insertions (key="$insert") and deletions (key="$delete") should count as a test failure
-            if "$" in key:
+            if isinstance(key, str) and "$" in key:
                 continue
 
             if isinstance(diff, dict):

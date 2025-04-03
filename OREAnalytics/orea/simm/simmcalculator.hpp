@@ -25,6 +25,7 @@
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/marketdata/market.hpp>
 
 #include <map>
@@ -36,6 +37,7 @@ namespace analytics {
 class SimmCalculator {
 public:
     typedef SimmConfiguration::SimmSide SimmSide;
+    typedef CrifRecord::RiskType RiskType;
 
     /*! Construct the SimmCalculator from a container of netted CRIF
         records and a SIMM configuration. The SIMM number is initially calculated in
@@ -45,7 +47,7 @@ public:
         give the FX spot rate between USD and the \p calculationCcy. This spot rate is
         interpreted as the number of USD per unit of \p calculationCcy.
     */
-    SimmCalculator(const ore::analytics::Crif& crif,
+    SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
                    const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                    const std::string& calculationCcyCall = "USD",
                    const std::string& calculationCcyPost = "USD",
@@ -54,45 +56,43 @@ public:
                    const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                    const bool quiet = false,
                    const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
-                       std::map<SimmSide, std::set<NettingSetDetails>>(),
-                   const std::map<SimmSide, std::set<NettingSetDetails>>& hasCFTC =
                        std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Calculates SIMM for a given regulation under a given netting set
     const void calculateRegulationSimm(const ore::analytics::Crif& crif, const ore::data::NettingSetDetails& nsd,
-                                       const string& regulation, const SimmSide& side);
+                                       const std::set<CrifRecord::Regulation>& regulation, const SimmSide& side);
 
     //! Return the winning regulation for each netting set
-    const std::string& winningRegulations(const SimmSide& side,
+    const CrifRecord::Regulation& winningRegulations(const SimmSide& side,
                                           const ore::data::NettingSetDetails& nettingSetDetails) const;
-    const std::map<ore::data::NettingSetDetails, string>& winningRegulations(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, string>>& winningRegulations() const;
+    const std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>& winningRegulations(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>>& winningRegulations() const;
 
     //! Give back the SIMM results container for the given portfolioId and SIMM side
     const SimmResults& simmResults(const SimmSide& side, const ore::data::NettingSetDetails& nettingSetDetails,
-                                   const std::string& regulation) const;
-    const std::map<std::string, SimmResults>& simmResults(const SimmSide& side, const ore::data::NettingSetDetails& nettingSetDetails) const;
+                                   const std::set<CrifRecord::Regulation>& regulation) const;
+    const std::map<std::set<CrifRecord::Regulation>, SimmResults>& simmResults(const SimmSide& side, const ore::data::NettingSetDetails& nettingSetDetails) const;
 
     /*! Give back a map containing the SIMM results containers for every portfolio for the
         given SIMM \p side. The key is the portfolio ID and the value is the SIMM results
         container for that portfolio.
     */
-    const std::map<ore::data::NettingSetDetails, std::map<std::string, SimmResults>>& simmResults(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, SimmResults>>>& simmResults() const;
+    const std::map<ore::data::NettingSetDetails, std::map<std::set<CrifRecord::Regulation>, SimmResults>>& simmResults(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::set<CrifRecord::Regulation>, SimmResults>>>& simmResults() const;
 
     //! Give back the SIMM results container for the given netting set and SIMM side
-    const std::pair<std::string, SimmResults>& finalSimmResults(const SimmSide& side, const ore::data::NettingSetDetails& nettingSetDetails) const;
+    const std::pair<CrifRecord::Regulation, SimmResults>& finalSimmResults(const SimmSide& side, const ore::data::NettingSetDetails& nettingSetDetails) const;
 
     /*! Give back a map containing the SIMM results containers for every portfolio for the given
         SIMM \p side. The key is the portfolio ID and the value is a map, with regulation as the
         key, and the value is the SIMM results container for that portfolioId-regulation combination.
     */
-    const std::map<ore::data::NettingSetDetails, std::pair<std::string, SimmResults>>& finalSimmResults(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<std::string, SimmResults>>>& finalSimmResults() const;
+    const std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, SimmResults>>& finalSimmResults(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, SimmResults>>>& finalSimmResults() const;
 
     const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
-    const Crif& simmParameters() const { return simmParameters_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& simmParameters() const { return simmParameters_; }
 
     //! Return the calculator's calculation currency
     const std::string& calculationCurrency(const SimmSide& side) const {
@@ -105,17 +105,18 @@ public:
     /*! Populate the finalSimmResults_ and finalAddMargins_ containers
         using the provided map of winning call/post regulations.
     */
-    void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>>& winningRegulations);
+    void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>>& winningRegulations);
+
+    const ore::data::Timer& timer() const { return timer_; }
 
 private:
-    //! All the net sensitivities passed in for the calculation
-    ore::analytics::Crif crif_;
-
     //! Net sentivities at the regulation level within each netting set
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails,
+                                std::map<std::set<CrifRecord::Regulation>, QuantLib::ext::shared_ptr<ore::analytics::Crif>>>>
+        regSensitivities_;
 
     //! Record of SIMM parameters that were used in the calculation
-    ore::analytics::Crif simmParameters_;
+    QuantLib::ext::shared_ptr<ore::analytics::Crif> simmParameters_;
 
     //! The SIMM configuration governing the calculation
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
@@ -132,7 +133,7 @@ private:
     //! If true, no logging is written out
     bool quiet_;
 
-    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_, hasCFTC_;
+    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_;
 
     //! For each netting set, whether all CRIF records' collect regulations are empty
     std::map<ore::data::NettingSetDetails, bool> collectRegsIsEmpty_;
@@ -142,25 +143,27 @@ private:
 
     //! Regulation with highest initial margin for each given netting set
     //       side,              netting set details,          regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>> winningRegulations_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>> winningRegulations_;
 
     /*! Containers, one for call and post, with a map containing a SimmResults object
         for each regulation under each portfolio ID
     */
     //       side,              netting set details,                   regulation     
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, SimmResults>>> simmResults_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::set<CrifRecord::Regulation>, SimmResults>>> simmResults_;
 
     /*! Containers, one for call and post, with a SimmResults object for each portfolio ID,
         and each margin amount is that of the winning regulation applicable to the portfolio ID
     */
     //       side,              netting set details,                   regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<std::string, SimmResults>>> finalSimmResults_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, SimmResults>>> finalSimmResults_;
 
     //! Container for keeping track of what trade IDs belong to each regulation
     //       side,              netting set details,                   regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, set<string>>>> tradeIds_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, set<string>>>> tradeIds_;
 
     std::map<SimmSide, set<string>> finalTradeIds_;
+
+    mutable ore::data::Timer timer_;
 
     //! Calculate the Interest Rate delta margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
@@ -183,7 +186,7 @@ private:
     */
     std::pair<std::map<std::string, QuantLib::Real>, bool> margin(const ore::data::NettingSetDetails& nettingSetDetails,
                                                                   const CrifRecord::ProductClass& pc,
-                                                                  const CrifRecord::RiskType& rt,
+                                                                  const RiskType& rt,
                                                                   const ore::analytics::Crif& netRecords,
                                                                   const SimmSide& side) const;
 
@@ -192,17 +195,18 @@ private:
     */
     std::pair<std::map<std::string, QuantLib::Real>, bool>
     curvatureMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
-                    const CrifRecord::RiskType& rt, const SimmSide& side, const ore::analytics::Crif& netRecords,
+                    const RiskType& rt, const SimmSide& side, const ore::analytics::Crif& netRecords,
                     bool rfLabels = true) const;
 
     //! Calculate the additional initial margin for the portfolio ID and regulation
-    void calcAddMargin(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const string& regulation, const ore::analytics::Crif& netRecords);
+    void calcAddMargin(const SimmSide& side, const ore::data::NettingSetDetails& nsd,
+                       const std::set<CrifRecord::Regulation>& regulation, const ore::analytics::Crif& simmParameters);
 
     /*! Populate the results structure with the higher level results after the IMs have been
         calculated at the (product class, risk class, margin type) level for the given
         regulation under the given portfolio
     */
-    void populateResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const string& regulation);
+    void populateResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const std::set<CrifRecord::Regulation>& regulation);
 
     /*! Populate final (i.e. winning regulators') using own list of winning regulators, which were determined
         solely by the SIMM results (i.e. not including any external IMSchedule results)
@@ -214,26 +218,31 @@ private:
 
         \remark all additions to the results containers should happen in this method
     */
-    void add(const ore::data::NettingSetDetails& nettingSetDetails, const string& regulation,
+    void add(const ore::data::NettingSetDetails& nettingSetDetails, const std::set<CrifRecord::Regulation>& regulation,
              const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real margin, SimmSide side,
              const bool overwrite = true);
 
-    void add(const ore::data::NettingSetDetails& nettingSetDetails, const string& regulation,
+    void add(const ore::data::NettingSetDetails& nettingSetDetails, const std::set<CrifRecord::Regulation>& regulation,
              const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::map<std::string, QuantLib::Real>& margins, SimmSide side,
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void splitCrifByRegulationsAndPortfolios(const Crif& crif, const bool enforceIMRegulations);
+    void splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations,
+                                             const QuantLib::ext::shared_ptr<Crif>& crif);
+
+    //! Split up CRIF records so that all records under each regulation are combined into one CRIF
+    void cleanDuplicateRegulations();
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
 
     std::set<std::string> getQualifiers(const Crif& crif, const ore::data::NettingSetDetails& nettingSetDetails,
                                         const CrifRecord::ProductClass& pc,
-                                        const std::vector<CrifRecord::RiskType>& riskTypes) const;
+                                        const std::vector<RiskType>& riskTypes) const;
 
+    QuantLib::Real fxRate(const std::string& ccyPair) const;
 };
 
 } // namespace analytics

@@ -424,8 +424,8 @@ void CalendarParser::reset() {
         {"CME", CME()},
 
         // Simple calendars
-        {"IslamicWeekendsOnly", IslamicWeekendsOnly()},
         {"WeekendsOnly", WeekendsOnly()},
+        {"IslamicWeekendsOnly", IslamicWeekendsOnly()},
         {"UNMAPPED", WeekendsOnly()},
         {"NullCalendar", NullCalendar()},
         {"", NullCalendar()}};

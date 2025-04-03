@@ -22,14 +22,16 @@
 
 #include <qle/indexes/inflationindexwrapper.hpp>
 
+#include <algorithm>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/utilities/inflation.hpp>
-#include <algorithm>
+#include <ql/math/interpolations/loginterpolation.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -194,28 +196,45 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
-            // base zero / yoy rate: if given, take it, otherwise set it to observered zeroRate
-            Real baseRate = quotes[0]->value();
-            if (config->baseRate() != Null<Real>()) {
-                baseRate = config->baseRate();
-            } else if (index) {
-                try {
-                    baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(
-                     config->useLastAvailableFixingAsBaseDate(), swapStart, asof, terms[0], conv->dayCounter(),
-                     conv->observationLag(), quotes[0]->value(), curveObsLag, config->dayCounter(), index,
-                        interpolatedIndex_, seasonality);
-                } catch (const std::exception& e) {
-                    WLOG("base rate estimation failed with " << e.what() << ", fallback to use first quote");
-                    baseRate = quotes[0]->value();
+            QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
+                config->useLastAvailableFixingAsBaseDate(), asof, curveObsLag, config->frequency(), index);
+
+            if (config->interpolationVariable() == InflationCurveConfig::InterpolationVariable::ZeroRate) {
+
+                curve_ = QuantLib::ext::make_shared<PiecewiseZeroInflationCurve<Linear>>(
+                    asof, baseDate, curveObsLag, config->frequency(), config->dayCounter(), instruments, seasonality,
+                    config->tolerance());
+                auto zr =
+                    QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
+                        QL_EPSILON);
+                DLOG("Zero rate at base date " << baseDate << " is " << zr);
+
+            } else {
+
+
+
+                auto baseFixing = index->fixing(baseDate, true);
+                if (config->interpolationMethod().empty() || config->interpolationMethod() == "Linear"){
+                
+                    curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
+                        asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
+                        seasonality, config->tolerance());
+                } else if (config->interpolationMethod() == "LogLinear"){
+                    curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<LogLinear>>(
+                        asof, baseDate, baseFixing, curveObsLag, config->frequency(), config->dayCounter(), instruments,
+                        seasonality, config->tolerance());
+                } else {
+                    QL_FAIL("Interpolation method " << config->interpolationMethod()
+                                                    << " not supported for ZC cpi inflation curve, use Linear or LogLinear");
                 }
+                auto zr =
+                    QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
+                        QL_EPSILON);
+                DLOG("Zerorate at base date " << baseDate << " is " << zr);
             }
-            curve_ = QuantLib::ext::shared_ptr<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-                new QuantExt::PiecewiseZeroInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate,
-                    instruments, config->tolerance(), index, config->useLastAvailableFixingAsBaseDate()));
-            
+
             // force bootstrap so that errors are thrown during the build, not later
-            QuantLib::ext::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
+            
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
@@ -274,9 +293,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate =
                 config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
-            curve_ = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, instruments, config->tolerance()));
+            Date baseDate =
+                QuantExt::ZeroInflation::curveBaseDate(false, asof, curveObsLag, config->frequency(), index);
+            curve_ =
+                QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+                    asof, baseDate, baseRate, curveObsLag, config->frequency(), interpolatedIndex_, config->dayCounter(),
+                    instruments, {}, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }

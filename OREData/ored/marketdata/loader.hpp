@@ -32,6 +32,7 @@
 #include <ored/utilities/wildcard.hpp>
 
 #include <qle/indexes/dividendmanager.hpp>
+#include <qle/utilities/serializationdate.hpp>
 #include <ql/time/date.hpp>
 
 #include <ql/shared_ptr.hpp>
@@ -70,6 +71,9 @@ public:
     //! check if there are quotes for a date
     virtual bool hasQuotes(const QuantLib::Date& d) const;
 
+    //! get set of dates for which quotes are loaded
+    virtual std::set<QuantLib::Date> asofDates() const = 0;
+
     /*! Default implementation for get that allows for the market data item to be optional. The first element of
         the \p name pair is the name of the market point being sought and the second element of the \p name pair
         is a flag to indicate if the market data point is optional, <code>true</code>, or not, <code>false</code>.
@@ -99,7 +103,9 @@ public:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) { 
+        ar& actualDate_; 
+    };
 
 protected:
     /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
@@ -109,3 +115,5 @@ protected:
 };
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::Loader);

@@ -43,34 +43,36 @@ namespace ore {
 namespace analytics {
 
 SensitivityAnalysis::SensitivityAnalysis(
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-    const string& marketConfiguration, const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const bool laxFxConversion, const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
-      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
+      laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+      overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
+      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+    const bool recalibrateModels, const bool laxFxConversion,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun, const std::string& context)
     : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
-      sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs),
-      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
+      sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), laxFxConversion_(laxFxConversion),
+      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
       portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
@@ -166,10 +168,12 @@ void SensitivityAnalysis::generateSensitivities() {
         vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
         if (nonShiftedBaseCurrencyConversion_)
             // use "original" FX rates to convert sensi to base currency
-            calculators.push_back(QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
+            calculators.push_back(
+                QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_, 0, laxFxConversion_));
         else
             // use the scenario FX rate when converting sensi to base currency
-            calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+            calculators.push_back(
+                QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy(), 0, laxFxConversion_));
 
         sensiCubes_.clear();
         for (auto const& [pf, scenGen] :
@@ -184,14 +188,11 @@ void SensitivityAnalysis::generateSensitivities() {
                 QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
             pf->reset();
             pf->build(factory, "sensi analysis");
-            if (recalibrateModels_)
-                modelBuilders_ = factory->modelBuilders();
-            else
-                modelBuilders_.clear();
-            ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+            ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
-            engine.buildCube(pf, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+            engine.buildCube(pf, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, true, nullptr, nullptr, {},
+                             dryRun_);
 
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
@@ -251,10 +252,10 @@ void SensitivityAnalysis::generateSensitivities() {
             auto baseCcy = simMarketData_->baseCcy();
             engine.buildCube(
                 pf,
-                [&baseCcy]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
-                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy)};
+                [&baseCcy, this]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
+                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy, 0, laxFxConversion_)};
                 },
-                {}, true, dryRun_);
+                ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
             std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> miniCubes;
             for (auto const& c : engine.outputCubes()) {
                 miniCubes.push_back(QuantLib::ext::dynamic_pointer_cast<NPVSensiCube>(c));
@@ -287,16 +288,16 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::FXSpot: {
         auto itr = sensiParams.fxShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.fxShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = simMarket->fxRate(keylabel, marketConfiguration)->value();
         }
     } break;
     case RiskFactorKey::KeyType::EquitySpot: {
         auto itr = sensiParams.equityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.equityShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = simMarket->equitySpot(keylabel, marketConfiguration)->value();
         }
     } break;
@@ -361,13 +362,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string pair = keylabel;
         auto itr = sensiParams.fxVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.fxVolShiftData().end(), "shiftData not found for " << pair);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = sensiParams.fxVolShiftData().at(pair).shiftStrikes;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = sensiParams.fxVolShiftData().at(pair)->shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0), "Only ATM FX vols supported");
             Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
-            Period p = itr->second.shiftExpiries[keyIdx];
+            Period p = itr->second->shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket->fxVol(pair, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + p);
             Real atmVol = vts->blackVol(t, atmFwd);
@@ -378,10 +379,10 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string pair = keylabel;
         auto itr = sensiParams.equityVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.equityVolShiftData().end(), "shiftData not found for " << pair);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second.shiftExpiries[keyIdx];
+            Period p = itr->second->shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket->equityVol(pair, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + p);
             Real atmVol = vts->blackVol(t, Null<Real>());
@@ -391,11 +392,11 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::SwaptionVolatility: {
         auto itr = sensiParams.swaptionVolShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.swaptionVolShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = itr->second.shiftStrikes;
-            vector<Period> tenors = itr->second.shiftTerms;
-            vector<Period> expiries = itr->second.shiftExpiries;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = itr->second->shiftStrikes;
+            vector<Period> tenors = itr->second->shiftTerms;
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
@@ -411,13 +412,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string securityId = keylabel;
         auto itr = sensiParams.yieldVolShiftData().find(securityId);
         QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = itr->second.shiftStrikes;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = itr->second->shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
                        "shift strikes should be {0.0} for yield volatilities");
-            vector<Period> tenors = itr->second.shiftTerms;
-            vector<Period> expiries = itr->second.shiftExpiries;
+            vector<Period> tenors = itr->second->shiftTerms;
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
@@ -438,17 +439,23 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
-            shiftMult = simMarket->baseScenario()->get(
-                RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, ccy, key.index));
+            Handle<OptionletVolatilityStructure> vts = simMarket->capFloorVol(ccy, marketConfiguration);
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / strikes.size();
+            Period p_exp = expiries[expIdx];
+            Size strIdx = keyIdx % strikes.size();
+            Real strike = strikes[strIdx];
+            Real vol = vts->volatility(p_exp, strike);
+            shiftMult = vol;
         }
     } break;
     case RiskFactorKey::KeyType::CDSVolatility: {
         string name = keylabel;
         auto itr = sensiParams.cdsVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.cdsVolShiftData().end(), "shiftData not found for " << name);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Period> expiries = itr->second.shiftExpiries;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
@@ -476,10 +483,10 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string name = keylabel;
         auto itr = sensiParams.baseCorrelationShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.baseCorrelationShiftData().end(), "shiftData not found for " << name);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> lossLevels = itr->second.shiftLossLevels;
-            vector<Period> terms = itr->second.shiftTerms;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> lossLevels = itr->second->shiftLossLevels;
+            vector<Period> terms = itr->second->shiftTerms;
             Size keyIdx = key.index;
             Size lossLevelIdx = keyIdx / terms.size();
             Real lossLevel = lossLevels[lossLevelIdx];
@@ -574,12 +581,12 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto it = sensiParams.commodityVolShiftData().find(keylabel);
         QL_REQUIRE(it != sensiParams.commodityVolShiftData().end(), "shiftData not found for " << keylabel);
 
-        shiftSize = it->second.shiftSize;
-        if (it->second.shiftType == ShiftType::Relative) {
-            Size moneynessIndex = key.index / it->second.shiftExpiries.size();
-            Size expiryIndex = key.index % it->second.shiftExpiries.size();
-            Real moneyness = it->second.shiftStrikes[moneynessIndex];
-            Period expiry = it->second.shiftExpiries[expiryIndex];
+        shiftSize = it->second->shiftSize;
+        if (it->second->shiftType == ShiftType::Relative) {
+            Size moneynessIndex = key.index / it->second->shiftExpiries.size();
+            Size expiryIndex = key.index % it->second->shiftExpiries.size();
+            Real moneyness = it->second->shiftStrikes[moneynessIndex];
+            Period expiry = it->second->shiftExpiries[expiryIndex];
             Real spotValue = simMarket->commodityPriceCurve(keylabel, marketConfiguration)->price(0);
             Handle<BlackVolTermStructure> vts = simMarket->commodityVolatility(keylabel, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + expiry);
@@ -590,8 +597,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::SecuritySpread: {
         auto itr = sensiParams.securityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = 1.0;
             try {
                 shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();

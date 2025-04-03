@@ -34,8 +34,9 @@ namespace analytics {
 class SensitivityInputStream : public SensitivityStream {
 public:
     //! Constructor
-    SensitivityInputStream(char delim = ',', const std::string& comment = "#") 
-        : delim_(delim), comment_(comment), lineNo_(0) {}
+    SensitivityInputStream(char delim = ',', char comment = '#', char quoteChar = '\0',
+                           char escapeChar = '\\') 
+        : delim_(delim), comment_(comment), quoteChar_(quoteChar), escapeChar_(escapeChar), lineNo_(0) {}
     virtual ~SensitivityInputStream() {} // Declare virtual destructor
         
     /*! Set stream for function */
@@ -51,7 +52,11 @@ private:
     //! Csv file delimiter
     char delim_;
     //! Csv file comment string
-    std::string comment_;
+    char comment_;
+    //! quoteChar wrapping strings
+    char quoteChar_;
+    //! escape character in strings
+    char escapeChar_;
     //! Keep track of line number for messages
     QuantLib::Size lineNo_;
 
@@ -62,7 +67,8 @@ private:
 class SensitivityFileStream : public SensitivityInputStream {
 public:
     //! Constructor providing path to csv file \p fileName
-    SensitivityFileStream(const std::string& fileName, char delim = ',', const std::string& comment = "#");
+    SensitivityFileStream(const std::string& fileName, char delim = ',', char comment = '#',
+                              char quoteChar = '\0', char escapeChar = '\\');
 
     ~SensitivityFileStream() override;
     
@@ -73,7 +79,8 @@ private:
 class SensitivityBufferStream : public SensitivityInputStream {
 public:
     //! Constructor providing path to csv file \p fileName
-    SensitivityBufferStream(const std::string& buffer, char delim = ',', const std::string& comment = "#");
+    SensitivityBufferStream(const std::string& buffer, char delim = ',', char comment = '#',
+                            char quoteChar = '\0', char escapeChar = '\\');
 };
 
 } // namespace analytics

@@ -155,7 +155,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {
-        result[maturity] = yoyCurve->yoyRate(maturity);
+        result[maturity] = yoyCurve->yoyRate(maturity, yoyCurve->observationLag());
     }
 
     return result;
@@ -186,28 +186,36 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
                (irTs->discount(S) * inflationGrowth(zts, S, indexIsInterpolated_));
 
     // Calculate the correction term C(t,S,T)
-    using CrossAssetAnalytics::ay;
-    using CrossAssetAnalytics::az;
-    using CrossAssetAnalytics::Hy;
-    using CrossAssetAnalytics::Hz;
-    using CrossAssetAnalytics::integral;
-    using CrossAssetAnalytics::LC;
-    using CrossAssetAnalytics::P;
-    using CrossAssetAnalytics::ryy;
-    using CrossAssetAnalytics::rzy;
-    using CrossAssetAnalytics::sy;
 
-    auto H_n_S = model_->irlgm1f(irIdx)->H(S);
-    auto zeta_r_S = rrParam->zeta(S);
+    Real c;
+    if (auto it = cache_C_.find(std::make_tuple(relativeTime_, S, T)); it == cache_C_.end()) {
+        using CrossAssetAnalytics::ay;
+        using CrossAssetAnalytics::az;
+        using CrossAssetAnalytics::Hy;
+        using CrossAssetAnalytics::Hz;
+        using CrossAssetAnalytics::integral;
+        using CrossAssetAnalytics::LC;
+        using CrossAssetAnalytics::P;
+        using CrossAssetAnalytics::ryy;
+        using CrossAssetAnalytics::rzy;
+        using CrossAssetAnalytics::sy;
 
-    auto c = H_r_S * (zeta_r_S - zeta_r_t);
-    c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
-    c += integral(*model_,
-                  LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
-                     P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
-                     P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),
-                  relativeTime_, S);
-    c *= (H_r_S - H_r_T);
+        auto H_n_S = model_->irlgm1f(irIdx)->H(S);
+        auto zeta_r_S = rrParam->zeta(S);
+
+        c = H_r_S * (zeta_r_S - zeta_r_t);
+        c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
+        c += integral(*model_,
+                      LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
+                         P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
+                         P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),
+                      relativeTime_, S);
+        c *= (H_r_S - H_r_T);
+        if (enableCache_)
+            cache_C_[std::make_tuple(relativeTime_, S, T)] = c;
+    } else {
+        c = it->second;
+    }
 
     return p_n_t_S * rrRatio * exp(c) - p_n_t_T;
 }

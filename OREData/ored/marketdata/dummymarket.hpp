@@ -82,6 +82,8 @@ public:
     }
     Handle<Quote> recoveryRate(const string&, const string&) const override { return Handle<Quote>(); }
 
+    Handle<Quote> conversionFactor(const string&, const string&) const override { return Handle<Quote>(); }
+
     Handle<QuantExt::CreditVolCurve> cdsVol(const string&, const string&) const override {
         return Handle<QuantExt::CreditVolCurve>();
     }

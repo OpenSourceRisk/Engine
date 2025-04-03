@@ -1,0 +1,37 @@
+\subsubsection{CPI Swap, Zero Coupon Inflation Index Swap}
+\label{pricing:inf_zciis}
+
+A CPI Swap uses the inflation fixing at the start of the contract as base for all 
+flows. Thus, the flows can be priced model-independently by discounting off the 
+zero-coupon inflation forward curve.  
+
+The present value of a CPI Swap leg with a final notional exchange can be 
+expressed as follows:
+$$
+\NPV_{CPILeg} = N\cdot \sum_{i=1}^n r \frac{I(t_i)}{I(t_0)}\cdot \delta_i \cdot P(t_i) + N\cdot \frac{I(t_n)}{I(t_0)} \cdot P(t_n)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $r$: the contractual real rate
+\item $I(t_i)$: the relevant forward CPI fixing for time $t_i$
+\item $I(t_0)$: the relevant CPI fixing before issue date (base date)
+\item $I(t_n)$: the relevant forward CPI fixing for the maturity date
+\item $\delta_i$: the daycount fraction for the accrual period from 
+$t_{i-1}$ up to time $t_i$
+\item $P(t_i)$: the discount factor for time $t_i$
+\item $P(t_n)$: the discount factor for maturity $t_n$
+\end{itemize}
+
+
+Alternatively, the term sheet may specify to subtract the un-inflated notional from each coupon payment.
+$$
+\NPV_{CPILeg} = N\cdot \sum_{i=1}^n r \left(\frac{I(t_i)}{I(t_0)} - 1 \right) \cdot \delta_i \cdot P(t_i) + N\cdot \frac{I(t_n)}{I(t_0)} \cdot P(t_n)
+$$
+
+Furthermore, the term sheet may specify to subtract the un-inflated redemption,
+depending on whether the second floating leg of the CPI Swap contains a final notional
+exchange:
+$$
+\NPV_{CPILeg} = N\cdot \sum_{i=1}^n r \frac{I(t_i)}{I(t_0)}\cdot \delta_i \cdot P(t_i) + N\cdot \left(\frac{I(t_n)}{I(t_0)} - 1\right) \cdot P(t_n)
+$$

@@ -105,17 +105,61 @@ Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v,
     };
 }
 
+namespace {
+bool checkKeyDifferences(const QuantLib::ext::shared_ptr<Scenario>& s1, const QuantLib::ext::shared_ptr<Scenario>& s2,
+                         const bool allowAdditionalKeysInS2) {
+
+    if (s1->keysHash() == s2->keysHash())
+        return true;
+
+    std::set<RiskFactorKey> k1(s1->keys().begin(), s1->keys().end());
+    std::set<RiskFactorKey> k2(s2->keys().begin(), s2->keys().end());
+    std::set<RiskFactorKey> k1_minus_k2;
+    std::set<RiskFactorKey> k2_minus_k1;
+    std::set_difference(k1.begin(), k1.end(), k2.begin(), k2.end(), std::inserter(k1_minus_k2, k1_minus_k2.begin()));
+    std::set_difference(k2.begin(), k2.end(), k1.begin(), k1.end(), std::inserter(k2_minus_k1, k2_minus_k1.begin()));
+
+    bool result = true;
+
+    if (!k1_minus_k2.empty()) {
+        ALOG("checkKeyDifferences(): scenario 1 contains keys that are not in scenario 2:");
+        for (auto const& k : k1_minus_k2) {
+            ALOG(k);
+        }
+        result = false;
+    }
+
+    if (!k2_minus_k1.empty()) {
+        if (allowAdditionalKeysInS2) {
+            DLOG("checkKeyDifferences(): scenario 2 contains keys that are not in scenario 1 (but this is allowed):");
+            for (auto const& k : k2_minus_k1) {
+                DLOG(k);
+            }
+        } else {
+            ALOG("checkKeyDifferences(): scenario 2 contains keys that are not in scenario 1:");
+            for (auto const& k : k2_minus_k1) {
+                ALOG(k);
+            }
+            result = false;
+        }
+    }
+
+    return result;
+}
+} // namespace
+
 QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::shared_ptr<Scenario>& s1,
                                                           const QuantLib::ext::shared_ptr<Scenario>& s2,
                                                           const Date& targetScenarioAsOf,
-                                                          const Real targetScenarioNumeraire) {
+                                                          const Real targetScenarioNumeraire,
+                                                          const bool allowAdditionalKeysInS2) {
 
     QL_REQUIRE(s1->isAbsolute() && s2->isAbsolute(), "getDifferenceScenario(): both scenarios must be absolute ("
                                                          << std::boolalpha << s1->isAbsolute() << ", "
                                                          << s2->isAbsolute());
 
-    QL_REQUIRE(s1->keysHash() == s2->keysHash(),
-               "getDifferenceScenario(): both scenarios must have identical key sets");
+    QL_REQUIRE(checkKeyDifferences(s1, s2, allowAdditionalKeysInS2),
+               "getDifferenceScenario(): scenario key sets are not compatible. Check log for details.");
 
     Date asof = targetScenarioAsOf;
     if (asof == Date() && s1->asof() == s2->asof())
@@ -144,8 +188,8 @@ QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext:
                                                             const Real targetScenarioNumeraire) {
 
     QL_REQUIRE(!d->isAbsolute(), "addDifferenceToScenario(): second argument must be difference scenario");
-    QL_REQUIRE(s->keysHash() == d->keysHash(),
-               "addDifferenceToScenario(): both scenarios must have identical key sets.");
+    QL_REQUIRE(checkKeyDifferences(s, d, false),
+               "addDifferenceToScenario(): scenario key sets are not compatible. Check log for details.");
 
     Date asof = targetScenarioAsOf;
     if (asof == Date() && s->asof() == d->asof())
@@ -235,15 +279,13 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
 
     std::set<std::pair<RiskFactorKey::KeyType, std::string>> keys;
     for (auto const& k : scenario->keys()) {
-        if(newCoordinates.count({k.keytype, k.name})==1){
+        if (newCoordinates.count({k.keytype, k.name}) == 1) {
             keys.insert(std::make_pair(k.keytype, k.name));
             TLOG("Insert keys " << k.keytype << " " << k.name)
-        } else{
+        } else {
             TLOG("Recast skip " << k.keytype << " " << k.name);
         }
     }
-
-
 
     for (auto const& k : keys) {
 
@@ -266,26 +308,27 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             RiskFactorKey key(k.first, k.second, 0);
             result->add(key, scenario->get(key));
 
-        } else {
-            // interpolate new values from old values
+        } else{
             Size newKeyIndex = 0;
-            std::vector<Size> indices(c0->second.size(), 0);
+            std::vector<Size> indices(c1->second.size(), 0);
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
                 while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
-                    --workingIndex;
-                    if (workingIndex >= 0)
                         indices[workingIndex] = 0;
+                        --workingIndex;
+                        if (workingIndex >= 0) {
+                            indices[workingIndex]++;
+                        }
                 }
                 if (workingIndex >= 0) {
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
                     auto iValue = interpolatedValue(c0->second, c1->second, indices, k, scenario);
-                    TLOG("Add "<< key <<  " interpolated value = " << iValue);
+                    TLOG("Add " << key << " interpolated value = " << iValue);
                     result->add(key, iValue);
-                    indices[workingIndex]++;
+                    indices.back()++;
                 }
-            } while (workingIndex >= 0);
+            } while (workingIndex >= 0 && indices[0] < c1->second[0].size());
         }
     }
     return result;
@@ -301,6 +344,50 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
         newCoordinatesMap[{key, name}] = coordinates;
     }
     return recastScenario(scenario, oldCoordinates, newCoordinatesMap);
+}
+
+QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar, const Real rawValue) {
+    switch (keyType) {
+    case RiskFactorKey::KeyType::CPR:
+    case RiskFactorKey::KeyType::SecuritySpread:
+    case RiskFactorKey::KeyType::CommodityCurve:
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+    case RiskFactorKey::KeyType::CreditState:
+    case RiskFactorKey::KeyType::None:
+        return rawValue;
+
+    case RiskFactorKey::KeyType::SwaptionVolatility:
+    case RiskFactorKey::KeyType::YieldVolatility:
+    case RiskFactorKey::KeyType::OptionletVolatility:
+    case RiskFactorKey::KeyType::FXVolatility:
+    case RiskFactorKey::KeyType::EquityVolatility:
+    case RiskFactorKey::KeyType::CDSVolatility:
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::FXSpot:
+    case RiskFactorKey::KeyType::EquitySpot:
+    case RiskFactorKey::KeyType::SurvivalProbability:
+    case RiskFactorKey::KeyType::RecoveryRate:
+    case RiskFactorKey::KeyType::CPIIndex:
+    case RiskFactorKey::KeyType::SurvivalWeight:
+        return std::max(0.0, rawValue);
+
+    case RiskFactorKey::KeyType::DiscountCurve:
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::IndexCurve:
+    case RiskFactorKey::KeyType::DividendYield:
+        return isPar ? rawValue : std::max(0.0, rawValue);
+
+    case RiskFactorKey::KeyType::Correlation:
+    case RiskFactorKey::KeyType::BaseCorrelation:
+        return std::max(std::min(rawValue, 1.0), -1.0);
+
+    default:
+        QL_FAIL("sanitizeScenarioValue(): key type "
+                << keyType << " not expected, and not covered. This is an internal error, contact dev.");
+    };
 }
 
 } // namespace analytics

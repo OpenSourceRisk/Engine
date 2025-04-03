@@ -93,6 +93,7 @@ void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& e
 
     varSwap->setPricingEngine(varSwapBuilder->engine(name(), ccy, assetClassUnderlying_, momentType));
     setSensitivityTemplate(*varSwapBuilder);
+    addProductModelEngine(*varSwapBuilder);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(varSwap));
@@ -100,6 +101,7 @@ void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& e
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
     maturity_ = endDate;
+    maturityType_ = "End Date";
 
     // add required fixings
     for (Date d = cal_.advance(start_, -1 * Days); d <= endDate; d = cal_.advance(d, 1 * Days)) {

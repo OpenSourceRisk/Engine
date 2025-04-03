@@ -26,10 +26,10 @@
 #include <ored/marketdata/expiry.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
-#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationperiod.hpp>
 
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -113,6 +113,7 @@ public:
         BOND,
         BOND_OPTION,
         INDEX_CDS_OPTION,
+        INDEX_CDS_TRANCHE,
         COMMODITY_SPOT,
         COMMODITY_FWD,
         CORRELATION,
@@ -138,6 +139,7 @@ public:
         BASE_CORRELATION,
         SHIFT,
         TRANSITION_PROBABILITY,
+        CONVERSION_FACTOR,
         NONE
     };
 
@@ -162,6 +164,12 @@ public:
     InstrumentType instrumentType() const { return instrumentType_; }
     QuoteType quoteType() const { return quoteType_; }
     //@}
+
+    //! \name Inspectors
+    //@{
+    void setValue(const double v);
+    //@}
+
 protected:
     Handle<Quote> quote_;
     Date asofDate_;
@@ -188,7 +196,7 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
 
 //! Money market data class
 /*!
-  This class holds single market points of type
+  This class holds single market points of type 
   - MM
 
   Specific data comprise currency, fwdStart, term
@@ -1616,25 +1624,28 @@ public:
     BaseCorrelationQuote() {}
     //! Constructor
     BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
-                         Period term, Real detachmentPoint)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
-          term_(term), detachmentPoint_(detachmentPoint) {}
+                         Period term, Real attachmentPoint, Real detachmentPoint)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::INDEX_CDS_TRANCHE), cdsIndexName_(cdsIndexName),
+          term_(term), attachmentPoint_(attachmentPoint), detachmentPoint_(detachmentPoint) {}
 
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<BaseCorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, detachmentPoint_);
+        return QuantLib::ext::make_shared<BaseCorrelationQuote>(
+            quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, attachmentPoint_, detachmentPoint_);
     }
 
     //! \name Inspectors
     //@{
     const string& cdsIndexName() const { return cdsIndexName_; }
     Real detachmentPoint() const { return detachmentPoint_; }
+    Real attachmentPoint() const { return attachmentPoint_; }
     Period term() const { return term_; }
     //@}
 private:
     string cdsIndexName_;
     Period term_;
+    Real attachmentPoint_;
     Real detachmentPoint_;
     //! Serialization
     friend class boost::serialization::access;
@@ -1935,6 +1946,35 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Bond Future ConversionFactor
+/*!
+This class holds single market points of type CONVERSION_FACTOR for a single Bond future
+\ingroup marketdata
+*/
+class BondFutureConversionFactor : public MarketDatum {
+public:
+    BondFutureConversionFactor() {}
+    //! Constructor
+    BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND),
+          securityID_(securityId) {}
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<BondFutureConversionFactor>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 //! Transition Probability data class
 class TransitionProbabilityQuote : public MarketDatum {
 public:
@@ -2005,4 +2045,5 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);

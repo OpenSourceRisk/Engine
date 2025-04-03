@@ -28,13 +28,44 @@
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ql/instruments/vanillaoption.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
+#include <qle/instruments/vanillaforwardoption.hpp>
 
 namespace QuantExt {
 
-class McCamFxOptionEngine : public McMultiLegBaseEngine, public VanillaOption::engine {
+class McCamFxOptionEngineBase : public McMultiLegBaseEngine {
 public:
-    // this engine works as QuantLib::AnalyticsEuropeanEngine, so that it is compatible with the ORE FxOption trade
-    // builder, i.e. for a call the foreign amount (1.0) is received, domestic (strike*1.0) is paid
+    McCamFxOptionEngineBase(
+        const Handle<CrossAssetModel>& model, const Currency& domesticCcy, const Currency& foreignCcy,
+        const Currency& npvCcy, const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
+        const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed,
+        const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
+        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+        const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const RegressorModel regressorModel = RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false);
+
+    void setupLegs() const;
+    void calculateFxOptionBase() const;
+    const Handle<CrossAssetModel>& model() const { return model_; }
+
+protected:
+    Currency domesticCcy_, foreignCcy_, npvCcy_;
+
+    mutable QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff> payoff_;
+    mutable Date payDate_;
+
+    mutable Real fxOptionResultValue_;
+    mutable Real fxOptionUnderlyingNpv_;
+};
+
+class McCamFxOptionEngine : public McCamFxOptionEngineBase, public VanillaOption::engine {
+public:
     McCamFxOptionEngine(
         const Handle<CrossAssetModel>& model, const Currency& domesticCcy, const Currency& foreignCcy,
         const Currency& npvCcy, const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
@@ -44,15 +75,80 @@ public:
         const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressorModel regressorModel = RegressorModel::Simple,
-        const Real regressionVarianceCutoff = Null<Real>());
-
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false)
+        : McCamFxOptionEngineBase(model, domesticCcy, foreignCcy, npvCcy, calibrationPathGenerator,
+                                  pricingPathGenerator, calibrationSamples, pricingSamples, calibrationSeed,
+                                  pricingSeed, polynomOrder, polynomType, ordering, directionIntegers, discountCurves,
+                                  simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+                                  regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                                  reevaluateExerciseInStickyRun) {
+        registerWith(model_);
+        for (auto const& h : discountCurves_)
+            registerWith(h);
+    }
     void calculate() const override;
-    const Handle<CrossAssetModel>& model() const { return model_; }
+};
 
-private:
-    const Currency domesticCcy_, foreignCcy_, npvCcy_;
+class McCamFxEuropeanForwardOptionEngine : public McCamFxOptionEngineBase, public VanillaForwardOption::engine {
+public:
+    McCamFxEuropeanForwardOptionEngine(
+        const Handle<CrossAssetModel>& model, const Currency& domesticCcy, const Currency& foreignCcy,
+        const Currency& npvCcy, const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
+        const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed,
+        const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
+        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+        const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const RegressorModel regressorModel = RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false)
+        : McCamFxOptionEngineBase(model, domesticCcy, foreignCcy, npvCcy, calibrationPathGenerator,
+                                  pricingPathGenerator, calibrationSamples, pricingSamples, calibrationSeed,
+                                  pricingSeed, polynomOrder, polynomType, ordering, directionIntegers, discountCurves,
+                                  simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+                                  regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                                  reevaluateExerciseInStickyRun) {
+        registerWith(model_);
+        for (auto const& h : discountCurves_)
+            registerWith(h);
+    }
+    void calculate() const override;
+};
+
+class McCamFxEuropeanCSOptionEngine : public McCamFxOptionEngineBase, public CashSettledEuropeanOption::engine {
+public:
+    McCamFxEuropeanCSOptionEngine(
+        const Handle<CrossAssetModel>& model, const Currency& domesticCcy, const Currency& foreignCcy,
+        const Currency& npvCcy, const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
+        const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed,
+        const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
+        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+        const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
+        const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
+        const RegressorModel regressorModel = RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false)
+        : McCamFxOptionEngineBase(model, domesticCcy, foreignCcy, npvCcy, calibrationPathGenerator,
+                                  pricingPathGenerator, calibrationSamples, pricingSamples, calibrationSeed,
+                                  pricingSeed, polynomOrder, polynomType, ordering, directionIntegers, discountCurves,
+                                  simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+                                  regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                                  reevaluateExerciseInStickyRun) {
+        registerWith(model_);
+        for (auto const& h : discountCurves_)
+            registerWith(h);
+    }
+    void calculate() const override;
 };
 
 } // namespace QuantExt

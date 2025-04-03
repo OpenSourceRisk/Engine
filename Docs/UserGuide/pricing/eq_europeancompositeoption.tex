@@ -1,0 +1,21 @@
+\subsubsection{European Equity Composite Option}
+\label{pricing:eq_compo_option}
+
+Vanilla European Composite Options are priced analytically using the Black-Scholes 
+model and log-normal volatilities. 
+
+\medskip
+The Black-Scholes model assumes that the spot price of the underlying equity $S$ and the 
+FX spot price $X$ follow a Geometric Brownian Motion:
+\begin{align*}
+dS/S &= \mu_S(t)dt+\sigma_S(t)\,dW \\
+dX/X &= \mu_X(t)dt+\sigma_X(t)\,dW_X
+\end{align*}
+with correlated standard Brownian motions $W$ and $W_X$, with correlation coefficient $\rho$.
+
+The final payoff depends on the product of both processes $X(T)S(T)$.
+
+The present value is given by Black Scholes Merton formula using the transformed volatility of the underlying into payoff currency
+$$ \sigma = \sqrt{\sigma_S^2 + \sigma_X^2 - 2 \rho \sigma^S \sigma^X}$$
+and the risk free rate of the payoff currency.
+

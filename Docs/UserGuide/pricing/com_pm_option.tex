@@ -1,0 +1,35 @@
+\subsubsection{European Precious Metal Option}
+\label{pricing:com_option}
+
+European Precious Metal Options are priced using the Black-Scholes model with log-normal 
+volatilities. Volatility structures with smile are taken into account where available. 
+The Precious Metal forwarding curve is used for respective Precious Metal.
+
+The Black-Scholes model assumes that the spot Precious Metal price C follows Geometric 
+Brownian Motion:
+$$
+dC/C=\mu(t)dt + \sigma(t)\,dW
+$$
+The model?s drift is calibrated such that the expected future spot Precious Metal price 
+agrees with today?s fair forward Precious Metal price for time T. This means that the 
+Precious Metal forward rate $F(t,T)$ follows drift-free GBM under the T-forward measure:
+$$
+dF(t,T)) = \sigma(t)\,F(t,T)\,dW
+$$
+This leads a Black76 analytical solution for the present value of a European FX option:
+$$
+\NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{T},\omega)\cdot P(T)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: strike price
+\item $F(0,T)$: the forward Precious Metal price for maturity $T$ at time 0 (start)
+\item $\sigma$: the volatility of the Precious Metal forward price
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\end{itemize}
+
+See Black Model, Section \ref{sec:models}, for more details.
+
+Note that this is the same approach and definition as European commodity option and indeed uses the same framework, however precious metal forwarding curves are typically (but not always) bootstrapped using FX style quotes (i.e. a Spot rate and then forward points) and volatility surfaces are often quoted in FX style (Delta neutral ATM, 25 or 10 delta Butterflies and Risk Reversals).

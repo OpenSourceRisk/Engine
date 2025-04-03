@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<NettingSetDefinitions>
+    <NettingSet>
+        <NettingSetId>Dummy1</NettingSetId>
+        <ActiveCSAFlag>false</ActiveCSAFlag>
+    </NettingSet>
+    <NettingSet>
+        <NettingSetId>Dummy4</NettingSetId>
+        <ActiveCSAFlag>false</ActiveCSAFlag>
+    </NettingSet>
+</NettingSetDefinitions>

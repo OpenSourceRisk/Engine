@@ -24,6 +24,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/pricingengines/blackcalculator.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -31,7 +32,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/utilities/inflation.hpp>
 
@@ -124,12 +124,11 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
                 index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, today, cd.zeroCouponPillars[0],
-                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
-                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
-    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve = QuantLib::ext::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-        today, cd.fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index,
-        useLastKnownFixing);
+    Date baseDate =
+        QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, cd.obsLag, index->frequency(),
+                                                                                  dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }
@@ -139,7 +138,7 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
 QuantLib::ext::shared_ptr<ZeroInflationIndex> buildIndexWithForwardTermStructure(CommonData& cd, bool useLastKnownFixing = true,
                                                                          bool isInterpolated = false,
                                                                          const Date& startDate = Date()) {
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(isInterpolated);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>();
     for (const auto& [date, fixing] : cd.cpiFixings) {
         curveBuildIndex->addFixing(date, fixing);
     }
@@ -154,7 +153,7 @@ QuantLib::ext::shared_ptr<CPIVolatilitySurface> buildVolSurface(CommonData& cd,
                                                         const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                                                         const QuantLib::Date& startDate = QuantLib::Date()) {
     auto surface = QuantLib::ext::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear>>(
-        cd.tenors, cd.strikes, cd.vols, index, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
+        cd.tenors, cd.strikes, cd.vols, index, false, 0, cd.fixingCalendar, ModifiedFollowing, cd.dayCounter, cd.obsLag,
         startDate);
     surface->enableExtrapolation();
     return surface;
@@ -217,7 +216,7 @@ QuantLib::ext::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(Common
     cpiCapFloorVolSurface = QuantLib::ext::make_shared<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>>(
         QuantExt::PriceQuotePreference::CapFloor, cd.obsLag, cd.fixingCalendar, cd.bdc, cd.dayCounter, index,
         cd.discountTS, priceData.cStrikes, priceData.fStrikes, priceData.tenors, priceData.cPrices, priceData.fPrices,
-        engine, startDate, ignoreMissingQuotes);
+        engine, false, startDate, ignoreMissingQuotes);
 
     cpiCapFloorVolSurface->enableExtrapolation();
     return cpiCapFloorVolSurface;
@@ -507,7 +506,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     Date startDate(15, Jun, 2022);
     Date lastKnownFixing(1, Jan, 2022);
 
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::AUCPI>(Quarterly, true, false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<QuantLib::AUCPI>(Quarterly, true);
     for (const auto& [date, fixing] : fixings) {
         curveBuildIndex->addFixing(date, fixing);
     }

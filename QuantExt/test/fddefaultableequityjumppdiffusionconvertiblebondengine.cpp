@@ -30,6 +30,7 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <ql/time/schedule.hpp>
 
 #include "toplevelfixture.hpp"
 
@@ -67,8 +68,11 @@ BOOST_AUTO_TEST_CASE(test_vanilla_bond) {
     auto equity = QuantLib::ext::make_shared<EquityIndex2>("myEqIndex", NullCalendar(), EURCurrency(),
                                                   Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(S0)), rate, dividend);
 
-    auto bond = QuantLib::ext::make_shared<FixedRateBond>(0, TARGET(), 100000.0, today, today + 5 * Years, 1 * Years,
-                                                  std::vector<Real>(1, 0.05), Thirty360(Thirty360::BondBasis));
+    Schedule bondSchedule(today, today + 5 * Years, 1 * Years, TARGET(), Following, Following, DateGeneration::Backward,
+                          false);
+
+    auto bond = QuantLib::ext::make_shared<FixedRateBond>(0, 100000.0, bondSchedule, std::vector<Real>(1, 0.05),
+                                                          Thirty360(Thirty360::BondBasis));
 
     // vanilla pricing
 

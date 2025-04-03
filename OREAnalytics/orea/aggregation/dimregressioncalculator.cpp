@@ -174,10 +174,10 @@ void RegressionDynamicInitialMarginCalculator::build() {
             accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> accDiff;
             accumulator_set<double, stats<boost::accumulators::tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
-                Real numDefault =
-                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut =
-                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
+                Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut = cubeInterpretation_->getCloseOutAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
                 Real npvDefault = nettingSetNPV_[n][j][k];
                 Real flow = nettingSetFLOW_[n][j][k];
                 Real npvCloseOut = nettingSetCloseOutNPV_[n][j][k];
@@ -186,9 +186,9 @@ void RegressionDynamicInitialMarginCalculator::build() {
             }
 
             Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
-            Real horizonScaling = sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
+            Real horizonScaling = std::sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
 
-            Real stdevDiff = sqrt(boost::accumulators::variance(accDiff));
+            Real stdevDiff = std::sqrt(boost::accumulators::variance(accDiff));
             Real E_OneOverNumeraire =
                 mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
@@ -200,10 +200,10 @@ void RegressionDynamicInitialMarginCalculator::build() {
             vector<Real> ry1(samples, 0.0);
             vector<Real> ry2(samples, 0.0);
             for (Size k = 0; k < samples; ++k) {
-                Real numDefault =
-                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut =
-                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
+                Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut = cubeInterpretation_->getCloseOutAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
                 Real x = nettingSetNPV_[n][j][k] * numDefault;
                 Real f = nettingSetFLOW_[n][j][k] * numDefault;
                 Real y = nettingSetCloseOutNPV_[n][j][k] * numCloseOut;
@@ -256,7 +256,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                 for (Size k = 0; k < samples; ++k) {
                     // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
                     Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
-                        AggregationScenarioDataType::Numeraire, j, k);
+                        scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
                     Array regressor = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                     Real e = ls.eval(regressor, v);
                     if (e < 0.0)
@@ -269,7 +269,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                     // 2) In particular the linear regression function can yield negative variance values in
                     //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
                     //    variance approaching zero. We correct this here by taking the positive part.
-                    Real std = sqrt(std::max(e, 0.0));
+                    Real std = std::sqrt(std::max(e, 0.0));
                     Real scalingFactor = horizonScaling * confidenceLevel * nettingSetDimScaling;
                     // Real dim = std * scalingFactor / num1;
                     Real dim = std * scalingFactor / numDefault;
@@ -301,14 +301,14 @@ Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet
             "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
             a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
         else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::IndexFixing,
-                                                                      dateIndex, sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::IndexFixing, dateIndex, sampleIndex, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::FXSpot, dateIndex,
-                                                                      sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::FXSpot, dateIndex, sampleIndex, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Generic, dateIndex,
-                                                                      sampleIndex, variable);
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::Generic, dateIndex, sampleIndex, variable);
         else
             QL_FAIL("scenario data does not provide data for " << variable);
     }
@@ -383,7 +383,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
         }
         Real E_OneOverNumeraire = mean(acc_OneOverNum);
         Real variance_t0 = boost::accumulators::variance(acc_delMtm);
-        Real sqrt_t0 = sqrt(variance_t0);
+        Real sqrt_t0 = std::sqrt(variance_t0);
         t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
         std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
         t0dimSimple[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
@@ -464,8 +464,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         vector<Real> numeraires(samples, 0.0);
         for (Size k = 0; k < samples; ++k)
             // numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
-            numeraires[k] =
-                cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, timeStep, k);
+            numeraires[k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::Numeraire, timeStep, k);
 
         auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
         vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);

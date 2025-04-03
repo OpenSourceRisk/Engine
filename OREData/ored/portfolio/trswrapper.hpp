@@ -62,7 +62,8 @@ public:
     TRSWrapper(const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
                const std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>>& underlyingIndex,
                const std::vector<QuantLib::Real> underlyingMultiplier, const bool includeUnderlyingCashflowsInReturn,
-               const QuantLib::Real initialPrice, const QuantLib::Currency& initialPriceCurrency,
+               const QuantLib::Real initialPrice, const QuantLib::Real portfolioInitialPrice, const std::string portfolioId,
+               const QuantLib::Currency& initialPriceCurrency,
                const std::vector<QuantLib::Currency>& assetCurrency, const QuantLib::Currency& returnCurrency,
                const std::vector<QuantLib::Date>& valuationSchedule, const std::vector<QuantLib::Date>& paymentSchedule,
                const std::vector<QuantLib::Leg>& fundingLegs,
@@ -88,6 +89,8 @@ private:
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
+    QuantLib::Real portfolioInitialPrice_;
+    const std::string portfolioId_;
     const QuantLib::Currency initialPriceCurrency_;
     const std::vector<QuantLib::Currency> assetCurrency_;
     const QuantLib::Currency returnCurrency_;
@@ -115,6 +118,8 @@ public:
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
+    QuantLib::Real portfolioInitialPrice_;
+    std::string portfolioId_;
     QuantLib::Currency initialPriceCurrency_;
     std::vector<QuantLib::Currency> assetCurrency_;
     QuantLib::Currency returnCurrency_;
@@ -143,9 +148,11 @@ class TRSWrapper::engine : public QuantLib::GenericEngine<TRSWrapper::arguments,
 
 class TRSWrapperAccrualEngine : public TRSWrapper::engine {
 public:
+    explicit TRSWrapperAccrualEngine(const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve = {});
     void calculate() const override;
 
 private:
+    Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve_;
     /* Computes underlying value, fx conversion for each underlying and the start date of the nth current
        valuation period. Notice there might be more than one "current" valuation period, if a payment lag
        is present and nth refers to the nth such period in order the associated valuation periods are
@@ -167,6 +174,9 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+
+    // return underlying #i npv on today
+    Real getUnderlyingNPV(const Size i) const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;

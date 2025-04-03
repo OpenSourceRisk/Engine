@@ -32,14 +32,17 @@ public:
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const bool sloppySimDates = false);
+                  const std::vector<Date>& stickyCloseOutDates = {});
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                    const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                    const std::size_t addRegressor2) const override;
+                    const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
+    std::set<std::size_t> npvRegressors(const Date& obsdate,
+                                        const std::optional<std::set<std::string>>& relevantCurrencies) const override;
+    std::size_t numeraire(const Date& s) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
@@ -49,6 +52,13 @@ public:
     // t0 market data functions from the ModelCG interface
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
+
+    void useStickyCloseOutDates(const bool b) const override;
+
+    const Handle<CrossAssetModel>& cam() const { return cam_; };
+
+    std::size_t getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const;
+    std::size_t getInterpolatedIrState(const Date& d, const Size ccyIndex) const;
 
 protected:
     // ModelCGImpl interface implementation
@@ -62,16 +72,18 @@ protected:
     std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
     std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
     std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
-    std::size_t getNumeraire(const Date& s) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
+    // helper methods
+    Date adjustForStickyCloseOut(const Date& d) const;
+
     // input parameters
-    const Handle<CrossAssetModel> cam_;
-    const std::vector<Handle<YieldTermStructure>> curves_;
-    const std::vector<Handle<Quote>> fxSpots_;
-    const Size timeStepsPerYear_;
-    const std::vector<Size> projectedStateProcessIndices_;
-    const bool sloppySimDates_;
+    Handle<CrossAssetModel> cam_;
+    std::vector<Handle<YieldTermStructure>> curves_;
+    std::vector<Handle<Quote>> fxSpots_;
+    Size timeStepsPerYear_;
+    std::vector<Size> projectedStateProcessIndices_;
+    std::vector<Date> stickyCloseOutDates_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
@@ -95,12 +107,8 @@ protected:
 
     mutable std::size_t underlyingPathsCgVersion_ = 0;
 
-    // data when paths are injected via the AMCModelCG interface
-    const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
-    const std::vector<std::vector<std::size_t>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
-    Size overwriteModelSize_ = Null<Size>();
+    // state
+    mutable bool useStickyCloseOutDates_ = false;
 };
 
 } // namespace data

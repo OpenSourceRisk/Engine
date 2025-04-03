@@ -31,7 +31,7 @@ namespace data {
 QuantLib::Currency ScriptedInstrumentAmcCalculator::npvCurrency() { return parseCurrency(model_->baseCcy()); }
 
 std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulatePath(
-    const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
     QL_REQUIRE(relevantPathIndex.size() == relevantTimeIndex.size(),
@@ -110,7 +110,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
                "did not find npv result variable '" << npv_ << "' as scalar in context");
     QL_REQUIRE(npv->second.which() == ValueTypeWhich::Number,
                "result variable '" << npv_ << "' must be of type NUMBER, got " << npv->second.which());
-    result[0] = expectation(QuantLib::ext::get<RandomVariable>(npv->second));
+    result[0] = expectation(boost::get<RandomVariable>(npv->second));
 
     // the other components are given as the additional result _AMC_NPV
 
@@ -124,7 +124,7 @@ std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulateP
     for (Size i = 0; i < resultSize; ++i) {
         QL_REQUIRE(s->second[i].which() == ValueTypeWhich::Number,
                    "component #" << i << " in _AMC_NPV has wrong type, expected Number");
-        result[i + 1] = QuantLib::ext::get<RandomVariable>(s->second[i]);
+        result[i + 1] = boost::get<RandomVariable>(s->second[i]);
     }
 
     // extract variables that should be static in subsequent sticky close-out runs

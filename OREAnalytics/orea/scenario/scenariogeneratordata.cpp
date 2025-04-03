@@ -37,8 +37,7 @@ namespace ore {
 namespace analytics {
 
 void ScenarioGeneratorData::clear() {
-    if (grid_)
-        grid_->truncate(0);
+    grid_ = QuantLib::ext::make_shared<DateGrid>();
 }
 
 void ScenarioGeneratorData::setGrid(QuantLib::ext::shared_ptr<DateGrid> grid) { 
@@ -93,7 +92,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
         try {
             samples_ = std::stol(c);
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             WLOG("enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES is set ("
                  << c << ") but can not be parsed to a number - ignoring.");
         }

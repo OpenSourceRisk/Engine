@@ -74,15 +74,18 @@ public:
 
     /* analoguous to buildCube() in the single-threaded engine, results are retrieved using below constructors
        if no cptyCalculators is given a function returning an empty vector of calculators will be returned */
-    void
-    buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
-              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
-                  cptyCalculators = {},
-              bool mporStickyDate = true, bool dryRun = false);
+    void buildCube(
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+        const ValuationEngine::ErrorPolicy errorPolicy = ValuationEngine::ErrorPolicy::RemoveAll,
+        const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
+            cptyCalculators = {},
+        bool mporStickyDate = true, bool dryRun = false);
 
     // result output cubes (mini-cubes, one per thread)
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
+
+    // TODO: add error reporting as in single-threaded engine
 
     // result netting cubes (might be null, if nettingSetCubeFactory is returning null)
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputNettingSetCubes() const {

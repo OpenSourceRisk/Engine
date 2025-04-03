@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
 #include <string>
 
@@ -95,6 +96,27 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
                                                   bool useXbsCurves = false);
 
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
+
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                                              QuantLib::Period tenor,
+                                              FutureConvention::DateGenerationRule rule);
+
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
+
+/*! convert the creditCurveId into the internal name for the index tranche credit curve*/
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate);
+
+/*! Return the credit curve with the index specific recovery rate for cdo pricing model*/
+QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                                                        const std::string& creditCurveId,
+                                                                        const std::string& configuration,
+                                                                        const double assumedRecoveryRate);
+
+std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows);
+
+std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
+
+std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
 
 } // namespace data
 } // namespace ore

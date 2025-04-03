@@ -29,7 +29,7 @@
 
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
-
+#include <qle/utilities/inflation.hpp>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -171,7 +171,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
             QuantLib::ext::dynamic_pointer_cast<YoYInflationIndexWrapper>(yoyIndex_);
         QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroTs =
             yiiWrapper->zeroIndex()->zeroInflationTermStructure().currentLink();
-        Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)));
+        Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)), zeroTs->observationLag());
 
         Real k = Null<Real>();
         if (fairSwap1Y < overlappingStrikes.back()) {
@@ -230,7 +230,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
         for (Size k = 0; k < numYears; ++k)
             sumDiscount += nominalTS_->discount(k + 1.0);
 
-        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat));
+        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat), observationLag());
         for (Size i = 0; i < cfStrikes_.size(); ++i) {
             Real K = cfStrikes_[i];
             // Real K = std::pow(1.0 + K_quote, mat.length());
@@ -315,10 +315,11 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // however for the data to be self-consistent
     // we pick this as the end of the curve
     Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
-
+    QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
+        false, nominalTS_->referenceDate(), observationLag(), yoyIndex()->frequency(), yoyIndex());
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
-        nominalTS_->referenceDate(), calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
-        yoyIndex()->interpolated(), baseYoYRate, YYhelpers));
+        nominalTS_->referenceDate(), baseDate, baseYoYRate, observationLag(), yoyIndex()->frequency(), yoyIndex()->interpolated(),
+        dayCounter(), YYhelpers));
     pYITS->recalculate();
     yoy_ = pYITS; // store
 

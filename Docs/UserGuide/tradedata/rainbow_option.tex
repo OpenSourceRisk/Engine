@@ -1,4 +1,12 @@
 \subsubsection{Rainbow Options}
+\label{sec:rainbowoption}
+
+%See Ouwehand and West, Pricing Rainbow Options, Wilmott, also on Research Gate
+
+Rainbow options are European calls or puts on the maximum or mimimum of
+of a range of assets. We denote the prices of $n$ assets at expiry $S_1, S_2,\ldots,
+S_n$ and initial prices $S_1^0, S_2^2,\ldots,S_n^0$ with respective constant
+weights $w_1$,\ldots,$w_n$. The payoff at expiry of the rainbow options covered here is
 
 Rainbow Options are represented as traditional trades or {\em scripted trades}, refer to the scripted trade documentation in ore/Docs/ScriptedTrade
 for an introduction of the latter. Each of the supported variations, all European style, is represented by a separate
@@ -21,7 +29,7 @@ $\max(\omega(\min(w_1 S_1,\ldots, w_n S_n) - K, 0)$ & MinRainbowOption  \\
 \hline
 \end{tabular}
 \end{center}
-\caption{Rainbow option types and associated script names.}
+\caption{Rainbow option types and associated script names. $\omega=\pm 1$ distinguishes call (+1) and put (-1).}
 \label{tab:rainbowoptions}
 \end{table}
 
@@ -34,7 +42,7 @@ container names
   \item CommodityRainbowOption / CommodityRainbowOptionData
 \end{itemize}
 
-Trade input and the associated payoff script are described in the following for all supported Rainbow Option variations.
+Trade input and the associated payoff script are described in the following for 12 supported Rainbow Option variations.
 
 \subsubsection*{Best Of Asset Or Cash Rainbow Option}
 

@@ -110,6 +110,7 @@ void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFac
 
     inst->setPricingEngine(eqOptBuilder->engine(name1(), name2(), ccy));
     setSensitivityTemplate(*eqOptBuilder);
+    addProductModelEngine(*eqOptBuilder);
     
     // Add additional premium payments
     Position::Type positionType = parsePositionType(option_.longShort());
@@ -124,6 +125,9 @@ void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFac
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst, mult, additionalInstruments, additionalMultipliers));
     npvCurrency_ = currency_;
     maturity_ = std::max(lastPremiumDate, std::max(maturity_, valuationDate));
+    maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date"
+                    : maturity_ == valuationDate ? "Valuation Date"
+                                                 : "Maturity Date";
     notional_ = amount_;
     notionalCurrency_= currency_;
 }

@@ -37,6 +37,7 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 
 using QuantExt::BlackVarianceCurve3;
 using QuantExt::CrossCcyBasisSwapHelper;

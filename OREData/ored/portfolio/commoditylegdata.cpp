@@ -118,13 +118,13 @@ ostream& operator<<(std::ostream& out, const CommodityPricingDateRule& cpdr) {
 }
 
 CommodityFixedLegData::CommodityFixedLegData()
-    : ore::data::LegAdditionalData("CommodityFixed"),
+    : ore::data::LegAdditionalData(LegType::CommodityFixed, false),
       commodityPayRelativeTo_(CommodityPayRelativeTo::CalculationPeriodEndDate) {}
 
 CommodityFixedLegData::CommodityFixedLegData(const vector<Real>& quantities, const vector<string>& quantityDates,
                                              const vector<Real>& prices, const vector<string>& priceDates,
                                              CommodityPayRelativeTo commodityPayRelativeTo, const string& tag)
-    : LegAdditionalData("CommodityFixed"), quantities_(quantities), quantityDates_(quantityDates), prices_(prices),
+    : LegAdditionalData(LegType::CommodityFixed, false), quantities_(quantities), quantityDates_(quantityDates), prices_(prices),
       priceDates_(priceDates), commodityPayRelativeTo_(commodityPayRelativeTo), tag_(tag) {}
 
 void CommodityFixedLegData::setQuantities(const vector<Real>& quantities) {
@@ -169,7 +169,7 @@ XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) const {
 }
 
 CommodityFloatingLegData::CommodityFloatingLegData()
-    : ore::data::LegAdditionalData("CommodityFloating"),
+    : ore::data::LegAdditionalData(LegType::CommodityFloating, false),
       priceType_(CommodityPriceType::FutureSettlement),
       commodityQuantityFrequency_(CommodityQuantityFrequency::PerCalculationPeriod),
       commodityPayRelativeTo_(CommodityPayRelativeTo::CalculationPeriodEndDate),
@@ -188,7 +188,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     bool isInArrears, Natural futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
     bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
     Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex)
-    : LegAdditionalData("CommodityFloating"), name_(name), priceType_(priceType), quantities_(quantities),
+    : LegAdditionalData(LegType::CommodityFloating, false), name_(name), priceType_(priceType), quantities_(quantities),
       quantityDates_(quantityDates), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), spreads_(spreads), spreadDates_(spreadDates),
       gearings_(gearings), gearingDates_(gearingDates), pricingDateRule_(pricingDateRule),

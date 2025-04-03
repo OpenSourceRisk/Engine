@@ -135,7 +135,7 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 configs_[type][curveId] = config;
                 unparsed_.at(type).erase(curveId);
             } catch (std::exception& ex) {
-                string err = "Curve config under node '" + to_string(type) + " was requested, but could not be parsed.";
+	        string err = "Curve config " + curveId + " under node '" + to_string(type) + "' was requested, but could not be parsed.";
                 StructuredCurveErrorMessage(curveId, err, ex.what()).log();
                 QL_FAIL(err);
             }
@@ -544,6 +544,14 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigIrSwaptionVols_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "YieldCurves")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigYieldCurves_.fromXML(tmp3);
+        }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "InflationCapFloorVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigInflationCapFloorVols_.fromXML(tmp3);
+        }
     }
 
     // Load YieldCurves, FXVols, etc, etc
@@ -586,8 +594,39 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
     addNodes(doc, parent, "CommodityCurves");
     addNodes(doc, parent, "CommodityVolatilities");
     addNodes(doc, parent, "Correlations");
+    addReportConfigurationNode(doc, parent);
 
     return parent;
+}
+
+// Append to the parent node a ReportConfiguration node generated from member variables
+void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const {
+    // Allocate a node to contain the ReportConfiguration data
+    XMLNode* node = doc.allocNode("ReportConfiguration");
+    // A function to append data from member variables (ReportConfig objects) to the ReportConfiguration node
+    auto f = [&doc, node](const ReportConfig& rc, const string& label) {
+        // From the ReportConfig object, generate a (possibly null) node.  If it exists it will have the label "Report".
+        if (const auto& xml = rc.toXML(doc)) {
+            // If the generated Report node has no children then exit
+            if (XMLUtils::getChildrenNodes(xml, "").empty())
+                return;
+            // Append the data from the Report node to a new child node called "label" in the ReportConfiguration node
+            XMLNode* child = doc.allocNode(label);
+            XMLUtils::appendNode(node, child);
+            XMLUtils::appendNode(child, xml);
+        }
+    };
+    // Call the above function for each of the ReportConfig members
+    f(reportConfigEqVols_, "EquityVolatilities");
+    f(reportConfigFxVols_, "FXVolatilities");
+    f(reportConfigCommVols_, "CommodityVolatilities");
+    f(reportConfigIrCapFloorVols_, "IRCapFloorVolatilities");
+    f(reportConfigIrSwaptionVols_, "IRSwaptionVolatilities");
+    f(reportConfigYieldCurves_, "YieldCurves");
+    f(reportConfigInflationCapFloorVols_, "InflationCapFloorVolatilities");
+    // If the newly generated ReportConfiguration node contains any data then append it to the parent node
+    if (!XMLUtils::getChildrenNodes(node, "").empty())
+        XMLUtils::appendNode(parent, node);
 }
 
 void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c) {

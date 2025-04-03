@@ -308,9 +308,11 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 namespace ore {
 namespace data {
 
-Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                       RequiredFixings& requiredFixings, const string& configuration,
-                                       const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+Leg CommodityFixedLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
 
     // Check that our leg data has commodity fixed leg data
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(data.concreteLegData());
@@ -408,9 +410,11 @@ Leg CommodityFixedLegBuilder::buildLeg(const LegData& data, const QuantLib::ext:
     return commodityFixedLeg;
 }
 
-Leg CommodityFloatingLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                          RequiredFixings& requiredFixings, const string& configuration,
-                                          const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+Leg CommodityFloatingLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
 
     // allAveraging_ flag should be reset to false before each build. If we do not do this, the allAveraging_
     // flag may have been set from building a different leg previously

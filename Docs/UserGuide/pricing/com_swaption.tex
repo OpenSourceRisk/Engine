@@ -1,0 +1,368 @@
+\subsubsection{Commodity Swaption - Future Settlement Prices}
+\label{pricing:com_swaption_future_settlement_prices}
+
+This section describes the European swaption pricing when the underlying swap references commodity future settlement prices. In particular, we consider the case where on each pricing date on the commodity floating leg of the underlying swap, the settlement price of the prompt future contract is observed. The calculations can be easily generalised to a non-prompt future contract.
+
+We assume that there are $N$ future contracts and, following Section 2.2 of \cite{Clark_2014}, we assume that each future contract price follows a driftless lognormal process under the risk neutral measure in the domestic currency
+\begin{equation}
+\label{eq:comm_future_price_processes}
+dF_{\alpha}(t) = \sigma_{\alpha} F_{\alpha}(t) dW_{\alpha}(t)
+\end{equation}
+where $\alpha = 1, \ldots, N$, $0 \leq t \leq s_{\alpha}$ and $s_{\alpha}$ in the expiry date of the $\alpha$-th future contract. Additionally, we assume that the correlation between any two future price processes is driven by an instantaneous correlation between their two driving Brownian motions. In particular, we assume that
+\begin{equation}
+d \langle W_{\alpha}(t), W_{\gamma}(t) \rangle = \rho_{\alpha, \gamma}
+\end{equation}
+for $1 \leq \alpha < \gamma \leq N$. Instead of providing a full correlation matrix, it is convenient in certain cases to parameterise the correlation. In ORE+, we allow for a parameterisation of the form
+\begin{equation}
+\rho_{\alpha, \gamma} = \exp \left\{ -\beta \left( s_{\gamma} - s_{\alpha} \right) \right\}
+\end{equation}
+where $\beta \geq 0$ and a value of $\beta$ equal to $0$ gives an instantaneous correlation of $1$ between all future contract price processes.
+
+We can now write down some straightforward properties of the future price processes that we will use later
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+F_{\alpha}(t) &= F_{\alpha}(0) \exp \left\{ - \frac{1}{2} \sigma^2_{\alpha} t + \sigma_{\alpha} W_{\alpha}(t) \right\} \\
+\Ex{F^2_{\alpha}(t)} &= F^2_{\alpha}(0) \exp \left\{ \sigma^2_{\alpha} t \right\} \label{eq:future_second_moment} \\
+\Ex{F_{\alpha}(t)F_{\gamma}(t)} &= F_{\alpha}(0) F_{\gamma}(0) \exp \left\{ \rho_{\alpha, \gamma} \sigma_{\alpha} \sigma_{\gamma} t \right\} \label{eq:future_exp_product}
+\end{align}
+\endgroup
+
+We now define the commodity swap underlying the commodity swaption that we are valuing. The commodity swap will exchange a sequence of payments that depend on known fixed prices, the commodity fixed leg, against a sequence of payments that reference the settlement prices of the future contracts, the commodity floating leg. The swap has $n$ calculation periods denoted by $I_1, \ldots, I_n$. Associated with the $i$-th calculation period, $I_i$, we have the commodity quantity for the calculation period denoted by $N_i$, the fixed leg price denoted by $K_i$ and the payment date denoted by $\tau_i$. On the commodity floating leg, each calculation period, $I_i$, contains $n_i$ pricing dates $t_{i,1}, \ldots, t_{i, n_i}$. On each pricing date, the settlement price of the prompt future contract is observed. To associate a pricing date $t_{i,j}$, $j = 1, \ldots, n_i$ with its prompt future contract we define the function $T:[0, +\infty) \to \{ 0, 1, \ldots, N \}$. This function takes a pricing date and returns the index of the future contract whose settlement price is to be observed. In particluar, this function also defines the roll date convention which can be specified on commodity swap contracts that have a floating leg with averaging. We now define the floating price associated with each calculation period, $I_i$, as
+\begin{equation}
+\frac{1}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_{i,j})
+\end{equation}
+Note that we can have $n_i = 1$ for $i = 1, \ldots, n$. In this case, we have a non-averaging commodity floating leg. In other words, the commodity future contract settlement price is observed on a single date in the calculation period to determine the floating price for the calculation period. If $n_i > 1$, the calculation period $I_i$ is an averaging period. In general, a commodity swap will be either non-averaging or averaging. In the case of averaging swaps, the pricing dates for a calculation period are generally defined as being every business day in the calculation period. The payoff $\Pi_i$ on payment date $\tau_i$ for a commodity swap defined in this way is given by
+\begin{equation}
+\Pi_i = \omega \left[ \frac{1}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_{i,j}) - K_i \right] N_i
+\end{equation}
+where $\omega$ is $1$ for a payer swap and $-1$ for a receiver swap.
+
+We now assume that we have a European swaption on the swap defined above with exercise date $t_e$ where $t_e < t_{1,1}$. We assume in what follows that we have deterministic domestic interest rates with $P(t,T)$ denoting the discount factor at time $t$ for maturity $T$. The value of the swap, $\hat{V}(t_e)$, at time $t_e$ is therefore given by
+\begin{equation}
+\label{eq:value_swap_te}
+\begin{split}
+\hat{V}(t_e) &= \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} \CEx{F_{T(t_{i,j})}(t_{i,j})}{\mathcal{F}_{t_e}} \\
+             &\qquad - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i \\
+             &= \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_e) - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i
+\end{split}
+\end{equation}
+We note that the first term in \eqref{eq:value_swap_te} is the value of the swap's floating leg at $t_e$ and the second term is the value of the swap's fixed leg at $t_e$.
+
+Now, the value of the swaption, $V(0)$, at time zero is given by
+\begin{equation}
+\label{eq:value_swaption_t0}
+V(0) = P(0, t_e) \Ex{\hat{V}(t_e)^{+}}
+\end{equation}
+Monte Carlo simulation would be one option for calculating a value for the expectation in \eqref{eq:value_swaption_t0}.
+
+Following Section 2.7.4.2 of \cite{Clark_2014}, we can calculate an approximate value for the expectation in \eqref{eq:value_swaption_t0} by replacing the floating leg with a lognormally distributed random variable $X$ whose first and second moments match those of the floating leg. Formally, we define
+\begin{equation}
+A(t_e) = \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_e)
+\end{equation}
+and let $X \sim LN(\mu_X, \sigma^2_X t_e)$ where we impose the conditions
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\Ex{A(t_e)} &= \Ex{X} = \exp \left\{ \mu_X + \frac{1}{2} \sigma^2_X t_e \right\} \\
+\Var{A(t_e)} &= \Var{X} = \left[ e^{\sigma^2_X t_e} - 1 \right] \Ex{X}^2
+\end{align}
+\endgroup
+which yields
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\sigma_X &= \sqrt{ \frac{1}{t_e} \ln \frac{\Ex{A^2(t_e)}}{\Ex{A(t_e)}^2} } \label{eq:future_sigma_x} \\
+\mu_X &= \ln \Ex{A(t_e)} - \frac{1}{2} \sigma^2_X t_e \label{eq:future_mu_x}
+\end{align}
+\endgroup
+Now, defining the value of the fixed commodity leg at $t_e$ as
+\begin{equation}
+K^{*} = \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i
+\end{equation}
+we can write the approximate value, $\tilde{V}(0)$, of the swaption at time zero as
+\begin{equation}
+\tilde{V}(0) = P(0, t_e) \Ex{\left[ \omega \left( X - K^{*} \right) \right]^{+}}
+\end{equation}
+This is the familiar expectation that appears in the Black-76 model as outlined in Section \ref{models:black}. In particular, using the $\text{Black}$ function defined in Section \ref{models:black}, we have
+\begin{equation}
+\tilde{V}(0) = P(0, t_e) \text{Black} \left( K^{*}, \Ex{A(t_e)}, \sigma_X \sqrt{t_e}, \omega \right)
+\end{equation}
+
+All that remains is to write down the explicit value for $\Ex{A(t_e)}$ and $\Ex{A^2(t_e)}$ appearing in \eqref{eq:future_sigma_x} and \eqref{eq:future_mu_x}. It is clear that
+\begin{equation}
+\label{eq:exp_A_te}
+\Ex{A(t_e)} = \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(0)
+\end{equation}
+In order to calculate $\Ex{A^2(t_e)}$, we write down an explicit expression for $A^2(t_e)$
+\begin{equation}
+\begin{split}
+& A^2(t_e) = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_e) \right]^2 \\
+         &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \left[ \sum_{j=1}^{n_k} F_{T(t_{k,j})}(t_e) \sum_{l=1}^{n_i} F_{T(t_{i,l})}(t_e) \right]
+\end{split}
+\end{equation}
+which in turn gives
+\begin{equation}
+\label{eq:future_A_te_2}
+\begin{split}
+& A^2(t_e) = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2_{T(t_{i,j})}(t_e) \right. \\
+         &\quad + \left. 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F_{T(t_{i,k})}(t_e) F_{T(t_{i,l})}(t_e) \right] \\
+         &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \left[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F_{T(t_{k,j})}(t_e) F_{T(t_{i,l})}(t_e) \right]
+\end{split}
+\end{equation}
+Now, taking the expectation and using \eqref{eq:future_second_moment} and \eqref{eq:future_exp_product}, we get
+\begin{equation}
+\label{eq:exp_future_A_te_2}
+\begin{split}
+& \Ex{A^2(t_e)} = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2_{T(t_{i,j})}(0) \exp \left\{ \sigma^2_{T(t_{i,j})} t_e \right\} \right. \\
+              &\quad \left. + 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F_{T(t_{i,k})}(0) F_{T(t_{i,l})}(0) \exp \Big\{ \rho_{T(t_{i,k}), T(t_{i,l})} \sigma_{T(t_{i,k})} \sigma_{T(t_{i,l})} t_e \Big\} \right] \\
+              &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \bigg[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F_{T(t_{k,j})}(0) \bigg. \\
+              &\qquad \qquad \bigg. F_{T(t_{i,l})}(0) \exp \Big\{ \rho_{T(t_{k,j}), T(t_{i,l})} \sigma_{T(t_{k,j})} \sigma_{T(t_{i,l})} t_e \Big\} \bigg]
+\end{split}
+\end{equation}
+
+\underline{FX adjustment}
+
+If the underlying swap references a commodity quoted in a currency different from the swaption currency we must adjust \eqref{eq:exp_A_te} and \eqref{eq:exp_future_A_te_2} accordingly.
+
+We assume that the FX Spot rate $Z$  follows a Geometric Brownian Motion:
+\begin{equation}
+\label{eq:fx_rate_dynamics}
+\begin{split}
+dZ/Z = \mu_{Z}(t)dt + \sigma_{Z}(t) dW_{Z}
+\end{split}
+\end{equation}
+
+For simplicity we assume that $\sigma_{Z}=0$ and the adjustment involves converting each futures price with the FX-forward at the price observation time. For completeness we write out the required adjustments.
+
+The floating price associated with each calculation period, $I_i$, becomes
+\begin{equation}
+\frac{1}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_{i,j}) Z(t_{i,j})
+\end{equation}
+
+And we have:
+
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\Ex{F_{\alpha}(t)Z(t)} &= F_{\alpha}(0) Z(0) \exp \left\{ (r_d - r_f) t + \rho_{F_{\alpha}, Z} \sigma_{F_{\alpha}} \sigma_{Z} t \right\} \label{eq:future_fx_exp_product} \\
+\Ex{F^2_{\alpha}(t)Z^2(t)} &= F^2_{\alpha}(0)Z^2(0) \exp \left\{ 2 (r_d - r_f) t + \sigma^2_{\alpha} t + \sigma^2_{Z} t + 4 \rho_{F_{\alpha}, Z} \sigma_{F_{\alpha}} \sigma_{Z} t \right\} \label{eq:future_fx_square}
+\end{align}
+\endgroup
+
+\eqref{eq:value_swap_te} becomes:
+\begin{equation}
+\label{eq:value_swap_te_fx}
+\begin{split}
+\hat{V}(t_e) = \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_e) Z(t_{i,j}) - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i
+\end{split}
+\end{equation}
+
+As before, we can calculate an approximate value for the expectation in (\eqref{eq:value_swap_te_fx}) by replacing the Floating leg with a lognormally distributed random variable X whose first and second moments match those of the floating leg, with:
+\begin{equation}
+A(t_e) = \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(t_e) Z(t_{i,j})
+\end{equation}
+
+Using \eqref{eq:future_fx_exp_product}, with $\sigma_{Z}=0$, we get:
+\begin{equation}
+\label{eq:exp_A_te_fx}
+\begin{split}
+\Ex{A(t_e)} &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(0) Z(t_e) \exp \left\{ (r_d(t_e, t_{i,j}) - r_f(t_e, t_{i,j})) (t_{i,j} - t_e) \right\} \\
+            &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F_{T(t_{i,j})}(0) Z(t_e, t_{i,j}) 
+\end{split}
+\end{equation}
+
+where $Z(t_1, t_2)$ is projected forward FX rate. And:
+\begin{equation}
+\label{eq:exp_future_A_te_2_te_fx}
+\begin{split}
+& \Ex{A^2(t_e)} = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2_{T(t_{i,j})}(0)Z^2(t_e,t_{i,j}) \exp \left\{ \sigma^2_{T(t_{i,j})} t_e \right\} \right. \\
+              &\quad \left. + 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F_{T(t_{i,k})}(0)Z(0,t_{i,k}) F_{T(t_{i,l})}(0)Z(t_e,t_{i,l}) \exp \Big\{ \rho_{T(t_{i,k}), T(t_{i,l})} \sigma_{T(t_{i,k})} \sigma_{T(t_{i,l})} t_e \Big\} \right] \\
+              &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \bigg[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F_{T(t_{k,j})}(0) Z(t_e,t_{k,j}) \bigg. \\
+              &\qquad \qquad \bigg. F_{T(t_{i,l})}(0) Z(t_e,t_{i,l}) \exp \Big\{ \rho_{T(t_{k,j}), T(t_{i,l})} \sigma_{T(t_{k,j})} \sigma_{T(t_{i,l})} t_e \Big\} \bigg]
+\end{split}
+\end{equation}
+
+
+\subsubsection{Commodity Swaption - Spot Prices}
+\label{pricing:com_swaption_spot_prices}
+
+This section describes the European swaption pricing when the underlying swap references a commodity spot price. In particular, we consider the case where on each pricing date on the commodity floating leg of the underlying swap, the spot price of a commodity is observed.
+
+Following Section 2.2.5 of \cite{Clark_2014}, we assume that the spot price process under the risk neutral measure in the domestic currency is given by
+\begin{equation}
+\label{eq:comm_spot_price_process}
+dS(t) = \left[ r(t) - r_f(t) \right] S(t) dt + \sigma_{S}(t) S(t) dW(t)
+\end{equation}
+where $r(t)$, $r_f(t)$ and $\sigma_{S}(t)$ are deterministic with $r(t)$ being the risk free domestic rate, $r_f(t)$ the commodity convenience yield and $\sigma_{S}(t)$ the instantaneous volatility. Note that we have
+\begin{equation}
+P(t, T) = \exp \left\{ -\int_t^T r(u) du \right\}
+\end{equation}
+for $0 \leq t \leq T < +\infty$ where $P(t, T)$ is as defined in Section \ref{pricing:com_swaption_future_settlement_prices} above.
+
+We can now write down some straightforward properties of the spot price process that we will use later. Solving the SDE for $S(t)$, we get
+\begin{equation}
+\begin{split}
+S(t_2) &= S(t_1) \exp \left\{ \int_{t_1}^{t_2} r(u) - r_f(u) du \right. \\
+       &\qquad + \left. \int_{t_1}^{t_2} \sigma_S(u) dW(u) - \frac{1}{2} \int_{t_1}^{t_2} \sigma^2_S(u) du \right\}
+\end{split}
+\end{equation}
+for $0 \leq t_1 \leq t_2 < +\infty$. The expected value at $t_2$ given information up to and including $t_1$ follows immediately 
+\begin{equation}
+\CEx{S(t_2)}{\mathcal{F}_{t_1}} = S(t_1) \exp \left\{ \int_{t_1}^{t_2} r(u) - r_f(u) du \right\} \label{eq:spot_exp_value}
+\end{equation}
+It will also be useful to look at $S^2(t)$ which is given by
+\begin{equation}
+\begin{split}
+S^2(t_2) &= S^2(t_1) \exp \left\{ 2 \int_{t_1}^{t_2} r(u) - r_f(u) du + \int_{t_1}^{t_2} \sigma^2_S(u) du \right. \\
+         &\qquad + \left. \int_{t_1}^{t_2} 2 \sigma_S(u) dW(u) - \frac{1}{2} \int_{t_1}^{t_2} \left(2 \sigma_S(u) \right)^2 du \right\}
+\end{split}
+\end{equation}
+with associated conditional expected value
+\begin{equation}
+\CEx{S^2(t_2)}{\mathcal{F}_{t_1}} = S^2(t_1) \exp \left\{ 2 \int_{t_1}^{t_2} r(u) - r_f(u) du + \int_{t_1}^{t_2} \sigma^2_S(u) du \right\} \label{eq:spot_second_moment}
+\end{equation}
+Note that the value of a $T$-maturity long forward contract on the commodity at time $t$ with strike $K$ is given by
+\begin{equation}
+V_f(t, T) = P(t, T) \CEx{S(T) - K}{\mathcal{F}_{t}} \label{eq:spot_forward_value}
+\end{equation}
+We denote by $F(t, T)$ the value of $K$ that gives the contract a value of zero at time $t$. This quantity is the $T$-maturity forward rate. It is clear from this and \eqref{eq:spot_exp_value} that
+\begin{equation}
+F(t, T) = \CEx{S(T)}{\mathcal{F}_{t}} = S(t) \exp \left\{ \int_{t}^{T} r(u) - r_f(u) du \right\} \label{eq:spot_forward_rate}
+\end{equation}
+One final quantity that will be useful in subsequent calculations below is the expectation of the product of commodity prices at two separate times. In particular, using the tower property of conditional expectation, \eqref{eq:spot_exp_value} and \eqref{eq:spot_second_moment}
+\begin{equation}
+\label{eq:comm_spot_exp_product}
+\begin{split}
+\CEx{S(t_2)S(t_3)}{\mathcal{F}_{t_1}} &= \CEx{ \CEx{S(t_2)S(t_3)}{\mathcal{F}_{t_2}} }{\mathcal{F}_{t_1}} \\
+&= \CEx{S(t_2) \CEx{S(t_3)}{\mathcal{F}_{t_2}} }{\mathcal{F}_{t_1}} \\
+&= \CEx{S^2(t_2) \exp \left\{ \int_{t_2}^{t_3} r(u) - r_f(u) du \right\} }{\mathcal{F}_{t_1}} \\
+&= F(t_1, t_2) F(t_1, t_3) \exp \left\{ \int_{t_1}^{t_2} \sigma^2_S(u) du \right\}
+\end{split}
+\end{equation}
+for $0 \leq t_1 \leq t_2 \leq t_3 < +\infty$.
+
+Now, as in Section \ref{pricing:com_swaption_future_settlement_prices} above, we define the commodity swap underlying the commodity swaption that we are valuing. The commodity swap will exchange a sequence of payments that depend on known fixed prices, the commodity fixed leg, against a sequence of payments that reference the commodity spot price, the commodity floating leg. The swap has $n$ calculation periods denoted by $I_1, \ldots, I_n$. Associated with the $i$-th calculation period, $I_i$, we have the commodity quantity for the calculation period denoted by $N_i$, the fixed leg price denoted by $K_i$ and the payment date denoted by $\tau_i$. On the commodity floating leg, each calculation period, $I_i$, contains $n_i$ pricing dates $t_{i,1}, \ldots, t_{i, n_i}$. On each pricing date, the commodity spot price is observed. We now define the floating price associated with each calculation period, $I_i$, as
+\begin{equation}
+\frac{1}{n_i} \sum_{j=1}^{n_i} S(t_{i,j})
+\end{equation}
+Note that we can have $n_i = 1$ for $i = 1, \ldots, n$. In this case, we have a non-averaging commodity floating leg. In other words, the commodity spot price is observed on a single date in the calculation period to determine the floating price for the calculation period. If $n_i > 1$, the calculation period $I_i$ is an averaging period. In general, a commodity swap will be either non-averaging or averaging. In the case of averaging swaps, the pricing dates for a calculation period are generally defined as being every business day in the calculation period. The payoff $\Pi_i$ on payment date $\tau_i$ for a commodity swap defined in this way is given by
+\begin{equation}
+\Pi_i = \omega \left[ \frac{1}{n_i} \sum_{j=1}^{n_i} S(t_{i,j}) - K_i \right] N_i
+\end{equation}
+where $\omega$ is $1$ for a payer swap and $-1$ for a receiver swap.
+
+We now assume that we have a European swaption on the swap defined above with exercise date $t_e$ where $t_e < t_{1,1}$. The value of the swap, $\hat{V}(t_e)$, at time $t_e$ is therefore given by
+\begin{equation}
+\label{eq:spot_value_swap_te}
+\begin{split}
+\hat{V}(t_e) &= \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} \CEx{S(t_{i,j})}{\mathcal{F}_{t_e}} \\
+             &\qquad - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i \\
+             &= \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} S(t_e) \exp \left\{ \int_{t_e}^{t_{i,j}} r(u) - r_f(u) du \right\} \\
+             &\qquad - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i \\
+             &= \omega \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F(t_e, t_{i,j}) - \omega \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i
+\end{split}
+\end{equation}
+We note that the first term in \eqref{eq:spot_value_swap_te} is the value of the swap's floating leg at $t_e$ and the second term is the value of the swap's fixed leg at $t_e$.
+
+Now, the value of the swaption, $V(0)$, at time zero is given by
+\begin{equation}
+\label{eq:spot_value_swaption_t0}
+V(0) = P(0, t_e) \Ex{\hat{V}(t_e)^{+}}
+\end{equation}
+Monte Carlo simulation would be one option for calculating a value for the expectation in \eqref{eq:spot_value_swaption_t0}. For Monte Carlo simulation, it helps to write $\hat{V}(t_e)$ as
+\begin{equation}
+\label{eq:spot_value_swap_te_mc}
+\hat{V}(t_e) = \omega \sum_{i=1}^{n} \frac{P(0, \tau_i)}{P(0, t_e)} \left[ \frac{1}{n_i} \sum_{j=1}^{n_i} S(t_e) \frac{F(0, t_{i,j})}{F(0, t_e)} - K_i \right] N_i
+\end{equation}
+to make it clear that we only need to simulate the commodity spot price at $t_e$ which is straightforward.
+
+Following Section 2.7.4.1 of \cite{Clark_2014}, we can calculate an approximate value for the expectation in \eqref{eq:spot_value_swaption_t0} by replacing the floating leg with a lognormally distributed random variable $X$ whose first and second moments match those of the floating leg. Formally, we define
+\begin{equation}
+A(t_e) = \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F(t_e, t_{i,j})
+\end{equation}
+and let $X \sim LN(\mu_X, \sigma^2_X t_e)$ where we impose the conditions
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\Ex{A(t_e)} &= \Ex{X} = \exp \left\{ \mu_X + \frac{1}{2} \sigma^2_X t_e \right\} \\
+\Var{A(t_e)} &= \Var{X} = \left[ e^{\sigma^2_X t_e} - 1 \right] \Ex{X}^2
+\end{align}
+\endgroup
+which yields
+\begingroup
+\addtolength{\jot}{0.5em}
+\begin{align}
+\sigma_X &= \sqrt{ \frac{1}{t_e} \ln \frac{\Ex{A^2(t_e)}}{\Ex{A(t_e)}^2} } \label{eq:spot_sigma_x} \\
+\mu_X &= \ln \Ex{A(t_e)} - \frac{1}{2} \sigma^2_X t_e \label{eq:spot_mu_x}
+\end{align}
+\endgroup
+Now, defining the value of the fixed commodity leg at $t_e$ as
+\begin{equation}
+K^{*} = \sum_{i=1}^{n} P(t_e, \tau_i) K_i N_i
+\end{equation}
+we can write the approximate value, $\tilde{V}(0)$, of the swaption at time zero as
+\begin{equation}
+\tilde{V}(0) = P(0, t_e) \Ex{\left[ \omega \left( X - K^{*} \right) \right]^{+}}
+\end{equation}
+This is the familiar expectation that appears in the Black-76 model as outlined in Section \ref{models:black}. In particular, using the $\text{Black}$ function defined in Section \ref{models:black}, we have
+\begin{equation}
+\tilde{V}(0) = P(0, t_e) \text{Black} \left( K^{*}, \Ex{A(t_e)}, \sigma_X \sqrt{t_e}, \omega \right)
+\end{equation}
+
+All that remains is to write down the explicit value for $\Ex{A(t_e)}$ and $\Ex{A^2(t_e)}$ appearing in \eqref{eq:spot_sigma_x} and \eqref{eq:spot_mu_x}. For the expectation, we have
+\begin{equation}
+\begin{split}
+\Ex{A(t_e)} &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} \Ex{S(t_e)} \exp \left\{ \int_{t_e}^{t_{i,j}} r(u) - r_f(u) du \right\} \\
+            &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F(0, t_{i,j})
+\end{split}
+\end{equation}
+In order to calculate $\Ex{A^2(t_e)}$, we write down an explicit expression for $A^2(t_e)$
+\begin{equation}
+\begin{split}
+& A^2(t_e) = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F(t_e, t_{i,j}) \right]^2 \\
+         &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \left[ \sum_{j=1}^{n_k} F(t_e, t_{k,j}) \sum_{l=1}^{n_i} F(t_e, t_{i,l}) \right]
+\end{split}
+\end{equation}
+which in turn gives
+\begin{equation}
+\label{eq:spot_A_te_2}
+\begin{split}
+& A^2(t_e) = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2(t_e, t_{i,j}) \right. \\
+         &\quad + \left. 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F(t_e, t_{i,k}) F(t_e, t_{i,l}) \right] \\
+         &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \left[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F(t_e, t_{k,j}) F(t_e, t_{i,l}) \right]
+\end{split}
+\end{equation}
+Now, taking the expectation and using \eqref{eq:spot_second_moment} and \eqref{eq:spot_exp_value}, we get
+\begin{equation}
+\begin{split}
+& \Ex{A^2(t_e)} = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2(0, t_{i,j}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} \right. \\
+              &\quad \left. + 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F(0, t_{i,k}) F(0, t_{i,l}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} \right] \\
+              &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \bigg[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F(0, t_{k,j}) \bigg. \\
+              &\qquad \qquad \bigg. F(0, t_{i,l}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} \bigg]
+\end{split}
+\end{equation}
+
+\underline{FX adjustment}
+
+Similarly to \ref{pricing:com_swaption_future_settlement_prices}, if the underlying swap references a commodity quoted in a currency different from the swaption currency, we need to make adjustmentds for the FX rate. This gives us:
+
+\begin{equation}
+A(t_e) = \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F(t_e, t_{i,j}) Z(t_{i,j})
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\Ex{A(t_e)} &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} \Ex{S(t_e)} \exp \left\{ \int_{t_e}^{t_{i,j}} r(u) - r_f(u) du \right\} Z(t_e, t_{i,j}) \\
+            &= \sum_{i=1}^{n} P(t_e, \tau_i) \frac{N_i}{n_i} \sum_{j=1}^{n_i} F(0, t_{i,j}) Z(t_e, t_{i,j})
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+& \Ex{A^2(t_e)} = \sum_{i=1}^{n} P^2(t_e, \tau_i) \frac{N^2_i}{n^2_i} \left[ \sum_{j=1}^{n_i} F^2(0, t_{i,j}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} Z^2(t_e, t_(i,j)) \right. \\
+              &\quad \left.  + 2 \sum_{k=2}^{n_i} \sum_{l=1}^{k-1} F(0, t_{i,k}) F(0, t_{i,l}) Z(t_e, t_{i,k}) Z(t_e, t_{i,l}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} \right] \\
+              &\quad + 2 \sum_{k=2}^{n} \sum_{i=1}^{k-1} P(t_e, \tau_k) P(t_e, \tau_i) \frac{N_k N_i}{n_k n_i} \bigg[ \sum_{j=1}^{n_k} \sum_{l=1}^{n_i} F(0, t_{k,j}) \bigg. \\
+              &\qquad \qquad \bigg. F(0, t_{i,l}) \exp \left\{ \int_0^{t_e} \sigma^2_S(u) du \right\} Z(t_e, t_{k,j}) Z(t_e, t_{i,l}) \bigg]
+\end{split}
+\end{equation}

@@ -1,0 +1,16 @@
+\subsubsection{Year-on-Year Inflation Swap}
+\label{pricing:inf_yyiis}
+
+A Year-on-Year Inflation Swap is priced by discounting cashflows based on the 
+Year-on-Year Inflation Index forwarding curve:
+$$
+\NPV_{YoYLeg} = N\cdot \sum_{i=1}^n \left(\frac{I(t_i)}{I(t_{i-1})}-1\right) \cdot \delta_i\cdot P(t_i)
+$$
+where $I(t_i)$ is the relevant forward Year-on-Year inflation fixing for time 
+$t_i$.
+
+\medskip
+For CPI and Year-on-Year inflation indices, caps and floors are priced using 
+the Black model (see Section 7.4.2) for log-normal and shifted log-normal 
+volatilities, and the Bachelier model (see Section 7.4.1) for normal 
+volatilities. Pricing is analogous to pricing of caps and floors for IBOR indices.

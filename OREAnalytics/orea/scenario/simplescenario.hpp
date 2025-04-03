@@ -43,7 +43,7 @@ public:
     SimpleScenario() {}
     //! if sharedData is not provided, the instance will create its own shared data block
     SimpleScenario(Date asof, const std::string& label = std::string(), Real numeraire = 0,
-                   const boost::shared_ptr<SharedData>& sharedData = nullptr);
+                   const QuantLib::ext::shared_ptr<SharedData>& sharedData = nullptr);
 
     const Date& asof() const override { return asof_; }
     void setAsof(const Date& d) override { asof_ = d; }
@@ -54,7 +54,8 @@ public:
     Real getNumeraire() const override { return numeraire_; }
     void setNumeraire(Real n) override { numeraire_ = n; }
 
-    bool isAbsolute() const override { return isAbsolute_; }
+    const bool isAbsolute() const override { return isAbsolute_; }
+    const bool isPar() const override { return isPar_; }
     const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
     coordinates() const override {
         return sharedData_->coordinates;
@@ -71,11 +72,12 @@ public:
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
 
     void setAbsolute(const bool isAbsolute) override;
+    void setPar(const bool isPar) override { isPar_ = isPar; };
     void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
                         const std::vector<std::vector<Real>>& coordinates);
 
     //! get shared data block (for construction of sister scenarios)
-    const boost::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
+    const QuantLib::ext::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
 
     //! get data, order is the same as in keys()
     const std::vector<Real>& data() const { return data_; }
@@ -83,6 +85,7 @@ public:
 private:
     QuantLib::ext::shared_ptr<SharedData> sharedData_;
     bool isAbsolute_ = true;
+    bool isPar_ = false;
     Date asof_;
     std::string label_;
     Real numeraire_ = 0.0;

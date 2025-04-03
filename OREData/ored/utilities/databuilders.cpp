@@ -106,6 +106,7 @@
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cashposition.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -210,6 +211,7 @@
 
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/cudaenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -265,6 +267,7 @@ void dataBuilders() {
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
     ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
 
+    ORE_REGISTER_TRADE_BUILDER("CashPosition", CashPosition, false)
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
     ORE_REGISTER_TRADE_BUILDER("CommoditySpreadOption", CommoditySpreadOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityFutureOption", EquityFutureOption, false)
@@ -396,13 +399,27 @@ void dataBuilders() {
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(LGMAmcSwaptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcBondEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFwdBondEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
-    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanForwardOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgCurrencySwapEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwaptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwapEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanForwardOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanCSOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxForwardEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
+    // (Bond, FwdBond, EquityForward missing compared to "AMC" variants)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)
@@ -455,7 +472,6 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionACGAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionTWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderOptimised, false)
     ORE_REGISTER_ENGINE_BUILDER(CrossCurrencySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointIndexCdsEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointCdsMultiStateEngineBuilder, false)
@@ -485,6 +501,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(GaussCopulaMonteCarloCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondMultiStateDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CreditLinkedSwapEngineBuilder, false)
@@ -499,7 +516,9 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredNonStandardYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(QuantoEquityEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(QuantoEquityAmericanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanForwardOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
@@ -519,6 +538,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FormulaBasedCouponPricerBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(EuropeanSwaptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(CurrencySwapEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilderDeltaGamma, false)
@@ -544,6 +564,7 @@ void dataBuilders() {
 
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("OpenCL", QuantExt::OpenClFramework, false);
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("BasicCpu", QuantExt::BasicCpuFramework, false);
+    ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("CUDA", QuantExt::CudaFramework, false);
 }
 
 } // namespace ore::data

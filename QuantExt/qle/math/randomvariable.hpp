@@ -25,12 +25,15 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
-
 #include <ql/functional.hpp>
+
 #include <boost/timer/timer.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
 
 #include <initializer_list>
 #include <vector>
+#include <set>
 
 namespace QuantExt {
 
@@ -107,6 +110,9 @@ private:
     bool constantData_;
     bool* data_;
     bool deterministic_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 // inline element-wise access operators
@@ -180,6 +186,7 @@ struct RandomVariable {
     bool deterministic() const { return deterministic_; }
     void updateDeterministic();
     bool initialised() const { return n_ != 0; }
+    bool isfinite() const;
     Size size() const { return n_; }
     Real operator[](const Size i) const; // undefined if uninitialized or i out of bounds
     Real at(const Size i) const;         // with checks for initialized, i within bounds
@@ -248,6 +255,9 @@ private:
     double* data_;
     bool deterministic_;
     Real time_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 bool operator==(const RandomVariable& a, const RandomVariable& b);
@@ -376,6 +386,9 @@ inline double* RandomVariable::data() { return data_; }
   the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
 multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
-                     Size basisSystemSizeBound = Null<Size>());
+                     const std::set<std::set<Size>>& varGroups = {}, Size basisSystemSizeBound = Null<Size>());
 
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_KEY(QuantExt::Filter);
+BOOST_CLASS_EXPORT_KEY(QuantExt::RandomVariable);

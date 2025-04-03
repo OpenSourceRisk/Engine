@@ -54,7 +54,8 @@ public:
     LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
-               const bool setCalibrationInfo = false, const std::string& id = "unknwon");
+               const bool setCalibrationInfo = false, const std::string& id = "unknown",
+               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::RelativePriceError);
     //! Return calibration error
     Real error() const;
 
@@ -75,9 +76,12 @@ public:
     //@{
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
+    void recalibrate() const override;
+    void newCalcWithoutRecalibration() const override;
     //@}
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     void buildSwaptionBasket() const;
     void updateSwaptionBasketVols() const;
@@ -129,6 +133,7 @@ private:
     mutable std::vector<QuantLib::Real> swaptionVolCache_;
 
     bool forceCalibration_ = false;
+    mutable bool suspendCalibration_ = false;
 
     // LGM Observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

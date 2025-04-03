@@ -48,6 +48,7 @@ public:
                 mdFilterEqVols = std::find(tokens.begin(), tokens.end(), "EQVOLS") != tokens.end();
                 mdFilterIrVols = std::find(tokens.begin(), tokens.end(), "IRVOLS") != tokens.end();
                 mdFilterCommVols = std::find(tokens.begin(), tokens.end(), "COMMVOLS") != tokens.end();
+                mdFilterCpiVols = std::find(tokens.begin(), tokens.end(), "CPIVOLS") != tokens.end();
             }
         }
 
@@ -60,6 +61,7 @@ public:
         bool mdFilterEqVols = true;
         bool mdFilterIrVols = true;
         bool mdFilterCommVols = true;
+        bool mdFilterCpiVols = true;
     };
 
     MarketCalibrationReportBase(const std::string& calibrationFilter);
@@ -68,30 +70,55 @@ public:
     virtual void initialise(const std::string& label) {};
 
     // Add yield curve data to array
-    virtual void addYieldCurve(const QuantLib::Date& refdate,
+    void addYieldCurve(const QuantLib::Date& refdate,
                        QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name,
-                       bool isDiscount, const std::string& label) = 0;
+                       bool isDiscount, const std::string& label, QuantLib::Handle<QuantLib::IborIndex> iborIndex = QuantLib::Handle<QuantLib::IborIndex>());
+    virtual void
+    addYieldCurveImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name,
+                      bool isDiscount, const std::string& label, const std::string& type,
+                      QuantLib::Handle<QuantLib::IborIndex> iborIndex = QuantLib::Handle<QuantLib::IborIndex>()) = 0;
 
     // Add inflation curve data to array
-    virtual void addInflationCurve(const QuantLib::Date& refdate,
+    void addInflationCurve(const QuantLib::Date& refdate,
                                    QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> yts,
-                                   const std::string& name, const std::string& label) = 0;
+                                   const std::string& name, const std::string& label);
+    virtual void addInflationCurveImpl(const QuantLib::Date& refdate,
+                                   QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> yts,
+                                       const std::string& name, const std::string& label, const std::string& type) = 0;
 
-    virtual void addCommodityCurve(const QuantLib::Date& refdate,
+    void addCommodityCurve(const QuantLib::Date& refdate,
                                    QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts,
-                                   std::string const& name, std::string const& label) = 0;
+                                   std::string const& name, std::string const& label);
+    virtual void addCommodityCurveImpl(const QuantLib::Date& refdate,
+                                   QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts,
+                                    std::string const& name, std::string const& label, const std::string& type) = 0;
 
     // Add fx/eq/comm vol curve data to array
-    virtual void addFxVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                            const std::string& name, const std::string& label) = 0;
-    virtual void addEqVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                            const std::string& name, const std::string& label) = 0;
-    virtual void addCommVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                            const std::string& name, const std::string& label) = 0;
+    void addFxVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                            const std::string& name, const std::string& label);
+    void addEqVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                            const std::string& name, const std::string& label);
+    void addCommVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                            const std::string& name, const std::string& label);
+
+    void addEqFxVol(const std::string& type, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                    const std::string& id, const std::string& label);
+    virtual void addEqFxVolImpl(const std::string& type, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                                const std::string& id, const std::string& label) = 0;
 
     // Add ir vol curve data to array
-    virtual void addIrVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
-                          const std::string& name, const std::string& label) = 0;
+    void addIrVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
+                          const std::string& name, const std::string& label);
+    virtual void addIrVolImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol, const std::string& name,
+                              const std::string& label, const std::string& type) = 0;
+
+    // Add cpi vol curve data to array
+    void addCpiVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol,
+        const std::string& name, const std::string& label);
+
+    virtual void addCpiVolImpl(const QuantLib::Date& refdate,
+                           QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol, const std::string& name,
+                           const std::string& label, const std::string& type) = 0;
 
     // populate the calibration reports
     virtual void populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -103,6 +130,10 @@ public:
 
 private:
     CalibrationFilters calibrationFilters_;
+
+    // a map of already reported calibrations
+    const bool checkCalibrations(std::string label, std::string type, std::string id) const;
+    std::map<std::string, std::map<std::string, std::set<std::string>>> calibrations_;
 };
 
 class MarketCalibrationReport : public MarketCalibrationReportBase {
@@ -112,43 +143,39 @@ public:
     
     QuantLib::ext::shared_ptr<ore::data::Report> outputCalibrationReport() override;
 
-    void addYieldCurve(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts,
-                       const std::string& name, bool isDiscount, const std::string& label) override;
+    void addYieldCurveImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name, bool isDiscount, 
+        const std::string& label, const std::string& type,
+         QuantLib::Handle<QuantLib::IborIndex> iborIndex = QuantLib::Handle<QuantLib::IborIndex>()) override;
 
     // Add inflation curve data to array
-    void addInflationCurve(const QuantLib::Date& refdate,
-                           QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> yts, const std::string& name,
-                           const std::string& label) override;
+    void addInflationCurveImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::InflationCurveCalibrationInfo> yts, 
+                               const std::string& name, const std::string& label, const std::string& type) override;
 
     // Add commodity curve data to array
-    void addCommodityCurve(const QuantLib::Date& refdate,
-                           QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts, const std::string& name,
-                           const std::string& label) override;
+    void addCommodityCurveImpl(const QuantLib::Date& refdate,
+                           QuantLib::ext::shared_ptr<ore::data::CommodityCurveCalibrationInfo> yts, const std::string& name, 
+                           const std::string& label, const std::string& type) override;
 
     // Add fx/eq/comm vol curve data to array
-    void addFxVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                  const std::string& name, const std::string& label) override;
-    void addEqVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                  const std::string& name, const std::string& label) override;
-    void addCommVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                    const std::string& name, const std::string& label) override;
+    void addEqFxVolImpl(const std::string& type,
+                        QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
+                        const std::string& id, const std::string& label) override;
 
     // Add ir vol curve data to array
-    void addIrVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
-                  const std::string& name, const std::string& label) override;
+    void addIrVolImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
+                      const std::string& name, const std::string& label, const std::string& type) override;
+
+    // Add cpi vol curve data to array
+    virtual void addCpiVolImpl(const QuantLib::Date& refdate,
+                               QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol, const std::string& name,
+                               const std::string& label, const std::string& type) override;
 
 private:
      QuantLib::ext::shared_ptr<ore::data::Report> report_;
-     
-     // a map of already reported calibrations
-     std::map<std::string, std::map<std::string, std::set<std::string>>> calibrations_;
 
      void addRowReport(const std::string& moType, const std::string& moId, const std::string& resId,
                        const std::string& key1, const std::string& key2, const std::string& key3,
                        const boost::any& value);
-     void addEqFxVol(const std::string& type, QuantLib::ext::shared_ptr<ore::data::FxEqCommVolCalibrationInfo> vol,
-                     const std::string& id, const std::string& label);
-     const bool checkCalibrations(std::string label, std::string type, std::string id) const;
 };
 
 } // namespace analytics

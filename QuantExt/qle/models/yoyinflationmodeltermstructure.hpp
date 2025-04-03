@@ -84,6 +84,9 @@ public:
     virtual std::map<QuantLib::Date, QuantLib::Real> yoyRates(const std::vector<QuantLib::Date>& dates,
         const QuantLib::Period& obsLag = -1 * QuantLib::Days) const = 0;
 
+    void enableCache(const bool b = true) const { enableCache_ = b; }
+    virtual void clearCache() const {}
+
 protected:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
@@ -103,6 +106,8 @@ protected:
         called.
     */
     virtual void checkState() const {}
+
+    mutable bool enableCache_ = false;
 };
 
 }

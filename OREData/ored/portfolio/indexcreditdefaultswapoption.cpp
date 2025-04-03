@@ -110,7 +110,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
 
     // Need fixed leg data with one rate. This should be the standard running coupon on the index CDS e.g.
     // 100bp for CDX IG and 500bp for CDX HY.
-    QL_REQUIRE(legData.legType() == "Fixed", "Index CDS option " << id() << " requires fixed leg.");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "Index CDS option " << id() << " requires fixed leg.");
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();
@@ -289,7 +289,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
                                                     swap_.recoveryRate(), settleType == Settlement::Cash));
-    setSensitivityTemplate(*iCdsEngineBuilder);
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -315,10 +314,12 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     volCurveId_ = p.first;
     option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
+    addProductModelEngine(*iCdsOptionEngineBuilder);
 
     // Keep this comment about the maturity date being the underlying maturity instead of the option expiry.
     // [RL] Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
     maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Underlying Maturity";
 
     // Set Trade members _before_ possibly adding the premium payment below.
     legs_ = {cds->coupons()};
@@ -333,9 +334,12 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
-    maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                                        option_.premiumData(), -indicatorLongShort, ccy, engineFactory, configuration));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
+                                       option_.premiumData(), -indicatorLongShort, ccy, engineFactory,
+                                       configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     // Instrument wrapper depends on the settlement type.
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
@@ -348,7 +352,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, isPhysical, cds, 1.0, 1.0,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, exerciseDate, isPhysical, cds, 1.0, 1.0,
                                                                 additionalInstruments, additionalMultipliers);
     }
 

@@ -42,7 +42,7 @@ public:
                              QuantLib::ext::make_shared<ore::analytics::SimpleScenarioFactory>(false));
     //! returns a new scenario, using the base scenario as a starting point
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>
-    buildScenario(QuantLib::Date asof, bool isAbsolute, const std::string& label = "",
+    buildScenario(QuantLib::Date asof, bool isAbsolute, bool isPar = false, const std::string& label = "",
                   QuantLib::Real numeraire = 0.0) const override;
 
 private:

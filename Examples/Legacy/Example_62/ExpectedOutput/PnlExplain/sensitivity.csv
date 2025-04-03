@@ -1,0 +1,6 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma
+SwapLeg,false,DiscountCurve/USD/4/1Y,0.000100,,0.000000,USD,47649.66,-4.75,#N/A
+SwapLeg,false,DiscountCurve/USD/5/2Y,0.000100,,0.000000,USD,47649.66,-0.03,#N/A
+SwapLegFlow,false,DiscountCurve/USD/0/2W,0.000100,,0.000000,USD,97317.38,-0.08,#N/A
+SwapLegFlow,false,DiscountCurve/USD/4/1Y,0.000100,,0.000000,USD,97317.38,-4.68,#N/A
+SwapLegFlow,false,DiscountCurve/USD/5/2Y,0.000100,,0.000000,USD,97317.38,-0.13,#N/A

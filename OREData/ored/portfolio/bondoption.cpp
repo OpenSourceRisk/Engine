@@ -48,12 +48,12 @@ namespace data {
 
 void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Bond Option: " << id());
-    
+
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("Option");
     additionalData_["isdaSubProduct"] = string("Debt Option");
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
@@ -62,6 +62,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     Calendar calendar = parseCalendar(bondData_.calendar());
     QuantLib::ext::shared_ptr<QuantExt::BondOption> bondoption;
+
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
 
     // FIXME this won't work for zero bonds (but their implementation is incomplete anyhow, see bond.cpp)
     underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
@@ -75,6 +77,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     notional_ = underlying_->notional() * bondData_.bondNotional();
     notionalCurrency_ = underlying_->bondData().currency();
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
+    maturityType_ =
+        maturity_ == underlying_->maturity() ? "Underlying Bond Maturity Date" : "Option's Latest Premium Date";
 
     auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
     QL_REQUIRE(qlBondInstr, "BondOption::build(): could not cast to QuantLib::Bond");
@@ -99,13 +103,13 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
         if (bondData_.coupons().size() > 0) {
             auto cn = bondData_.coupons().front();
             const string& dc = cn.dayCounter();
-            if (!dc.empty()) 
+            if (!dc.empty())
                 dayCounter = parseDayCounter(dc);
             if (cn.schedule().rules().size() > 0)
                 freq = parsePeriod(cn.schedule().rules().front().tenor()).frequency();
         }
         callabilityPrice = QuantLib::InterestRate(strike_.value(), dayCounter, strike_.compounding(), freq);
-    }    
+    }
 
     Callability::Type callabilityType =
         parseOptionType(optionData_.callPut()) == Option::Call ? Callability::Call : Callability::Put;
@@ -125,11 +129,13 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
         QuantLib::ext::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
     QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
 
-    QuantLib::ext::shared_ptr<BlackBondOptionEngine> blackEngine = QuantLib::ext::dynamic_pointer_cast<BlackBondOptionEngine>(
-        bondOptionBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
-                                  bondData_.securityId(), bondData_.referenceCurveId(), bondData_.volatilityCurveId()));
+    QuantLib::ext::shared_ptr<BlackBondOptionEngine> blackEngine =
+        QuantLib::ext::dynamic_pointer_cast<BlackBondOptionEngine>(
+            bondOptionBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.securityId(),
+                                      bondData_.referenceCurveId(), bondData_.volatilityCurveId()));
     bondoption->setPricingEngine(blackEngine);
     setSensitivityTemplate(*bondOptionBuilder);
+    addProductModelEngine(*bondOptionBuilder);
 
     Real multiplier =
         bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
@@ -141,7 +147,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
                 bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
-    
+
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
 }

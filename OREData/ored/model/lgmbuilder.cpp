@@ -16,10 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
+#include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
+#include <ored/model/utilities.hpp>
+#include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/strike.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
@@ -28,14 +33,11 @@
 #include <qle/models/marketobserver.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
-#include <ored/model/lgmbuilder.hpp>
-#include <ored/model/structuredmodelerror.hpp>
-#include <ored/model/utilities.hpp>
-#include <ored/utilities/dategrid.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/strike.hpp>
+#include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -101,6 +103,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     // Notice: the vol that is passed in to this method is in general a dummy value, which is good enough though to
     // check 2 and 3 above. To check 1, the vol is not needed at all.
 
+    //TODO Adjust Settlement Days
     auto vt = svts->volatilityType();
     auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
@@ -167,13 +170,13 @@ namespace data {
 LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
-                       const std::string& id)
+                       const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
+      calibrationErrorType_(calibrationErrorType) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
@@ -189,23 +192,47 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     requiresCalibration_ =
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
+    // try to get market objects, if sth fails, we fall back to a default and log a structured error
+
+    Handle<YieldTermStructure> dummyYts(
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+
     try {
         shortSwapIndex_ =
             market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
-        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
-        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
-        // see the comment for dinscountCurve() in the interface
-        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
-        calibrationDiscountCurve_ = Handle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
     } catch (const std::exception& e) {
-        StructuredModelErrorMessage(
-            "Error when retrieving swap index base for qualifier '" + data_->qualifier() +
-                "'. Use market discount curve instead of swap index discount curve as a fallback.",
-            e.what(), id_)
-            .log();
-        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
-        calibrationDiscountCurve_ = Handle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
+        processException("short swap index", e);
+        shortSwapIndex_ = Handle<SwapIndex>(QuantLib::ext::make_shared<SwapIndex>(
+            "dummy", 30 * Years, 0, ccy, NullCalendar(), 1 * Years, Unadjusted, Actual365Fixed(),
+            QuantLib::ext::make_shared<IborIndex>("dummy", 1 * Years, 0, ccy, NullCalendar(), Unadjusted, false,
+                                                  Actual365Fixed(), dummyYts),
+            dummyYts));
     }
+
+    try {
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
+    } catch (const std::exception& e) {
+        processException("swap index", e);
+        swapIndex_ = Handle<SwapIndex>(QuantLib::ext::make_shared<SwapIndex>(
+            "dummy", 30 * Years, 0, ccy, NullCalendar(), 1 * Years, Unadjusted, Actual365Fixed(),
+            QuantLib::ext::make_shared<IborIndex>("dummy", 1 * Years, 0, ccy, NullCalendar(), Unadjusted, false,
+                                                  Actual365Fixed(), dummyYts),
+            dummyYts));
+    }
+
+    try {
+        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
+    } catch (const std::exception& e) {
+        processException("swaption vol surface", e);
+        svts_ = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
+            0, NullCalendar(), Unadjusted, 0.0010, Actual365Fixed(), Normal, 0.0));
+    }
+
+    // see the comment for dinscountCurve() in the interface
+    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+    calibrationDiscountCurve_ = Handle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+
+    // check if weed calibration
 
     if (requiresCalibration_) {
         registerWith(svts_);
@@ -220,7 +247,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     alwaysForwardNotifications();
 
     swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-
+    
     if (requiresCalibration_) {
         buildSwaptionBasket();
     }
@@ -229,7 +256,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
     Array alpha(data_->aValues().begin(), data_->aValues().end());
     Array h(data_->hValues().begin(), data_->hValues().end());
-
+    
     if (data_->aParamType() == ParamType::Constant) {
         QL_REQUIRE(data_->aTimes().size() == 0,
                    "LgmBuilder: empty volatility time grid expected for constant parameter type");
@@ -241,6 +268,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
             QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
+            QL_REQUIRE(!data_->aValues().empty(), "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
             aTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
             alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
         } else {
@@ -293,8 +321,32 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
+    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
+
+    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
+
+    if (data_->shiftHorizon() > 0.0) {
+        Real value = -parametrization_->H(data_->shiftHorizon());
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
+                                    << " LGM model");
+        parametrization_->shift() = value;
+    }
+
+    if (data_->scaling() != 1.0) {
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
+        parametrization_->scaling() = data_->scaling();
+    }
+
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
+}
+
+void LgmBuilder::processException(const std::string& s, const std::exception& e) {
+    StructuredModelErrorMessage("Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" +
+                                    s + "'. Using a fallback, results depending on this object will be invalid.",
+                                e.what(), id_)
+        .log();
 }
 
 Real LgmBuilder::error() const {
@@ -317,9 +369,20 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swapt
     return swaptionBasket_;
 }
 
+void LgmBuilder::recalibrate() const {
+    suspendCalibration_ = false;
+    calculate();
+}
+
+void LgmBuilder::newCalcWithoutRecalibration() const {
+    suspendCalibration_ = true;
+    calculate();
+}
+
 bool LgmBuilder::requiresRecalibration() const {
     return requiresCalibration_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_) &&
+           !suspendCalibration_;
 }
 
 void LgmBuilder::performCalculations() const {
@@ -356,15 +419,12 @@ void LgmBuilder::performCalculations() const {
 
     // reset model parameters to ensure identical results on identical market data input
     model_->setParams(params_);
-    parametrization_->shift() = 0.0;
-    parametrization_->scaling() = 1.0;
 
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
-        (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will aborted."));
+        (continueOnError_ ? std::string("Calculation will proceed.") : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
@@ -419,9 +479,10 @@ void LgmBuilder::performCalculations() const {
             calibrationInfo.valid = true;
         }
     } else {
-        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
-                                       " exceeds tolerance " + std::to_string(bootstrapTolerance_);
-        StructuredModelErrorMessage(errorTemplate, exceptionMessage, id_).log();
+        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration target function value (" +
+                                       std::to_string(error_) + ") exceeds notification threshold (" +
+                                       std::to_string(bootstrapTolerance_) + ").";
+        StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
             auto d = getBasketDetails(calibrationInfo);
@@ -446,22 +507,6 @@ void LgmBuilder::performCalculations() const {
     }
     model_->setCalibrationInfo(calibrationInfo);
 
-    DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
-
-    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
-    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-    if (data_->shiftHorizon() > 0.0) {
-        Real value = -parametrization_->H(data_->shiftHorizon());
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
-                                    << " LGM model");
-        parametrization_->shift() = value;
-    }
-
-    if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
-        parametrization_->scaling() = data_->scaling();
-    }
 } // performCalculations()
 
 void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,
@@ -602,25 +647,30 @@ void LgmBuilder::buildSwaptionBasket() const {
             averagingMethod = on->averagingMethod();
         }
 
-        Real dummyQuote = svts_->volatilityType() == Normal ? 0.0020 : 0.10;
-        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(dummyQuote);
+        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(0);
         Handle<Quote> vol = Handle<Quote>(volQuote);
         QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
 
         if (expiryDateBased && termDateBased) {
+            double v = svts_->volatility(expiryDb, termT, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryDb, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (expiryDateBased && !termDateBased) {
+            double v = svts_->volatility(expiryDb, termPb, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryDb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && termDateBased) {
+            double v = svts_->volatility(expiryPb, termT, strikeValue);
+            volQuote->setValue(v);
             Date expiry = svts_->optionDateFromTenor(expiryPb);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termT) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
@@ -628,6 +678,8 @@ void LgmBuilder::buildSwaptionBasket() const {
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && !termDateBased) {
+            double v = svts_->volatility(expiryPb, termPb, strikeValue);
+            volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
                 expiryPb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
@@ -644,8 +696,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             swaptionBasket_.push_back(helper);
             swaptionStrike_.push_back(updatedStrike);
             expiryTimes.push_back(calibrationDiscountCurve_->timeFromReference(expiryDate));
-            Date matDate = helper->underlyingSwap() ? helper->underlyingSwap()->maturityDate()
-                                                    : helper->underlyingOvernightIndexedSwap()->maturityDate();
+            Date matDate = helper->underlying()->maturityDate();
             maturityTimes.push_back(calibrationDiscountCurve_->timeFromReference(matDate));
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;

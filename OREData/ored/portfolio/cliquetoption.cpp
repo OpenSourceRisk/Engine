@@ -99,11 +99,13 @@ void CliquetOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     cliquet->setPricingEngine(cliquetOptionBuilder->engine(name(), ccy));
     setSensitivityTemplate(*cliquetOptionBuilder);
+    addProductModelEngine(*cliquetOptionBuilder);
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(cliquet));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
+    maturityType_ = "Expiry Date";
     notional_ = cliquetNotional_;
     notionalCurrency_ = currency_;
 

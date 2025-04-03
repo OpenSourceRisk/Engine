@@ -114,6 +114,8 @@ ORE+ Release & Date & Author & Comment \\
 na & 25 February 2019  & Peter Caspers & initial version\\
 na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
 na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
+na & 18 June 2024 & Henning Segger & add bond engine\\
+na & 19 September 2024 & Peter Caspers & add parameters RecalibrateOnStickyCloseOutDates, ReevaluateExerciseInStickyRun\\
 \hline
 \end{supertabular}
 \end{center}
@@ -204,14 +206,18 @@ cubes is automatic. The post processing step is run on the joint cube from the c
 
 \subsection{Application}\label{sec:application_config}
 
-To use the AMC engine for an XVA simulation the following analytic type should be active (in addition to the usual
-simulation and xva analytic types required to do an exposure analysis):
+To use the AMC engine for an XVA simulation the following parameters can be added to the simulation setup:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Analytic type="amc">
-  <Parameter name="active">Y</Parameter>
-  <Parameter name="pricingEnginesFile">pricingengine_amc.xml</Parameter>
-  <Parameter name="amcTradeTypes">Swap,FxOption</Parameter>
+<Analytic type="simulation">
+  ...
+  <Parameter name="amc">Y</Parameter>
+  <Parameter name="amcPathDataInput">amcpathdata.dat</Parameter>
+  <Parameter name="amcPathDataOutput">amcpathdata.dat</Parameter>
+  <Parameter name="amcIndividualTrainingOutput">Y</Parameter>
+  <Parameter name="amcIndividualTrainingInput">N</Parameter>
+  <Parameter name="amcTradeTypes">Swap,Swaption,CapFloor,ForwardRateAgreement,FxOption,BermudanSwaption</Parameter>
+  <Parameter name="amcPricingEnginesFile">pricingengines_amc.xml</Parameter>
 </Analytic>
 \end{minted}
 
@@ -225,6 +231,15 @@ simulation are joined and passed to the post processor in the usual way.
 Note that since sometimes the AMC pricing engines have a different base ccy than the risk factor evolution model (see
 below), a horizon shift parameter in the simulation set up should be set for all currencies, so that the shift also
 applies to these reduced models.
+
+The \verb+amcPathDataInput+ and \verb+amcPathDataOutput+ parameters are optional. If the output path is given, the
+generated path data is serialized to disk. The path should be either absolute or relative to the working directory. If
+the input path is given, path generation is suppressed and paths are deserialized from the specified file. This can be
+used to speed up calculations using the same simulation setup.
+
+The \verb+amcIndividualTrainingOutput+ and \verb+amcIndividualTrainingInput+ parameters are optional. If the output is requested, each trade's
+AMC calculator is serialized to disk. If \verb+amcIndividualTrainingInput+ is set to \emph{Y} and the binary files have been previously generated, 
+AMC calculator generation is suppressed and the AMC calculator is deserialized from the appropriate file.
 
 \subsection{Pricing Engine Configuration}\label{sec:pricing_engine_config}
 
@@ -249,6 +264,8 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="MinObsDate">true</Parameter>
     <Parameter name="RegressorModel">Simple</Parameter>
     <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
+    <Parameter name="RecalibrateOnStickyCloseOutDates">false</Parameter>
+    <Parameter name="ReevaluateExerciseInStickyRun">false</Parameter>
   </EngineParameters>
 </Product>
 \end{minted}
@@ -291,6 +308,14 @@ engine types. The engine parameters are the same for all products:
 \item \verb+RegressionVarianceCutoff+: Optional. If given, a coordinate transform and (possibly) a factor reduction is
   applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
   given parameter. This helps dealing with collinearity and also reducing the dimnensionality of the regression model.
+\item \verb+RecalibrateOnStickyCloseOutDates+: Optional, defaults to false. If true, the amc regression models are
+  retrained on close-out dates in a sticky-date simulation. Otherwise the regression model from the valuation date is
+  reused for the sticky run. If the valuation date is close to today (e.g. today + 1D) and the close-out date is
+  relatively speaking further out (e.g. today + 15D), recalibration on close-out dates might be necessary to ensure
+  stable results.
+\item \verb+ReevaluateExerciseInStickyRun+: Optional, defaults to false. If true, the exercise decision is updated for
+  the run on sticky close-out dates, otherwise the exercise indicator from the valuation date is reused on the close-out
+  date.
 \end{enumerate}
 
 \begin{table}[hbt]
@@ -641,6 +666,8 @@ QuantExt pricing engines
 \item \verb+McCamFxOptionEngine+ for fx options
 \item \verb+McLgmSwaptionEngine+ for Bermudan swaptions
 \item \verb+McMultiLegOptionEngine+ for Multileg option
+\item \verb+McLgmBondEngine+ for plain vanilla bonds
+\item \verb+McLgmFwdBondEngine+ for forward bonds
 \end{enumerate}
 
 All these engine are based on a common \verb+McMultiLegBaseEngine+ which does all the computations. For this each of the
@@ -656,6 +683,9 @@ engines sets up the following protected member variables (serving as parameters 
 \item \verb+optionSettlement_+: a \verb+Settlement::Type+ value indicating whether the option is settled physically or
   in cash
 \end{enumerate}
+
+Though both bond engines inherit from \verb+McMultiLegBaseEngine+ bespoke \verb+calculate()+ and \verb+amcCalculator()+
+methods are in place for the bond flavours.
 
 A call to \verb+McMultiLegBaseEngine::calculate()+ will set the result member variables
 

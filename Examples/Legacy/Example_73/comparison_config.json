@@ -1,0 +1,37 @@
+{
+  "csv_settings": {
+    "files": {
+      ".*npv.*.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "NPV(Base)"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      ".*exposure*.*.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "use_cols": [
+          "EPE"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EPE"
+            ],
+            "rel_tol": 0.01
+          }
+        ]
+      }
+    }
+  }
+}

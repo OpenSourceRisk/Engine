@@ -209,6 +209,7 @@
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cashposition.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -230,6 +231,9 @@
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/convertiblebonddata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
+#include <ored/portfolio/counterpartycorrelationmatrix.hpp>
+#include <ored/portfolio/counterpartyinformation.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
@@ -345,6 +349,13 @@
 #include <ored/scripting/asttoscriptconverter.hpp>
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
+#include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
+#include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
@@ -365,7 +376,6 @@
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/hwcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
@@ -386,6 +396,7 @@
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/credit.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
@@ -402,11 +413,10 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
-#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/utilities/wildcard.hpp>

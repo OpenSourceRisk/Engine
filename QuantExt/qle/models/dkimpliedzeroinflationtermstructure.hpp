@@ -39,9 +39,6 @@ public:
     */
     DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
-    QL_DEPRECATED
-    DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
-
 protected:
     //! \name ZeroInflationTermStructure interface
     //@{

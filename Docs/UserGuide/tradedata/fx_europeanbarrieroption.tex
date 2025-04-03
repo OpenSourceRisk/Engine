@@ -1,16 +1,58 @@
 \subsubsection{FX European Barrier Option}
 
-European exercise, European barrier.
+\ifdefined\IncludePayoff{{\bf Payoff}
 
-The \lstinline!FxEuropeanBarrierOptionData!  node is the trade data container for the \emph{FxEuropeanBarrierOption} trade type.    The barrier level of an FX European Barrier Option is quoted as the amount in SoldCurrency
-per unit BoughtCurrency. The \lstinline!FxEuropeanBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the FX Barrier Option. 
+A FX European Barrier option gives the buyer the right, but not the obligation, to
+exchange a set amount of one currency for another, at a predetermined exchange
+rate, at one predetermined time in the future. This right may be withdrawn depending
+upon an FX spot rate reaching a predetermined barrier level at the
+predetermined time, the underlying is monitored only at expiry with a
+single barrier).
+
+For this right the buyer pays a premium to the seller. Settlement can be
+either cash or physical delivery.
+
+Single FX European Barrier options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes 
+active when the FX spot rate reaches the barrier level at expiry.
+\item A knock-out option starts its life active, but ceases to exist/becomes 
+inactive, if the barrier is reached at expiry.
+\end{itemize}
+
+When a Single FX European Barrier option expires inactive, the payoff may be zero, or 
+there may be a cash rebate (barrier rebate) paid out as a fraction of the 
+original option premium.
+
+There are four main types of Single European Barrier FX Options:
+\begin{itemize}
+\item Up-and-out: The FX spot price starts below the barrier level and has to 
+move up for the option to be knocked out.
+\item Down-and-out: The FX spot price starts above the barrier level and has 
+to move down for the option to become knocked out.
+\item Up-and-in: The FX spot price starts below the barrier level and has to 
+move up for the option to become activated.
+\item Down-and-in: The FX spot price starts above the barrier level and has 
+to move down for the option to become activated.
+\end{itemize}
+
+{\bf Input}}
+
+\else
+
+European exercise, European barrier.
 
 An FX European Barrier option gives the buyer the right, but not the obligation, to
 exchange a set amount of one currency for another, at a predetermined exchange rate,
 at one predetermined time in the future. This right may be withdrawn depending upon
 an FX spot rate reaching a predetermined barrier level at the predetermined time, the
 underlying is monitored only at expiry with a single barrier (European Barrier style).
+
+\fi
+
+The \lstinline!FxEuropeanBarrierOptionData!  node is the trade data container for the \emph{FxEuropeanBarrierOption} trade type.    The barrier level of an FX European Barrier Option is quoted as the amount in SoldCurrency
+per unit BoughtCurrency. The \lstinline!FxEuropeanBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the FX Barrier Option. 
 
 The structure of an example \lstinline!FxEuropeanBarrierOptionData! node for a FX European Barrier Option is shown in Listing
 \ref{lst:fxeuropeanbarrieroption_data}.
