@@ -1,110 +1,150 @@
-<?xml version="1.0"?>
-<ORE>
-  <Setup>
-    <Parameter name="asofDate">2025-02-10</Parameter>
-    <Parameter name="inputPath">Input/Dim2</Parameter>
-    <Parameter name="outputPath">Output/Dim2/AmcCg</Parameter>
-    <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">marketdata.csv</Parameter>
-    <Parameter name="fixingDataFile">fixings.csv</Parameter>
-    <Parameter name="implyTodaysFixings">N</Parameter>
-    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio.xml</Parameter>
-    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
-    <Parameter name="observationModel">None</Parameter>
-    <Parameter name="continueOnError">false</Parameter>
-    <Parameter name="buildFailedTrades">true</Parameter>
-  </Setup>
-  <Markets>
-    <Parameter name="lgmcalibration">default</Parameter>
-    <Parameter name="fxcalibration">default</Parameter>
-    <Parameter name="infcalibration">default</Parameter>
-    <Parameter name="pricing">default</Parameter>
-    <Parameter name="simulation">default</Parameter>
-    <Parameter name="sensitivity">default</Parameter>
-  </Markets>
-  <Analytics>
-    <Analytic type="npv">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
-      <Parameter name="additionalResults">Y</Parameter>
-      <Parameter name="additionalResultsReportPrecision">12</Parameter>
-    </Analytic>
-    <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+#!/usr/bin/env python
 
-      <Parameter name="amc">Y</Parameter>
-      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
-      <Parameter name="amcCg">CubeGeneration</Parameter>
-      <!-- external device config -->
-      <Parameter name="xvaCgUseExternalComputeDevice">false</Parameter>
-      <Parameter name="xvaCgExternalDeviceCompatibilityMode">false</Parameter>
-      <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">false</Parameter>
-      <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
-      <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
-      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade</Parameter>
-      <Parameter name="simulationConfigFile">simulation_amccg.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-      <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
-      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
-      <!-- enable dynamic IM -->
-      <Parameter name="xvaCgDynamicIM">true</Parameter>
-      <!-- calculate dynamic IM on each nth time step -->
-      <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
-      <!-- regression order in xva cg engine -->
-      <Parameter name="xvaCgRegressionOrder">4</Parameter>
-      <!-- enable trade level breakdown in xva cg engine -->
-      <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
-      <!-- enable memory management using red nodes in xva cg engine -->
-      <Parameter name="xvaCgUseRedBlocks">true</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <!-- <Parameter name="cubeFile">cube.csv.gz</Parameter> -->
-      <!-- <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter> -->
-      <!-- <Parameter name="scenariodump">scenariodump.csv</Parameter> -->
-    </Analytic>
-    <Analytic type="xva">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="exposureProfiles">Y</Parameter>
-      <Parameter name="exposureProfilesByTrade">Y</Parameter>
-      <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">None</Parameter>
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>
-      <Parameter name="exerciseNextBreak">N</Parameter>
-      <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="dim">Y</Parameter>
-      <!-- DynamicIM requires xvaCgDynamicIM = true under simulation above -->
-      <Parameter name="dimModel">DynamicIM</Parameter>
-      <Parameter name="dimQuantile">0.99</Parameter>
-      <Parameter name="dimHorizonCalendarDays">14</Parameter>
-      <Parameter name="dimRegressionOrder">2</Parameter>
-      <Parameter name="dimRegressors"/>
-      <Parameter name="dimScaling">1.0</Parameter>
-      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
-      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
-      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
-      <Parameter name="dimOutputGridPoints">0</Parameter>
-      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
-      <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
-      <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->
-      <!-- <Parameter name="netCubeOutputFile">netcube.csv</Parameter> -->
-    </Analytic>
-  </Analytics>
-</ORE>
+import glob
+import os
+import sys
+import pandas as pd
+import lxml.etree as etree
+import utilities
+sys.path.append('../')
+from ore_examples_helper import OreExample
+
+oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
+
+print("+-----------------------------------------------------+")
+print("| Dynamic SIMM                                        |")
+print("+-----------------------------------------------------+")
+
+filterSample = 1
+
+oreex.print_headline("Run ORE to generate the npv cube and scenario dump, with swaption vol simulation")
+oreex.run("Input/Dim2/ore.xml")
+
+oreex.print_headline("Convert scenario " + str(filterSample) + " into a market data file")
+refDates = utilities.scenarioToMarket('Input/Dim2/simulation.xml', 'Output/Dim2/scenariodump.csv', filterSample, 'Input/DimValidation')
+
+oreex.print_headline("Extract NPV evolution from the raw cube for scenario " + str(filterSample))
+cubeFile = 'Output/Dim2/rawcube.csv'
+cubeData = utilities.rawCubeFilter(cubeFile, filterSample)
+
+oreex.print_headline("Convert aggregation scenario data file into a fixing file for sample " + str(filterSample))
+numeraireData = utilities.scenarioToFixings("Output/Dim2/scenariodata.csv.gz", refDates, filterSample, "Input/DimValidation")
+
+orecrif = 'Input/DimValidation/ore_crif.xml'
+doccrif = etree.parse(orecrif)
+
+oresimm = 'Input/DimValidation/ore_simm.xml'
+docsimm = etree.parse(oresimm)
+
+columns = ["#TradeId", "asofDate", "NPV(Base)"] 
+rowlist = []
+
+simmColumns = ["Portfolio","AsOfDate", "SimmSide","InitialMargin","Currency"]
+simmRowList = []
+
+npvFile = "Output/DimValidation/npv.csv"
+simmFile = "Output/DimValidation/simm.csv"
+crifFile = "Output/DimValidation/crif.csv"
+
+for asof in refDates:
+
+    # delete output files
+    if os.path.isfile(npvFile):
+        os.remove(npvFile)
+    if os.path.isfile(simmFile):
+        os.remove(simmFile)
+    if os.path.isfile(crifFile):
+        os.remove(crifFile)
+
+    nodes = doccrif.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    nodes[0].text = asof
+    doccrif.write(orecrif)
+
+    print()
+    print(orecrif, "updated with asofDate", nodes[0].text)
+
+    oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
+    oreex.run_plus(orecrif)
+
+    nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    nodes[0].text = asof
+    docsimm.write(oresimm)
+
+    print()
+    print(oresimm, "updated with asofDate", nodes[0].text)
+
+    oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
+    oreex.run_plus(oresimm)
+
+    #    if asof == refDates[0]:
+    #        oreex.run_plus(orexml)
+    #    oreex.run_plus(orexml)
+    #oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
+    #oreex.run(orexml)
+
+    if os.path.isfile(npvFile):
+        npvData = pd.read_csv(npvFile)
+        for index, row in npvData.iterrows():
+            trade = row['#TradeId']
+            npv = float(row['NPV(Base)'])
+            rowlist.append([trade, asof, '{:.6f}'.format(npv)])
+
+    if os.path.isfile(simmFile):
+        simmData = pd.read_csv(simmFile)
+        for index, row in simmData.iterrows():
+            portfolio = row['#Portfolio']
+            productClass = row['ProductClass']
+            riskClass = row['RiskClass']
+            marginType = row['MarginType']
+            bucket = row['Bucket']
+            simmSide = row['SimmSide']
+            regulation = row['Regulation']
+            initialMargin = float(row['InitialMargin'])
+            currency = row['Currency']
+            if productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
+                simmRowList.append([portfolio, asof, simmSide, '{:.6f}'.format(initialMargin), currency])
+                break
+        
+npvData = pd.DataFrame(rowlist, columns=columns)
+
+print("Undiscounted NPVs from ORE runs using implied markets")
+print(npvData)
+
+print("Numeraire data:")
+print(numeraireData)
+
+print("Discounted NPVs from the raw cube:")
+print(cubeData)
+
+comparisonData = utilities.npvComparison(npvData, cubeData, numeraireData);
+print(comparisonData)
+
+resultFile = "Output/DimValidation/npv_comparison.csv"
+comparisonData.to_csv(resultFile, sep=',')
+
+oreex.setup_plot("npv_comparison")
+#oreex.plot("DimValidation/npv_comparison.csv", 0, 3, 'b', "Undiscounted NPVs")
+oreex.plot("DimValidation/npv_comparison.csv", 0, 4, 'b', "Discounted NPVs")
+oreex.plot("DimValidation/npv_comparison.csv", 0, 5, 'r', "Raw Cube Discounted NPVs")
+oreex.decorate_plot(title="NPV Validation", ylabel="NPV", xlabel="Time Steps")
+oreex.save_plot_to_file()
+
+simmData = pd.DataFrame(simmRowList, columns=simmColumns)
+print(simmData)
+
+simmResultFile = "Output/DimValidation/simm_evolution.csv"
+simmData.to_csv(simmResultFile, sep=',')
+
+oreex.setup_plot("simm_evolution")
+oreex.plot("DimValidation/simm_evolution.csv", 0, 4, 'b', "SIMM")
+oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time Steps")
+oreex.save_plot_to_file()
+
+oreex.print_headline("Run ORE for Dynamic SIMM with AMC/CG")
+oreex.run("Input/Dim2/ore_amccg.xml")
+
+oreex.setup_plot("dim_comparison")
+oreex.plot("DimValidation/simm_evolution.csv", 0, 4, 'b', "SIMM")
+oreex.plot("Dim2/AmcCg/dim_evolution.csv", 0, 4, 'r', "Dynamic SIMM with AMC/CG")
+oreex.decorate_plot(title="DIM Evolution", ylabel="IM", xlabel="Time Steps")
+oreex.save_plot_to_file()
