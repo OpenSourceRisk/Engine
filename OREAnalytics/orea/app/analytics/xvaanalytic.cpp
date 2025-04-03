@@ -63,14 +63,19 @@ void XvaAnalyticImpl::setUpConfigurations() {
 void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
     // find the unique nettingset keys in portfolio
     std::map<std::string, std::string> nettingSetMap = portfolio->nettingSetMap();
-    std::vector<std::string> nettingSetKeys;
+    std::set<std::string> nettingSetKeys;
     for (std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it)
-        nettingSetKeys.push_back(it->second);
-    // unique nettingset keys
-    sort(nettingSetKeys.begin(), nettingSetKeys.end());
-    nettingSetKeys.erase(unique(nettingSetKeys.begin(), nettingSetKeys.end()), nettingSetKeys.end());
+        nettingSetKeys.insert(it->second);
     // controls on calcType and grid type, if netting-set has an active CSA in place
     for (auto const& key : nettingSetKeys) {
+        if (!inputs_->nettingSetManager()->has(key)) {
+            StructuredAnalyticsWarningMessage(
+                "XvaAnalytic", "Netting set definition not found",
+                "Definition for netting set " + key + " is not found. "
+                "Configuration check is not performed on this netting set.")
+                .log();
+            continue;
+        }
         LOG("For netting-set " << key << "CSA flag is " << inputs_->nettingSetManager()->get(key)->activeCsaFlag());
         if (inputs_->nettingSetManager()->get(key)->activeCsaFlag()) {
             string calculationType = inputs_->collateralCalculationType();
@@ -103,6 +108,32 @@ void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfo
                         .log();
             }
         }
+    }
+}
+
+void XvaAnalyticImpl::applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
+    // find the unique undefined nettingset keys in portfolio
+    std::map<std::string, std::string> nettingSetMap = portfolio->nettingSetMap();
+    std::set<std::string> nettingSetKeys;
+    for (std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it) {
+        if (!inputs_->nettingSetManager()->has(it->second)) {
+            StructuredTradeErrorMessage(
+                it->first, portfolio->get(it->first)->tradeType(),
+                "Netting set definition is not found.",
+                "Definition for netting set " + it->second + " is not found. "
+                "A fallback of 'uncollateralised' netting set will be used, results for this netting set may be invalid.")
+                .log();
+                nettingSetKeys.insert(it->second);
+        }
+    }
+    // add fallback netting set definitions
+    for (auto const& key : nettingSetKeys) {
+        StructuredAnalyticsErrorMessage(
+            "XvaAnalytic", "Netting set definition not found",
+            "Definition for netting set " + key + " is not found. "
+            "A fallback of 'uncollateralised' netting set will be used, results for this netting set may be invalid.")
+            .log();
+        inputs_->nettingSetManager()->add(QuantLib::ext::make_shared<NettingSetDefinition>(key));
     }
 }
 
@@ -721,6 +752,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
     bool firstMporCollateralAdjustment = inputs_->firstMporCollateralAdjustment();
     checkConfigurations(analytic()->portfolio());
+    applyConfigurationFallback(analytic()->portfolio());
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
