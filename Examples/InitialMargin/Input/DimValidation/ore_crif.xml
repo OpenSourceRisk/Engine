@@ -4,7 +4,7 @@
     <Parameter name="inputPath">Input/DimValidation</Parameter>
     <Parameter name="outputPath">Output/DimValidation</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">marketdata.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -29,7 +29,7 @@
   </Markets>
   <Analytics>
     <Analytic type="npv">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
       <Parameter name="additionalResults">Y</Parameter>
@@ -51,14 +51,6 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="simmVersion">2.6</Parameter>
       <Parameter name="crifOutputFile">crif.csv</Parameter>
-    </Analytic>
-    <Analytic type="simm">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="version">2.6</Parameter>
-      <Parameter name="crif">../../Output/DimValidation/crif.csv</Parameter>
-      <Parameter name="calculationCurrency">EUR</Parameter>
-      <Parameter name="enforceIMRegulations">Y</Parameter>
-      <Parameter name="mporDays">10</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

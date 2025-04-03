@@ -30,8 +30,11 @@ cubeData = utilities.rawCubeFilter(cubeFile, filterSample)
 oreex.print_headline("Convert aggregation scenario data file into a fixing file for sample " + str(filterSample))
 numeraireData = utilities.scenarioToFixings("Output/Dim2/scenariodata.csv.gz", refDates, filterSample, "Input/DimValidation")
 
-orexml = 'Input/DimValidation/ore.xml'
-doc = etree.parse(orexml)
+orecrif = 'Input/DimValidation/ore_crif.xml'
+doccrif = etree.parse(orecrif)
+
+oresimm = 'Input/DimValidation/ore_simm.xml'
+docsimm = etree.parse(oresimm)
 
 columns = ["#TradeId", "asofDate", "NPV(Base)"] 
 rowlist = []
@@ -41,25 +44,43 @@ simmRowList = []
 
 npvFile = "Output/DimValidation/npv.csv"
 simmFile = "Output/DimValidation/simm.csv"
+crifFile = "Output/DimValidation/crif.csv"
 
 for asof in refDates:
-    nodes = doc.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
-    nodes[0].text = asof
-    doc.write(orexml)
-
-    print(orexml, "updated with asofDate", nodes[0].text)
 
     # delete output files
     if os.path.isfile(npvFile):
         os.remove(npvFile)
     if os.path.isfile(simmFile):
         os.remove(simmFile)
+    if os.path.isfile(crifFile):
+        os.remove(crifFile)
 
-    oreex.print_headline("Run ORE+ on the implied market as of " + asof)
+    nodes = doccrif.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    nodes[0].text = asof
+    doccrif.write(orecrif)
+
+    print()
+    print(orecrif, "updated with asofDate", nodes[0].text)
+
+    oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
+    oreex.run_plus(orecrif)
+
+    nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    nodes[0].text = asof
+    docsimm.write(oresimm)
+
+    print()
+    print(oresimm, "updated with asofDate", nodes[0].text)
+
+    oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
+    oreex.run_plus(oresimm)
+
+    #    if asof == refDates[0]:
+    #        oreex.run_plus(orexml)
+    #    oreex.run_plus(orexml)
+    #oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
     #oreex.run(orexml)
-    if asof == refDates[0]:
-        oreex.run_plus(orexml)
-    oreex.run_plus(orexml)
 
     if os.path.isfile(npvFile):
         npvData = pd.read_csv(npvFile)
