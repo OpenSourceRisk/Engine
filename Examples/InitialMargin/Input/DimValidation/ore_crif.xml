@@ -49,7 +49,7 @@
       <Parameter name="marketConfigFile">crifmarket.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="simmVersion">2.6</Parameter>
+      <Parameter name="simmVersion">2.7</Parameter>
       <Parameter name="crifOutputFile">crif.csv</Parameter>
     </Analytic>
   </Analytics>
