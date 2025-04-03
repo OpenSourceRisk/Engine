@@ -70,7 +70,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const Type type() const { return type_; }
+    Type type() const { return type_; }
     const QuoteType& quoteType() const { return quoteType_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }

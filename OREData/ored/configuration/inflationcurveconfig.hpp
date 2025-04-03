@@ -63,7 +63,7 @@ public:
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }
-    const Type type() const { return type_; }
+    Type type() const { return type_; }
     const string& conventions() const { return conventions_; }
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
