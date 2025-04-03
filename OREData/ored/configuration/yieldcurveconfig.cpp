@@ -98,8 +98,9 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<IborFallbackCurveSegment> {
 
 public:
-    SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
-        : curveID_(curveID), requiredCurveIds_(requiredCurveIds) {}
+    SegmentIDGetter(const string& curveID, const string& ccy,
+                    map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
+        : curveID_(curveID), ccy_(ccy), requiredCurveIds_(requiredCurveIds) {}
 
     void visit(YieldCurveSegment&) override;
     void visit(SimpleYieldCurveSegment& s) override;
@@ -116,6 +117,7 @@ public:
 
 private:
     string curveID_;
+    string ccy_;
     map<CurveSpec::CurveType, set<string>>& requiredCurveIds_;
 };
 
@@ -164,9 +166,9 @@ void SegmentIDGetter::visit(CrossCcyYieldCurveSegment& s) {
 
     string spotRateID = s.spotRateID();
     auto md = parseMarketDatum(Date(), spotRateID, Null<Real>());
-    QuantLib::ext::shared_ptr<FXSpotQuote> fxSpotQuote = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(md);
-    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxSpotQuote->unitCcy());
-    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxSpotQuote->ccy());
+    QuantLib::ext::shared_ptr<FXSpotQuote> fxq = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(md);
+    string foreignCcy = ccy_ == fxq->unitCcy() ? fxq->ccy() : fxq->unitCcy();
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(foreignCcy);
 }
 
 void SegmentIDGetter::visit(ZeroSpreadedYieldCurveSegment& s) {
@@ -389,7 +391,7 @@ void YieldCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurveID_);
     }
 
-    SegmentIDGetter segmentIDGetter(curveID_, requiredCurveIds_);
+    SegmentIDGetter segmentIDGetter(curveID_, currency_, requiredCurveIds_);
     for (Size i = 0; i < curveSegments_.size(); i++) {
         curveSegments_[i]->accept(segmentIDGetter);
     }
