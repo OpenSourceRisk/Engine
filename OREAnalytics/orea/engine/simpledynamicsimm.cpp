@@ -165,7 +165,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         }
 
         for (std::size_t i = 0; i < currencies_.size(); ++i) {
-            deltaMarginIr += Sb[i] * Sb[i];
+            deltaMarginIr += Kb[i] * Kb[i];
             for (std::size_t j = 0; j < i; ++j) {
                 deltaMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Sb[i] * Sb[j];
             }
@@ -197,7 +197,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         }
 
         for (std::size_t i = 0; i < currencies_.size(); ++i) {
-            vegaMarginIr += Sb[i] * Sb[i];
+            vegaMarginIr += Kb[i] * Kb[i];
             for (std::size_t j = 0; j < i; ++j) {
                 vegaMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Sb[i] * Sb[j];
             }
@@ -233,7 +233,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         }
 
         for (std::size_t i = 0; i < currencies_.size(); ++i) {
-            curvatureMarginIr += Sb[i] * Sb[i];
+            curvatureMarginIr += Kb[i] * Kb[i];
             for (std::size_t j = 0; j < i; ++j) {
                 curvatureMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Sb[i] * Sb[j];
             }
@@ -293,7 +293,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         }
 
         for (std::size_t i = 1; i < currencies_.size(); ++i) {
-            vegaMarginFx += Sb[i - 1] * Sb[i - 1];
+            vegaMarginFx += Kb[i - 1] * Kb[i - 1];
             for (std::size_t j = 1; j < i; ++j) {
                 vegaMarginFx += RandomVariable(n_, 2.0 * fxCorr_) * Sb[i - 1] * Sb[j - 1];
             }
@@ -329,7 +329,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         }
 
         for (std::size_t i = 1; i < currencies_.size(); ++i) {
-            curvatureMarginFx += Sb[i - 1] * Sb[i - 1];
+            curvatureMarginFx += Kb[i - 1] * Kb[i - 1];
             for (std::size_t j = 1; j < i; ++j) {
                 curvatureMarginFx += RandomVariable(n_, 2.0 * irGamma_) * Sb[i - 1] * Sb[j - 1];
             }
