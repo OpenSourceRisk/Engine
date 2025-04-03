@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2025-02-10</Parameter>
     <Parameter name="inputPath">Input/Dim2</Parameter>
-    <Parameter name="outputPath">Output/Dim2</Parameter>
+    <Parameter name="outputPath">Output/Dim2/AmcCg</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">marketdata.csv</Parameter>
@@ -55,7 +55,7 @@
       <!-- enable dynamic IM -->
       <Parameter name="xvaCgDynamicIM">true</Parameter>
       <!-- calculate dynamic IM on each nth time step -->
-      <Parameter name="xvaCgDynamicIMStepSize">10</Parameter>
+      <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
