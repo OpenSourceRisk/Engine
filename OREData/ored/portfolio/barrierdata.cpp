@@ -60,8 +60,9 @@ XMLNode* BarrierData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Type", type_);
     if (!style_.empty())
         XMLUtils::addChild(doc, node, "Style", style_);
-    if (strictComparison_)
+    if (strictComparison_) {
         XMLUtils::addChild(doc, node, "StrictComparison", *strictComparison_);
+    }
     XMLUtils::addChild(doc, node, "Rebate", rebate_);
     XMLUtils::addChildren(doc, node, "Levels", "Level", levels_);
     if (!rebateCurrency_.empty())
