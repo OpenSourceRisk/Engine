@@ -1,0 +1,485 @@
+RUN portfolio.py
+Load parameters from Input/ore_market.xml
+Build ORE App...
+Run ORE to build inputs...
+Get the portfolio from xml...
+Add the portfolio and request NPV...
+Run ORE process...
+Get NPV analytic...
+Get the built portfolio from the NPV analytic
+... portfolio size =  12
+Swap_20
+ trade id =  Swap_20
+ trade type is  Swap
+ trade notional is  10000000.0
+ instWrap pv =  1659799.5070679416
+ qlInst pv =  1659799.5070679416
+ is expired? =  False
+          flow as of  2016-10-28  is  200000.00000000017
+          flow as of  2017-10-30  is  201111.1111111119
+          flow as of  2018-10-29  is  199444.44444444543
+          flow as of  2019-10-28  is  199444.44444444543
+          flow as of  2020-10-28  is  200000.00000000017
+          flow as of  2021-10-28  is  200000.00000000017
+          flow as of  2022-10-28  is  200000.00000000017
+          flow as of  2023-10-30  is  201111.1111111119
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2016-04-28  is  5591.666666666667
+          flow as of  2016-10-28  is  -835.118354104436
+          flow as of  2017-04-28  is  -3500.482052427589
+          flow as of  2017-10-30  is  -3558.1720394606277
+          flow as of  2018-04-30  is  -957.9137162696317
+          flow as of  2018-10-29  is  2284.798839320423
+          flow as of  2019-04-29  is  7625.914593027972
+          flow as of  2019-10-28  is  14913.85091432429
+          flow as of  2020-04-28  is  19462.166400399106
+          flow as of  2020-10-28  is  25477.652074750167
+          flow as of  2021-04-28  is  33991.111883568956
+          flow as of  2021-10-28  is  45790.66566151591
+          flow as of  2022-04-28  is  45539.874555660106
+          flow as of  2022-10-28  is  45790.66566151591
+          flow as of  2023-04-28  is  57515.55023353338
+          flow as of  2023-10-30  is  74721.47077434155
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_10_10
+ trade id =  Swaption_10_10
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  995643.1703051651
+ qlInst pv =  995643.1703051651
+ is expired? =  False
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_12_8
+ trade id =  Swaption_12_8
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  844604.8428999237
+ qlInst pv =  844604.8428999237
+ is expired? =  False
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_14_6
+ trade id =  Swaption_14_6
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  663898.4351670302
+ qlInst pv =  663898.4351670302
+ is expired? =  False
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_16_4
+ trade id =  Swaption_16_4
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  469008.16325697536
+ qlInst pv =  469008.16325697536
+ is expired? =  False
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_18_2
+ trade id =  Swaption_18_2
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  240066.16017370948
+ qlInst pv =  240066.16017370948
+ is expired? =  False
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_19_1
+ trade id =  Swaption_19_1
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  118437.63275723458
+ qlInst pv =  118437.63275723458
+ is expired? =  False
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_1_19
+ trade id =  Swaption_1_19
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  1486198.3683523994
+ qlInst pv =  1486198.3683523994
+ is expired? =  False
+          flow as of  2017-10-30  is  201111.1111111119
+          flow as of  2018-10-29  is  199444.44444444543
+          flow as of  2019-10-28  is  199444.44444444543
+          flow as of  2020-10-28  is  200000.00000000017
+          flow as of  2021-10-28  is  200000.00000000017
+          flow as of  2022-10-28  is  200000.00000000017
+          flow as of  2023-10-30  is  201111.1111111119
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2017-04-28  is  -3500.482052427589
+          flow as of  2017-10-30  is  -3558.1720394606277
+          flow as of  2018-04-30  is  -957.9137162696317
+          flow as of  2018-10-29  is  2284.798839320423
+          flow as of  2019-04-29  is  7625.914593027972
+          flow as of  2019-10-28  is  14913.85091432429
+          flow as of  2020-04-28  is  19462.166400399106
+          flow as of  2020-10-28  is  25477.652074750167
+          flow as of  2021-04-28  is  33991.111883568956
+          flow as of  2021-10-28  is  45790.66566151591
+          flow as of  2022-04-28  is  45539.874555660106
+          flow as of  2022-10-28  is  45790.66566151591
+          flow as of  2023-04-28  is  57515.55023353338
+          flow as of  2023-10-30  is  74721.47077434155
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_2_18
+ trade id =  Swaption_2_18
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  1441195.9429610467
+ qlInst pv =  1441195.9429610467
+ is expired? =  False
+          flow as of  2018-10-29  is  199444.44444444543
+          flow as of  2019-10-28  is  199444.44444444543
+          flow as of  2020-10-28  is  200000.00000000017
+          flow as of  2021-10-28  is  200000.00000000017
+          flow as of  2022-10-28  is  200000.00000000017
+          flow as of  2023-10-30  is  201111.1111111119
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2018-04-30  is  -957.9137162696317
+          flow as of  2018-10-29  is  2284.798839320423
+          flow as of  2019-04-29  is  7625.914593027972
+          flow as of  2019-10-28  is  14913.85091432429
+          flow as of  2020-04-28  is  19462.166400399106
+          flow as of  2020-10-28  is  25477.652074750167
+          flow as of  2021-04-28  is  33991.111883568956
+          flow as of  2021-10-28  is  45790.66566151591
+          flow as of  2022-04-28  is  45539.874555660106
+          flow as of  2022-10-28  is  45790.66566151591
+          flow as of  2023-04-28  is  57515.55023353338
+          flow as of  2023-10-30  is  74721.47077434155
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_4_16
+ trade id =  Swaption_4_16
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  1339584.29169304
+ qlInst pv =  1339584.29169304
+ is expired? =  False
+          flow as of  2020-10-28  is  200000.00000000017
+          flow as of  2021-10-28  is  200000.00000000017
+          flow as of  2022-10-28  is  200000.00000000017
+          flow as of  2023-10-30  is  201111.1111111119
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2020-04-28  is  19462.166400399106
+          flow as of  2020-10-28  is  25477.652074750167
+          flow as of  2021-04-28  is  33991.111883568956
+          flow as of  2021-10-28  is  45790.66566151591
+          flow as of  2022-04-28  is  45539.874555660106
+          flow as of  2022-10-28  is  45790.66566151591
+          flow as of  2023-04-28  is  57515.55023353338
+          flow as of  2023-10-30  is  74721.47077434155
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_6_14
+ trade id =  Swaption_6_14
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  1224479.4335305775
+ qlInst pv =  1224479.4335305775
+ is expired? =  False
+          flow as of  2022-10-28  is  200000.00000000017
+          flow as of  2023-10-30  is  201111.1111111119
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2022-04-28  is  45539.874555660106
+          flow as of  2022-10-28  is  45790.66566151591
+          flow as of  2023-04-28  is  57515.55023353338
+          flow as of  2023-10-30  is  74721.47077434155
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Swaption_8_12
+ trade id =  Swaption_8_12
+ trade type is  Swaption
+ trade notional is  10000000.0
+ instWrap pv =  1110235.3193597975
+ qlInst pv =  1110235.3193597975
+ is expired? =  False
+          flow as of  2024-10-28  is  198888.88888888844
+          flow as of  2025-10-28  is  200000.00000000017
+          flow as of  2026-10-28  is  200000.00000000017
+          flow as of  2027-10-28  is  200000.00000000017
+          flow as of  2028-10-30  is  201111.1111111119
+          flow as of  2029-10-29  is  199444.44444444543
+          flow as of  2030-10-28  is  199444.44444444543
+          flow as of  2031-10-28  is  200000.00000000017
+          flow as of  2032-10-28  is  200000.00000000017
+          flow as of  2033-10-28  is  200000.00000000017
+          flow as of  2034-10-30  is  201111.1111111119
+          flow as of  2035-10-29  is  199444.44444444543
+          flow as of  2024-04-29  is  73505.328890755
+          flow as of  2024-10-28  is  73505.32889075723
+          flow as of  2025-04-28  is  73505.32889075723
+          flow as of  2025-10-28  is  73910.6932062783
+          flow as of  2026-04-28  is  75246.36174555344
+          flow as of  2026-10-28  is  77996.06371163615
+          flow as of  2027-04-28  is  77568.2069729311
+          flow as of  2027-10-28  is  77996.06371163615
+          flow as of  2028-04-28  is  81121.19631250802
+          flow as of  2028-10-30  is  86172.32429408483
+          flow as of  2029-04-30  is  84769.02928818975
+          flow as of  2029-10-29  is  84769.02928818752
+          flow as of  2030-04-29  is  84769.02928818752
+          flow as of  2030-10-28  is  84769.02928818975
+          flow as of  2031-04-28  is  81725.86108748047
+          flow as of  2031-10-28  is  78005.47468601815
+          flow as of  2032-04-28  is  78005.47468601815
+          flow as of  2032-10-28  is  78005.47468601815
+          flow as of  2033-04-28  is  77577.56612384092
+          flow as of  2033-10-28  is  78005.47468601815
+          flow as of  2034-04-28  is  77577.56612384315
+          flow as of  2034-10-30  is  78861.34631999387
+          flow as of  2035-04-30  is  77577.56612384315
+          flow as of  2035-10-29  is  77577.56612384315
+Done.
