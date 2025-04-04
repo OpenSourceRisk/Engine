@@ -456,19 +456,6 @@ void XvaEngineCG::buildCgPartC() {
         }
     }
 
-    // Add notes to store ir states, this is needed for dynamic delta calc (and only that)
-    // In fact, this is probably not needed.
-
-    // if (enableDynamicIM_) {
-    //     irState_.resize(model_->currencies().size(), std::vector<std::size_t>(valuationDates_.size() + 1));
-    //     for (Size ccy = 0; ccy < model_->currencies().size(); ++ccy) {
-    //         for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
-    //             irState_[ccy][i] =
-    //                 model_->getInterpolatedIrState(i == 0 ? model_->referenceDate() : valuationDates_[i - 1], ccy);
-    //         }
-    //     }
-    // }
-
     timing_partc_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: add exposure nodes to graph done - graph size is "
          << g->size() << ", generateTradeLevelExposure = " << std::boolalpha << tradeLevelBreakDown_);
