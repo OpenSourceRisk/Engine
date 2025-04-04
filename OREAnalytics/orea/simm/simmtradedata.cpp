@@ -68,9 +68,17 @@
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 
+#define TRY_AND_CATCH(expr, tradeId, tradeType, context, emitStructuredError)                                          \
+    try {                                                                                                              \
+        expr;                                                                                                          \
+    } catch (const std::exception& e) {                                                                                \
+            ore::data::StructuredTradeErrorMessage(                                                                    \
+                tradeId, tradeType, "Error while setting simm trade data (" + std::string(context) + ")", e.what())    \
+                .log();                                                                                                \
+    }
+
 using ore::data::LegType;
 using ore::data::BondTRS;
-// using oreplus::data::SensiTrade;
 using std::multimap;
 
 namespace ore {

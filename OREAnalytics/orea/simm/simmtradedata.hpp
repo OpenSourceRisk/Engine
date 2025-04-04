@@ -42,15 +42,6 @@ using std::vector;
 using std::pair;
 using std::string;
 
-#define TRY_AND_CATCH(expr, tradeId, tradeType, context, emitStructuredError)                                          \
-    try {                                                                                                              \
-        expr;                                                                                                          \
-    } catch (const std::exception& e) {                                                                                \
-            ore::data::StructuredTradeErrorMessage(                                                                    \
-                tradeId, tradeType, "Error while setting simm trade data (" + std::string(context) + ")", e.what())    \
-                .log();                                                                                                \
-    }
-
 namespace ore {
 namespace analytics {
 class SimmBucketMapper;
