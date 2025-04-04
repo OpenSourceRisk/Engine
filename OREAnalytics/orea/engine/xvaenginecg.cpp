@@ -874,22 +874,26 @@ void XvaEngineCG::calculateDynamicIM() {
 
     // sensi bucketing configuration
 
-    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years, 30 * Years};
-    const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
-        IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Swap,
-        IrDeltaParConverter::InstrumentType::Swap, IrDeltaParConverter::InstrumentType::Swap,
-        IrDeltaParConverter::InstrumentType::Swap};
-
-    // const std::vector<QuantLib::Period> irDeltaTerms{2 * Weeks,  1 * Months, 3 * Months, 6 * Months,
-    //                                                  1 * Years,  2 * Years,  3 * Years,  5 * Years,
-    //                                                  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    // const std::vector<QuantLib::Period> irDeltaTerms{30 * Years};
     // const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
-    //     IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Deposit,
-    //     IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Deposit,
-    //     IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
-    //     IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
-    //     IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
-    //     IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap};
+    //     IrDeltaParConverter::InstrumentType::Swap};
+
+    // const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years, 30 * Years};
+    // const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
+    //     IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Swap,
+    //     IrDeltaParConverter::InstrumentType::Swap, IrDeltaParConverter::InstrumentType::Swap,
+    //     IrDeltaParConverter::InstrumentType::Swap};
+
+    const std::vector<QuantLib::Period> irDeltaTerms{2 * Weeks,  1 * Months, 3 * Months, 6 * Months,
+                                                     1 * Years,  2 * Years,  3 * Years,  5 * Years,
+                                                     10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
+        IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Deposit,
+        IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Deposit,
+        IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap};
 
     const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
@@ -1004,7 +1008,8 @@ void XvaEngineCG::calculateDynamicIM() {
 
             // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
-            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate && p.date2() > valDate) {
+            if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate &&
+                (p.date2() > valDate || p.date2() == Date())) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
                 std::size_t bucket = std::min<std::size_t>(
@@ -1171,12 +1176,16 @@ void XvaEngineCG::calculateDynamicIM() {
                 }
             }
 
-            // debug conditional ir delta vs. model state on time step 20
+            // debug conditional ir delta vs. model state on time step 1
 
-            // if (ccy == 0 && i == 20) {
+            // if (ccy == 0 && i == 24) {
             //     std::cout << "args size " << args.size() << std::endl;
+            //     RandomVariable tmp(model_->size(), 0.0);
+            //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+            //         tmp += conditionalIrDelta[ccy][b];
+            //     }
             //     for (std::size_t j = 0; j < model_->size(); ++j) {
-            //         std::cout << j << "," << args[2]->at(j) << "," << conditionalIrDelta[ccy].at(j) << std::endl;
+            //         std::cout << j << "," << args[2]->at(j) << "," << tmp[j] << "," << pathIrDelta[0][0][j]  << std::endl;
             //     }
             // }
 
@@ -1192,6 +1201,15 @@ void XvaEngineCG::calculateDynamicIM() {
         //                   << expectation(conditionalIrDelta[ccy][b]).at(0) << std::endl;
         //     }
         // }
+
+        //     for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
+        //         Real tmp = 0.0;
+        //         for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+        //             tmp += conditionalIrDelta[ccy][b][7];
+        //         }
+        //         if(ccy==0)
+        //         std::cout << "parDelta," << tmp << std::endl;
+        //     }
 
         // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
         //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
