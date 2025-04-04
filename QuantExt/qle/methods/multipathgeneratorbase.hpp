@@ -182,6 +182,20 @@ protected:
     BigNatural scrambleSeed_;
 };
 
+//! Instantiation of MultiPathGenerator which generate t0 paths only
+/*! \ingroup methods
+ */
+class MultiPathGeneratorT0Only : public MultiPathGeneratorBase {
+public:
+    explicit MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>&);
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
+
+private:
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
+    mutable Sample<MultiPath> next_;
+};
+
 //! Make function for path generators
 QuantLib::ext::shared_ptr<MultiPathGeneratorBase>
 makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<StochasticProcess>& process,
