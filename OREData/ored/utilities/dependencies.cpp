@@ -330,6 +330,7 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
         for (const auto& [o, s] : mp) {
             auto ct = marketObjectToCurveType(o);
             for (const auto& c : s) {
+                DLOG("Get dependencies for " << o << " " << c << " in configuration " << config);
                 string cId = c;
                 if (!curveConfigs->has(ct, c)) {
                     // the object name is not a curve id, try to find the curve id in the curve config
@@ -546,6 +547,7 @@ string swapIndexDiscountCurve(const string& ccy, const string& baseCcy, const st
         indexName = ccy + "-IN-" + baseCcy;
     }
 
+    DLOG("Got the swap index discount curve for currency '" << ccy << "', - '" << indexName <<"'");
     return indexName;
 }
 

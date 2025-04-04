@@ -382,6 +382,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
 
 const QuantLib::ext::shared_ptr<CurveConfig>&
 CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
+    DLOG("Find inflation curve config for id " << id << " and type " << to_string(type));
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (it != configs_.end()) {
@@ -403,10 +404,13 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
         auto cc = get(CurveSpec::CurveType::InflationCapFloorVolatility, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc)) {
             InflationCapFloorVolatilityCurveConfig::Type t = icc->getType();
-            if (t == type)
+            if (t == type) {
+                DLOG("Found inflation curve config for id " << id << " and type " << to_string(type));
                 return cc;
+            }
         }
     }
+    DLOG("Couldn't find inflation curve for id " << id << " and type " << to_string(type));
     return nullptr;
 }
 
