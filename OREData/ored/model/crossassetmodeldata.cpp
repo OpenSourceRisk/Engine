@@ -766,8 +766,9 @@ void CrossAssetModelData::buildComConfigs(std::map<std::string, QuantLib::ext::s
             QuantLib::ext::shared_ptr<CommoditySchwartzData> def = comDataMap["default"];
             QuantLib::ext::shared_ptr<CommoditySchwartzData> comData = QuantLib::ext::make_shared<CommoditySchwartzData>(
                 name, def->currency(), def->calibrationType(), def->calibrateSigma(), def->sigmaValue(),
-                def->calibrateKappa(), def->kappaValue(), def->optionExpiries(), def->optionStrikes());
-
+                def->calibrateKappa(), def->kappaValue(), def->calibrateSeasonality(), def->seasonalityParamType(), def->seasonalityTimes(),
+                def->seasonalityValues(),
+                def->optionExpiries(), def->optionStrikes());
             comConfigs_.push_back(comData);
         }
         LOG("CrossAssetModelData: COM config added for name " << name);

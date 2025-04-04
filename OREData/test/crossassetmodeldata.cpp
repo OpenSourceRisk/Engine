@@ -279,6 +279,33 @@ QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CrCirData>>> crCirCon
     return cirDataVector;
 }
 
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>> comConfigsData() {
+
+    // Create two instances
+    QuantLib::ext::shared_ptr<CommoditySchwartzData> comData(new data::CommoditySchwartzData());
+
+    vector<std::string> expiries = {"1Y", "2Y", "36M"};
+    vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"}; 
+
+    std::vector<Time> seasonalityTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> seasonalityValues = {0.01, 0.01, 0.01, 0.01, 0.01};
+
+    // First instance
+    comData->name() = "ICE:T";
+    comData->currency() = "USD";
+    comData->calibrationType() = parseCalibrationType("BOOTSTRAP");
+    comData->calibrateSeasonality() = true;
+    comData->seasonalityParamType() = parseParamType("PIECEWISE");
+    comData->seasonalityValues() = seasonalityValues;
+    comData->seasonalityTimes() = seasonalityTimes;
+    comData->optionExpiries() = expiries;
+    comData->optionStrikes() = strikes;
+
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>> comDataVector(new vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>);
+    *comDataVector = {comData};
+    return comDataVector;
+}
+
 QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
@@ -288,12 +315,14 @@ QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     crossAssetData->equities() = {"SP5"};
     crossAssetData->infIndices() = {"EUHICPXT"};
     crossAssetData->creditNames() = {"ItraxxEuropeS9V1", "CDX.NA.S33v1"};
+    crossAssetData->commodities() = {"ICE:T"}; 
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();
     crossAssetData->infConfigs() = infConfigsData();
     crossAssetData->crLgmConfigs() = *crLgmConfigsData();
     crossAssetData->crCirConfigs() = *crCirConfigsData();
+    crossAssetData->comConfigs() = *comConfigsData();
 
     CorrelationMatrixBuilder cmb;
     cmb.addCorrelation("IR:EUR", "IR:USD", 1.0);
@@ -315,7 +344,7 @@ QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 class F : public TopLevelFixture {
 public:
     F() {}
-    ~F() { clearOutput(TEST_OUTPUT_PATH); }
+    //~F() { clearOutput(TEST_OUTPUT_PATH); }
 };
 } // namespace
 

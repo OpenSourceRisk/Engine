@@ -77,6 +77,8 @@ public:
     bool requiresRecalibration() const override;
     //@}
 
+    void setCalibrationDone() const;
+    
 private:
     void performCalculations() const override;
     Real optionStrike(const Size j) const;

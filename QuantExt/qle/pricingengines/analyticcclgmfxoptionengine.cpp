@@ -105,7 +105,6 @@ Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
                 lowerBound, higherBound);
         }
     }
-
     BlackCalculator black(payoff, fxForward, std::sqrt(variance), domesticDiscount);
 
     return black.value();

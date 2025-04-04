@@ -27,6 +27,7 @@
 #include <ql/handle.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/models/parametrization.hpp>
+#include <qle/models/piecewiseconstanthelper.hpp>
 
 namespace QuantExt {
 //! COM Schwartz parametrization
@@ -61,16 +62,20 @@ namespace QuantExt {
 
     \ingroup models
 */
-class CommoditySchwartzParametrization : public Parametrization {
+class CommoditySchwartzParametrization : public Parametrization,
+                                         private PiecewiseConstantHelper1 {
 public:
     /*! The currency refers to the commodity currency, the
         fx spot is as of today (i.e. the discounted spot) */
     CommoditySchwartzParametrization(const Currency& currency, const std::string& name,
                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
                                      const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa,
-                                     bool driftFreeState = false);
+                                     bool driftFreeState = false,
+                                     const Array& aTimes = Array(), const Array& a = Array(1, 0.0), 
+                                     const QuantLib::ext::shared_ptr<QuantLib::Constraint>& aConstraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>()
+                                     );
 
-    Size numberOfParameters() const override { return 2; }
+    Size numberOfParameters() const override { return 3; }
     //! State variable variance on [0, t]
     Real variance(const Time t) const;
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
@@ -84,10 +89,15 @@ public:
     //! Inspector for today's price curve
     Handle<QuantExt::PriceTermStructure> priceCurve() { return priceCurve_; }
     //! Variance V(t,T) used in the computation of F(t,T)
-    virtual Real VtT(Real t, Real T);
+    Real VtT(Real t, Real T);
+    //! Inspector for the current value of model parameter m(T) (direct)
+    Real m(const QuantLib::Time t) const;
+    //! Inspector for the current value of model parameter m(T) (direct)
+    Real a(const QuantLib::Time t) const;
 
     bool driftFreeState() const { return driftFreeState_; }
     
+    void update() const override;
 protected:
     Real direct(const Size i, const Real x) const override;
     Real inverse(const Size i, const Real y) const override;
@@ -98,13 +108,50 @@ protected:
     const QuantLib::ext::shared_ptr<PseudoParameter> sigma_;
     const QuantLib::ext::shared_ptr<PseudoParameter> kappa_;
     bool driftFreeState_;
+
+private:
+    void initialize(const Array& a);
 };
 
 // inline
+inline void CommoditySchwartzParametrization::initialize(const Array& a) {
+    QL_REQUIRE(PiecewiseConstantHelper1::t().size() + 1 == a.size(),
+               "a size (" << a.size() << ") inconsistent to times size ("
+                              << PiecewiseConstantHelper1::t().size() << ")");
+                              
+    // store raw parameter values
+    for (Size i = 0; i < PiecewiseConstantHelper1::y_->size(); ++i) {
+        PiecewiseConstantHelper1::y_->setParam(i, inverse(i + 2, a[i]));
+    }
+    update();
+}
 
-inline Real CommoditySchwartzParametrization::direct(const Size, const Real x) const { return x * x; }
+inline void CommoditySchwartzParametrization::update() const {
+    Parametrization::update();
+    PiecewiseConstantHelper1::update();
+}
 
-inline Real CommoditySchwartzParametrization::inverse(const Size, const Real y) const { return std::sqrt(y); }
+inline Real CommoditySchwartzParametrization::direct(const Size i, const Real x) const { 
+    if (i==0 || i==1)
+        return x * x; 
+    else
+        return PiecewiseConstantHelper1::direct(x);
+}
+
+inline Real CommoditySchwartzParametrization::inverse(const Size i, const Real y) const {   
+    if (i==0 || i==1)
+        return std::sqrt(y); 
+    else
+        return PiecewiseConstantHelper1::inverse(y);
+}
+
+inline Real CommoditySchwartzParametrization::m(const QuantLib::Time t) const{
+    return std::exp(PiecewiseConstantHelper1::y(t));
+}
+
+inline Real CommoditySchwartzParametrization::a(const QuantLib::Time t) const{
+    return PiecewiseConstantHelper1::y(t);
+}
 
 inline Real CommoditySchwartzParametrization::variance(const Time t) const {
     Real sig = direct(0, sigma_->params()[0]);
@@ -135,11 +182,13 @@ inline Real CommoditySchwartzParametrization::kappaParameter() const {
 }
 
 inline const QuantLib::ext::shared_ptr<Parameter> CommoditySchwartzParametrization::parameter(const Size i) const {
-    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0 and 1");
+    QL_REQUIRE(i < 3, "parameter " << i << " does not exist, only have 0, 1 and 2");
     if (i == 0)
         return sigma_;
-    else
+    else if (i == 1)
         return kappa_;
+    else
+        return PiecewiseConstantHelper1::y_;
 }
 
 } // namespace QuantExt

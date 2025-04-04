@@ -260,10 +260,11 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
-        << std::setw(14) << "(diff)" << std::setw(14) << "Sigma" << setw(14) << "Kappa\n";
+        << std::setw(14) << "(diff)" << std::setw(14) << "Sigma" << setw(14) << "Kappa" << setw(14) << "Seasonality" << setw(14) << "a\n";
     Real t = 0.0;
     Real modelSigma = parametrization->sigmaParameter();
     Real modelKappa = parametrization->kappaParameter();
+    Real modelSeasonality, a;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
@@ -277,9 +278,12 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
         marketVol = basket[j]->volatility()->value();
         modelVol = impliedVolatility(basket[j]);
         volDiff = modelVol - marketVol;
+        modelSeasonality = parametrization->m(t);
+        a = parametrization->a(t);
         log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
             << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
-            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << " " << modelKappa << "\n";
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << std::setw(14) 
+            << modelKappa << std::setw(14) << modelSeasonality << std::setw(14) << a <<"\n";
     }
     if (parametrization != nullptr) {
         modelSigma = parametrization->sigma(t + 1E-4);
