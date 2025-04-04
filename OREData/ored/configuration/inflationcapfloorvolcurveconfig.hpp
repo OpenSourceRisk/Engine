@@ -145,6 +145,7 @@ private:
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::QuoteType t);
+std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::Type t);
 
 } // namespace data
 } // namespace ore

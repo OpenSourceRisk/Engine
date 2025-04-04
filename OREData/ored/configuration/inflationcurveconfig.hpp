@@ -122,5 +122,8 @@ private:
     vector<double> overrideSeasonalityFactors_;
     InterpolationVariable interpolationVariable_ = InterpolationVariable::ZeroRate;
 };
+
+std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t);
+
 } // namespace data
 } // namespace ore
