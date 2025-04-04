@@ -444,7 +444,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                 QL_FAIL("Transatlantic BarrierType (" << n.type()
                                                       << ") must be DownAndIn, UpAndIn, DownAndOut, UpAndOut");
             }
-            if (transatlanticBarrier_[0].strictComparison()) {
+            if (n.strictComparison()) {
                 transatlanticBarrierStrictComparison.push_back(transatlanticBarrier_[0].strictComparison().value());
             } else {
                 transatlanticBarrierStrictComparison.push_back("0");
