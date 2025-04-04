@@ -444,17 +444,23 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                 QL_FAIL("Transatlantic BarrierType (" << n.type()
                                                       << ") must be DownAndIn, UpAndIn, DownAndOut, UpAndOut");
             }
-            if (n.strictComparison()) {
-                transatlanticBarrierStrictComparison.push_back(n.strictComparison().value());
+            if (transatlanticBarrier_[0].strictComparison()) {
+                transatlanticBarrierStrictComparison.push_back(transatlanticBarrier_[0].strictComparison().value());
             } else {
                 transatlanticBarrierStrictComparison.push_back("0");
             }
-        }
+        }      
         QL_REQUIRE(transatlanticBarrierType.size() == 1 || transatlanticBarrierType.size() == underlyings_.size(),
                    "Transatlantic Barrier must have only 1 Barrier block or 1 block for each underlyings, got "
                        << transatlanticBarrierType.size());
         if (transatlanticBarrierType.size() == 1 && underlyings_.size() > 1) {
-            transatlanticBarrierType.assign(underlyings_.size(), transatlanticBarrierType[0]);
+            transatlanticBarrierType.assign(underlyings_.size(), transatlanticBarrierType[0]);          
+            if (transatlanticBarrier_[0].strictComparison()) {
+                transatlanticBarrierStrictComparison.assign(underlyings_.size(),
+                                                            transatlanticBarrier_[0].strictComparison().value());
+            } else {
+                transatlanticBarrierStrictComparison.assign(underlyings_.size(),"0");
+            }
         }
         transatlanticBarrierLevel.clear();
         if (transatlanticBarrier_.size() == 1) {
