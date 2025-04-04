@@ -1414,6 +1414,14 @@
       <xs:enumeration value="FixingFloor"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="barrierCompare">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="1"/>
+      <xs:enumeration value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="barrierStyle">
     <xs:restriction base="xs:string">
@@ -1425,6 +1433,7 @@
   <xs:complexType name="barrierData">
     <xs:all>
       <xs:element type="barrierType" name="Type"/>
+	  <xs:element type="barrierCompare" name="StrictComparison" minOccurs="0"/>
       <xs:element type="barrierStyle" name="Style" minOccurs="0"/>
       <xs:element name="Levels">
         <xs:complexType>
