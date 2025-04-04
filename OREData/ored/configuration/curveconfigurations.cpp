@@ -352,6 +352,7 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
 
 const QuantLib::ext::shared_ptr<CurveConfig>&
 CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) {
+    DLOG("Find inflation curve config for id " << id);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
     if (it != configs_.end()) {
@@ -373,16 +374,19 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
         auto cc = get(CurveSpec::CurveType::Inflation, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
             InflationCurveConfig::Type t = icc->getType();
-            if (t == type)
+            if (t == type) {
+                DLOG("Couldn't find inflation curve config for id " << id);
                 return cc;
+            }
         }
     }
+    DLOG("Couldn't find inflation curve for id " << id);
     return nullptr;
 }
 
 const QuantLib::ext::shared_ptr<CurveConfig>&
 CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
-    DLOG("Find inflation curve config for id " << id << " and type " << to_string(type));
+    DLOG("Find inflation vol curve config for id " << id);
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (it != configs_.end()) {
@@ -405,12 +409,12 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCapFloorVolatilityCurveConfig>(cc)) {
             InflationCapFloorVolatilityCurveConfig::Type t = icc->getType();
             if (t == type) {
-                DLOG("Found inflation curve config for id " << id << " and type " << to_string(type));
+                DLOG("Found inflation vol curve config for id " << id);
                 return cc;
             }
         }
     }
-    DLOG("Couldn't find inflation curve for id " << id << " and type " << to_string(type));
+    DLOG("Couldn't find inflationvol curve for id " << id);
     return nullptr;
 }
 
