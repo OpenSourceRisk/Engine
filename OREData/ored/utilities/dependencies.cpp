@@ -130,9 +130,9 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
     case CurveSpec::CurveType::Inflation: {
         string cId;
         if (mo == MarketObject::ZeroInflationCurve) {
-            if (const auto& cc = curveConfigs->findInflationCurveConfig(name, InflationCurveConfig::Type::ZC))
+            if (auto cc = curveConfigs->findInflationCurveConfig(name, InflationCurveConfig::Type::ZC))
                 cId = cc->curveID();
-        } else if (const auto& cc = curveConfigs->findInflationCurveConfig(name, InflationCurveConfig::Type::YY))
+        } else if (auto cc = curveConfigs->findInflationCurveConfig(name, InflationCurveConfig::Type::YY))
             cId = cc->curveID();
 
         cs = new InflationCurveSpec(name, cId);
@@ -141,10 +141,10 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
     case CurveSpec::CurveType::InflationCapFloorVolatility: {
         string cId;
         if (mo == MarketObject::ZeroInflationCapFloorVol) {
-            if (const auto& cc =
+            if (auto cc =
                     curveConfigs->findInflationVolCurveConfig(name, InflationCapFloorVolatilityCurveConfig::Type::ZC))
                 cId = cc->curveID();
-        } else if (const auto& cc = curveConfigs->findInflationVolCurveConfig(
+        } else if (auto cc = curveConfigs->findInflationVolCurveConfig(
                        name, InflationCapFloorVolatilityCurveConfig::Type::YY))
             cId = cc->curveID();
 
