@@ -764,7 +764,7 @@ void LegData::fromXML(XMLNode* node) {
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     paymentLag_ = XMLUtils::getChildValue(node, "PaymentLag");
-    notionalPaymentLag_ = XMLUtils::getChildValue(node, "NotionalPaymentLag");
+    notionalPaymentLag_ = XMLUtils::getChildValue(node, "NotionalPaymentLag", false, paymentLag_);
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
@@ -812,6 +812,15 @@ void LegData::fromXML(XMLNode* node) {
 
     if (auto tmp = XMLUtils::getChildNode(node, "ScheduleData"))
         schedule_.fromXML(tmp);
+
+    // set payment calendar equal to the schedule calendar if the payment calendar not given
+    // otherwise the payment calendar is not set and payments of notional can happen before the interest payments 
+    if (paymentCalendar_.empty()  && !schedule_.rules().empty()) {
+        auto tmp = schedule_.rules().front().calendar();
+        if (!tmp.empty()) {
+            paymentCalendar_ = tmp;
+        }
+    }
 
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
     if (!paymentDates_.empty()) {
