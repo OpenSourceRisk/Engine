@@ -325,8 +325,20 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
     const string& baseCcyDiscountCurve) {
+
+    DLOG("MarketObjectSize =  " << objects->size());
+    for (const auto& [config, mp] : *objects) {
+        DLOG("Config =  " << config);
+        for (const auto& [o, s] : mp) {
+			DLOG("MarketObject =  " << o);
+			for (const auto& c : s) {
+				DLOG("CurveSpec =  " << c);
+			}
+		}
+    }
     for (const auto& [config, mp] : *objects) {
         std::map<CurveSpec::CurveType, std::set<string>> dependencies;
+
         for (const auto& [o, s] : mp) {
             auto ct = marketObjectToCurveType(o);
             for (const auto& c : s) {
