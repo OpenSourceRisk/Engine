@@ -45,7 +45,9 @@ public:
     void setUpConfigurations() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
-        
+
+    void applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
         offsetScenario_ = offsetScenario;
     }
