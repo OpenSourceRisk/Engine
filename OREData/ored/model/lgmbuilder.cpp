@@ -87,7 +87,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 
     DLOG("LgmBuilder::createSwaptionHelper(" << expiry << ", " << term << ")");
 
-    // hardcoded parameters to ensure a robust cailbration:
+    // hardcoded parameters to ensure a robust calibration:
 
     // 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
     //   calibration strike closer to the ATM level
