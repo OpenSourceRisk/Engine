@@ -55,6 +55,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
 
     // Build Portfolio
     p->build(factory, "portfolio-analyzer");
+    DLOG("PortfolioAnalyser: portfolio built");
     maturity_ = p->maturity();
 
     // Build bonds having a security entry to get additional deps to the curves needed by the bond
@@ -99,6 +100,8 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
         }
     }
 
+    
+    DLOG("PortfolioAnalyser: Setting market Objects");
     // add any curve dependencies from the marketobjects obtained
     marketObjects_ = market_->marketObjects();
     DLOG("Start adding dependent curves");
