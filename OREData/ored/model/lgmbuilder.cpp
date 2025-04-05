@@ -78,7 +78,7 @@ SwaptionData swaptionData(const QuantLib::ext::shared_ptr<Swaption> swaption, co
 
 // Utility function to create swaption helper. Returns helper and (possibly updated) strike
 template <typename E, typename T>
-std::pair<QuantLib::ext::shared_ptr<SwaptionHelper>, double>
+std::tuple<QuantLib::ext::shared_ptr<SwaptionHelper>, double, ore::data::LgmBuilder::FallbackType>
 createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolatilityStructure>& svts,
                      const Handle<Quote>& vol, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                      const Period& fixedLegTenor, const DayCounter& fixedDayCounter, const DayCounter& floatDayCounter,
@@ -87,23 +87,8 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 
     DLOG("LgmBuilder::createSwaptionHelper(" << expiry << ", " << term << ")");
 
-    // hardcoded parameters to ensure a robust calibration:
+    ore::data::LgmBuilder::FallbackType fallbackType = ore::data::LgmBuilder::FallbackType::NoFallback;
 
-    // 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
-    //   calibration strike closer to the ATM level
-    static constexpr Real maxAtmStdDev = 3.0;
-
-    // 2 If the helper value is lower than mmv, replace it with a "more reasonable" helper. Here, we replace
-    //   the helper with a helper that has the ATM strike. There are other options here.
-    static constexpr Real mmv = 1.0E-20;
-
-    // 3 Switch to PriceError if helper's market value is below smv
-    static constexpr Real smv = 1.0E-8;
-
-    // Notice: the vol that is passed in to this method is in general a dummy value, which is good enough though to
-    // check 2 and 3 above. To check 1, the vol is not needed at all.
-
-    //TODO Adjust Settlement Days
     auto vt = svts->volatilityType();
     auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
@@ -116,50 +101,55 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     if (vt == ShiftedLognormal) {
         atmStdDev *= sd.atmForward + shift;
     }
-    if (strike != Null<Real>() && std::abs(strike - sd.atmForward) > maxAtmStdDev * atmStdDev) {
+    if (strike != Null<Real>() && std::abs(strike - sd.atmForward) > ore::data::LgmBuilder::maxAtmStdDev * atmStdDev) {
         DLOG("Helper with expiry " << expiry << " and term " << term << " has a strike (" << strike
-                                   << ") that is too far out of the money (atm = " << sd.atmForward << ", atmStdDev = "
-                                   << atmStdDev << "). Adjusting the strike using maxAtmStdDev " << maxAtmStdDev);
+                                   << ") that is too far out of the money (atm = " << sd.atmForward
+                                   << ", atmStdDev = " << atmStdDev << "). Adjusting the strike using maxAtmStdDev "
+                                   << ore::data::LgmBuilder::maxAtmStdDev);
         if (strike > sd.atmForward)
-            strike = sd.atmForward + maxAtmStdDev * atmStdDev;
+            strike = sd.atmForward + ore::data::LgmBuilder::maxAtmStdDev * atmStdDev;
         else
-            strike = sd.atmForward - maxAtmStdDev * atmStdDev;
+            strike = sd.atmForward - ore::data::LgmBuilder::maxAtmStdDev * atmStdDev;
         helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
+        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule1;
     }
 
     // ensure point 2 from above
 
     auto mv = std::abs(helper->marketValue());
-    if (mv < mmv) {
+    if (mv < ore::data::LgmBuilder::mmv) {
         DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than minimum market value " << mmv
-                                   << " so switching to helper with atm rate " << sd.atmForward);
+                                   << std::scientific << mv << " which is lower than minimum market value "
+                                   << ore::data::LgmBuilder::mmv << " so switching to helper with atm rate "
+                                   << sd.atmForward);
         strike = sd.atmForward;
         helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
+        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule2;
     }
 
     // ensure point 3 from above
 
     mv = std::abs(helper->marketValue());
-    if (errorType != BlackCalibrationHelper::PriceError && mv < smv) {
+    if (errorType != BlackCalibrationHelper::PriceError && mv < ore::data::LgmBuilder::smv) {
         errorType = BlackCalibrationHelper::PriceError;
         TLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than " << smv
+                                   << std::scientific << mv << " which is lower than " << ore::data::LgmBuilder::smv
                                    << " so switching to a price error helper.");
         helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
+        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule3;
     }
 
     DLOG("Created swaption helper with expiry " << expiry << " and term " << term << ": vol=" << vol->value()
                                                 << ", index=" << iborIndex->name() << ", strike=" << strike
                                                 << ", shift=" << shift);
 
-    return std::make_pair(helper, strike);
+    return std::make_tuple(helper, strike, fallbackType);
 }
 
 } // namespace
@@ -246,10 +236,10 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
-    swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-    
+    swaptionIndexInBasket_ = std::vector<Size>(data_->optionExpiries().size(), Null<Size>());
+
     if (requiresCalibration_) {
-        buildSwaptionBasket();
+        buildSwaptionBasket(false);
     }
 
     Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
@@ -267,9 +257,9 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
             if (data_->aTimes().size() > 0) {
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
-            QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
+            QL_REQUIRE(!swaptionExpiries_.empty() > 0, "empty swaptionExpiries");
             QL_REQUIRE(!data_->aValues().empty(), "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
-            aTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
+            aTimes = Array(swaptionExpiries_.begin(), std::next(swaptionExpiries_.end(), -1));
             alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
         } else {
             QL_REQUIRE(alpha.size() == aTimes.size() + 1,
@@ -289,7 +279,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                 DLOG("overriding h time grid with swaption underlying maturities, set all initial values to first "
                      "given value");
             }
-            hTimes = swaptionMaturities_;
+            hTimes = Array(swaptionMaturities_.begin(), swaptionMaturities_.end());
             h = Array(hTimes.size() + 1, data_->hValues()[0]);
         } else { // use input time grid and input h array otherwise
             QL_REQUIRE(h.size() == hTimes.size() + 1, "H grids do not match");
@@ -397,16 +387,11 @@ void LgmBuilder::performCalculations() const {
     // reset lgm observer's updated flag
     marketObserver_->hasUpdated(true);
 
-    if (swaptionBasketRefDate_ != calibrationDiscountCurve_->referenceDate()) {
-        // build swaption basket if required, i.e. if reference date has changed since last build
-        buildSwaptionBasket();
-        volSurfaceChanged(true);
-        updateSwaptionBasketVols();
-    } else {
-        // otherwise just update vols
-        volSurfaceChanged(true);
-        updateSwaptionBasketVols();
-    }
+    // if reference date has changed we must rebuild the swaption basket, otherwise we can reuse the existing basket
+    // except when a fallback rule in createSwaptionHelper() implies a change in the helper
+    buildSwaptionBasket(swaptionBasketRefDate_ != calibrationDiscountCurve_->referenceDate());
+    volSurfaceChanged(true);
+    updateSwaptionBasketVols();
 
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
         auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_,
@@ -557,12 +542,11 @@ bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
     if (swaptionVolCache_.size() != swaptionBasket_.size())
         swaptionVolCache_ = vector<Real>(swaptionBasket_.size(), Null<Real>());
 
-    Size swaptionCounter = 0;
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
-        if (!swaptionActive_[j])
+        if (swaptionIndexInBasket_[j] == Null<Size>())
             continue;
 
-        Real volCache = swaptionVolCache_.at(swaptionCounter);
+        Real volCache = swaptionVolCache_.at(swaptionIndexInBasket_[j]);
 
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
@@ -570,7 +554,7 @@ bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
         Real termT;
 
         getExpiryAndTerm(j, expiryPb, termPb, expiryDb, termDb, termT, expiryDateBased, termDateBased);
-        Real strikeValue = swaptionStrike_.at(swaptionCounter);
+        Real strikeValue = swaptionStrike_.at(swaptionIndexInBasket_[j]);
 
         Real vol;
         if (expiryDateBased && termDateBased) {
@@ -586,10 +570,9 @@ bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
 
         if (!close_enough(volCache, vol)) {
             if (updateCache)
-                swaptionVolCache_[swaptionCounter] = vol;
+                swaptionVolCache_[swaptionIndexInBasket_[j]] = vol;
             hasUpdated = true;
         }
-        swaptionCounter++;
     }
     return hasUpdated;
 }
@@ -599,29 +582,35 @@ void LgmBuilder::updateSwaptionBasketVols() const {
         swaptionBasketVols_.at(j)->setValue(swaptionVolCache_.at(j));
 }
 
-void LgmBuilder::buildSwaptionBasket() const {
+void LgmBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
 
-    DLOG("build swaption basket");
+    bool fullRebuild = enforceFullRebuild || swaptionBasket_.empty();
 
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionTerms().size(), "swaption vector size mismatch");
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "swaption vector size mismatch");
+    DLOG("build swaption basket (full rebuild = " << std::boolalpha << enforceFullRebuild << ")");
 
-    std::ostringstream log;
-
-    std::vector<Time> expiryTimes;
-    std::vector<Time> maturityTimes;
-    swaptionBasket_.clear();
-    swaptionBasketVols_.clear();
-    swaptionVolCache_.clear();
-    swaptionStrike_.clear();
-
-    DLOG("build reference date grid '" << referenceCalibrationGrid_ << "'");
     Date lastRefCalDate = Date::minDate();
     std::vector<Date> referenceCalibrationDates;
-    if (!referenceCalibrationGrid_.empty())
-        referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
+
+    if (fullRebuild) {
+        QL_REQUIRE(data_->optionExpiries().size() == data_->optionTerms().size(), "swaption vector size mismatch");
+        QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "swaption vector size mismatch");
+        swaptionBasket_.clear();
+        swaptionBasketVols_.clear();
+        swaptionStrike_.clear();
+        swaptionExpiries_.clear();
+        swaptionFallbackType_.clear();
+        swaptionMaturities_.clear();
+        swaptionVolCache_.clear();
+        DLOG("build reference date grid '" << referenceCalibrationGrid_ << "'");
+        if (!referenceCalibrationGrid_.empty())
+            referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
+    }
 
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+
+        if(!fullRebuild && swaptionIndexInBasket_[j] == Null<Size>())
+                continue;
+
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
         Date expiryDb, termDb;
@@ -651,12 +640,13 @@ void LgmBuilder::buildSwaptionBasket() const {
         Handle<Quote> vol = Handle<Quote>(volQuote);
         QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
+        FallbackType fallbackType;
 
         if (expiryDateBased && termDateBased) {
             double v = svts_->volatility(expiryDb, termT, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
-            std::tie(helper, updatedStrike) = createSwaptionHelper(
+            std::tie(helper, updatedStrike, fallbackType) = createSwaptionHelper(
                 expiryDb, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
@@ -664,7 +654,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             double v = svts_->volatility(expiryDb, termPb, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termPb) : 0.0;
-            std::tie(helper, updatedStrike) = createSwaptionHelper(
+            std::tie(helper, updatedStrike, fallbackType) = createSwaptionHelper(
                 expiryDb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
@@ -673,7 +663,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             volQuote->setValue(v);
             Date expiry = svts_->optionDateFromTenor(expiryPb);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termT) : 0.0;
-            std::tie(helper, updatedStrike) = createSwaptionHelper(
+            std::tie(helper, updatedStrike, fallbackType) = createSwaptionHelper(
                 expiry, termDb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
@@ -681,9 +671,20 @@ void LgmBuilder::buildSwaptionBasket() const {
             double v = svts_->volatility(expiryPb, termPb, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termPb) : 0.0;
-            std::tie(helper, updatedStrike) = createSwaptionHelper(
+            std::tie(helper, updatedStrike, fallbackType) = createSwaptionHelper(
                 expiryPb, termPb, svts_, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter,
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
+        }
+
+        if (!fullRebuild) {
+            if (fallbackType == swaptionFallbackType_[swaptionIndexInBasket_[j]] &&
+                QuantLib::close_enough(updatedStrike, swaptionStrike_[swaptionIndexInBasket_[j]])) {
+                continue;
+            }
+            swaptionBasket_[swaptionIndexInBasket_[j]] = helper;
+            swaptionFallbackType_[swaptionIndexInBasket_[j]] = fallbackType;
+            swaptionStrike_[swaptionIndexInBasket_[j]] = updatedStrike;
+            continue;
         }
 
         // check if we want to keep the helper when a reference calibration grid is given
@@ -691,33 +692,18 @@ void LgmBuilder::buildSwaptionBasket() const {
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
-            swaptionActive_[j] = true;
+            swaptionIndexInBasket_[j] = swaptionBasket_.size();
             swaptionBasketVols_.push_back(volQuote);
             swaptionBasket_.push_back(helper);
             swaptionStrike_.push_back(updatedStrike);
-            expiryTimes.push_back(calibrationDiscountCurve_->timeFromReference(expiryDate));
+            swaptionFallbackType_.push_back(fallbackType);
+            swaptionExpiries_.insert(calibrationDiscountCurve_->timeFromReference(expiryDate));
             Date matDate = helper->underlying()->maturityDate();
-            maturityTimes.push_back(calibrationDiscountCurve_->timeFromReference(matDate));
+            swaptionMaturities_.insert(calibrationDiscountCurve_->timeFromReference(matDate));
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;
         }
     }
-
-    std::sort(expiryTimes.begin(), expiryTimes.end());
-    auto itExpiryTime = unique(expiryTimes.begin(), expiryTimes.end());
-    expiryTimes.resize(distance(expiryTimes.begin(), itExpiryTime));
-
-    swaptionExpiries_ = Array(expiryTimes.size());
-    for (Size j = 0; j < expiryTimes.size(); j++)
-        swaptionExpiries_[j] = expiryTimes[j];
-
-    std::sort(maturityTimes.begin(), maturityTimes.end());
-    auto itMaturityTime = unique(maturityTimes.begin(), maturityTimes.end());
-    maturityTimes.resize(distance(maturityTimes.begin(), itMaturityTime));
-
-    swaptionMaturities_ = Array(maturityTimes.size());
-    for (Size j = 0; j < maturityTimes.size(); j++)
-        swaptionMaturities_[j] = maturityTimes[j];
 
     swaptionBasketRefDate_ = calibrationDiscountCurve_->referenceDate();
 }
