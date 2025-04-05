@@ -93,13 +93,10 @@ void SimmTradeData::init() {
         initialised_ = true;
     }
 }
-  
-void SimmTradeData::TradeAttributes::setTradeType(const string tradeType) {
-    tradeType_ = tradeType; }
 
-void SimmTradeData::TradeAttributes::setSimmProductClass(const CrifRecord::ProductClass& pc) {
-    simmProductClass_ = pc;
-}
+void SimmTradeData::TradeAttributes::setTradeType(const string tradeType) { tradeType_ = tradeType; }
+
+void SimmTradeData::TradeAttributes::setSimmProductClass(const CrifRecord::ProductClass& pc) { simmProductClass_ = pc; }
 
 void SimmTradeData::TradeAttributes::setScheduleProductClass(const CrifRecord::ProductClass& pc) {
     scheduleProductClass_ = pc;

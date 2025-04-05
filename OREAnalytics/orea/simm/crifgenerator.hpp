@@ -67,7 +67,7 @@ public:
     */
     CrifGenerator(const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                   const QuantLib::ext::shared_ptr<SimmNameMapper>& nameMapper,
-		  const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
+                  const QuantLib::ext::shared_ptr<SimmTradeData>& tradeData,
                   const QuantLib::ext::shared_ptr<CrifMarket>& crifMarket, bool xccyDiscounting = false,
                   const std::string& currency = "USD", QuantLib::Real usdSpot = 1.0,
                   const QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter>& fieldGetter = nullptr,
@@ -88,9 +88,8 @@ public:
     generateCrif(const QuantLib::ext::shared_ptr<ore::analytics::SensitivityStream>& ss);
 
     // Process the sensistream and add crif recrods to the the crif
-    std::vector<ore::analytics::CrifRecord> processSensitivityStream(ore::analytics::SensitivityStream& ss, std::set<std::string>& failedTrades);
-
-    // void addExtendedAttributes(ore::analytics::CrifRecord& record) const;
+    std::vector<ore::analytics::CrifRecord> processSensitivityStream(ore::analytics::SensitivityStream& ss,
+                                                                     std::set<std::string>& failedTrades);
 
     //! Return the base currency's discount index name. May be empty if not populated.
     const std::string& discountIndex() const { return discountIndex_; }
@@ -99,7 +98,6 @@ public:
     const bool& hasNettingSetDetails() const { return hasNettingSetDetails_; }
 
 private:
-
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
     QuantLib::ext::shared_ptr<SimmNameMapper> nameMapper_;
     QuantLib::ext::shared_ptr<SimmTradeData> tradeData_;
@@ -107,7 +105,7 @@ private:
     bool xccyDiscounting_;
     std::string currency_;
     QuantLib::ext::shared_ptr<ore::data::PortfolioFieldGetter> fieldGetter_;
-    QuantLib::Real usdSpot_;;
+    QuantLib::Real usdSpot_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     std::string discountIndex_;
@@ -122,12 +120,14 @@ private:
     bool hasNettingSetDetails_;
 
     //! Creates a crif record for special cases like zeroFxRisk or UseCounterpartyTrade
-    ore::analytics::CrifRecord createZeroAmountCrifRecord(const string& tradeId, const ore::analytics::CrifRecord::RiskType riskType, const CrifRecord::IMModel& imModel,
-							  const std::string& qualifer, bool inlcudeEndDateIfAvailable) const;
+    ore::analytics::CrifRecord createZeroAmountCrifRecord(const string& tradeId,
+                                                          const ore::analytics::CrifRecord::RiskType riskType,
+                                                          const CrifRecord::IMModel& imModel,
+                                                          const std::string& qualifer,
+                                                          bool inlcudeEndDateIfAvailable) const;
 
     //! Write a "zero" Risk_FX CRIF record to the report
     ore::analytics::CrifRecord createZeroRiskFxRecord(const std::string& tradeId) const;
-
 };
 
 } // namespace analytics

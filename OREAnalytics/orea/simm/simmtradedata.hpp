@@ -28,7 +28,6 @@
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-//#include <ored/portfolio/simmcreditqualifiermapping.hpp>
 
 #include <map>
 #include <set>

@@ -16,22 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/crifgenerator.hpp
-    \brief Class that generates a CRIF report
+/*! \file orea/simm/crifrecordgenerator.hpp
+    \brief Class that generates a CRIF records from sensitivity records
  */
 
 #pragma once
 
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmnamemapper.hpp>
-#include <ored/report/report.hpp>
 #include <orea/simm/crifmarket.hpp>
 #include <orea/simm/simmtradedata.hpp>
+
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/additionalfieldgetter.hpp>
+#include <ored/report/report.hpp>
 
 #include <ql/types.hpp>
 

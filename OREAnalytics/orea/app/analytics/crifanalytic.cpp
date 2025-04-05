@@ -93,7 +93,7 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         auto simmScenarioReport = QuantLib::ext::make_shared<InMemoryReport>();
         reportWriter.writeScenarioReport(*simmScenarioReport, sensiAnalysis->sensiCubes(),
                                          inputs->sensiThreshold());
-        sensiReports["simm_scenario"] = simmScenarioReport;
+        sensiReports["crif_scenario"] = simmScenarioReport;
     } else {
         LOG("Skipping SIMM scenario report, this is an optional report and writeOptionalReports is set to false");
     }
@@ -104,7 +104,7 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     if (writeReports) {
         auto simmSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
         reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, inputs->sensiThreshold());
-        sensiReports["simm_sensitivity"] = simmSensitivityReport;
+        sensiReports["crif_sensitivity"] = simmSensitivityReport;
     } else {
         LOG("Skipping SIMM sensitivity report, this is an optional report and writeOptionalReports is set to "
             "false");
@@ -116,7 +116,7 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         reportWriter.writeSensitivityConfigReport(
             *simmSensitivityConfigReport, sensiAnalysis->scenarioGenerator()->shiftSizes(),
             sensiAnalysis->scenarioGenerator()->baseValues(), sensiAnalysis->scenarioGenerator()->keyToFactor());
-        sensiReports["simm_sensitivity_config"] = simmSensitivityConfigReport;
+        sensiReports["crif_sensitivity_config"] = simmSensitivityConfigReport;
     } else {
         LOG("Skipping SIMM sensitivity config report, this is an optional report and writeOptionalReports is set "
             "to false");
@@ -134,18 +134,18 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     if (writeReports) {
         auto simmParSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
         reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, inputs->sensiThreshold());
-        sensiReports["simm_par_sensitivity"] = simmParSensitivityReport;
+        sensiReports["crif_par_sensitivity"] = simmParSensitivityReport;
     }
     MEM_LOG;
 
     if (writeReports && inputs->outputJacobi()) {
         auto jacobiReport = QuantLib::ext::make_shared<InMemoryReport>();
         writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-        sensiReports["simm_par_conversion_matrix"] = jacobiReport;
+        sensiReports["crif_par_conversion_matrix"] = jacobiReport;
 
         auto jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>();
         parConverter->writeConversionMatrix(*jacobiInverseReport);
-        sensiReports["simm_par_conversion_matrix_inverse"] = jacobiInverseReport;
+        sensiReports["crif_par_conversion_matrix_inverse"] = jacobiInverseReport;
     }
 
     analytic->stopTimer("computeSensitivities()");
@@ -154,7 +154,6 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
 };
   
 void CrifAnalyticImpl::setUpConfigurations() {
-    LOG("CrifAnalytic::setUpConfigurations() called");
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
@@ -254,66 +253,20 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         sensiReports = res.second;
         LOG("Finished sensitivity and par sensitivity analysis");
 
-        // Write out reports from computed sensitivities (for portfolio only)
-        if (sensiReports.find("simm_scenario") != sensiReports.end()) {
-            if (analytic()->getWriteIntermediateReports()) {
-                LOG("Write SIMM scenario report");
-                path simmScenarioPath = inputs_->resultsPath() / "simm_scenario.csv";
-                sensiReports.at("simm_scenario")
-                    ->toFile(simmScenarioPath.string(), ',', false, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-                LOG("Scenario report written to " << simmScenarioPath);
-            } else
-                analytic()->addReport(LABEL, "simm_scenario", sensiReports.at("simm_scenario"));
-        }
-        if (sensiReports.find("simm_sensitivity") != sensiReports.end()) {
-            if (analytic()->getWriteIntermediateReports()) {
-                LOG("Write SIMM sensitivity report");
-                path simmSensitivityPath = inputs_->resultsPath() / "simm_sensitivity.csv";
-                sensiReports.at("simm_sensitivity")
-                    ->toFile(simmSensitivityPath.string(), ',', false, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-                LOG("Sensitivity report written to " << simmSensitivityPath);
-            } else
-                analytic()->addReport(LABEL, "simm_sensitivity", sensiReports.at("simm_sensitivity"));
-        }
-        if (sensiReports.find("simm_sensitivity_config") != sensiReports.end()) {
-            if (analytic()->getWriteIntermediateReports()) {
-                LOG("Write SIMM sensitivity config report");
-                path simmSensitivityConfigPath = inputs_->resultsPath() / "simm_sensitivity_config.csv";
-                sensiReports.at("simm_sensitivity_config")
-                    ->toFile(simmSensitivityConfigPath.string(), ',', false, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-                LOG("Sensitivity config report written to " << simmSensitivityConfigPath);
-            } else
-                analytic()->addReport(LABEL, "simm_sensitivity_config", sensiReports.at("simm_sensitivity_config"));
-        }
-        if (sensiReports.find("simm_par_sensitivity") != sensiReports.end()) {
-            if (analytic()->getWriteIntermediateReports()) {
-                LOG("Write SIMM par sensitivity report");
-                path simmParSensitivityPath = inputs_->resultsPath() / "simm_par_sensitivity.csv";
-                sensiReports.at("simm_par_sensitivity")
-                    ->toFile(simmParSensitivityPath.string(), ',', false, inputs_->csvQuoteChar(),
-                             inputs_->reportNaString());
-                LOG("SIMM par sensitivity report written to " << simmParSensitivityPath);
-            } else
-                analytic()->addReport(LABEL, "simm_par_sensitivity", sensiReports.at("simm_par_sensitivity"));
-        }
+        // Store sensitivity reports
+        if (sensiReports.find("crif_scenario") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_scenario", sensiReports.at("crif_scenario"));
+        if (sensiReports.find("crif_sensitivity") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_sensitivity", sensiReports.at("crif_sensitivity"));
+        if (sensiReports.find("crif_sensitivity_config") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_sensitivity_config", sensiReports.at("crif_sensitivity_config"));
+        if (sensiReports.find("crif_par_sensitivity") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_par_sensitivity", sensiReports.at("crif_par_sensitivity"));
+        if (sensiReports.find("crif_par_conversion_matrix") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_par_conversion_matrix", sensiReports.at("crif_par_conversion_matrix"));
+        if (sensiReports.find("crif_par_conversion_matrix_inverse") != sensiReports.end())
+	    analytic()->addReport(LABEL, "crif_par_conversion_matrix_inverse", sensiReports.at("crif_par_conversion_matrix_inverse"));
 
-        if (sensiReports.find("simm_par_conversion_matrix") != sensiReports.end() &&
-            analytic()->getWriteIntermediateReports()) {
-            path simmParJacobiPath = inputs_->resultsPath() / "simm_par_conversion_matrix.csv";
-            sensiReports.at("simm_par_conversion_matrix")
-                ->toFile(simmParJacobiPath.string(), ',', false, inputs_->csvQuoteChar(),
-                         inputs_->reportNaString());
-        }
-        if (sensiReports.find("simm_par_conversion_matrix_inverse") != sensiReports.end() &&
-            analytic()->getWriteIntermediateReports()) {
-            path simmParJacobiInversePath = inputs_->resultsPath() / "simm_par_conversion_matrix_inverse.csv";
-            sensiReports.at("simm_par_conversion_matrix_inverse")
-                ->toFile(simmParJacobiInversePath.string(), ',', false, inputs_->csvQuoteChar(),
-                         inputs_->reportNaString());
-        }
 	CONSOLE("OK");
     }
 
