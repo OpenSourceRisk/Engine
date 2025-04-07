@@ -36,4 +36,5 @@ Run a local Example
 
 - send a request, the equivalent of Example 1
   python3 request.py
-  
+ 
+* if running run_json_testsuite.py or run_examples_testsuite.py, ensure that the data server is run with "--input_dir ore/Examples" *

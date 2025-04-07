@@ -1,6 +1,7 @@
 import flask
 import argparse
 import os
+from pathlib import Path
 from urllib.parse import unquote
 
 def getMimeType(filename):
@@ -19,6 +20,14 @@ file_type_header_map = {
     "xml": "text/xml",
     "json": "application/json",
 }
+
+def is_directory_traversal(file_name):
+    #examples_directory = os.path.dirname(os.getcwd())
+    examples_directory = os.path.normpath(Path(__file__).resolve().parents[1])
+    requested_path = os.path.relpath(file_name, start=examples_directory)
+    requested_path = os.path.abspath(requested_path)
+    common_prefix = os.path.normpath(os.path.commonprefix([requested_path, examples_directory]))
+    return common_prefix != examples_directory
 
 @api.route('/file/<path:filename>', methods=['GET', 'POST'])
 def get_file(filename):
@@ -47,17 +56,22 @@ def post_report(filename):
     else:
         filename = os.path.join(os.path.join(fdir, file.replace('-', '_')))
     file_dir = os.path.dirname(os.path.realpath(filename))
-    if not os.path.exists(file_dir):
+    if not os.path.exists(file_dir) and not is_directory_traversal(file_dir):
         try:
             os.makedirs(file_dir)
         except OSError as e:
             raise
+    elif is_directory_traversal(file_dir):
+        return flask.abort(400, description="backwards directory traversal detected!")
     data = flask.request.get_data(as_text=True)
     data = unquote(data)
     clean_data = data.replace("data=", "#", 1)
-    with open(filename, "w", newline='') as f:
-        f.write(clean_data)
-        return flask.Response()
+    if not is_directory_traversal(filename):
+        with open(filename, "w", newline='') as f:
+            f.write(clean_data)
+            return flask.Response()
+    else:
+        return flask.abort(400, description="backwards directory traversal detected!")
 
 if __name__ == '__main__':
 
