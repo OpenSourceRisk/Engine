@@ -587,7 +587,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
 
 
 // Remove in the next release, interpolation has to happen in the coupon (script) and not in the index
-QuantExt::ext::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName) {
     QL_REQUIRE(!indexName.empty(), "parseScriptedInflationIndex(): empty index name");
     std::vector<std::string> tokens;
