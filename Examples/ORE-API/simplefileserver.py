@@ -1,3 +1,4 @@
+from doctest import Example
 import flask
 import argparse
 import os
@@ -22,12 +23,14 @@ file_type_header_map = {
 }
 
 def is_directory_traversal(file_name):
-    #examples_directory = os.path.dirname(os.getcwd())
     examples_directory = os.path.normpath(Path(__file__).resolve().parents[1])
-    requested_path = os.path.relpath(file_name, start=examples_directory)
-    requested_path = os.path.abspath(requested_path)
-    common_prefix = os.path.normpath(os.path.commonprefix([requested_path, examples_directory]))
-    return common_prefix != examples_directory
+    if os.path.basename(os.path.split(examples_directory)[0]) == "ore" and os.path.split(examples_directory)[1] == "Examples":
+        requested_path = os.path.relpath(file_name, start=examples_directory)
+        requested_path = os.path.abspath(requested_path)
+        common_prefix = os.path.normpath(os.path.commonprefix([requested_path, examples_directory]))
+        return common_prefix != examples_directory
+    else:
+        return True
 
 @api.route('/file/<path:filename>', methods=['GET', 'POST'])
 def get_file(filename):
