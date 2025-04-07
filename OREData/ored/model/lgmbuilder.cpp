@@ -638,8 +638,10 @@ void LgmBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
             averagingMethod = on->averagingMethod();
         }
 
-        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(0);
+        QuantLib::ext::shared_ptr<SimpleQuote> volQuote =
+            fullRebuild ? QuantLib::ext::make_shared<SimpleQuote>(0) : swaptionBasketVols_[swaptionIndexInBasket_[j]];
         Handle<Quote> vol = Handle<Quote>(volQuote);
+
         QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
         FallbackType fallbackType;
