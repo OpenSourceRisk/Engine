@@ -691,21 +691,23 @@ void LgmBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
             continue;
         }
 
-        // check if we want to keep the helper when a reference calibration grid is given
-        Date expiryDate = helper->swaption()->exercise()->date(0);
-        auto refCalDate =
-            std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
-        if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
-            swaptionIndexInBasket_[j] = swaptionBasket_.size();
-            swaptionBasketVols_.push_back(volQuote);
-            swaptionBasket_.push_back(helper);
-            swaptionStrike_.push_back(updatedStrike);
-            swaptionFallbackType_.push_back(fallbackType);
-            swaptionExpiries_.insert(calibrationDiscountCurve_->timeFromReference(expiryDate));
-            Date matDate = helper->underlying()->maturityDate();
-            swaptionMaturities_.insert(calibrationDiscountCurve_->timeFromReference(matDate));
-            if (refCalDate != referenceCalibrationDates.end())
-                lastRefCalDate = *refCalDate;
+        if (fullRebuild) {
+            // check if we want to keep the helper when a reference calibration grid is given
+            Date expiryDate = helper->swaption()->exercise()->date(0);
+            auto refCalDate =
+                std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
+            if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
+                swaptionIndexInBasket_[j] = swaptionBasket_.size();
+                swaptionBasketVols_.push_back(volQuote);
+                swaptionBasket_.push_back(helper);
+                swaptionStrike_.push_back(updatedStrike);
+                swaptionFallbackType_.push_back(fallbackType);
+                swaptionExpiries_.insert(calibrationDiscountCurve_->timeFromReference(expiryDate));
+                Date matDate = helper->underlying()->maturityDate();
+                swaptionMaturities_.insert(calibrationDiscountCurve_->timeFromReference(matDate));
+                if (refCalDate != referenceCalibrationDates.end())
+                    lastRefCalDate = *refCalDate;
+            }
         }
     }
 
