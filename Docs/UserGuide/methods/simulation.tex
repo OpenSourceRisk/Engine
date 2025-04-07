@@ -21,7 +21,7 @@ by $q_j$.
 
 Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
 in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$
-and the credit processes in the domestic LGM measure with state variables ${C,k}$ and $y_{C,k}$ for $k=1,\ldots,K$.
+and the credit processes in the domestic LGM measure with state variables $z_{C,k}$ and $y_{C,k}$ for $k=1,\ldots,K$ and single factor (drift-free) commodity processes in the domestic LGM measure with state variables $c_l$ for $l=1,\ldots,L$. 
 If we consider $n$ 
 foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
 $x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
@@ -33,15 +33,18 @@ dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
 dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
 dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\
 dz_{C,k} &=& \alpha_{C,k}(t)dW_k^C \\
-dy_{C,k} &=& H_{C,k}(t)\alpha_{C,k}(t)dW_k^C \\ \\
+dy_{C,k} &=& H_{C,k}(t)\alpha_{C,k}(t)dW_k^C \\ 
+dc_{l} &=& \mu_l^c dt + \sigma^c_l e^{\kappa^c t}dW_l^c \\ \\
 \gamma_i &=&
 -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
 \mu_j^S &=& (r_{\phi(j)}(t) - q_j(t) + \rho_{0j}^{zs} \alpha_0 H_0 \sigma_j^S - \epsilon_{\phi(j)}
 \rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
-\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
-dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I, C\}, \qquad a, b \text{
+\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ 
+\mu^c_l &=&  \rho_{0c}^{zl} \alpha_0 H_0 \sigma_l^c e^{\kappa_l^ct} - \epsilon_{\phi(l)}
+\rho_{l \phi(l)}^{cx} \sigma^x_{\phi(l)} \sigma_l^c  e^{\kappa_l^ct}   \\ \\
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, S, I, C, c\}, \qquad a, b \text{
                               suitable indices }
 %\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
 %\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
@@ -200,6 +203,12 @@ du - \frac{1}{2} \int_s^t \sigma_{j}^{S}(u) \sigma_{j}^{S}(u) du\\
 +\epsilon_{\phi(j)} \int_s^t \gamma_{\phi(j)} (u) (H_{\phi(j)}(t) - H_{\phi(j)}(u)) du\\
 \end{eqnarray*}
 
+The expectation of the commodity process $c_l$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+\mathbb{E}_{t_0}[c_l(t_0+\Delta t] = c_l(0) + \rho^{zc}_{0l } \int_{0}^t   H_0(u) \alpha_0(u)\sigma_l^c  e^{\kappa_l^c u}  du - \epsilon_{\phi(l)} \rho^{cx}_{l\phi(l)}   \int_0^t  \sigma^x_{\phi(l)}(u) \sigma^c_l e^{\kappa_l^c u} du
+\end{eqnarray*}
+
 The IR-IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
 
 \begin{eqnarray*}
@@ -355,6 +364,36 @@ The equity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (
 	Cov \left[\Delta ln[s_i], \Delta y_{C,j} \right] &=&
 	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
 	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+\end{eqnarray*}
+
+
+The commodity/commodity covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta c_i, \Delta c_j \right] &=& \rho_{ij}^{cc} \int_s^t \sigma_i^c(u) e^{\kappa^c_i u } \sigma_j^c(u) e^{\kappa^c_j u } du\\
+\end{eqnarray*}
+
+The commodity/IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta c_i, \Delta z_j \right] &=& \rho_{ij}^{cz} \int_s^t \sigma_i^c e^{\kappa^c_i u} (u) \alpha_j (u) du\\
+\end{eqnarray*}
+
+The commodity/FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta c_i, \Delta ln[x_j] \right] &=& \rho_{i0}^{cz} \int_s^t (H_0 (t) - H_0 (u)) \alpha_0 (u) \sigma_i^c e^{\kappa^c_i u}  du\\
+	&&- \rho_{ij}^{cz} \int_s^t (H_j (t) - H_j (u)) \alpha_j (u) \sigma_i^c e^{\kappa^c_i u}  du\\
+	&&+ \rho_{ij}^{cx} \int_s^t \sigma_i^c e^{\kappa^c_i u} \sigma^x_j(u) du\\
+\end{eqnarray*}
+
+The commodity/inflation covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta c_i, \Delta z_{I,j} \right] &=& \rho_{ij}^{cI} \int_s^t \sigma_i^c e^{\kappa^c_i u } \alpha_{I,j} (u) du\\	
+	Cov \left[\Delta c_i, \Delta y_{I,j} \right] &=&\rho_{ij}^{cI} \int_s^t \sigma_i^c e^{\kappa^c_i u } H_{I,j} (u) \alpha_{I,j} (u) du\\
+\end{eqnarray*}
+
+The commodity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta c_i, \Delta z_{C,j} \right] &=& \rho_{ij}^{cC} \int_s^t \sigma_i^c e^{\kappa^c_i u } \alpha_{C,j} (u) du\\
+	Cov \left[\Delta c_i, \Delta y_{C,j} \right] &=&\rho_{ij}^{cC} \int_s^t \sigma_i^c e^{\kappa^c_i u } H_{C,j} (u) \alpha_{C,j} (u) du\\
 \end{eqnarray*}
 
 \subsection{Change of Measure}
@@ -591,7 +630,7 @@ The AMC pricing engines perform a T0 pricing and - as a by-product - can be used
 corresponding engine builder is supplied, see Example 39 (Exposure Simulation using American Monte Carlo).
 
 In addition the AMC pricing engines perform the necessary calculations to yield conditional NPVs on the given global
-simulation grid. How these calcuations are performed is completely the responsibility of the pricing engines, altough
+simulation grid. How these calculations are performed is completely the responsibility of the pricing engines, altough
 some common framework for many trade types is given by a base engine, see \ref{sec:amc_base_engine}. This way the
 approximation of conditional NPVs on the simulation grid can be taylored to each product and also each single trade,
 with regards to

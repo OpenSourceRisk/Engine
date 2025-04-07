@@ -32,7 +32,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-class CompositeIndex : public Index, public Observer {
+class CompositeIndex : public Index {
 public:
     /*! fxConversion can be an empty vector or its length should match indices. For components that
       do not require a conversion, a nullptr should be given, otherwise a FxIndex with domestic ccy

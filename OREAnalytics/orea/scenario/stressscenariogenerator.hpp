@@ -82,11 +82,13 @@ private:
     void generateScenarios();
     void addFxShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addCommodityCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addFxVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addCommodityVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);

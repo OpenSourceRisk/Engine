@@ -34,6 +34,9 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmbucketmapperbase.hpp>
 
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
@@ -1785,6 +1788,26 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgDynamicIM", false);
+        if (!tmp.empty())
+            setXvaCgDynamicIM(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgDynamicIMStepSize", false);
+        if (!tmp.empty())
+            setXvaCgDynamicIMStepSize(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionOrder", false);
+        if (!tmp.empty())
+            setXvaCgRegressionOrder(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
+        if (!tmp.empty())
+            setXvaCgTradeLevelBreakdown(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
+        if (!tmp.empty())
+            setXvaCgUseRedBlocks(parseBool(tmp));
     }
 
     /**********************
@@ -1925,10 +1948,11 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "dimModel", false);
     if (tmp != "") {
-        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" ||
-		   tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" || tmp == "DeltaGammaVaR",
-                   "DIM model " << tmp << " not supported, "
-		   << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
+        QL_REQUIRE(
+            tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM",
+            "DIM model " << tmp << " not supported, "
+                         << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM");
         setDimModel(tmp);
     }
 
@@ -2478,6 +2502,61 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PORTFOLIO_DETAILS");
+    }
+
+    /*****************
+     * CRIF Generation
+     *****************/
+
+    tmp = params_->get("crif", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CRIF");
+
+	// Use the same market and sensi configs as the the sensitivity analytic
+	// FIXME: Warn if we override previous settings
+        tmp = params_->get("crif", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("crif", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+	tmp = params_->get("crif", "simmVersion", false);
+        if (tmp != "") {
+            setSimmVersion(tmp);
+        } else {
+            LOG("set SIMM version for CRIF generation to 2.6")
+            setSimmVersion("2.6");
+        }
+
+	auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+	tmp = params_->get("crif", "nameMappingInputFile", false);
+	if (tmp != "") {
+	   string fileName = (inputPath / tmp).generic_string();
+	   LOG("simmNameMapper file name: " << fileName);
+	   nameMapper->fromFile(fileName);
+	}
+	simmNameMapper_ = nameMapper;
+
+	auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+	tmp = params_->get("crif", "bucketMappingInputFile", false);
+	if (tmp != "") {
+	   string fileName = (inputPath / tmp).generic_string();
+	   LOG("simmBucketMapper file name: " << fileName);
+	   bucketMapper->fromFile(fileName);
+	}
+	simmBucketMapper_ = bucketMapper;
     }
 
     if (analytics().size() == 0) {

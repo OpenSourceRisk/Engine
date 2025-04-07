@@ -87,7 +87,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 
     DLOG("LgmBuilder::createSwaptionHelper(" << expiry << ", " << term << ")");
 
-    // hardcoded parameters to ensure a robust cailbration:
+    // hardcoded parameters to ensure a robust calibration:
 
     // 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
     //   calibration strike closer to the ATM level
@@ -103,6 +103,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     // Notice: the vol that is passed in to this method is in general a dummy value, which is good enough though to
     // check 2 and 3 above. To check 1, the vol is not needed at all.
 
+    //TODO Adjust Settlement Days
     auto vt = svts->volatilityType();
     auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
@@ -169,13 +170,13 @@ namespace data {
 LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
-                       const std::string& id)
+                       const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
+      calibrationErrorType_(calibrationErrorType) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();

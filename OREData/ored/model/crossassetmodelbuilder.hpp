@@ -117,6 +117,10 @@ private:
     void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
                          const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
                          const Real mult) const;
+    void relinkIrDiscountCurves(const std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>>& irParametrizations,
+                                const std::string& context,
+                                const std::string& configuration,
+                                std::vector<RelinkableHandle<YieldTermStructure>>& irDiscountCurves) const;
 
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;

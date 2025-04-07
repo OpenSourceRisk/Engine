@@ -34,17 +34,15 @@ namespace analytics {
 ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const QuantLib::ext::shared_ptr<Market>& market,
-    bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
-    const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError)
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
+    const QuantLib::ext::shared_ptr<Market>& market, bool exerciseNextBreak, const string& baseCurrency,
+    const string& configuration, const Real quantile, const CollateralExposureHelper::CalculationType calcType,
+    const bool multiPath, const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
-       market_(market), exerciseNextBreak_(exerciseNextBreak),
-      baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), calcType_(calcType),
-      multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA),
-      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues),
+      aggregationScenarioData_(aggregationScenarioData), market_(market), exerciseNextBreak_(exerciseNextBreak),
+      baseCurrency_(baseCurrency), configuration_(configuration), quantile_(quantile), calcType_(calcType),
+      multiPath_(multiPath), dates_(cube->dates()), today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)),
+      flipViewXVA_(flipViewXVA), exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues),
       continueOnError_(continueOnError) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
@@ -192,7 +190,7 @@ void ExposureCalculator::build() {
                 else
                     closeOutValue = d > nextBreakDate && exerciseNextBreak_
                                         ? 0.0
-                                        : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                                        : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k, aggregationScenarioData_);
 
                 Real positiveCashFlow = cubeInterpretation_->getMporPositiveFlows(cube_, i, j, k);
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);

@@ -2660,9 +2660,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (!isSurface) {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
                                 if (useSpreadedTermStructures_) {
+                                    // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     newVol =
                                         Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<SpreadedBlackVolatilityCurve>(
-                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], true));
+                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], !parameters->simulateCommodityVolATMOnly()));
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,

@@ -125,14 +125,14 @@ NonParallelShifts. Each of these models corresponds to a certain specification
 of the annuity mapping function $\alpha(s)$ \cite{Hagan_2003}.
 
 %--------------------------------------------------------------------------------
-\subsection{Log-Normal Swap Rate Model (LSM)}
-\label{models:LSM}
+\subsection{Bivariate swap rate model BrigoMercurio}
+\label{models:BrigoMercurio}
 
 CMS Spread Options with payoff $\max(\varphi(S_1(t)-S_2(t)-K),0)$ are priced using 
-the LSM \cite{Brigo_Mercurio_2006} Ch 13.6.2, optionally with partial smile 
+the the model \cite{Brigo_Mercurio_2006} Ch 13.6.2, optionally with partial smile
 adjustment \cite{Berrahoui_2004}. This model supports log-normal swap rate dynamics 
 and has been extended to support shifted log-normal and normal dynamics as well
-\cite{Caspers_2015}. 
+\cite{Caspers_2015}.
 
 The model is given by:
 \begin{align*}
@@ -176,8 +176,28 @@ implied from quoted CMS Spread option premiums.
 The (shifted) lognormal model allows for a semi-analytical solution involving 
 a one-dimensional numerical integration which can be carried out using a 
 Gauss-Hermite integration scheme, see \cite{Brigo_Mercurio_2006} Ch 13.6.2 for 
-the details. The normal model can be solved using the Bachelier option pricing 
-formula, see \cite{Caspers_2015}.
+the details.
+
+The normal model can be solved using the Bachelier option pricing formula, see \cite{Caspers_2015}. In this special case
+the NPV $\nu$ is given by:
+
+\begin{equation}
+P(0,T) \mathcal{B}(\phi, K, \mu, \sigma\sqrt{t})
+\end{equation}
+
+Here, $\mathcal{B}$ denotes the Bachelier option pricing formula with strike $K$, forward $\mu$, standard deviation
+$\sigma\sqrt{t}$ and $\phi=1$ for a call, $-1$ for a put. The forward is given by
+
+\begin{equation}
+\mu = (S_1(0)+\mu_1t) - (S_2(0) + \mu_2t);
+\end{equation}
+
+and the variance is given by
+
+\begin{equation}
+\sigma^2 = \sigma_1^2t + \sigma_2^2t - 2 \rho\sigma_1\sigma_2t
+\end{equation}
+
 
 %--------------------------------------------------------------------------------
 \subsection{One-Factor Linear Gauss Markov model (LGM)}

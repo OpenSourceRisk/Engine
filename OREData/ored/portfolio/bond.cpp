@@ -283,6 +283,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
                                                 parseDate(bondData_.maturityDate())));
     } else { // Coupon bond
         for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+            std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
@@ -291,6 +292,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             leg = legBuilder->buildLeg(legData, engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
+            addProductModelEngine(productModelEngines);
         } // for coupons_
         Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
@@ -409,10 +411,9 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
 
     Result res;
     res.bond = qlBond;
-    res.bondTrade = bond;
     res.qlInstrument = qlBond;
-    res.oreTrade = bond;
-
+    res.trade = bond;
+    res.bondData = data;
     if (data.isInflationLinked()) {
         res.isInflationLinked = true;
     }

@@ -44,16 +44,13 @@ namespace analytics {
 class CubeInterpretation {
 public:
     CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
-                       const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData =
-                           QuantLib::Handle<AggregationScenarioData>(),
-                       const QuantLib::ext::shared_ptr<DateGrid>& dateGrid = nullptr, const Size storeCreditStateNPVs = 0,
-                       const bool flipViewXVA = false);
+                       const QuantLib::ext::shared_ptr<DateGrid>& dateGrid = nullptr,
+                       const Size storeCreditStateNPVs = 0, const bool flipViewXVA = false);
 
     //! inspectors
     bool storeFlows() const;
     bool withCloseOutLag() const;
-    const QuantLib::Handle<AggregationScenarioData>& aggregationScenarioData() const; // might be empty handle
-    const QuantLib::ext::shared_ptr<DateGrid>& dateGrid() const;                              // might be nullptr
+    const QuantLib::ext::shared_ptr<DateGrid>& dateGrid() const; // might be nullptr
     Size storeCreditStateNPVs() const;
     bool flipViewXVA() const;
 
@@ -74,7 +71,8 @@ public:
     Real getDefaultNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
     //! Retrieve the close-out date NPV from the Cube
-    Real getCloseOutNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getCloseOutNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
+                        const QuantLib::ext::shared_ptr<AggregationScenarioData>& data) const;
 
     //! Retrieve the aggregate value of Margin Period of Risk positive cashflows from the Cube
     Real getMporPositiveFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
@@ -87,11 +85,13 @@ public:
     Real getMporFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    Real getDefaultAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getDefaultAggregationScenarioData(const QuantLib::ext::shared_ptr<AggregationScenarioData>& data,
+                                           const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                            const std::string& qualifier = "") const;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
-    Real getCloseOutAggregationScenarioData(const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
+    Real getCloseOutAggregationScenarioData(const QuantLib::ext::shared_ptr<AggregationScenarioData>& data,
+                                            const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
                                             const std::string& qualifier = "") const;
 
     //! Number of Calendar Days between a given default date and corresponding close-out date
@@ -100,7 +100,6 @@ public:
 private:
     bool storeFlows_;
     bool withCloseOutLag_;
-    QuantLib::Handle<AggregationScenarioData> aggregationScenarioData_;
     QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
     Size storeCreditStateNPVs_;
     bool flipViewXVA_;

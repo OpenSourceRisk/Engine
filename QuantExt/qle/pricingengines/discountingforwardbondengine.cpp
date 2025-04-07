@@ -269,7 +269,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     return npvValue * arguments_.bondNotional;
 }
 
-QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
+std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
     Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
     Date cmpPaymentDate, bool dirty, double conversionFactor) const {
 

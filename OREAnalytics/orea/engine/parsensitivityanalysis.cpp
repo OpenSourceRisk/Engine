@@ -168,22 +168,28 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         TodaysFixingsRemover(const std::set<std::string>& names) : today_(Settings::instance().evaluationDate()) {
             Date today = Settings::instance().evaluationDate();
             for (auto const& n : names) {
+                QL_DEPRECATED_DISABLE_WARNING
                 TimeSeries<Real> t = IndexManager::instance().getHistory(n);
+                QL_DEPRECATED_ENABLE_WARNING
                 if (t[today] != Null<Real>()) {
                     DLOG("removing todays fixing (" << std::setprecision(6) << t[today] << ") from " << n);
                     savedFixings_.insert(std::make_pair(n, t[today]));
                     t[today] = Null<Real>();
+                    QL_DEPRECATED_DISABLE_WARNING
                     IndexManager::instance().setHistory(n, t);
+                    QL_DEPRECATED_ENABLE_WARNING
                 }
             }
         }
         ~TodaysFixingsRemover() {
+            QL_DEPRECATED_DISABLE_WARNING
             for (auto const& p : savedFixings_) {
                 TimeSeries<Real> t = IndexManager::instance().getHistory(p.first);
                 t[today_] = p.second;
                 IndexManager::instance().setHistory(p.first, t);
                 DLOG("restored todays fixing (" << std::setprecision(6) << p.second << ") for " << p.first);
             }
+            QL_DEPRECATED_ENABLE_WARNING
         }
         const Date today_;
         std::set<std::pair<std::string, Real>> savedFixings_;

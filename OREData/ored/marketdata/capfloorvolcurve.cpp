@@ -907,7 +907,15 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
             if (!cfq->atm()) {
                 auto findTenor = std::find(configTenors.begin(), configTenors.end(), cfq->term());
                 if (wildcardTenor) {
-                    tenorRelevant = true;
+                    const Date quote_date = WeekendsOnly().advance(asof, cfq->term());
+                    const Date first_computation_date = WeekendsOnly().advance(asof, config.rateComputationPeriod());
+                    if (quote_date < first_computation_date) {
+                        tenorRelevant = false;
+                        ALOG("For wildcard tenors, optionlet quotes with term shorter than " <<
+                             "rate computation period are excluded from bootstrapping")
+                    } else {
+                        tenorRelevant = true;
+                    }
                 } else {
                     tenorRelevant = findTenor != configTenors.end();
                 }
@@ -944,7 +952,15 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                 // atm quotes
                 auto findTenor = std::find(atmConfigTenors.begin(), atmConfigTenors.end(), cfq->term());
                 if (atmWildcardTenor) {
-                    atmTenorRelevant = true;
+                    const Date quote_date = WeekendsOnly().advance(asof, cfq->term());
+                    const Date first_computation_date = WeekendsOnly().advance(asof, config.rateComputationPeriod());
+                    if (quote_date < first_computation_date) {
+                        atmTenorRelevant = false;
+                        ALOG("For wildcard tenors, optionlet quotes with term shorter than " <<
+                             "rate computation period are excluded from bootstrapping")
+                    } else {
+                        atmTenorRelevant = true;
+                    }
                 } else {
                     atmTenorRelevant = findTenor != atmConfigTenors.end();
                 }

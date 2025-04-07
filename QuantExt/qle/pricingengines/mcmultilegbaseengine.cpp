@@ -1461,7 +1461,7 @@ void McMultiLegBaseEngine::calculate() const {
     // build simulation times corresponding to close-out grid for sticky runs (if required)
 
     std::vector<Real> simulationTimesWithCloseOutLag;
-    if (recalibrateOnStickyCloseOutDates_ && !stickyCloseOutDates_.empty()) {
+    if (recalibrateOnStickyCloseOutDates_ && !stickyCloseOutDates_.empty() && xvaTimes.size() > 0) {
         std::vector<Real> xvaTimesWithCloseOutLag(1, 0.0);
         for (auto const& d : stickyCloseOutDates_) {
             xvaTimesWithCloseOutLag.push_back(time(d));
@@ -1672,6 +1672,9 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
         Filter wasExercised(samples, false);
 
         for (auto t : exerciseTimes_) {
+
+            if (xvaTimes_.size() == 0)
+                break;
 
             // find the time in the exerciseXvaTimes vector
             Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));

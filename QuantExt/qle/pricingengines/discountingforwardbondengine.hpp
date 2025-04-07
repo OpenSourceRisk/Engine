@@ -51,12 +51,12 @@ class DiscountingForwardBondEngine : public QuantExt::ForwardBond::engine {
                                      Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                      const Date& settlementDate = Date(), const Date& npvDate = Date());
 
-        void calculate() const override;
-        Real calculateBondNpv(Date, Date) const;
-        QuantLib::ext::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
-                                                                      Date computeDate, Date settlementDate,
-                                                                      bool cashSettlement, Date cmpPaymentDate,
-                                                                      bool dirty, double conversionFactor) const;
+    void calculate() const override;
+    Real calculateBondNpv(Date, Date) const;
+    std::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
+                                                                  Date computeDate, Date settlementDate,
+                                                                  bool cashSettlement, Date cmpPaymentDate,
+                                                                  bool dirty, double conversionFactor) const;
 
         const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
         const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }

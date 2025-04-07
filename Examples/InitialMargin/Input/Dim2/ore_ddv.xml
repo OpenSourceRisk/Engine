@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-02-10</Parameter>
+    <Parameter name="inputPath">Input/Dim2</Parameter>
+    <Parameter name="outputPath">Output/Dim2/Ddv</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">marketdata.csv</Parameter>
+    <Parameter name="fixingDataFile">fixings.csv</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="buildFailedTrades">true</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="simulationConfigFile">simulation_classic.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../Dim/pricingengine_dg.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <!-- <Parameter name="cubeFile">cube.csv.gz</Parameter> -->
+      <!-- <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter> -->
+      <!-- <Parameter name="scenariodump">scenariodump.csv</Parameter> -->
+      <Parameter name="storeSensis">Y</Parameter>
+      <Parameter name="curveSensiGrid">1,2,3,5,7,10,15,20</Parameter>
+      <Parameter name="vegaSensiGrid">1,2,3,5,7,10,15,20</Parameter>
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="exposureProfilesByTrade">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="cva">Y</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
+      <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="colva">N</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
+      <Parameter name="dim">Y</Parameter>
+      <!-- DynamicIM requires xvaCgDynamicIM = true under simulation above -->
+      <Parameter name="dimModel">DeltaVaR</Parameter>
+      <!--<Parameter name="dimModel">Regression</Parameter>-->
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimHorizonCalendarDays">14</Parameter>
+      <Parameter name="dimRegressionOrder">2</Parameter>
+      <Parameter name="dimRegressors"/>
+      <Parameter name="dimScaling">1.0</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
+      <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->
+      <!-- <Parameter name="netCubeOutputFile">netcube.csv</Parameter> -->
+    </Analytic>
+  </Analytics>
+</ORE>

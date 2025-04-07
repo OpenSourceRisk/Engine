@@ -125,11 +125,14 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     std::vector<Leg> separateLegs;
     for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+        std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
         Leg leg;
         auto configuration = builder_bd->configuration(MarketContext::pricing);
         auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+                                   QuantLib::Date(), false, true, &productModelEngines);
         separateLegs.push_back(leg);
+        addProductModelEngine(productModelEngines);
     }
     Leg leg = joinLegs(separateLegs);
     auto bond = QuantLib::ext::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);

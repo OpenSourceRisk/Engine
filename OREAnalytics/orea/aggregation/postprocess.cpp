@@ -139,13 +139,10 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
      *    and scenario. This prepares the netting set exposure
      *    calculation below
      */
-    exposureCalculator_ =
-        QuantLib::ext::make_shared<ExposureCalculator>(
-            portfolio, cube_, cubeInterpretation_,
-            market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
-            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
-            analytics_["exposureProfilesUseCloseOutValues"], continueOnError_
-        );
+    exposureCalculator_ = QuantLib::ext::make_shared<ExposureCalculator>(
+        portfolio, cube_, cubeInterpretation_, scenarioData_, market_, analytics_["exerciseNextBreak"], baseCurrency_,
+        configuration_, quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
+        analytics_["exposureProfilesUseCloseOutValues"], continueOnError_);
     exposureCalculator_->build();
 
     /******************************************************************

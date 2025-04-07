@@ -590,16 +590,15 @@ void Accumulator::fromXML(XMLNode* node) {
         rangeBounds_.push_back(RangeBound());
         rangeBounds_.back().fromXML(n);
     }
-    auto barriersNode = XMLUtils::getChildNode(dataNode, "Barriers");
-    QL_REQUIRE(barriersNode, "No Barriers node");
-    auto barriers = XMLUtils::getChildrenNodes(barriersNode, "BarrierData");
-    for (auto const& n : barriers) {
-        barriers_.push_back(BarrierData());
-        barriers_.back().fromXML(n);
+    if (auto barriersNode = XMLUtils::getChildNode(dataNode, "Barriers")) {
+        auto barriers = XMLUtils::getChildrenNodes(barriersNode, "BarrierData");
+        for (auto const& n : barriers) {
+            barriers_.push_back(BarrierData());
+            barriers_.back().fromXML(n);
+        }
     }
     knockOutSettlementAtPeriodEnd_ =
         XMLUtils::getChildValueAsBool(dataNode, "KnockOutSettlementAtPeriodEnd", false, false);
-
     knockOutFixingAtKOSettlement_ = 
         XMLUtils::getChildValueAsBool(dataNode, "KnockOutFixingAtKOSettlement", false, false);
 

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# On your system, the boost_thread lib may have a nonstandard name, e.g. boost_thread-mt.
+# If that is the case then set the BOOST_THREAD variable before calling this script, e.g:
+# export BOOST_THREAD=boost_thread-mt
+BOOST_THREAD="${BOOST_THREAD:=boost_thread}"
+
+usage="\
+Usage: oreanalytics-config [--libs] [--cflags]"
+
+if test $# -eq 0; then
+      echo "${usage}" 1>&2
+      exit 1
+fi
+
+while test $# -gt 0; do
+  case "$1" in
+  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *) optarg= ;;
+  esac
+
+  case $1 in
+    --cflags)
+      #echo -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib -I${BOOST_INC} -std=c++1z
+      #echo -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib
+      echo -I${ORE}/build/QuantLib -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib
+      ;;
+    --libs)
+      #echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -L${BOOST_LIB} -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -std=c++1z
+      echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -lboost_thread -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem
+      ;;
+    *)
+      echo "${usage}" 1>&2
+      exit 1
+      ;;
+  esac
+  shift
+done

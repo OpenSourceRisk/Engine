@@ -67,10 +67,9 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                const bool bumpCvaSensis = false,
-                const bool dynamicDelta = false,
-                const bool useExternalComputeDevice = false,
-                const bool externalDeviceCompatibilityMode = false,
+                const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
+                const Size regressionOrder = 4, const bool tradeLevelBreakDown = true, const bool useRedBlocks = true,
+                const bool useExternalComputeDevice = false, const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
                 const bool continueOnError = true, const std::string& context = "xva engine cg");
@@ -83,6 +82,9 @@ public:
 
     // set npv output cube - if not nullptr, the cube will be populated when running the engine
     void setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& npvOutputCube);
+
+    // set dynamic IM output cube - if not nullptr and dynamicIM is true, it will be populated with netting set IM
+    void setDynamicIMOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& dynamicIMOutputCube);
 
     // run the engine, this is required before populateNpvCube() is called or reports are retrieved
     void run();
@@ -105,8 +107,9 @@ private:
     void doForwardEvaluation();
     void populateAsd();
     void populateNpvOutputCube();
+    void populateDynamicIMOutputCube();
     void generateXvaReports();
-    void calculateDynamicDelta();
+    void calculateDynamicIM();
     void calculateSensitivities();
     void generateSensiReports();
     void cleanUpAfterCalcs();
@@ -133,6 +136,7 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvOutputCube_;
+    QuantLib::ext::shared_ptr<ore::analytics::NPVCube> dynamicIMOutputCube_;
 
     // input parameters from constructor
 
@@ -152,7 +156,11 @@ private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     bool bumpCvaSensis_;
-    bool dynamicDelta_;
+    bool enableDynamicIM_;
+    Size dynamicIMStepSize_;
+    Size regressionOrder_;
+    bool tradeLevelBreakDown_;
+    bool useRedBlocks_;
     bool useExternalComputeDevice_;
     bool externalDeviceCompatibilityMode_;
     bool useDoublePrecisionForExternalCalculation_;
@@ -186,11 +194,9 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
-    bool generateTradeLevelExposure_ = false;
-
     // trade level exposure, per valuation resp. close-out date, as path values (no conditional expectation)
-    std::vector<std::vector<std::size_t>> amcNpvNodes_;                // valuation date npv nodes
-    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv
+    std::vector<std::vector<std::size_t>> amcNpvNodes_;         // valuation date npv nodes
+    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_; // includes time zero npv
 
     // trade level exposure, as conditional expectation
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv
@@ -201,22 +207,23 @@ private:
     std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
     std::vector<std::size_t> pfExposureCloseOutNodes_;
 
-    // porfolio exposure, per valuation date, as path values, multiplied by numeraire
+    // portfolio exposure, per valuation date, as path values, multiplied by numeraire
     std::vector<std::size_t> pfExposureNodesPathwiseInflated_;
 
+    // dynamic im per netting set
+    std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
+
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
-    std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
+    std::vector<std::size_t> asdNumeraire_;
+    std::vector<std::vector<std::size_t>> asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
 
     // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
-    // irStates per ccy index and valuationDate (including reference date), probably not needed
-    // std::vector<std::vector<std::size_t>> irState_;
-
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> xvaDerivatives_;
-    std::vector<RandomVariable> dynamicDeltaDerivatives_;
+    std::vector<RandomVariable> dynamicIMDerivatives_;
     std::vector<ExternalRandomVariable> valuesExternal_;
 
     std::vector<std::size_t> externalOutputNodes_;
@@ -225,8 +232,8 @@ private:
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
                                   timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
-                                  timing_fwd_ = 0, timing_dynamicDelta_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
-                                  timing_asd_ = 0, timing_outcube_ = 0, timing_total_ = 0;
+                                  timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
+                                  timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
 
     // output reports

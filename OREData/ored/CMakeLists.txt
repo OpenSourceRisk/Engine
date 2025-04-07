@@ -102,6 +102,7 @@ model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
 portfolio/accumulator.cpp
+portfolio/additionalfieldgetter.cpp
 portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/autocallable_01.cpp
@@ -503,6 +504,7 @@ model/structuredmodelerror.hpp
 model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
+portfolio/additionalfieldgetter.hpp
 portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/autocallable_01.hpp
@@ -784,6 +786,7 @@ utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
+utilities/credit.hpp
 utilities/csvfilereader.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
