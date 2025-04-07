@@ -50,6 +50,10 @@ public:
     bool hasMarketObjectType(const ore::data::MarketObject& marketObject) const {
         return market_->hasMarketObjectType(marketObject);
     }
+    //! Return the risk factor names of the given risk factor type in the portfolio
+    std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const {
+        return market_->riskFactors();
+    }
 
     //! Return the risk factor names of the given risk factor type in the portfolio
     std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const {
