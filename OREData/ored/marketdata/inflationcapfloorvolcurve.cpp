@@ -567,12 +567,13 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         // Required by the QL pricesurface but not used
         Rate startRate = 0.0;
         // Build the term structure
+        QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = QuantLib::ext::make_shared<
                 QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
                 0, config->observationLag(), index, startRate, discountCurve_, config->dayCounter(), config->calendar(),
                 config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
-
+        QL_DEPRECATED_ENABLE_WARNING
         std::vector<Period> optionletTerms = {yoySurface->maturities().front()};
         while (optionletTerms.back() != terms.back()) {
             optionletTerms.push_back(optionletTerms.back() + Period(1, Years));
