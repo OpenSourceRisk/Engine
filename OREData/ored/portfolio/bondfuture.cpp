@@ -153,8 +153,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
         id(), parseCurrency(currency_), bondSpreadId, envelope().additionalField("discount_curve", false, string()),
-        ctdUnderlying_.creditCurveId, ctdId_, ctdUnderlying_.bondTrade->bondData().referenceCurveId(),
-        ctdUnderlying_.bondTrade->bondData().incomeCurveId(), settlementDirty));
+        ctdUnderlying_.creditCurveId, ctdId_, ctdUnderlying_.bondData.referenceCurveId(),
+        ctdUnderlying_.bondData.incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);
@@ -506,9 +506,8 @@ BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<Eng
     Result res;
     // set null ptr
     res.bond = QuantLib::ext::shared_ptr<QuantLib::Bond>();
-    res.bondTrade = QuantLib::ext::shared_ptr<ore::data::Bond>();
     res.qlInstrument = future->instrument()->qlInstrument();
-    res.oreTrade = future;
+    res.trade = future;
     res.currency = future->currency();
 
     res.isInflationLinked = false;

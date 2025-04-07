@@ -209,7 +209,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Handle<Qu
     QuantLib::ext::shared_ptr<SimpleQuote>  spreadQuote = market->spreadQuote(securityId);
 
     //in case of a future, use the ctd bondspread, hence:
-    auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.oreTrade);
+    auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.trade);
     if(bondfuture){
         spreadQuote = market->spreadQuote(bondfuture->ctdId());
         // in case we want strike = price // comment out for zero...
