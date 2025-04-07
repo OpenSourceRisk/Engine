@@ -43,7 +43,9 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
       bondIssueDateFallback_(bondIssueDateFallback), quotedDirtyPrices_(quotedDirtyPrices) {
 
     registerWith(Settings::instance().evaluationDate());
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
+    QL_DEPRECATED_ENABLE_WARNING
     registerWith(bond_);
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
