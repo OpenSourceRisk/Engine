@@ -392,8 +392,11 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     }
                     case MarketObject::ZeroInflationCapFloorVol: {
                         if (auto cc = curveConfigs->findInflationVolCurveConfig(
-                                c, InflationCapFloorVolatilityCurveConfig::Type::ZC))
+                                c, InflationCapFloorVolatilityCurveConfig::Type::ZC)) {
+                            DLOG("Found a curveconfig for inflation curve " << c);
                             cId = cc->curveID();
+                            DLOG("cId = " << cId);
+                        }
                         break;
                     }
                     case MarketObject::YoYInflationCapFloorVol: {
