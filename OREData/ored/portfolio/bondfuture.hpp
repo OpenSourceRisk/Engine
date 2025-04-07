@@ -78,6 +78,7 @@ protected:
 
     std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry);
 
+    const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
 private:
     // mandatory first tier information
     std::string contractName_; // can be used to identify tier 2/3 info

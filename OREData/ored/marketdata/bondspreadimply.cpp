@@ -42,6 +42,7 @@ namespace data {
 std::map<std::string, QuantLib::ext::shared_ptr<Security>>
 BondSpreadImply::requiredSecurities(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
                                     const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
+                                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                     const bool continueOnError, const std::string& excludeRegex) {
     std::regex excludePattern;
     if (!excludeRegex.empty())
@@ -69,6 +70,10 @@ BondSpreadImply::requiredSecurities(const Date& asof, const QuantLib::ext::share
                     QuantLib::ext::shared_ptr<Security> security;
                     try {
                         security = QuantLib::ext::make_shared<Security>(asof, *securityspec, loader, *curveConfigs);
+                        //in case of the future, we need the price for the ctd selection, hence:
+                        if (!security->price().empty()) {
+                            addPriceToRefData(securityspec->securityID(), security->price(), referenceDataManager);
+                        }
                     } catch (const std::exception& e) {
                         if (continueOnError) {
                             StructuredCurveErrorMessage(securityId, "Bond spread imply failed",
@@ -181,11 +186,11 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
     } else if (b.bond) { // this is the standard bond case
         return b.bond->cleanPrice() / 100.0;
     } else {// this is bond future case
-        //return b.qlInstrument->NPV() / b.oreTrade->notional();
-        auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.qlInstrument);
-        QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
-        //std::cout << "future->forwardValue() " << future->forwardValue() << std::endl;
-        return future->forwardValue();
+        return b.qlInstrument->NPV();
+        // in case we want strike = zero 
+        //auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.qlInstrument);
+        //QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
+        //return future->forwardValue();
     }
 }
 
@@ -200,17 +205,15 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Handle<Qu
 
     Real priceAdj = marketQuote->value();
 
-    //in case of the future, we need the price for the ctd selection, hence:
-    addPriceToRefData(securityId, marketQuote, referenceDataManager);
-
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
     QuantLib::ext::shared_ptr<SimpleQuote>  spreadQuote = market->spreadQuote(securityId);
 
-    //in case of the future use the ctd bondspread, hence:
+    //in case of a future, use the ctd bondspread, hence:
     auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.oreTrade);
     if(bondfuture){
-        std::cout << "bondfuture->ctdId() " << bondfuture->ctdId() << std::endl;
         spreadQuote = market->spreadQuote(bondfuture->ctdId());
+        // in case we want strike = price // comment out for zero...
+        priceAdj = 0.0;
     }
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit

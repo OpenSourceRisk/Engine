@@ -125,7 +125,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctdId_);
 
     // hardcoded values for bondfuture vs forward bond
-    double amount = 0.0;                   // strike amount is zero for bondfutures
+    double amount = getSettlementPriceFuture(engineFactory) * contractNotional_;
+    // double amount = 0.0; 
     double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
     bool isPhysicallySettled = true;       // TODO Check
@@ -412,28 +413,12 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
 
     DLOG("BondFuture::identifyCtdBond called.");
     // get settlement price for future
-    double settlementPriceFuture = 0.0;
-    if (!engineFactory->referenceData() ||
-        !engineFactory->referenceData()->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
-        ALOG("could not get BondFutureReferenceDatum for name " << contractName_
-                                                                << " settlementPriceFuture set to zero.");
-    } else {
-        auto bondFutureRefData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-            engineFactory->referenceData()->getData(BondFutureReferenceDatum::TYPE, contractName_));
-        if (bondFutureRefData->contractSettlementPrice()->isValid()) {
-            settlementPriceFuture = bondFutureRefData->contractSettlementPrice()->value();
-        } else {
-            ALOG("could not get value for contractSettlementPrice for name " << contractName_
-                                                                             << " settlementPriceFuture set to zero.");
-        }
-    }
-    DLOG("BondFuture::identifyCtdBond future " << contractName_ << " settlementPriceFuture " << settlementPriceFuture);
+    double settlementPriceFuture = getSettlementPriceFuture(engineFactory);
 
     double lowestValue = QL_MAX_REAL; // arbitray high number
     string ctdSec = string();
 
     for (const auto& sec : secList_) {
-
         // create bond instrument
         auto bond = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), sec);
         // get value at expiry
@@ -451,7 +436,6 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
             // MESSAGE: failed to retrieve bond price quote or conversion factor for SECID
             // TODO implement Conversion Factor Method more generic than the existing...
         }
-
         // do the test, inspired by
         //  HULL: OPTIONS, FUTURES, AND OTHER DERIVATIVES, 7th Edition, page 134
         double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
@@ -468,6 +452,27 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
 
     return ctdSec;
 } // BondFuture::ctdBond
+
+const double BondFuture::getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const {
+
+    double settlementPriceFuture = 0.0;
+    if (!engineFactory->referenceData() ||
+        !engineFactory->referenceData()->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
+        ALOG("could not get BondFutureReferenceDatum for name " << contractName_
+                                                                << " settlementPriceFuture set to zero.");
+    } else {
+        auto bondFutureRefData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            engineFactory->referenceData()->getData(BondFutureReferenceDatum::TYPE, contractName_));
+        try {
+            settlementPriceFuture = bondFutureRefData->contractSettlementPrice()->value();
+        } catch (const std::exception& e) {
+            ALOG("failed to retrieve contractSettlementPrice for " << contractName_
+                                                                   << " settlementPriceFuture set to zero.");
+        }
+    }
+    DLOG("BondFuture::identifyCtdBond future " << contractName_ << " settlementPriceFuture " << settlementPriceFuture);
+    return settlementPriceFuture;
+}
 
 void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData) {
     QL_REQUIRE(!contractName_.empty(), "BondFuture::populateFromBondReferenceData(): no contract name given");

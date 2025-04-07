@@ -41,6 +41,7 @@ public:
     static std::map<std::string, QuantLib::ext::shared_ptr<Security>>
     requiredSecurities(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
                        const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
+                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                        const bool continueOnError = false, const std::string& excludeRegex = std::string());
 
     /*! Imply bond spreads and add them to the loader. */

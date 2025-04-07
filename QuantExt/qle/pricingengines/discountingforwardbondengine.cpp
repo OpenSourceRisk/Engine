@@ -321,6 +321,12 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
         bd->notional(bondSettlementDate) * arguments_.bondNotional;
     results_.additionalResults["accruedAmount"] = accruedAmount;
 
+    // apply conversion factor for future calcs
+
+    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
+    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
+    forwardBondValue /= conversionFactor;
+
     // Subtract strike at maturity. Regarding accrual (i.e. strike is given clean vs dirty) there are two
     // cases: long or short.
 
@@ -357,7 +363,7 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
         effectivePayoff = QuantLib::ext::make_shared<ForwardBondTypePayoff>(
             (*arguments_.longInForward) ? Position::Long : Position::Short,
             arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
-        
+
         results_.additionalResults["dv01"] = dv01;
         results_.additionalResults["modifiedDuration"] = modDur;
         results_.additionalResults["yield"] = yield;
@@ -367,13 +373,7 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
     }
-
-    // apply conversion factor for future calcs
-
-    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
-    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
-    forwardContractForwardValue /= conversionFactor;
-
+    //forwardContractForwardValue /= conversionFactor;
     // forwardContractPresentValue adjusted for potential default before computeDate:
     forwardContractPresentValue =
         forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *
