@@ -77,6 +77,10 @@ class OreExample(object):
             elif os.path.isfile("../../../build/ore/App/ore"):
                 self.ore_exe = "../../../build/ore/App/ore"
                 self.ore_plus_exe = "../../../build/AppPlus/ore_plus"
+            elif shutil.which("ore"):
+                # Look on the PATH to see if the executable is there
+                self.ore_exe = shutil.which("ore")
+                print_on_console("Using ORE executable found on PATH")
             else:
                 print_on_console("ORE executable not found.")
                 quit()
