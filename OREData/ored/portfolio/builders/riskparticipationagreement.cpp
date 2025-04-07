@@ -224,9 +224,6 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     bool allowChangingFallbacks =
         rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
-    std::cout << "runtype " << rt->second << std::endl;
-    std::cout << "continue on error: " << continueOnCalibrationError << std::endl;
-    std::cout << "allowchangingfallbacks: " << allowChangingFallbacks << std::endl;
 
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
