@@ -923,7 +923,9 @@ public:
             value.push(RandomVariable(model_->size(), 0.0));
         else {
             // otherwise check whether a fixing is present in the historical time series
+            QL_DEPRECATED_DISABLE_WARNING
             TimeSeries<Real> series = IndexManager::instance().getHistory(IndexInfo(und).index()->name());
+            QL_DEPRECATED_ENABLE_WARNING
             if (series[obs] == Null<Real>())
                 value.push(RandomVariable(model_->size(), 0.0));
             else

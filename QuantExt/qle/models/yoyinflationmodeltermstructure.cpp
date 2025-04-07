@@ -26,6 +26,8 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
+QL_DEPRECATED_DISABLE_WARNING
+
 YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                Size index, bool indexIsInterpolated)
     : YoYInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
@@ -38,6 +40,8 @@ YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::e
     registerWith(model_);
     update();
 }
+
+QL_DEPRECATED_ENABLE_WARNING
 
 void YoYInflationModelTermStructure::update() {
     notifyObservers();
