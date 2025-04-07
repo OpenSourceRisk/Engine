@@ -381,8 +381,10 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     // so if we get a name like "EUHICPXT" there could be multiple inflation curveconfigs named
                     // EUHICPXT_YY_Swaps or EUHICPXT_ZC_Swaps, so we need to check the type and index
                     case MarketObject::ZeroInflationCurve: {
-                        if (auto cc = curveConfigs->findInflationCurveConfig(c, InflationCurveConfig::Type::ZC))
+                        if (auto cc = curveConfigs->findInflationCurveConfig(c, InflationCurveConfig::Type::ZC)) {
+                            DLOG("Found a curveconfig for inflation curve " << c);
                             cId = cc->curveID();
+                        }
                         break;
                     }
                     case MarketObject::YoYInflationCurve: {
