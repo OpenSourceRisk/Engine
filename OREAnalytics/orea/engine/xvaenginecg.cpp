@@ -149,10 +149,11 @@ void XvaEngineCG::buildCam() {
     boost::timer::cpu_timer timer;
 
     // note: sim market has one config only, no in-ccy config to calibrate IR components
+    // TODO: hardcoded "allowChangingFallbacks" to false here, we might want to revisit this when calculating e.g. stress
     camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
-        std::string(), "xva engine cg - cam builder");
+        std::string(), "xva engine cg - cam builder", false);
 
     // Set up gaussian cam cg model
 

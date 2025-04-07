@@ -66,11 +66,13 @@ public:
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,
         i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
         the swap index). */
-    LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
-               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
-               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
-               const bool setCalibrationInfo = false, const std::string& id = "unknown",
-               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::RelativePriceError);
+    LgmBuilder(
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
+        const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
+        const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
+        const bool setCalibrationInfo = false, const std::string& id = "unknown",
+        BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
+        const bool allowChangingFallbacksUnderScenarios = false);
     //! Return calibration error
     Real error() const;
 
@@ -147,6 +149,8 @@ private:
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+
+    bool allowChangingFallbacksUnderScenarios_;
 
     // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;

@@ -219,9 +219,19 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
 
     // Build model
     DLOG("Build LGM model");
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
+    std::cout << "runtype " << rt->second << std::endl;
+    std::cout << "continue on error: " << continueOnCalibrationError << std::endl;
+    std::cout << "allowchangingfallbacks: " << allowChangingFallbacks << std::endl;
+
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-        referenceCalibrationGrid, generateAdditionalResults, id);
+        referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+        allowChangingFallbacks);
 
     // In some cases, we do not want to calibrate the model
     QuantLib::ext::shared_ptr<QuantExt::LGM> model;
