@@ -259,7 +259,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
             if (data_->aTimes().size() > 0) {
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
-            QL_REQUIRE(!swaptionExpiries_.empty() > 0, "empty swaptionExpiries");
+            QL_REQUIRE(!swaptionExpiries_.empty(), "empty swaptionExpiries");
             QL_REQUIRE(!data_->aValues().empty(), "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
             aTimes = Array(swaptionExpiries_.begin(), std::next(swaptionExpiries_.end(), -1));
             alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
