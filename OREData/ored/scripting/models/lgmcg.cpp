@@ -81,13 +81,13 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
 
 std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                        const Handle<YieldTermStructure>& discountCurve,
-                                       const std::string& discountCurveId) const {
+                                       const std::string& discountCurveId, const Date& expiryDate) const {
     e = std::max(d, e);
     if (d == e)
-        return numeraire(d, x, discountCurve, discountCurveId);
+        return cg_div(g_, cg_const(g_, 1.0), numeraire(d, x, discountCurve, discountCurveId));
 
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::lgm_reducedDiscountBond, qualifier_, discountCurveId, d,
-                               e);
+                               e, expiryDate);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
 
@@ -95,7 +95,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
     Real t = p()->termStructure()->timeFromReference(d);
     Real T = p()->termStructure()->timeFromReference(e);
 
-    ModelCG::ModelParameter id_P0T(ModelCG::ModelParameter::Type::dsc, qualifier_, discountCurveId, e);
+    ModelCG::ModelParameter id_P0T(ModelCG::ModelParameter::Type::dsc, qualifier_, discountCurveId, e, expiryDate);
     ModelCG::ModelParameter id_H(ModelCG::ModelParameter::Type::lgm_H, qualifier_, {}, e);
     ModelCG::ModelParameter id_zeta(ModelCG::ModelParameter::Type::lgm_zeta, qualifier_, {}, d);
 
@@ -142,8 +142,10 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
 
         Time dt = ibor->dayCounter().yearFraction(d1, d2);
 
-        std::size_t disc1 = reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
-        std::size_t disc2 = reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name());
+        std::size_t disc1 =
+            reducedDiscountBond(t, d1, x, ibor->forwardingTermStructure(), "fwd_" + index->name(), fixingDate);
+        std::size_t disc2 =
+            reducedDiscountBond(t, d2, x, ibor->forwardingTermStructure(), "fwd_" + index->name(), fixingDate);
 
         id.setNode(cg_div(g_, cg_subtract(g_, cg_div(g_, disc1, disc2), cg_const(g_, 1.0)), cg_const(g_, dt)));
         cachedParameters_.insert(id);

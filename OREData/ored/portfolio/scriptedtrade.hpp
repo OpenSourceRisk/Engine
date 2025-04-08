@@ -279,6 +279,7 @@ protected:
     std::string scriptName_;
 
     // set in build()
+    bool isPfAnalyserRun_ = false;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
     bool includePastCashflows_ = false;

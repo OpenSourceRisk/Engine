@@ -68,12 +68,13 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at,
     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType, const Period& switchTenor, DeltaVolQuote::DeltaType ltdt,
     DeltaVolQuote::AtmType ltat, boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType,
-    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
+    InterpolatedSmileSection::InterpolationMethod im, bool flatStrikeExtrapolation,
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter), dates_(dates), times_(dates.size(), 0),
       putDeltas_(putDeltas), callDeltas_(callDeltas), hasAtm_(hasAtm), spot_(spot), domesticTS_(domesticTS),
       foreignTS_(foreignTS), dt_(dt), at_(at), atmDeltaType_(atmDeltaType), switchTenor_(switchTenor), ltdt_(ltdt),
       ltat_(ltat), longTermAtmDeltaType_(longTermAtmDeltaType), interpolationMethod_(im),
-      flatExtrapolation_(flatExtrapolation) {
+      flatStrikeExtrapolation_(flatStrikeExtrapolation), timeExtrapolation_(timeExtrapolation) {
 
     // If ATM delta type is not given, set it to dt
     if (!atmDeltaType_)
@@ -113,8 +114,9 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
         }
 
         // BlackVarianceCurve will make a local copy of vols and dates
-        interpolators_.push_back(
-            QuantLib::ext::make_shared<BlackVarianceCurve>(referenceDate, dates, vols, dayCounter, forceMonotoneVariance));
+        interpolators_.push_back(QuantLib::ext::make_shared<BlackVarianceCurve>(
+            referenceDate, dates, vols, dayCounter, forceMonotoneVariance,
+            timeExtrapolation));
     }
 
     // register
@@ -205,7 +207,7 @@ QuantLib::ext::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolS
     } else {
         // we have at least two strikes
         return QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols,
-                                                            interpolationMethod_, flatExtrapolation_);
+                                                                    interpolationMethod_, flatStrikeExtrapolation_);
     }
 }
 
@@ -218,9 +220,10 @@ Real BlackVolatilitySurfaceDelta::forward(Time t) const {
 }
 
 Volatility BlackVolatilitySurfaceDelta::blackVolImpl(Time t, Real strike) const {
-    // Only flat extrapolation allowed
-    Time tme = t <= times_.back() ? t : times_.back();
     // If asked for strike == 0, just return the ATM value.
+    double tme =
+        (t > times_.back() && timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) ? times_.back() : t;
+
     if (strike == 0 || strike == Null<Real>()) {
         if (hasAtm_) {
             // ask the ATM interpolator directly

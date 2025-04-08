@@ -311,13 +311,15 @@ class LegBuilder {
 public:
     LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                         const bool useXbsCurves = false, const bool attachPricer = true) const = 0;
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&,
+                         RequiredFixings& requiredFixings, const string& configuration,
+                         const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                         const bool attachPricer = true,
+                         std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr) const = 0;
     const LegType& legType() const { return legType_; }
 
 private:
-    const LegType legType_;
+    LegType legType_;
 };
 
 } // namespace data

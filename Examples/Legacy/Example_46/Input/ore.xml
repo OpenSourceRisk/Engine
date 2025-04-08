@@ -18,13 +18,6 @@
     <Parameter name="referenceDataFile">reference_data.xml</Parameter>
   </Setup>
   <Markets>
-  <!--
-    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">xois_eur</Parameter>
-    <Parameter name="pricing">xois_eur</Parameter>
-    <Parameter name="simulation">xois_eur</Parameter>
-    <Parameter name="sensitivity">xois_eur</Parameter> 
-    -->
     <Parameter name="lgmcalibration">default</Parameter>
     <Parameter name="fxcalibration">default</Parameter>
     <Parameter name="pricing">default</Parameter>

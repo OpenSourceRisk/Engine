@@ -133,8 +133,8 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
 
 std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter& p) {
     return o << "(" << p.type() << "," << p.qualifier() << "," << p.qualifier2() << ","
-             << QuantLib::io::iso_date(p.date()) << "," << QuantLib::io::iso_date(p.date2()) << "," << p.date3() << ","
-             << p.index() << "," << p.index2() << ")";
+             << QuantLib::io::iso_date(p.date()) << "," << QuantLib::io::iso_date(p.date2()) << ","
+             << QuantLib::io::iso_date(p.date3()) << "," << p.index() << "," << p.index2() << ")";
 }
 
 } // namespace data

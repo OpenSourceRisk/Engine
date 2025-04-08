@@ -45,7 +45,9 @@ public:
     void setUpConfigurations() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
-        
+
+    void applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
         offsetScenario_ = offsetScenario;
     }
@@ -87,7 +89,7 @@ protected:
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     QuantLib::ext::shared_ptr<Portfolio> amcPortfolio_, classicPortfolio_;
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_, amcCube_;
-    QuantLib::RelinkableHandle<AggregationScenarioData> scenarioData_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> scenarioData_;
     QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter_;
     QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     QuantLib::ext::shared_ptr<PostProcess> postProcess_;

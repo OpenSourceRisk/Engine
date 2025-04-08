@@ -98,7 +98,7 @@ public:
         const std::string& qualifier2() const { return qualifier2_; }
         const QuantLib::Date& date() const { return date_; }
         const QuantLib::Date& date2() const { return date2_; }
-        const QuantLib::Date& date3() const { return date2_; }
+        const QuantLib::Date& date3() const { return date3_; }
         std::size_t index() const { return index_; }
         std::size_t index2() const { return index2_; }
         double eval() const { return functor_ ? functor_() : 0.0; }
@@ -117,7 +117,7 @@ public:
         QuantLib::Date date3_;
         std::size_t index_;
         std::size_t index2_;
-        // functor, only filled for primary model parameters, not cached parameters
+        // functor, only filled for primary model parameters, not filled for cached parameters
         mutable std::function<double(void)> functor_;
         // node in cg, this is filled for primary model parameters and cached parameters
         mutable std::size_t node_ = QuantExt::ComputationGraph::nan;

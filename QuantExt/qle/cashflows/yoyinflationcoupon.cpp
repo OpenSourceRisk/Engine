@@ -27,11 +27,20 @@ namespace QuantExt {
 YoYInflationCoupon::YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                        const Date& endDate, Natural fixingDays,
                                        const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag,
+                                       CPI::InterpolationType interpolation, const DayCounter& dayCounter,
+                                       Real gearing, Spread spread, const Date& refPeriodStart,
+                                       const Date& refPeriodEnd, bool addInflationNotional)
+    : QuantLib::YoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
+                                   interpolation, dayCounter, gearing, spread, refPeriodStart, refPeriodEnd),
+      addInflationNotional_(addInflationNotional) {}
+
+YoYInflationCoupon::YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
+                                       const Date& endDate, Natural fixingDays,
+                                       const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag,
                                        const DayCounter& dayCounter, Real gearing, Spread spread,
                                        const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
-    : QuantLib::YoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
-                                   dayCounter, gearing, spread, refPeriodStart, refPeriodEnd),
-      addInflationNotional_(addInflationNotional) {}
+    : YoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag, CPI::AsIndex,
+                                   dayCounter, gearing, spread, refPeriodStart, refPeriodEnd, addInflationNotional) {}
 
 void YoYInflationCoupon::accept(AcyclicVisitor& v) {
     Visitor<YoYInflationCoupon>* v1 = dynamic_cast<Visitor<YoYInflationCoupon>*>(&v);
@@ -64,12 +73,12 @@ CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
 
 CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
-    const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
-    Real gearing, Spread spread, const Rate cap, const Rate floor, const Date& refPeriodStart, const Date& refPeriodEnd,
-    bool addInflationNotional)
+    const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag, CPI::InterpolationType interpolation,
+    const DayCounter& dayCounter, Real gearing, Spread spread, const Rate cap, const Rate floor,
+    const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
     : QuantLib::CappedFlooredYoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index,
-                                                observationLag, dayCounter, gearing, spread, cap, floor, refPeriodStart,
-                                                refPeriodEnd),
+                                                observationLag, interpolation, dayCounter, gearing, spread, cap, floor,
+                                                refPeriodStart, refPeriodEnd),
       addInflationNotional_(addInflationNotional) {
     if (addInflationNotional_) {
         if (isCapped_) {
@@ -80,6 +89,15 @@ CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
         }
     }
 }
+
+CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
+    const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
+    const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag,
+    const DayCounter& dayCounter, Real gearing, Spread spread, const Rate cap, const Rate floor,
+    const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
+    : CappedFlooredYoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
+                                      CPI::AsIndex, dayCounter, gearing, spread, cap, floor, refPeriodStart,
+                                      refPeriodEnd) {}
 
 void CappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredYoYInflationCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredYoYInflationCoupon>*>(&v);
@@ -98,10 +116,14 @@ Rate CappedFlooredYoYInflationCoupon::rate() const {
 }
 
 yoyInflationLeg::yoyInflationLeg(Schedule schedule, Calendar paymentCalendar, ext::shared_ptr<YoYInflationIndex> index,
-                                 const Period& observationLag)
+                                 const Period& observationLag, CPI::InterpolationType interpolation)
     : schedule_(std::move(schedule)), index_(std::move(index)), observationLag_(observationLag),
-      paymentAdjustment_(ModifiedFollowing), paymentCalendar_(std::move(paymentCalendar)),
-      addInflationNotional_(false) {}
+      interpolation_(interpolation), paymentAdjustment_(ModifiedFollowing),
+      paymentCalendar_(std::move(paymentCalendar)), addInflationNotional_(false) {}
+
+yoyInflationLeg::yoyInflationLeg(Schedule schedule, Calendar paymentCalendar, ext::shared_ptr<YoYInflationIndex> index,
+                                 const Period& observationLag)
+    : yoyInflationLeg(schedule, paymentCalendar, index, observationLag, CPI::AsIndex) {}
 
 yoyInflationLeg& yoyInflationLeg::withNotionals(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -220,7 +242,7 @@ yoyInflationLeg::operator Leg() const {
             if (detail::noOption(caps_, floors_, i)) { // just swaplet
                 ext::shared_ptr<YoYInflationCoupon> coup(new YoYInflationCoupon(
                     paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
-                    observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
+                    observationLag_, interpolation_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
                     refStart, refEnd, addInflationNotional_));
 
                 // in this case you can set a pricer
@@ -233,7 +255,7 @@ yoyInflationLeg::operator Leg() const {
             } else { // cap/floorlet
                 leg.push_back(ext::shared_ptr<CashFlow>(new CappedFlooredYoYInflationCoupon(
                     paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
-                    observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
+                    observationLag_, interpolation_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
                     detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()), refStart, refEnd,
                     addInflationNotional_)));
             }

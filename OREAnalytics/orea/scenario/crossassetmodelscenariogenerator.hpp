@@ -36,6 +36,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedswaptionvoltermstructure.hpp>
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
@@ -93,6 +94,7 @@ private:
     std::vector<RiskFactorKey> crStateKeys_, survivalWeightKeys_, recoveryRateKeys_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedSwaptionVolTermStructure>> swaptionVols_;
     std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
     Size n_ccy_, n_fx_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_, n_states_;
