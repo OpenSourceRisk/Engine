@@ -151,8 +151,10 @@ class TestExamples(unittest.TestCase):
 
 
 def get_list_of_examples():
-    return sorted([e for e in os.listdir(os.path.join(os.getcwd(), '../'))
-                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+    examples_dir = os.path.normpath(Path(__file__).resolve().parents[1])
+    ignored_dirs = ["__pycache__", "Input", "ORE-Python", "Academy", "CreditRisk"]
+    return sorted([e for e in os.listdir(examples_dir)
+                   if os.path.isdir(os.path.join(examples_dir, e)) and e not in ignored_dirs])
 
 def add_utest(name):
     def do_run_test(self):

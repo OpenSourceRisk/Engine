@@ -36,4 +36,4 @@ Run a local Example
 
 - send a request, the equivalent of Example 1
   python3 request.py
-  
+ 
