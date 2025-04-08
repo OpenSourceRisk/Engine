@@ -28,6 +28,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/crifanalytic.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>
@@ -171,10 +172,14 @@
 #include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifconfiguration.hpp>
+#include <orea/simm/crifgenerator.hpp>
 #include <orea/simm/crifloader.hpp>
+#include <orea/simm/crifmarket.hpp>
 #include <orea/simm/crifrecord.hpp>
+#include <orea/simm/crifrecordgenerator.hpp>
 #include <orea/simm/imschedulecalculator.hpp>
 #include <orea/simm/imscheduleresults.hpp>
+#include <orea/simm/portfoliomodifier.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
@@ -210,6 +215,7 @@
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <orea/simm/simmtradedata.hpp>
 #include <orea/simm/utilities.hpp>
 #include <orea/simulation/fixingmanager.hpp>
 #include <orea/simulation/simmarket.hpp>
