@@ -327,6 +327,7 @@
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradebarrier.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/tranche.hpp>
