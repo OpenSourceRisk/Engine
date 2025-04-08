@@ -39,17 +39,24 @@ def get_file(filename):
     flask.request.get_data()
     file_type = filename.rsplit(".", 1)[1]
     fdir, file = os.path.split(unquote(filename))
-    response = flask.make_response(flask.send_from_directory(os.path.join(main_args.input_dir, fdir), file, mimetype=getMimeType(filename)))
-    response.headers['Content-Type'] = file_type_header_map[file_type]
-    return response
-
+    filepath = os.path.join(main_args.input_dir, fdir)
+    if not is_directory_traversal(filepath):
+        response = flask.make_response(flask.send_from_directory(filepath, file, mimetype=getMimeType(filename)))
+        response.headers['Content-Type'] = file_type_header_map[file_type]
+        return response
+    else:
+        flask.abort(400, description="backwards directory traversal detected!")
 
 @api.route('/file/<path:filename>/<notused>', methods=['GET', 'POST'])
 def get_file2(filename, notused):
     flask.request.get_data()
     fdir, file = os.path.split(unquote(filename))
-    return flask.send_from_directory(os.path.join(main_args.input_dir, fdir), file, mimetype=getMimeType(filename))
-
+    filepath = os.path.join(main_args.input_dir, fdir)
+    if not is_directory_traversal(filepath):
+        return flask.send_from_directory(os.path.join(main_args.input_dir, fdir), file, mimetype=getMimeType(filename))
+    else:
+        flask.abort(400, description="backwards directory traversal detected!")
+        
 @api.route('/report/<path:filename>', methods=['POST'])
 def post_report(filename):
     fdir, file = os.path.split(unquote(filename))
