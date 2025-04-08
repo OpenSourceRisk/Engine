@@ -501,12 +501,10 @@ BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<Eng
     future->build(engineFactory);
 
     QL_REQUIRE(future->instrument(), "BondFutureBuilder: constructed future is null, this is unexpected");
-    auto qlFuture = QuantLib::ext::dynamic_pointer_cast<ForwardBond>(future->instrument()->qlInstrument());
 
     Result res;
     // set null ptr
     res.bond = QuantLib::ext::shared_ptr<QuantLib::Bond>();
-    res.qlInstrument = future->instrument()->qlInstrument();
     res.trade = future;
     res.currency = future->currency();
 

@@ -186,9 +186,9 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
     } else if (b.bond) { // this is the standard bond case
         return b.bond->cleanPrice() / 100.0;
     } else {// this is bond future case
-        return b.qlInstrument->NPV();
-        // in case we want strike = zero 
-        //auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.qlInstrument);
+        return b.trade->instrument()->qlInstrument()->NPV();
+        // in case we want strike = zero
+        //auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.trade->instrument()->qlInstrument());
         //QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
         //return future->forwardValue();
     }

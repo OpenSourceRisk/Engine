@@ -190,7 +190,6 @@ struct BondBuilder {
     struct Result {
         std::string builderLabel;
         QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
-        QuantLib::ext::shared_ptr<QuantLib::Instrument> qlInstrument;
         QuantLib::ext::shared_ptr<ore::data::Trade> trade;
         BondData bondData;
         QuantLib::ext::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
