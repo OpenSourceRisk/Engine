@@ -1,0 +1,755 @@
+%------------------------------------------------------------------------------------------------------------
+\section{Automatic Differentiation}
+%------------------------------------------------------------------------------------------------------------
+\label{sec:computationgraph}
+
+Automatic differentiation (AD), also called algorithmic differentiation or computational
+differentiation, is a set of techniques for automatically augmenting computer programs with
+statements / code for the computation of derivatives (sensitivities) \cite{autodiff}.
+AD is hence an alternative approach to
+\begin{itemize}
+\item numerical differentiation using
+finite difference expressions
+$$
+\frac{df(x)}{dx} \approx \lim_{h\rightarrow 0} \frac{f(x+h)-f(x)}{h},
+$$
+\item symbolic differentiation as implemented in computer algebra packages
+such as Mathematica, Maple, Maxima, etc.,
+\item symbolic differentiation ``by
+hand'', subsequently turned into computer code.
+\end{itemize}
+
+AD is well known in computer science since the 1980's with application e.g. in
+computational fluid dynamics, meteorology and engineering design
+optimization. It gained attention in the quantitative finance community more recently
+\cite{giles_2006, leclerc_2009, joshi_2010, capriotti_2010,
+  capriotti_2011, capriotti_2011b, capriotti_2011c}, to name a few, where the seminal paper by
+Giles and Glasserman \cite{giles_2006} addresses the problem of fast Greeks computation
+in a Libor Market Model setting. In January 2015 AD has even made it to the front
+page of RISK \cite{sherif_2015}. For a problem like CVA risk, where the underlying
+CVA numbers are computed by Monte Carlo techniques, ``fast Greeks''
+are not only nice to have but a hard requirement, which explains the
+raised attention and the attempts to implement AD into Bank's quant libraries as stated e.g. in
+\cite{capriotti_2011b} and \cite{sherif_2015}.
+
+It can be shown \cite{griewank_2000} that the overall
+complexity of sensitivity calculation using AD is no more than
+four times greater than the complexity (number of operations) of the original valuation,
+an astonishing reduction in complexity compared to the conventional
+bump/revalue approach to sensitivity calculation, even if the realisitc overhead is closer to a
+factor of 10 than 4.
+
+To apply AD, essentially the chain rule of differentiation, automatically ``under
+the hood'', it is key to extract the {\em Computation Graph} from an algorithm.
+
+Consider the simple example of computing
+$$
+y = (a + b) \times (b - c).
+$$
+The computation graph for this case is shown in figure \ref{fig:cg}.
+
+\begin{center}
+  \begin{figure}[hbt]
+    \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,thick,main/.style={draw,ellipse,thick}]
+
+      \node[main] (1) {$y = d \times e$};
+      \node[main] (2) [below left of=1] {$d = a + b$};
+      \node[main] (3) [below right of=1] {$e = b - c$};
+      \node[main] (4) [below left of=2] {$a$};
+      \node[main] (5) [below right of=2] {$b$};
+      \node[main] (6) [below right of=3] {$c$};
+
+      \path[every node/.style={font=\sffamily\small}]
+      (2) edge node [left] {$\frac{\partial y}{\partial d}=e$} (1)
+      (3) edge node [right] {$\frac{\partial y}{\partial e}=d$} (1)
+      (4) edge node [left] {$\frac{\partial d}{\partial a}=1$} (2)
+      (5) edge node [left] {$\frac{\partial d}{\partial b}=1$} (2)
+          edge node [right] {$\frac{\partial e}{\partial b}=1$} (3)
+      (6) edge node [right] {$\frac{\partial e}{\partial c}=-1$} (3);
+    \end{tikzpicture}
+    \caption{Computation Graph for $y = (a + b) \times (b - c)$}
+    \label{fig:cg}
+  \end{figure}
+\end{center}
+
+Applying the chain rule and collecting the derivatives along the edges of the graph, we can assemble
+the (forward) derivatives of $y$ w.r.t. the input variables $a, b, c$
+\begin{align*}
+  \frac{\partial y}{\partial a} &= \frac{\partial y}{\partial d} \cdot \frac{\partial d}{\partial a} = e\\
+  \frac{\partial y}{\partial b} &= \frac{\partial y}{\partial d} \cdot \frac{\partial d}{\partial b} +  \frac{\partial y}{\partial e} \cdot \frac{\partial e}{\partial b} = e + d \\
+  \frac{\partial y}{\partial c} &= \frac{\partial y}{\partial e} \cdot \frac{\partial e}{\partial c} = -d
+  \end{align*}
+
+The following section provides a brief introduction to the AD mechanics, {\em Forward} and {\em Backward} modes. The latter is also referred to as Adjoint Algorithmic Differentiation (AAD) and particularly important for fast sensitivity calulation.
+
+%------------------------------------------------------------------------------------------------------------
+\subsection{Automatic Differentiation Basics}
+%------------------------------------------------------------------------------------------------------------
+\label{sec:ad}
+
+Consider the evaluation of some function $y=f(x_1, ...., x_n)$ of $n$
+input variables (e.g. an instrument value as a function of many market
+data points).  Any such function evaluation can be expressed in terms
+of $m$ intermediate variables to which we apply simple unary built-in
+functions (such as $\exp(x)$, $\log(x)$, $\sin(x)$, ...) and binary
+operations (addition, subtraction, multiplication, division).
+
+AD is a ``mechanical'' application of the chain rule of differentiation
+% $$
+% \frac{\partial y}{\partial x_j} = \sum_{k=1}^m
+% \frac{\partial y}{\partial g_k}\frac{dg_k}{dx_j}
+% $$
+to the series of intermediate results. The sequence can be evaluated
+in two ways, forward and backward direction, as well as combinations of
+both. The following sections sketch these procedures.
+
+\subsection*{Forward Mode}
+
+The concept of this mode is the one that is easier to understand.
+We assume that our functions do not operate on real numbers but on
+{\em dual numbers} $x+\epsilon x'$ with an arithemtic defined by $\epsilon^2=0$.
+Basic operations -- addition, subtraction, multiplication, division of dual numbers
+-- follow from this definition as
+\begin{align*}
+(x+\epsilon x') \pm (y+\epsilon y') &= x \pm y + \epsilon(x'\pm y') \\
+(x+\epsilon x') \times (y+\epsilon y') &= x\,y + \epsilon(xy' +x'y) \\
+%(y+\epsilon y') \times (y-\epsilon y') &= y^2 \\
+ (x+\epsilon x') / (y+\epsilon y') &=
+\frac{ (x+\epsilon x') \times (y-\epsilon y')}{(y+\epsilon y')\times
+  (y-\epsilon y')}
+%= \frac{xy + \epsilon(x'y-y'x)}{y^2+\epsilon(y'y-y'y)}\\
+= \frac{xy + \epsilon(x'y-y'x) }{y^2} \\
+&= x/y + \epsilon(x'/y-y'x/y^2)
+\end{align*}
+Function evaluations of dual arguments follow from their truncated Taylor
+expansion\footnote{Assuming that the derivative $f'(x)$ exists.}
+(as all powers $\epsilon^2, \epsilon^3, \dots$ vanish):
+\begin{align*}
+f(x+\epsilon x') &= f(x) + \epsilon\,f'(x)\,x'
+\intertext{which also yields the chain rule}
+f(g(x+\epsilon x')) &= f(g(x) + \epsilon\,g'(x)\,x') \\
+&= f(g(x)) + \epsilon\,f'(g(x))\,g'(x)\,x'
+\end{align*}
+by iterated application of the first truncated Taylor series.
+For $x'=1$ the RHS of the latter is just the derivative of $f(\cdot)$
+w.r.t. $x$. All we need to do is generalize all operations to {\em
+  dual numbers} and evaluate $f(g(x+\epsilon))$. This yields the usual
+``primal'' valuation $f(g(x))$ and the function's derivative
+mechanically by looking up the $\epsilon$ coefficient (second component)
+of the resulting dual number.
+
+Generalizing to functions of $n$ variables $x_1, ..., x_n$, and their
+dual generalization $(x_i+\epsilon x'_i)$, the
+difference is in the truncated Taylor expansion for the function
+evaluations
+$$
+f(x_1+\epsilon x'_1,\dots,x_n+\epsilon x'_n) = f(x_1,\dots,x_n)
++\epsilon \sum_{i=1}^n \frac{\partial f}{\partial x_i} x'_i.
+$$
+This shows that we get any first order partial derivative by setting its {\em
+  seed} $x'_i$ to one and all others to zero. Hence this forward mode
+requires $n$ passes / valuations to get all $n$ partial derivatives.
+The forward mode is efficient if we need to evaluate many functions
+$f$ of few variables.
+
+In finance it is often the other way around, few
+functions need sensitivity calculation w.r.t. many input variables.
+The {\em backward} mode, sketched in the following, is
+suited for this situation.
+
+\subsection*{Backward Mode, Adjoint Algorithmic Differentiation (AAD)}
+\index{adjoint algorithmic differentiation|(textbf}
+The backward mode evaluates the chain rule along
+intermediate calculation steps in {\em reverse} order.
+Consider a sequence of evaluations \cite{capriotti_2011c}
+$$
+X \rightarrow ... \rightarrow U \rightarrow V \rightarrow
+... \rightarrow Y
+$$
+which transforms the input $X$ (of dimension $n$) to the outptut $Y$
+(of dimension $m$) using basic arithmetic operations and simple
+built-in function calls for which the derivative is built-in as well.
+We are interested in all partial derivatives
+$$
+\frac{\partial Y_i}{\partial X_j}.
+$$
+The derivative of the function $Y: \R^n \to \R^m, X\mapsto Y(X)$ in $\xi\in\R^n$ is a linear operator $DY(\xi): \R^n\to\R^m$ which maps
+$$
+\left(\begin{matrix}
+x_1\\
+\vdots\\
+x_n
+\end{matrix}\right)
+ \mapsto
+\left( \begin{matrix}
+\frac{\partial Y_1}{\partial X_1}(\xi) & \cdots & \frac{\partial Y_1}{\partial X_n}(\xi)\\
+\vdots & \ddots & \vdots\\
+\frac{\partial Y_m}{\partial X_1}(\xi) & \cdots & \frac{\partial Y_m}{\partial X_n}(\xi)
+\end{matrix}\right) \!
+\left(\begin{matrix}
+x_1\\
+\vdots\\
+x_n
+\end{matrix}\right)
+= \left(\begin{matrix}
+\sum_{i=1}^n \frac{\partial Y_1}{\partial X_i}(\xi)\,x_i\\
+\vdots\\
+\sum_{i=1}^n \frac{\partial Y_m}{\partial X_i}(\xi)\,x_i\\
+\end{matrix}\right) \!.$$
+Because all variables are real, the adjoint operator of $DY(\xi)$ is
+$$(DY(\xi)^* = \left( \begin{matrix}
+\frac{\partial Y_1}{\partial X_1}(\xi) & \cdots & \frac{\partial Y_1}{\partial X_n}(\xi)\\
+\vdots & \ddots & \vdots\\
+\frac{\partial Y_m}{\partial X_1}(\xi) & \cdots & \frac{\partial Y_m}{\partial X_n}(\xi)
+\end{matrix}\right)^{\top} \!=
+\left( \begin{matrix}
+\frac{\partial Y_1}{\partial X_1}(\xi) & \cdots & \frac{\partial Y_m}{\partial X_1}(\xi)\\
+\vdots & \ddots & \vdots\\
+\frac{\partial Y_1}{\partial X_n}(\xi) & \cdots & \frac{\partial Y_m}{\partial X_n}(\xi)
+\end{matrix}\right).
+$$
+For intermediate functions, the chain rule in conjunction with the multiplication rule for transposed matrices yields:
+\begin{align*}
+Y(X) &= Y(V(X)) \Rightarrow\\
+(DY(\xi))^* &= (DY(V(\xi))\,DV(\xi))^* \\
+&= (DV(\xi))^*\,(DY(V(\xi)))^*
+\end{align*}
+which allows us to compute the derivatives backwards, provided we can compute the adjoint operators.
+Hence, the backward mode considers {\em adjoint} variables
+$$
+\bar V_k = \sum_{j=1}^m \bar Y_j \frac{\partial Y_j}{\partial V_k}
+$$
+which collect the sensitivity of the result w.r.t. intermediate
+variable $V_k$. Likewise
+$$
+\bar U_i = \sum_{j=1}^m \bar Y_j \frac{\partial Y_j}{\partial U_i}
+= \sum_{j=1}^m \bar Y_j \sum_k \frac{\partial Y_j}{\partial
+  V_k}\frac{\partial V_k}{\partial U_i}
+= \sum_k \bar V_k \frac{\partial V_k}{\partial U_i}
+$$
+Starting from the adjoint of the output we can eventually generate the
+adjoint of the input variables
+\begin{align}
+  \label{eq_adjoint_der_op}
+\bar X_i & = \sum_{j=1}^m \bar Y_j \frac{\partial Y_j}{\partial X_i}
+\end{align}
+by applying the chain rule to all intermediate results in reverse
+order
+$$
+\bar X \leftarrow ... \leftarrow \bar U \leftarrow \bar V \leftarrow
+... \leftarrow \bar Y.
+$$
+Initializing the output adjoint for index $j$ with one (and all other
+with zero) in \eqref{eq_adjoint_der_op} therefore yields the entire set of sensitivities of $Y_i$
+to all $n$ input variables. Due to the formulation in terms of
+adjoint variables, AD in backward mode is also referred to as {\em Adjoint Algorithmic Differentiation
+  (AAD)}.
+Recall that the overall complexity of sensitivity calculation using AAD is no more than
+four times greater than the complexity (in terms of number of operations)
+of the original valuation. The general rule is: The adjoint method should be used in case there
+are many inputs (curve points, volatilities, credit spreads etc.) but few outputs (prices,
+value adjustments). If there are few inputs but many outputs, the forward method is better.
+
+\medskip
+Note that the reverse procedure uses
+partial derivatives of internal variables $V_k$ w.r.t. internal
+variables $U_i$ which are generally dependent on the values of
+internal variables. This means they need to be computed in a first
+forward {\em sweep} and then stored for usage in the backward sweep.
+This memory impact is different from the pure forward sweep which
+does not require storing intermediate results.
+
+\subsection{Computation Graphs in ORE}
+
+{\em Operator Overloading} is a typical approach to ``recording'' a computation graph automatically.
+See for example the attempts to integrate AAD with Operator Overloading into QuantLib \cite{QuantLib}
+around 2014. See also the series of papers by Antoine Savine on the subject \cite{savine_cg_1,
+  savine_cg_2, savine_cg_3} and his books for a deeper dive \cite{savine_book_1, savine_book_2}.
+
+However, in ORE we apply AAD in the context of the scripted trade module only. Rather than following
+the operator overloading path introducing an ``active'' {\tt Real} data type, replacing the
+``inactive'' {\tt Real} type across the entire ORE libraries, we extract the computation graph
+explicitly from the script in its AST representation in order to utilize AAD in the scripted trade
+processing only. Thus we avoid negative perfomance impact (recall the ``factor 4'' overhead)
+elsewhere and in the valuation of vanilla instruments. Moreover, we make the ``AAD activation'' of the
+scripted trade framework configurable, i.e. we can switch AAD on and off without recompiling the
+code base. How this works is discussed briefly in the following.
+
+The {\tt ComputationGraph} object is defined in qle/math/ad/computationgraph.*pp, alongside
+essential operations on the graph -- forward valuation, forward and backward derivative propagation.
+It is recommended to review the compact implementation of the these functions in qle/math/ad,
+see listings \ref{lst:forwardvaluation}, \ref{lst:forwardderivatives} and \ref{lst:backwardderivatives}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{c++}
+template <class T>
+void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
+                       const std::vector<std::function<T(const std::vector<const T*>&)>>& ops,
+                       std::function<void(T&)> deleter = {}, bool keepValuesForDerivatives = true,
+                       const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
+                           opRequiresNodesForDerivatives = {},
+                       const std::vector<bool>& keepNodes = {}, const std::size_t startNode = 0,
+                       const std::size_t endNode = ComputationGraph::nan, const bool redBlockReconstruction = false) {
+
+    std::vector<bool> keepNodesDerivatives;
+    if (deleter && keepValuesForDerivatives)
+        keepNodesDerivatives = std::vector<bool>(g.size(), false);
+
+    // loop over the nodes in the graph in ascending order
+
+    for (std::size_t node = startNode; node < (endNode == ComputationGraph::nan ? g.size() : endNode); ++node) {
+
+        // if a node is computed by an op applied to predecessors ...
+        if (!g.predecessors(node).empty()) {
+
+            // evaluate the node
+
+            std::vector<const T*> args(g.predecessors(node).size());
+            for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
+                args[arg] = &values[g.predecessors(node)[arg]];
+            }
+            values[node] = ops[g.opId(node)](args);
+
+            QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
+                                                   << node << " is not initialized, opId = " << g.opId(node));
+
+            // then check if we can delete the predecessors
+            if (deleter) {
+                ...
+            }     // if deleter
+        }         // if !g.predecessors empty
+    }             // for node
+}
+\end{minted}
+\caption{Forward valuation on a computation graph in qle/ad/forwardvaluation.hpp}
+\label{lst:forwardvaluation}
+\end{listing}
+
+\begin{listing}
+\begin{minted}[fontsize=\scriptsize]{c++}
+template <class T>
+void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
+                        const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
+                        std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+                        const std::size_t conditionalExpectationOpId = 0,
+                        const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
+
+    if (g.size() == 0)
+        return;
+
+    // loop over the nodes in the graph in forward order
+
+    for (std::size_t node = 0; node < g.size(); ++node) {
+        if (!g.predecessors(node).empty()) {
+
+            // propagate the derivatives from predecessors of a node to the node
+
+            std::vector<const T*> args(g.predecessors(node).size());
+            for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
+                args[arg] = &values[g.predecessors(node)[arg]];
+            }
+
+            if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
+
+                args[0] = &derivatives[g.predecessors(node)[0]];
+                derivatives[node] = conditionalExpectation(args);
+
+            } else {
+
+                auto gr = grad[g.opId(node)](args, &values[node]);
+
+                for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
+                    derivatives[node] += derivatives[g.predecessors(node)[p]] * gr[p];
+                }
+            }
+
+            // the check if we can delete the predecessors
+
+            if (deleter) {
+                ...
+            }     // if deleter
+        }         // if !g.predecessors empty
+    }             // for node
+}
+\end{minted}
+\caption{Forward derivaties calculation on a computation graph in qle/ad/forwardderivatives.hpp}
+\label{lst:forwardderivatives}
+\end{listing}
+
+\begin{listing}
+\begin{minted}[fontsize=\scriptsize]{c++}
+template <class T>
+void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
+                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
+                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+                         const std::vector<std::function<T(const std::vector<const T*>&)>>& fwdOps = {},
+                         const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
+                             fwdOpRequiresNodesForDerivatives = {},
+                         const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
+                         const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
+
+    if (g.size() == 0)
+        return;
+
+    std::size_t redBlockId = 0;
+
+    // loop over the nodes in the graph in reverse order
+
+    for (std::size_t node = g.size() - 1; node > 0; --node) {
+
+        if (g.redBlockId(node) != redBlockId) {
+
+            // delete the values in the previous red block
+            ...
+
+            // populate the values in the current red block
+            ...
+
+            // update the red block id
+            redBlockId = g.redBlockId(node);
+        }
+
+        if (!g.predecessors(node).empty() && !isDeterministicAndZero(derivatives[node])) {
+
+            // propagate the derivative at a node to its predecessors
+            std::vector<const T*> args(g.predecessors(node).size());
+            for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
+                args[arg] = &values[g.predecessors(node)[arg]];
+            }
+
+            QL_REQUIRE(derivatives[node].initialised(),
+                       "backwardDerivatives(): derivative at active node " << node << " is not initialized.");
+
+            if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
+
+                // expected stochastic automatic differentiaion, Fries, 2017
+                args[0] = &derivatives[node];
+                derivatives[g.predecessors(node)[0]] += conditionalExpectation(args);
+
+            } else {
+
+                auto gr = grad[g.opId(node)](args, &values[node]);
+
+                for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
+                    ...
+                    derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
+                }
+            }
+        }
+
+        // then check if we can delete the node
+        ...
+
+    } // for node
+}
+\end{minted}
+\caption{Backward derivaties calculation on a computation graph in qle/ad/backwardderivatives.hpp}
+\label{lst:backwardderivatives}
+\end{listing}
+
+To utilise the computation graph, ORE provides an additional hierarchy of scripting models and
+engines, as well as a configuration graph builder using the AST, summarized in table \ref{tab:cg}.
+Which side of the hierarchy is built, depends on configuration settings in pricingengine.xml
+(UseCG, UseAD). We can use the computation graph version even without activating AD.
+
+\begin{table}[htb]
+  \scriptsize
+  \begin{tabular}{|l|l|}
+    \hline
+    models/model.hpp &
+    models/model{\color{red}cg}.*pp \\
+    models/modelimpl.*pp &
+    models/model{\color{red}cg}impl.*pp \\
+    models/blackscholes.hpp &
+    models/blackscholes{\color{red}cg}.*pp \\
+    models/blackscholesbase.*pp &
+    models/blackscholes{\color{red}cg}base.*pp \\
+    models/gaussiancam.*pp &
+    models/gaussiancam{\color{red}cg}.*pp \\
+    models/localvol.*pp & -- \\
+    -- & models/hw{\color{red}cg}.*pp \\
+    -- & models/lgm{\color{red}cg}.*pp \\
+    \hline
+    engines/scriptedinstrumentpricingengine.*pp &
+    engines/scriptedinstrumentpricingengine{\color{red}cg}.*pp \\
+    \hline
+    -- & computationgraphbuilder.*pp \\
+    \hline
+\end{tabular}
+\caption{``Classic'' scripting vs ``Computation Graph'', all files is ore/scripting.}
+\label{tab:cg}
+\end{table}
+
+Apparently these implementation have somewhat different scope (see localvol on the ``classic'' side,
+hwcg, and lgmcg on the ``CG'' side), which shows that the module is
+still in progress, on both sides with and without computation graph utilisation.
+Generally the duplication of code here (about 3500 lines of code in the models and engine
+classes of type CG) seems undesireable, disadvantageous from a development and maintenance effort
+point of view.
+
+However, our plan is to continue following and building out the computation graph
+path (adding more scripting models over time) and to keep the ``classic'' implementation available
+for validation and testing for part of the computation graph framework.
+
+Key differences:
+\begin{itemize}
+\item {\tt ScriptedInstrumentPricingEngineCG} calls the {\tt ComputationGraphBuilder} which
+  constructs the computation graph from the AST and delegates the pricing to the
+  {\tt forwardEvaluatiuon} function defined in qle/ad that operates on the computation graph;
+  it does {\em not} use the {\tt ASTRunner} any more
+\item the scripting models, starting with base class {\tt ModelCG}, have a similar interface as
+  the ``non-CG'' counterparts with {\tt RandomVariable} arguments replaced with indexes (of type
+  std::size\_t) referencing nodes in the computation graph, see the cut-down listing of
+  {\tt ModelCG} in listing \ref{lst:modelcg} and compare
+\ifdefined\RiskCatalogue
+to the {\tt Model} interface;
+\else
+to the {\tt Model} interface in listing  \ref{lst:model};
+\fi
+the scripting model classes provide additional member functions that reference random variates and model parameters on the graph;
+\end{itemize}
+
+\begin{listing}
+\begin{minted}[fontsize=\scriptsize]{c++}
+class ModelCG : public QuantLib::LazyObject {
+public:
+    enum class Type { MC, FD };
+
+    explicit ModelCG(const QuantLib::Size n);
+
+    // computation graph
+    boost::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
+
+    // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
+    virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
+                            const std::string& currency) const = 0;
+
+    // refdate <= obsdate <= paydate required
+    virtual std::size_t discount(...)
+
+    // refdate <= obsdate required
+    virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
+                            const boost::optional<long>& memSlot, const std::size_t addRegressor1,
+                            const std::size_t addRegressor2) const = 0;
+    ...
+
+    // CG / AD part of the interface
+    virtual std::size_t cgVersion() const = 0;
+    virtual const std::vector<std::vector<std::size_t>>& randomVariates() const = 0;
+    virtual std::vector<std::pair<std::size_t, double>> modelParameters() const = 0;
+    ...
+ };
+\end{minted}
+\caption{Scripting model base class {\tt ModelCG} using a computation graph.}
+\label{lst:modelcg}
+\end{listing}
+
+%-----------------------------------------------------------------------------------------------------
+\subsection{NPV Sensitivities with AAD}
+%-----------------------------------------------------------------------------------------------------
+
+Now we can utilise the backward sensitivity calculation on the computation graph to compute
+trade/portfolio sensitivities (for scripted trades). All we need to do for that purpose -- as a user
+of ORE -- is providing a scripted trade pricing engine configuration of the kind in listing
+\ref{lst:pricingengineconfig_aad}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{xml}
+<PricingEngines>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      ...
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">8192</Parameter>
+      <Parameter name="RegressionOrder">4</Parameter>
+      <Parameter name="TimeStepsPerYear">1</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">1.0</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="UseAD">true</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>
+\end{minted}
+\caption{Scripted Trade pricing engine configuration to generate AAD sensitivities: {\tt UseAD=true}.}
+\label{lst:pricingengineconfig_aad}
+\end{listing}
+
+i.e. with {\tt Engine} set to MC and {\tt UseAD} flag set to true.
+This triggers the construction of the computation graph version of scripting models and script engine.
+
+When we run the usual pricing/sensitivity analytic in ORE, this will cause the generation of
+backward sensitivities in the first pricing call, and sensitivities are cached as pricing
+engine additional results, see upper half of listing \ref{lst:sensicache}.
+When we then run the usual bump \& revalue sensitivity scenarios and
+reprice the instrument repeatedly, then we read the cached sensitivities, scale them to the
+desired bump size and populate the sensitivity cube, see lower half of listing \ref{lst:sensicache}.
+This is fully integrated with the rest of the portfolio represented as ``classic'' trades.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{c++}
+void ScriptedInstrumentPricingEngineCG::calculate() const {
+    ...
+    if (!haveBaseValues_ || !useCachedSensis_) {
+        ...
+        if (useCachedSensis_) {
+
+            // extract sensis and store them
+
+            std::vector<RandomVariable> derivatives(g->size(), RandomVariable(model_->size(), 0.0));
+            derivatives[cg_var(*g, npv_ + "_0")] = RandomVariable(model_->size(), 1.0);
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodes);
+
+            sensis_.resize(baseModelParams_.size());
+            for (Size i = 0; i < baseModelParams_.size(); ++i) {
+                sensis_[i] = model_->extractT0Result(derivatives[baseModelParams_[i].first]);
+            }
+            DLOG("got backward sensitivities");
+
+            // set flag indicating that we can use cached sensis in subsequent calculations
+
+            haveBaseValues_ = true;
+        }
+
+    } else {
+
+        // useCachedSensis => calculate npv from stored base npv, sensis, model params
+
+        auto modelParams = model_->modelParameters();
+
+        double npv = baseNpv_;
+        DLOG("computing npv using baseNpv " << baseNpv_ << " and sensis.");
+
+        for (Size i = 0; i < baseModelParams_.size(); ++i) {
+            QL_REQUIRE(...)
+            Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
+            npv += tmp;
+            DLOG(...)
+        }
+        results_.value = npv;
+    }
+    ...
+}
+\end{minted}
+\caption{Scripted Instrument Pricing Engine CG - this excerpt shows the caching of backward
+  sensitivities upon the first pricing call (upper part), as well as their utilisation on subsequent
+  calls to simulate NPVs in line with base NPV, sensitivities and risk factor bump sizes.}
+\label{lst:sensicache}
+\end{listing}
+
+
+%-----------------------------------------------------------------------------------------------------
+\subsection{XVA Sensitivities with AAD}
+%-----------------------------------------------------------------------------------------------------
+
+The XVA sensitivity calculation using AAD is in development in ORE and in an experimental,
+proof of concept state at the time of writing this text.
+
+ORE Example 56 demonstrates the current functionality using ORE's command line interface.
+Note that interface and implementation details are subject to change.
+
+The key idea is to reuse ORE's ComputationGraph in the scripted trade framework.
+The case in Example 56 is particularly simple, a single Swap.
+
+The AAD XVA sensitivity calculation is triggered in ore.xml as shown in listing
+\ref{lst:orexml_xva_sensi_aad}, i.e. with parameters
+\begin{itemize}
+\item amc set to true, so that we run the exposure calculation with AMC
+\item amcCg set to true, so that we call a new {\tt XvaEngineCG} (defined in
+  orea/engine/xvaenginecg.*pp) that has the capability to generates both XVA and XVA sensitivities,
+  when running the XVA analytic
+\item xvaSensitivityConfig set to a valid sensitivity config file
+\end{itemize}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">true</Parameter>
+      <Parameter name="amc">true</Parameter>
+      <Parameter name="amcCg">true</Parameter>
+      <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
+      <Parameter name="amcTradeTypes">Swap</Parameter>
+      <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      ...
+    </Analytic>
+\end{minted}
+\caption{ore.xml settings for XVA sendsitivity calculation using AAD: {\tt amc=true},
+  {\tt amcCg=true}, {\tt xvaCgSensitivityConfigFile} set.}
+\label{lst:orexml_xva_sensi_aad}
+\end{listing}
+
+Moreover, we need to set {\tt UseCG} set to {\tt true} in the pricing engine configuration
+\ref{lst:pricignengine_xva_sensi_aad} used in the simulation phase,
+so that we build the trade using the computation graph scripting models.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      ...
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="UseCG">true</Parameter>
+      ...
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{pricingengine.xml for XVA sensitivity calculation using AAD: {\tt UseCG=true}.}
+\label{lst:pricignengine_xva_sensi_aad}
+\end{listing}
+
+When running the XvaAnalytic with the settings above, we will bypass the usual process
+and call into a new analytic {\tt XvaAnalyticCG} defined in orea/engine/xvaenginecg.*pp,
+as shown in listing \ref{lst:xvaenginecg}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{c++}
+void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+                              const std::set<std::string>& runTypes) {
+    if(inputs_->amcCg()) {
+        LOG("XVA analytic is running with amc cg engine (experimental).");
+        XvaEngineCG engine(
+            inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        return;
+    }
+\end{minted}
+\caption{Call into the experimental XVA AAD-Sensitivity implementation, bypassing the ususal XVA run.}
+\label{lst:xvaenginecg}
+\end{listing}
+
+This new analytic covers the following steps
+\begin{itemize}
+\item build today's market
+\item build a simulation market
+\item build the {\tt GaussianCamCG} scripting model
+\item build the portfolio against the latter
+\item build the computation graph for all trades
+\item add nodes to the computation graph which sum the exposure over trades
+\item add nodes for the CVA calculation
+\item run a forward evaluation
+\item write exposure reports
+\item compute CVA as expectation over random variable values in the CVA node
+\item do a backward derivatives run
+\item fill the sensitivity cube by copying the AAD derivatives (or do repeated forward valuations for bump sensitivities);
+  this is currently controlled by a hard-coded boolean {\tt bumpCvaSensis}
+\item write the sensitivity report
+\end{itemize}
+
+i.e. it replaces the entire XVA analytic and the post processing of the NPV cube.
+
+For testing/validation purposes (accuracy of results, performance) we can activate bump \& revalue sensitivity
+calculation by setting the hard coded boolean {\tt bumpCvaSensis=true} in orea/engine/xvaenginecg.cpp.
