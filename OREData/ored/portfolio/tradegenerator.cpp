@@ -174,9 +174,9 @@ void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, R
         type = "IBOR";
         break;
     }
-    case default:
+    default:
     {
-        DLOG("Convention type " & conv->type() & " not yet supported");
+        DLOG("Convention type " + to_string(conv->type()) + " not yet supported");
     }
     }
     cal = floatingLeg.schedule().rules().front().calendar();
