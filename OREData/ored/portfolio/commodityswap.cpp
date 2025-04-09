@@ -160,9 +160,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         legPayersTmp.push_back(legPayers_.at(idx));
         legCurrenciesTmp.push_back(legCurrencies_.at(idx));
     }
-    legs_ = legsTmp;
-    legPayers_ = legPayersTmp;
-    legCurrencies_ = legCurrenciesTmp;
+    legs_.swap(legsTmp);
+    legPayers_.swap(legPayersTmp);
+    legCurrencies_.swap(legCurrenciesTmp);
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
