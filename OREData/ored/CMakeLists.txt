@@ -102,6 +102,7 @@ model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
 portfolio/accumulator.cpp
+portfolio/additionalfieldgetter.cpp
 portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/autocallable_01.cpp
@@ -304,6 +305,7 @@ portfolio/tradeactions.cpp
 portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
 portfolio/trademonetary.cpp
+portfolio/tradegenerator.cpp
 portfolio/tradestrike.cpp
 portfolio/tranche.cpp
 portfolio/trs.cpp
@@ -503,6 +505,7 @@ model/structuredmodelerror.hpp
 model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
+portfolio/additionalfieldgetter.hpp
 portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/autocallable_01.hpp
@@ -715,6 +718,7 @@ portfolio/tradeactions.hpp
 portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
 portfolio/trademonetary.hpp
+portfolio/tradegenerator.hpp
 portfolio/tradestrike.hpp
 portfolio/tranche.hpp
 portfolio/trs.hpp

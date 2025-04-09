@@ -135,7 +135,8 @@ Allowable values: See Table \ref{tab:convention} Roll Convention.
     \item Rebate [Optional]: The rebate amount. Defaults to zero. Rebate amounts and currencies can be different across barriers
           if only ``out'' barriers are defined, but must be identical as soon as at least one ``in'' barrier is defined.
     \item RebateCurrency [Optional]: The currency in which the rebate is paid. Defaults to PayCurrency.
-    \item RebatePayTime [Optional]: \emph{atExpiry} ar \emph{atHit}. For ``in'' barriers only \emph{atExpiry} is allowed.
+    \item RebatePayTime [Optional]: \emph{atExpiry} or \emph{atHit}. For ``in'' barriers only \emph{atExpiry} is allowed.
+    \item StrictComparison [Optional]: \emph{0}, \emph{1} strict comparison < and > for the barrier type, \emph{2} strict or equal comparison <= and >= for the barrier type. Default to \emph{0}. I.e. the barrier checks use $<=$, $>=$ to check In-barriers and $<$, $>$ to check Out-barriers. \\
     \end{itemize}
   \item KikoType: Required if both a KI and KO barriers are defined. Allowable values are \emph{KoAlways}, \emph{KoBeforeKi},
     \emph{KoAfterKi}.
@@ -143,9 +144,10 @@ Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item TransatlanticBarrier [Optional]: An additional barrier to be checked on option expiry. May contain exactly one
   BarrierData block with number of levels equal to the number of underlyings or contain same amount of BarrierData blocks with
-  the number of underlyings, exactly one level is allowed in each block for each underlying. The type (\emph{UpAndIn, UpAndOut, DownAndIn, DownAndOut}), the (unqiue) level and the rebate are relevant fields. \\
+  the number of underlyings, exactly one level is allowed in each block for each underlying. The type (\emph{UpAndIn, UpAndOut, DownAndIn, DownAndOut}), the (unique) level and the rebate are relevant fields. \\
   For  \emph{CashOrNothing}, the payoff occurs if the underlying at expiry is equal to or below the level of transatlantic barrier type \emph{DownAndIn}, or equal to or above  barrier type \emph{UpAndIn}, or equal to or above barrier type \emph{DownAndOut}, or equal to or below barrier type \emph{UpAndOut}. I.e. the barrier checks use $<=$, $>=$ to check In-barriers and $<$, $>$ to check Out-barriers. \\
   The rebate is paid if there is no knock-out from the American barriers and no payoff from the Transatlantic barrier. 
+\item TransatlanticBarrieStrictComparison [Optional]: \emph{0}, \emph{1} strict comparison < and > for the barrier type, \emph{2} strict or equal comparison <= and >= for the barrier type. Default to \emph{0}.\\
   %See \ref{ss:barrier_data} for the complete definition.
 
 \end{itemize}

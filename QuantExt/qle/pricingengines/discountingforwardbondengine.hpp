@@ -53,7 +53,7 @@ public:
 
     void calculate() const override;
     Real calculateBondNpv(Date, Date) const;
-    QuantLib::ext::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
+    std::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
                                                                   Date computeDate, Date settlementDate,
                                                                   bool cashSettlement, Date cmpPaymentDate,
                                                                   bool dirty, double conversionFactor) const;

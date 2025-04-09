@@ -37,6 +37,7 @@
 #include <qle/ad/ssaform.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
+#include <qle/methods/irdeltaparconverter.hpp>
 #include <qle/methods/lgmswaptionvegaparconverter.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
@@ -880,17 +881,17 @@ void XvaEngineCG::calculateDynamicIM() {
     for (auto const& [id, t] : portfolio_->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
 
-    QL_REQUIRE(nettingSetIds.size() == 1,
-               "XvaEngineCG::calculateDynamicIM(): only one netting is supported at this time, porfolio has "
-                   << nettingSetIds.size());
-
     for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
     }
 
     // sensi bucketing configuration
 
-    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 30 * Years};
+    const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years, 30 * Years};
+    const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
+        IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap, IrDeltaParConverter::InstrumentType::Swap,
+        IrDeltaParConverter::InstrumentType::Swap};
 
     const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
@@ -900,26 +901,28 @@ void XvaEngineCG::calculateDynamicIM() {
     const std::vector<QuantLib::Period> fxVegaTerms{1 * Months, 6 * Months, 1 * Years,
                                                     5 * Years,  10 * Years, 20 * Years};
 
-    // set up ir delta times
+    // set up ir delta, vega and fx vega conversion matrices
 
-    std::vector<double> irDeltaTimes;
-    for (auto const& p : irDeltaTerms) {
-        Date d = model_->referenceDate() + p;
-        irDeltaTimes.push_back(model_->actualTimeFromReference(d));
-    }
-
-    // set up ir and fx vega conversion matrices
-
+    std::vector<IrDeltaParConverter> irDeltaConverter(model_->currencies().size());
     std::vector<LgmSwaptionVegaParConverter> irVegaConverter(model_->currencies().size());
     std::vector<CcLgmFxOptionVegaParConverter> fxVegaConverter(model_->currencies().size() - 1);
 
     for (std::size_t ccyIndex = 0; ccyIndex < model_->currencies().size(); ++ccyIndex) {
+
+        irDeltaConverter[ccyIndex] =
+            IrDeltaParConverter(irDeltaTerms, irDeltaInstruments,
+                                *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])),
+                                [this](const Date& d) { return model_->actualTimeFromReference(d); });
 
         irVegaConverter[ccyIndex] = LgmSwaptionVegaParConverter(
             model_->cam()->lgm(ccyIndex), irVegaTerms, irVegaUnderlyingTerms,
             *initMarket_->swapIndex(initMarket_->swapIndexBase(model_->currencies()[ccyIndex])));
 
         // debug output
+
+        // std::cout << "ir delta " << model_->currencies()[ccyIndex] << ":" << std::endl;
+        // std::cout << "dpardzero = \n" << irDeltaConverter[ccyIndex].dpardzero() << std::endl;
+        // std::cout << "dzerodpar = \n" << irDeltaConverter[ccyIndex].dzerodpar() << std::endl;
 
         // std::cout << "ir vega " << model_->currencies()[ccyIndex] << ":" << std::endl;
         // std::cout << "dpardzero = \n" << irVegaConverter[ccyIndex].dpardzero() << std::endl;
@@ -1006,27 +1009,22 @@ void XvaEngineCG::calculateDynamicIM() {
             if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate && p.date2() > valDate) {
                 std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                 Real T = model_->actualTimeFromReference(p.date());
-                // This correction is actually not needed, I think:
-                // Real HT = model_->cam()->irlgm1f(ccyIndex)->H(T);
-                // Real Ht = model_->cam()->irlgm1f(ccyIndex)->H(t);
-                // Real zetat = model_->cam()->irlgm1f(ccyIndex)->zeta(t);
-                // RandomVariable correction =
-                //     exp(RandomVariable(model_->size(), (HT - Ht)) * values_[irState_[ccyIndex][i]] +
-                //         RandomVariable(model_->size(), 0.5 * (HT * HT - Ht * Ht) * zetat));
                 std::size_t bucket = std::min<std::size_t>(
                     irDeltaTerms.size() - 1,
-                    std::distance(irDeltaTimes.begin(), std::lower_bound(irDeltaTimes.begin(), irDeltaTimes.end(), T)));
+                    std::distance(irDeltaConverter[ccyIndex].times().begin(),
+                                  std::lower_bound(irDeltaConverter[ccyIndex].times().begin(),
+                                                   irDeltaConverter[ccyIndex].times().end(), T - t)));
                 Real w1 = 0.0, w2 = 1.0;
                 if (bucket > 0) {
-                    w1 = (irDeltaTimes[bucket] - T) /
-                         (irDeltaTimes[bucket] - (bucket == 0 ? 0.0 : irDeltaTimes[bucket - 1]));
+                    w1 = (irDeltaConverter[ccyIndex].times()[bucket] - (T - t)) /
+                         (irDeltaConverter[ccyIndex].times()[bucket] -
+                          (bucket == 0 ? 0.0 : irDeltaConverter[ccyIndex].times()[bucket - 1]));
                     w2 = 1.0 - w1;
                     pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
-                                                         values_[p.node()] *
-                                                         dynamicIMDerivatives_[p.node()] /** correction*/;
+                                                         values_[p.node()] * dynamicIMDerivatives_[p.node()];
                 }
                 pathIrDelta[ccyIndex][bucket] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w2) *
-                                                 values_[p.node()] * dynamicIMDerivatives_[p.node()] /** correction*/;
+                                                 values_[p.node()] * dynamicIMDerivatives_[p.node()];
             }
 
             // fx spot sensi as seen from val date t for a relative shift r is r * d NPV / d ln fxSpot, we use r = 0.01
@@ -1082,6 +1080,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // calculate conditional expectations on the aggregated sensis and convert to par if applicable
 
+        std::vector<RandomVariable> tmpIrDelta(irDeltaTerms.size(), RandomVariable(model_->size()));
         std::vector<std::vector<RandomVariable>> conditionalIrDelta(
             model_->currencies().size(),
             std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size())));
@@ -1114,7 +1113,15 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                 args[0] = &pathIrDelta[ccy][b];
-                conditionalIrDelta[ccy][b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                tmpIrDelta[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+            }
+
+            for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+                // conditionalIrDelta[ccy][b] = tmpIrDelta[b]; // no conversion
+                for (std::size_t z = 0; z < irDeltaTerms.size(); ++z) {
+                    conditionalIrDelta[ccy][b] +=
+                        RandomVariable(model_->size(), irDeltaConverter[ccy].dzerodpar()(z, b)) * tmpIrDelta[z];
+                }
             }
 
             // ir vega (including par conversion)
@@ -1216,7 +1223,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         for (auto const& n : nettingSetIds) {
             // debug (to prepare im calculator debug output)
-            std::cout << i << ",";
+            // std::cout << i << ",";
             // end debug
             dynamicIM_[n][i] =
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);

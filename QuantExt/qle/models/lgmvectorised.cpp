@@ -218,7 +218,9 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
     Date today = Settings::instance().evaluationDate();
 
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+        QL_DEPRECATED_DISABLE_WARNING
         Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        QL_DEPRECATED_ENABLE_WARNING
         QL_REQUIRE(pastFixing != Null<Real>(), "LgmVectorised::compoundedOnRate(): Missing "
                                                    << index->name() << " fixing for "
                                                    << fixingDates[std::min(i, nCutoff)]);
@@ -231,7 +233,9 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
     }
 
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
+        QL_DEPRECATED_DISABLE_WARNING
         Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        QL_DEPRECATED_ENABLE_WARNING
         if (pastFixing != Null<Real>()) {
             if (includeSpread) {
                 compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
@@ -370,7 +374,9 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
     Date today = Settings::instance().evaluationDate();
 
     while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+        QL_DEPRECATED_DISABLE_WARNING
         Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        QL_DEPRECATED_ENABLE_WARNING
         QL_REQUIRE(pastFixing != Null<Real>(), "LgmVectorised::averageOnRate(): Missing "
                                                    << index->name() << " fixing for "
                                                    << fixingDates[std::min(i, nCutoff)]);
@@ -379,7 +385,9 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
     }
 
     if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
+        QL_DEPRECATED_DISABLE_WARNING
         Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        QL_DEPRECATED_ENABLE_WARNING
         if (pastFixing != Null<Real>()) {
             accumulatedRate += pastFixing * dt[i];
             ++i;

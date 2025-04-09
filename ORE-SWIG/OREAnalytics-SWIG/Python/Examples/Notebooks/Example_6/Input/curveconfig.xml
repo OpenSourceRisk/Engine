@@ -1,0 +1,187 @@
+<CurveConfiguration>
+
+  <FXVolatilities>    
+    <FXVolatility>
+      <CurveId>EURGBP</CurveId>
+      <CurveDescription />
+      <Dimension>ATM</Dimension>
+      <Expiries>1Y</Expiries>
+      <FXSpotID>FX/EUR/GBP</FXSpotID>
+    </FXVolatility>
+  </FXVolatilities>
+
+  <SwaptionVolatilities>
+    <SwaptionVolatility>
+      <CurveId>EUR_SWPTN</CurveId>
+      <CurveDescription>EUR lognormal swaption volatilities</CurveDescription>
+      <Dimension>ATM</Dimension>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y</OptionTenors>
+      <SwapTenors>1Y</SwapTenors>
+      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+    </SwaptionVolatility>
+    <SwaptionVolatility>
+      <CurveId>GBP_SWPTN</CurveId>
+      <CurveDescription>GBP normal swaption volatilities</CurveDescription>
+      <Dimension>ATM</Dimension>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>UK</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y</OptionTenors>
+      <SwapTenors>1Y</SwapTenors>
+      <ShortSwapIndexBase>GBP-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+
+  <DefaultCurves>
+    <DefaultCurve>
+      <CurveId>BANK_SR_EUR</CurveId>
+      <CurveDescription>BANK SR CDS EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>SpreadCDS</Type>
+      <DiscountCurve>Yield/EUR/EUR6M</DiscountCurve>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_A_SR_EUR</CurveId>
+      <CurveDescription>CPTY_A SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+  </DefaultCurves>
+
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>EUR1D</CurveId>
+      <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve />
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR1D/A360/1Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR6M</CurveId>
+      <CurveDescription />
+      <Currency>EUR</Currency>
+      <DiscountCurve />
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR6M/A360/1Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>GBP1D</CurveId>
+      <CurveDescription />
+      <Currency>GBP</Currency>
+      <DiscountCurve />
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/GBP/GBP1D/A365F/1Y</Quote>
+          </Quotes>
+          <Conventions>GBP-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>GBP6M</CurveId>
+      <CurveDescription />
+      <Currency>GBP</Currency>
+      <DiscountCurve />
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/GBP/GBP6M/A365F/1Y</Quote>
+          </Quotes>
+          <Conventions>GBP-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>USD1D</CurveId>
+      <CurveDescription>USD discount curve bootstrapped from FED FUNDS swap rates</CurveDescription>
+      <Currency>USD</Currency>
+      <DiscountCurve>USD1D</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>Deposit</Type>
+          <Quotes>
+            <Quote>MM/RATE/USD/0D/1D</Quote>
+          </Quotes>
+          <Conventions>USD-FED-FUNDS-CONVENTIONS</Conventions>
+        </Simple>
+        <Simple>
+          <Type>OIS</Type>
+          <Quotes>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/1M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/3M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/6M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/9M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/1Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/1Y3M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/1Y6M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/1Y9M</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/2Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/3Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/4Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/5Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/7Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/10Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/12Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/15Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/20Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/25Y</Quote>
+            <Quote>IR_SWAP/RATE/USD/2D/1D/30Y</Quote>
+          </Quotes>
+          <Conventions>USD-OIS-CONVENTIONS</Conventions>
+        </Simple>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+  </YieldCurves>
+
+</CurveConfiguration> 
