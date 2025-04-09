@@ -32,8 +32,8 @@ namespace data {
 enum FutureType { ShortTenor, LongTenor };
 
 void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonth,
-                                         std::string& deliverableGrade, std::string& rootDate, std::string& expiryBasis,
-                                         std::string& settlementBasis, std::string& expiryLag,
+                                         std::string& deliverableGrade, string& fairPrice, std::string& rootDate,
+                                         std::string& expiryBasis, std::string& settlementBasis, std::string& expiryLag,
                                          std::string& settlementLag, std::string& lastTrading,
                                          std::string& lastDelivery, std::vector<std::string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData);
@@ -64,6 +64,7 @@ public:
     const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
     const string& ctdId() const { return ctdId_; }
     const string& currency() const { return currency_; }
+    const bool fairPrice() const { return fairPriceBool_; }
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
@@ -103,6 +104,9 @@ private:
 
     BondBuilder::Result ctdUnderlying_;
     std::string ctdId_;
+
+    std::string fairPrice_;
+    bool fairPriceBool_;
 };
 
 struct BondFutureBuilder : public BondBuilder {

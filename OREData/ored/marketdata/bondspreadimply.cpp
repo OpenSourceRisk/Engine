@@ -186,11 +186,15 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
     } else if (b.bond) { // this is the standard bond case
         return b.bond->cleanPrice() / 100.0;
     } else {// this is bond future case
-        return b.trade->instrument()->qlInstrument()->NPV();
-        // in case we want strike = zero
-        //auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.trade->instrument()->qlInstrument());
-        //QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
-        //return future->forwardValue();
+        auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.trade);
+        QL_REQUIRE(bondfuture, "instrument is not bond nor bondfuture. unexpected.");
+        if(bondfuture->fairPrice())
+            return b.trade->instrument()->qlInstrument()->NPV();
+        else { // in case we want strike = zero
+            auto future = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(b.trade->instrument()->qlInstrument());
+            QL_REQUIRE(future, "expected QuantExt::ForwardBond instrument");
+            return future->forwardValue();
+        }
     }
 }
 
@@ -212,8 +216,8 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Handle<Qu
     auto bondfuture = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(b.trade);
     if(bondfuture){
         spreadQuote = market->spreadQuote(bondfuture->ctdId());
-        // in case we want strike = price // comment out for zero...
-        priceAdj = 0.0;
+        if(bondfuture->fairPrice()) // strike = price
+            priceAdj = 0.0;
     }
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit

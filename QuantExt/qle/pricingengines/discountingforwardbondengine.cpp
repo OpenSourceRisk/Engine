@@ -373,7 +373,6 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
     }
-    //forwardContractForwardValue /= conversionFactor;
     // forwardContractPresentValue adjusted for potential default before computeDate:
     forwardContractPresentValue =
         forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *

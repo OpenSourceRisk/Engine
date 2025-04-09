@@ -39,9 +39,9 @@ namespace ore {
 namespace data {
 
 void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
-                                         string& rootDate, string& expiryBasis, string& settlementBasis,
-                                         string& expiryLag, string& settlementLag, string& lastTrading,
-                                         string& lastDelivery, vector<string>& secList,
+                                         string& fairPrice, string& rootDate, string& expiryBasis,
+                                         string& settlementBasis, string& expiryLag, string& settlementLag,
+                                         string& lastTrading, string& lastDelivery, vector<string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
     DLOG("populating data bondfuture from reference data");
     // checked before
@@ -57,6 +57,10 @@ void populateFromBondFutureReferenceData(string& currency, string& contractMonth
     if (deliverableGrade.empty()) {
         deliverableGrade = bondFutureRefData->bondFutureData().deliverableGrade;
         TLOG("overwrite deliverableGrade with '" << deliverableGrade << "'");
+    }
+    if (fairPrice.empty()) {
+        fairPrice = bondFutureRefData->bondFutureData().fairPrice;
+        TLOG("overwrite fairPrice with '" << fairPrice << "'");
     }
     if (rootDate.empty()) {
         rootDate = bondFutureRefData->bondFutureData().rootDate;
@@ -124,9 +128,15 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
         ctdId_ = identifyCtdBond(engineFactory, expiry);
     ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctdId_);
 
+    // handle strike treatment
+    fairPriceBool_ = true; // fallback: strike = settlement price --> MtM = 0.0
+    if (!fairPrice_.empty())
+        fairPriceBool_ = parseBool(fairPrice_);
+    double amount = 0.0;
+    if (fairPriceBool_)
+        amount = getSettlementPriceFuture(engineFactory) * contractNotional_;
+
     // hardcoded values for bondfuture vs forward bond
-    double amount = getSettlementPriceFuture(engineFactory) * contractNotional_;
-    // double amount = 0.0; 
     double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
     bool isPhysicallySettled = true;       // TODO Check
@@ -188,6 +198,7 @@ void BondFuture::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false);
     contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false);
     deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false);
+    fairPrice_ = XMLUtils::getChildValue(bondFutureNode, "FairPrice", false);
     rootDate_ = XMLUtils::getChildValue(bondFutureNode, "RootDate", false);
     expiryBasis_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryBasis", false);
     settlementBasis_ = XMLUtils::getChildValue(bondFutureNode, "SettlementBasis", false);
@@ -208,6 +219,7 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
+    XMLUtils::addChild(doc, node, "FairPrice", fairPrice_);
     XMLUtils::addChild(doc, node, "RootDate", rootDate_);
     XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis_);
     XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis_);
@@ -485,9 +497,9 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
             referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));
         QL_REQUIRE(bondFutureRefData, "could not cast to BondReferenceDatum, this is unexpected");
         DLOG("Got BondFutureReferenceDatum for name " << contractName_ << " overwrite empty elements in trade");
-        ore::data::populateFromBondFutureReferenceData(currency_, contractMonth_, deliverableGrade_, rootDate_,
-                                                       expiryBasis_, settlementBasis_, expiryLag_, settlementLag_,
-                                                       lastTrading_, lastDelivery_, secList_, bondFutureRefData);
+        ore::data::populateFromBondFutureReferenceData(
+            currency_, contractMonth_, deliverableGrade_, fairPrice_, rootDate_, expiryBasis_, settlementBasis_,
+            expiryLag_, settlementLag_, lastTrading_, lastDelivery_, secList_, bondFutureRefData);
     }
 }
 
