@@ -82,7 +82,9 @@ public:
         //! reference calibration grid
         const std::string& referenceCalibrationGrid_ = "",
         //! id of the builder
-        const std::string& id = "unknown");
+        const std::string& id = "unknown",
+        //! allow changing fallbacks under scenarios in lgm sub builders
+        const bool allowChangingFallbacksUnderScenarios = false);
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -152,6 +154,7 @@ private:
     bool continueOnError_;
     std::string referenceCalibrationGrid_;
     std::string id_;
+    bool allowChangingFallbacksUnderScenarios_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
