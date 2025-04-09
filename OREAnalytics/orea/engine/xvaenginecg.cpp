@@ -874,16 +874,6 @@ void XvaEngineCG::calculateDynamicIM() {
 
     // sensi bucketing configuration
 
-    // const std::vector<QuantLib::Period> irDeltaTerms{30 * Years};
-    // const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
-    //     IrDeltaParConverter::InstrumentType::Swap};
-
-    // const std::vector<QuantLib::Period> irDeltaTerms{1 * Years, 5 * Years, 10 * Years, 20 * Years, 30 * Years};
-    // const std::vector<IrDeltaParConverter::InstrumentType> irDeltaInstruments{
-    //     IrDeltaParConverter::InstrumentType::Deposit, IrDeltaParConverter::InstrumentType::Swap,
-    //     IrDeltaParConverter::InstrumentType::Swap, IrDeltaParConverter::InstrumentType::Swap,
-    //     IrDeltaParConverter::InstrumentType::Swap};
-
     const std::vector<QuantLib::Period> irDeltaTerms{2 * Weeks,  1 * Months, 3 * Months, 6 * Months,
                                                      1 * Years,  2 * Years,  3 * Years,  5 * Years,
                                                      10 * Years, 15 * Years, 20 * Years, 30 * Years};
@@ -1202,14 +1192,14 @@ void XvaEngineCG::calculateDynamicIM() {
         //     }
         // }
 
-        //     for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
-        //         Real tmp = 0.0;
-        //         for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
-        //             tmp += conditionalIrDelta[ccy][b][7];
-        //         }
-        //         if(ccy==0)
-        //         std::cout << "parDelta," << tmp << std::endl;
+        // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
+        //     Real tmp = 0.0;
+        //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+        //         tmp += conditionalIrDelta[ccy][b][7];
         //     }
+        //     if (ccy == 0)
+        //         std::cout << "parDelta," << tmp << std::endl;
+        // }
 
         // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
         //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
