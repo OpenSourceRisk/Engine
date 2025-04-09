@@ -466,7 +466,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_, 1.0,
-                                       parseCurrency(legData_.currency()), engineFactory, "");
+                                       parseCurrency(legData_.currency()), engineFactory, Market::defaultConfiguration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
