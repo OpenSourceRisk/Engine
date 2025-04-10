@@ -407,6 +407,47 @@ void LgmBuilder::performCalculations() const {
     // reset model parameters to ensure identical results on identical market data input
     model_->setParams(params_);
 
+    // precheck if initial vol values are high enough to produce a signal for the optimizer
+    if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) {
+        DLOG("running precheck whether initial modelVol values are high enough to produce a signal for the "
+             "optimizer.");
+        Array tunedParams(params_);
+        for (Size j = 0; j < swaptionBasket_.size(); ++j) {
+            constexpr double minRatio = 1E-4;
+            constexpr Size maxAttempts = 10;
+            constexpr double growFactor = 1.3;
+            if (swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio) {
+                DLOG("swaption #" << j << ": modelValue (" << swaptionBasket_[j]->modelValue() << ") < " << minRatio
+                                  << " x marketValue (" << swaptionBasket_[j]->marketValue()
+                                  << "). Trying to increase modelVol.");
+                auto fixedParams = model_->MoveVolatility(j);
+                auto it = std::find(fixedParams.begin(), fixedParams.end(), false);
+                if (it != fixedParams.end()) {
+                    Size idx = std::distance(fixedParams.begin(), it);
+                    for (Size attempts = 0;
+                         attempts < maxAttempts &&
+                         swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio;
+                         ++attempts) {
+                        tunedParams[idx] *= growFactor;
+                        model_->setParams(tunedParams);
+                        model_->generateArguments();
+                    }
+                    if (swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue() < minRatio) {
+                        DLOG("swaption #" << j << ": increasing modelVol did not bring modelValue / marketValue below "
+                                          << minRatio << ". Continue with original modelVol");
+                        tunedParams[idx] = params_[idx];
+                        model_->setParams(tunedParams);
+                    }
+                    DLOG("swaption #" << j << ": change modelVol " << params_[idx] << " -> " << tunedParams[idx]
+                                      << ": new modelValue = " << swaptionBasket_[j]->modelValue()
+                                      << ", new ratio to marketValue = "
+                                      << swaptionBasket_[j]->modelValue() / swaptionBasket_[j]->marketValue());
+                }
+            }
+        }
+    }
+
+    // call into the actual calibration routines
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
     std::string errorTemplate =
