@@ -43,8 +43,44 @@ public:
     TestMarket() : MarketImpl(false) {
         asof_ = Date(2, January, 2017);
 
+        vector<pair<string, Real>> indexData = {
+            {"EUR-EONIA", 0.01},    {"EUR-EURIBOR-3M", 0.015}, {"EUR-EURIBOR-6M", 0.02}
+        };
+    
+        for (auto id : indexData) {
+            Handle<IborIndex> h(parseIborIndex(id.first, flatRateYts(id.second)));
+            iborIndices_[make_pair(Market::defaultConfiguration, id.first)] = h;
+    
+            // set up dummy fixings for the past 400 days
+            for (Date d = asof_ - 400; d < asof_; d++) {
+                if (h->isValidFixingDate(d))
+                    h->addFixing(d, 0.01);
+            }
+        }
+        QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
+            "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));    
+        conventions->add(swapEURConv);
+
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
+    
+        conventions->add(swapIndexEURConv);
+        conventions->add(swapIndexEURLongConv);
+        InstrumentConventions::instance().setConventions(conventions);
+
+
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.03);
+        //yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR-EURIBOR-6M")] = flatRateYts(0.03);
+        //yieldCurves_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = flatRateYts(0.03);
+
+        addSwapIndex("EUR-CMS-2Y", "EUR-EONIA", Market::defaultConfiguration);
+        addSwapIndex("EUR-CMS-30Y", "EUR-EONIA", Market::defaultConfiguration);
+
+        swaptionIndexBases_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = std::make_pair("EUR-CMS-2Y", "EUR-CMS-30Y");
 
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatSwaptionVol(0.30);
@@ -142,6 +178,91 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
 
     BOOST_CHECK_SMALL(npvCash - expectedNpvCash, 0.01);
     BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingNotional) {
+
+    BOOST_TEST_MESSAGE("Testing Representative Swaption for varying notional ...");
+
+    Date today(2, January, 2017);
+    Settings::instance().evaluationDate() = today;
+
+    // build market
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+
+    // build Swaptions - expiry 5Y, term 10Y
+    Calendar calendar = TARGET();
+    Date qlStartDate = calendar.adjust(today + 5 * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + 10 * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, "6M", "TARGET", "MF", "MF", "Forward"));
+    ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, "1Y", "TARGET", "MF", "MF", "Forward"));
+
+    auto notionals = std::vector<Real>(10, 1000.0);
+    notionals[0]=1000;
+    notionals[1]=900;
+    notionals[2]=800;
+    notionals[3]=700;
+    notionals[4]=600;
+    notionals[5]=500;
+    notionals[6]=400;
+    notionals[7]=300;
+    notionals[8]=200;
+    notionals[9]=100;
+
+    // fixed leg
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(std::vector<Real>(1, 0.03)), true, "EUR", fixedSchedule, "30/360",
+                     notionals);
+    // float leg
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0)),
+                        false, "EUR", floatSchedule, "A360", notionals);
+
+    // leg vector
+    vector<LegData> legs;
+    legs.push_back(fixedLeg);
+    legs.push_back(floatingLeg);
+
+    Envelope env("CP1");
+    OptionData optionData("Long", "Call", "European", true, vector<string>(1, startDate), "Cash");
+    OptionData optionDataPhysical("Long", "Call", "European", true, vector<string>(1, startDate), "Physical");
+    Real premium = 700.0;
+    OptionData optionDataPremium("Long", "Call", "European", true, vector<string>(1, startDate), "Cash", "",
+                                 PremiumData(premium, "EUR", qlStartDate));
+    ore::data::Swaption swaptionCash(env, optionData, legs);
+    ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
+    ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
+
+    //Real expectedNpvCash = 565.19;
+    //Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));
+    //Real expectedNpvPremium = expectedNpvCash - premiumNpv;
+
+    // Build and price
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->model("EuropeanSwaption") = "BlackBachelier";
+    engineData->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    engineData->model("Swap") = "DiscountedCashflows";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+
+    swaptionCash.build(engineFactory);
+    swaptionPhysical.build(engineFactory);
+    swaptionPremium.build(engineFactory);
+
+    /*Real npvCash = swaptionCash.instrument()->NPV();
+    Real npvPhysical = swaptionPhysical.instrument()->NPV();
+    Real npvPremium = swaptionPremium.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("Swaption, NPV Currency " << swaptionCash.npvCurrency());
+    BOOST_TEST_MESSAGE("NPV Cash              = " << npvCash);
+    BOOST_TEST_MESSAGE("NPV Physical          = " << npvPhysical);
+    BOOST_TEST_MESSAGE("NPV Cash with premium = " << npvPremium);*/
+
+    //BOOST_CHECK_SMALL(npvCash - expectedNpvCash, 0.01);
+    //BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

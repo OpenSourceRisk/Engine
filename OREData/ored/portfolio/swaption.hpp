@@ -73,6 +73,9 @@ private:
     std::vector<QuantLib::ext::shared_ptr<Instrument>> buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&,
                                                                     const std::vector<Date>&);
 
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
+        const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve, const std::vector<Date>& exerciseDates);
+
     QuantLib::ext::shared_ptr<ore::data::Swap> underlying_;
     QuantLib::ext::shared_ptr<ExerciseBuilder> exerciseBuilder_;
     Position::Type positionType_;
