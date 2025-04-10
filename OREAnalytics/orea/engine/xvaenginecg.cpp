@@ -339,7 +339,8 @@ void XvaEngineCG::buildCgPartB() {
 
         if (useRedBlocks_)
             g->endRedBlock();
-        tradeCurrencyGroup_.push_back(engine->relevantCurrencies());
+        tradeRelevantCurrencies_.push_back(engine->relevantCurrencies());
+        tradeHasVega_.push_back(engine->hasVega());
     }
 
     timing_partb_ = timer.elapsed().wall;
@@ -347,27 +348,12 @@ void XvaEngineCG::buildCgPartB() {
          << model_->computationGraph()->size());
 }
 
-std::pair<std::size_t, std::size_t> XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex,
-                                                                             const bool isValuationDate) {
-
-    auto g = model_->computationGraph();
-
-    Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
-    Date closeOutDate;
-    if (!isValuationDate) {
-        closeOutDate = dateIndex == 0 ? model_->referenceDate() : closeOutDates_[dateIndex - 1];
-    }
-    Date obsDate = valuationDate;
-    if (stickyCloseOutDates_.empty() && !isValuationDate)
-        obsDate = closeOutDate;
-
-    model_->useStickyCloseOutDates(!stickyCloseOutDates_.empty());
+std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
+XvaEngineCG::getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeFilter) {
     std::set<std::set<std::size_t>> pfRegressorGroups;
     std::set<std::size_t> pfRegressors;
-    std::vector<std::size_t> tradeSum(portfolio_->trades().size());
     for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-        tradeSum[j] = isValuationDate ? amcNpvNodes_[j][dateIndex] : amcNpvCloseOutNodes_[j][dateIndex];
-        std::set<std::size_t> tradeRegressors = model_->npvRegressors(obsDate, tradeCurrencyGroup_[j]);
+        std::set<std::size_t> tradeRegressors = model_->npvRegressors(obsDate, tradeRelevantCurrencies_[j]);
         pfRegressorGroups.insert(tradeRegressors);
         pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
     }
@@ -381,13 +367,60 @@ std::pair<std::size_t, std::size_t> XvaEngineCG::createPortfolioExposureNode(con
         pfRegressorPosGroups.insert(group);
     }
 
+    return std::make_pair(pfRegressors,pfRegressorPosGroups);
+}
+
+std::pair<std::size_t, std::size_t> XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex,
+                                                                             const bool isValuationDate) {
+
+    auto g = model_->computationGraph();
+
+    // determine valuation date and if applicable closeout date
+
+    Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
+    Date closeOutDate;
+    if (!isValuationDate) {
+        closeOutDate = dateIndex == 0 ? model_->referenceDate() : closeOutDates_[dateIndex - 1];
+    }
+
+    // determine the obs date for conditional expectations below
+
+    Date obsDate = valuationDate;
+    if (stickyCloseOutDates_.empty() && !isValuationDate)
+        obsDate = closeOutDate;
+
+    // enable stickyness for the following calculations, if applicable
+
+    model_->useStickyCloseOutDates(!stickyCloseOutDates_.empty());
+
+    // build the vector of nodes over which we sum the npvs
+
+    std::vector<std::size_t> tradeSum(portfolio_->trades().size());
+    for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+        tradeSum[j] = isValuationDate ? amcNpvNodes_[j][dateIndex] : amcNpvCloseOutNodes_[j][dateIndex];
+    }
+
+    // get the regressors and regressor pos groups
+
+    auto [pfRegressors, pfRegressorPosGroups] = getRegressors(dateIndex, obsDate);
+
+    // build the portfolio exposure nodes
+
     std::size_t pfExposureNodePathwiseTmp = cg_add(*g, tradeSum);
     std::size_t pfExposureNodeTmp =
         model_->npv(pfExposureNodePathwiseTmp, obsDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
+
+    // set the regressor pos groups
+
     pfRegressorPosGroups_[pfExposureNodePathwiseTmp] = pfRegressorPosGroups;
     pfRegressorPosGroups_[pfExposureNodeTmp] = pfRegressorPosGroups;
 
+    // diable stickyness again
+
     model_->useStickyCloseOutDates(false);
+
+    // return the pathwise and conditional expectation nodes
+
     return std::make_pair(pfExposureNodePathwiseTmp, pfExposureNodeTmp);
 }
 
@@ -408,7 +441,7 @@ std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, co
     model_->useStickyCloseOutDates(!stickyCloseOutDates_.empty());
     std::size_t res = model_->npv(
         isValuationDate ? amcNpvNodes_[tradeIndex][dateIndex] : amcNpvCloseOutNodes_[tradeIndex][dateIndex], obsDate,
-        cg_const(*g, 1.0), {}, {}, model_->npvRegressors(obsDate, tradeCurrencyGroup_[tradeIndex]));
+        cg_const(*g, 1.0), {}, {}, model_->npvRegressors(obsDate, tradeRelevantCurrencies_[tradeIndex]));
     model_->useStickyCloseOutDates(false);
     return res;
 }
