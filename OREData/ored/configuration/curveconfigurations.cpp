@@ -350,7 +350,7 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
     return curves;
 }
 
-const QuantLib::ext::shared_ptr<CurveConfig>&
+QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) {
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
@@ -381,7 +381,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     return nullptr;
 }
 
-const QuantLib::ext::shared_ptr<CurveConfig>&
+QuantLib::ext::shared_ptr<CurveConfig>
 CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapFloorVolatilityCurveConfig::Type type) {
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);

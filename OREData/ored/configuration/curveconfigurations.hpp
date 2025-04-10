@@ -148,9 +148,9 @@ public:
     std::set<string> yieldCurveConfigIds();
   
     /*! Return an inflation curveconfig based on a name lookup */
-    const QuantLib::ext::shared_ptr<CurveConfig>& findInflationCurveConfig(const string& id,
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationCurveConfig(const string& id,
         InflationCurveConfig::Type type);
-    const QuantLib::ext::shared_ptr<CurveConfig>& findInflationVolCurveConfig(const string& id, 
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationVolCurveConfig(const string& id, 
         InflationCapFloorVolatilityCurveConfig::Type type);
 
     /*! Return all curve ids required by a given curve id of a given type */
