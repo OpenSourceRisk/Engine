@@ -4,9 +4,11 @@ cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0078 NEW)
 cmake_policy(SET CMP0086 NEW)
 
+project(ORE-SWIG)
+
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
-include(${PROJECT_SOURCE_DIR}/cmake/commonSettings.cmake)
+include(${PROJECT_SOURCE_DIR}/../cmake/commonSettings.cmake)
 
 # Append /bigobj to compiler flags on Windows for this target
 if (MSVC)
@@ -47,10 +49,10 @@ endif()
 include(${SWIG_USE_FILE})
 
 # Add to the list of include directories
-include_directories(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/ORE-SWIG/QuantLib-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/ORE-SWIG/QuantExt-SWIG/SWIG)
-include_directories(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREData-SWIG/SWIG)
+include_directories(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG)
+include_directories(${PROJECT_SOURCE_DIR}/QuantLib-SWIG/SWIG)
+include_directories(${PROJECT_SOURCE_DIR}/QuantExt-SWIG/SWIG)
+include_directories(${PROJECT_SOURCE_DIR}/OREData-SWIG/SWIG)
 
 #include_directories(${ORE_BUILD}/QuantLib)
 
@@ -81,9 +83,9 @@ if(EXISTS "${CMAKE_BINARY_DIR}/QuantLib/ql/")
 endif()
 
 # Tell SWIG to compile in C++ mode
-set_source_files_properties(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES CPLUSPLUS ON)
-set_source_files_properties(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-includeall")
-set_source_files_properties(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-small")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES CPLUSPLUS ON)
+set_source_files_properties(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-includeall")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-small")
 #set_source_files_properties(${PROJECT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-py3")
 
 # Tell SWIG to build a Python module, to be called "ORE"
@@ -97,7 +99,7 @@ set_source_files_properties(${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWI
 # Then restore the variable after because it is required by the calls to target_link_libraries() below.
 set(TEMP_CMAKE_DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 unset(CMAKE_DEBUG_POSTFIX)
-swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${PROJECT_SOURCE_DIR}/ORE-SWIG/OREAnalytics-SWIG/SWIG/oreanalytics.i)
+swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i)
 
 set(CMAKE_DEBUG_POSTFIX ${TEMP_CMAKE_DEBUG_POSTFIX})
 
