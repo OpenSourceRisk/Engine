@@ -41,6 +41,7 @@
       <xs:element type="cliquetOptionData" name="EquityCliquetOptionData"/>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
+      <xs:element type="bondFutureData" name="BondFutureData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
@@ -370,6 +371,34 @@
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureData">
+    <xs:all>
+      <xs:element type="xs:string" name="ContractName"/>
+      <xs:element type="xs:string" name="ContractNotional"/>
+      <xs:element type="xs:string" name="LongShort"/>
+      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ContractMonth" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="DeliverableGrade" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="FairPrice" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="Settlement" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementDirty" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="RootDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryBasis" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementBasis" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryLag" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementLag" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastTradingDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastDeliveryDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="deliveryBasket">
+    <xs:sequence>
+      <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="varianceSwapData">
@@ -1234,6 +1263,7 @@
       <xs:enumeration value="CommodityVarianceSwap"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
+      <xs:enumeration value="BondFuture"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="Failed"/>
