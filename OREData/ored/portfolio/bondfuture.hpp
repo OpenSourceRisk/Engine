@@ -31,11 +31,11 @@ namespace data {
 
 enum FutureType { ShortTenor, LongTenor };
 
-void populateFromBondFutureReferenceData(std::string& currency, std::string& contractMonth,
-                                         std::string& deliverableGrade, string& fairPrice, std::string& rootDate,
-                                         std::string& expiryBasis, std::string& settlementBasis, std::string& expiryLag,
-                                         std::string& settlementLag, std::string& lastTrading,
-                                         std::string& lastDelivery, std::vector<std::string>& secList,
+void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
+                                         string& fairPrice, string& settlement, string& settlementDirty,
+                                         string& rootDate, string& expiryBasis, string& settlementBasis,
+                                         string& expiryLag, string& settlementLag, string& lastTrading,
+                                         string& lastDelivery, vector<string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData);
 
 class BondFuture : public Trade {
@@ -80,6 +80,7 @@ protected:
     std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry);
 
     const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
+
 private:
     // mandatory first tier information
     std::string contractName_; // can be used to identify tier 2/3 info
@@ -105,8 +106,11 @@ private:
     BondBuilder::Result ctdUnderlying_;
     std::string ctdId_;
 
-    std::string fairPrice_;
+    // flags with fallbacks
+    std::string fairPrice_; // indicates whether strike = 0 (false) or settlement price (true)
     bool fairPriceBool_;
+    std::string settlement_;      // Cash or Physical
+    std::string settlementDirty_; // true (dirty) or false (clean)
 };
 
 struct BondFutureBuilder : public BondBuilder {

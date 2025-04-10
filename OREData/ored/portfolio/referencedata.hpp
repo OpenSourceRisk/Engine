@@ -147,6 +147,8 @@ public:
         std::string lastTrading;      // expiry
         std::string lastDelivery;     // settlement date
         std::string fairPrice;        // indicates whether strike = 0 (false) or settlement price (true)
+        std::string settlement;       // Cash or Physical
+        std::string settlementDirty;  // true (dirty) or false (clean)
         // bond future date conventions to derive lastTrading and lastDelivery
         std::string rootDate;        // first, end, nth weekday (e.g. 'Monday,3') taken
         std::string expiryBasis;     // root, expiry, settle taken

@@ -130,7 +130,9 @@ void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
     currency = XMLUtils::getChildValue(node, "Currency", false);
     contractMonth = XMLUtils::getChildValue(node, "ContractMonth", false);
     deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false);
-    fairPrice = XMLUtils::getChildValue(node, "FairPrice", false, "true");
+    fairPrice = XMLUtils::getChildValue(node, "FairPrice", false);
+    settlement = XMLUtils::getChildValue(node, "Settlement", false);
+    settlementDirty = XMLUtils::getChildValue(node, "SettlementDirty", false);
     rootDate = XMLUtils::getChildValue(node, "RootDate", false);
     expiryBasis = XMLUtils::getChildValue(node, "ExpiryBasis", false);
     settlementBasis = XMLUtils::getChildValue(node, "SettlementBasis", false);
@@ -146,6 +148,8 @@ XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);
     XMLUtils::addChild(doc, node, "FairPrice", fairPrice);
+    XMLUtils::addChild(doc, node, "Settlement", settlement);
+    XMLUtils::addChild(doc, node, "SettlementDirty", settlementDirty);
     XMLUtils::addChild(doc, node, "RootDate", rootDate);
     XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis);
     XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis);
