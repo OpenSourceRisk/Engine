@@ -143,7 +143,7 @@ void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
 }
 
 XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const {
-    XMLNode* node = doc.allocNode("BondFutureData");
+    XMLNode* node = doc.allocNode("BondFutureReferenceData");
     XMLUtils::addChild(doc, node, "Currency", currency);
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);

@@ -145,7 +145,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     if (fairPriceBool_)
         amount = getSettlementPriceFuture(engineFactory) * contractNotional_;
 
-    //more flags...
+    // more flags with fallbacks
+    // supposed to be physical
     bool isPhysicallySettled;
     if (settlement_ == "Physical" || settlement_.empty())
         isPhysicallySettled = true;
@@ -155,6 +156,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("ForwardBond: invalid settlement '" << settlement_ << "', expected Cash or Physical");
     }
 
+    // supposed to be clean
     bool settlementDirty = settlementDirty_.empty() ? false : parseBool(settlementDirty_);
 
     // hardcoded values for bondfuture vs forward bond
