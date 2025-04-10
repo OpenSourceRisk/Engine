@@ -23,16 +23,16 @@ COPY ore/ORE-SWIG/QuantLib-SWIG ./QuantLib-SWIG
 #    PYTHON_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/python3.9
 
 RUN find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';'
-WORKDIR /swig/OREAnalytics-SWIG/Python
+WORKDIR /swig
 RUN mkdir build.release
-WORKDIR /swig/OREAnalytics-SWIG/Python/build.release
+WORKDIR /swig/build.release
 RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON -DORE=/swig
 RUN cmake --build . --config Release
 WORKDIR /
 RUN mkdir oreswig
-RUN mv /swig/OREAnalytics-SWIG/Python/build.release/ORE.py oreswig \
-  && mv /swig/OREAnalytics-SWIG/Python/build.release/_OREP.so oreswig
+RUN mv /swig/build.release/ORE.py oreswig \
+  && mv /swig/build.release/_OREP.so oreswig
 
 ENV PYTHONPATH=/oreswig
 
-WORKDIR /swig/OREAnalytics-SWIG/Python/Examples
+WORKDIR /swig/Examples
