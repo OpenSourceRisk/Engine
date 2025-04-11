@@ -981,13 +981,17 @@ void XvaEngineCG::calculateDynamicIM() {
         IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap,
         IrDeltaParConverter::InstrumentType::Swap,    IrDeltaParConverter::InstrumentType::Swap};
 
-    const std::vector<QuantLib::Period> irVegaTerms{1 * Months, 6 * Months, 1 * Years,
-                                                    5 * Years,  10 * Years, 20 * Years};
-    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{30 * Years, 30 * Years, 29 * Years,
-                                                              25 * Years, 20 * Years, 10 * Years};
+    const std::vector<QuantLib::Period> irVegaTerms{2 * Weeks,  1 * Months, 3 * Months, 6 * Months,
+                                                    1 * Years,  2 * Years,  3 * Years,  5 * Years,
+                                                    10 * Years, 15 * Years, 20 * Years, 30 * Years};
 
-    const std::vector<QuantLib::Period> fxVegaTerms{1 * Months, 6 * Months, 1 * Years,
-                                                    5 * Years,  10 * Years, 20 * Years};
+    const std::vector<QuantLib::Period> irVegaUnderlyingTerms{30 * Years, 30 * Years, 30 * Years, 30 * Years,
+                                                              29 * Years, 28 * Years, 27 * Years, 25 * Years,
+                                                              20 * Years, 15 * Years, 10 * Years, 1 * Years};
+
+    const std::vector<QuantLib::Period> fxVegaTerms{2 * Weeks,  1 * Months, 3 * Months, 6 * Months,
+                                                    1 * Years,  2 * Years,  3 * Years,  5 * Years,
+                                                    10 * Years, 15 * Years, 20 * Years, 30 * Years};
 
     // set up ir delta, vega and fx vega conversion matrices
 
