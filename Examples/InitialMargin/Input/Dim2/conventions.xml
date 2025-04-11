@@ -315,6 +315,66 @@
 		<Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
 		<FixingCalendar/>
 	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-1Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-302Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-1Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-302Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-1Y</Id>
+		<Conventions>USD-SOFR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-302Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
 	<FX>
 		<Id>EUR-CNY-FX</Id>
 		<SpotDays>2</SpotDays>

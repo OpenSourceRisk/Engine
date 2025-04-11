@@ -20,6 +20,7 @@
       <Index>USD-SOFR</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
+      <Index>USD-SOFR-3M</Index>
     </Indices>
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
