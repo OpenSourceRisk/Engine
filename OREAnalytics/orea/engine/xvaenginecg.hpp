@@ -126,7 +126,7 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeFilter = {});
+    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeIds);
     std::pair<std::size_t, std::size_t> createPortfolioExposureNode(const std::size_t dateIndex,
                                                                     const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
@@ -214,9 +214,10 @@ private:
     // only for dynamicIM:
     // - parameter groups filtering on sensis
     // - for each parameter group the portfolio exposure, per valuation date, inflated and pathwise
+    // - the sum over parameter group exposure nodes
     std::set<std::set<ModelCG::ModelParameter>> dynamicIMModelParameterGroups_;
-    std::vector<std::vector<std::size_t>> pfExposureNodesForDynamicIM_;
-    std::vector<std::size_t> pfExposureNodesPathwiseInflated_; // tempoarary!!!
+    std::vector<std::vector<std::size_t>> pfExposureNodesForDynamicIMByParameterGroup_;
+    std::vector<std::size_t> pfExposureNodesForDynamicIM_;
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
@@ -231,7 +232,10 @@ private:
     // the cva node from the cg-pp
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
 
-    // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
+    /* regressor groups per portfolio exposure node, the groups are set on
+       - pfExposureNodesPathwise
+       - pfExposureNodes
+       - pfExposureCloseOutNodes */
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     std::vector<RandomVariable> values_;
