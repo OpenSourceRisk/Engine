@@ -431,7 +431,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
     
-    if(true)
+    //if(builderType.find("NonStandard") != std::string::npos) // "NonStandard" has been found //TODO switch on
+    if(true) //TODO remove
     {
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
@@ -474,7 +475,7 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
 
-        for (Size j = 0; j < legs.size(); ++j) {
+        /*for (Size j = 0; j < legs.size(); ++j) {
             
             // Alle vergangenen Coupons wegwerfen, TODO noch nötig? Macht der Matcher das nicht alleine?
             auto it = std::lower_bound(legs[j].begin(), legs[j].end(), ed,
@@ -488,33 +489,27 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
             if (it != legs[j].begin())
                 --it;
             legs[j].erase(legs[j].begin(), it);
-        }
+        }*/
 
         QuantExt::RepresentativeSwaptionMatcher matcher(legs, payer, swapIndex.currentLink(), true, discountCurve, 0.01);
         auto criterion=QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise;
-        auto newSwap = matcher.representativeSwaption(ed, criterion); // Muss es nciht swaption heissen?
-        auto underlyingSwap = newSwap->underlying();    
+        auto newSwaption = matcher.representativeSwaption(ed, criterion); 
+        auto newSwap = newSwaption->underlying();    
 
-        QuantLib::Date firstExerciseDate = newSwap->exercise()->dates().front();
-        std::cout << "First Exercise: " << firstExerciseDate << std::endl;
+        const QuantLib::Schedule& fixedSchedule = newSwap->fixedSchedule();
+        std::cout << "Start: " << fixedSchedule.startDate() << std::endl;
+        std::cout << "Maturity: " << fixedSchedule.endDate() << std::endl;
 
-        // Das letzte Datum im Schedule ist das Maturity-Datum des Swaps
-        const QuantLib::Schedule& fixedSchedule = underlyingSwap->fixedSchedule();
-        QuantLib::Date swapMaturity = fixedSchedule.endDate();
-        std::cout << "Maturity: " << swapMaturity << std::endl;
-
-        // Abrufen der Fixing Rate des Swaps (dies stellt den "Strike" der Swaption dar)
-        QuantLib::Real strike = underlyingSwap->fixedRate();
+        QuantLib::Real strike = newSwap->fixedRate();
         std::cout << "Strike: " << strike << std::endl;
 
-        // Der Notional steckt in den Legs – z.B. im Fixed Leg:
         for (int i=0; i<6; ++i){
-            QuantLib::Real notional = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(underlyingSwap->leg(0)[i])->nominal();
+            QuantLib::Real notional = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[i])->nominal();
             std::cout << "Notional Fixed: " << notional << std::endl;
         }
 
         for (int i=0; i<6; ++i){
-            QuantLib::Real notional2 = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(underlyingSwap->leg(1)[i])->nominal();
+            QuantLib::Real notional2 = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[i])->nominal();
             std::cout << "Notional Floating: " << notional2 << std::endl;
         }
 
