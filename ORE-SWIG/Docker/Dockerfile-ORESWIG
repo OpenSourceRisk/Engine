@@ -14,6 +14,10 @@ RUN apt-get update && apt-get upgrade -y \
 WORKDIR /swig
 
 COPY ore/cmake ./cmake
+COPY ore/ORE-SWIG/CMakeLists.txt ./CMakeLists.txt
+#COPY ore/ORE-SWIG/__init__.py ./__init__.py
+#COPY ore/ORE-SWIG/Examples ./Examples
+#COPY ore/ORE-SWIG/test ./test
 COPY ore/ORE-SWIG/OREAnalytics-SWIG ./OREAnalytics-SWIG
 COPY ore/ORE-SWIG/OREData-SWIG ./OREData-SWIG
 COPY ore/ORE-SWIG/QuantExt-SWIG ./QuantExt-SWIG
