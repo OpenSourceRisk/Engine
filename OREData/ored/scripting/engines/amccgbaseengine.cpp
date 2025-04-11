@@ -789,6 +789,7 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
 void AmcCgBaseEngine::calculate() const {}
 
 std::set<std::string> AmcCgBaseEngine::relevantCurrencies() const { return relevantCurrencies_; }
+bool AmcCgBaseEngine::hasVega() const { return exercise_ != nullptr; }
 
 } // namespace data
 } // namespace ore
