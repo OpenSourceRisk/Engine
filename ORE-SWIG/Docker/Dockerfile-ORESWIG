@@ -14,28 +14,28 @@ RUN apt-get update && apt-get upgrade -y \
 WORKDIR /swig
 
 COPY ore/cmake ./cmake
-COPY ore/ORE-SWIG/CMakeLists.txt ./CMakeLists.txt
-#COPY ore/ORE-SWIG/__init__.py ./__init__.py
-#COPY ore/ORE-SWIG/Examples ./Examples
-#COPY ore/ORE-SWIG/test ./test
-COPY ore/ORE-SWIG/OREAnalytics-SWIG ./OREAnalytics-SWIG
-COPY ore/ORE-SWIG/OREData-SWIG ./OREData-SWIG
-COPY ore/ORE-SWIG/QuantExt-SWIG ./QuantExt-SWIG
-COPY ore/ORE-SWIG/QuantLib-SWIG ./QuantLib-SWIG
+COPY ore/ORE-SWIG/CMakeLists.txt ./ORE-SWIG/CMakeLists.txt
+#COPY ore/ORE-SWIG/__init__.py ./ORE-SWIG/__init__.py
+COPY ore/ORE-SWIG/Examples ./ORE-SWIG/Examples
+COPY ore/ORE-SWIG/test ./ORE-SWIG/test
+COPY ore/ORE-SWIG/OREAnalytics-SWIG ./ORE-SWIG/OREAnalytics-SWIG
+COPY ore/ORE-SWIG/OREData-SWIG ./ORE-SWIG/OREData-SWIG
+COPY ore/ORE-SWIG/QuantExt-SWIG ./ORE-SWIG/QuantExt-SWIG
+COPY ore/ORE-SWIG/QuantLib-SWIG ./ORE-SWIG/QuantLib-SWIG
 
 #ENV PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/ \
 #    PYTHON_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/python3.9
 
 RUN find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';'
-WORKDIR /swig
+WORKDIR /swig/ORE-SWIG
 RUN mkdir build.release
-WORKDIR /swig/build.release
+WORKDIR /swig/ORE-SWIG/build.release
 RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON
 RUN cmake --build . --config Release
 WORKDIR /
 RUN mkdir oreswig
-RUN mv /swig/build.release/ORE.py oreswig \
-  && mv /swig/build.release/_OREP.so oreswig
+RUN mv /swig/ORE-SWIG/build.release/ORE.py oreswig \
+  && mv /swig/ORE-SWIG/build.release/_OREP.so oreswig
 
 ENV PYTHONPATH=/oreswig
 
