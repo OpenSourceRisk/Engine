@@ -135,7 +135,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
     Date paymentDate = expiryDate;
-    
+
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     const boost::optional<OptionPaymentData>& opd = option_.paymentData();
@@ -319,7 +319,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     npvCurrency_ = soldCurrency_; // sold is the domestic
     notional_ = soldAmount_;
     notionalCurrency_ = soldCurrency_;
-    additionalData_["Digital Payoff"] = level - strike;  
+
     additionalData_["boughtCurrency"] = boughtCurrency_;
     additionalData_["boughtAmount"] = boughtAmount_;
     additionalData_["soldCurrency"] = soldCurrency_;
