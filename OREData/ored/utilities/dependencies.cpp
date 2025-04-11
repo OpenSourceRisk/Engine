@@ -343,7 +343,7 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     // should be valid curve config Id's
                     switch (o) {
                     case MarketObject::DiscountCurve: {
-                        if (config == Market::inCcyConfiguration)
+                        if (config == Market::inCcyConfiguration && c != baseCcy)
                             cId = swapIndexDiscountCurve(c, baseCcy);
                         else
                             cId = currencyToDiscountCurve(c, baseCcy, baseCcyDiscountCurve, curveConfigs);
@@ -546,7 +546,7 @@ string swapIndexDiscountCurve(const string& ccy, const string& baseCcy, const st
         if (baseCcy.empty())
             return string();
         QL_REQUIRE(ccy != baseCcy,
-                   "ConfigurationBuilder: can not determine base ccy discount curve for "
+                   "SwapIndexDiscountCurve cannot determine base ccy discount curve for "
                        << ccy << " because neither appropriate swap conventions nor discounting_index is given.");
         indexName = ccy + "-IN-" + baseCcy;
     }
