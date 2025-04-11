@@ -71,15 +71,15 @@ add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
 add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
-add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
-add_link_directory_if_exists("${CMAKE_BINARY_DIR}/ore/QuantLib/ql")
+add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib")
+add_link_directory_if_exists("${CMAKE_BINARY_DIR}/ore/QuantLib")
 
-if(EXISTS "${CMAKE_BINARY_DIR}/ore/QuantLib/ql/")
-    include_directories("${CMAKE_BINARY_DIR}/ore/QuantLib/ql")
+if(EXISTS "${CMAKE_BINARY_DIR}/ore/QuantLib/")
+    include_directories("${CMAKE_BINARY_DIR}/ore/QuantLib")
 endif()
 
-if(EXISTS "${CMAKE_BINARY_DIR}/QuantLib/ql/")
-    include_directories("${CMAKE_BINARY_DIR}/QuantLib/q/")
+if(EXISTS "${CMAKE_BINARY_DIR}/QuantLib/")
+    include_directories("${CMAKE_BINARY_DIR}/QuantLib")
 endif()
 
 # Tell SWIG to compile in C++ mode

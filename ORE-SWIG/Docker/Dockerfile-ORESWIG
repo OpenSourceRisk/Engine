@@ -26,7 +26,7 @@ RUN find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';'
 WORKDIR /swig
 RUN mkdir build.release
 WORKDIR /swig/build.release
-RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON -DORE=/swig
+RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON
 RUN cmake --build . --config Release
 WORKDIR /
 RUN mkdir oreswig
