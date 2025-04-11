@@ -224,7 +224,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
                 S += tmp;
                 Sabs += abs(tmp);
                 for (std::size_t j = 0; j < i; ++j) {
-                    auto tmp2 = RandomVariable(n_, irVegaRw_) * irVega[ccy][j];
+                    auto tmp2 = RandomVariable(n_, irCurvatureWeights_[j]) * irVega[ccy][j];
                     Kb[ccy] += RandomVariable(n_, 2.0 * irVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
@@ -320,7 +320,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
                 S += tmp;
                 Sabs += abs(tmp);
                 for (std::size_t j = 0; j < i; ++j) {
-                    auto tmp2 = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][j];
+                    auto tmp2 = RandomVariable(n_, fxCurvatureWeights_[j]) * fxVega[ccy - 1][j];
                     Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
