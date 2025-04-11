@@ -240,21 +240,44 @@ def rawCubeFilter(rawCubeFileName, filterSample):
 
     return cubeData
 
+def netCubeFilter(cubeFileName, nettingSetId, filterSample):
+
+    print("read net cube file:", cubeFileName)
+    data = pd.read_csv(cubeFileName)
+
+    columns = ["Id", "Date", "NPV"]
+    rowlist = []
+
+    for index, row in data.iterrows():
+
+        nid = row["#Id"]
+        date = row["Date"]
+        sample = row["Sample"]
+        depth = row["Depth"]
+        value = float(row["Value"])
+
+        if depth == 0 and sample == filterSample and nid == nettingSetId:
+            rowlist.append([nid, date, '{:.6f}'.format(value)])
+
+    cubeData = pd.DataFrame(rowlist, columns=columns)
+
+    return cubeData
+
 def npvComparison(undiscounted, discounted, numeraires):
 
     result = pd.concat([undiscounted, discounted, numeraires], axis=1)
 
-    columns = ["TradeId", "Date", "NPV(Base)", "NPV(Base)/Numeraire", "NPV", "Difference", "DifferenceWithoutDiscounting"]
+    columns = ["Id", "Date", "NPV(Base)", "NPV(Base)/Numeraire", "NPV", "Difference", "DifferenceWithoutDiscounting"]
     rowlist = []
     
     for index, row in result.iterrows():
         undisc = float(row["NPV(Base)"])
         disc = float(row["NPV"])
-        num = float(row["Numeraire"])
         date = row["asofDate"]
-        trade = row["TradeId"]
+        nid = row["Id"]
+        num = float(row["Numeraire"])
         
-        rowlist.append([trade, date,
+        rowlist.append([nid, date,
                         '{:.6f}'.format(undisc),
                         '{:.6f}'.format(undisc/num),
                         '{:.6f}'.format(disc),

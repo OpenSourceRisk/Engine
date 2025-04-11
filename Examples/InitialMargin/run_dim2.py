@@ -16,6 +16,7 @@ print("| Dynamic SIMM                                        |")
 print("+-----------------------------------------------------+")
 
 filterSample = 1
+nettingSet = "CPTY_A"
 
 oreex.print_headline("Run ORE to generate the npv cube and scenario dump, with swaption vol simulation")
 oreex.run("Input/Dim2/ore.xml")
@@ -24,8 +25,10 @@ oreex.print_headline("Convert scenario " + str(filterSample) + " into a market d
 refDates = utilities.scenarioToMarket('Input/Dim2/simulation.xml', 'Output/Dim2/scenariodump.csv', filterSample, 'Input/DimValidation')
 
 oreex.print_headline("Extract NPV evolution from the raw cube for scenario " + str(filterSample))
-cubeFile = 'Output/Dim2/rawcube.csv'
-cubeData = utilities.rawCubeFilter(cubeFile, filterSample)
+#cubeFile = 'Output/Dim2/rawcube.csv'
+#cubeData = utilities.rawCubeFilter(cubeFile, filterSample)
+cubeFile = 'Output/Dim2/netcube.csv'
+cubeData = utilities.netCubeFilter(cubeFile, nettingSet, filterSample)
 
 oreex.print_headline("Convert aggregation scenario data file into a fixing file for sample " + str(filterSample))
 numeraireData = utilities.scenarioToFixings("Output/Dim2/scenariodata.csv.gz", refDates, filterSample, "Input/DimValidation")
@@ -36,7 +39,7 @@ doccrif = etree.parse(orecrif)
 oresimm = 'Input/DimValidation/ore_simm.xml'
 docsimm = etree.parse(oresimm)
 
-columns = ["#TradeId", "asofDate", "NPV(Base)"] 
+columns = ["NettingSet", "asofDate", "NPV(Base)"] 
 rowlist = []
 
 simmColumns = ["Portfolio","AsOfDate", "SimmSide","InitialMargin","Currency"]
@@ -64,7 +67,7 @@ for asof in refDates:
     print(orecrif, "updated with asofDate", nodes[0].text)
 
     oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
-    oreex.run_plus(orecrif)
+    oreex.run(orecrif)
 
     nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
     nodes[0].text = asof
@@ -74,20 +77,17 @@ for asof in refDates:
     print(oresimm, "updated with asofDate", nodes[0].text)
 
     oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
-    oreex.run_plus(oresimm)
+    oreex.run(oresimm)
 
-    #    if asof == refDates[0]:
-    #        oreex.run_plus(orexml)
-    #    oreex.run_plus(orexml)
-    #oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
-    #oreex.run(orexml)
-
+    value = 0
     if os.path.isfile(npvFile):
         npvData = pd.read_csv(npvFile)
         for index, row in npvData.iterrows():
-            trade = row['#TradeId']
+            nid = row['NettingSet']
             npv = float(row['NPV(Base)'])
-            rowlist.append([trade, asof, '{:.6f}'.format(npv)])
+            if nid == nettingSet:
+                value = value + npv
+        rowlist.append([nid, asof, '{:.6f}'.format(value)])
 
     if os.path.isfile(simmFile):
         simmData = pd.read_csv(simmFile)
