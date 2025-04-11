@@ -257,7 +257,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_, 0.0));
 
         for (std::size_t ccy = 1; ccy < currencies_.size(); ++ccy) {
-            Kb[ccy] = fxDelta[ccy - 1] * RandomVariable(n_, fxDeltaRw_);
+            Kb[ccy - 1] = fxDelta[ccy - 1] * RandomVariable(n_, fxDeltaRw_);
         }
 
         for (std::size_t i = 1; i < currencies_.size(); ++i) {
