@@ -523,6 +523,7 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", false);
     strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    shiftParSensitivity_ = XMLUtils::getChildValueAsBool(node, "ShiftParSensitivity", false, false);
     hasSubPeriod_ = (strFloatFrequency_ != "");
 
     build();
@@ -540,6 +541,9 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) const {
     if (hasSubPeriod_) {
         XMLUtils::addChild(doc, node, "FloatFrequency", strFloatFrequency_);
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    }
+    if (shiftParSensitivity_) {
+        XMLUtils::addChild(doc, node, "ShiftParSensitivity", shiftParSensitivity_);
     }
 
     return node;
