@@ -120,6 +120,7 @@
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FloatFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="ShiftParSensitivity" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
