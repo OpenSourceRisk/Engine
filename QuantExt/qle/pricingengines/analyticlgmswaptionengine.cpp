@@ -306,20 +306,20 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     try {
         try { 
             try { // Try Brent
-                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
                     0.0, 0.01 );
             } catch (const std::exception& e) { // Try Brent with optimized starting point                
                 Bisection b2;
-                double startValue = b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                double startValue = b2.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2,
                             -3.0, 3.0);
-                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
                             startValue, 0.01); 
             }
         } catch (const std::exception& e) { // Try Brent with another optimized starting point
             Bisection b2;
-            double startValue2=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+            double startValue2=b2.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2,
                     -10.0, 10.0);
-            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+            yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
                     startValue2, 0.01); 
         } 
     } catch (const std::exception& e) {

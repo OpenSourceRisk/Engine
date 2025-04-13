@@ -214,8 +214,8 @@ template <class E> inline Real integral_helper(const CrossAssetModel& x, const E
 }
 
 template <class E> inline Real integral(const CrossAssetModel& x, const E& e, const Real a, const Real b) {
-    return x.integrator()->operator()(QuantLib::ext::bind(&integral_helper<E>, QuantLib::ext::cref(x),
-                                                          QuantLib::ext::cref(e), QuantLib::ext::placeholders::_1),
+    return x.integrator()->operator()(std::bind(&integral_helper<E>, QuantLib::ext::cref(x),
+                                                          QuantLib::ext::cref(e), std::placeholders::_1),
                                       a, b);
 }
 

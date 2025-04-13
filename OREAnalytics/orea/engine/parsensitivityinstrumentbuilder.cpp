@@ -1741,11 +1741,11 @@ QuantLib::ext::shared_ptr<Instrument> ParSensitivityInstrumentBuilder::makeYoyIn
             discountCurve = market->discountCurve(ccy, marketConfiguration);
         }
     }
-
+    QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<YearOnYearInflationSwap> helper(new YearOnYearInflationSwap(
         YearOnYearInflationSwap::Payer, 1.0, fixSchedule, 0.0, conv->dayCounter(), yoySchedule, index,
         conv->observationLag(), 0.0, conv->dayCounter(), conv->infCalendar()));
-
+    QL_DEPRECATED_ENABLE_WARNING
     QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
         QuantLib::ext::make_shared<YoYInflationCouponPricer>(discountCurve);
     for (auto& c : helper->yoyLeg()) {
@@ -1822,11 +1822,12 @@ void ParSensitivityInstrumentBuilder::makeYoYCapFloor(ParSensitivityInstrumentBu
     }
 
     // build the leg data and instrument
+    QL_DEPRECATED_DISABLE_WARNING
     Leg yoyLeg = yoyInflationLeg(yoySchedule, yoySchedule.calendar(), index, conv->observationLag())
                      .withNotionals(1.0)
                      .withPaymentDayCounter(conv->dayCounter())
                      .withRateCurve(discountCurve);
-
+    QL_DEPRECATED_ENABLE_WARNING
     if (market == nullptr)
         return;
 
