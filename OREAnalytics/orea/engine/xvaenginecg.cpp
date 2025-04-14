@@ -1274,11 +1274,6 @@ void XvaEngineCG::calculateDynamicIM() {
                             RandomVariable(model_->size(), fxVegaConverter[ccy - 1].dzerodpar()(z, b) * 1E-2) *
                             tmpFxVega[z];
                     }
-
-                    // multiply with atm vol for further processing in dynamic im model
-
-                    conditionalFxVega[ccy - 1][b] *=
-                        RandomVariable(model_->size(), 1E2 * fxVegaConverter[ccy - 1].baseImpliedVols()[b]);
                 }
             }
 
