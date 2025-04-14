@@ -2190,6 +2190,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         vector<Real> times(simMarketTenors.size());
         vector<Real> basePrices(times.size());
         vector<Real> shiftedPrices(times.size());
+        vector<Real> offsets(times.size());
 
         // Get the base prices for this name from the base scenario
         bool valid = true;
@@ -2197,6 +2198,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             times[j] = dc.yearFraction(asof, asof + simMarketTenors[j]);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, basePrices[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, offsets[j], continueOnError_);
         }
         if (!valid)
             continue;
@@ -2231,7 +2233,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             for (Size k = 0; k < times.size(); ++k) {
                 RiskFactorKey key(RFType::CommodityCurve, name, k);
                 if (sensitivityData_->useSpreadedTermStructures()) {
-                    scenario->add(key, shiftedPrices[k] - basePrices[k]);
+                    scenario->add(key, shiftedPrices[k] - basePrices[k] + offsets[k]);
                 } else {
                     scenario->add(key, shiftedPrices[k]);
                 }
