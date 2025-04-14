@@ -42,6 +42,7 @@
 #include <ored/portfolio/compositetrade.hpp>
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -319,6 +320,7 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"Autocallable_01", CrifRecord::ProductClass::Equity},
     {"BalanceGuaranteedSwap", CrifRecord::ProductClass::Rates},
     {"Bond", CrifRecord::ProductClass::Rates},
+    {"BondFuture", CrifRecord::ProductClass::Rates},
     {"BondOption", CrifRecord::ProductClass::Rates},
     {"BondRepo", CrifRecord::ProductClass::Rates},
     {"BondTRS", CrifRecord::ProductClass::Rates},
@@ -504,6 +506,9 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondTRS>(trade));
     } else if (trade->tradeType() == "ForwardBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
+    } else if (trade->tradeType() == "BondFuture") {
+        auto future = QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade);
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::Bond>(future->ctdUnderlying().trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
