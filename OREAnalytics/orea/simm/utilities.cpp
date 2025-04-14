@@ -320,7 +320,6 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"Autocallable_01", CrifRecord::ProductClass::Equity},
     {"BalanceGuaranteedSwap", CrifRecord::ProductClass::Rates},
     {"Bond", CrifRecord::ProductClass::Rates},
-    {"BondFuture", CrifRecord::ProductClass::Rates},
     {"BondOption", CrifRecord::ProductClass::Rates},
     {"BondRepo", CrifRecord::ProductClass::Rates},
     {"BondTRS", CrifRecord::ProductClass::Rates},
