@@ -470,8 +470,32 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
         try {
             conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
         } catch (const std::exception& e) {
-            // MESSAGE: failed to retrieve bond price quote or conversion factor for SECID
-            // TODO implement Conversion Factor Method more generic than the existing...
+            DLOG("no conversion factor provided from market, start calculation");
+            if (parseCurrency(currency_) == USDCurrency()) {
+                // get fixed rate
+                double coupon = Real();
+                if (bond.bondData.coupons().size() == 1 &&
+                    bond.bondData.coupons().front().concreteLegData()->legType() == LegType::Fixed) {
+                    auto fixedLegData =
+                        ext::dynamic_pointer_cast<FixedLegData>(bond.bondData.coupons().front().concreteLegData());
+                    QL_REQUIRE(fixedLegData, "expecting FixedLegData object");
+                    if(fixedLegData->rates().size() > 1)
+                        ALOG("calc conversionFactor: there is a vector of rates, took the first. sec " << sec);
+                    coupon = fixedLegData->rates().front();
+                } else {
+                    QL_FAIL("expected bond " << sec << " with one leg " << bond.bondData.coupons().size()
+                                             << " of LegType::Fixed "
+                                             << bond.bondData.coupons().front().concreteLegData()->legType());
+                }
+                conversionFactor =
+                    conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), bond.trade->maturity(), expiry);
+                DLOG("calculated conversionFactor " << conversionFactor << " secId " << sec << " cpn " << coupon
+                                                    << " deliverableGrade " << deliverableGrade_ << " secMat "
+                                                    << io::iso_date(bond.trade->maturity()) << " futureExpiry "
+                                                    << io::iso_date(expiry));
+            } else {
+                QL_FAIL("Other currency than USD not supported ");
+            }
         }
         // do the test, inspired by
         //  HULL: OPTIONS, FUTURES, AND OTHER DERIVATIVES, 7th Edition, page 134
@@ -527,6 +551,60 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
                                                        settlementBasis_, expiryLag_, settlementLag_, lastTrading_,
                                                        lastDelivery_, secList_, bondFutureRefData);
     }
+}
+
+double BondFuture::conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity,
+                                        const Date& futureExpiry) {
+
+    // inspired by:
+    // CME GROUP, Calculating U.S. Treasury Futures Conversion Factors
+    // https://www.cmegroup.com/trading/interest-rates/files/Calculating_U.S.Treasury_Futures_Conversion_Factors.pdf
+
+    // 1) derive dates ...
+
+    // z is the number of whole months between n and the maturity (or call) date
+    // rounded down to the nearest quarter for UB, ZB, TWE, TN and ZN,
+    // and to the nearest month for ZF, Z3N, and ZT
+
+    // n is the number of whole years from the first day of the
+    // delivery month to the maturity (or call) date of the bond or note.
+
+    int full_months = (bondMaturity.year() - futureExpiry.year()) * 12 + (bondMaturity.month() - futureExpiry.month());
+    int n = (int)std::floor(full_months / 12);
+    int z = full_months % 12;
+
+    // rounded down to the nearest quarter
+    if (type == FutureType::LongTenor) {
+        int mod = z % 3;
+        z -= mod;
+    }
+
+    // 2) calculation
+    double v;
+    if (z < 7) {
+        v = z;
+    } else {
+        if (type == FutureType::LongTenor)
+            v = 3.0;
+        else if (type == FutureType::ShortTenor)
+            v = (z - 6.0);
+        else
+            QL_FAIL("FutureType " << type << " unkown");
+    }
+
+    double a = 1.0 / std::pow(1.03, v / 6.0);
+    double b = (coupon / 2.0) * (6.0 - v) / 6.0;
+    double c;
+    if (z < 7) {
+        c = 1.0 / std::pow(1.03, 2.0 * n);
+    } else {
+        c = 1.0 / std::pow(1.03, 2.0 * n + 1.0);
+    }
+    double d = (coupon / 0.06) * (1 - c);
+    double factor = a * ((coupon / 2.0) + c + d) - b;
+
+    // where the factor is rounded to four decimal places
+    return std::round(factor * 10000) / 10000;
 }
 
 BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,

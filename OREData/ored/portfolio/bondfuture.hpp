@@ -60,7 +60,6 @@ public:
     // override;
 
     //! inspectors
-    // const std::vector<std::string>& secList() const { return secList_; }
     const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
     const string& ctdId() const { return ctdId_; }
     const string& currency() const { return currency_; }
@@ -80,6 +79,8 @@ protected:
     std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry);
 
     const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
+
+    double conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity, const Date& futureExpiry);
 
 private:
     // mandatory first tier information
