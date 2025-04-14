@@ -310,16 +310,23 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
                     QuantLib::ext::shared_ptr<IborIndex> rfrIndex;
-                    auto f = iborIndices_.find(make_pair(configuration, fallbackData.rfrIndex));
-                    if (f == iborIndices_.end()) {
-                        f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
-                        QL_REQUIRE(f != iborIndices_.end(),
-                                   "Failed to build ibor fallback index '"
-                                       << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
-                                       << "' in configuration '" << configuration
-                                       << "' or default - is the rfr index configuration in todays market parameters?");
+                    bool foundRfr = false;
+                    for (const auto& y : requiredYieldCurves_) {
+                        auto cs = parseCurveSpec(y.first);
+                        if (cs) {
+                            if (fallbackData.rfrIndex == cs->curveConfigID()) {
+                                rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle());
+                                foundRfr = true;
+                                break;
+                            }
+                        }
                     }
-                    auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(*f->second);
+                    QL_REQUIRE(foundRfr,
+                               "Failed to build ibor fallback index '"
+                                   << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
+                                   << "' in configuration '" << configuration
+                                   << "' or default - is the rfr index configuration in todays market parameters?");
+                    auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex);
                     QL_REQUIRE(oi,
                                "Found rfr index '"
                                    << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
