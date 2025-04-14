@@ -64,7 +64,7 @@ for asof in refDates:
     print(orecrif, "updated with asofDate", nodes[0].text)
 
     oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
-    oreex.run_plus(orecrif)
+    oreex.run(orecrif)
 
     nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
     nodes[0].text = asof
@@ -74,13 +74,7 @@ for asof in refDates:
     print(oresimm, "updated with asofDate", nodes[0].text)
 
     oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
-    oreex.run_plus(oresimm)
-
-    #    if asof == refDates[0]:
-    #        oreex.run_plus(orexml)
-    #    oreex.run_plus(orexml)
-    #oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
-    #oreex.run(orexml)
+    oreex.run(oresimm)
 
     if os.path.isfile(npvFile):
         npvData = pd.read_csv(npvFile)
