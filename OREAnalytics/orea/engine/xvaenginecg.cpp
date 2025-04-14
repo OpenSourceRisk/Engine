@@ -1102,9 +1102,9 @@ void XvaEngineCG::calculateDynamicIM() {
                 // debug output end
 
                 // if the model parameter is not wanted for the current parameter group, we ignore its contribution
-                // if (parameterGroup.find(ModelCG::ModelParameter(p.type(), p.qualifier())) == parameterGroup.end()) {
-                //     continue;
-                // }
+                if (parameterGroup.find(ModelCG::ModelParameter(p.type(), p.qualifier())) == parameterGroup.end()) {
+                    continue;
+                }
 
                 // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
