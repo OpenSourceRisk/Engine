@@ -214,10 +214,8 @@ private:
     // only for dynamicIM:
     // - parameter groups filtering on sensis
     // - for each parameter group the portfolio exposure, per valuation date, inflated and pathwise
-    // - the sum over parameter group exposure nodes
     std::set<std::set<ModelCG::ModelParameter>> dynamicIMModelParameterGroups_;
     std::vector<std::vector<std::size_t>> pfExposureNodesForDynamicIMByParameterGroup_;
-    std::vector<std::size_t> pfExposureNodesForDynamicIM_;
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
