@@ -449,10 +449,11 @@ string currencyToDiscountCurve(const string& ccy, const string& baseCcy, const s
         string discCurve = swapIndexDiscountCurve(ccy, baseCcy);
 
         // If we can't get a base currency discount curve, we should stop
-        StructuredCurveErrorMessage(
-            "Discount Curve " + ccy , "Find Discount Curve",
-            "No discount curve found for currency '" + ccy)
-            .log();
+        if (discCurve.empty())
+            StructuredCurveErrorMessage(
+                "Discount Curve " + ccy , "Find Discount Curve",
+                "No discount curve found for currency '" + ccy)
+                .log();
 
         return discCurve;
     } else {
