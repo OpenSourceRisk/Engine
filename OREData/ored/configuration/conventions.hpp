@@ -543,7 +543,6 @@ public:
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
     SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
-    bool hasShiftParSensitivity() const { return shiftParSensitivity_; }
     //@}
 
     //! \name Serialisation
@@ -570,7 +569,6 @@ private:
     string strIndex_;
     string strFloatFrequency_;
     string strSubPeriodsCouponType_;
-    bool shiftParSensitivity_;
 };
 
 //! Container for storing Average OIS conventions

@@ -122,6 +122,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
     parHelpers_.clear();
     parCaps_.clear();
     parYoYCaps_.clear();
+    auto parConversionExcludeFixings = sensitivityData.parConversionExcludeFixings();
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr,
@@ -169,7 +170,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     if (instType == "IRS")
                         ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
                                        convention, singleCurve, parHelperDependencies_[key],
-                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
+                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration, parConversionExcludeFixings);
                     else if (instType == "DEP")
                         ret = makeDeposit(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName,
                                           term, convention, marketConfiguration);
@@ -271,7 +272,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     if (instType == "IRS")
                         ret = makeSwap(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
                                        singleCurve, parHelperDependencies_[key], instruments.removeTodaysFixingIndices_,
-                                       data.discountCurve, marketConfiguration);
+                                       data.discountCurve, marketConfiguration, parConversionExcludeFixings);
                     else if (instType == "DEP")
                         ret = makeDeposit(asof, simMarket, ccy, "", curveName, equityForecastCurveName, term,
                                           convention, marketConfiguration);
@@ -368,7 +369,8 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     if (instType == "IRS")
                         ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
                                        convention, singleCurve, parHelperDependencies_[key],
-                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
+                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration,
+                                       parConversionExcludeFixings);
                     else if (instType == "DEP")
                         ret = makeDeposit(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName,
                                           term, convention, marketConfiguration);
@@ -711,7 +713,7 @@ ParSensitivityInstrumentBuilder::makeSwap(const QuantLib::ext::shared_ptr<Market
                                           const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
                                           std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_,
                                           std::set<std::string>& removeTodaysFixingIndices,
-                                          const string& expDiscountCurve, const string& marketConfiguration) const {
+                                          const string& expDiscountCurve, const string& marketConfiguration, const std::vector<string>& parConversionExcludeFixings) const {
     // Curve priorities, use in the following order if ccy/indexName/yieldCurveName strings are not blank
     // 1) singleCurve = false
     //    - discounts: discountCurve(ccy) -> yieldCurve(yieldCurveName)
@@ -783,9 +785,18 @@ ParSensitivityInstrumentBuilder::makeSwap(const QuantLib::ext::shared_ptr<Market
             QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(helper->leg(1).back());
         latestRelevantDate = std::max(helper->maturityDate(), lastCoupon->fixingDates().end()[-2]);
     } else if (conv->hasSubPeriod()) {
-        if (!conv->hasShiftParSensitivity()) {
+
+        bool containsWildcard = std::any_of(parConversionExcludeFixings.begin(), parConversionExcludeFixings.end(),
+                                            [](const std::string& str) { return str == ".*"; });
+        if (!containsWildcard) {
+            auto it = std::find(parConversionExcludeFixings.begin(), parConversionExcludeFixings.end(), indexName);
+            if (it != parConversionExcludeFixings.end()) {
+                removeTodaysFixingIndices.insert(index->name());
+            }
+        } else {
             removeTodaysFixingIndices.insert(index->name());
-        }
+        }     
+
         auto subPeriodSwap = QuantLib::ext::shared_ptr<SubPeriodsSwap>(
             MakeSubPeriodsSwap(term, index, 0.0, Period(conv->floatFrequency()), 0 * Days)
                 .withSettlementDays(index->fixingDays())
@@ -814,9 +825,18 @@ ParSensitivityInstrumentBuilder::makeSwap(const QuantLib::ext::shared_ptr<Market
             latestRelevantDate = std::max(latestRelevantDate, endValueDate);
         }
     } else {
-        if (!conv->hasShiftParSensitivity()) {
+
+        bool containsWildcard = std::any_of(parConversionExcludeFixings.begin(), parConversionExcludeFixings.end(),
+                                            [](const std::string& str) { return str == ".*"; });
+        if (!containsWildcard) {
+            auto it = std::find(parConversionExcludeFixings.begin(), parConversionExcludeFixings.end(), indexName);
+            if (it != parConversionExcludeFixings.end()) {
+                removeTodaysFixingIndices.insert(index->name());
+            }
+        } else {
             removeTodaysFixingIndices.insert(index->name());
         }
+
         helper =
             QuantLib::ext::shared_ptr<VanillaSwap>(MakeVanillaSwap(term, index, 0.0, 0 * Days)
                                                        .withSettlementDays(index->fixingDays())

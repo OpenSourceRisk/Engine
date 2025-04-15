@@ -327,7 +327,6 @@ The meanings of the various elements in this node are as follows:
 \item Index: The Ibor index on the floating leg.
 \item FloatFrequency [Optional]: The frequency of payments on the floating leg, to be used if the frequency is different to the tenor of the index (e.g. CAD swaps for BA-3M have a 6M or 1Y payment frequency with a Compounding coupon)
 \item SubPeriodsCouponType [Optional]: Defines how coupon rates should be calculated when the float frequency is different to that of the index. Possible values are "Compounding" and "Averaging".
-\item ShiftParSensitivity [Optional Boolean]: True, use historical fixing on the valuation date when calculating the sensitivities of par instruments to zero rates. Default to False, ignore it.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
