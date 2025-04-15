@@ -477,4 +477,76 @@
     </SwaptionData>
   </Trade>
   -->
+
+  <!--
+  <Trade id="Swap_SONIA_3M">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>A365</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
+          <Index>GBP-SONIA-3M</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2025-02-12</StartDate>
+            <EndDate>2035-02-12</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>T360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.0391</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2025-02-12</StartDate>
+            <EndDate>2035-02-12</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+	</LegData>
+    </SwapData>
+  </Trade>
+-->
 </Portfolio>

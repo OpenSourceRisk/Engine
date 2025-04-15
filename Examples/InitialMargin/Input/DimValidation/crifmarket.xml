@@ -29,7 +29,8 @@
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
       </Currencies>
-      <Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
+      <!--<Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>-->
+      <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
       <Terms>5Y,10Y</Terms>
     </SwaptionVolatilities>
     <FxVolatilities>

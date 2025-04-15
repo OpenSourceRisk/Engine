@@ -20,6 +20,7 @@
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </Currencies>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
@@ -32,7 +33,7 @@
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.00001</InitialValue>
+          <InitialValue>0.00002</InitialValue>
 	  <!--
           <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
@@ -95,6 +96,7 @@
 
     <Currencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </Currencies>
 
@@ -111,6 +113,10 @@
       <Index>EUR-EONIA</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EURIBOR-6M</Index>
+      <Index>GBP-SONIA</Index>
+      <Index>GBP-SONIA-3M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-LIBOR-6M</Index>
       <Index>USD-SOFR</Index>
       <Index>USD-SOFR-3M</Index>
       <Index>USD-FedFunds</Index>
@@ -134,6 +140,14 @@
         <Name>EUR-CMS-30Y</Name>
         <DiscountingIndex>EUR-ESTER</DiscountingIndex>
       </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-10Y</Name>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-30Y</Name>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
     </SwapIndices>
     
     <SwaptionVolatilities>
@@ -142,6 +156,7 @@
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
+        <Currency>GBP</Currency>
         <Currency>USD</Currency>
       </Currencies>
       <!--<Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>-->
@@ -155,12 +170,14 @@
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
       </CurrencyPairs>
       <Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
     </FxVolatilities>
     
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </AggregationScenarioDataCurrencies>
 
@@ -169,6 +186,10 @@
       <Index>EUR-EONIA</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EURIBOR-6M</Index>
+      <Index>GBP-SONIA</Index>
+      <Index>GBP-SONIA-3M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-LIBOR-6M</Index>
       <Index>USD-SOFR</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
