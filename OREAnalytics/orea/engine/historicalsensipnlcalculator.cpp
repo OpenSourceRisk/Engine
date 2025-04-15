@@ -186,7 +186,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
             } catch (const std::exception& e) {
                 StructuredAnalyticsErrorMessage(
                     "HistocialSensiPnlCalculator",
-                    "Shift calcuation failed. Check consistency of simulation and sensi config.",
+                    "Shift calculation failed. Check consistency of simulation and sensi config.",
                     "Error retrieving sensi key '" + ore::data::to_string(key) + "' from ssm scenario: '" + e.what())
                     .log();
             }

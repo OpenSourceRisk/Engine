@@ -47,15 +47,32 @@ using namespace QuantLib;
  */
 class LgmBuilder : public QuantExt::ModelBuilder {
 public:
+    // We apply certain fallback rules to ensure a robust calibration:
+
+    enum class FallbackType { NoFallback, FallbackRule1, FallbackRule2, FallbackRule3 };
+
+    /* Rule 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
+              calibration strike closer to the ATM level */
+    static constexpr Real maxAtmStdDev = 3.0;
+
+    /* Rule 2 If the helper value is lower than mmv, replace it with a "more reasonable" helper. We replace
+              the helper with a helper that has the ATM strike. */
+    static constexpr Real mmv = 1.0E-20;
+
+    /* Rule 3 Switch to PriceError if helper's market value is below smv */
+    static constexpr Real smv = 1.0E-8;
+
     /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,
         i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
         the swap index). */
-    LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
-               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
-               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
-               const bool setCalibrationInfo = false, const std::string& id = "unknwon", 
-               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::RelativePriceError);
+    LgmBuilder(
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
+        const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
+        const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
+        const bool setCalibrationInfo = false, const std::string& id = "unknown",
+        BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
+        const bool allowChangingFallbacksUnderScenarios = false);
     //! Return calibration error
     Real error() const;
 
@@ -83,7 +100,7 @@ public:
 private:
     void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
-    void buildSwaptionBasket() const;
+    void buildSwaptionBasket(const bool enforceFullRebuild) const;
     void updateSwaptionBasketVols() const;
     std::string getBasketDetails(QuantExt::LgmCalibrationInfo& info) const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
@@ -110,13 +127,17 @@ private:
     mutable Array params_;
     mutable QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
 
-    // which swaptions in data->optionExpries() are actually in the basket?
-    mutable std::vector<bool> swaptionActive_;
+    // index of swaption in swaptionBasket for expiries in data->optionExpries(), or null if inactive
+    mutable std::vector<Size> swaptionIndexInBasket_;
+
     mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
     mutable std::vector<Real> swaptionStrike_;
     mutable std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> swaptionBasketVols_;
-    mutable Array swaptionExpiries_;
-    mutable Array swaptionMaturities_;
+    mutable std::vector<FallbackType> swaptionFallbackType_;
+
+    mutable std::set<double> swaptionExpiries_;
+    mutable std::set<double> swaptionMaturities_;
+
     mutable Date swaptionBasketRefDate_;
 
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
@@ -128,6 +149,8 @@ private:
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+
+    bool allowChangingFallbacksUnderScenarios_;
 
     // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;

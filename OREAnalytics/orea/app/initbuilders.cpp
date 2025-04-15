@@ -44,6 +44,7 @@
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/analytics/crifanalytic.hpp>
 
 #include <ored/utilities/databuilders.hpp>
 
@@ -87,6 +88,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("SA_CCR", {}, SaCcrAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("BA_CVA", {}, BaCvaAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SMRC", {}, SmrcAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("CRIF", {}, CrifAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SENSITIVITY_STRESS", {}, SensitivityStressAnalytic, false);
     }
 }

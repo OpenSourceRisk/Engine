@@ -214,14 +214,12 @@ private:
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
 
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
-    std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
+    std::vector<std::size_t> asdNumeraire_;
+    std::vector<std::vector<std::size_t>> asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
 
     // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
     std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
-
-    // irStates per ccy index and valuationDate (including reference date), probably not needed
-    // std::vector<std::vector<std::size_t>> irState_;
 
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> xvaDerivatives_;

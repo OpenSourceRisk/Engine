@@ -1,53 +1,70 @@
-name: C/C++ MacOS
+name: C/C++ MacOS ARM64
 
 on:
   push:
-    branches: [master]
     tags:
        - 'v*'
-  release:
-   types: [published]
-  pull_request:
-    branches: [master]
-    types: [ready_for_review, opened, synchronize, reopened]
-    paths:
-      - .github/workflows/macos_ARM64_build.yaml
-      - ./App/**
-      - ./OREAnalytics/**
-      - '!./OREAnalytics/doc/**'
-      - ./OREData/**
-      - '!./OREData/doc/**'
-      - ./ORETest/**
-      - ./QuantExt/**
-      - '!./QuantExt/doc/**'
-      - CMakeLists.txt
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-11
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
     - name: get QuantLib
       run: |
-        git submodule update --init
+        git submodule update --init --recursive
     - name: Install Boost
       run: |
-        curl -O -L https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
-        tar xfz boost_1_80_0.tar.gz
-        cd boost_1_80_0
+        curl -O -L https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
+        tar xfz boost_1_84_0.tar.gz
+        cd boost_1_84_0
         ./bootstrap.sh
         ./b2 architecture=arm address-model=64 -s NO_LZMA=1 -s NO_ZSTD=1 abi=aapcs install
     - name: cmake configure and build
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64 -DORE_USE_ZLIB=ON -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
+        cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64 -DORE_USE_ZLIB=ON -DORE_BUILD_SWIG=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . -j4
         cmake --install .
     - name: Save executables as artifacts
-      if: startsWith(github.ref, 'refs/tags/v')
+      #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
         name: ore-macos-arm64
-        path: /Users/runner/work/Engine/Engine/build/App/ore
+        path: ${{ github.workspace }}/build/App/ore
+    - name: Wrap ORE-SWIG for Python Wheels
+      run: |
+        pwd
+        cd ORE-SWIG
+        python -m pip install setuptools
+        cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
+        cd ORE-SWIG/OREAnalytics-SWIG
+        ls -al
+        cd SWIG
+        ls -al
+        chmod +x oreanalytics.i
+        cd ..
+        cd ..
+        ls -al
+        pwd
+        python setup.py wrap
+    - name: Build Wheels
+      uses: pypa/cibuildwheel@v2.22.0
+      env:
+        CIBW_SKIP: cp36-*
+        #CIBW_BUILD: cp311-macosx_arm64
+        CIBW_ARCHS_MACOS: arm64
+        CXXFLAGS: -std=c++17 -g0 -O3
+        CIBW_BUILD_VERBOSITY: 2
+        CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+          DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&
+          DYLD_LIBRARY_PATH=/usr/local/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
+      with:
+        package-dir: ${{ github.workspace }}/ORE-SWIG
+    - name: Save wheels as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheels-macos-arm64
+        path: ./wheelhouse/*.whl

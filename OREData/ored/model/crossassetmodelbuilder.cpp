@@ -28,6 +28,7 @@
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -56,6 +57,7 @@
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -81,7 +83,7 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const std::string& id)
+    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -89,6 +91,7 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), id_(id),
+      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -206,6 +209,27 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
     }
 }
 
+void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>>& irParametrizations,
+                                                    const std::string& context,
+                                                    const std::string& configuration,
+                                                    std::vector<RelinkableHandle<YieldTermStructure>>& irDiscountCurves) const {
+    for (Size i = 0; i < irParametrizations.size(); i++) {
+        auto p = irParametrizations[i];
+        Handle<YieldTermStructure> yts;
+        try {
+            yts = market_.value()->discountCurve(p->currency().code(), configuration);
+        } catch (const std::exception& e) {
+            StructuredModelErrorMessage("Error while relinking '" + p->currency().code() + "' discount curve, context '" +
+                context + "'. Using a fallback, results depending on this object will be invalid.",
+                e.what(), id_);
+            yts = Handle<YieldTermStructure>(
+                QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        }
+        irDiscountCurves[i].linkTo(*yts);
+        DLOG("Relinked discounting curve for " << p->currency().code() << " for " << context);
+    }
+}
+
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
@@ -285,7 +309,8 @@ void CrossAssetModelBuilder::buildModel() const {
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
-                    referenceCalibrationGrid_, false, id_);
+                    referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
+                    allowChangingFallbacksUnderScenarios_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -359,7 +384,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<FxBsBuilder>(
-                market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_);
+                market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_, id_);
         }
         auto builder =
             QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
@@ -385,7 +410,7 @@ void CrossAssetModelBuilder::buildModel() const {
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::EQ][i] = QuantLib::ext::make_shared<EqBsBuilder>(
-                market_.value(), eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
+                market_.value(), eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_, id_);
         }
         QuantLib::ext::shared_ptr<EqBsBuilder> builder =
             QuantLib::ext::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
@@ -592,14 +617,9 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for FX calibration
+     * Relink IR discount curves to curves used for FX calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFxCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for FX calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "FX calibration", configurationFxCalibration_, irDiscountCurves);
 
     /*************************
      * Calibrate FX components
@@ -671,14 +691,9 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for EQ calibration
+     * Relink IR discount curves to curves used for EQ calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationEqCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "EQ calibration", configurationEqCalibration_, irDiscountCurves);
 
     /*************************
      * Calibrate EQ components
@@ -754,14 +769,9 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for INF calibration
+     * Relink IR discount curves to curves used for INF calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationInfCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for INF calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "INF calibration", configurationInfCalibration_, irDiscountCurves);
 
     // Calibrate INF components
     for (Size i = 0; i < infParameterizations.size(); i++) {
@@ -800,14 +810,10 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to final model curves
+     * Relink IR discount curves to final model curves
      */
+    relinkIrDiscountCurves(irParametrizations, "final model curves assignment", configurationFinalModel_, irDiscountCurves);
 
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFinalModel_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
-    }
 
     DLOG("Building CrossAssetModel done");
 }

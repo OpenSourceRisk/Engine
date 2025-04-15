@@ -44,7 +44,7 @@ class DiscountingRiskyBondEngine;
 
 //! Bond Index
 /*! \ingroup indexes */
-class BondIndex : public Index, public Observer {
+class BondIndex : public Index {
 public:
     enum class PriceQuoteMethod { PercentageOfPar, CurrencyPerUnit };
 
@@ -116,7 +116,7 @@ public:
     //! \name Fixing calculations
     //@{
     virtual Rate forecastFixing(const Date& fixingDate) const;
-    Rate pastFixing(const Date& fixingDate) const;
+    Rate pastFixing(const Date& fixingDate) const override;
     //@}
 
     //! \name Inspectors

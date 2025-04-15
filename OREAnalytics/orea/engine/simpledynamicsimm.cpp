@@ -31,19 +31,40 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std::string>& currencies,
-                                     const std::vector<Period> irVegaTerms, const std::vector<Period> fxVegaTerms,
+                                     const std::vector<QuantLib::Period>& irDeltaTerms,
+                                     const std::vector<Period>& irVegaTerms, const std::vector<Period>& fxVegaTerms,
                                      const boost::shared_ptr<SimmConfiguration>& simmConfiguration)
-    : n_(n), currencies_(currencies), irVegaTerms_(irVegaTerms), fxVegaTerms_(fxVegaTerms),
+    : n_(n), currencies_(currencies), irDeltaTerms_(irDeltaTerms), irVegaTerms_(irVegaTerms), fxVegaTerms_(fxVegaTerms),
       simmConfiguration_(simmConfiguration) {
 
     corrIrFx_ = simmConfiguration_->correlationRiskClasses(SimmConfiguration::RiskClass::InterestRate,
                                                            SimmConfiguration::RiskClass::FX);
-    irDeltaRw_ = simmConfiguration_->weight(CrifRecord::RiskType::IRCurve, std::string("USD"), std::string("30y"));
+
+    irDeltaRw_ = Array(irDeltaTerms_.size());
+    for (std::size_t i = 0; i < irDeltaTerms_.size(); ++i) {
+        auto p1 = ore::data::to_string(irDeltaTerms[i]);
+        boost::algorithm::to_lower(p1);
+        irDeltaRw_[i] = simmConfiguration_->weight(CrifRecord::RiskType::IRCurve, std::string("USD"), p1);
+    }
+
+    irDeltaCorrelations_ = Matrix(irDeltaTerms.size(), irDeltaTerms.size(), 0.0);
+    for (std::size_t i = 0; i < irDeltaTerms.size(); ++i) {
+        auto p1 = ore::data::to_string(irDeltaTerms[i]);
+        boost::algorithm::to_lower(p1);
+        irDeltaCorrelations_(i, i) = 1.0;
+        for (std::size_t j = 0; j < i; ++j) {
+            auto p2 = ore::data::to_string(irDeltaTerms[j]);
+            boost::algorithm::to_lower(p2);
+            irDeltaCorrelations_(i, j) = irDeltaCorrelations_(j, i) =
+                simmConfiguration_->correlation(CrifRecord::RiskType::IRCurve, "USD", p1, std::string(),
+                                                CrifRecord::RiskType::IRCurve, "USD", p2, std::string());
+        }
+    }
+
+    irGamma_ = simmConfiguration_->correlation(CrifRecord::RiskType::IRCurve, "USD", std::string(), std::string(),
+                                               CrifRecord::RiskType::IRCurve, "GBP", std::string(), std::string());
 
     irVegaRw_ = simmConfiguration_->weight(CrifRecord::RiskType::IRVol, std::string("USD"));
-
-    irGamma_ = simmConfiguration_->correlation(CrifRecord::RiskType::IRVol, "USD", std::string(), std::string(),
-                                               CrifRecord::RiskType::IRVol, "GBP", std::string(), std::string());
 
     irCurvatureScaling_ = simmConfiguration_->curvatureMarginScaling();
 
@@ -104,6 +125,7 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     // std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
     // std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
     // std::cout << "irGamma              = " << irGamma_ << std::endl;
+    // std::cout << "irDeltaCorr          = \n" << irDeltaCorrelations_ << std::endl;
     // std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
     // std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
     // std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
@@ -115,7 +137,7 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     // end debug output
 }
 
-QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::RandomVariable>& irDelta,
+QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
                                                   const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                                   const std::vector<QuantExt::RandomVariable>& fxDelta,
                                                   const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega) {
@@ -125,16 +147,27 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
     RandomVariable deltaMarginIr(n_, 0.0);
 
     {
-        std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_, 0.0));
+        std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_, 0.0)),
+            Sb(currencies_.size(), RandomVariable(n_, 0.0));
 
         for (std::size_t ccy = 0; ccy < currencies_.size(); ++ccy) {
-            Kb[ccy] = irDelta[ccy] * RandomVariable(n_, irDeltaRw_);
+            for (std::size_t i = 0; i < irDeltaTerms_.size(); ++i) {
+                auto tmp = RandomVariable(n_, irDeltaRw_[i]) * irDelta[ccy][i];
+                Kb[ccy] += tmp * tmp;
+                Sb[ccy] += tmp;
+                for (std::size_t j = 0; j < i; ++j) {
+                    auto tmp2 = RandomVariable(n_, irDeltaRw_[j]) * irDelta[ccy][j];
+                    Kb[ccy] += RandomVariable(n_, 2.0 * irDeltaCorrelations_(i, j)) * tmp * tmp2;
+                }
+            }
+            Kb[ccy] = sqrt(Kb[ccy]);
+            Sb[ccy] = max(min(Sb[ccy], Kb[ccy]), -Kb[ccy]);
         }
 
         for (std::size_t i = 0; i < currencies_.size(); ++i) {
-            deltaMarginIr += Kb[i] * Kb[i];
+            deltaMarginIr += Sb[i] * Sb[i];
             for (std::size_t j = 0; j < i; ++j) {
-                deltaMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Kb[i] * Kb[j];
+                deltaMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Sb[i] * Sb[j];
             }
         }
 
@@ -154,7 +187,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
                 auto tmp = RandomVariable(n_, irVegaRw_) * irVega[ccy][i];
                 Kb[ccy] += tmp * tmp;
                 Sb[ccy] += tmp;
-                for (std::size_t j = 0; i < j; ++j) {
+                for (std::size_t j = 0; j < i; ++j) {
                     auto tmp2 = RandomVariable(n_, irVegaRw_) * irVega[ccy][j];
                     Kb[ccy] += RandomVariable(n_, 2.0 * irVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
@@ -190,7 +223,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
                 Sb[ccy] += tmp;
                 S += tmp;
                 Sabs += abs(tmp);
-                for (std::size_t j = 0; i < j; ++j) {
+                for (std::size_t j = 0; j < i; ++j) {
                     auto tmp2 = RandomVariable(n_, irVegaRw_) * irVega[ccy][j];
                     Kb[ccy] += RandomVariable(n_, 2.0 * irVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
@@ -250,7 +283,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
                 auto tmp = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][i];
                 Kb[ccy - 1] += tmp * tmp;
                 Sb[ccy - 1] += tmp;
-                for (std::size_t j = 0; i < j; ++j) {
+                for (std::size_t j = 0; j < i; ++j) {
                     auto tmp2 = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][j];
                     Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
@@ -286,7 +319,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<QuantExt::Ra
                 Sb[ccy - 1] += tmp;
                 S += tmp;
                 Sabs += abs(tmp);
-                for (std::size_t j = 0; i < j; ++j) {
+                for (std::size_t j = 0; j < i; ++j) {
                     auto tmp2 = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][j];
                     Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
