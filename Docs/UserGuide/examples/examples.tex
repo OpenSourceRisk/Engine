@@ -572,16 +572,20 @@ stress testing framework that operates in the ``par'' rate domain in a configura
 the user's manipulation of the input market data.
 
 \subsubsection{Stressed Sensitivity Analysis}
+\label{example:marketrisk_sensistress}
 
 This example ({\tt python run\_sensistress.py}) demonstrates the stressed sensitivity analysis.
-The new analytic type \emph{SENSITIVITY\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
-The Stresstest scenarios are given in the same input format as for the regular stresstest. 
+The new analytic type \emph{SENSITIVITY\_STRESS} utilizes the existing stresstest framework and 
+supports stresstests in both zero and par domain. The Stresstest scenarios are given in the same 
+input format as for the regular stresstest. 
 
-The stressed sensitivity analytic replaces the todaysMarket with a SimulationMarket during the sensitivity calculation. For some risk factors the simulationMarket behaves 
-different as the todaysMarket. Depending on the simulation and stress scenario settings it could use different tenors when building curves 
-or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the stressed sensitivity run.
+The stressed sensitivity analytic replaces the todaysMarket with a SimulationMarket during the 
+sensitivity calculation. For some risk factors the simulationMarket behaves  different as the 
+todaysMarket. Depending on the simulation and stress scenario settings it could use different 
+tenors when building curves  or use only the ATM volatilities. It is recommended to activate 
+UseSpreadedTermStructures and simulate SwaptionVolatilities for the stressed sensitivity run.
 
-The respective output files are {\tt sensitivity_scenario.csv} and {\tt sensitivity.csv}.
+The respective output files are {\tt sensitivity\_scenario.csv} and {\tt sensitivity.csv}.
 
 \subsubsection{Historical Simulation VaR}
 \label{example:marketrisk_histsim}
