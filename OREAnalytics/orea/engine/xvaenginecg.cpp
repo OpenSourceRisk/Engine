@@ -1324,6 +1324,38 @@ void XvaEngineCG::calculateDynamicIM() {
         //     }
         // }
 
+        // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+        //         std::cout << i << "," << "irDelta," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy] << "," << irDeltaTerms[b] << ","
+        //                   << conditionalIrDelta[ccy][b].at(7) << std::endl;
+        //     }
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
+        //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
+        //               << model_->currencies()[ccy + 1] << ",," << expectation(conditionalFxDelta[ccy]).at(0)
+        //               << std::endl;
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalIrVega.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
+        //         std::cout << i << "," << "irVega," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy] << "," << irVegaTerms[b] << ","
+        //                   << conditionalIrVega[ccy][b].at(7) << std::endl;
+        //     }
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalFxVega.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
+        //         std::cout << i << "," << "fxVega," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy + 1] << "," << fxVegaTerms[b] << ","
+        //                   << expectation(conditionalFxVega[ccy][b]).at(7) << std::endl;
+        //     }
+        // }
+
+        // std::cout << i << "," << "npv," << values_[n0].at(7) << std::endl;
+
         // end output for debug
 
         // set results for this valuation date
