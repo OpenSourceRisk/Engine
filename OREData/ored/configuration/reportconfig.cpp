@@ -131,7 +131,7 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
     if (underlyingTenors_)
         XMLUtils::addGenericChildAsList(doc, node, "UnderlyingTenors", *underlyingTenors_);
     if (continuationExpiries_)
-        XMLUtils::addGenericChildAsList(doc, node, "UnderlyingTenors", *continuationExpiries_);
+        XMLUtils::addGenericChildAsList(doc, node, "ContinuationExpiry", *continuationExpiries_);
     return node;
 }
 
