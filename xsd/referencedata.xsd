@@ -118,7 +118,7 @@
       <xs:element type="xs:string" name="SettlementLag" maxOccurs="1" minOccurs="0"/>
       <xs:element type="xs:string" name="LastTradingDate" maxOccurs="1" minOccurs="0"/>
       <xs:element type="xs:string" name="LastDeliveryDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
