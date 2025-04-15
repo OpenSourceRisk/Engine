@@ -76,7 +76,8 @@ protected:
 
     void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
 
-    std::string identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry);
+    std::pair<std::string, double> identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
+                                                   const Date& expiry);
 
     const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
 

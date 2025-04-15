@@ -164,7 +164,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
         id(), currency, bondData_.securityId(), envelope().additionalField("discount_curve", false, std::string()),
         bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(),
-        settlementDirty));
+        settlementDirty, Real()));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);

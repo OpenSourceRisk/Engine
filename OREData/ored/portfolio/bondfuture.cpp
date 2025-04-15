@@ -133,8 +133,12 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     // identify CTD bond
     QL_REQUIRE(secList_.size() > 0, "BondFuture::build no DeliveryBasket given");
     ctdId_ = secList_.front();
-    if (secList_.size() > 1)
-        ctdId_ = identifyCtdBond(engineFactory, expiry);
+    double ctdCf = Real();
+    if (secList_.size() > 1){
+        auto res = identifyCtdBond(engineFactory, expiry);
+        ctdId_ = res.first;
+        ctdCf = res.second;
+    }
     ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctdId_);
 
     // handle strike treatment
@@ -185,7 +189,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
         id(), parseCurrency(currency_), bondSpreadId, envelope().additionalField("discount_curve", false, string()),
         ctdUnderlying_.creditCurveId, ctdId_, ctdUnderlying_.bondData.referenceCurveId(),
-        ctdUnderlying_.bondData.incomeCurveId(), settlementDirty));
+        ctdUnderlying_.bondData.incomeCurveId(), settlementDirty, ctdCf));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);
@@ -446,7 +450,8 @@ void BondFuture::checkDates(const Date& expiry, const Date& settlementDate) {
                                        << io::iso_date(settlementDate));
 }
 
-string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const Date& expiry) {
+pair<string, double> BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
+                                                 const Date& expiry) {
 
     DLOG("BondFuture::identifyCtdBond called.");
     // get settlement price for future
@@ -454,6 +459,7 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
 
     double lowestValue = QL_MAX_REAL; // arbitray high number
     string ctdSec = string();
+    double ctdCf = Real();
 
     for (const auto& sec : secList_) {
         // create bond instrument
@@ -466,7 +472,7 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
             drbe->calculateNpv(expiry, expiry, bond.bond->cashflows()).npv - bond.bond->accruedAmount(expiry) / 100.0;
 
         // get conversion factor
-        double conversionFactor = 1.0;
+        double conversionFactor = Real();
         try {
             conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
         } catch (const std::exception& e) {
@@ -506,12 +512,13 @@ string BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineF
         if (value < lowestValue) {
             lowestValue = value;
             ctdSec = sec;
+            ctdCf = conversionFactor;
         }
     }
     QL_REQUIRE(!ctdSec.empty(), "No CTD bond found.");
     DLOG("BondFuture::identifyCtdBond -- selected CTD for " << id() << " is " << ctdSec);
 
-    return ctdSec;
+    return make_pair(ctdSec, ctdCf);
 } // BondFuture::ctdBond
 
 const double BondFuture::getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const {

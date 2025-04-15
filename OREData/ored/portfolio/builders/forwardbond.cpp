@@ -33,7 +33,7 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
                                                              const std::string& discountCurveName,
                                                              const string& creditCurveId, const string& securityId,
                                                              const string& referenceCurveId,
-                                                             const string& incomeCurveId, const bool dirty) {
+                                                             const string& incomeCurveId, const bool dirty, const double cf) {
     FwdBondEngineBuilder::Curves curves;
     // for discounting underlying bond make use of reference curve
     curves.referenceCurve_ = referenceCurveId.empty()
@@ -69,13 +69,18 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
 
     try {
         curves.conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
+        DLOG("Security ID " << id << " using market conversion factor of " << curves.conversionFactor_->value());
     } catch (...) {
-        curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        if (cf != Real()) { // this is the derived conversion factor (bondfuture)
+            curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(cf));
+            DLOG("Security ID " << id << " using derived conversion factor of " << curves.conversionFactor_->value())
+        } else {
+            curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+            DLOG("Security ID " << id << " using non conversion factor of " << curves.conversionFactor_->value())
+        }
     }
-    if (dirty && curves.conversionFactor_->value() != 1.0) {
-        WLOG("conversionFactor for " << securityId << " is overwritten to 1.0, settlement is dirty")
-        curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-    }
+    if (dirty && curves.conversionFactor_->value() != 1.0)
+        WLOG("Security ID " << id << " using a conversion factor " << curves.conversionFactor_->value() << " although settlement is dirty.")
 
     // credit curve may not always be used. If credit curve ID is empty proceed without it
     if (!creditCurveId.empty()){
@@ -123,7 +128,7 @@ QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& contractId,
                                        const string& discountCurveName, const string& creditCurveId,
                                        const string& securityId, const string& referenceCurveId,
-                                       const string& incomeCurveId, const bool dirty) {
+                                       const string& incomeCurveId, const bool dirty, const double cf) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -132,7 +137,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
         cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
     auto curves = getCurves(id, ccy, contractId, discountCurveName, creditCurveId, securityId, referenceCurveId,
-                            incomeCurveId, dirty);
+                            incomeCurveId, dirty, cf);
 
     return buildMcEngine(model->lgm(0), curves.spreadedReferenceCurve_, simulationDates_, externalModelIndices,
                          curves.incomeCurve_, curves.discountCurve_, curves.conversionFactor_);

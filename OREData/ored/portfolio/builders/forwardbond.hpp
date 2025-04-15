@@ -43,18 +43,18 @@ namespace data {
 
 class FwdBondEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&,
-                                         const string&, const string&, const string&, const string&, const bool> {
+                                         const string&, const string&, const string&, const string&, const bool, const double> {
 protected:
     FwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const string& bondspreadId,
                            const std::string& discountCurveName, const string& creditCurveId, const string& securityId,
-                           const string& referenceCurveId, const string& incomeCurveId, const bool dirty) override {
+                           const string& referenceCurveId, const string& incomeCurveId, const bool dirty, const double cf = Real()) override {
 
         // id is _not_ part of the key
         std::string returnString =
-            ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
+            ccy.code() + "_" + creditCurveId + "_" + bondspreadId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
 
         return returnString;
     }
@@ -76,7 +76,7 @@ protected:
     FwdBondEngineBuilder::Curves getCurves(const string& id, const Currency& ccy, const string& bondspreadId,
                                            const std::string& discountCurveName, const string& creditCurveId,
                                            const string& securityId, const string& referenceCurveId,
-                                           const string& incomeCurveId, const bool dirty);
+                                           const string& incomeCurveId, const bool dirty, const double cf = Real());
 };
 
 class DiscountingForwardBondEngineBuilder : public FwdBondEngineBuilder {
@@ -88,12 +88,12 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const string& bondspreadId, const std::string& discountCurveName,
                const string& creditCurveId, const string& securityId, const string& referenceCurveId,
-               const string& incomeCurveId, const bool dirty) override {
+               const string& incomeCurveId, const bool dirty, const double cf = Real()) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         auto curves = getCurves(id, ccy, bondspreadId, discountCurveName, creditCurveId, securityId, referenceCurveId,
-                                incomeCurveId, dirty);
+                                incomeCurveId, dirty, cf);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
             curves.discountCurve_, curves.incomeCurve_, curves.spreadedReferenceCurve_,
@@ -113,7 +113,7 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const string& bondspreadId, const std::string& discountCurveName,
                const string& creditCurveId, const string& securityId, const string& referenceCurveId,
-               const string& incomeCurveId, const bool dirty) override;
+               const string& incomeCurveId, const bool dirty, const double cf = Real()) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine>
