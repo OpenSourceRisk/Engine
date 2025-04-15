@@ -109,38 +109,40 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
-        try {
-            DLOG("Calculate Sensitivity for scenario " << label);
-            CONSOLE("SENSITIVITY_STRESS: Apply scenario " << label);
-            auto newAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false).second;
-            newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
-            newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-            auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
-            sensitivityImpl->setOffsetScenario(scenario);
-            sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+        if ((inputs_->sensitivityStressCalcBaseScenario() && label == "BASE") || (label != "BASE")) {
+            try {
+                DLOG("Calculate Sensitivity for scenario " << label);
+                CONSOLE("SENSITIVITY_STRESS: Apply scenario " << label);
+                auto newAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false).second;
+                newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+                newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+                auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
+                sensitivityImpl->setOffsetScenario(scenario);
+                sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
 
-            CONSOLE("SENSITIVITY_STRESS: Calculate Sensitivity")
-            newAnalytic->runAnalytic(loader, {"SENSITIVITY"});
-            // Collect sensitivity reports
-            auto rpts = newAnalytic->reports();
-            auto it = rpts.find("SENSITIVITY");
-            QL_REQUIRE(it != rpts.end(), "Sensitivity report not found in Sensitivity analytic reports");
-            for (auto [name, rpt] : it->second) { 
-                // add scenario column to report and copy it, concat it later
-                if (boost::starts_with(name, "sensitivity")) {
-                    DLOG("Save and extend report " << name);
-                    sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                CONSOLE("SENSITIVITY_STRESS: Calculate Sensitivity")
+                newAnalytic->runAnalytic(loader, {"SENSITIVITY"});
+                // Collect sensitivity reports
+                auto rpts = newAnalytic->reports();
+                auto it = rpts.find("SENSITIVITY");
+                QL_REQUIRE(it != rpts.end(), "Sensitivity report not found in Sensitivity analytic reports");
+                for (auto [name, rpt] : it->second) {
+                    // add scenario column to report and copy it, concat it later
+                    if (boost::starts_with(name, "sensitivity")) {
+                        DLOG("Save and extend report " << name);
+                        sensitivityReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
+                    }
                 }
+
+                // FIXME: If the sensitivity analytic above is a dependent analytic, then we do not have to add this timer,
+                // otherwise we have to manually add the SensitivityAnalytic::timer
+                analytic()->addTimer("Sensitivity analytic", newAnalytic->getTimer());
+            } catch (const std::exception& e) {
+                StructuredAnalyticsErrorMessage("SensitivityStress", "SensitivityCalc",
+                                                "Error during Sensitivity calc under scenario " + label + ", got " + e.what() +
+                                                    ". Skip it")
+                    .log();
             }
-            
-            // FIXME: If the sensitivity analytic above is a dependent analytic, then we do not have to add this timer,
-            // otherwise we have to manually add the SensitivityAnalytic::timer
-            analytic()->addTimer("Sensitivity analytic", newAnalytic->getTimer());
-        } catch (const std::exception& e) {
-            StructuredAnalyticsErrorMessage("SensitivityStress", "SensitivityCalc",
-                                            "Error during Sensitivity calc under scenario " + label + ", got " + e.what() +
-                                                ". Skip it")
-                .log();
         }
     }
     concatReports(sensitivityReports);

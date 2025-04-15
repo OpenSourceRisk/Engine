@@ -2199,6 +2199,15 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
         }
+
+        tmp = params_->get("sensitivityStress", "calcBaseScenario", false);
+        if (!tmp.empty()) {
+            bool calcBaseScenario = false;
+            bool success = tryParse<bool>(tmp, calcBaseScenario, parseBool);
+            if (success) {
+                setSensitivityStressCalculateBaseScenario(calcBaseScenario);
+            }
+        }
     }
 
     /*************

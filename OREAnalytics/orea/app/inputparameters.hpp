@@ -380,6 +380,7 @@ public:
     void setSensitivityStressScenarioDataFromFile(const std::string& s);
     void setSensitivityStressSensitivityScenarioData(const std::string& xml);
     void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
+    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario) { sensitivityStressCalcBaseScenario_ = calcBaseScenario; }
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -784,6 +785,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityStressSensitivityScenarioData() const {
         return sensitivityStressSensitivityScenarioData_;
     }
+    bool sensitivityStressCalcBaseScenario() const { return sensitivityStressCalcBaseScenario_; }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1180,6 +1182,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
+    bool sensitivityStressCalcBaseScenario_ = false;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
 
