@@ -449,7 +449,10 @@ string currencyToDiscountCurve(const string& ccy, const string& baseCcy, const s
         string discCurve = swapIndexDiscountCurve(ccy, baseCcy);
 
         // If we can't get a base currency discount curve, we should stop
-        QL_REQUIRE(!discCurve.empty(), "ConfigurationBuilder cannot get a discount curve for base currency " << ccy);
+        StructuredCurveErrorMessage(
+            "Discount Curve " + ccy , "Find Discount Curve",
+            "No discount curve found for currency '" + ccy)
+            .log();
 
         return discCurve;
     } else {
@@ -543,11 +546,8 @@ string swapIndexDiscountCurve(const string& ccy, const string& baseCcy, const st
 
     // We don't want a GENERIC curve as the discount
     if (isGenericIborIndex(indexName) || indexName.empty()) {
-        if (baseCcy.empty())
+        if (ccy == baseCcy || baseCcy.empty())
             return string();
-        QL_REQUIRE(ccy != baseCcy,
-                   "SwapIndexDiscountCurve cannot determine base ccy discount curve for "
-                       << ccy << " because neither appropriate swap conventions nor discounting_index is given.");
         indexName = ccy + "-IN-" + baseCcy;
     }
 

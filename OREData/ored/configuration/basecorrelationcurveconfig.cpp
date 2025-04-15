@@ -123,6 +123,8 @@ map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurve
                     DLOG("Skipping curve " << c.name() << ", having zero weight");
                 }
             }
+            for (const auto& c : constituentCurves)
+                rci[CurveSpec::CurveType::Default].insert(c);
         }
     }
     return rci;

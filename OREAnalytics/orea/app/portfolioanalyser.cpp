@@ -61,7 +61,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
     // Build bonds having a security entry to get additional deps to the curves needed by the bond
     for (auto const& securityId : market_->marketObjectNames(ore::data::MarketObject::Security)) {
         try {
-	    ore::data::BondFactory::instance().build(factory, referenceData, securityId);
+	        ore::data::BondFactory::instance().build(factory, referenceData, securityId);
         } catch (const std::exception& e) {
             WLOG("PortfolioAnalyser: error during build of bond '"
                  << securityId << "', we might miss out dependencies (" << e.what() << ").");
