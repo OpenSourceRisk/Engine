@@ -33,9 +33,6 @@ cubeData = utilities.netCubeFilter(cubeFile, nettingSet, filterSample)
 oreex.print_headline("Convert aggregation scenario data file into a fixing file for sample " + str(filterSample))
 numeraireData = utilities.scenarioToFixings("Output/Dim2/scenariodata.csv.gz", refDates, filterSample, "Input/DimValidation")
 
-orecrif = 'Input/DimValidation/ore_crif.xml'
-doccrif = etree.parse(orecrif)
-
 oresimm = 'Input/DimValidation/ore_simm.xml'
 docsimm = etree.parse(oresimm)
 
@@ -56,17 +53,6 @@ for asof in refDates:
         os.remove(npvFile)
     if os.path.isfile(simmFile):
         os.remove(simmFile)
-    if os.path.isfile(crifFile):
-        os.remove(crifFile)
-
-    # update asof in ore_crif.xml and run ORE
-    nodes = doccrif.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
-    nodes[0].text = asof
-    doccrif.write(orecrif)
-    print()
-    print(orecrif, "updated with asofDate", nodes[0].text)
-    oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
-    oreex.run(orecrif)
 
     # update asof in ore_simm.xml and run ORE
     nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
