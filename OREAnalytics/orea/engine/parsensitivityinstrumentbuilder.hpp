@@ -93,7 +93,7 @@ private:
              const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions, bool singleCurve,
              std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
              std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
-             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration, const std::vector<std::string>& parConversionExcludeFixings = {}) const;
+             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create OIS Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>

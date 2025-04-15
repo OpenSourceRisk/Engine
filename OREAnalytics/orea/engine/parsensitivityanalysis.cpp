@@ -94,6 +94,7 @@ ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
     : asof_(asof), simMarketParams_(simMarketParams), sensitivityData_(sensitivityData),
       marketConfiguration_(marketConfiguration), continueOnError_(continueOnError), typesDisabled_(typesDisabled) {
     const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    parConversionExcludeFixings_ = sensitivityData.parConversionExcludeFixings();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
     ParSensitivityInstrumentBuilder().createParInstruments(instruments_, asof_, simMarketParams_, sensitivityData_,
                                                            typesDisabled_, parTypes_, relevantRiskFactors_,
@@ -194,6 +195,18 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         const Date today_;
         std::set<std::pair<std::string, Real>> savedFixings_;
     };
+    bool containsWildcard = std::any_of(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(),
+                                        [](const std::string& str) { return str == ".*"; });
+    if (!containsWildcard && parConversionExcludeFixings_.size() > 0) {
+        std::transform(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), parConversionExcludeFixings_.begin(),
+                       [](const std::string& x) { return parseIborIndex(x)->name(); });
+        for (const auto& indices : instruments_.removeTodaysFixingIndices_) {
+            auto it2 = std::find(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), indices);
+            if (it2 == parConversionExcludeFixings_.end()) {
+                instruments_.removeTodaysFixingIndices_.erase(indices);
+            }
+        }
+    }   
     TodaysFixingsRemover fixingRemover(instruments_.removeTodaysFixingIndices_);
 
     // We must have a ShiftScenarioGenerator

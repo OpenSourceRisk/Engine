@@ -5,6 +5,7 @@
   <xs:complexType name="sensitivityanalysis">
     <xs:all>
       <xs:element type="parExcludes" name="ParConversionExcludes" minOccurs="0"/>
+      <xs:element type="xs:string" name="parSensiRemoveFixing" minOccurs="0"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>

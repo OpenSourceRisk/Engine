@@ -209,6 +209,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 	    parConversionExcludes_.insert(parseRiskFactorKeyType(types[i]));
     }
 
+    vector<string> parSensiRemoveFixingXml = XMLUtils::getChildrenValuesAsStrings(node, "parSensiRemoveFixing", false);
+    if (parSensiRemoveFixingXml.size()>0) {
+        parConversionExcludeFixings_ = parSensiRemoveFixingXml;
+    }
+
     DLOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
@@ -669,6 +674,10 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 	for (auto t : parConversionExcludes_)
 	    types.push_back(to_string(t));
 	XMLUtils::addChildren(doc, root, "ParConversionExcludes", "Type", types);
+    }
+
+    if (parConversionExcludeFixings_.size() > 0) {
+        XMLUtils::addGenericChildAsList(doc, root, "parSensiRemoveFixing", parConversionExcludeFixings_);
     }
 
     if (!discountCurveShiftData_.empty()) {
