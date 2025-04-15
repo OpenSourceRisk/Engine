@@ -201,8 +201,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         std::transform(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), parConversionExcludeFixings_.begin(),
                        [](const std::string& x) { return parseIborIndex(x)->name(); });
         for (const auto& indices : instruments_.removeTodaysFixingIndices_) {
-            auto it2 = std::find(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), indices);
-            if (it2 == parConversionExcludeFixings_.end()) {
+            auto it = std::find(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), indices);
+            if (it == parConversionExcludeFixings_.end()) {
                 instruments_.removeTodaysFixingIndices_.erase(indices);
             }
         }
