@@ -52,8 +52,6 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                   const bool bondIssueDateFallback) {
 
-    std::cout << "check" << std::endl;
-
     fixings_ = trade_->requiredFixings();
 
     // get the curves
@@ -99,8 +97,6 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
         conditionalOnSurvival, parseDate(bondData_.issueDate()), bondData_.priceQuoteMethod(),
         bondData_.priceQuoteBaseValue(), bondData_.isInflationLinked(), bidAskAdjustment, bondIssueDateFallback,
         bondData_.quotedDirtyPrices());
-
-    std::cout << "check done" << std::endl;
 }
 
 QuantLib::ext::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }

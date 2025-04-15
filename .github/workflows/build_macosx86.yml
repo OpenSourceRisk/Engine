@@ -1,16 +1,14 @@
-name: C/C++ MacOS ARM64
+name: MacOS x86 Wheels
 
 on:
-  push:
-    tags:
-       - 'v*'
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-14
+  wheels-macos:
+    runs-on: macos-13
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout ORE
+      uses: actions/checkout@v4
     - name: get QuantLib
       run: |
         git submodule update --init --recursive
@@ -20,43 +18,37 @@ jobs:
         tar xfz boost_1_84_0.tar.gz
         cd boost_1_84_0
         ./bootstrap.sh
-        ./b2 architecture=arm address-model=64 -s NO_LZMA=1 -s NO_ZSTD=1 abi=aapcs install
-    - name: cmake configure and build
+        ./b2 toolset=clang-darwin target-os=darwin architecture=x86 cxxflags="-arch x86_64" cflags="-arch x86_64" linkflags="-arch x86_64" abi=sysv binary-format=mach-o install
+    - name: Build ORE CMake
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64 -DORE_USE_ZLIB=ON -DORE_BUILD_SWIG=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
+        cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64 -DORE_USE_ZLIB=ON -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DORE_BUILD_SWIG=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . -j4
         cmake --install .
     - name: Save executables as artifacts
-      #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
-        name: ore-macos-arm64
-        path: ${{ github.workspace }}/build/App/ore
-    - name: Wrap ORE-SWIG for Python Wheels
+        name: ore-macos-x86
+        path: /Users/runner/work/Engine/Engine/build/App/ore
+    - name: Wrap ORE-SWIG
       run: |
         pwd
-        cd ORE-SWIG
         python -m pip install setuptools
         cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
-        cd ORE-SWIG/OREAnalytics-SWIG
-        ls -al
-        cd SWIG
-        ls -al
+        cd ORE-SWIG/OREAnalytics-SWIG/SWIG
         chmod +x oreanalytics.i
         cd ..
-        cd ..
-        ls -al
+        cd Python
         pwd
         python setup.py wrap
     - name: Build Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
         CIBW_SKIP: cp36-*
-        #CIBW_BUILD: cp311-macosx_arm64
-        CIBW_ARCHS_MACOS: arm64
-        CXXFLAGS: -std=c++17 -g0 -O3
+        CIBW_ARCHS_MACOS: x86_64
+        MACOSX_DEPLOYMENT_TARGET: "13.7"
+        CXXFLAGS: -std=c++17 -g0 -O3 -mmacosx-version-min=13
         CIBW_BUILD_VERBOSITY: 2
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&
@@ -66,5 +58,5 @@ jobs:
     - name: Save wheels as artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-macos-arm64
+        name: wheels-macos-x86_64
         path: ./wheelhouse/*.whl
