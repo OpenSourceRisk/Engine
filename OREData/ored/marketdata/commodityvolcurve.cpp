@@ -1797,14 +1797,25 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                                                 const CommodityVolatilityConfig& config) {
     DLOG("CommodityVolCurve: building volatility calibration info");
     try{
-
+        auto cvc = QuantLib::ext::dynamic_pointer_cast<CommodityVolatilityConfig>(vc);
         ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigCommVols(), config.reportConfig());
         bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
         bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
         std::vector<Real> moneyness = *rc.moneyness();
         std::vector<std::string> deltas = *rc.deltas();
-        std::vector<Period> expiries = *rc.expiries();
-
+        std::vector<Date> expiryDates;
+        if (rc.continuationExpiries() && cvc != nullptr) {
+            for (const auto& expiry : *rc.continuationExpiries()){
+                expiryDates.push_back(getExpiry(asof, expiry, cvc->futureConventionsId(), cvc->optionExpiryRollDays()));
+            }
+        } else if (rc.expiries()) {
+            std::vector<Period> expiries = *rc.expiries();
+            for(const auto& p : expiries){
+                expiryDates.push_back(volatility_->optionDateFromTenor(p));
+            }
+        } else {
+            QL_FAIL("CommodityVol CalibrationReport, ContinuationExpiries or Expiriy grid required");
+        }
 
         auto info = QuantLib::ext::make_shared<FxEqCommVolCalibrationInfo>();
 
@@ -1827,8 +1838,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
         info->butterflyStyle = "na";
 
         std::vector<Real> times, forwards;
-        for (auto const& p : expiries) {
-            auto d = volatility_->optionDateFromTenor(p);
+        for (auto const& d : expiryDates) {
             info->expiryDates.push_back(d);
             times.push_back(volatility_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
                                                               : volatility_->timeFromReference(d));
