@@ -232,7 +232,6 @@
 		<DefaultCurve name="ISIN:DE000A3H2WP2">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
 		<DefaultCurve name="ISIN:IE00BH3SQ895">Default/EUR/ISIN:IE00BH3SQ895</DefaultCurve>
 		<DefaultCurve name="ISIN:IT0005177909">Default/EUR/ISIN:IT0005177909</DefaultCurve>
-		<DefaultCurve name="ISIN:US04542BMG40">Default/USD/ISIN:US04542BMG40</DefaultCurve>
 		<DefaultCurve name="ISIN:US531229AR32">Default/USD/ISIN:US531229AR32</DefaultCurve>
 		<DefaultCurve name="ISIN:US682189AS48">Default/USD/ISIN:US682189AS48</DefaultCurve>
                 <DefaultCurve name="RED:007G93|SNRFOR|USD|XR14">Default/USD/RED:007G93|SNRFOR|USD|XR14</DefaultCurve>
@@ -407,7 +406,6 @@
 		<Security name="ISIN:DE000A3H2WP2">Security/ISIN:DE000A3H2WP2</Security>
 		<Security name="ISIN:IE00BH3SQ895">Security/ISIN:IE00BH3SQ895</Security>
 		<Security name="ISIN:IT0005177909">Security/ISIN:IT0005177909</Security>
-		<Security name="ISIN:US04542BMG40">Security/ISIN:US04542BMG40</Security>
 		<Security name="ISIN:US531229AR32">Security/ISIN:US531229AR32</Security>
 		<Security name="ISIN:US682189AS48">Security/ISIN:US682189AS48</Security>
 		<Security name="ISIN:US912828X703">Security/ISIN:US912828X703</Security>

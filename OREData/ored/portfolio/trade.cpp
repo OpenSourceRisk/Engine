@@ -208,7 +208,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     if (arc.endFixingTotal != Null<Real>())
                         additionalData_["endEquityFixingTotal[" + legID + "]"] = arc.endFixingTotal;
                     if (arc.currentPeriodStartFxFixing != Null<Real>())
-                        additionalData_["startFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
+                        additionalData_["currentPeriodStartFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
                     if (arc.currentPeriodEndFxFixing != Null<Real>())
                         additionalData_["currentPeriodEndFxFixing[" + legID + "]"] = arc.currentPeriodEndFxFixing;
                     if (arc.pastDividends != Null<Real>())
