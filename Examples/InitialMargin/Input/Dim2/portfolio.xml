@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  
+
   <Trade id="Swap_Euribor">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -70,7 +70,8 @@
 	</LegData>
     </SwapData>
   </Trade>
-  
+
+  <!--
   <Trade id="Swap_EUR">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -139,7 +140,8 @@
         </ScheduleData>
 	</LegData>
     </SwapData>
-  </Trade>
+    </Trade>
+    -->
   <!--
   <Trade id="Swap_USD">
     <TradeType>Swap</TradeType>
@@ -211,7 +213,6 @@
     </SwapData>
   </Trade>
   -->
-  <!--
   <Trade id="Swap_SOFR_3M">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -281,7 +282,6 @@
 	</LegData>
     </SwapData>
   </Trade>
--->
   <!--
   <Trade id="FXFWD_EURUSD">
     <TradeType>FxForward</TradeType>
@@ -325,7 +325,6 @@
     </FxOptionData>
   </Trade>
   -->
-
   <!--
   <Trade id="ForwardSwap">
     <TradeType>Swap</TradeType>

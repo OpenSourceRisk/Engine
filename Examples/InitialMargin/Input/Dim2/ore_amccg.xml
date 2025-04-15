@@ -37,7 +37,6 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-
       <Parameter name="amc">Y</Parameter>
       <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
       <Parameter name="amcCg">CubeGeneration</Parameter>

@@ -490,6 +490,19 @@
 	</CDSVolatilities>
 	<DefaultCurves>
 		<DefaultCurve>
+			<CurveId>CPTY_A</CurveId>
+			<CurveDescription>Generic EUR Default Curve</CurveDescription>
+			<Currency>EUR</Currency>
+			<Type>HazardRate</Type>
+			<DiscountCurve>Yield/EUR/EUR-ESTER</DiscountCurve>
+			<DayCounter>A365</DayCounter>
+			<RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/EUR</RecoveryRate>
+			<Quotes>
+				<Quote>HAZARD_RATE/RATE/CPTY_A/SR/EUR/0Y</Quote>
+			</Quotes>
+			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+		</DefaultCurve>
+		<DefaultCurve>
 			<CurveId>ISIN:DE000A3H2WP2</CurveId>
 			<CurveDescription>Delivery Hero Se</CurveDescription>
 			<Currency>EUR</Currency>

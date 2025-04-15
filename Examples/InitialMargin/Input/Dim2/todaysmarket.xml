@@ -158,8 +158,9 @@
 	</CapFloorVolatilities>
         <CDSVolatilities id="default"/>
 	<DefaultCurves id="default">
-		<DefaultCurve name="CPTY_C">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
-                <DefaultCurve name="RED:007G93|SNRFOR|USD|XR14">Default/USD/RED:007G93|SNRFOR|USD|XR14</DefaultCurve>
+	        <DefaultCurve name="CPTY_A">Default/EUR/CPTY_A</DefaultCurve>
+		<!--<DefaultCurve name="CPTY_C">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>-->
+                <!--<DefaultCurve name="RED:007G93|SNRFOR|USD|XR14">Default/USD/RED:007G93|SNRFOR|USD|XR14</DefaultCurve>-->
 	</DefaultCurves>
 	<YYInflationCapFloorVolatilities id="default"/>
 	<ZeroInflationCapFloorVolatilities id="default"/>

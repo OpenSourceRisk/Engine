@@ -39,8 +39,8 @@ doccrif = etree.parse(orecrif)
 oresimm = 'Input/DimValidation/ore_simm.xml'
 docsimm = etree.parse(oresimm)
 
-columns = ["NettingSet", "asofDate", "NPV(Base)"] 
-rowlist = []
+npvColumns = ["NettingSet", "asofDate", "NPV(Base)"] 
+npvRowlist = []
 
 simmColumns = ["Portfolio","AsOfDate", "SimmSide","InitialMargin","Currency"]
 simmRowList = []
@@ -59,26 +59,25 @@ for asof in refDates:
     if os.path.isfile(crifFile):
         os.remove(crifFile)
 
+    # update asof in ore_crif.xml and run ORE
     nodes = doccrif.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
     nodes[0].text = asof
     doccrif.write(orecrif)
-
     print()
     print(orecrif, "updated with asofDate", nodes[0].text)
-
     oreex.print_headline("Run ORE for CRIF on the implied market as of " + asof)
     oreex.run(orecrif)
 
+    # update asof in ore_simm.xml and run ORE
     nodes = docsimm.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
     nodes[0].text = asof
     docsimm.write(oresimm)
-
     print()
     print(oresimm, "updated with asofDate", nodes[0].text)
-
     oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
     oreex.run(oresimm)
 
+    # aggregate NPVs across the selected netting set and append to the npv row list
     value = 0
     if os.path.isfile(npvFile):
         npvData = pd.read_csv(npvFile)
@@ -87,8 +86,9 @@ for asof in refDates:
             npv = float(row['NPV(Base)'])
             if nid == nettingSet:
                 value = value + npv
-        rowlist.append([nid, asof, '{:.6f}'.format(value)])
+        npvRowlist.append([nid, asof, '{:.6f}'.format(value)])
 
+    # pick total SIMM to Call for the selected netting set and append to the simm row list
     if os.path.isfile(simmFile):
         simmData = pd.read_csv(simmFile)
         for index, row in simmData.iterrows():
@@ -101,11 +101,11 @@ for asof in refDates:
             regulation = row['Regulation']
             initialMargin = float(row['InitialMargin'])
             currency = row['Currency']
-            if productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
+            if portfolio == nettingSet and productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
                 simmRowList.append([portfolio, asof, simmSide, '{:.6f}'.format(initialMargin), currency])
                 break
         
-npvData = pd.DataFrame(rowlist, columns=columns)
+npvData = pd.DataFrame(npvRowlist, columns=npvColumns)
 
 print("Undiscounted NPVs from ORE runs using implied markets")
 print(npvData)
@@ -116,6 +116,7 @@ print(numeraireData)
 print("Discounted NPVs from the raw cube:")
 print(cubeData)
 
+# These data frames should match, i.e. one line each per asof
 comparisonData = utilities.npvComparison(npvData, cubeData, numeraireData);
 print(comparisonData)
 

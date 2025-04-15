@@ -13,7 +13,7 @@ Create a virtual environment: <code> python -m venv env1 </code>
 
 Activate the virtual environment
 - on Windows: <code> .\env1\Scripts\activate.bat </code>
-- on macOS or Linux: <code> ./env1/bin/activate </code>
+- on macOS or Linux: <code> source env1/bin/activate </code>
 
 Insall ORE: <code> pip install open-source-risk-engine </code>
 
