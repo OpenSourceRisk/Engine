@@ -260,7 +260,7 @@ void SensitivityAnalysis::generateSensitivities() {
                    const QuantLib::Size samples) {
                     return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
                 },
-                {}, {}, context_);
+                {}, {}, context_, offsetScenario_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
 
