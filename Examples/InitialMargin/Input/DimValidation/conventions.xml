@@ -280,11 +280,24 @@
     <DayCounter>A365</DayCounter>
     <Compounding>Continuous</Compounding>
     <CompoundingFrequency>Daily</CompoundingFrequency>
-    <!--
-	  <TenorCalendar>TARGET</TenorCalendar>
-	  <SpotLag>2</SpotLag>
-	  <SpotCalendar>TARGET</SpotCalendar>
-	  -->
+    <TenorCalendar>NullCalendar</TenorCalendar>
+    <SpotLag>0</SpotLag>
+    <SpotCalendar>NullCalendar</SpotCalendar>
+    <RollConvention>Unadjusted</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+  <Zero>
+    <Id>GBP-ZERO-CONVENTIONS</Id>
+    <TenorBased>false</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+  </Zero>
+  <Zero>
+    <Id>GBP-ZERO-CONVENTIONS-TENOR-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
     <TenorCalendar>NullCalendar</TenorCalendar>
     <SpotLag>0</SpotLag>
     <SpotCalendar>NullCalendar</SpotCalendar>
@@ -303,11 +316,6 @@
     <DayCounter>A365</DayCounter>
     <Compounding>Continuous</Compounding>
     <CompoundingFrequency>Daily</CompoundingFrequency>
-    <!--
-	  <TenorCalendar>US</TenorCalendar>
-	  <SpotLag>2</SpotLag>
-	  <SpotCalendar>US</SpotCalendar>
-	  -->
     <TenorCalendar>NullCalendar</TenorCalendar>
     <SpotLag>0</SpotLag>
     <SpotCalendar>NullCalendar</SpotCalendar>
@@ -394,5 +402,61 @@
     <Id>USD-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
     <Index>USD-LIBOR</Index>
+  </Deposit>
+  <OIS>
+    <Id>GBP-OIS</Id>
+    <SpotLag>0</SpotLag>
+    <Index>GBP-SONIA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>0</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+  <Deposit>
+    <Id>GBP-ON-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-SONIA</Index>
+  </Deposit>
+  <FX>
+    <Id>GBP-USD-FX</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>GBP</SourceCurrency>
+    <TargetCurrency>USD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>UK,US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <Convention>MF</Convention>
+  </FX>
+  <Swap>
+    <Id>GBP-LIBOR-3M-SWAP</Id>
+    <FixedCalendar>UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>GBP-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>GBP-LIBOR-6M-SWAP</Id>
+    <FixedCalendar>UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>GBP-LIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>GBP-SONIA-3M-SWAP</Id>
+    <FixedCalendar>UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>GBP-SONIA-3M</Index>
+  </Swap>
+  <Deposit>
+    <Id>GBP-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-LIBOR</Index>
   </Deposit>
 </Conventions>
