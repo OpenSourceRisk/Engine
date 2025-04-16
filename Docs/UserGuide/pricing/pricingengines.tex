@@ -5208,4 +5208,5 @@ In addition to product specific settings there is also a block with global param
 \item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines 
   file is referenced. Might also be left empty. This is used by some trade constructions to adapt to certain monte carlo
   types. E.g. Pricer would not be attached to coupons which can be computed in AMC without a leg / coupon pricer
+\item StrikeSpread: Defaults to 0.1. If set, overrides the default value used to calculate the strike spread for replication engines.
 \end{itemize}
