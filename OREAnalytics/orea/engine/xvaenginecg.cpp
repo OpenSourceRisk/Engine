@@ -453,12 +453,7 @@ std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, co
 void XvaEngineCG::buildCgPartC() {
     DLOG("XvaEngineCG: add exposure nodes to graph");
 
-    // Add nodes that sum the exposure over trades and add conditional expectations on pf level
-    // Optionally, add conditional expectations on trade level (if we have to populate a legacy npv cube)
     // This constitutes part C of the computation graph spanning "trade m range end ... lastExposureNode"
-    // - pfExposureNodes          :     the conditional expectations on pf level
-    // - tradeExposureNodes       :     the conditional expectations on trade level
-    // - prExposureNodesInflated  :     pfExposureNode times numeraire evaluated at associated sim time
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
