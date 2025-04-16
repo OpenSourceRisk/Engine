@@ -273,12 +273,12 @@ void BondFuture::checkData() {
     vector<string> missingElements;
     if (currency_.empty())
         missingElements.push_back("Currency");
+    if (deliverableGrade_.empty())
+        missingElements.push_back("DeliverableGrade");
 
     // we can deduce lastTrading_/lastDelivery_ given DeliverableGrade/ContractMonth
     // expiryLag_, settlementLag_ covered in method where it is used
     if (lastTrading_.empty() && lastDelivery_.empty()) {
-        if (deliverableGrade_.empty())
-            missingElements.push_back("DeliverableGrade");
         if (contractMonth_.empty())
             missingElements.push_back("ContractMonth");
         if (rootDate_.empty())
@@ -287,6 +287,10 @@ void BondFuture::checkData() {
             missingElements.push_back("ExpiryBasis");
         if (settlementBasis_.empty())
             missingElements.push_back("SettlementBasis");
+        if (expiryLag_.empty())
+            missingElements.push_back("ExpiryLag");
+        if (settlementLag_.empty())
+            missingElements.push_back("SettlementLag");
     }
 
     if (secList_.size() < 1)

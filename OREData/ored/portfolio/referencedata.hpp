@@ -142,7 +142,6 @@ public:
     struct BondFutureData : XMLSerializable {
         std::string currency;
         std::vector<std::string> secList;
-        std::string contractMonth;
         std::string deliverableGrade; // futureType differentiating the underlying
         std::string lastTrading;      // expiry
         std::string lastDelivery;     // settlement date
@@ -150,9 +149,10 @@ public:
         std::string settlement;       // Cash or Physical
         std::string settlementDirty;  // true (dirty) or false (clean)
         // bond future date conventions to derive lastTrading and lastDelivery
+        std::string contractMonth;
         std::string rootDate;        // first, end, nth weekday (e.g. 'Monday,3') taken
-        std::string expiryBasis;     // root, expiry, settle taken
-        std::string settlementBasis; // root, expiry, settle taken
+        std::string expiryBasis;     // ROOT, SETTLEMENT taken
+        std::string settlementBasis; // ROOT, EXPIRY taken
         std::string expiryLag;       // periods taken
         std::string settlementLag;   // periods taken
         void fromXML(XMLNode* node) override;

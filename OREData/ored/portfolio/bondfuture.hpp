@@ -84,35 +84,34 @@ protected:
     double conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity, const Date& futureExpiry);
 
 private:
-    // mandatory first tier information
-    std::string contractName_; // can be used to identify tier 2/3 info
-    std::vector<std::string> secList_;
+    // mandatory information
+    std::string contractName_;
     std::string currency_;
     double contractNotional_;
     std::string longShort_;
 
-    // second tier information - both can be used in conjunction to identify tier 3 info
-    std::string contractMonth_;
-    std::string deliverableGrade_; // futureType differentiating the underlying
-    // bond future date conventions
-    std::string rootDate_;        // first, end, nth weekday (e.g. 'Monday,3') taken
-    std::string expiryBasis_;     // root, expiry, settle taken
-    std::string settlementBasis_; // root, expiry, settle taken
-    std::string expiryLag_;       // periods taken
-    std::string settlementLag_;   // periods taken
-
-    // thirdt tier information
-    std::string lastTrading_;  // expiry
-    std::string lastDelivery_; // settlement date
-
-    BondBuilder::Result ctdUnderlying_;
-    std::string ctdId_;
+    // can be in reference data
+    std::vector<std::string> secList_; // list of DeliveryBasket securities
+    std::string deliverableGrade_;     // futureType differentiating the underlying -> USD conversion factor derivation
+    std::string lastTrading_;          // expiry
+    std::string lastDelivery_;         // settlement date
 
     // flags with fallbacks
     std::string fairPrice_; // indicates whether strike = 0 (false) or settlement price (true)
     bool fairPriceBool_;
     std::string settlement_;      // Cash or Physical
     std::string settlementDirty_; // true (dirty) or false (clean)
+
+    // bond future date conventions to derive lastTrading and lastDelivery
+    std::string contractMonth_;
+    std::string rootDate_;        // first, end, nth weekday (e.g. 'Monday,3') taken
+    std::string expiryBasis_;     // ROOT, SETTLEMENT taken
+    std::string settlementBasis_; // ROOT, EXPIRY taken
+    std::string expiryLag_;       // periods taken
+    std::string settlementLag_;   // periods taken
+
+    BondBuilder::Result ctdUnderlying_;
+    std::string ctdId_;
 };
 
 struct BondFutureBuilder : public BondBuilder {
