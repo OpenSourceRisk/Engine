@@ -1271,17 +1271,20 @@ void XvaEngineCG::calculateDynamicIM() {
                 }
             }
 
-            // debug conditional ir delta vs. model state on time step 1
+            // debug conditional fx delta vs. model state on time step 58
 
-            // if (ccy == 0 && i == 24) {
+            // std::size_t n1 = pfExposureNodesPathwise_[i];
+            // if (ccy == 1 && i == 58) {
             //     std::cout << "args size " << args.size() << std::endl;
             //     RandomVariable tmp(model_->size(), 0.0);
-            //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
-            //         tmp += conditionalIrDelta[ccy][b];
+            //     for (std::size_t b = 0; b < 1/*irDeltaTerms.size()*/; ++b) {
+            //         tmp += conditionalFxDelta[ccy-1];
             //     }
             //     for (std::size_t j = 0; j < model_->size(); ++j) {
-            //         std::cout << j << "," << args[2]->at(j) << "," << tmp[j] << "," << pathIrDelta[0][0][j]  <<
-            //         std::endl;
+            //         std::cout << j << "," << args[2]->at(j) << "," << args[3]->at(j) << "," << args[4]->at(j) << "," << tmp[j]
+            //                   << "," << pathFxDelta[ccy - 1][j] << std::endl;
+            //         // std::cout << j << "," << args[4]->at(j) << "," << values_[n1].at(j) << "," << values_[n0].at(j)
+            //         //           << std::endl;
             //     }
             // }
 
@@ -1330,8 +1333,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
         //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
-        //               << model_->currencies()[ccy + 1] << ",," << expectation(conditionalFxDelta[ccy]).at(0)
-        //               << std::endl;
+        //               << model_->currencies()[ccy + 1] << ",," << conditionalFxDelta[ccy].at(7) << std::endl;
         // }
 
         // for (std::size_t ccy = 0; ccy < conditionalIrVega.size(); ++ccy) {
