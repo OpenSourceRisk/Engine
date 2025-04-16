@@ -201,6 +201,14 @@
     <FixedDayCounter>ACT/360</FixedDayCounter>
     <Index>USD-LIBOR-3M</Index>
   </Swap>
+  <Swap>
+    <Id>USD-SOFR-3M-SWAP</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>USD-SOFR-3M</Index>
+  </Swap>
   <BMABasisSwap>
     <Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
     <Index>USD-LIBOR-3M</Index>
