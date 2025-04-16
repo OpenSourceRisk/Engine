@@ -548,7 +548,6 @@ void XvaEngineCG::buildCgPartC() {
                 tmp.push_back(cg_mult(*g, cg_add(*g, tradeSum), num));
             }
             pfExposureNodesForDynamicIMByParameterGroup_.push_back(tmp);
-            pfExposureNodesForDynamicIM_.push_back(cg_add(*g, tmp));
         }
     }
 
@@ -1103,9 +1102,9 @@ void XvaEngineCG::calculateDynamicIM() {
                 // debug output end
 
                 // if the model parameter is not wanted for the current parameter group, we ignore its contribution
-                // if (parameterGroup.find(ModelCG::ModelParameter(p.type(), p.qualifier())) == parameterGroup.end()) {
-                //     continue;
-                // }
+                if (parameterGroup.find(ModelCG::ModelParameter(p.type(), p.qualifier())) == parameterGroup.end()) {
+                    continue;
+                }
 
                 // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
@@ -1186,9 +1185,10 @@ void XvaEngineCG::calculateDynamicIM() {
 
         } // loop over parameter groups
 
-        std::size_t n = pfExposureNodesForDynamicIM_[i];
-
         // calculate conditional expectations on the aggregated sensis and convert to par if applicable
+
+        // this node is used to determine the regressor nodes and groups when calculating conditional expectations
+        std::size_t n0 = pfExposureNodes_[i];
 
         std::vector<RandomVariable> tmpIrDelta(irDeltaTerms.size(), RandomVariable(model_->size()));
         std::vector<std::vector<RandomVariable>> conditionalIrDelta(
@@ -1207,8 +1207,6 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
-        // we use this node to determine the regressor, which is given as part of the predecessors of this node
-        std::size_t n0 = pfExposureNodes_[i];
 
         for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
 
@@ -1223,7 +1221,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                 args[0] = &pathIrDelta[ccy][b];
-                tmpIrDelta[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                tmpIrDelta[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n0);
             }
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
@@ -1238,7 +1236,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                 args[0] = &pathIrVega[ccy][b];
-                tmpIrVega[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                tmpIrVega[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n0);
             }
 
             for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
@@ -1259,13 +1257,13 @@ void XvaEngineCG::calculateDynamicIM() {
                 // fx delta
 
                 args[0] = &pathFxDelta[ccy - 1];
-                conditionalFxDelta[ccy - 1] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                conditionalFxDelta[ccy - 1] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n0);
 
                 // fx vega (including par conversion)
 
                 for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                     args[0] = &pathFxVega[ccy - 1][b];
-                    tmpFxVega[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n);
+                    tmpFxVega[b] = ops_[RandomVariableOpCode::ConditionalExpectation](args, n0);
                 }
 
                 for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
@@ -1275,11 +1273,6 @@ void XvaEngineCG::calculateDynamicIM() {
                             RandomVariable(model_->size(), fxVegaConverter[ccy - 1].dzerodpar()(z, b) * 1E-2) *
                             tmpFxVega[z];
                     }
-
-                    // multiply with atm vol for further processing in dynamic im model
-
-                    conditionalFxVega[ccy - 1][b] *=
-                        RandomVariable(model_->size(), 1E2 * fxVegaConverter[ccy - 1].baseImpliedVols()[b]);
                 }
             }
 
@@ -1331,6 +1324,38 @@ void XvaEngineCG::calculateDynamicIM() {
         //                   << expectation(conditionalFxVega[ccy][b]).at(0) << std::endl;
         //     }
         // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalIrDelta.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
+        //         std::cout << i << "," << "irDelta," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy] << "," << irDeltaTerms[b] << ","
+        //                   << conditionalIrDelta[ccy][b].at(7) << std::endl;
+        //     }
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalFxDelta.size(); ++ccy) {
+        //     std::cout << i << "," << "fxDelta," << QuantLib::io::iso_date(valDate) << ","
+        //               << model_->currencies()[ccy + 1] << ",," << expectation(conditionalFxDelta[ccy]).at(0)
+        //               << std::endl;
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalIrVega.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
+        //         std::cout << i << "," << "irVega," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy] << "," << irVegaTerms[b] << ","
+        //                   << conditionalIrVega[ccy][b].at(7) << std::endl;
+        //     }
+        // }
+
+        // for (std::size_t ccy = 0; ccy < conditionalFxVega.size(); ++ccy) {
+        //     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
+        //         std::cout << i << "," << "fxVega," << QuantLib::io::iso_date(valDate) << ","
+        //                   << model_->currencies()[ccy + 1] << "," << fxVegaTerms[b] << ","
+        //                   << expectation(conditionalFxVega[ccy][b]).at(7) << std::endl;
+        //     }
+        // }
+
+        // std::cout << i << "," << "npv," << values_[n0].at(7) << std::endl;
 
         // end output for debug
 
