@@ -67,8 +67,13 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date exDate = parseDate(optionData_.exerciseDates().front());
 
+    Real spread = 0.01;
+    if (engineFactory->engineData()->globalParameters().find("StrikeSpread") !=
+        engineFactory->engineData()->globalParameters().end()) {
+        spread = parseReal(engineFactory->engineData()->globalParameters().find("StrikeSpread")->second);
+    }
 
-    Real strikeSpread = strike_ * 0.01; // FIXME, what is a usual spread here, and where should we put it?
+    Real strikeSpread = strike_ * spread; // FIXME, what is a usual spread here, and where should we put it?
     Real strike1 = strike_ - strikeSpread / 2;
     Real strike2 = strike_ + strikeSpread / 2;
     CommodityAveragePriceOption opt1(
@@ -131,6 +136,7 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     }
 
     additionalData_["payoff"] = digitalCashPayoff_;
+    additionalData_["spread"] = spread;
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;
