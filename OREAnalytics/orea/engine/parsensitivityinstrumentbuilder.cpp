@@ -122,7 +122,6 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
     parHelpers_.clear();
     parCaps_.clear();
     parYoYCaps_.clear();
-    auto parConversionExcludeFixings = sensitivityData.parConversionExcludeFixings();
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(conventions != nullptr,
