@@ -177,7 +177,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             } else {
                 if (inverted)
                     fixing = 1.0 / fixing;
-                ALOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
+                LOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
                     knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel);

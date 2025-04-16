@@ -2593,7 +2593,7 @@
                     <PaymentConvention>F</PaymentConvention>
                     <FixedLegData>
                         <Rates>
-                            <Rate>0.01</Rate>
+                            <Rate>0.005</Rate>
                         </Rates>
                     </FixedLegData>
                     <ScheduleData>
@@ -2608,7 +2608,7 @@
                     </ScheduleData>
                 </LegData>
             </IndexCreditDefaultSwapData>
-            <Strike>1.0636537422065</Strike>
+            <Strike>1.0</Strike>
             <StrikeType>Price</StrikeType>
         </IndexCreditDefaultSwapOptionData>
     </Trade>

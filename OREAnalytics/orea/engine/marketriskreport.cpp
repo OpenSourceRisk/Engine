@@ -299,6 +299,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
         // loop over all the trade groups
         tradeGroups_->reset();
         while (ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next()) {
+            runSensiBased = sensiBased_;
             reset(riskGroup);
 
             // Only look at this trade group if there required

@@ -28,7 +28,7 @@
 #include <ored/utilities/indexparser.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 using namespace std;
 using namespace QuantLib;
 using namespace ore::data;
@@ -157,5 +157,5 @@ public:
     }
 };
 
-} // namespace analytics
+} // namespace data
 } // namespace ore

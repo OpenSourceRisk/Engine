@@ -96,7 +96,7 @@ void OISCapFloorHelper::initializeDates() {
         auto cfon2 = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(capFloor_.back());
         QL_REQUIRE(cfon2, "OISCapFloorHelper: Expected the final cashflow on the cap floor instrument to be a "
                           "CappedFlooredOvernightIndexedCoupon");
-        pillarDate_ = latestDate_ = latestRelevantDate_ = cfon2->underlying()->fixingDates().back();
+        pillarDate_ = latestDate_ = latestRelevantDate_ = cfon2->underlying()->fixingDates().front();
     }
 }
 
