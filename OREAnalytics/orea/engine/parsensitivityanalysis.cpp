@@ -166,7 +166,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
     // remove todays fixings from relevant indices for the scope of this method
     struct TodaysFixingsRemover {
-        TodaysFixingsRemover(const std::set<std::string>& names) : today_(Settings::instance().evaluationDate()) {
+        TodaysFixingsRemover(const std::vector<std::string>& names) : today_(Settings::instance().evaluationDate()) {
             Date today = Settings::instance().evaluationDate();
             for (auto const& n : names) {
                 QL_DEPRECATED_DISABLE_WARNING
@@ -195,19 +195,24 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         const Date today_;
         std::set<std::pair<std::string, Real>> savedFixings_;
     };
-    bool containsWildcard = std::any_of(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(),
-                                        [](const std::string& str) { return str == ".*"; });
-    if (!containsWildcard && parConversionExcludeFixings_.size() > 0) {
-        std::transform(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), parConversionExcludeFixings_.begin(),
-                       [](const std::string& x) { return parseIborIndex(x)->name(); });
-        for (const auto& indices : instruments_.removeTodaysFixingIndices_) {
-            auto it = std::find(parConversionExcludeFixings_.begin(), parConversionExcludeFixings_.end(), indices);
-            if (it == parConversionExcludeFixings_.end()) {
-                instruments_.removeTodaysFixingIndices_.erase(indices);
-            }
+
+    std::string combined_pattern;
+    for (const auto& pattern : parConversionExcludeFixings_) {
+        if (!combined_pattern.empty()) {
+            combined_pattern += "|";
         }
-    }   
-    TodaysFixingsRemover fixingRemover(instruments_.removeTodaysFixingIndices_);
+        combined_pattern += pattern;
+    }
+
+    // Case insensitive
+    std::regex regex_pattern(combined_pattern,std::regex_constants::icase);
+    //Filter out elements that match any pattern
+    std::vector<std::string> removeTodaysFixingIndicesRegex;
+    std::copy_if(instruments_.removeTodaysFixingIndices_.begin(), instruments_.removeTodaysFixingIndices_.end(),
+                 std::back_inserter(removeTodaysFixingIndicesRegex),
+                 [&regex_pattern](const std::string& s) { return std::regex_match(s, regex_pattern); });
+
+    TodaysFixingsRemover fixingRemover(removeTodaysFixingIndicesRegex);
 
     // We must have a ShiftScenarioGenerator
     QuantLib::ext::shared_ptr<ScenarioGenerator> simMarketScenGen = simMarket->scenarioGenerator();
