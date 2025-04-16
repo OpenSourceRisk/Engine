@@ -93,7 +93,12 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         simmConfiguration_->weight(CrifRecord::RiskType::FX, std::string("GBP"), boost::none, std::string("USD"));
 
     fxVegaRw_ =
-        simmConfiguration_->weight(CrifRecord::RiskType::FXVol, std::string("GBP"), boost::none, std::string("USD"));
+        simmConfiguration_->weight(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), boost::none, std::string("USD"));
+
+    fxSigma_ =
+        simmConfiguration_->sigma(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), boost::none, std::string("USD"));
+
+    fxHvr_ = simmConfiguration_->historicalVolatilityRatio(CrifRecord::RiskType::FXVol);
 
     fxCorr_ = simmConfiguration_->correlation(CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
                                               CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
@@ -131,6 +136,8 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     // std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
     // std::cout << "fxDeltaRw            = " << fxDeltaRw_ << std::endl;
     // std::cout << "fxVegaRw             = " << fxVegaRw_ << std::endl;
+    // std::cout << "fxSigma              = " << fxSigma_ << std::endl;
+    // std::cout << "fxHvr                = " << fxHvr_ << std::endl;
     // std::cout << "fxCorr               = " << fxCorr_ << std::endl;
     // std::cout << "fxVegaCorr           = \n" << fxVegaCorrelations_ << std::endl;
     // std::cout << "fxCurvatureWeights   = " << fxCurvatureWeights_ << std::endl;
@@ -280,11 +287,11 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         for (std::size_t ccy = 1; ccy < currencies_.size(); ++ccy) {
             for (std::size_t i = 0; i < fxVegaTerms_.size(); ++i) {
-                auto tmp = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][i];
+                auto tmp = RandomVariable(n_, fxVegaRw_ * fxSigma_ * fxHvr_) * fxVega[ccy - 1][i];
                 Kb[ccy - 1] += tmp * tmp;
                 Sb[ccy - 1] += tmp;
                 for (std::size_t j = 0; j < i; ++j) {
-                    auto tmp2 = RandomVariable(n_, fxVegaRw_) * fxVega[ccy - 1][j];
+                    auto tmp2 = RandomVariable(n_, fxVegaRw_ * fxSigma_ * fxHvr_) * fxVega[ccy - 1][j];
                     Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
@@ -314,13 +321,13 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         for (std::size_t ccy = 1; ccy < currencies_.size(); ++ccy) {
             for (std::size_t i = 0; i < fxVegaTerms_.size(); ++i) {
-                auto tmp = RandomVariable(n_, fxCurvatureWeights_[i]) * fxVega[ccy - 1][i];
+                auto tmp = RandomVariable(n_, fxCurvatureWeights_[i] * fxSigma_ * fxHvr_) * fxVega[ccy - 1][i];
                 Kb[ccy - 1] += tmp * tmp;
                 Sb[ccy - 1] += tmp;
                 S += tmp;
                 Sabs += abs(tmp);
                 for (std::size_t j = 0; j < i; ++j) {
-                    auto tmp2 = RandomVariable(n_, fxCurvatureWeights_[j]) * fxVega[ccy - 1][j];
+                    auto tmp2 = RandomVariable(n_, fxCurvatureWeights_[j] * fxSigma_ * fxHvr_) * fxVega[ccy - 1][j];
                     Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
@@ -357,6 +364,10 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
     //           << expectation(curvatureMarginIr).at(0) << "," << expectation(imFx).at(0) << ","
     //           << expectation(deltaMarginFx).at(0) << "," << expectation(vegaMarginFx).at(0) << ","
     //           << expectation(curvatureMarginFx).at(0) << std::endl;
+
+    // std::cout << imProductRatesFx.at(7) << "," << imIr.at(7) << "," << deltaMarginIr.at(7) << "," << vegaMarginIr.at(7)
+    //           << "," << curvatureMarginIr.at(7) << "," << imFx.at(7) << "," << deltaMarginFx.at(7) << ","
+    //           << vegaMarginFx.at(7) << "," << curvatureMarginFx.at(7) << std::endl;
 
     // std::cout << "SIMM_RatesFX         : " << expectation(imProductRatesFx).at(0) << std::endl;
     // std::cout << "  SIMM_Rates         : " << expectation(imIr).at(0) << std::endl;
