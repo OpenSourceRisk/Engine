@@ -19,6 +19,9 @@ print("+-----------------------------------------------------+")
 filterSample = 0
 nettingSet = "CPTY_A"
 
+asof0 = utilities.getAsOfDate("Input/Dim2/ore.xml")
+print("AsOfDate:", asof0)
+
 # Number of samples specified in the simulation.xml
 samples = utilities.getSamples('Input/Dim2/simulation.xml')
 sampleRange = list(range(1, samples + 1))
@@ -33,7 +36,7 @@ oreex.run("Input/Dim2/ore.xml")
 
 simmFile = "Output/DimValidation/simm.csv"
 simmCubeFile = "Output/DimValidation/simm_cube.csv"
-simmColumns = ["Portfolio","AsOfDate", "SimmSide","InitialMargin","Currency","Sample"]
+simmColumns = ["AsOfDate","Time","InitialMargin","Currency","SimmSide","Portfolio","Sample"]
 
 oresimm = 'Input/DimValidation/ore_simm.xml'
 docsimm = etree.parse(oresimm)
@@ -54,6 +57,8 @@ for s in sampleRange:
     simmRowList = []
 
     for asof in refDates:
+
+        time = utilities.getTimeDifference(asof0, asof) 
 
         # delete output file
         if os.path.isfile(simmFile):
@@ -81,22 +86,28 @@ for s in sampleRange:
                 initialMargin = float(row['InitialMargin'])
                 currency = row['Currency']
                 if portfolio == nettingSet and productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
-                    simmRowList.append([portfolio, asof, simmSide, '{:.6f}'.format(initialMargin), currency, s])
+                    simmRowList.append([asof, '{:.4f}'.format(time), '{:.6f}'.format(initialMargin), currency, simmSide, portfolio, s])
                     break
         
-            simmData = pd.DataFrame(simmRowList, columns=simmColumns)
-            #print(simmData)
+    simmData = pd.DataFrame(simmRowList, columns=simmColumns)
+    #print(simmData)
 
-            simmData.to_csv(simmResultFile, sep=',')
+    simmData.to_csv(simmResultFile, sep=',')
 
-            simmData.to_csv(simmCubeFile, sep=',', mode='a', header=not os.path.exists(simmCubeFile))
+    simmData.to_csv(simmCubeFile, sep=',', mode='a', header=not os.path.exists(simmCubeFile), index=False)
             
         
+simmAvgFile = "Output/DimValidation/simm_evolution_avg.csv"
+utilities.expectedSimmEvolution("Output/DimValidation/simm_cube.csv", simmAvgFile)
+
 oreex.setup_plot("simm_evolution")
-oreex.plot("DimValidation/simm_evolution_1.csv", 0, 4, 'b', "Sample 1")
-oreex.plot("DimValidation/simm_evolution_2.csv", 0, 4, 'r', "Sample 2")
-oreex.plot("DimValidation/simm_evolution_3.csv", 0, 4, 'g', "Sample 3")
-oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time Steps")
+oreex.plot("DimValidation/simm_evolution_1.csv", 2, 3, 'r', "Sample 1")
+oreex.plot("DimValidation/simm_evolution_2.csv", 2, 3, 'g', "Sample 2")
+oreex.plot("DimValidation/simm_evolution_3.csv", 2, 3, 'b', "Sample 3")
+oreex.plot("DimValidation/simm_evolution_4.csv", 2, 3, 'y', "Sample 4")
+oreex.plot("DimValidation/simm_evolution_5.csv", 2, 3, 'm', "Sample 5")
+oreex.plot("DimValidation/simm_evolution_avg.csv", 1, 5, 'black', "Average")
+oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time")
 oreex.save_plot_to_file()
 
 #oreex.print_headline("Run ORE for Dynamic SIMM with AMC/CG")

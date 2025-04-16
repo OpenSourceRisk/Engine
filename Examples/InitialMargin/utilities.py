@@ -4,6 +4,8 @@ import os
 import pandas as pd
 import numpy as np
 import csv
+import datetime
+from dateutil import parser
 from lxml import etree as et
 
 def getSamples(simulationXml):
@@ -12,6 +14,20 @@ def getSamples(simulationXml):
     samples = int(root.find("Parameters/Samples").text.replace(' ', ''))
     return samples
     
+def getAsOfDate(oreXml):
+    doc = et.parse(oreXml)
+    nodes = doc.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    asof = nodes[0].text
+    return asof
+
+def getTimeDifference(fromDateString, toDateString):   
+    d0 = parser.parse(fromDateString) 
+    d1 = parser.parse(toDateString) 
+    #print("d0 =", d0)
+    #print("d1 =", d1)
+    delta = d1 - d0
+    delta_fraction = delta.days / 365.25
+    return delta_fraction
 
 def scenarioToMarket(simulationXml, scenarioFile, filterSample, outputDir):
 
@@ -294,3 +310,33 @@ def npvComparison(undiscounted, discounted, numeraires):
     comparisonData = pd.DataFrame(rowlist, columns=columns)
 
     return comparisonData
+
+def expectedSimmEvolution(simmCubeFile, outputFile):
+    print("read simm cube file:", simmCubeFile)
+    data = pd.read_csv(simmCubeFile)
+
+    samples = data["Sample"].unique()
+    
+    print ("number of samples:", len(samples))
+    print ("unique samples:", samples)
+    
+    print("add dataframe for sample", 0)
+    df = data[data["Sample"] == samples[0]]    
+    df = df.drop("Sample", axis=1)
+    df = df.set_index(["AsOfDate","Time","Currency","SimmSide","Portfolio"])
+    #print(df)
+    
+    for i in range(1,len(samples)):
+        print("add dataframe for sample", i)
+        df2 = data[data["Sample"] == samples[i]]
+        df2 = df2.drop("Sample", axis=1)
+        df2 = df2.set_index(["AsOfDate","Time","Currency","SimmSide","Portfolio"])
+        df = df + df2
+        #print(df)
+    
+    df["InitialMargin"] = df["InitialMargin"] / len(samples)
+
+    #print()
+    #print(df)
+
+    df.to_csv(outputFile, sep=',')
