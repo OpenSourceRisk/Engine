@@ -331,7 +331,10 @@ class OreExample(object):
     def run(self, xml):
         if not self.dry:
             if(self.use_python):
-                res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+                if(os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py"))):
+                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+                elif(os.path.isfile(os.path.isfile(os.pardir, "..", "ore_wrapper.py"))):
+                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml])
             else:
                 res = subprocess.call([self.ore_exe, xml])
             if res != 0:
