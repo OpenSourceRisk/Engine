@@ -6,6 +6,13 @@ import numpy as np
 import csv
 from lxml import etree as et
 
+def getSamples(simulationXml):
+    tree = et.parse(simulationXml)
+    root = tree.getroot()
+    samples = int(root.find("Parameters/Samples").text.replace(' ', ''))
+    return samples
+    
+
 def scenarioToMarket(simulationXml, scenarioFile, filterSample, outputDir):
 
     ###############################################################################################
