@@ -354,6 +354,7 @@ This directory demonstrates the following collection of market risk analytics:
 \item parametric VaR: {\tt run\_parametricvar.py}
 \item Stress testing in the ``raw'' domain: {\tt run\_stress.py}
 \item Stress testing in the ``par'' domain: {\tt run\_parstress.py}
+\item Stressed Sensitivity analysis: {\tt python run\_sensistress.py}
 \item Historical Simulation VaR: {\tt run\_histsimvar.py}
 \item Simple Market Risk Capital (SMRC): {\tt run\_smrc.py}
 \item P\&L and P\&L Explanation: {\tt run\_pnlexplain.py}
@@ -569,6 +570,15 @@ manipulate the market data input into ORE and re-run the entire ORE process mult
 This example ({\tt python run\_parstress.py}) demonstrates the extended
 stress testing framework that operates in the ``par'' rate domain in a configurable way i.e without
 the user's manipulation of the input market data.
+
+\subsubsection{Stressed Sensitivity Analysis}
+\label{example:marketrisk_sensistress}
+
+This example ({\tt python run\_sensistress.py}) demonstrates the stressed sensitivity analysis. The new analytic type \emph{SENSITIVITY\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain.
+The Stresstest scenarios are given in the same input format as for the regular stresstest.
+
+The stressed sensitivity analytic replaces the todaysMarket with a SimulationMarket during the sensitivity calculation. For some risk factors the simulationMarket behaves  different as the todaysMarket.
+Depending on the simulation and stress scenario settings it could use different tenors when building curves  or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the stressed sensitivity run.
 
 \subsubsection{Historical Simulation VaR}
 \label{example:marketrisk_histsim}
