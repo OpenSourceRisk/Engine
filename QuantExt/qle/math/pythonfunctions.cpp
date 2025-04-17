@@ -26,11 +26,11 @@ namespace QuantExt {
 #ifdef ORE_PYTHON_INTEGRATION
 
 PyObject* toPythonList(const std::vector<const RandomVariable*>& x) {
-    PyObject* x0 = PyList_New(x.size());
-    for (std::size_t k = 0; k < x.size(); ++k) {
-        PyObject* x1 = PyList_New(x[k]->size());
-        for (std::size_t i = 0; i < x[k]->size(); ++i) {
-            PyObject* d = PyFloat_FromDouble(x[k]->operator[](i));
+    PyObject* x0 = PyList_New(x.front()->size());
+    for (std::size_t k = 0; k < x.front()->size(); ++k) {
+        PyObject* x1 = PyList_New(x.size());
+        for (std::size_t i = 0; i < x.size(); ++i) {
+            PyObject* d = PyFloat_FromDouble(x[i]->operator[](k));
             PyList_SET_ITEM(x1, i, d);
         }
         PyList_SET_ITEM(x0, k, x1);
@@ -74,11 +74,13 @@ PythonFunctions::~PythonFunctions() {
 RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
                                                        const std::vector<const RandomVariable*>& regressor,
                                                        const Filter& filter) {
+
     QL_REQUIRE(initialized_, "PythonFunctions::conditionalExpectation(): not initialized.");
     QL_REQUIRE(!filter.initialised(), "PythonFunctions::conditionalExpectation() does not support non-empty filter");
+    QL_REQUIRE(!regressor.empty(), "PythonFunctions::conditionalExpectation(): empty regressor not allowed.");
 
-    PyObject* xl = toPythonList({&r});
-    PyObject* yl = toPythonList(regressor);
+    PyObject* xl = toPythonList(regressor);
+    PyObject* yl = toPythonList({&r});
 
     PyObject* pArgs = PyTuple_New(2);
     PyTuple_SetItem(pArgs, 0, xl);
@@ -86,14 +88,22 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
 
     PyObject* result = PyObject_CallObject(pConditionalExpectation_, pArgs);
 
-    std::size_t n = PyList_Size(result);
-    RandomVariable tmp(n);
+    RandomVariable tmp;
 
-    for (std::size_t i = 0; i < n; ++i) {
-        tmp.set(i, PyFloat_AsDouble(PyList_GET_ITEM(PyList_GET_ITEM(result, i), 0)));
+    if (result != nullptr && PyList_Check(result)) {
+        std::size_t n = PyList_Size(result);
+        tmp = RandomVariable(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            tmp.set(i, PyFloat_AsDouble(PyList_GET_ITEM(PyList_GET_ITEM(result, i), 0)));
+        }
     }
 
     Py_DECREF(pArgs);
+
+    if (PyErr_Occurred()) {
+        std::cerr << "PythonFunctions::conditionalExpectation(): an error occured." << std::endl;
+        PyErr_Print();
+    }
 
     return tmp;
 }
