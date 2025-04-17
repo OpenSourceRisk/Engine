@@ -21,6 +21,8 @@
 
 #include <ql/errors.hpp>
 
+#include <iostream>
+
 namespace QuantExt {
 
 #ifdef ORE_PYTHON_INTEGRATION
