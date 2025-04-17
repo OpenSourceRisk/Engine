@@ -94,7 +94,7 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
         std::size_t n = PyList_Size(result);
         tmp = RandomVariable(n);
         for (std::size_t i = 0; i < n; ++i) {
-            tmp.set(i, PyFloat_AsDouble(PyList_GET_ITEM(PyList_GET_ITEM(result, i), 0)));
+            tmp.set(i, PyFloat_AsDouble(PyList_GET_ITEM(result, i)));
         }
     }
 
