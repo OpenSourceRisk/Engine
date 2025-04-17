@@ -103,7 +103,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const bool tradeLevelBreakDown, const bool useRedBlocks, const bool useExternalComputeDevice,
                          const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
-                         const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
+                         const bool usePythonIntegration, const bool continueOnCalibrationError,
+                         const bool continueOnError, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -114,8 +115,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       useExternalComputeDevice_(useExternalComputeDevice),
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
-      externalComputeDevice_(externalComputeDevice), continueOnCalibrationError_(continueOnCalibrationError),
-      continueOnError_(continueOnError), context_(context) {}
+      externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
+      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
@@ -663,9 +664,9 @@ void XvaEngineCG::doForwardEvaluation() {
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
         // todo set regression variance cutoff
-        ops_ =
-            getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
-                                 (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, Null<Real>(), pfRegressorPosGroups_);
+        ops_ = getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
+                                    (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, Null<Real>(),
+                                    pfRegressorPosGroups_, usePythonIntegration_);
         grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     }
 
