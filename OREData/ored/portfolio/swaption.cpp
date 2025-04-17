@@ -421,7 +421,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps;
     
-    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy");
+    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, false);
 
     if(calibrationStrategy == "Advanced") 
     {
