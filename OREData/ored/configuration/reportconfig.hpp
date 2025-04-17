@@ -43,7 +43,7 @@ public:
                  const QuantLib::ext::optional<std::vector<Period>>& expiries,
                  const QuantLib::ext::optional<std::vector<Date>>& pillarDates,
                  const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors,
-                 const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<FutureContinuationExpiry>>>& continuationExpiries)
+                 const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>>& continuationExpiries)
         : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid),
           reportOnStrikeGrid_(reportOnStrikeGrid), reportOnStrikeSpreadGrid_(reportOnStrikeSpreadGrid), deltas_(deltas),
           moneyness_(moneyness), strikes_(strikes), strikeSpreads_(strikeSpreads), expiries_(expiries),
@@ -60,7 +60,7 @@ public:
     const QuantLib::ext::optional<std::vector<Period>>& expiries() const { return expiries_; }
     const QuantLib::ext::optional<std::vector<Date>>& pillarDates() const { return pillarDates_; }
     const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
-    const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<FutureContinuationExpiry>>>& continuationExpiries() const { return continuationExpiries_; }
+    const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>>& continuationExpiries() const { return continuationExpiries_; }
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
@@ -77,7 +77,7 @@ private:
     QuantLib::ext::optional<std::vector<Period>> expiries_;
     QuantLib::ext::optional<std::vector<Date>> pillarDates_;
     QuantLib::ext::optional<std::vector<Period>> underlyingTenors_;
-    QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<FutureContinuationExpiry>>> continuationExpiries_;
+    QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>> continuationExpiries_;
 };
 
 ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig);

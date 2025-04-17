@@ -1796,7 +1796,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                                                 const CurveConfigurations& curveConfigs,
                                                 const CommodityVolatilityConfig& config) {
     DLOG("CommodityVolCurve: building volatility calibration info");
-    try{
+    try {
         ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigCommVols(), config.reportConfig());
         bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
         bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
@@ -1805,13 +1805,14 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
         std::vector<Date> expiryDates;
         if (rc.continuationExpiries() && !rc.continuationExpiries()->empty()) {
             DLOG("Build calibration report time grid from continuation expiries")
-            for (const auto& expiry : *rc.continuationExpiries()){
-                expiryDates.push_back(getExpiry(asof, expiry, config.futureConventionsId(), config.optionExpiryRollDays()));
+            for (const auto& expiry : *rc.continuationExpiries()) {
+                expiryDates.push_back(
+                    getExpiry(asof, expiry, config.futureConventionsId(), config.optionExpiryRollDays()));
             }
         } else if (rc.expiries()) {
             DLOG("Build calibration report time grid from periods")
             std::vector<Period> expiries = *rc.expiries();
-            for(const auto& p : expiries){
+            for (const auto& p : expiries) {
                 expiryDates.push_back(volatility_->optionDateFromTenor(p));
             }
         }
@@ -1849,10 +1850,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         if (reportOnDeltaGrid) {
             info->deltas = deltas;
-            info->deltaCallPrices =
-                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            info->deltaPutPrices =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaCallPrices = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaPutPrices = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridProb = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1881,8 +1880,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 Real t = times[i];
                 at = atmType;
                 dt = deltaType;
-                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike (as in equities)
-                // from delta conversions: we use fwd delta always and ATM DNS
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // (as in equities) from delta conversions: we use fwd delta always and ATM DNS
                 if (t > maxTime) {
                     at = DeltaVolQuote::AtmDeltaNeutral;
                     dt = DeltaVolQuote::Fwd;
@@ -1893,8 +1892,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                     try {
                         Real strike;
                         if (d.isAtm()) {
-                            strike =
-                                QuantExt::getAtmStrike(dt, at, pts_->price(asof,true), yts_->discount(t), pyts->discount(t), volatility_, t);
+                            strike = QuantExt::getAtmStrike(dt, at, pts_->price(asof, true), yts_->discount(t),
+                                                            pyts->discount(t), volatility_, t);
                         } else if (d.isCall()) {
                             strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof, true),
                                                                   yts_->discount(t), pyts->discount(t), volatility_, t);
@@ -1906,9 +1905,11 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
 
                         if (d.isPut()) {
-                            info->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaPutPrices[i][j] =
+                                blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
                         } else {
-                            info->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaCallPrices[i][j] =
+                                blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
                         }
 
                         info->deltaGridStrikes[i][j] = strike;
@@ -2000,8 +2001,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
             }
         }
     calibrationInfo_ = info;
-    }
-    catch (std::exception& e){
+    } catch (std::exception& e) {
         QL_FAIL("CommodityVolCurve: calibration info building failed: " << e.what());
     } catch (...) {
         QL_FAIL("CommodityVolCurve:  calibration info building failed: unknown error");

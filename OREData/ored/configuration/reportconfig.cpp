@@ -95,12 +95,7 @@ void ReportConfig::fromXML(XMLNode* node) {
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "ContinuationExpiry")) {
-        auto parseContinuationExpiry = [](const std::string& str) {
-            auto expiry = ext::make_shared<FutureContinuationExpiry>();
-            expiry->fromString(str);
-            return expiry;
-        };
-        continuationExpiries_ = parseListOfValues<QuantLib::ext::shared_ptr<FutureContinuationExpiry>>(XMLUtils::getNodeValue(tmp), parseContinuationExpiry);
+        continuationExpiries_ = parseListOfValues<QuantLib::ext::shared_ptr<Expiry>>(XMLUtils::getNodeValue(tmp), &parseExpiry);
     } else {
         continuationExpiries_ = ext::nullopt;
     }
@@ -147,7 +142,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     std::vector<Period> expiries;
     std::vector<Date> pillarDates;
     std::vector<Period> underlyingTenors;
-    std::vector<QuantLib::ext::shared_ptr<FutureContinuationExpiry>> continuationExpiries;
+    std::vector<QuantLib::ext::shared_ptr<Expiry>> continuationExpiries;
 
     if (localConfig.reportOnDeltaGrid())
         reportOnDeltaGrid = *localConfig.reportOnDeltaGrid();
