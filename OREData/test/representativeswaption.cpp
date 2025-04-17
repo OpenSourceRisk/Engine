@@ -104,6 +104,52 @@ BOOST_AUTO_TEST_CASE(testStandardUnderlying) {
     }
 }
 
+void printSwap(const boost::shared_ptr<ore::data::FixedVsFloatingSwap>& swap) {
+    std::cout << "Start Date: " << swap->startDate() << std::endl;
+    std::cout << "Maturity Date: " << swap->maturityDate() << std::endl;
+
+    std::cout << "\n--- Fixed Leg Details ---\n";
+    const auto& fixedLeg = swap->fixedLeg();
+    for (Size i = 0; i < fixedLeg.size(); ++i) {
+        auto cf = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(fixedLeg[i]);
+        if (cf) {
+            std::cout //<< "Payment Date: " << cf->date()
+                      << ", Accrual Start: " << cf->accrualStartDate()
+                      << ", Accrual End:   " << cf->accrualEndDate()
+                      << ", Rate: " << cf->rate()
+                      //<< ", Accrual: " << cf->accrualPeriod()
+                      //<< ", Amount: " << cf->amount()
+                      //<< ", DayCount: " << cf->dayCounter().name()
+                      << std::endl;
+        } else {
+            std::cout << "Non-fixed coupon or cashflow at index " << i << std::endl;
+        }
+    }
+    
+    std::cout << "\n--- Floating Leg Details ---\n";
+    const auto& floatLeg = swap->floatingLeg();
+    for (Size i = 0; i < floatLeg.size(); ++i) {
+        auto cf = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(floatLeg[i]);
+        if (cf) {
+            std::cout << "Payment Date: " << cf->date()
+                      << ", Accrual Start: " << cf->accrualStartDate()
+                      << ", Accrual End: " << cf->accrualEndDate()
+                      << ", Fixing Date: " << cf->fixingDate()
+                      << ", Index Rate: " << cf->indexFixing()
+                      << ", Accrual: " << cf->accrualPeriod()
+                      << ", Amount: " << cf->amount()
+                      << ", DayCount:      " << cf->dayCounter().name()
+                      << ", Index Fixing:  " << cf->indexFixing()                   
+                      << ", Accrual:       " << cf->accrualPeriod()
+                      << ", Amount:        " << cf->amount()
+                      << std::endl;
+        } else {
+            std::cout << "Non-floating coupon or cashflow at index " << i << std::endl;
+        }
+    }
+
+}
+
 namespace {
 void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real errorTol,
              const std::vector<Real> cachedSimResults = {}) {
@@ -159,7 +205,9 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Real npv = 0.0;
         auto w = matcher.representativeSwaption(evalDates[i],
                                                 RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise);
+
         if (w) {
+            printSwap(w->underlying());
             w->setPricingEngine(blackEngine);
             npv = w->NPV();
         }
