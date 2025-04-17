@@ -75,6 +75,7 @@ public:
         LogNaturalCubic,
         LogFinancialCubic,
         LogCubicSpline,
+        MonotonicLogCubicSpline,
         Hermite,
         CubicSpline,
         DefaultLogMixedLinearCubic,
