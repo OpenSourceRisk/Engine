@@ -46,7 +46,7 @@
       <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">false</Parameter>
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
       <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
-      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade</Parameter>
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade,FxForward</Parameter>
       <Parameter name="simulationConfigFile">simulation_amccg.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
@@ -57,6 +57,8 @@
       <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <!-- whether to use python integration (conditional expectation calculation) -->
+      <Parameter name="xvaCgUsePythonIntegration">true</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
       <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->
