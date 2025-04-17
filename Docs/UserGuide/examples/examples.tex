@@ -574,7 +574,7 @@ the user's manipulation of the input market data.
 \subsubsection{Stressed Sensitivity Analysis}
 \label{example:marketrisk_sensistress}
 
-This example ({\tt python run\_sensistress.py}) demonstrates the stressed sensitivity analysis. The new analytic type \emph{SENSITIVITY\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain.
+This example ({\tt python run\_sensistress.py}) demonstrates the stressed sensitivity analysis. The new analytic type \emph{SENSITIVITY\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain (except COMM assets class, which currently supports only Zero domain).
 The Stresstest scenarios are given in the same input format as for the regular stresstest.
 
 The stressed sensitivity analytic replaces the todaysMarket with a SimulationMarket during the sensitivity calculation. For some risk factors the simulationMarket behaves  different as the todaysMarket.
