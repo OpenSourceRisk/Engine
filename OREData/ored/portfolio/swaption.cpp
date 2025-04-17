@@ -431,14 +431,15 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
     
+    auto para = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, true);
+    
     //if(builderType.find("NonStandard") != std::string::npos) // "NonStandard" has been found //TODO switch on
     if(true) //TODO remove
     {
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
-        Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);
-
+        Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
         std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
             buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
     }
@@ -463,6 +464,52 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building Swaption done");
 }
 
+void printSwapDetails(const boost::shared_ptr<ore::data::FixedVsFloatingSwap>& swap) {
+    std::cout << "Start Date: " << swap->startDate() << std::endl;
+    std::cout << "Maturity Date: " << swap->maturityDate() << std::endl;
+
+    std::cout << "\n--- Fixed Leg Details ---\n";
+    const auto& fixedLeg = swap->fixedLeg();
+    for (Size i = 0; i < fixedLeg.size(); ++i) {
+        auto cf = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(fixedLeg[i]);
+        if (cf) {
+            std::cout << "Payment Date: " << cf->date()
+                      << ", Accrual Start: " << cf->accrualStartDate()
+                      << ", Accrual End:   " << cf->accrualEndDate()
+                      << ", Rate: " << cf->rate()
+                      << ", Accrual: " << cf->accrualPeriod()
+                      << ", Amount: " << cf->amount()
+                      << ", DayCount: " << cf->dayCounter().name()
+                      << std::endl;
+        } else {
+            std::cout << "Non-fixed coupon or cashflow at index " << i << std::endl;
+        }
+    }
+    
+    std::cout << "\n--- Floating Leg Details ---\n";
+    const auto& floatLeg = swap->floatingLeg();
+    for (Size i = 0; i < floatLeg.size(); ++i) {
+        auto cf = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(floatLeg[i]);
+        if (cf) {
+            std::cout << "Payment Date: " << cf->date()
+                      << ", Accrual Start: " << cf->accrualStartDate()
+                      << ", Accrual End: " << cf->accrualEndDate()
+                      << ", Fixing Date: " << cf->fixingDate()
+                      << ", Index Rate: " << cf->indexFixing()
+                      << ", Accrual: " << cf->accrualPeriod()
+                      << ", Amount: " << cf->amount()
+                      << ", DayCount:      " << cf->dayCounter().name()
+                      << ", Index Fixing:  " << cf->indexFixing()                   
+                      << ", Accrual:       " << cf->accrualPeriod()
+                      << ", Amount:        " << cf->amount()
+                      << std::endl;
+        } else {
+            std::cout << "Non-floating coupon or cashflow at index " << i << std::endl;
+        }
+    }
+
+}
+
 std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
     const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve, const std::vector<Date>& exerciseDates) {
     std::vector<QuantLib::ext::shared_ptr<Instrument>> swaps;
@@ -475,7 +522,7 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
 
-        /*for (Size j = 0; j < legs.size(); ++j) {
+        /*for (Size j = 0; j < legs.size(); ++j) { //TODO erase
             
             // Alle vergangenen Coupons wegwerfen, TODO noch nötig? Macht der Matcher das nicht alleine?
             auto it = std::lower_bound(legs[j].begin(), legs[j].end(), ed,
@@ -491,10 +538,12 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
             legs[j].erase(legs[j].begin(), it);
         }*/
 
-        QuantExt::RepresentativeSwaptionMatcher matcher(legs, payer, swapIndex.currentLink(), true, discountCurve, 0.01);
+        QuantExt::RepresentativeSwaptionMatcher matcher(legs, payer, swapIndex.currentLink(), true, discountCurve, 0.00);
         auto criterion=QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise;
         auto newSwaption = matcher.representativeSwaption(ed, criterion); 
-        auto newSwap = newSwaption->underlying();    
+        auto newSwap = newSwaption->underlying();  
+        
+        printSwapDetails(newSwap);
 
         const QuantLib::Schedule& fixedSchedule = newSwap->fixedSchedule();
         std::cout << "Start: " << fixedSchedule.startDate() << std::endl;
@@ -503,14 +552,18 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         QuantLib::Real strike = newSwap->fixedRate();
         std::cout << "Strike: " << strike << std::endl;
 
-        for (int i=0; i<6; ++i){
-            QuantLib::Real notional = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[i])->nominal();
-            std::cout << "Notional Fixed: " << notional << std::endl;
+        if( boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[0]) ){
+            for (int k=0; k<newSwap->leg(0).size(); ++k){
+                QuantLib::Real notional = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[k])->nominal();
+                std::cout << "Notional Fixed: " << notional << std::endl;
+            }
         }
 
-        for (int i=0; i<6; ++i){
-            QuantLib::Real notional2 = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[i])->nominal();
-            std::cout << "Notional Floating: " << notional2 << std::endl;
+        if( boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[0]) ){
+            for (int k=0; k<newSwap->leg(1).size(); ++k){
+                QuantLib::Real notional2 = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[k])->nominal();
+                std::cout << "Notional Floating: " << notional2 << std::endl;
+            }
         }
 
         std::cout << std::endl;
