@@ -52,6 +52,7 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "SensitivityStressAnalytic::run: No portfolio loaded.");
+    QL_REQUIRE((inputs_->parSensi() != true), "SensitivityStressAnalytic::run: Sensitivity analysis under stressed scenario is currently supported only in zero domain.");
     
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
