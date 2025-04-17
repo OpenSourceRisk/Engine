@@ -28,6 +28,7 @@
 
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -196,22 +197,15 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         std::set<std::pair<std::string, Real>> savedFixings_;
     };
 
-    std::string combined_pattern;
-    for (const auto& pattern : parConversionExcludeFixings_) {
-        if (!combined_pattern.empty()) {
-            combined_pattern += "|";
-        }
-        combined_pattern += pattern;
-    }
-
     // Case insensitive
-    std::regex regex_pattern(combined_pattern,std::regex_constants::icase);
+    std::regex regex_pattern(parConversionExcludeFixings_, std::regex_constants::icase);
     //Filter out elements that match any pattern
     std::vector<std::string> removeTodaysFixingIndicesRegex;
     std::copy_if(instruments_.removeTodaysFixingIndices_.begin(), instruments_.removeTodaysFixingIndices_.end(),
-                 std::back_inserter(removeTodaysFixingIndicesRegex),
-                 [&regex_pattern](const std::string& s) { return std::regex_match(s, regex_pattern); });
-
+                 std::back_inserter(removeTodaysFixingIndicesRegex), [&regex_pattern](const std::string& s) {
+                     return std::regex_match(IndexNameTranslator::instance().oreName(s), regex_pattern);
+                 });
+    
     TodaysFixingsRemover fixingRemover(removeTodaysFixingIndicesRegex);
 
     // We must have a ShiftScenarioGenerator

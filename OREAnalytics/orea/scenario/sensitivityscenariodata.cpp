@@ -209,8 +209,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 	    parConversionExcludes_.insert(parseRiskFactorKeyType(types[i]));
     }
 
-    vector<string> parSensiRemoveFixingXml = XMLUtils::getChildrenValuesAsStrings(node, "ParSensiRemoveFixing", false);
-    if (parSensiRemoveFixingXml.size()>0) {
+    std::string parSensiRemoveFixingXml = XMLUtils::getChildValue(node, "ParSensiRemoveFixing", false);
+    if (!parSensiRemoveFixingXml.empty()) {
         parConversionExcludeFixings_ = parSensiRemoveFixingXml;
     }
 
@@ -676,8 +676,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 	XMLUtils::addChildren(doc, root, "ParConversionExcludes", "Type", types);
     }
 
-    if (parConversionExcludeFixings_.size() > 0) {
-        XMLUtils::addGenericChildAsList(doc, root, "ParSensiRemoveFixing", parConversionExcludeFixings_);
+    if (!parConversionExcludeFixings_.empty()) {
+        XMLUtils::addChild(doc, root, "ParSensiRemoveFixing", parConversionExcludeFixings_);
     }
 
     if (!discountCurveShiftData_.empty()) {

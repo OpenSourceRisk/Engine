@@ -198,7 +198,7 @@ public:
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
 
     const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
-    const vector<string>& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
+    const std::string& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
     //@}
 
     //! \name Setters
@@ -298,7 +298,7 @@ public:
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
-    void setParConversionExcludeFixings(const vector<string> b) { parConversionExcludeFixings_ = b; }
+    void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
 
     //@}
 
@@ -362,7 +362,7 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
-    vector<string> parConversionExcludeFixings_;
+    std::string parConversionExcludeFixings_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
