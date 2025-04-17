@@ -30,6 +30,7 @@ target_link_libraries(ore ${ORED_LIB_NAME})
 target_link_libraries(ore ${QLE_LIB_NAME})
 target_link_libraries(ore ${QL_LIB_NAME})
 target_link_libraries(ore ${Boost_LIBRARIES})
+target_link_libraries(ore ${Python_LIBRARIES})
 
 if(MSVC AND MSVC_WHOLE_PROGRAM_OPTIMIZATION)
     target_compile_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/GL>")
