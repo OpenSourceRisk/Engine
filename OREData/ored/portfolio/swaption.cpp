@@ -419,8 +419,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
                             envelope().additionalField("security_spread", false), {});
     
-    std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
-        buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps;
     
     auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy");
 
@@ -430,8 +429,10 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
         Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
-        std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
-            buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+        underlyingSwaps = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+    } else
+    {
+        underlyingSwaps = buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
     }
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
