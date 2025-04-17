@@ -338,15 +338,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     }
 
     // 9.2 determine strikes for calibration basket (simple approach, a la summit)
-    // TODO: Capture ExerciseFee in calibration
-
-    // In Zukunft: Wir nehmen für jedes ExerciseDate (NoticeDates wie in 340) den SwaptionMatcher und können einen StandardSwap an 
-    // das Underlying bauen. Diese europäischen Optionen auf diese Swaps bilden dann für uns das Calibration Instrument. Dann können wir 
-    // auch an komplexe Instrumente kalibrieren.
-    // Bisher übergeben wir nur Strikes and die Engine Builder. 
-
-    // Anhand von amortisierender Swaption testen bitte
-
+    // TODO: Capture Exercise Fee in Calibration
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
@@ -423,7 +415,6 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     addProductModelEngine(*swaptionBuilder);
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
-
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
                             envelope().additionalField("security_spread", false), {});
@@ -431,10 +422,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
     
-    auto para = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, true);
-    
-    //if(builderType.find("NonStandard") != std::string::npos) // "NonStandard" has been found //TODO switch on
-    if(true) //TODO remove
+    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy");
+
+    if(calibrationStrategy == "Advanced") 
     {
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
@@ -473,13 +463,12 @@ void printSwapDetails(const boost::shared_ptr<ore::data::FixedVsFloatingSwap>& s
     for (Size i = 0; i < fixedLeg.size(); ++i) {
         auto cf = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(fixedLeg[i]);
         if (cf) {
-            std::cout << "Payment Date: " << cf->date()
-                      << ", Accrual Start: " << cf->accrualStartDate()
-                      << ", Accrual End:   " << cf->accrualEndDate()
+            std::cout << "Accrual Start: " << cf->accrualStartDate()
+                      << ", Accrual End: " << cf->accrualEndDate()
                       << ", Rate: " << cf->rate()
                       << ", Accrual: " << cf->accrualPeriod()
                       << ", Amount: " << cf->amount()
-                      << ", DayCount: " << cf->dayCounter().name()
+                      << ", DC: " << cf->dayCounter().name()
                       << std::endl;
         } else {
             std::cout << "Non-fixed coupon or cashflow at index " << i << std::endl;
@@ -491,23 +480,19 @@ void printSwapDetails(const boost::shared_ptr<ore::data::FixedVsFloatingSwap>& s
     for (Size i = 0; i < floatLeg.size(); ++i) {
         auto cf = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(floatLeg[i]);
         if (cf) {
-            std::cout << "Payment Date: " << cf->date()
-                      << ", Accrual Start: " << cf->accrualStartDate()
+            std::cout << "Accrual Start: " << cf->accrualStartDate()
                       << ", Accrual End: " << cf->accrualEndDate()
-                      << ", Fixing Date: " << cf->fixingDate()
-                      << ", Index Rate: " << cf->indexFixing()
-                      << ", Accrual: " << cf->accrualPeriod()
+                    //  << ", Fixing Date: " << cf->fixingDate()
+                    //  << ", Index Rate: " << cf->indexFixing()
+                      << ", Accrual: " << cf->accrualPeriod()                     
+                      << ", DC: " << cf->dayCounter().name()
+                      << ", Index: " << cf->indexFixing()          
                       << ", Amount: " << cf->amount()
-                      << ", DayCount:      " << cf->dayCounter().name()
-                      << ", Index Fixing:  " << cf->indexFixing()                   
-                      << ", Accrual:       " << cf->accrualPeriod()
-                      << ", Amount:        " << cf->amount()
                       << std::endl;
         } else {
             std::cout << "Non-floating coupon or cashflow at index " << i << std::endl;
         }
     }
-
 }
 
 std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
@@ -517,26 +502,8 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
     for (Size i = 0; i < exerciseDates.size(); ++i) {
         Date ed = exerciseDates[i];
 
-        std::cout << "ed: " << ed << " -----------------" << std::endl;
-
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
-
-        /*for (Size j = 0; j < legs.size(); ++j) { //TODO erase
-            
-            // Alle vergangenen Coupons wegwerfen, TODO noch nötig? Macht der Matcher das nicht alleine?
-            auto it = std::lower_bound(legs[j].begin(), legs[j].end(), ed,
-                [&ed](const QuantLib::ext::shared_ptr<CashFlow>& c, const Date& d) {
-                    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
-                        return cpn->accrualStartDate() < ed;
-                    } else {
-                        return c->date() < ed;
-                    }
-                });
-            if (it != legs[j].begin())
-                --it;
-            legs[j].erase(legs[j].begin(), it);
-        }*/
 
         QuantExt::RepresentativeSwaptionMatcher matcher(legs, payer, swapIndex.currentLink(), true, discountCurve, 0.00);
         auto criterion=QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise;
@@ -544,30 +511,7 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         auto newSwap = newSwaption->underlying();  
         
         printSwapDetails(newSwap);
-
-        const QuantLib::Schedule& fixedSchedule = newSwap->fixedSchedule();
-        std::cout << "Start: " << fixedSchedule.startDate() << std::endl;
-        std::cout << "Maturity: " << fixedSchedule.endDate() << std::endl;
-
-        QuantLib::Real strike = newSwap->fixedRate();
-        std::cout << "Strike: " << strike << std::endl;
-
-        if( boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[0]) ){
-            for (int k=0; k<newSwap->leg(0).size(); ++k){
-                QuantLib::Real notional = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(newSwap->leg(0)[k])->nominal();
-                std::cout << "Notional Fixed: " << notional << std::endl;
-            }
-        }
-
-        if( boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[0]) ){
-            for (int k=0; k<newSwap->leg(1).size(); ++k){
-                QuantLib::Real notional2 = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(newSwap->leg(1)[k])->nominal();
-                std::cout << "Notional Floating: " << notional2 << std::endl;
-            }
-        }
-
-        std::cout << std::endl;
-
+       
         if (swapEngine != nullptr) {
             newSwap->setPricingEngine(swapEngine);
         }
