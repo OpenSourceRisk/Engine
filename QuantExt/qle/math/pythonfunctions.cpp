@@ -118,8 +118,7 @@ PythonFunctions::~PythonFunctions() {}
 RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
                                                        const std::vector<const RandomVariable*>& regressor,
                                                        const Filter& filter) {
-    QL_REQUIRE(initialized_,
-               "PythonFunctions::conditionalExpectation(): not available, compile with ORE_PYTHON_INTEGRATION");
+    QL_FAIL("PythonFunctions::conditionalExpectation(): not available, compile with ORE_PYTHON_INTEGRATION");
 }
 
 #endif
