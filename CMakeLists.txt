@@ -9,7 +9,7 @@ option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
 option(ORE_BUILD_SWIG "Build ORE Python" ON)
-option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" ON)
+option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" OFF)
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(CTest)

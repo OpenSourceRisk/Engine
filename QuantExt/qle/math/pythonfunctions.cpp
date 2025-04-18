@@ -116,11 +116,11 @@ PythonFunctions::PythonFunctions() {}
 PythonFunctions::~PythonFunctions() {}
 
 RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
-                                                       const std::vector<const RandomVariable*>& regressor) {
-    QL_REQUIRE(initialized_,
-               "PythonFunctions::conditionalExpectation(): not available, compile with ORE_PYTHON_INTEGRATION");
+                                                       const std::vector<const RandomVariable*>& regressor,
+                                                       const Filter& filter) {
+    QL_FAIL("PythonFunctions::conditionalExpectation(): not available, compile with ORE_PYTHON_INTEGRATION");
 }
 
 #endif
 
-}; // namespace QuantExt
+} // namespace QuantExt

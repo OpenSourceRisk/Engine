@@ -58,7 +58,7 @@
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
       <!-- whether to use python integration (conditional expectation calculation) -->
-      <Parameter name="xvaCgUsePythonIntegration">true</Parameter>
+      <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
       <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->
