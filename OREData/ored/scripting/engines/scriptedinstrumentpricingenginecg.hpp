@@ -53,7 +53,8 @@ public:
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
     std::string npvName() const override { return npv_; }
-    virtual std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
+    std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
+    bool hasVega() const override { return true; }
 
     void buildComputationGraph(const bool stickyCloseOutDateRun,
                                const bool reevaluateExerciseInStickyCloseOutDateRun) const override;

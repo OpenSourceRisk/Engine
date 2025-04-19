@@ -244,6 +244,29 @@
       <Report/>
     </YieldCurve>
     <YieldCurve>
+      <CurveId>USD-SOFR-3M</CurveId>
+      <CurveDescription>USD discount curve</CurveDescription>
+      <Currency>USD</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Discount</Type>
+          <Quotes>
+            <Quote>DISCOUNT/RATE/USD/USD-SOFR-3M/*</Quote>
+          </Quotes>
+          <Conventions>USD-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <MixedInterpolationCutoff>1</MixedInterpolationCutoff>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.0000000000010000</Tolerance>
+      <Extrapolation>true</Extrapolation>
+      <BootstrapConfig/>
+      <Report/>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>USD-FedFunds</CurveId>
       <CurveDescription>FedFunds curve</CurveDescription>
       <Currency>USD</Currency>

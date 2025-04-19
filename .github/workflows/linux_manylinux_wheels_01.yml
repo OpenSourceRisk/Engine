@@ -9,13 +9,9 @@ jobs:
     steps:
     - name: Checkout ORE
       uses: actions/checkout@v4
-    - name: get QuantLib
+    - name: get QuantLib Submodules
       run: |
-        git submodule update --init
-    - name: get QuantLib-SWIG
-      run: |
-        cd ORE-SWIG
-        git submodule update --init
+        git submodule update --init --recursive
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
@@ -42,11 +38,11 @@ jobs:
     - name: Copy Configuration
       run: |
          pwd
-         cp ORE-SWIG/Wheels/oreanalytics-config.linux ORE-SWIG/OREAnalytics-SWIG/oreanalytics-config
+         cp ORE-SWIG/Wheels/oreanalytics-config.linux ORE-SWIG/oreanalytics-config
          cd ORE-SWIG/Wheels
          chmod +x before_all_linux.sh
     - name: Build ORE wheels
-      uses: pypa/cibuildwheel@v2.16.2
+      uses: pypa/cibuildwheel@v2.22.0
       env:
         CIBW_BUILD: "*-manylinux*"
         CIBW_SKIP: cp*
@@ -62,7 +58,7 @@ jobs:
         CIBW_ENVIRONMENT_LINUX: CXXFLAGS="-std=c++17 -O3 -g0" ORE=/project
         CIBW_ENVIRONMENT_PASS_LINUX: CXXFLAGS
       with:
-        package-dir: ${{ github.workspace }}/ORE-SWIG/OREAnalytics-SWIG/Python
+        package-dir: ${{ github.workspace }}/ORE-SWIG
     - name: Save wheels as artifacts
       uses: actions/upload-artifact@v4
       with:
