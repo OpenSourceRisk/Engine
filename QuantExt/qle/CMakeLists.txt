@@ -161,7 +161,6 @@ math/fillemptymatrix.cpp
 math/gpucodegenerator.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
-math/pythonfunctions.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
@@ -325,6 +324,7 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
