@@ -95,7 +95,9 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
             Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
             if (usePythonIntegration && filter.deterministic() && filter[0]) {
                 // FIXME does not support regressor groups, non-trivial filters at the moment
-                return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+                // return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+                // testing earth...
+                return PythonFunctions::instance().conditionalExpectationEarth(*args[0], regressor);
             } else {
                 return conditionalExpectation(*args[0], regressor, tmp,
                                               !close_enough(*args[1], RandomVariable(size, 0.0)));

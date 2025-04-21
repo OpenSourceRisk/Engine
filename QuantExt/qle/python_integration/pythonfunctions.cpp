@@ -23,6 +23,8 @@
 
 #include <iostream>
 
+#include <earth.h>
+
 namespace QuantExt {
 
 #ifdef ORE_PYTHON_INTEGRATION
@@ -108,6 +110,13 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
     }
 
     return tmp;
+}
+
+RandomVariable PythonFunctions::conditionalExpectationEarth(const RandomVariable& r,
+                                                            const std::vector<const RandomVariable*>& regressor,
+                                                            const Filter& filter) {
+    std::cerr << "condititionalExpectationEarth()" << std::endl;
+    return RandomVariable();
 }
 
 #else

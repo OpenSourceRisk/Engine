@@ -41,6 +41,9 @@ public:
     RandomVariable conditionalExpectation(const RandomVariable& r, const std::vector<const RandomVariable*>& regressor,
                                           const Filter& filter = Filter());
 
+    RandomVariable conditionalExpectationEarth(const RandomVariable& r,
+                                               const std::vector<const RandomVariable*>& regressor,
+                                               const Filter& filter = Filter());
 
 private:
     bool initialized_ = false;

@@ -24,6 +24,8 @@ add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 
+add_link_directory_if_exists("/Users/peter.caspers/mars/Cpp/build")
+
 add_executable(ore ore.cpp)
 target_link_libraries(ore ${OREA_LIB_NAME})
 target_link_libraries(ore ${ORED_LIB_NAME})
