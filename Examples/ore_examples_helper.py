@@ -333,7 +333,7 @@ class OreExample(object):
             if(self.use_python):
                 if(os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py"))):
                     res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
-                elif(os.path.isfile(os.path.isfile(os.pardir, "..", "ore_wrapper.py"))):
+                elif(os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py"))):
                     res = subprocess.call([sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml])
             else:
                 res = subprocess.call([self.ore_exe, xml])
