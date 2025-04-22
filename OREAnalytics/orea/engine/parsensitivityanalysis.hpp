@@ -126,6 +126,8 @@ private:
     //! Set of risk factor types disabled for this instance of ParSensitivityAnalysis.
     std::set<ore::analytics::RiskFactorKey::KeyType> typesDisabled_;
 
+    std::string parConversionExcludeFixings_;
+
     /*! Store the zero rate and par rate absolute shift size for each risk factor key
 
         The first element in the pair is the zero or raw rate absolute shift size. The second element in the pair is
