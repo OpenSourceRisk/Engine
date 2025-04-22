@@ -21,6 +21,8 @@
 
 #include <ql/errors.hpp>
 
+#include <boost/scoped_array.hpp>
+
 #include <iostream>
 
 #include <earth.h>
@@ -115,8 +117,82 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
 RandomVariable PythonFunctions::conditionalExpectationEarth(const RandomVariable& r,
                                                             const std::vector<const RandomVariable*>& regressor,
                                                             const Filter& filter) {
-    std::cerr << "condititionalExpectationEarth()" << std::endl;
-    return RandomVariable();
+
+    // std::cout << "conditionalExpectationEarth..." << std::flush;
+
+    QL_REQUIRE(!filter.initialised(), "PythonFunctions::conditionalExpectation() does not support non-empty filter");
+    QL_REQUIRE(!regressor.empty(), "PythonFunctions::conditionalExpectation(): empty regressor not allowed.");
+
+    // input
+
+    int nCases = r.size();
+    int nPreds = regressor.size();
+    int nresponses = 1;
+
+    int nMaxDegree = 1;
+    int nMaxTerms = 101;
+    double Trace = 0.0; // 3.0;
+    // bool Format = false;
+    double ForwardStepThresh = 0.00001;
+    int K = 20;
+    double FastBeta = 0.0;
+    double NewVarPenalty = 0.0;
+    double Penalty = ((nMaxDegree > 1) ? 3 : 2);
+    double AdjuntEndSpan = 0.0;
+    std::vector<int> LinPreds(nPreds, 0);
+    std::vector<double> x(nCases * nPreds);
+    std::vector<double> y(nCases * nresponses);
+
+    for (Size i = 0; i < regressor.size(); ++i) {
+        for (Size j = 0; j < nCases; ++j) {
+            x[j + nCases * i] = regressor[i]->at(j);
+        }
+    }
+
+    for (Size j = 0; j < nCases; ++j) {
+        y[j] = r.at(j);
+    }
+
+    // set by call to Earth
+
+    double BestGcv;
+    int nTerms;
+    int TermCond = 0;
+    std::vector<double> bx(nCases * nMaxTerms);
+    // bool* BestSet = new bool[nMaxTerms];
+    std::unique_ptr<bool[]> BestSet(new bool[nMaxTerms]);
+    std::vector<int> Dirs(nMaxTerms * nPreds, 0);
+    std::vector<double> Cuts(nMaxTerms * nPreds, 0.0);
+    std::vector<double> Residuals(nCases * nresponses, 0.0);
+    std::vector<double> Betas(nMaxTerms * nresponses, 0.0);
+
+    // train
+
+    Earth(&BestGcv, &nTerms, &TermCond, BestSet.get(), &bx[0], &Dirs[0], &Cuts[0], &Residuals[0], &Betas[0], &x[0],
+          &y[0], NULL, // weights are NULL
+          nCases, nresponses, nPreds, nMaxDegree, nMaxTerms, Penalty, ForwardStepThresh,
+          0,    // MinSpan
+          0,    // EndSpan
+          true, // Prune
+          K, FastBeta, NewVarPenalty, &LinPreds[0], AdjuntEndSpan, true, Trace);
+
+    // predict and set result
+
+    RandomVariable result(nCases);
+
+    std::vector<double> xVec(nPreds);
+    std::vector<double> yHat(nresponses);
+    for (int iCase = 0; iCase < nCases; iCase++) {
+        for (int iPred = 0; iPred < nPreds; iPred++)
+            xVec[iPred] = x[iCase + iPred * nCases];
+        PredictEarth(&yHat[0], &xVec[0], BestSet.get(), &Dirs[0], &Cuts[0], &Betas[0], nPreds, nresponses, nTerms,
+                     nMaxTerms);
+        result.set(iCase, yHat[0]);
+    }
+
+    // std::cout << " done." << std::endl;
+
+    return result;
 }
 
 #else
