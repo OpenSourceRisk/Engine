@@ -167,7 +167,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
     // remove todays fixings from relevant indices for the scope of this method
     struct TodaysFixingsRemover {
-        TodaysFixingsRemover(const std::vector<std::string>& names) : today_(Settings::instance().evaluationDate()) {
+        TodaysFixingsRemover(const std::set<std::string>& names) : today_(Settings::instance().evaluationDate()) {
             Date today = Settings::instance().evaluationDate();
             for (auto const& n : names) {
                 QL_DEPRECATED_DISABLE_WARNING
@@ -200,9 +200,10 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
     // Case insensitive
     std::regex regex_pattern(parConversionExcludeFixings_, std::regex_constants::icase);
     //Filter out elements that match any pattern
-    std::vector<std::string> removeTodaysFixingIndicesRegex;
+    std::set<std::string> removeTodaysFixingIndicesRegex;
     std::copy_if(instruments_.removeTodaysFixingIndices_.begin(), instruments_.removeTodaysFixingIndices_.end(),
-                 std::back_inserter(removeTodaysFixingIndicesRegex), [&regex_pattern](const std::string& s) {
+                 std::inserter(removeTodaysFixingIndicesRegex, removeTodaysFixingIndicesRegex.end()),
+                 [&regex_pattern](const std::string& s) {
                      return std::regex_match(IndexNameTranslator::instance().oreName(s), regex_pattern);
                  });
     

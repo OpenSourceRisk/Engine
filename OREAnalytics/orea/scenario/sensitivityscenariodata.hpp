@@ -140,8 +140,8 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true)
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*")
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), parConversionExcludeFixings_(parConversionExcludeFixings){};
 
     //! \name Inspectors
     //@{
