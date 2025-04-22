@@ -44,6 +44,7 @@ public:
                     const std::vector<QuantLib::Date>& simulationDates);
     std::string npvName() const override { return "__AMCCG_NPV"; }
     std::set<std::string> relevantCurrencies() const override;
+    bool hasVega() const override;
     void buildComputationGraph(const bool stickyCloseOutDateRun,
                                const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const;
