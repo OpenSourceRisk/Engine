@@ -165,6 +165,12 @@ void PricingAnalyticImpl::runAnalytic(
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
+
+            if (offsetScenario_ != nullptr) {
+                sensiAnalysis_->setOffsetScenario(offsetScenario_);
+                sensiAnalysis_->setOffsetSimMarketParams(offsetSimMarketParams_);
+            }
+
             const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(

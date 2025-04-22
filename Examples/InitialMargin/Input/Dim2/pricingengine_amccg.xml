@@ -51,6 +51,12 @@
     <Engine>AMCCG</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="EuropeanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters/>
+    <Engine>AMCCG</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="BermudanSwaption">
     <Model>LGM</Model>
     <ModelParameters/>
