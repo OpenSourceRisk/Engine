@@ -1349,7 +1349,7 @@ void XvaEngineCG::calculateDynamicIM() {
         //     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
         //         std::cout << i << "," << "fxVega," << QuantLib::io::iso_date(valDate) << ","
         //                   << model_->currencies()[ccy + 1] << "," << fxVegaTerms[b] << ","
-        //                   << expectation(conditionalFxVega[ccy][b]).at(7) << std::endl;
+        //                   << conditionalFxVega[ccy][b].at(7) << std::endl;
         //     }
         // }
 
