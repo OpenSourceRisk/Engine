@@ -782,7 +782,7 @@ ParSensitivityInstrumentBuilder::makeSwap(const QuantLib::ext::shared_ptr<Market
         QuantLib::ext::shared_ptr<AverageBMACoupon> lastCoupon =
             QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(helper->leg(1).back());
         latestRelevantDate = std::max(helper->maturityDate(), lastCoupon->fixingDates().end()[-2]);
-    } else if (conv->hasSubPeriod()) {  
+    } else if (conv->hasSubPeriod()) {
         removeTodaysFixingIndices.insert(index->name());
         auto subPeriodSwap = QuantLib::ext::shared_ptr<SubPeriodsSwap>(
             MakeSubPeriodsSwap(term, index, 0.0, Period(conv->floatFrequency()), 0 * Days)
