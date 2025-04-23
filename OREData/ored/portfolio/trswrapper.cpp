@@ -374,15 +374,18 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        return getUnderlyingNPV(i) / arguments_.underlyingMultiplier_[i];
+        auto tmp = getUnderlyingNPV(i);
+        return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
     try {
         auto tmp = arguments_.underlyingIndex_[i]->fixing(adjustedDate);
         return tmp;
     } catch (const std::exception&) {
-        if (adjustedDate == today)
-            return getUnderlyingNPV(i) / arguments_.underlyingMultiplier_[i];
+        if (adjustedDate == today) {
+            auto tmp = getUnderlyingNPV(i);
+            return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
+        }
         else
             throw;
     }
