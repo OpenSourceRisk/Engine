@@ -18,6 +18,7 @@
 
 #include <orea/engine/dependencymarket.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
@@ -92,6 +93,9 @@ public:
 
     //! return underlying indices of portfolio
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const { return underlyingIndices_; }
+    
+    //! add any missing market dependencies
+    void addDependencies();
 
 private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
@@ -100,6 +104,9 @@ private:
     std::set<std::string> counterparties_;
     QuantLib::Date maturity_;
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
+    std::string baseCcy_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    std::string baseCcyDiscountCurve_;
 };
 
 } // namespace analytics
