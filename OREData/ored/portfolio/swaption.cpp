@@ -455,47 +455,6 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building Swaption done");
 }
 
-void printSwapDetails(const boost::shared_ptr<ore::data::FixedVsFloatingSwap>& swap) {
-    std::cout << "Start Date: " << swap->startDate() << std::endl;
-    std::cout << "Maturity Date: " << swap->maturityDate() << std::endl;
-
-    std::cout << "\n--- Fixed Leg Details ---\n";
-    const auto& fixedLeg = swap->fixedLeg();
-    for (Size i = 0; i < fixedLeg.size(); ++i) {
-        auto cf = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(fixedLeg[i]);
-        if (cf) {
-            std::cout << "Accrual Start: " << cf->accrualStartDate()
-                      << ", Accrual End: " << cf->accrualEndDate()
-                      << ", Rate: " << cf->rate()
-                      << ", Accrual: " << cf->accrualPeriod()
-                      << ", Amount: " << cf->amount()
-                      << ", DC: " << cf->dayCounter().name()
-                      << std::endl;
-        } else {
-            std::cout << "Non-fixed coupon or cashflow at index " << i << std::endl;
-        }
-    }
-    
-    std::cout << "\n--- Floating Leg Details ---\n";
-    const auto& floatLeg = swap->floatingLeg();
-    for (Size i = 0; i < floatLeg.size(); ++i) {
-        auto cf = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(floatLeg[i]);
-        if (cf) {
-            std::cout << "Accrual Start: " << cf->accrualStartDate()
-                      << ", Accrual End: " << cf->accrualEndDate()
-                    //  << ", Fixing Date: " << cf->fixingDate()
-                    //  << ", Index Rate: " << cf->indexFixing()
-                      << ", Accrual: " << cf->accrualPeriod()                     
-                      << ", DC: " << cf->dayCounter().name()
-                      << ", Index: " << cf->indexFixing()          
-                      << ", Amount: " << cf->amount()
-                      << std::endl;
-        } else {
-            std::cout << "Non-floating coupon or cashflow at index " << i << std::endl;
-        }
-    }
-}
-
 std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
     const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve, const std::vector<Date>& exerciseDates) {
     std::vector<QuantLib::ext::shared_ptr<Instrument>> swaps;
@@ -510,8 +469,6 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         auto criterion=QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise;
         auto newSwaption = matcher.representativeSwaption(ed, criterion); 
         auto newSwap = newSwaption->underlying();  
-        
-        printSwapDetails(newSwap);
        
         if (swapEngine != nullptr) {
             newSwap->setPricingEngine(swapEngine);
