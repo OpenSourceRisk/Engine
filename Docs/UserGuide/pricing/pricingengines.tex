@@ -2690,7 +2690,7 @@ The parameters have the following meaning:
 \subsection{Product Type: CommodityOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: CommodityOption if exercise stly is american
+Used by trade type: CommodityOption if exercise style is american
 
 Available Model/Engine pairs:
 
@@ -3693,7 +3693,7 @@ The parameters have the following meaning:
 \subsection{Product Type: EquityOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: EquityOption if exercise stly is american
+Used by trade type: EquityOption if exercise style is american
 
 Available Model/Engine pairs:
 
@@ -3760,6 +3760,80 @@ The parameters have the following meaning:
 </Product>
 \end{minted}
 \caption{Configuration for Product EquityOptionAmerican, Model BlackScholesMerton, Engine BaroneAdesiWhaleyApproximationEngine}
+\label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: QuantoEquityOptionAmerican}
+%--------------------------------------------------------
+
+Used by trade type: EquityOption if exercise style is american and the payoff Currency is different than currency the underlying equity is quoted in.
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/FdBlackScholesVanillaEngine
+\item BlackScholesMerton/BaroneAdesiWhaleyApproximationEngine
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/FdBlackScholesVanillaEngine builds a FdBlackScholesVanillaEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="QuantoEquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="TimeGridPerYear">100</Parameter>
+        <Parameter name="XGrid">100</Parameter>
+        <Parameter name="DampingSteps">0</Parameter>
+        <Parameter name="EnforceMonotoneVariance">true</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine FdBlackScholesVanillaEngine}
+\label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+\end{longlisting}
+
+BlackScholesMerton/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyApproximationEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="QuantoEquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine BaroneAdesiWhaleyApproximationEngine}
 \label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
 \end{longlisting}
 
@@ -4641,7 +4715,7 @@ The parameters have the following meaning:
 \subsection{Product Type: FxOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: FxOption if exercise stly is american
+Used by trade type: FxOption if exercise style is american
 
 Available Model/Engine pairs:
 
