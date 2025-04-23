@@ -21,11 +21,12 @@
 
 #include <ql/errors.hpp>
 
-#include <boost/scoped_array.hpp>
-
 #include <iostream>
 
+#ifdef ORE_PYTHON_INTEGRATION
+#include <boost/scoped_array.hpp>
 #include <earth.h>
+#endif
 
 namespace QuantExt {
 
