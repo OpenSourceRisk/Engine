@@ -338,7 +338,6 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     }
 
     // 9.2 determine strikes for calibration basket (simple approach, a la summit)
-    // TODO: Capture Exercise Fee in Calibration
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
@@ -465,6 +464,16 @@ std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentative
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
 
+        if (exerciseBuilder_->feeSettlement()) {
+            legs.push_back(Leg());
+            legs.back().push_back(exerciseBuilder_->feeSettlement());
+            legCurrencies_.push_back(npvCurrency_);
+            payer.push_back(true);
+            maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
+            if (maturity_ == exerciseBuilder_->feeSettlement()->date())
+                maturityType_ = "Fee Settlement Date";
+        }
+
         QuantExt::RepresentativeSwaptionMatcher matcher(legs, payer, swapIndex.currentLink(), true, discountCurve, 0.00);
         auto criterion=QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise;
         auto newSwaption = matcher.representativeSwaption(ed, criterion); 
@@ -501,6 +510,17 @@ Swaption::buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& s
     for (Size i = 0; i < exerciseDates.size(); ++i) {
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
+
+        if (exerciseBuilder_->feeSettlement()) {
+            legs.push_back(Leg());
+            legs.back().push_back(exerciseBuilder_->feeSettlement());
+            legCurrencies_.push_back(npvCurrency_);
+            payer.push_back(true);
+            maturity_ = std::max(maturity_, exerciseBuilder_->feeSettlement()->date());
+            if (maturity_ == exerciseBuilder_->feeSettlement()->date())
+                maturityType_ = "Fee Settlement Date";
+        }
+
         for (Size j = 0; j < legs.size(); ++j) {
             Date ed = exerciseDates[i];
             auto it = std::lower_bound(legs[j].begin(), legs[j].end(), exerciseDates[i],
