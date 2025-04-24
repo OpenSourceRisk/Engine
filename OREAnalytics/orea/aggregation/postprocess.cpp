@@ -791,6 +791,10 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     return nettedExposureCalculator_->collateralFloor(nettingSetId);
 }
 
+void PostProcess::exportDimDistribution(ore::data::Report& dimDistributionReport) {
+    return dimCalculator_->exportDimDistribution(dimDistributionReport);
+}
+
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
     dimCalculator_->exportDimEvolution(dimEvolutionReport);
 }

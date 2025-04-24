@@ -29,6 +29,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
+#include <qle/math/distributioncount.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
@@ -1735,29 +1736,6 @@ void ReportWriter::writeScenarioStatistics(const QuantLib::ext::shared_ptr<Scena
     }
     report.end();
 }
-
-namespace {
-template <class I>
-void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts) {
-    Real xmin = *std::min_element(begin, end);
-    Real xmax = *std::max_element(begin, end);
-    std::vector<Real> v(begin, end);
-    std::sort(v.begin(), v.end());
-    Real h = (xmax - xmin) / static_cast<Real>(steps);
-    Size idx0 = 0;
-    counts.resize(steps);
-    bounds.resize(steps);
-    for (Size i = 0; i < steps; ++i) {
-        Real v1 = xmin + static_cast<Real>(i + 1) * h;
-        // Need the `i == steps - 1` here because noticed in backtest regression tests that xmax is not getting
-        // included in the count in the last bucket due to numerical accuracy. This ensures that it does.
-        Size idx1 = i == steps - 1 ? v.size() : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
-        counts[i] = idx1 - idx0;
-        bounds[i] = v1;
-        idx0 = idx1;
-    }
-} // distributionCount
-} // namespace
 
 void ReportWriter::writeScenarioDistributions(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
                                               const std::vector<RiskFactorKey>& keys, const Size numPaths,
