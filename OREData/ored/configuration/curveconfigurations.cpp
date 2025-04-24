@@ -356,7 +356,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
     if (it != configs_.end()) {
         for (const auto& c : it->second) {
-            if (boost::starts_with(c.first, id))
+            if (c.first == id || boost::starts_with(c.first, id + "_"))
                 curves.insert(c.first);
         }
     }
@@ -364,7 +364,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     const auto& itu = unparsed_.find(CurveSpec::CurveType::Inflation);
     if (itu != unparsed_.end()) {
         for (const auto& c : itu->second) {
-            if (boost::starts_with(c.first, id))
+            if (c.first == id || boost::starts_with(c.first, id + "_"))
                 curves.insert(c.first);
         }
     }
@@ -387,7 +387,7 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
     const auto& it = configs_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (it != configs_.end()) {
         for (const auto& c : it->second) {
-            if (boost::starts_with(c.first, id))
+            if (c.first == id || boost::starts_with(c.first, id + "_"))
                 curves.insert(c.first);
         }
     }
@@ -395,7 +395,7 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
     const auto& itu = unparsed_.find(CurveSpec::CurveType::InflationCapFloorVolatility);
     if (itu != unparsed_.end()) {
         for (const auto& c : itu->second) {
-            if (boost::starts_with(c.first, id))
+            if (c.first == id || boost::starts_with(c.first, id + "_"))
                 curves.insert(c.first);
         }
     }
