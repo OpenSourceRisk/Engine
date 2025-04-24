@@ -81,7 +81,8 @@ protected:
 
     const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
 
-    double conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity, const Date& futureExpiry);
+    double conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity,
+                                const Date& futureExpiry);
 
 private:
     // mandatory information
