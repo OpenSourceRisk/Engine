@@ -667,7 +667,7 @@ void XvaEngineCG::doForwardEvaluation() {
         ops_ = getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
                                     (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, Null<Real>(),
                                     pfRegressorPosGroups_, usePythonIntegration_);
-        grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
+        grads_ = getRandomVariableGradients(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, eps);
     }
 
     bool keepValuesForDerivatives = (!bumpCvaSensis_ && sensitivityData_) || enableDynamicIM_;
