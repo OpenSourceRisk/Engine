@@ -2532,11 +2532,13 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
         if (auto q =
                 QuantLib::ext::dynamic_pointer_cast<FXForwardQuote>(loader_.get(fxForwardQuoteIDs[i], asofDate_))) {
-            if (matchFxFwdDate(q->term(), onDate))
+            if (matchFxFwdDate(q->term(), onDate) || matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::ON))
                 onIndex = i;
-            else if (matchFxFwdDate(q->term(), tnDate))
+            else if (matchFxFwdDate(q->term(), tnDate) ||
+                     matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::TN))
                 tnIndex = i;
-            else if (matchFxFwdDate(q->term(), snDate))
+            else if (matchFxFwdDate(q->term(), snDate) ||
+                     matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::SN))
                 snIndex = i;
         }
     }
