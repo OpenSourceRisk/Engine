@@ -2517,10 +2517,11 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
     /* Determine the absolute maturity dates associated to on, tn and sn quotes */
 
     Calendar cal =  fxConvention->advanceCalendar();
+    Date adjustedAsof = cal.adjust(asofDate_);
 
-    Date onEarliestDate = cal.advance(asofDate_, 0 * Days);
-    Date tnEarliestDate = cal.advance(asofDate_, 1 * Days);
-    Date snEarliestDate = cal.advance(asofDate_, fxConvention->spotDays() * Days);
+    Date onEarliestDate = cal.advance(adjustedAsof, 0 * Days);
+    Date tnEarliestDate = cal.advance(adjustedAsof, 1 * Days);
+    Date snEarliestDate = cal.advance(adjustedAsof, fxConvention->spotDays() * Days);
 
     Date onDate = cal.advance(onEarliestDate, 1 * Days);
     Date tnDate = cal.advance(tnEarliestDate, 1 * Days);
@@ -2635,7 +2636,7 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                     earliestDate = snEarliestDate;
                 } else {
                     earliestDate =
-                        cal.advance(asofDate_, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
+                        cal.advance(adjustedAsof, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
                 }
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
