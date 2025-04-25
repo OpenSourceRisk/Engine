@@ -47,6 +47,14 @@
 		<FixedDayCounter>A365</FixedDayCounter>
 		<Index>AUD-BBSW-6M</Index>
 	</Swap>
+        <Swap>
+          <Id>USD-SOFR-3M-SWAP</Id>
+          <FixedCalendar>US,UK</FixedCalendar>
+          <FixedFrequency>Semiannual</FixedFrequency>
+          <FixedConvention>MF</FixedConvention>
+          <FixedDayCounter>30/360</FixedDayCounter>
+          <Index>USD-SOFR-3M</Index>
+        </Swap>
 	<Deposit>
 		<Id>AUD-DEPOSIT</Id>
 		<IndexBased>true</IndexBased>
@@ -313,6 +321,66 @@
 	<SwapIndex>
 		<Id>EUR-CMS-30Y</Id>
 		<Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-1Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-30Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-1Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-LIBOR3M-30Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-1Y</Id>
+		<Conventions>USD-SOFR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-2Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-10Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
+		<FixingCalendar/>
+	</SwapIndex>
+	<SwapIndex>
+		<Id>USD-CMS-SOFR-30Y</Id>
+		<Conventions>USD-LIBOR-3M-SWAP</Conventions>
 		<FixingCalendar/>
 	</SwapIndex>
 	<FX>

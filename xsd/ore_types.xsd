@@ -486,6 +486,7 @@
       <xs:enumeration value="LogNaturalCubic"/>
       <xs:enumeration value="LogFinancialCubic"/>
       <xs:enumeration value="LogCubicSpline"/>
+      <xs:enumeration value="MonotonicLogCubicSpline"/>
       <xs:enumeration value="CubicSpline"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
