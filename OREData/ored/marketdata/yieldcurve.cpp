@@ -2511,7 +2511,36 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                "FX Forward segment does not support pillar choice " << segment->pillarChoice());
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
+
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
+
+    /* Determine the absolute maturity dates associated to on, tn and sn quotes */
+
+    Calendar cal =  fxConvention->advanceCalendar();
+
+    Date onEarliestDate = cal.advance(asofDate_, 0 * Days);
+    Date tnEarliestDate = cal.advance(asofDate_, 1 * Days);
+    Date snEarliestDate = cal.advance(asofDate_, fxConvention->spotDays() * Days);
+
+    Date onDate = cal.advance(onEarliestDate, 1 * Days);
+    Date tnDate = cal.advance(tnEarliestDate, 1 * Days);
+    Date snDate = cal.advance(snEarliestDate, 1 * Days);
+
+    /* identify on, tn, sn quotes, if present in the curve config */
+
+    Size onIndex = Null<Size>(), tnIndex = Null<Size>(), snIndex = Null<Size>();
+    for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
+        if (auto q =
+                QuantLib::ext::dynamic_pointer_cast<FXForwardQuote>(loader_.get(fxForwardQuoteIDs[i], asofDate_))) {
+            if (matchFxFwdDate(q->term(), onDate))
+                onIndex = i;
+            else if (matchFxFwdDate(q->term(), tnDate))
+                tnIndex = i;
+            else if (matchFxFwdDate(q->term(), snDate))
+                snIndex = i;
+        }
+    }
+
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
 
@@ -2543,7 +2572,7 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
             }
 
             Natural spotDays = fxConvention->spotDays();
-            if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::ON)) {
+            if (i == onIndex) {
                 // Overnight rate is the spread over todays fx, for settlement on t+1. We need 'todays' rate in order
                 // to use this to determine yield curve value at t+1.
                 // If spotDays is 0 it is spread over Spot.
@@ -2564,33 +2593,26 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                 }
                 case 2: {
                     // find the TN quote
-                    for (auto q : loader_.loadQuotes(asofDate_)) {
-                        if (q->instrumentType() == MarketDatum::InstrumentType::FX_FWD) {
-                            auto fxq = QuantLib::ext::dynamic_pointer_cast<FXForwardQuote>(q);
-                            if (fxq && fxSpotQuote->unitCcy() == fxq->unitCcy() && fxSpotQuote->ccy() == fxq->ccy() &&
-                                matchFxFwdStringTerm(fxq->term(), FXForwardQuote::FxFwdString::TN)) {
-                                tnSpread = fxq->quote()->value() / fxConvention->pointsFactor();
-                                break;
-                            }
-                        }
-                    }
-                    if (tnSpread == Null<Real>()) {
+                    if(tnIndex == Null<Size>()) {
                         WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are 2 we also require the TN "
                              "rate");
                         continue;
                     }
+                    QuantLib::ext::shared_ptr<MarketDatum> fxq = loader_.get(fxForwardQuoteIDs[tnIndex], asofDate_);
+                    tnSpread = fxq->quote()->value() / fxConvention->pointsFactor();
                     totalSpread = tnSpread + qlFXForwardQuote->value();
                     // TODO: this isn't registeredWith the ON or TN basis quote
                     auto m2 = [totalSpread](Real x) { return x - totalSpread; };
                     spotFx = Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m2)>>(fxSpotQuote->quote(), m2));
                     break;
                 }
-                default:
-                    WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are " << spotDays << 
-                        ", only valid for SpotDays of 0, 1 or 2.");
+                default: {
+                    WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are "
+                         << spotDays << ", only valid for SpotDays of 0, 1 or 2.");
                     continue;
                 }
-            } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {
+                }
+            } else if (i == tnIndex) {
                 // TODO: this isn't registeredWith the TN basis quote
                 auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
                 spotFx = Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
@@ -2598,14 +2620,32 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                 spotFx = fxSpotQuote->quote();
             }
 
-            Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
-            Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
             bool isFxBaseCurrencyCollateralCurrency = knownCurrency == fxSpotSourceCcy;
+            QuantLib::ext::shared_ptr<RateHelper> fxForwardHelper;
 
-            QuantLib::ext::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
-                qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(), 
-                fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                knownDiscountCurve));
+            if(isFxFwdDateBased(fxForwardQuote->term())) {
+                Date earliestDate;
+                if (i == onIndex) {
+                    earliestDate = onEarliestDate;
+                } else if (i == tnIndex) {
+                    earliestDate = tnEarliestDate;
+                } else if (i == snIndex) {
+                    earliestDate = snEarliestDate;
+                } else {
+                    earliestDate =
+                        cal.advance(asofDate_, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
+                }
+                fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
+                    qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
+                    isFxBaseCurrencyCollateralCurrency, knownDiscountCurve);
+            } else {
+                Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
+                Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
+                fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
+                    qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(),
+                    fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
+                    knownDiscountCurve);
+            }
 
             instruments.push_back(fxForwardHelper);
         }
