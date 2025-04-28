@@ -172,7 +172,7 @@ void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& di
         .addColumn("Bound", Real(), 6)
         .addColumn("Count", Size());
 
-    constexpr Size steps = 20;
+    constexpr Size steps = 50;
 
     std::vector<Real> bounds;
     std::vector<Size> counts;
