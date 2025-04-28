@@ -1793,6 +1793,10 @@ void OREAppInputParameters::loadParameters() {
 
         setXvaCgExternalComputeDevice(params_->get("simulation", "xvaCgExternalComputeDevice", false));
 
+        tmp = params_->get("simulation", "xvaCgUsePythonIntegration", false);
+        if (!tmp.empty())
+            setXvaCgUsePythonIntegration(parseBool(tmp));
+
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));

@@ -84,6 +84,9 @@ public:
     //! DIM evolution report
     virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport) const;
 
+    //! DIM distribution report
+    virtual void exportDimDistribution(ore::data::Report& dimDistributionReport) const;
+
     //! DIM by nettingSet, date, sample returned as a regular NPV cube
     const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
 
