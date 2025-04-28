@@ -20,6 +20,7 @@
 #define ored_portfolio_i
 
 %include cashflows.i
+%include ored_xmlutils.i
 
 %{
 using ore::data::Portfolio;
@@ -35,6 +36,8 @@ using ore::data::Trade;
 using ore::data::TradeFactory;
 using ore::data::InstrumentWrapper;
 using ore::data::Envelope;
+using ore::data::XMLUtils;
+using ore::data::XMLSerializable;
 using QuantLib::CashFlow;
 using namespace std;
 %}
@@ -118,7 +121,7 @@ class Trade {
 
 // Portfolio
 %shared_ptr(Portfolio)
-class Portfolio {
+class Portfolio : public XMLSerializable {
   public:
     Portfolio(bool buildFailedTrades = true);
     std::size_t size() const;

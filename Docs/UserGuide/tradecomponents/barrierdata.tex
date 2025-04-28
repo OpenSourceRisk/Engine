@@ -134,6 +134,19 @@ Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot
 
   Allowable Values: \emph{atExpiry}, \emph{atHit}
 
+\item StrictComparison [Optional]: Determines how the  barrier is checked, as per:
+
+  \emph{0}: the barrier checks use $<=$, $>=$ to check In-barriers and $<$, $>$ to check Out-barriers.
+  
+  \emph{1}: the barrier checks use strict comparison $<$ and $>$ for both In- and Out-barriers.
+  
+  \emph{2}: the barrier checks use strict or equal comparison $<=$ and $>=$ for both In- and Out-barriers.
+  
+  Note that the StrictComparison element only has an effect for TradeType \emph{GenericBarrierOption}. All other TradeTypes are treated as having StrictComparison set to \emph{0}.
+
+  Allowable Values: \emph{0}, \emph{1}, or \emph{2}. Defaults to \emph{0} if omitted.
+
+
 \item OverrideTriggered [Optional]: Specifies whether a barrier was triggered before the valuation date. If given, this overrides the automatic check using fixing data.
 
   Allowable Values: \emph{true}, \emph{false}

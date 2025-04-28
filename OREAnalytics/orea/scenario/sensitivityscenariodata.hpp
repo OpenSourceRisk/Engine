@@ -140,8 +140,8 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true)
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*")
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), parConversionExcludeFixings_(parConversionExcludeFixings){};
 
     //! \name Inspectors
     //@{
@@ -198,6 +198,7 @@ public:
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
 
     const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
+    const std::string& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
     //@}
 
     //! \name Setters
@@ -297,6 +298,7 @@ public:
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
+    void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
 
     //@}
 
@@ -360,6 +362,7 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
+    std::string parConversionExcludeFixings_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
