@@ -38,13 +38,13 @@ RUN rm oreswig/tests/QuantLibTestSuite/__init__.py
 COPY ore/ORE-SWIG/test /oreswig/tests/ORETestSuite
 COPY ore/Examples /oreswig/Examples
 # due to relative path imports in the notebooks, we need to copy utilities.py directly into the example folder
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_1
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_2
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_3
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_4
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_5
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_6
-RUN cp oreswig/example_scripts/ORE-Python/Notebooks/utilities.py oreswig/example_scripts/ORE-Python/Notebooks/Example_7
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_1
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_2
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_3
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_4
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_5
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_6
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_7
 COPY ore/Tools /oreswig/Tools
 # Set env variable to run the ore examples with the python interface instead of the executable
 ENV ORE_EXAMPLES_USE_PYTHON=1
