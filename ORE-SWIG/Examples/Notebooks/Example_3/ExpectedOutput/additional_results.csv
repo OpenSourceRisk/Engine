@@ -1,0 +1,1251 @@
+#TradeId,ResultId,ResultType,ResultValue
+Swap_1,amount[1],double,200000.000000
+Swap_1,amount[2],double,101885.706669
+Swap_1,currentNotional[1],double,10000000.000000
+Swap_1,currentNotional[2],double,10000000.000000
+Swap_1,index[2],string,Euribor6M Actual/360
+Swap_1,isPayer[1],bool,false
+Swap_1,isPayer[2],bool,true
+Swap_1,isdaAssetClass,string,Interest Rate
+Swap_1,isdaBaseProduct,string,IR Swap
+Swap_1,isdaSubProduct,string,Fixed Float
+Swap_1,isdaTransaction,string,
+Swap_1,legNPV[1],double,3266722.174761
+Swap_1,legNPV[2],double,-3266119.689189
+Swap_1,legType[1],string,Fixed
+Swap_1,legType[2],string,Floating
+Swap_1,notionalCurrency[1],string,EUR
+Swap_1,notionalCurrency[2],string,EUR
+Swap_1,originalNotional[1],double,10000000.000000
+Swap_1,originalNotional[2],double,10000000.000000
+Swap_1,paymentDate[1],string,2017-03-01
+Swap_1,paymentDate[2],string,2016-09-01
+Swap_1,rate[1],double,0.020000
+Swap_1,rate[2],double,0.019934
+Swap_1,spread[2],double,0.000000
+Swap_1,startDate,string,2016-03-01
+Swap_10,amount[1],double,200000.000000
+Swap_10,amount[2],double,101885.706669
+Swap_10,currentNotional[1],double,10000000.000000
+Swap_10,currentNotional[2],double,10000000.000000
+Swap_10,index[2],string,Euribor6M Actual/360
+Swap_10,isPayer[1],bool,false
+Swap_10,isPayer[2],bool,true
+Swap_10,isdaAssetClass,string,Interest Rate
+Swap_10,isdaBaseProduct,string,IR Swap
+Swap_10,isdaSubProduct,string,Fixed Float
+Swap_10,isdaTransaction,string,
+Swap_10,legNPV[1],double,3266722.174761
+Swap_10,legNPV[2],double,-3266119.689189
+Swap_10,legType[1],string,Fixed
+Swap_10,legType[2],string,Floating
+Swap_10,notionalCurrency[1],string,EUR
+Swap_10,notionalCurrency[2],string,EUR
+Swap_10,originalNotional[1],double,10000000.000000
+Swap_10,originalNotional[2],double,10000000.000000
+Swap_10,paymentDate[1],string,2017-03-01
+Swap_10,paymentDate[2],string,2016-09-01
+Swap_10,rate[1],double,0.020000
+Swap_10,rate[2],double,0.019934
+Swap_10,spread[2],double,0.000000
+Swap_10,startDate,string,2016-03-01
+Swap_11,amount[1],double,200000.000000
+Swap_11,amount[2],double,101885.706669
+Swap_11,currentNotional[1],double,10000000.000000
+Swap_11,currentNotional[2],double,10000000.000000
+Swap_11,index[2],string,Euribor6M Actual/360
+Swap_11,isPayer[1],bool,false
+Swap_11,isPayer[2],bool,true
+Swap_11,isdaAssetClass,string,Interest Rate
+Swap_11,isdaBaseProduct,string,IR Swap
+Swap_11,isdaSubProduct,string,Fixed Float
+Swap_11,isdaTransaction,string,
+Swap_11,legNPV[1],double,3266722.174761
+Swap_11,legNPV[2],double,-3266119.689189
+Swap_11,legType[1],string,Fixed
+Swap_11,legType[2],string,Floating
+Swap_11,notionalCurrency[1],string,EUR
+Swap_11,notionalCurrency[2],string,EUR
+Swap_11,originalNotional[1],double,10000000.000000
+Swap_11,originalNotional[2],double,10000000.000000
+Swap_11,paymentDate[1],string,2017-03-01
+Swap_11,paymentDate[2],string,2016-09-01
+Swap_11,rate[1],double,0.020000
+Swap_11,rate[2],double,0.019934
+Swap_11,spread[2],double,0.000000
+Swap_11,startDate,string,2016-03-01
+Swap_12,amount[1],double,200000.000000
+Swap_12,amount[2],double,101885.706669
+Swap_12,currentNotional[1],double,10000000.000000
+Swap_12,currentNotional[2],double,10000000.000000
+Swap_12,index[2],string,Euribor6M Actual/360
+Swap_12,isPayer[1],bool,false
+Swap_12,isPayer[2],bool,true
+Swap_12,isdaAssetClass,string,Interest Rate
+Swap_12,isdaBaseProduct,string,IR Swap
+Swap_12,isdaSubProduct,string,Fixed Float
+Swap_12,isdaTransaction,string,
+Swap_12,legNPV[1],double,3266722.174761
+Swap_12,legNPV[2],double,-3266119.689189
+Swap_12,legType[1],string,Fixed
+Swap_12,legType[2],string,Floating
+Swap_12,notionalCurrency[1],string,EUR
+Swap_12,notionalCurrency[2],string,EUR
+Swap_12,originalNotional[1],double,10000000.000000
+Swap_12,originalNotional[2],double,10000000.000000
+Swap_12,paymentDate[1],string,2017-03-01
+Swap_12,paymentDate[2],string,2016-09-01
+Swap_12,rate[1],double,0.020000
+Swap_12,rate[2],double,0.019934
+Swap_12,spread[2],double,0.000000
+Swap_12,startDate,string,2016-03-01
+Swap_13,amount[1],double,200000.000000
+Swap_13,amount[2],double,101885.706669
+Swap_13,currentNotional[1],double,10000000.000000
+Swap_13,currentNotional[2],double,10000000.000000
+Swap_13,index[2],string,Euribor6M Actual/360
+Swap_13,isPayer[1],bool,false
+Swap_13,isPayer[2],bool,true
+Swap_13,isdaAssetClass,string,Interest Rate
+Swap_13,isdaBaseProduct,string,IR Swap
+Swap_13,isdaSubProduct,string,Fixed Float
+Swap_13,isdaTransaction,string,
+Swap_13,legNPV[1],double,3266722.174761
+Swap_13,legNPV[2],double,-3266119.689189
+Swap_13,legType[1],string,Fixed
+Swap_13,legType[2],string,Floating
+Swap_13,notionalCurrency[1],string,EUR
+Swap_13,notionalCurrency[2],string,EUR
+Swap_13,originalNotional[1],double,10000000.000000
+Swap_13,originalNotional[2],double,10000000.000000
+Swap_13,paymentDate[1],string,2017-03-01
+Swap_13,paymentDate[2],string,2016-09-01
+Swap_13,rate[1],double,0.020000
+Swap_13,rate[2],double,0.019934
+Swap_13,spread[2],double,0.000000
+Swap_13,startDate,string,2016-03-01
+Swap_14,amount[1],double,200000.000000
+Swap_14,amount[2],double,101885.706669
+Swap_14,currentNotional[1],double,10000000.000000
+Swap_14,currentNotional[2],double,10000000.000000
+Swap_14,index[2],string,Euribor6M Actual/360
+Swap_14,isPayer[1],bool,false
+Swap_14,isPayer[2],bool,true
+Swap_14,isdaAssetClass,string,Interest Rate
+Swap_14,isdaBaseProduct,string,IR Swap
+Swap_14,isdaSubProduct,string,Fixed Float
+Swap_14,isdaTransaction,string,
+Swap_14,legNPV[1],double,3266722.174761
+Swap_14,legNPV[2],double,-3266119.689189
+Swap_14,legType[1],string,Fixed
+Swap_14,legType[2],string,Floating
+Swap_14,notionalCurrency[1],string,EUR
+Swap_14,notionalCurrency[2],string,EUR
+Swap_14,originalNotional[1],double,10000000.000000
+Swap_14,originalNotional[2],double,10000000.000000
+Swap_14,paymentDate[1],string,2017-03-01
+Swap_14,paymentDate[2],string,2016-09-01
+Swap_14,rate[1],double,0.020000
+Swap_14,rate[2],double,0.019934
+Swap_14,spread[2],double,0.000000
+Swap_14,startDate,string,2016-03-01
+Swap_15,amount[1],double,200000.000000
+Swap_15,amount[2],double,101885.706669
+Swap_15,currentNotional[1],double,10000000.000000
+Swap_15,currentNotional[2],double,10000000.000000
+Swap_15,index[2],string,Euribor6M Actual/360
+Swap_15,isPayer[1],bool,false
+Swap_15,isPayer[2],bool,true
+Swap_15,isdaAssetClass,string,Interest Rate
+Swap_15,isdaBaseProduct,string,IR Swap
+Swap_15,isdaSubProduct,string,Fixed Float
+Swap_15,isdaTransaction,string,
+Swap_15,legNPV[1],double,3266722.174761
+Swap_15,legNPV[2],double,-3266119.689189
+Swap_15,legType[1],string,Fixed
+Swap_15,legType[2],string,Floating
+Swap_15,notionalCurrency[1],string,EUR
+Swap_15,notionalCurrency[2],string,EUR
+Swap_15,originalNotional[1],double,10000000.000000
+Swap_15,originalNotional[2],double,10000000.000000
+Swap_15,paymentDate[1],string,2017-03-01
+Swap_15,paymentDate[2],string,2016-09-01
+Swap_15,rate[1],double,0.020000
+Swap_15,rate[2],double,0.019934
+Swap_15,spread[2],double,0.000000
+Swap_15,startDate,string,2016-03-01
+Swap_16,amount[1],double,200000.000000
+Swap_16,amount[2],double,101885.706669
+Swap_16,currentNotional[1],double,10000000.000000
+Swap_16,currentNotional[2],double,10000000.000000
+Swap_16,index[2],string,Euribor6M Actual/360
+Swap_16,isPayer[1],bool,false
+Swap_16,isPayer[2],bool,true
+Swap_16,isdaAssetClass,string,Interest Rate
+Swap_16,isdaBaseProduct,string,IR Swap
+Swap_16,isdaSubProduct,string,Fixed Float
+Swap_16,isdaTransaction,string,
+Swap_16,legNPV[1],double,3266722.174761
+Swap_16,legNPV[2],double,-3266119.689189
+Swap_16,legType[1],string,Fixed
+Swap_16,legType[2],string,Floating
+Swap_16,notionalCurrency[1],string,EUR
+Swap_16,notionalCurrency[2],string,EUR
+Swap_16,originalNotional[1],double,10000000.000000
+Swap_16,originalNotional[2],double,10000000.000000
+Swap_16,paymentDate[1],string,2017-03-01
+Swap_16,paymentDate[2],string,2016-09-01
+Swap_16,rate[1],double,0.020000
+Swap_16,rate[2],double,0.019934
+Swap_16,spread[2],double,0.000000
+Swap_16,startDate,string,2016-03-01
+Swap_17,amount[1],double,200000.000000
+Swap_17,amount[2],double,101885.706669
+Swap_17,currentNotional[1],double,10000000.000000
+Swap_17,currentNotional[2],double,10000000.000000
+Swap_17,index[2],string,Euribor6M Actual/360
+Swap_17,isPayer[1],bool,false
+Swap_17,isPayer[2],bool,true
+Swap_17,isdaAssetClass,string,Interest Rate
+Swap_17,isdaBaseProduct,string,IR Swap
+Swap_17,isdaSubProduct,string,Fixed Float
+Swap_17,isdaTransaction,string,
+Swap_17,legNPV[1],double,3266722.174761
+Swap_17,legNPV[2],double,-3266119.689189
+Swap_17,legType[1],string,Fixed
+Swap_17,legType[2],string,Floating
+Swap_17,notionalCurrency[1],string,EUR
+Swap_17,notionalCurrency[2],string,EUR
+Swap_17,originalNotional[1],double,10000000.000000
+Swap_17,originalNotional[2],double,10000000.000000
+Swap_17,paymentDate[1],string,2017-03-01
+Swap_17,paymentDate[2],string,2016-09-01
+Swap_17,rate[1],double,0.020000
+Swap_17,rate[2],double,0.019934
+Swap_17,spread[2],double,0.000000
+Swap_17,startDate,string,2016-03-01
+Swap_18,amount[1],double,200000.000000
+Swap_18,amount[2],double,101885.706669
+Swap_18,currentNotional[1],double,10000000.000000
+Swap_18,currentNotional[2],double,10000000.000000
+Swap_18,index[2],string,Euribor6M Actual/360
+Swap_18,isPayer[1],bool,false
+Swap_18,isPayer[2],bool,true
+Swap_18,isdaAssetClass,string,Interest Rate
+Swap_18,isdaBaseProduct,string,IR Swap
+Swap_18,isdaSubProduct,string,Fixed Float
+Swap_18,isdaTransaction,string,
+Swap_18,legNPV[1],double,3266722.174761
+Swap_18,legNPV[2],double,-3266119.689189
+Swap_18,legType[1],string,Fixed
+Swap_18,legType[2],string,Floating
+Swap_18,notionalCurrency[1],string,EUR
+Swap_18,notionalCurrency[2],string,EUR
+Swap_18,originalNotional[1],double,10000000.000000
+Swap_18,originalNotional[2],double,10000000.000000
+Swap_18,paymentDate[1],string,2017-03-01
+Swap_18,paymentDate[2],string,2016-09-01
+Swap_18,rate[1],double,0.020000
+Swap_18,rate[2],double,0.019934
+Swap_18,spread[2],double,0.000000
+Swap_18,startDate,string,2016-03-01
+Swap_19,amount[1],double,200000.000000
+Swap_19,amount[2],double,101885.706669
+Swap_19,currentNotional[1],double,10000000.000000
+Swap_19,currentNotional[2],double,10000000.000000
+Swap_19,index[2],string,Euribor6M Actual/360
+Swap_19,isPayer[1],bool,false
+Swap_19,isPayer[2],bool,true
+Swap_19,isdaAssetClass,string,Interest Rate
+Swap_19,isdaBaseProduct,string,IR Swap
+Swap_19,isdaSubProduct,string,Fixed Float
+Swap_19,isdaTransaction,string,
+Swap_19,legNPV[1],double,3266722.174761
+Swap_19,legNPV[2],double,-3266119.689189
+Swap_19,legType[1],string,Fixed
+Swap_19,legType[2],string,Floating
+Swap_19,notionalCurrency[1],string,EUR
+Swap_19,notionalCurrency[2],string,EUR
+Swap_19,originalNotional[1],double,10000000.000000
+Swap_19,originalNotional[2],double,10000000.000000
+Swap_19,paymentDate[1],string,2017-03-01
+Swap_19,paymentDate[2],string,2016-09-01
+Swap_19,rate[1],double,0.020000
+Swap_19,rate[2],double,0.019934
+Swap_19,spread[2],double,0.000000
+Swap_19,startDate,string,2016-03-01
+Swap_2,amount[1],double,200000.000000
+Swap_2,amount[2],double,101885.706669
+Swap_2,currentNotional[1],double,10000000.000000
+Swap_2,currentNotional[2],double,10000000.000000
+Swap_2,index[2],string,Euribor6M Actual/360
+Swap_2,isPayer[1],bool,false
+Swap_2,isPayer[2],bool,true
+Swap_2,isdaAssetClass,string,Interest Rate
+Swap_2,isdaBaseProduct,string,IR Swap
+Swap_2,isdaSubProduct,string,Fixed Float
+Swap_2,isdaTransaction,string,
+Swap_2,legNPV[1],double,3266722.174761
+Swap_2,legNPV[2],double,-3266119.689189
+Swap_2,legType[1],string,Fixed
+Swap_2,legType[2],string,Floating
+Swap_2,notionalCurrency[1],string,EUR
+Swap_2,notionalCurrency[2],string,EUR
+Swap_2,originalNotional[1],double,10000000.000000
+Swap_2,originalNotional[2],double,10000000.000000
+Swap_2,paymentDate[1],string,2017-03-01
+Swap_2,paymentDate[2],string,2016-09-01
+Swap_2,rate[1],double,0.020000
+Swap_2,rate[2],double,0.019934
+Swap_2,spread[2],double,0.000000
+Swap_2,startDate,string,2016-03-01
+Swap_20,amount[1],double,200000.000000
+Swap_20,amount[2],double,101885.706669
+Swap_20,currentNotional[1],double,10000000.000000
+Swap_20,currentNotional[2],double,10000000.000000
+Swap_20,index[2],string,Euribor6M Actual/360
+Swap_20,isPayer[1],bool,false
+Swap_20,isPayer[2],bool,true
+Swap_20,isdaAssetClass,string,Interest Rate
+Swap_20,isdaBaseProduct,string,IR Swap
+Swap_20,isdaSubProduct,string,Fixed Float
+Swap_20,isdaTransaction,string,
+Swap_20,legNPV[1],double,3266722.174761
+Swap_20,legNPV[2],double,-3266119.689189
+Swap_20,legType[1],string,Fixed
+Swap_20,legType[2],string,Floating
+Swap_20,notionalCurrency[1],string,EUR
+Swap_20,notionalCurrency[2],string,EUR
+Swap_20,originalNotional[1],double,10000000.000000
+Swap_20,originalNotional[2],double,10000000.000000
+Swap_20,paymentDate[1],string,2017-03-01
+Swap_20,paymentDate[2],string,2016-09-01
+Swap_20,rate[1],double,0.020000
+Swap_20,rate[2],double,0.019934
+Swap_20,spread[2],double,0.000000
+Swap_20,startDate,string,2016-03-01
+Swap_21,amount[1],double,200000.000000
+Swap_21,amount[2],double,101885.706669
+Swap_21,currentNotional[1],double,10000000.000000
+Swap_21,currentNotional[2],double,10000000.000000
+Swap_21,index[2],string,Euribor6M Actual/360
+Swap_21,isPayer[1],bool,false
+Swap_21,isPayer[2],bool,true
+Swap_21,isdaAssetClass,string,Interest Rate
+Swap_21,isdaBaseProduct,string,IR Swap
+Swap_21,isdaSubProduct,string,Fixed Float
+Swap_21,isdaTransaction,string,
+Swap_21,legNPV[1],double,3266722.174761
+Swap_21,legNPV[2],double,-3266119.689189
+Swap_21,legType[1],string,Fixed
+Swap_21,legType[2],string,Floating
+Swap_21,notionalCurrency[1],string,EUR
+Swap_21,notionalCurrency[2],string,EUR
+Swap_21,originalNotional[1],double,10000000.000000
+Swap_21,originalNotional[2],double,10000000.000000
+Swap_21,paymentDate[1],string,2017-03-01
+Swap_21,paymentDate[2],string,2016-09-01
+Swap_21,rate[1],double,0.020000
+Swap_21,rate[2],double,0.019934
+Swap_21,spread[2],double,0.000000
+Swap_21,startDate,string,2016-03-01
+Swap_22,amount[1],double,200000.000000
+Swap_22,amount[2],double,101885.706669
+Swap_22,currentNotional[1],double,10000000.000000
+Swap_22,currentNotional[2],double,10000000.000000
+Swap_22,index[2],string,Euribor6M Actual/360
+Swap_22,isPayer[1],bool,false
+Swap_22,isPayer[2],bool,true
+Swap_22,isdaAssetClass,string,Interest Rate
+Swap_22,isdaBaseProduct,string,IR Swap
+Swap_22,isdaSubProduct,string,Fixed Float
+Swap_22,isdaTransaction,string,
+Swap_22,legNPV[1],double,3266722.174761
+Swap_22,legNPV[2],double,-3266119.689189
+Swap_22,legType[1],string,Fixed
+Swap_22,legType[2],string,Floating
+Swap_22,notionalCurrency[1],string,EUR
+Swap_22,notionalCurrency[2],string,EUR
+Swap_22,originalNotional[1],double,10000000.000000
+Swap_22,originalNotional[2],double,10000000.000000
+Swap_22,paymentDate[1],string,2017-03-01
+Swap_22,paymentDate[2],string,2016-09-01
+Swap_22,rate[1],double,0.020000
+Swap_22,rate[2],double,0.019934
+Swap_22,spread[2],double,0.000000
+Swap_22,startDate,string,2016-03-01
+Swap_23,amount[1],double,200000.000000
+Swap_23,amount[2],double,101885.706669
+Swap_23,currentNotional[1],double,10000000.000000
+Swap_23,currentNotional[2],double,10000000.000000
+Swap_23,index[2],string,Euribor6M Actual/360
+Swap_23,isPayer[1],bool,false
+Swap_23,isPayer[2],bool,true
+Swap_23,isdaAssetClass,string,Interest Rate
+Swap_23,isdaBaseProduct,string,IR Swap
+Swap_23,isdaSubProduct,string,Fixed Float
+Swap_23,isdaTransaction,string,
+Swap_23,legNPV[1],double,3266722.174761
+Swap_23,legNPV[2],double,-3266119.689189
+Swap_23,legType[1],string,Fixed
+Swap_23,legType[2],string,Floating
+Swap_23,notionalCurrency[1],string,EUR
+Swap_23,notionalCurrency[2],string,EUR
+Swap_23,originalNotional[1],double,10000000.000000
+Swap_23,originalNotional[2],double,10000000.000000
+Swap_23,paymentDate[1],string,2017-03-01
+Swap_23,paymentDate[2],string,2016-09-01
+Swap_23,rate[1],double,0.020000
+Swap_23,rate[2],double,0.019934
+Swap_23,spread[2],double,0.000000
+Swap_23,startDate,string,2016-03-01
+Swap_24,amount[1],double,200000.000000
+Swap_24,amount[2],double,101885.706669
+Swap_24,currentNotional[1],double,10000000.000000
+Swap_24,currentNotional[2],double,10000000.000000
+Swap_24,index[2],string,Euribor6M Actual/360
+Swap_24,isPayer[1],bool,false
+Swap_24,isPayer[2],bool,true
+Swap_24,isdaAssetClass,string,Interest Rate
+Swap_24,isdaBaseProduct,string,IR Swap
+Swap_24,isdaSubProduct,string,Fixed Float
+Swap_24,isdaTransaction,string,
+Swap_24,legNPV[1],double,3266722.174761
+Swap_24,legNPV[2],double,-3266119.689189
+Swap_24,legType[1],string,Fixed
+Swap_24,legType[2],string,Floating
+Swap_24,notionalCurrency[1],string,EUR
+Swap_24,notionalCurrency[2],string,EUR
+Swap_24,originalNotional[1],double,10000000.000000
+Swap_24,originalNotional[2],double,10000000.000000
+Swap_24,paymentDate[1],string,2017-03-01
+Swap_24,paymentDate[2],string,2016-09-01
+Swap_24,rate[1],double,0.020000
+Swap_24,rate[2],double,0.019934
+Swap_24,spread[2],double,0.000000
+Swap_24,startDate,string,2016-03-01
+Swap_25,amount[1],double,200000.000000
+Swap_25,amount[2],double,101885.706669
+Swap_25,currentNotional[1],double,10000000.000000
+Swap_25,currentNotional[2],double,10000000.000000
+Swap_25,index[2],string,Euribor6M Actual/360
+Swap_25,isPayer[1],bool,false
+Swap_25,isPayer[2],bool,true
+Swap_25,isdaAssetClass,string,Interest Rate
+Swap_25,isdaBaseProduct,string,IR Swap
+Swap_25,isdaSubProduct,string,Fixed Float
+Swap_25,isdaTransaction,string,
+Swap_25,legNPV[1],double,3266722.174761
+Swap_25,legNPV[2],double,-3266119.689189
+Swap_25,legType[1],string,Fixed
+Swap_25,legType[2],string,Floating
+Swap_25,notionalCurrency[1],string,EUR
+Swap_25,notionalCurrency[2],string,EUR
+Swap_25,originalNotional[1],double,10000000.000000
+Swap_25,originalNotional[2],double,10000000.000000
+Swap_25,paymentDate[1],string,2017-03-01
+Swap_25,paymentDate[2],string,2016-09-01
+Swap_25,rate[1],double,0.020000
+Swap_25,rate[2],double,0.019934
+Swap_25,spread[2],double,0.000000
+Swap_25,startDate,string,2016-03-01
+Swap_26,amount[1],double,200000.000000
+Swap_26,amount[2],double,101885.706669
+Swap_26,currentNotional[1],double,10000000.000000
+Swap_26,currentNotional[2],double,10000000.000000
+Swap_26,index[2],string,Euribor6M Actual/360
+Swap_26,isPayer[1],bool,false
+Swap_26,isPayer[2],bool,true
+Swap_26,isdaAssetClass,string,Interest Rate
+Swap_26,isdaBaseProduct,string,IR Swap
+Swap_26,isdaSubProduct,string,Fixed Float
+Swap_26,isdaTransaction,string,
+Swap_26,legNPV[1],double,3266722.174761
+Swap_26,legNPV[2],double,-3266119.689189
+Swap_26,legType[1],string,Fixed
+Swap_26,legType[2],string,Floating
+Swap_26,notionalCurrency[1],string,EUR
+Swap_26,notionalCurrency[2],string,EUR
+Swap_26,originalNotional[1],double,10000000.000000
+Swap_26,originalNotional[2],double,10000000.000000
+Swap_26,paymentDate[1],string,2017-03-01
+Swap_26,paymentDate[2],string,2016-09-01
+Swap_26,rate[1],double,0.020000
+Swap_26,rate[2],double,0.019934
+Swap_26,spread[2],double,0.000000
+Swap_26,startDate,string,2016-03-01
+Swap_27,amount[1],double,200000.000000
+Swap_27,amount[2],double,101885.706669
+Swap_27,currentNotional[1],double,10000000.000000
+Swap_27,currentNotional[2],double,10000000.000000
+Swap_27,index[2],string,Euribor6M Actual/360
+Swap_27,isPayer[1],bool,false
+Swap_27,isPayer[2],bool,true
+Swap_27,isdaAssetClass,string,Interest Rate
+Swap_27,isdaBaseProduct,string,IR Swap
+Swap_27,isdaSubProduct,string,Fixed Float
+Swap_27,isdaTransaction,string,
+Swap_27,legNPV[1],double,3266722.174761
+Swap_27,legNPV[2],double,-3266119.689189
+Swap_27,legType[1],string,Fixed
+Swap_27,legType[2],string,Floating
+Swap_27,notionalCurrency[1],string,EUR
+Swap_27,notionalCurrency[2],string,EUR
+Swap_27,originalNotional[1],double,10000000.000000
+Swap_27,originalNotional[2],double,10000000.000000
+Swap_27,paymentDate[1],string,2017-03-01
+Swap_27,paymentDate[2],string,2016-09-01
+Swap_27,rate[1],double,0.020000
+Swap_27,rate[2],double,0.019934
+Swap_27,spread[2],double,0.000000
+Swap_27,startDate,string,2016-03-01
+Swap_28,amount[1],double,200000.000000
+Swap_28,amount[2],double,101885.706669
+Swap_28,currentNotional[1],double,10000000.000000
+Swap_28,currentNotional[2],double,10000000.000000
+Swap_28,index[2],string,Euribor6M Actual/360
+Swap_28,isPayer[1],bool,false
+Swap_28,isPayer[2],bool,true
+Swap_28,isdaAssetClass,string,Interest Rate
+Swap_28,isdaBaseProduct,string,IR Swap
+Swap_28,isdaSubProduct,string,Fixed Float
+Swap_28,isdaTransaction,string,
+Swap_28,legNPV[1],double,3266722.174761
+Swap_28,legNPV[2],double,-3266119.689189
+Swap_28,legType[1],string,Fixed
+Swap_28,legType[2],string,Floating
+Swap_28,notionalCurrency[1],string,EUR
+Swap_28,notionalCurrency[2],string,EUR
+Swap_28,originalNotional[1],double,10000000.000000
+Swap_28,originalNotional[2],double,10000000.000000
+Swap_28,paymentDate[1],string,2017-03-01
+Swap_28,paymentDate[2],string,2016-09-01
+Swap_28,rate[1],double,0.020000
+Swap_28,rate[2],double,0.019934
+Swap_28,spread[2],double,0.000000
+Swap_28,startDate,string,2016-03-01
+Swap_29,amount[1],double,200000.000000
+Swap_29,amount[2],double,101885.706669
+Swap_29,currentNotional[1],double,10000000.000000
+Swap_29,currentNotional[2],double,10000000.000000
+Swap_29,index[2],string,Euribor6M Actual/360
+Swap_29,isPayer[1],bool,false
+Swap_29,isPayer[2],bool,true
+Swap_29,isdaAssetClass,string,Interest Rate
+Swap_29,isdaBaseProduct,string,IR Swap
+Swap_29,isdaSubProduct,string,Fixed Float
+Swap_29,isdaTransaction,string,
+Swap_29,legNPV[1],double,3266722.174761
+Swap_29,legNPV[2],double,-3266119.689189
+Swap_29,legType[1],string,Fixed
+Swap_29,legType[2],string,Floating
+Swap_29,notionalCurrency[1],string,EUR
+Swap_29,notionalCurrency[2],string,EUR
+Swap_29,originalNotional[1],double,10000000.000000
+Swap_29,originalNotional[2],double,10000000.000000
+Swap_29,paymentDate[1],string,2017-03-01
+Swap_29,paymentDate[2],string,2016-09-01
+Swap_29,rate[1],double,0.020000
+Swap_29,rate[2],double,0.019934
+Swap_29,spread[2],double,0.000000
+Swap_29,startDate,string,2016-03-01
+Swap_3,amount[1],double,200000.000000
+Swap_3,amount[2],double,101885.706669
+Swap_3,currentNotional[1],double,10000000.000000
+Swap_3,currentNotional[2],double,10000000.000000
+Swap_3,index[2],string,Euribor6M Actual/360
+Swap_3,isPayer[1],bool,false
+Swap_3,isPayer[2],bool,true
+Swap_3,isdaAssetClass,string,Interest Rate
+Swap_3,isdaBaseProduct,string,IR Swap
+Swap_3,isdaSubProduct,string,Fixed Float
+Swap_3,isdaTransaction,string,
+Swap_3,legNPV[1],double,3266722.174761
+Swap_3,legNPV[2],double,-3266119.689189
+Swap_3,legType[1],string,Fixed
+Swap_3,legType[2],string,Floating
+Swap_3,notionalCurrency[1],string,EUR
+Swap_3,notionalCurrency[2],string,EUR
+Swap_3,originalNotional[1],double,10000000.000000
+Swap_3,originalNotional[2],double,10000000.000000
+Swap_3,paymentDate[1],string,2017-03-01
+Swap_3,paymentDate[2],string,2016-09-01
+Swap_3,rate[1],double,0.020000
+Swap_3,rate[2],double,0.019934
+Swap_3,spread[2],double,0.000000
+Swap_3,startDate,string,2016-03-01
+Swap_30,amount[1],double,200000.000000
+Swap_30,amount[2],double,101885.706669
+Swap_30,currentNotional[1],double,10000000.000000
+Swap_30,currentNotional[2],double,10000000.000000
+Swap_30,index[2],string,Euribor6M Actual/360
+Swap_30,isPayer[1],bool,false
+Swap_30,isPayer[2],bool,true
+Swap_30,isdaAssetClass,string,Interest Rate
+Swap_30,isdaBaseProduct,string,IR Swap
+Swap_30,isdaSubProduct,string,Fixed Float
+Swap_30,isdaTransaction,string,
+Swap_30,legNPV[1],double,3266722.174761
+Swap_30,legNPV[2],double,-3266119.689189
+Swap_30,legType[1],string,Fixed
+Swap_30,legType[2],string,Floating
+Swap_30,notionalCurrency[1],string,EUR
+Swap_30,notionalCurrency[2],string,EUR
+Swap_30,originalNotional[1],double,10000000.000000
+Swap_30,originalNotional[2],double,10000000.000000
+Swap_30,paymentDate[1],string,2017-03-01
+Swap_30,paymentDate[2],string,2016-09-01
+Swap_30,rate[1],double,0.020000
+Swap_30,rate[2],double,0.019934
+Swap_30,spread[2],double,0.000000
+Swap_30,startDate,string,2016-03-01
+Swap_31,amount[1],double,200000.000000
+Swap_31,amount[2],double,101885.706669
+Swap_31,currentNotional[1],double,10000000.000000
+Swap_31,currentNotional[2],double,10000000.000000
+Swap_31,index[2],string,Euribor6M Actual/360
+Swap_31,isPayer[1],bool,false
+Swap_31,isPayer[2],bool,true
+Swap_31,isdaAssetClass,string,Interest Rate
+Swap_31,isdaBaseProduct,string,IR Swap
+Swap_31,isdaSubProduct,string,Fixed Float
+Swap_31,isdaTransaction,string,
+Swap_31,legNPV[1],double,3266722.174761
+Swap_31,legNPV[2],double,-3266119.689189
+Swap_31,legType[1],string,Fixed
+Swap_31,legType[2],string,Floating
+Swap_31,notionalCurrency[1],string,EUR
+Swap_31,notionalCurrency[2],string,EUR
+Swap_31,originalNotional[1],double,10000000.000000
+Swap_31,originalNotional[2],double,10000000.000000
+Swap_31,paymentDate[1],string,2017-03-01
+Swap_31,paymentDate[2],string,2016-09-01
+Swap_31,rate[1],double,0.020000
+Swap_31,rate[2],double,0.019934
+Swap_31,spread[2],double,0.000000
+Swap_31,startDate,string,2016-03-01
+Swap_32,amount[1],double,200000.000000
+Swap_32,amount[2],double,101885.706669
+Swap_32,currentNotional[1],double,10000000.000000
+Swap_32,currentNotional[2],double,10000000.000000
+Swap_32,index[2],string,Euribor6M Actual/360
+Swap_32,isPayer[1],bool,false
+Swap_32,isPayer[2],bool,true
+Swap_32,isdaAssetClass,string,Interest Rate
+Swap_32,isdaBaseProduct,string,IR Swap
+Swap_32,isdaSubProduct,string,Fixed Float
+Swap_32,isdaTransaction,string,
+Swap_32,legNPV[1],double,3266722.174761
+Swap_32,legNPV[2],double,-3266119.689189
+Swap_32,legType[1],string,Fixed
+Swap_32,legType[2],string,Floating
+Swap_32,notionalCurrency[1],string,EUR
+Swap_32,notionalCurrency[2],string,EUR
+Swap_32,originalNotional[1],double,10000000.000000
+Swap_32,originalNotional[2],double,10000000.000000
+Swap_32,paymentDate[1],string,2017-03-01
+Swap_32,paymentDate[2],string,2016-09-01
+Swap_32,rate[1],double,0.020000
+Swap_32,rate[2],double,0.019934
+Swap_32,spread[2],double,0.000000
+Swap_32,startDate,string,2016-03-01
+Swap_33,amount[1],double,200000.000000
+Swap_33,amount[2],double,101885.706669
+Swap_33,currentNotional[1],double,10000000.000000
+Swap_33,currentNotional[2],double,10000000.000000
+Swap_33,index[2],string,Euribor6M Actual/360
+Swap_33,isPayer[1],bool,false
+Swap_33,isPayer[2],bool,true
+Swap_33,isdaAssetClass,string,Interest Rate
+Swap_33,isdaBaseProduct,string,IR Swap
+Swap_33,isdaSubProduct,string,Fixed Float
+Swap_33,isdaTransaction,string,
+Swap_33,legNPV[1],double,3266722.174761
+Swap_33,legNPV[2],double,-3266119.689189
+Swap_33,legType[1],string,Fixed
+Swap_33,legType[2],string,Floating
+Swap_33,notionalCurrency[1],string,EUR
+Swap_33,notionalCurrency[2],string,EUR
+Swap_33,originalNotional[1],double,10000000.000000
+Swap_33,originalNotional[2],double,10000000.000000
+Swap_33,paymentDate[1],string,2017-03-01
+Swap_33,paymentDate[2],string,2016-09-01
+Swap_33,rate[1],double,0.020000
+Swap_33,rate[2],double,0.019934
+Swap_33,spread[2],double,0.000000
+Swap_33,startDate,string,2016-03-01
+Swap_34,amount[1],double,200000.000000
+Swap_34,amount[2],double,101885.706669
+Swap_34,currentNotional[1],double,10000000.000000
+Swap_34,currentNotional[2],double,10000000.000000
+Swap_34,index[2],string,Euribor6M Actual/360
+Swap_34,isPayer[1],bool,false
+Swap_34,isPayer[2],bool,true
+Swap_34,isdaAssetClass,string,Interest Rate
+Swap_34,isdaBaseProduct,string,IR Swap
+Swap_34,isdaSubProduct,string,Fixed Float
+Swap_34,isdaTransaction,string,
+Swap_34,legNPV[1],double,3266722.174761
+Swap_34,legNPV[2],double,-3266119.689189
+Swap_34,legType[1],string,Fixed
+Swap_34,legType[2],string,Floating
+Swap_34,notionalCurrency[1],string,EUR
+Swap_34,notionalCurrency[2],string,EUR
+Swap_34,originalNotional[1],double,10000000.000000
+Swap_34,originalNotional[2],double,10000000.000000
+Swap_34,paymentDate[1],string,2017-03-01
+Swap_34,paymentDate[2],string,2016-09-01
+Swap_34,rate[1],double,0.020000
+Swap_34,rate[2],double,0.019934
+Swap_34,spread[2],double,0.000000
+Swap_34,startDate,string,2016-03-01
+Swap_35,amount[1],double,200000.000000
+Swap_35,amount[2],double,101885.706669
+Swap_35,currentNotional[1],double,10000000.000000
+Swap_35,currentNotional[2],double,10000000.000000
+Swap_35,index[2],string,Euribor6M Actual/360
+Swap_35,isPayer[1],bool,false
+Swap_35,isPayer[2],bool,true
+Swap_35,isdaAssetClass,string,Interest Rate
+Swap_35,isdaBaseProduct,string,IR Swap
+Swap_35,isdaSubProduct,string,Fixed Float
+Swap_35,isdaTransaction,string,
+Swap_35,legNPV[1],double,3266722.174761
+Swap_35,legNPV[2],double,-3266119.689189
+Swap_35,legType[1],string,Fixed
+Swap_35,legType[2],string,Floating
+Swap_35,notionalCurrency[1],string,EUR
+Swap_35,notionalCurrency[2],string,EUR
+Swap_35,originalNotional[1],double,10000000.000000
+Swap_35,originalNotional[2],double,10000000.000000
+Swap_35,paymentDate[1],string,2017-03-01
+Swap_35,paymentDate[2],string,2016-09-01
+Swap_35,rate[1],double,0.020000
+Swap_35,rate[2],double,0.019934
+Swap_35,spread[2],double,0.000000
+Swap_35,startDate,string,2016-03-01
+Swap_36,amount[1],double,200000.000000
+Swap_36,amount[2],double,101885.706669
+Swap_36,currentNotional[1],double,10000000.000000
+Swap_36,currentNotional[2],double,10000000.000000
+Swap_36,index[2],string,Euribor6M Actual/360
+Swap_36,isPayer[1],bool,false
+Swap_36,isPayer[2],bool,true
+Swap_36,isdaAssetClass,string,Interest Rate
+Swap_36,isdaBaseProduct,string,IR Swap
+Swap_36,isdaSubProduct,string,Fixed Float
+Swap_36,isdaTransaction,string,
+Swap_36,legNPV[1],double,3266722.174761
+Swap_36,legNPV[2],double,-3266119.689189
+Swap_36,legType[1],string,Fixed
+Swap_36,legType[2],string,Floating
+Swap_36,notionalCurrency[1],string,EUR
+Swap_36,notionalCurrency[2],string,EUR
+Swap_36,originalNotional[1],double,10000000.000000
+Swap_36,originalNotional[2],double,10000000.000000
+Swap_36,paymentDate[1],string,2017-03-01
+Swap_36,paymentDate[2],string,2016-09-01
+Swap_36,rate[1],double,0.020000
+Swap_36,rate[2],double,0.019934
+Swap_36,spread[2],double,0.000000
+Swap_36,startDate,string,2016-03-01
+Swap_37,amount[1],double,200000.000000
+Swap_37,amount[2],double,101885.706669
+Swap_37,currentNotional[1],double,10000000.000000
+Swap_37,currentNotional[2],double,10000000.000000
+Swap_37,index[2],string,Euribor6M Actual/360
+Swap_37,isPayer[1],bool,false
+Swap_37,isPayer[2],bool,true
+Swap_37,isdaAssetClass,string,Interest Rate
+Swap_37,isdaBaseProduct,string,IR Swap
+Swap_37,isdaSubProduct,string,Fixed Float
+Swap_37,isdaTransaction,string,
+Swap_37,legNPV[1],double,3266722.174761
+Swap_37,legNPV[2],double,-3266119.689189
+Swap_37,legType[1],string,Fixed
+Swap_37,legType[2],string,Floating
+Swap_37,notionalCurrency[1],string,EUR
+Swap_37,notionalCurrency[2],string,EUR
+Swap_37,originalNotional[1],double,10000000.000000
+Swap_37,originalNotional[2],double,10000000.000000
+Swap_37,paymentDate[1],string,2017-03-01
+Swap_37,paymentDate[2],string,2016-09-01
+Swap_37,rate[1],double,0.020000
+Swap_37,rate[2],double,0.019934
+Swap_37,spread[2],double,0.000000
+Swap_37,startDate,string,2016-03-01
+Swap_38,amount[1],double,200000.000000
+Swap_38,amount[2],double,101885.706669
+Swap_38,currentNotional[1],double,10000000.000000
+Swap_38,currentNotional[2],double,10000000.000000
+Swap_38,index[2],string,Euribor6M Actual/360
+Swap_38,isPayer[1],bool,false
+Swap_38,isPayer[2],bool,true
+Swap_38,isdaAssetClass,string,Interest Rate
+Swap_38,isdaBaseProduct,string,IR Swap
+Swap_38,isdaSubProduct,string,Fixed Float
+Swap_38,isdaTransaction,string,
+Swap_38,legNPV[1],double,3266722.174761
+Swap_38,legNPV[2],double,-3266119.689189
+Swap_38,legType[1],string,Fixed
+Swap_38,legType[2],string,Floating
+Swap_38,notionalCurrency[1],string,EUR
+Swap_38,notionalCurrency[2],string,EUR
+Swap_38,originalNotional[1],double,10000000.000000
+Swap_38,originalNotional[2],double,10000000.000000
+Swap_38,paymentDate[1],string,2017-03-01
+Swap_38,paymentDate[2],string,2016-09-01
+Swap_38,rate[1],double,0.020000
+Swap_38,rate[2],double,0.019934
+Swap_38,spread[2],double,0.000000
+Swap_38,startDate,string,2016-03-01
+Swap_39,amount[1],double,200000.000000
+Swap_39,amount[2],double,101885.706669
+Swap_39,currentNotional[1],double,10000000.000000
+Swap_39,currentNotional[2],double,10000000.000000
+Swap_39,index[2],string,Euribor6M Actual/360
+Swap_39,isPayer[1],bool,false
+Swap_39,isPayer[2],bool,true
+Swap_39,isdaAssetClass,string,Interest Rate
+Swap_39,isdaBaseProduct,string,IR Swap
+Swap_39,isdaSubProduct,string,Fixed Float
+Swap_39,isdaTransaction,string,
+Swap_39,legNPV[1],double,3266722.174761
+Swap_39,legNPV[2],double,-3266119.689189
+Swap_39,legType[1],string,Fixed
+Swap_39,legType[2],string,Floating
+Swap_39,notionalCurrency[1],string,EUR
+Swap_39,notionalCurrency[2],string,EUR
+Swap_39,originalNotional[1],double,10000000.000000
+Swap_39,originalNotional[2],double,10000000.000000
+Swap_39,paymentDate[1],string,2017-03-01
+Swap_39,paymentDate[2],string,2016-09-01
+Swap_39,rate[1],double,0.020000
+Swap_39,rate[2],double,0.019934
+Swap_39,spread[2],double,0.000000
+Swap_39,startDate,string,2016-03-01
+Swap_4,amount[1],double,200000.000000
+Swap_4,amount[2],double,101885.706669
+Swap_4,currentNotional[1],double,10000000.000000
+Swap_4,currentNotional[2],double,10000000.000000
+Swap_4,index[2],string,Euribor6M Actual/360
+Swap_4,isPayer[1],bool,false
+Swap_4,isPayer[2],bool,true
+Swap_4,isdaAssetClass,string,Interest Rate
+Swap_4,isdaBaseProduct,string,IR Swap
+Swap_4,isdaSubProduct,string,Fixed Float
+Swap_4,isdaTransaction,string,
+Swap_4,legNPV[1],double,3266722.174761
+Swap_4,legNPV[2],double,-3266119.689189
+Swap_4,legType[1],string,Fixed
+Swap_4,legType[2],string,Floating
+Swap_4,notionalCurrency[1],string,EUR
+Swap_4,notionalCurrency[2],string,EUR
+Swap_4,originalNotional[1],double,10000000.000000
+Swap_4,originalNotional[2],double,10000000.000000
+Swap_4,paymentDate[1],string,2017-03-01
+Swap_4,paymentDate[2],string,2016-09-01
+Swap_4,rate[1],double,0.020000
+Swap_4,rate[2],double,0.019934
+Swap_4,spread[2],double,0.000000
+Swap_4,startDate,string,2016-03-01
+Swap_40,amount[1],double,200000.000000
+Swap_40,amount[2],double,101885.706669
+Swap_40,currentNotional[1],double,10000000.000000
+Swap_40,currentNotional[2],double,10000000.000000
+Swap_40,index[2],string,Euribor6M Actual/360
+Swap_40,isPayer[1],bool,false
+Swap_40,isPayer[2],bool,true
+Swap_40,isdaAssetClass,string,Interest Rate
+Swap_40,isdaBaseProduct,string,IR Swap
+Swap_40,isdaSubProduct,string,Fixed Float
+Swap_40,isdaTransaction,string,
+Swap_40,legNPV[1],double,3266722.174761
+Swap_40,legNPV[2],double,-3266119.689189
+Swap_40,legType[1],string,Fixed
+Swap_40,legType[2],string,Floating
+Swap_40,notionalCurrency[1],string,EUR
+Swap_40,notionalCurrency[2],string,EUR
+Swap_40,originalNotional[1],double,10000000.000000
+Swap_40,originalNotional[2],double,10000000.000000
+Swap_40,paymentDate[1],string,2017-03-01
+Swap_40,paymentDate[2],string,2016-09-01
+Swap_40,rate[1],double,0.020000
+Swap_40,rate[2],double,0.019934
+Swap_40,spread[2],double,0.000000
+Swap_40,startDate,string,2016-03-01
+Swap_41,amount[1],double,200000.000000
+Swap_41,amount[2],double,101885.706669
+Swap_41,currentNotional[1],double,10000000.000000
+Swap_41,currentNotional[2],double,10000000.000000
+Swap_41,index[2],string,Euribor6M Actual/360
+Swap_41,isPayer[1],bool,false
+Swap_41,isPayer[2],bool,true
+Swap_41,isdaAssetClass,string,Interest Rate
+Swap_41,isdaBaseProduct,string,IR Swap
+Swap_41,isdaSubProduct,string,Fixed Float
+Swap_41,isdaTransaction,string,
+Swap_41,legNPV[1],double,3266722.174761
+Swap_41,legNPV[2],double,-3266119.689189
+Swap_41,legType[1],string,Fixed
+Swap_41,legType[2],string,Floating
+Swap_41,notionalCurrency[1],string,EUR
+Swap_41,notionalCurrency[2],string,EUR
+Swap_41,originalNotional[1],double,10000000.000000
+Swap_41,originalNotional[2],double,10000000.000000
+Swap_41,paymentDate[1],string,2017-03-01
+Swap_41,paymentDate[2],string,2016-09-01
+Swap_41,rate[1],double,0.020000
+Swap_41,rate[2],double,0.019934
+Swap_41,spread[2],double,0.000000
+Swap_41,startDate,string,2016-03-01
+Swap_42,amount[1],double,200000.000000
+Swap_42,amount[2],double,101885.706669
+Swap_42,currentNotional[1],double,10000000.000000
+Swap_42,currentNotional[2],double,10000000.000000
+Swap_42,index[2],string,Euribor6M Actual/360
+Swap_42,isPayer[1],bool,false
+Swap_42,isPayer[2],bool,true
+Swap_42,isdaAssetClass,string,Interest Rate
+Swap_42,isdaBaseProduct,string,IR Swap
+Swap_42,isdaSubProduct,string,Fixed Float
+Swap_42,isdaTransaction,string,
+Swap_42,legNPV[1],double,3266722.174761
+Swap_42,legNPV[2],double,-3266119.689189
+Swap_42,legType[1],string,Fixed
+Swap_42,legType[2],string,Floating
+Swap_42,notionalCurrency[1],string,EUR
+Swap_42,notionalCurrency[2],string,EUR
+Swap_42,originalNotional[1],double,10000000.000000
+Swap_42,originalNotional[2],double,10000000.000000
+Swap_42,paymentDate[1],string,2017-03-01
+Swap_42,paymentDate[2],string,2016-09-01
+Swap_42,rate[1],double,0.020000
+Swap_42,rate[2],double,0.019934
+Swap_42,spread[2],double,0.000000
+Swap_42,startDate,string,2016-03-01
+Swap_43,amount[1],double,200000.000000
+Swap_43,amount[2],double,101885.706669
+Swap_43,currentNotional[1],double,10000000.000000
+Swap_43,currentNotional[2],double,10000000.000000
+Swap_43,index[2],string,Euribor6M Actual/360
+Swap_43,isPayer[1],bool,false
+Swap_43,isPayer[2],bool,true
+Swap_43,isdaAssetClass,string,Interest Rate
+Swap_43,isdaBaseProduct,string,IR Swap
+Swap_43,isdaSubProduct,string,Fixed Float
+Swap_43,isdaTransaction,string,
+Swap_43,legNPV[1],double,3266722.174761
+Swap_43,legNPV[2],double,-3266119.689189
+Swap_43,legType[1],string,Fixed
+Swap_43,legType[2],string,Floating
+Swap_43,notionalCurrency[1],string,EUR
+Swap_43,notionalCurrency[2],string,EUR
+Swap_43,originalNotional[1],double,10000000.000000
+Swap_43,originalNotional[2],double,10000000.000000
+Swap_43,paymentDate[1],string,2017-03-01
+Swap_43,paymentDate[2],string,2016-09-01
+Swap_43,rate[1],double,0.020000
+Swap_43,rate[2],double,0.019934
+Swap_43,spread[2],double,0.000000
+Swap_43,startDate,string,2016-03-01
+Swap_44,amount[1],double,200000.000000
+Swap_44,amount[2],double,101885.706669
+Swap_44,currentNotional[1],double,10000000.000000
+Swap_44,currentNotional[2],double,10000000.000000
+Swap_44,index[2],string,Euribor6M Actual/360
+Swap_44,isPayer[1],bool,false
+Swap_44,isPayer[2],bool,true
+Swap_44,isdaAssetClass,string,Interest Rate
+Swap_44,isdaBaseProduct,string,IR Swap
+Swap_44,isdaSubProduct,string,Fixed Float
+Swap_44,isdaTransaction,string,
+Swap_44,legNPV[1],double,3266722.174761
+Swap_44,legNPV[2],double,-3266119.689189
+Swap_44,legType[1],string,Fixed
+Swap_44,legType[2],string,Floating
+Swap_44,notionalCurrency[1],string,EUR
+Swap_44,notionalCurrency[2],string,EUR
+Swap_44,originalNotional[1],double,10000000.000000
+Swap_44,originalNotional[2],double,10000000.000000
+Swap_44,paymentDate[1],string,2017-03-01
+Swap_44,paymentDate[2],string,2016-09-01
+Swap_44,rate[1],double,0.020000
+Swap_44,rate[2],double,0.019934
+Swap_44,spread[2],double,0.000000
+Swap_44,startDate,string,2016-03-01
+Swap_45,amount[1],double,200000.000000
+Swap_45,amount[2],double,101885.706669
+Swap_45,currentNotional[1],double,10000000.000000
+Swap_45,currentNotional[2],double,10000000.000000
+Swap_45,index[2],string,Euribor6M Actual/360
+Swap_45,isPayer[1],bool,false
+Swap_45,isPayer[2],bool,true
+Swap_45,isdaAssetClass,string,Interest Rate
+Swap_45,isdaBaseProduct,string,IR Swap
+Swap_45,isdaSubProduct,string,Fixed Float
+Swap_45,isdaTransaction,string,
+Swap_45,legNPV[1],double,3266722.174761
+Swap_45,legNPV[2],double,-3266119.689189
+Swap_45,legType[1],string,Fixed
+Swap_45,legType[2],string,Floating
+Swap_45,notionalCurrency[1],string,EUR
+Swap_45,notionalCurrency[2],string,EUR
+Swap_45,originalNotional[1],double,10000000.000000
+Swap_45,originalNotional[2],double,10000000.000000
+Swap_45,paymentDate[1],string,2017-03-01
+Swap_45,paymentDate[2],string,2016-09-01
+Swap_45,rate[1],double,0.020000
+Swap_45,rate[2],double,0.019934
+Swap_45,spread[2],double,0.000000
+Swap_45,startDate,string,2016-03-01
+Swap_46,amount[1],double,200000.000000
+Swap_46,amount[2],double,101885.706669
+Swap_46,currentNotional[1],double,10000000.000000
+Swap_46,currentNotional[2],double,10000000.000000
+Swap_46,index[2],string,Euribor6M Actual/360
+Swap_46,isPayer[1],bool,false
+Swap_46,isPayer[2],bool,true
+Swap_46,isdaAssetClass,string,Interest Rate
+Swap_46,isdaBaseProduct,string,IR Swap
+Swap_46,isdaSubProduct,string,Fixed Float
+Swap_46,isdaTransaction,string,
+Swap_46,legNPV[1],double,3266722.174761
+Swap_46,legNPV[2],double,-3266119.689189
+Swap_46,legType[1],string,Fixed
+Swap_46,legType[2],string,Floating
+Swap_46,notionalCurrency[1],string,EUR
+Swap_46,notionalCurrency[2],string,EUR
+Swap_46,originalNotional[1],double,10000000.000000
+Swap_46,originalNotional[2],double,10000000.000000
+Swap_46,paymentDate[1],string,2017-03-01
+Swap_46,paymentDate[2],string,2016-09-01
+Swap_46,rate[1],double,0.020000
+Swap_46,rate[2],double,0.019934
+Swap_46,spread[2],double,0.000000
+Swap_46,startDate,string,2016-03-01
+Swap_47,amount[1],double,200000.000000
+Swap_47,amount[2],double,101885.706669
+Swap_47,currentNotional[1],double,10000000.000000
+Swap_47,currentNotional[2],double,10000000.000000
+Swap_47,index[2],string,Euribor6M Actual/360
+Swap_47,isPayer[1],bool,false
+Swap_47,isPayer[2],bool,true
+Swap_47,isdaAssetClass,string,Interest Rate
+Swap_47,isdaBaseProduct,string,IR Swap
+Swap_47,isdaSubProduct,string,Fixed Float
+Swap_47,isdaTransaction,string,
+Swap_47,legNPV[1],double,3266722.174761
+Swap_47,legNPV[2],double,-3266119.689189
+Swap_47,legType[1],string,Fixed
+Swap_47,legType[2],string,Floating
+Swap_47,notionalCurrency[1],string,EUR
+Swap_47,notionalCurrency[2],string,EUR
+Swap_47,originalNotional[1],double,10000000.000000
+Swap_47,originalNotional[2],double,10000000.000000
+Swap_47,paymentDate[1],string,2017-03-01
+Swap_47,paymentDate[2],string,2016-09-01
+Swap_47,rate[1],double,0.020000
+Swap_47,rate[2],double,0.019934
+Swap_47,spread[2],double,0.000000
+Swap_47,startDate,string,2016-03-01
+Swap_48,amount[1],double,200000.000000
+Swap_48,amount[2],double,101885.706669
+Swap_48,currentNotional[1],double,10000000.000000
+Swap_48,currentNotional[2],double,10000000.000000
+Swap_48,index[2],string,Euribor6M Actual/360
+Swap_48,isPayer[1],bool,false
+Swap_48,isPayer[2],bool,true
+Swap_48,isdaAssetClass,string,Interest Rate
+Swap_48,isdaBaseProduct,string,IR Swap
+Swap_48,isdaSubProduct,string,Fixed Float
+Swap_48,isdaTransaction,string,
+Swap_48,legNPV[1],double,3266722.174761
+Swap_48,legNPV[2],double,-3266119.689189
+Swap_48,legType[1],string,Fixed
+Swap_48,legType[2],string,Floating
+Swap_48,notionalCurrency[1],string,EUR
+Swap_48,notionalCurrency[2],string,EUR
+Swap_48,originalNotional[1],double,10000000.000000
+Swap_48,originalNotional[2],double,10000000.000000
+Swap_48,paymentDate[1],string,2017-03-01
+Swap_48,paymentDate[2],string,2016-09-01
+Swap_48,rate[1],double,0.020000
+Swap_48,rate[2],double,0.019934
+Swap_48,spread[2],double,0.000000
+Swap_48,startDate,string,2016-03-01
+Swap_49,amount[1],double,200000.000000
+Swap_49,amount[2],double,101885.706669
+Swap_49,currentNotional[1],double,10000000.000000
+Swap_49,currentNotional[2],double,10000000.000000
+Swap_49,index[2],string,Euribor6M Actual/360
+Swap_49,isPayer[1],bool,false
+Swap_49,isPayer[2],bool,true
+Swap_49,isdaAssetClass,string,Interest Rate
+Swap_49,isdaBaseProduct,string,IR Swap
+Swap_49,isdaSubProduct,string,Fixed Float
+Swap_49,isdaTransaction,string,
+Swap_49,legNPV[1],double,3266722.174761
+Swap_49,legNPV[2],double,-3266119.689189
+Swap_49,legType[1],string,Fixed
+Swap_49,legType[2],string,Floating
+Swap_49,notionalCurrency[1],string,EUR
+Swap_49,notionalCurrency[2],string,EUR
+Swap_49,originalNotional[1],double,10000000.000000
+Swap_49,originalNotional[2],double,10000000.000000
+Swap_49,paymentDate[1],string,2017-03-01
+Swap_49,paymentDate[2],string,2016-09-01
+Swap_49,rate[1],double,0.020000
+Swap_49,rate[2],double,0.019934
+Swap_49,spread[2],double,0.000000
+Swap_49,startDate,string,2016-03-01
+Swap_5,amount[1],double,200000.000000
+Swap_5,amount[2],double,101885.706669
+Swap_5,currentNotional[1],double,10000000.000000
+Swap_5,currentNotional[2],double,10000000.000000
+Swap_5,index[2],string,Euribor6M Actual/360
+Swap_5,isPayer[1],bool,false
+Swap_5,isPayer[2],bool,true
+Swap_5,isdaAssetClass,string,Interest Rate
+Swap_5,isdaBaseProduct,string,IR Swap
+Swap_5,isdaSubProduct,string,Fixed Float
+Swap_5,isdaTransaction,string,
+Swap_5,legNPV[1],double,3266722.174761
+Swap_5,legNPV[2],double,-3266119.689189
+Swap_5,legType[1],string,Fixed
+Swap_5,legType[2],string,Floating
+Swap_5,notionalCurrency[1],string,EUR
+Swap_5,notionalCurrency[2],string,EUR
+Swap_5,originalNotional[1],double,10000000.000000
+Swap_5,originalNotional[2],double,10000000.000000
+Swap_5,paymentDate[1],string,2017-03-01
+Swap_5,paymentDate[2],string,2016-09-01
+Swap_5,rate[1],double,0.020000
+Swap_5,rate[2],double,0.019934
+Swap_5,spread[2],double,0.000000
+Swap_5,startDate,string,2016-03-01
+Swap_50,amount[1],double,200000.000000
+Swap_50,amount[2],double,101885.706669
+Swap_50,currentNotional[1],double,10000000.000000
+Swap_50,currentNotional[2],double,10000000.000000
+Swap_50,index[2],string,Euribor6M Actual/360
+Swap_50,isPayer[1],bool,false
+Swap_50,isPayer[2],bool,true
+Swap_50,isdaAssetClass,string,Interest Rate
+Swap_50,isdaBaseProduct,string,IR Swap
+Swap_50,isdaSubProduct,string,Fixed Float
+Swap_50,isdaTransaction,string,
+Swap_50,legNPV[1],double,3266722.174761
+Swap_50,legNPV[2],double,-3266119.689189
+Swap_50,legType[1],string,Fixed
+Swap_50,legType[2],string,Floating
+Swap_50,notionalCurrency[1],string,EUR
+Swap_50,notionalCurrency[2],string,EUR
+Swap_50,originalNotional[1],double,10000000.000000
+Swap_50,originalNotional[2],double,10000000.000000
+Swap_50,paymentDate[1],string,2017-03-01
+Swap_50,paymentDate[2],string,2016-09-01
+Swap_50,rate[1],double,0.020000
+Swap_50,rate[2],double,0.019934
+Swap_50,spread[2],double,0.000000
+Swap_50,startDate,string,2016-03-01
+Swap_6,amount[1],double,200000.000000
+Swap_6,amount[2],double,101885.706669
+Swap_6,currentNotional[1],double,10000000.000000
+Swap_6,currentNotional[2],double,10000000.000000
+Swap_6,index[2],string,Euribor6M Actual/360
+Swap_6,isPayer[1],bool,false
+Swap_6,isPayer[2],bool,true
+Swap_6,isdaAssetClass,string,Interest Rate
+Swap_6,isdaBaseProduct,string,IR Swap
+Swap_6,isdaSubProduct,string,Fixed Float
+Swap_6,isdaTransaction,string,
+Swap_6,legNPV[1],double,3266722.174761
+Swap_6,legNPV[2],double,-3266119.689189
+Swap_6,legType[1],string,Fixed
+Swap_6,legType[2],string,Floating
+Swap_6,notionalCurrency[1],string,EUR
+Swap_6,notionalCurrency[2],string,EUR
+Swap_6,originalNotional[1],double,10000000.000000
+Swap_6,originalNotional[2],double,10000000.000000
+Swap_6,paymentDate[1],string,2017-03-01
+Swap_6,paymentDate[2],string,2016-09-01
+Swap_6,rate[1],double,0.020000
+Swap_6,rate[2],double,0.019934
+Swap_6,spread[2],double,0.000000
+Swap_6,startDate,string,2016-03-01
+Swap_7,amount[1],double,200000.000000
+Swap_7,amount[2],double,101885.706669
+Swap_7,currentNotional[1],double,10000000.000000
+Swap_7,currentNotional[2],double,10000000.000000
+Swap_7,index[2],string,Euribor6M Actual/360
+Swap_7,isPayer[1],bool,false
+Swap_7,isPayer[2],bool,true
+Swap_7,isdaAssetClass,string,Interest Rate
+Swap_7,isdaBaseProduct,string,IR Swap
+Swap_7,isdaSubProduct,string,Fixed Float
+Swap_7,isdaTransaction,string,
+Swap_7,legNPV[1],double,3266722.174761
+Swap_7,legNPV[2],double,-3266119.689189
+Swap_7,legType[1],string,Fixed
+Swap_7,legType[2],string,Floating
+Swap_7,notionalCurrency[1],string,EUR
+Swap_7,notionalCurrency[2],string,EUR
+Swap_7,originalNotional[1],double,10000000.000000
+Swap_7,originalNotional[2],double,10000000.000000
+Swap_7,paymentDate[1],string,2017-03-01
+Swap_7,paymentDate[2],string,2016-09-01
+Swap_7,rate[1],double,0.020000
+Swap_7,rate[2],double,0.019934
+Swap_7,spread[2],double,0.000000
+Swap_7,startDate,string,2016-03-01
+Swap_8,amount[1],double,200000.000000
+Swap_8,amount[2],double,101885.706669
+Swap_8,currentNotional[1],double,10000000.000000
+Swap_8,currentNotional[2],double,10000000.000000
+Swap_8,index[2],string,Euribor6M Actual/360
+Swap_8,isPayer[1],bool,false
+Swap_8,isPayer[2],bool,true
+Swap_8,isdaAssetClass,string,Interest Rate
+Swap_8,isdaBaseProduct,string,IR Swap
+Swap_8,isdaSubProduct,string,Fixed Float
+Swap_8,isdaTransaction,string,
+Swap_8,legNPV[1],double,3266722.174761
+Swap_8,legNPV[2],double,-3266119.689189
+Swap_8,legType[1],string,Fixed
+Swap_8,legType[2],string,Floating
+Swap_8,notionalCurrency[1],string,EUR
+Swap_8,notionalCurrency[2],string,EUR
+Swap_8,originalNotional[1],double,10000000.000000
+Swap_8,originalNotional[2],double,10000000.000000
+Swap_8,paymentDate[1],string,2017-03-01
+Swap_8,paymentDate[2],string,2016-09-01
+Swap_8,rate[1],double,0.020000
+Swap_8,rate[2],double,0.019934
+Swap_8,spread[2],double,0.000000
+Swap_8,startDate,string,2016-03-01
+Swap_9,amount[1],double,200000.000000
+Swap_9,amount[2],double,101885.706669
+Swap_9,currentNotional[1],double,10000000.000000
+Swap_9,currentNotional[2],double,10000000.000000
+Swap_9,index[2],string,Euribor6M Actual/360
+Swap_9,isPayer[1],bool,false
+Swap_9,isPayer[2],bool,true
+Swap_9,isdaAssetClass,string,Interest Rate
+Swap_9,isdaBaseProduct,string,IR Swap
+Swap_9,isdaSubProduct,string,Fixed Float
+Swap_9,isdaTransaction,string,
+Swap_9,legNPV[1],double,3266722.174761
+Swap_9,legNPV[2],double,-3266119.689189
+Swap_9,legType[1],string,Fixed
+Swap_9,legType[2],string,Floating
+Swap_9,notionalCurrency[1],string,EUR
+Swap_9,notionalCurrency[2],string,EUR
+Swap_9,originalNotional[1],double,10000000.000000
+Swap_9,originalNotional[2],double,10000000.000000
+Swap_9,paymentDate[1],string,2017-03-01
+Swap_9,paymentDate[2],string,2016-09-01
+Swap_9,rate[1],double,0.020000
+Swap_9,rate[2],double,0.019934
+Swap_9,spread[2],double,0.000000
+Swap_9,startDate,string,2016-03-01

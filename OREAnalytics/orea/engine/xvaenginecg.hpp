@@ -124,6 +124,9 @@ private:
     void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
+
+    std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
+    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeIds);
     std::pair<std::size_t, std::size_t> createPortfolioExposureNode(const std::size_t dateIndex,
                                                                     const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
@@ -199,29 +202,39 @@ private:
     std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_; // includes time zero npv
 
     // trade level exposure, as conditional expectation
-    std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv
-    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv
-    std::vector<std::set<std::string>> tradeCurrencyGroup_;            // relevant ccys per trade
+    std::vector<std::vector<std::size_t>> tradeExposureNodes_;                    // includes time zero npv
+    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;            // includes time zero npv
+    std::vector<std::set<std::string>> tradeRelevantCurrencies_;                  // relevant ccys per trade
+    std::vector<bool> tradeHasVega_;                                              // vega flag per trade
 
     // portfolio exposure, per valuation resp. close-out date, as path values and conditional expectation
     std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
     std::vector<std::size_t> pfExposureCloseOutNodes_;
 
-    // portfolio exposure, per valuation date, as path values, multiplied by numeraire
-    std::vector<std::size_t> pfExposureNodesPathwiseInflated_;
+    // only for dynamicIM:
+    // - parameter groups filtering on sensis
+    // - for each parameter group the portfolio exposure, per valuation date, inflated and pathwise
+    std::set<std::set<ModelCG::ModelParameter>> dynamicIMModelParameterGroups_;
+    std::vector<std::vector<std::size_t>> pfExposureNodesForDynamicIMByParameterGroup_;
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
 
-    std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
-    std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
+    // asd nodes
+    std::vector<std::size_t> asdNumeraire_;
+    std::vector<std::vector<std::size_t>> asdFx_, asdIndex_;
+
+    // nodes to keep in calculation graph algorightms
     std::vector<bool> keepNodes_;
 
-    // regressor groups per portfolio exposure node, the groups are set on all nodes pfExposure* above
-    std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
+    // the cva node from the cg-pp
+    std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
 
-    // irStates per ccy index and valuationDate (including reference date), probably not needed
-    // std::vector<std::vector<std::size_t>> irState_;
+    /* regressor groups per portfolio exposure node, the groups are set on
+       - pfExposureNodesPathwise
+       - pfExposureNodes
+       - pfExposureCloseOutNodes */
+    std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> xvaDerivatives_;

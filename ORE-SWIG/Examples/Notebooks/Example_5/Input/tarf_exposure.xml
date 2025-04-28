@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="FX_TaRF">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ScriptedTradeData>
+      <Script>
+        <Code><![CDATA[
+        NUMBER PnL, AccProfit, Payoff, isTriggered;
+        NUMBER Fixing, Triggered, d, r;
+        FOR d IN (1, SIZE(FixingDates), 1) DO
+          Fixing = Underlying(FixingDates[d]);
+          PnL = 0;
+          FOR r IN (1, SIZE(RangeLowerBounds), 1) DO
+            IF Fixing > RangeLowerBounds[r] AND Fixing <= RangeUpperBounds[r] THEN
+              PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing - RangeStrikes[r]);
+            END;
+          END;
+          IF isTriggered != 1 THEN
+            AccProfit = AccProfit + max(PnL, 0.0);
+            IF AccProfit >= KnockOutProfitAmount THEN
+              isTriggered = 1;
+              Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            ELSE
+              Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            END;
+          END;
+        END;
+        value = LongShort * Payoff;
+        ]]></Code>
+        <NPV>value</NPV>
+        <Results>
+          <Result>isTriggered</Result>
+        </Results>
+      </Script>
+      <Script purpose="AMC">
+        <Code><![CDATA[
+        NUMBER PnL, AccProfit[SIZE(FixingDates)], Payoff, isTriggered;
+        NUMBER Fixing, Triggered, d, r;
+        NUMBER a, s, NthPayoff[SIZE(FixingDates)], BwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];
+        FOR d IN (1, SIZE(FixingDates), 1) DO
+          Fixing = Underlying(FixingDates[d]);
+          PnL = 0;
+          FOR r IN (1, SIZE(RangeLowerBounds), 1) DO
+            IF Fixing > RangeLowerBounds[r] AND Fixing <= RangeUpperBounds[r] THEN
+              PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing - RangeStrikes[r]);
+            END;
+          END;
+          IF isTriggered != 1 THEN
+            AccProfit[d] = AccProfit[d] + max(PnL, 0.0);
+            IF AccProfit[d] >= KnockOutProfitAmount THEN
+              isTriggered = 1;
+              Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit[d] - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+              NthPayoff[d] = LOGPAY(TargetAmount - (AccProfit[d] - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            ELSE
+              Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+              NthPayoff[d] = LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            END;
+          END;
+          IF d < SIZE(FixingDates) THEN
+            AccProfit[d + 1] = AccProfit[d];
+          END;
+        END;
+        value = LongShort * Payoff;
+        FOR a IN (SIZE(FixingAndSimDates), 1, -1) DO
+          s = DATEINDEX(FixingAndSimDates[a], _AMC_SimDates, EQ);
+          d = DATEINDEX(FixingAndSimDates[a], FixingDates, GT);
+          IF s > 0 THEN
+            IF d > 1 THEN
+              _AMC_NPV[s] = LongShort * NPVMEM( BwdPayoff, _AMC_SimDates[s], a, 1 == 1, AccProfit[d-1]);
+            ELSE
+              _AMC_NPV[s] = LongShort * NPVMEM( BwdPayoff, _AMC_SimDates[s], a);
+            END;
+          END;
+          d = DATEINDEX(FixingAndSimDates[a], FixingDates, EQ);
+          IF d > 0 THEN
+            BwdPayoff = BwdPayoff + NthPayoff[d];
+          END;
+        END;
+        ]]></Code>
+        <NPV>value</NPV>
+        <Results>
+          <Result>isTriggered</Result>
+        </Results>
+        <NewSchedules>
+          <NewSchedule>
+            <Name>FixingAndSimDates</Name>
+            <Operation>Join</Operation>
+            <Schedules>
+              <Schedule>_AMC_SimDates</Schedule>
+              <Schedule>FixingDates</Schedule>
+            </Schedules>
+          </NewSchedule>
+        </NewSchedules>
+        <ConditionalExpectation>
+          <ModelStates>
+            <ModelState>Asset</ModelState>
+          </ModelStates>
+        </ConditionalExpectation>
+      </Script>
+      <Data>
+        <Event>
+          <Name>FixingDates</Name>
+          <ScheduleData>
+            <Dates>
+              <Dates>
+                <Date>2023-02-20</Date>
+                <Date>2023-03-20</Date>
+                <Date>2023-04-20</Date>
+                <Date>2023-05-20</Date>
+                <Date>2023-06-20</Date>
+                <Date>2023-07-20</Date>
+                <Date>2023-08-20</Date>
+                <Date>2023-09-20</Date>
+                <Date>2023-10-20</Date>
+                <Date>2023-11-20</Date>
+                <Date>2023-12-20</Date>
+                <Date>2024-01-20</Date>
+                <Date>2024-02-20</Date>
+              </Dates>
+            </Dates>
+          </ScheduleData>
+        </Event>
+        <Event>
+          <Name>SettlementDates</Name>
+          <DerivedSchedule>
+            <BaseSchedule>FixingDates</BaseSchedule>
+            <Shift>2D</Shift>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+          </DerivedSchedule>
+        </Event>
+        <Number>
+          <Name>RangeLowerBounds</Name>
+          <Values>
+            <Value>0.0</Value>
+            <Value>1.1</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeUpperBounds</Name>
+          <Values>
+            <Value>1.01</Value>
+            <Value>999999.9</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeLeverages</Name>
+          <Values>
+            <Value>2</Value>
+            <Value>1</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeStrikes</Name>
+          <Values>
+            <Value>1.01</Value>
+            <Value>1.1</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>KnockOutProfitAmount</Name>
+          <Value>100000</Value>
+        </Number>
+        <Number>
+          <Name>TargetAmount</Name>
+          <Value>100000</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>FixingAmount</Name>
+          <Value>1000000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>USD</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>FX-ECB-EUR-USD</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+</Portfolio>

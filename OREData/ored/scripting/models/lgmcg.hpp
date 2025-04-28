@@ -54,7 +54,8 @@ public:
 
     std::size_t reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                                    const std::string& discountCurveId = "default") const;
+                                    const std::string& discountCurveId = "default",
+                                    const Date& expiryDate = Date()) const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
     std::size_t fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,

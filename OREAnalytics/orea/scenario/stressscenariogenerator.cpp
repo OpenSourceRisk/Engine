@@ -53,6 +53,8 @@ void StressScenarioGenerator::generateScenarios() {
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);
         addEquityShifts(data, scenario);
+        if (simMarketData_->commodityCurveSimulate())
+            addCommodityCurveShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
         addYieldCurveShifts(data, scenario);
@@ -60,6 +62,8 @@ void StressScenarioGenerator::generateScenarios() {
             addFxVolShifts(data, scenario);
         if (simMarketData_->simulateEquityVols())
             addEquityVolShifts(data, scenario);
+        if (simMarketData_->commodityVolSimulate())
+            addCommodityVolShifts(data, scenario);
         if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);
         if (simMarketData_->simulateCapFloorVols())
@@ -134,6 +138,62 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
                       stressData_->useSpreadedTermStructures() ? newRate / rate : newRate);
     }
     DLOG("Equity scenarios done");
+}
+
+void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::StressTestData& std,
+    QuantLib::ext::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
+    for (auto d : std.commodityCurveShifts) {
+        string commodity = d.first;
+        TLOG("Apply stress scenario to commodity curve " << commodity);
+
+        Size n_ten = simMarketData_->commodityCurveTenors(commodity).size();
+        // original curves' buffer
+        std::vector<Real> basePrices(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted price curves
+        std::vector<Real> shiftedPrices(n_ten);
+
+        StressTestScenarioData::CurveShiftData data = *d.second;
+        ShiftType shiftType = data.shiftType;
+        DayCounter dc = Actual365Fixed();
+        if(auto s = simMarket_.lock()) {
+            dc = s->commodityPriceCurve(commodity)->dayCounter();
+        } else {
+            QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+        }
+
+        for (Size j = 0; j < n_ten; ++j) {
+            Date d = asof + simMarketData_->commodityCurveTenors(commodity)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodity, j);
+            basePrices[j] = baseScenarioAbsolute_->get(key);
+        }
+
+        std::vector<Period> shiftTenors = data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() > 0, "Commodity shift tenors not specified");
+        std::vector<Real> shifts = data.shifts;
+        QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+
+        // apply price shift at tenor point j
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, basePrices, times, shiftedPrices, j == 0 ? true : false);
+
+        // store shifted commodity price curve in the scenario
+        for (Size k = 0; k < n_ten; ++k) {
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodity, k);
+            if (stressData_->useSpreadedTermStructures()) {
+                scenario->add(key, shiftedPrices[k] - basePrices[k]);
+            } else {
+                scenario->add(key, shiftedPrices[k]);
+            }
+        }
+    }
+    DLOG("Commodity curve stress scenarios done");
 }
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -562,6 +622,78 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         }
     }
     DLOG("Equity vol scenarios done");
+}
+
+void StressScenarioGenerator::addCommodityVolShifts(StressTestScenarioData::StressTestData& std,
+    QuantLib::ext::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
+    for (auto d : std.commodityVolShifts) {
+        string commodity = d.first;
+        TLOG("Apply stress scenario to commodity vol structure " << commodity);
+        vector<Period> expiries = simMarketData_->commodityVolExpiries(commodity);
+        const vector<Real>& moneyness = simMarketData_->commodityVolMoneyness(commodity);
+
+        // Store base scenario volatilities, strike x expiry
+        vector<vector<Real>> baseValues(moneyness.size(), vector<Real>(expiries.size()));
+        // Time to each expiry
+        vector<Time> times(expiries.size());
+        // Store shifted scenario volatilities
+        vector<vector<Real>> shiftedValues = baseValues;
+
+        StressTestScenarioData::CommodityVolShiftData data = *d.second;
+
+        DayCounter dc = Actual365Fixed();
+        try {
+            if (auto s = simMarket_.lock()) {
+                dc = s->commodityVolatility(commodity)->dayCounter();
+            } else {
+                QL_FAIL("Internal error: could not lock simMarket. Contact dev.");
+            }
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for commodity vol surface " << commodity
+                                                                                             << ", using default A365");
+        }
+        for (Size j = 0; j < expiries.size(); ++j) {
+            Date d = asof + simMarketData_->commodityVolExpiries(commodity)[j];
+            times[j] = dc.yearFraction(asof, d);
+            for (Size i = 0; i < moneyness.size(); i++) {
+                RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, commodity, i * expiries.size() + j);
+                baseValues[i][j] = baseScenarioAbsolute_->get(key);
+            }
+        }
+
+        ShiftType shiftType = data.shiftType;
+
+        std::vector<Period> shiftExpiries = data.shiftExpiries;
+        std::vector<Real> shiftMoneyness = data.shiftMoneyness;
+        std::vector<Time> shiftTimes(shiftExpiries.size());
+        vector<Real> shifts = data.shifts;
+        QL_REQUIRE(shiftExpiries.size() > 0, "Commodity vol shift tenors not specified");
+        QL_REQUIRE(shiftExpiries.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+
+        for (Size j = 0; j < shiftExpiries.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftExpiries[j]);
+
+        for (Size sj = 0; sj < shiftExpiries.size(); ++sj) {
+            for (Size si = 0; si < shiftMoneyness.size(); ++si) {
+                applyShift(si, sj, shifts[sj], true, shiftType, shiftMoneyness, shiftTimes, moneyness, times, baseValues, shiftedValues, sj == 0 ? true : false);
+
+                Size counter = 0;
+                for (Size i = 0; i < moneyness.size(); i++) {
+                    for (Size j = 0; j < expiries.size(); ++j) {
+                        RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, commodity, counter++);
+                        if (stressData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[i][j] - baseValues[i][j]);
+                        } else {
+                            scenario->add(key, shiftedValues[i][j]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    DLOG("Commodity vol scenarios done");
 }
 
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,

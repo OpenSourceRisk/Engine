@@ -108,7 +108,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
-    std::vector<ext::function<Real(Array)>> v(
+    std::vector<std::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
     LOG("DIM confidence level " << confidenceLevel);

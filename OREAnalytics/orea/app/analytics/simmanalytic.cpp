@@ -33,13 +33,17 @@ void SimmAnalyticImpl::setUpConfigurations() {
 
 void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
+    CONSOLEW("SIMM: Build Market");
     analytic()->buildMarket(loader, false);
+    CONSOLE("OK");
 
     auto simmAnalytic = static_cast<SimmAnalytic*>(analytic());
     QL_REQUIRE(simmAnalytic, "Analytic must be of type SimmAnalytic");
 
     LOG("Get CRIF records from CRIF loader and fill amountUSD");        
+    CONSOLEW("SIMM: Load CRIF");
     simmAnalytic->loadCrifRecords(loader);
+    CONSOLE("OK");
 
     if (analytic()->getWriteIntermediateReports()) {
         QuantLib::ext::shared_ptr<InMemoryReport> crifReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -65,6 +69,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     simmConfig->bucketMapper()->updateFromCrif(simmAnalytic->crif());
 
     // Calculate SIMM
+    CONSOLEW("SIMM: Calculate");
     auto simm = QuantLib::ext::make_shared<SimmCalculator>(simmAnalytic->crif(),
                                                    simmConfig,
                                                    inputs_->simmCalculationCurrencyCall(),
@@ -73,7 +78,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                                                    analytic()->market(),
                                                    simmAnalytic->determineWinningRegulations(),
                                                    inputs_->enforceIMRegulations());
-    
+    CONSOLE("OK");    
     analytic()->addTimer("SimmCalculator", simm->timer());
 
     Real fxSpot = 1.0;
@@ -84,6 +89,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         LOG("SIMM reporting currency is " << inputs_->simmReportingCurrency() << " with fxSpot " << fxSpot);
     }
 
+    CONSOLEW("SIMM: Generate Reports");
     QuantLib::ext::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
@@ -99,6 +105,7 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                          inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
                          inputs_->simmCalculationCurrencyPost(), inputs_->simmReportingCurrency(), fxSpot);
     analytic()->addReport(LABEL, "simm", simmReport);
+    CONSOLE("OK");    
     LOG("SIMM report generated");
     MEM_LOG;
 }

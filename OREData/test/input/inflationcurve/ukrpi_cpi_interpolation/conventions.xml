@@ -1,0 +1,31 @@
+<Conventions>
+  <InflationSwap>
+		<Id>UKRPI_INFLATIONSWAP</Id>
+		<FixCalendar>UK</FixCalendar>
+		<FixConvention>MF</FixConvention>
+		<DayCounter>30/360</DayCounter>
+		<Index>UKRPI</Index>
+		<Interpolated>false</Interpolated>
+		<ObservationLag>2M</ObservationLag>
+		<AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+		<InflationCalendar>UK</InflationCalendar>
+		<InflationConvention>MF</InflationConvention>
+	</InflationSwap>
+  <Deposit>
+    <Id>GBP-ON-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-SONIA</Index>
+  </Deposit>
+  <OIS>
+    <Id>GBP-OIS</Id>
+    <SpotLag>1</SpotLag>
+    <Index>GBP-SONIA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+</Conventions>

@@ -64,6 +64,7 @@
 		<Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
 		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
 		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+		<Index name="USD-SOFR-3M">Yield/USD/USD-SOFR-3M</Index>
 	</IndexForwardingCurves>
 	<SwapIndexCurves id="default">
 		<SwapIndex name="EUR-CMS-10Y">

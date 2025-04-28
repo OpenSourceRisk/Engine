@@ -95,6 +95,26 @@
       <Parameter name="SensitivityTemplate">IR_FD</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="BermudanSwaption_NonStandard">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.10</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="AmericanSwaption">
     <Model>LGM</Model>
     <ModelParameters>
@@ -477,7 +497,7 @@
       <!-- Recovery rate grid to be used with stochastic recovery -->
       <!-- Constant:   Use the flat market recovery rate R -->
       <!-- Markit2020: Use a three-pillar recovery rate grid [0.1, R, 2*R - 0.1] -->
-      <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+      <Parameter name="recoveryRateGrid">0.7,0.4,0.1</Parameter>
       <!-- Recovery rate probabilities, associated with the recovery rate grid -->
       <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
     </ModelParameters>

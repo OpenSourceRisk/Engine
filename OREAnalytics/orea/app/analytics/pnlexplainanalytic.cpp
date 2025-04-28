@@ -150,7 +150,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             for (auto d : parScenarios->endDates())
                 sw.writeScenario(parScenarios->next(d), false);
             
-            analytic()->reports()[label()]["par_scenarios"] = parScenarioReport;
+            analytic()->addReport(label(), "par_scenarios", parScenarioReport);
             scenarios = parScenarios;
         } else
             scenarios = zeroScenarios;

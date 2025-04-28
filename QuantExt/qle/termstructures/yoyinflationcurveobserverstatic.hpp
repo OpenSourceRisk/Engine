@@ -93,6 +93,8 @@ protected:
 
 // template definitions
 
+QL_DEPRECATED_DISABLE_WARNING
+
 template <class Interpolator>
 YoYInflationCurveObserverStatic<Interpolator>::YoYInflationCurveObserverStatic(
     const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
@@ -172,6 +174,8 @@ template <class T> Date YoYInflationCurveObserverStatic<T>::maxDate() const {
     }
     return d;
 }
+
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class T> inline Rate YoYInflationCurveObserverStatic<T>::yoyRateImpl(Time t) const {
     calculate();

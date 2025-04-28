@@ -55,9 +55,10 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
 
     // Will need a YoY index below in the helpers.
+    QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
         QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
-
+    QL_DEPRECATED_ENABLE_WARNING
     for (const auto& maturity : dts) {
 
         // Schedule for the YoY swap with maturity date equal to `maturity`
@@ -149,9 +150,10 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Use Linear here in line with what is in scenariosimmarket and todaysmarket but should probably be more generic.
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
+    QL_DEPRECATED_DISABLE_WARNING
     auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
         referenceDate_, calendar(), dayCounter(), lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {

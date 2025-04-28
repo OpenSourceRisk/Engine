@@ -64,6 +64,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -85,6 +86,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -104,6 +106,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -627,6 +630,8 @@
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -891,6 +896,7 @@
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="xs:string" name="MaxTenor" minOccurs="0"/>
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>

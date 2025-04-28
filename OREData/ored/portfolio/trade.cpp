@@ -208,7 +208,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     if (arc.endFixingTotal != Null<Real>())
                         additionalData_["endEquityFixingTotal[" + legID + "]"] = arc.endFixingTotal;
                     if (arc.currentPeriodStartFxFixing != Null<Real>())
-                        additionalData_["startFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
+                        additionalData_["currentPeriodStartFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
                     if (arc.currentPeriodEndFxFixing != Null<Real>())
                         additionalData_["currentPeriodEndFxFixing[" + legID + "]"] = arc.currentPeriodEndFxFixing;
                     if (arc.pastDividends != Null<Real>())
@@ -336,7 +336,7 @@ void Trade::addProductModelEngine(
 void Trade::updateProductModelEngineAdditionalData() {
     Size counter = 0;
     for (auto const& [p, m, e] : productModelEngine_) {
-        std::string suffix = productModelEngine_.size() > 1 ? "_" + std::to_string(counter) : std::string();
+        std::string suffix = productModelEngine_.size() > 1 ? "[" + std::to_string(counter) + "]" : std::string();
         if (p.size() == 1) {
             additionalData_["PricingConfigProductType" + suffix] = *p.begin();
         } else {
