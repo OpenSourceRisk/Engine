@@ -88,6 +88,8 @@ this will lead to an exception at run time, so that it is the user's responsibil
 currencies here is sufficient. The list can be larger than actually required by the portfolio. This will not lead to any
 exceptions, but add to the run time of ORE.
 
+When defining the currencies in the cross asset model, the domestic currency always has to be given as the first currency.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -608,6 +610,8 @@ Any risk factor pair not specified explicitly here will be assumed to have zero 
 The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
 simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
 yield curves that can be 'understood' by the instruments which we want to price under scenarios.  
+
+The specified currencies need to contain at least the currencies both defined above in the cross asset model and used in the portfolio, the order however is not important.
 
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 

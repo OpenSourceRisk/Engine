@@ -586,14 +586,14 @@ void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     // handle deprecated fields...
     XMLNode* projectionCurveShort = XMLUtils::getChildNode(node, "ProjectionCurveShort");
     if (projectionCurveShort) {
-        DLOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, use node ProjectionCurveReceive instead");
         if (receiveProjectionCurveID_.empty())
             receiveProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveShort);
     }
 
     XMLNode* projectionCurveLong = XMLUtils::getChildNode(node, "ProjectionCurveLong");
     if (projectionCurveLong) {
-        DLOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, use node ProjectionCurvePay instead");
         if (payProjectionCurveID_.empty())
             payProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveLong);
     }
