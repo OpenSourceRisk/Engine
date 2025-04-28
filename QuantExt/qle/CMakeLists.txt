@@ -324,6 +324,7 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -875,6 +876,7 @@ processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
@@ -1060,6 +1062,10 @@ if (ORE_ENABLE_CUDA)
   target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
   target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
   target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
+endif()
+
+if (ORE_PYTHON_INTEGRATION)
+  target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
