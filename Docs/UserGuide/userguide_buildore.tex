@@ -93,6 +93,9 @@ Note that one can also run
 
 in step 2, which also performs the steps in 3.
 
+The above fetches ORE from the master branch, if you want to fetch a specific release then right after {\tt\% cd ore} do {\tt\% git checkout tags/release\_name}, e.g. {\tt\% git checkout tags/v1.8.12.0}. 
+%Building from the latest release is usually preferable over the master branch in order to avoid surprises.
+
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
@@ -273,7 +276,7 @@ Note:
 \item If the boost libraries are not installed in a standard path they might not be found during runtime because of a missing rpath
 tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
   \${BOOST}/stage/lib}.
-\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites, in order not to override the rpath information embedded into the libaries built with CMake
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites, in order not to override the rpath information embedded into the libraries built with CMake
 \item On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
 recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
 
