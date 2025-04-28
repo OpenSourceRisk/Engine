@@ -52,8 +52,8 @@ required because the simulation must step over 'good' dates on which index fixin
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
-\item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic,
-  Sobol,Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
+item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
+  Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
@@ -167,6 +167,7 @@ Each interest rate model is specified by a block as follows
         <ShiftHorizon>0.0</ShiftHorizon>
         <Scaling>1.0</Scaling>
       </ParameterTransformation>
+      <FloatSpreadMapping>proRata</FloatSpreadMapping>
     </LGM>
     <LGM ccy="EUR">
       <!-- ... -->
@@ -204,6 +205,8 @@ the time grid is empty
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\item {\tt FloatSpreadMapping: } mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \end{itemize}
 
 The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
@@ -627,8 +630,10 @@ There are two methods in ORE for commodity volatility simulation:
 Swaption volatilities are taken to be a surface by default.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
-\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this
+  case set {\tt <SimulateATMOnly>} to true and no surface node is given.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
@@ -646,6 +651,20 @@ For Default Curve, there is a similar choice for the extrapolation:
 \begin{itemize}
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \end{itemize}
+
+For swap, yield, interest cap-floor, yoy inflation cap-floor, zc inflation cap-floor, cds, fx, equity, commodity
+volatilities the smile dynamics can be specified as shown in listing \ref{lst:smile_dynamics_configuration} for swap
+vols. The empty key serves as a default configuration for all keys for which no own smile dynamics node is present. The
+allowed smile dynamics values are StickyStrike and StickyMoneyness. If not given, the smile dynamics defaults to
+StickyStrike.
+\begin{listing}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <SmileDynamics key="">StickyStrike</SmileDynamics>
+    <SmileDynamics key="EUR-ESTER">StickyMoneyness</SmileDynamics>
+  \end{minted}
+\caption{Smile Configuration Node}
+\label{lst:smile_dynamics_configuration}
+\end{listing}
 
 \begin{longlisting}
 %\hrule\medskip
@@ -728,12 +747,10 @@ For Default Curve, there is a similar choice for the extrapolation:
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Surface>
-        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
-        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness>
       </Surface>
       <TimeExtrapolation>Flat</TimeExtrapolation>
       <StrikeExtrapolation>Flat</StrikeExtrapolation>
-
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
@@ -783,15 +800,15 @@ For Default Curve, there is a similar choice for the extrapolation:
     </Pairs>
     <Expiries>1Y,2Y</Expiries>
   </Correlations>
-  <AdditionalScenarioDataCurrencies>
+  <AggregationScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
-  </AdditionalScenarioDataCurrencies>
-  <AdditionalScenarioDataIndices>
+  </AggregationScenarioDataCurrencies>
+  <AggregationScenarioDataIndices>
     <Index>EUR-EURIBOR-3M</Index>
     <Index>EUR-EONIA</Index>
     <Index>USD-LIBOR-3M</Index>
-  </AdditionalScenarioDataIndices>
+  </AggregationScenarioDataIndices>
 </Market>
 \end{minted}
 \caption{Simulation market configuration}
