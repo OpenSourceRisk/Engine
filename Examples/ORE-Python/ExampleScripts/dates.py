@@ -1,11 +1,11 @@
-
+import os
 import ORE as ore
 
 startDateString = '2020-05-01'
 calendarString = 'Japan'
 tenorString = '1M'
 businessDayConventionString = 'F'
-calAdjXml = "Input/caladj.xml"
+calAdjXml = os.path.join("..", "..", "Input", "calendaradjustment.xml")
 
 startDate = ore.parseDate(startDateString)
 calendar = ore.parseCalendar(calendarString)

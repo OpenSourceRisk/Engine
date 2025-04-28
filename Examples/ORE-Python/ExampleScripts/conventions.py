@@ -68,7 +68,7 @@ def buildFullConventionFromXML(xmlElement):
 #### Therefore, we need to downcast the returned object (using the getFullView() functions implemented in SWIG)
 conv_container = Conventions()
 print("Conventions type is ", type(conv_container))
-convFile = os.path.join("Input","conventions.xml")
+convFile = os.path.join("..", "..", "Input","conventions.xml")
 convXml = ET.parse(convFile).getroot()
 convXmlStr = ET.tostring(convXml,encoding="unicode")
 conv_container.fromXMLString(convXmlStr)

@@ -50,7 +50,7 @@ def check_data(loader):
             assert f.fixing == fix_value
     
 
-csv_loader = CSVLoader("Input/market_20160205.txt", "Input/fixings_20160205.txt", True)
+csv_loader = CSVLoader("../../Input/market_20160205.txt", "../../Input/fixings_20160205.txt", True)
 check_data(csv_loader)
 
 im_loader = InMemoryLoader()

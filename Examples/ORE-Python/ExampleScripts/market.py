@@ -4,7 +4,7 @@
 
 from ORE import *
 
-orexml = "Input/ore_market.xml"
+orexml = "../Input/ore_market.xml"
 print ("Run ORE using", orexml)
 params = Parameters()
 params.fromFile(orexml)

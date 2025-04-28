@@ -3,7 +3,7 @@ import json
 import nbformat
 import os
 import ast
-from compare_files import compare_files, read_comparison_config, is_float  # noqa
+from compare_files import compare_files, is_float  # noqa
 
 def read_notebook(notebook_path):
     with open(notebook_path, 'r', encoding='utf-8') as f:
@@ -84,6 +84,7 @@ def compare_notebooks(actual_notebook_path, expected_notebook_path):
                         print("------------------------------------------------------")
                         print("expected output: ")
                         print(expected_output.get(i))
+                        print("------------------------------------------------------")
                         status += 1
                         continue
                     cell_status = compare_floats(actual_floats, expected_floats)
@@ -99,6 +100,7 @@ def compare_notebooks(actual_notebook_path, expected_notebook_path):
                     print("------------------------------------------------------")
                     print("expected output: ")
                     print(expected_output.get(i))
+                    print("------------------------------------------------------")
         if status != 0:
             print(f"Output mismatch in notebook: {actual_notebook_path}")
             return 1
@@ -114,7 +116,6 @@ def compare_all_files(example_name, path, expected_output_path, comp_config):
     failed_files = []
     if not os.path.isfile(comp_config):
         raise ValueError('Expected path ' + comp_config + ' to exist')
-    default_config = read_comparison_config(comp_config)
     for f in os.listdir(expected_output_path):
         if f.endswith('.ipynb') or f.endswith('.txt'):
             continue
@@ -122,7 +123,7 @@ def compare_all_files(example_name, path, expected_output_path, comp_config):
             file_1 = os.path.join(expected_output_path, f)
             file_2 = os.path.join(path, 'Output', f)
             fail_msg = 'Error comparing {0} for Example {1}'.format(f, example_name)
-            result = compare_files(file_1, file_2, example_name, default_config)
+            result = compare_files(file_1, file_2, example_name, comp_config)
             if result == True:
                 continue                
             else:
