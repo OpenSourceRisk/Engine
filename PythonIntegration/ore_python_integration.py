@@ -24,7 +24,7 @@ def conditional_expectation(x,y):
 
     # 2 regression tree
 
-    model = DecisionTreeRegressor(max_depth=7)
+    model = DecisionTreeRegressor(max_depth=3)
     model.fit(X, Y)
     return  model.predict(X).tolist()
 
