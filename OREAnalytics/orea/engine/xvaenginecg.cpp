@@ -761,8 +761,8 @@ void XvaEngineCG::doForwardEvaluation() {
 void XvaEngineCG::buildAsdNodes() {
     DLOG("XvaEngineCG: build asd nodes.");
 
-    // we need the numeraire to populate the npv output cube
-    if (asd_ == nullptr && npvOutputCube_ == nullptr)
+    // we need the numeraire to populate the npv output cube and dynamic im output cube
+    if (asd_ == nullptr && npvOutputCube_ == nullptr && (dynamicIMOutputCube_ == nullptr || !enableDynamicIM_))
         return;
 
     asdNumeraire_.resize(valuationDates_.size());
@@ -923,7 +923,8 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
 
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size k = 0; k < im[i + 1].size(); ++k) {
-                dynamicIMOutputCube_->set(im[i + 1][k], nidx->second, i, k, 0);
+                // convention in the output cube is im deflated by numeraire
+                dynamicIMOutputCube_->set(im[i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 0);
             }
         }
     }
