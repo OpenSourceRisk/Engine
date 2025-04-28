@@ -1068,8 +1068,6 @@ if (ORE_PYTHON_INTEGRATION)
   target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
 endif()
 
-target_link_libraries(${QLE_LIB_NAME} earth)
-
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
  target_precompile_headers(${QLE_LIB_NAME}
    PUBLIC

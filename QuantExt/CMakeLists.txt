@@ -41,10 +41,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 
-# TEMP to test earth
-include_directories("/Users/peter.caspers/mars/Cpp/EcoEarth")
-add_link_directory_if_exists("/Users/peter.caspers/mars/Cpp/build")
-
 generate_git_hash(ore_qle)
 
 add_subdirectory("qle")

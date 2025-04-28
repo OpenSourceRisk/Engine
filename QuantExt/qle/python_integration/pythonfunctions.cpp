@@ -23,11 +23,6 @@
 
 #include <iostream>
 
-#ifdef ORE_PYTHON_INTEGRATION
-#include <boost/scoped_array.hpp>
-#include <earth.h>
-#endif
-
 namespace QuantExt {
 
 #ifdef ORE_PYTHON_INTEGRATION
@@ -113,13 +108,6 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
     }
 
     return tmp;
-}
-
-RandomVariable PythonFunctions::conditionalExpectationEarth(const RandomVariable& r,
-                                                            const std::vector<const RandomVariable*>& regressor,
-                                                            const Filter& filter) {
-    std::cerr << "condititionalExpectationEarth()" << std::endl;
-    return RandomVariable();
 }
 
 #else

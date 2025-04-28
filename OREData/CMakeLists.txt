@@ -27,8 +27,6 @@ add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantExt/qle")
 
-add_link_directory_if_exists("/Users/peter.caspers/mars/Cpp/build")
-
 add_subdirectory("ored")
 if (ORE_BUILD_DOC)
     add_subdirectory("doc")
