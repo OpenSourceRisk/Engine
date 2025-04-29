@@ -693,6 +693,9 @@ elements are the following:
 \item {\tt Frequency}: The frequency of index fixings.
 \item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
   given, it is defaulted to the first market rate.
+\item {\tt InterpolationVariable}: Optional, the variable on which the interpolation of the zero inflation curve is
+  performed. The allowable values \emph{ZeroRate} and \emph{PriceIndex}. If not provided, the default value is \emph{ZeroRate}. Ignored for year on year inflation curves.
+\item {\tt InterpolationMethod}: Only relevant if InterpolationVariable is PriceIndex, allowed is \emph{Linear} and \emph{LogLinear}. Defaults to \emph{Linear}.
 \end{itemize}
 
 The optional seasonality block defines a multiplicative seasonality and contains the following elements:
@@ -948,7 +951,13 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 
 \subsubsection{Base Correlations}
 
-Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve.
+Base correlations can be configured using either quoted base correlations directly or by implying them from quoted upfront quotes.
+When using quoted base correlations, the market quotes are directly used to construct the base correlation curve. 
+Alternatively, base correlations can be implied from upfront quotes of tranches, which involves a calibration process to
+derive the base correlation values that best fit the observed market prices of the tranches.
+
+
+Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve from quoted correlations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -985,6 +994,78 @@ Allowable values: Any positive number less than one
 \item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion
 \item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
 \end{itemize}
+
+Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Base Correlation curve from upfront quotes or base correlations if it fails to imply the base correlations.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BaseCorrelation>
+  <CurveId>RED:2I666VDI3</CurveId>
+  <CurveDescription />
+  <Terms>*</Terms>
+  <DetachmentPoints>*</DetachmentPoints>
+  <SettlementDays>0</SettlementDays>
+  <Calendar>weekends only</Calendar>
+  <BusinessDayConvention>Following</BusinessDayConvention>
+  <DayCounter>Actual/365 (Fixed)</DayCounter>
+  <Extrapolate>true</Extrapolate>
+  <QuoteName>2I666VDI3</QuoteName>
+  <StartDate>2023-09-20</StartDate>
+  <Rule>CDS2015</Rule>
+  <AdjustForLosses>true</AdjustForLosses>
+  <QuoteTypes>
+    <QuoteType>PRICE</QuoteType>
+    <QuoteType>BASE_CORRELATION</QuoteType>
+  <QuoteTypes>
+  <IndexSpread>0.01</IndexSpread>
+  <Currency>EUR</Currency>
+  <CalibrateConstituentsToIndexSpread>true</CalibrateConstituentsToIndexSpread>
+  <AdjustForLosses>true</AdjustForLosses>
+  <UseAssumedRecovery>true</UseAssumedRecovery>
+  <RecoveryGrid>
+    <Grid seniority="SECDOM">0.4</Grid>
+    <Grid seniority="SNRFOR">0.7, 0.40000000000000002, 0.10000000000000001</Grid>
+    <Grid seniority="SNRLAC">0.4</Grid>
+    <Grid seniority="SUBLT2">0.2</Grid>
+  </RecoveryGrid>
+  <RecoveryProbabilities>
+    <Probabilities seniority="SECDOM">1</Probabilities>
+    <Probabilities seniority="SNRFOR">0.35, 0.29999999999999999, 0.34999999999999998</Probabilities>
+    <Probabilities seniority="SNRLAC">1</Probabilities>
+    <Probabilities seniority="SUBLT2">1</Probabilities>
+  </RecoveryProbabilities>
+</BaseCorrelation>
+\end{minted}
+\caption{Base Correlation Configuration from Upfront Quotes}
+\label{lst:basecorr_upfront_configuration}
+\end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configuration} is given below.
+
+\begin{itemize}
+\item CurveId: Unique identifier of the base correlation structure.
+\item CurveDescription [Optional]: A description of the base correlation structure, may be left blank.
+\item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in the time direction. A wildcard (*) can be used to include all terms.
+\item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order. A wildcard (*) can be used to include all detachment points.
+\item SettlementDays: The floating term structure's settlement days argument used in the reference date calculation.
+\item Calendar: The term structure's calendar used in tenor to date conversions.
+\item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion.
+\item DayCounter: The term structure's day counter used in date to time conversions.
+\item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not.
+\item QuoteName: The name of the quote used for the base correlation.
+\item StartDate: The start date for the base correlation curve.
+\item Rule: The rule used for the base correlation curve, e.g., CDS2015.
+\item AdjustForLosses: Boolean to indicate whether to adjust for losses.
+\item QuoteTypes: A priority list of quote types to use for the base correlation curve. If it fails to build a base correlation from the first quote type it will try the next one.
+\item IndexSpread: The spread of the index.
+\item Currency: The currency of the base correlation curve.
+\item CalibrateConstituentsToIndexSpread: Relevant only when price quotes are used. Indicates if the constituents should be calibrated to the index spread before deriving the base correlations from the tranche prices.
+\item UseAssumedRecovery: Boolean flag to indicate whether to use specialized default curves bootstrapped with assumed recovery rates (mean of the stochastic recovery rate distribution). These curves have following the naming convention
+\_\_CDO\_CurveName\_\&\_REC\_0.30\_\&\_ and are used to derive the base correlations.
+\item RecoveryGrid: Specifies the recovery rates for different seniorities of the constituent. Use wildcard * to apply one grid for all seniorities.
+\item RecoveryProbabilities: Specifies the probabilities of the recovery rates for different seniorities. Use wildcard * to apply one grid for all seniorities.
+\end{itemize}
+
 
 \subsubsection{FXSpots}
 
@@ -1029,7 +1110,7 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
   a clean price settlement. Otherwise the default value of 1.0 for the conversion factor will be used.
 \item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
   match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
-  implied spread. Also see \ref{example:70}.
+  implied spread. 
 \end{itemize}
 
 If no configuration is given for a security, in general a pricer will assume as zero spread and recovery rate. Notice

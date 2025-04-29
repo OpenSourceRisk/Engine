@@ -91,7 +91,8 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
     return tmps;
 }
 
-void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
+void AnalyticsManager::runAnalytics(
+    const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
     QL_REQUIRE(initialised_, "AnalyticsManager has not been initialised");
     if (analytics_.size() == 0)
         return;
@@ -141,7 +142,12 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     for (auto a : analytics_) {
         LOG("run analytic with label '" << a.first << "'");
         a.second->startTimer("Run " + a.second->label() + "Analytic");
-        a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        try {
+            a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        } catch (const exception& e) {
+            failedAnalytics_.push_back(a.first);
+            StructuredAnalyticsErrorMessage(a.first, "Failed Analytic", e.what());
+        }
         a.second->stopTimer("Run " + a.second->label() + "Analytic");
         LOG("run analytic with label '" << a.first << "' finished.");
         // then populate the market calibration report if required
@@ -151,8 +157,7 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
 
     if (inputs_->portfolio()) {
         auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
-            .writePricingStats(*pricingStatsReport, inputs_->portfolio());
+        ReportWriter(inputs_->reportNaString()).writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
     }
 
@@ -276,5 +281,17 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         }
     }
 }
+
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+getReport(const ore::analytics::Analytic::analytic_reports& reports, const std::string& analytic,
+          const std::string& report) {
+    if (auto r1 = reports.find(analytic); r1 != reports.end()) {
+        if (auto r2 = r1->second.find(report); r2 != r1->second.end()) {
+            return r2->second;
+        }
+    }
+    return QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+}
+
 }
 }

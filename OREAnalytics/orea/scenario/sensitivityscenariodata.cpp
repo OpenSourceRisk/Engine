@@ -209,6 +209,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 	    parConversionExcludes_.insert(parseRiskFactorKeyType(types[i]));
     }
 
+    parConversionExcludeFixings_ = XMLUtils::getChildValue(node, "ParSensiRemoveFixing", false, ".*");
+
     DLOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
@@ -671,6 +673,10 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 	XMLUtils::addChildren(doc, root, "ParConversionExcludes", "Type", types);
     }
 
+    if (parConversionExcludeFixings_!=".*") {
+        XMLUtils::addChild(doc, root, "ParSensiRemoveFixing", parConversionExcludeFixings_);
+    }
+
     if (!discountCurveShiftData_.empty()) {
         DLOG("toXML for DiscountCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "DiscountCurves");
@@ -1058,10 +1064,11 @@ XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
     // Check that we have a CurveShiftParData node
     auto data = QuantLib::ext::dynamic_pointer_cast<CurveShiftParData>(csd);
 
-    // TODO: Fail here because fromXML requires par everywhere but maybe needs to be revisited
-    QL_REQUIRE(data, "The sensitivity configuration should have par conversion data");
-
     XMLNode* parNode = doc.allocNode("ParConversion");
+
+    if(!data)
+        return parNode;
+
     XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);
     XMLUtils::addChild(doc, parNode, "SingleCurve", data->parInstrumentSingleCurve);
     if (!data->discountCurve.empty())

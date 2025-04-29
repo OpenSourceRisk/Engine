@@ -8,8 +8,9 @@ option(ORE_BUILD_DOC "Build documentation" ON)
 option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
+option(ORE_BUILD_SWIG "Build ORE Python" ON)
+option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" OFF)
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
-option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calculations" OFF)
 
 include(CTest)
 
@@ -28,6 +29,9 @@ add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
 if (ORE_BUILD_APP)
     add_subdirectory("App")
+endif()
+if (ORE_BUILD_SWIG)
+    add_subdirectory("ORE-SWIG")
 endif()
 
 # add examples testsuite

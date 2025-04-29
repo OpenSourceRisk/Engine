@@ -221,10 +221,16 @@ public:
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
+    void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
+    void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
+    void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
+    void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
     void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
+    void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -367,6 +373,15 @@ public:
     void setXvaStressSensitivityScenarioData(const std::string& xml);
     void setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName);
     void setXvaStressWriteCubes(const bool writeCubes) { xvaStressWriteCubes_ = writeCubes; }
+
+    // Setters for sensitivityStress
+    void setSensitivityStressSimMarketParams(const std::string& xml);
+    void setSensitivityStressSimMarketParamsFromFile(const std::string& f);
+    void setSensitivityStressScenarioData(const std::string& s);
+    void setSensitivityStressScenarioDataFromFile(const std::string& s);
+    void setSensitivityStressSensitivityScenarioData(const std::string& xml);
+    void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
+    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario) { sensitivityStressCalcBaseScenario_ = calcBaseScenario; }
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -643,12 +658,18 @@ public:
     bool amc() const { return amc_; }
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
+    bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
+    Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
+    Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
+    bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
     bool xvaCgUseDoublePrecisionForExternalCalculation() const {
         return xvaCgUseDoublePrecisionForExternalCalculation_;
     }
     const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
+    bool xvaCgUsePythonIntegration() const { return xvaCgUsePythonIntegration_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
@@ -761,6 +782,12 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaStressSensitivityScenarioData() const {
         return xvaStressSensitivityScenarioData_;
     }
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensitivityStressSimMarketParams() const { return sensitivityStressSimMarketParams_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& sensitivityStressScenarioData() const { return sensitivityStressScenarioData_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityStressSensitivityScenarioData() const {
+        return sensitivityStressSensitivityScenarioData_;
+    }
+    bool sensitivityStressCalcBaseScenario() const { return sensitivityStressCalcBaseScenario_; }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1041,11 +1068,17 @@ protected:
      *******************/
     bool amc_ = false;
     XvaEngineCG::Mode amcCg_ = XvaEngineCG::Mode::Disabled;
+    bool xvaCgDynamicIM_ = false;
+    Size xvaCgDynamicIMStepSize_ = 1;
+    Size xvaCgRegressionOrder_ = 4;
+    bool xvaCgTradeLevelBreakdown_ = true;
+    bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
     bool xvaCgExternalDeviceCompatibilityMode_ = false;
     bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
     string xvaCgExternalComputeDevice_;
+    bool xvaCgUsePythonIntegration_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
@@ -1149,6 +1182,10 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
+    bool sensitivityStressCalcBaseScenario_ = false;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
 
@@ -1283,6 +1320,7 @@ private:
     std::string stressTestFileName_;
     std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
+    std::string sensitivityStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
     std::string parConversionOutputFileName_;

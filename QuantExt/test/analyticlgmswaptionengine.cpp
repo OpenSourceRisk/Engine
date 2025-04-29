@@ -230,10 +230,10 @@ BOOST_AUTO_TEST_CASE(testDualCurve) {
     Swaption swaption2 = MakeSwaption(index2, 10 * Years, 0.02);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine_a =
-        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::nextCoupon);
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine_b =
-        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::proRata);
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata);
 
     swaption1.setPricingEngine(engine_a);
     swaption1.NPV();
@@ -386,9 +386,9 @@ BOOST_AUTO_TEST_CASE(testAgainstOtherEngines) {
                     QuantLib::ext::make_shared<HullWhite>(discountingCurve, kappa[k], sigma[l]);
 
                 QuantLib::ext::shared_ptr<PricingEngine> engine_map_a = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(
-                    irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::nextCoupon);
+                        irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon);
                 QuantLib::ext::shared_ptr<PricingEngine> engine_map_b = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(
-                    irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::proRata);
+                        irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata);
 
                 QuantLib::ext::shared_ptr<PricingEngine> engine_g1d =
                     QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(g1d, 128, 7.0, true, false, discountingCurve);

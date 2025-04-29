@@ -196,19 +196,21 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
-                    additionalData_["initialPrice[" + legID + "]"] = arc.initialPrice;
+                    additionalData_["initialPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
                     additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
                     if (arc.startFixing != Null<Real>())
                         additionalData_["startEquityFixing[" + legID + "]"] = arc.startFixing;
+                    if (arc.dividendFactor != Null<Real>())
+                        additionalData_["dividendFactor[" + legID + "]"] = arc.dividendFactor;
                     if (arc.startFixingTotal != Null<Real>())
                         additionalData_["startEquityFixingTotal[" + legID + "]"] =
                             arc.startFixingTotal;
                     if (arc.endFixingTotal != Null<Real>())
                         additionalData_["endEquityFixingTotal[" + legID + "]"] = arc.endFixingTotal;
-                    if (arc.startFxFixing != Null<Real>())
-                        additionalData_["startFxFixing[" + legID + "]"] = arc.startFxFixing;
-                    if (arc.endFxFixing != Null<Real>())
-                        additionalData_["endFxFixing[" + legID + "]"] = arc.endFxFixing;
+                    if (arc.currentPeriodStartFxFixing != Null<Real>())
+                        additionalData_["currentPeriodStartFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
+                    if (arc.currentPeriodEndFxFixing != Null<Real>())
+                        additionalData_["currentPeriodEndFxFixing[" + legID + "]"] = arc.currentPeriodEndFxFixing;
                     if (arc.pastDividends != Null<Real>())
                         additionalData_["pastDividends[" + legID + "]"] = arc.pastDividends;
                     if (arc.forecastDividends != Null<Real>())
@@ -267,13 +269,14 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                         quantity = eqc->legInitialNotional() / eqc->initialPrice();
                     }
                 }
-                additionalData_["initialQuantity[" + legID + "]"] = quantity;
+
+                additionalData_[(eqc->notionalReset() ? "quantity[" : "initialQuantity[") + legID + "]"] = quantity;
 
                 Real currentPrice = Null<Real>();
                 if (eqc->equityCurve()->isValidFixingDate(asof)) {
                     currentPrice = eqc->equityCurve()->equitySpot()->value();
                 }
-                if (currentPrice != Null<Real>() && originalNotional != Null<Real>()) {
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>() && !eqc->notionalReset()) {
                     additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
                 }
             }
@@ -333,7 +336,7 @@ void Trade::addProductModelEngine(
 void Trade::updateProductModelEngineAdditionalData() {
     Size counter = 0;
     for (auto const& [p, m, e] : productModelEngine_) {
-        std::string suffix = productModelEngine_.size() > 1 ? "_" + std::to_string(counter) : std::string();
+        std::string suffix = productModelEngine_.size() > 1 ? "[" + std::to_string(counter) + "]" : std::string();
         if (p.size() == 1) {
             additionalData_["PricingConfigProductType" + suffix] = *p.begin();
         } else {

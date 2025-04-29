@@ -166,6 +166,12 @@ QuantLib::ext::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>
                                      LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
                                               0.0, CubicInterpolation::SecondDerivative, 0.0)));
          break;
+     case YieldCurve::InterpolationMethod::MonotonicLogCubicSpline:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
+         break;
 
      default:
          QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
@@ -216,6 +222,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::LogFinancialCubic;
     else if (s == "LogCubicSpline")
         return YieldCurve::InterpolationMethod::LogCubicSpline;
+    else if (s == "MonotonicLogCubicSpline")
+        return YieldCurve::InterpolationMethod::MonotonicLogCubicSpline;
     else if (s == "Hermite")
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
@@ -270,6 +278,8 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "LogFinancialCubic";
     else if (m == YieldCurve::InterpolationMethod::LogCubicSpline)
         return out << "LogCubicSpline";
+    else if (m == YieldCurve::InterpolationMethod::MonotonicLogCubicSpline)
+        return out << "MonotonicLogCubicSpline";
     else if (m == YieldCurve::InterpolationMethod::Hermite)
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
@@ -530,6 +540,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
          } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
@@ -659,6 +678,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
          } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<Discount,LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
@@ -784,6 +812,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                        CubicInterpolation::SecondDerivative, 0.0),
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
@@ -959,7 +996,7 @@ void YieldCurve::buildZeroCurve() {
             zeroes.push_back(tempRate.equivalentRate(Continuous, NoFrequency, t));
         }
         discounts.push_back(tempRate.discountFactor(t));
-        DLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
+        TLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
                                         << setprecision(4) << zeroes.back() << " / " << discounts.back());
     }
 

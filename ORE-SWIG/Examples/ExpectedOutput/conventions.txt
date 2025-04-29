@@ -1,0 +1,12 @@
+RUN conventions.py
+Conventions type is  <class 'ORE.ORE.Conventions'>
+Loaded conventions from string
+convObj is of type  <class 'ORE.ORE.AverageOisConvention'>
+convObj ID =  USD-AVERAGE-OIS-CONVENTIONS
+convObj type() is  6
+FedFundsON Actual/360 index
+idx is of type  <class 'ORE.ORE.OvernightIndex'>
+index name is  USD-FedFunds
+<class 'ORE.ORE.IborIndex'>
+<class 'ORE.ORE.YieldTermStructureHandle'>
+discount 10y =  0.9512294245007139

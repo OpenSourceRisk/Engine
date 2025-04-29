@@ -98,7 +98,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
-    analytic()->reports()[LABEL]["pnl_npv_t0"] = t0NpvReport;
+    analytic()->addReport(LABEL, "pnl_npv_t0", t0NpvReport);
 
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional t0 Results");
@@ -106,7 +106,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t0AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->reports()[LABEL]["pnl_additional_results_t0"] = t0AddReport;
+        analytic()->addReport(LABEL, "pnl_additional_results_t0", t0AddReport);
         CONSOLE("OK");
     }
 
@@ -120,7 +120,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     ReportWriter(inputs_->reportNaString())
       .writeCashflow(*t0CashFlowReport, effectiveResultCurrency, analytic()->portfolio(),
 		     analytic()->market(), marketConfig, inputs_->includePastCashflows());
-    analytic()->reports()[LABEL]["pnl_cashflow"] = t0CashFlowReport;
+    analytic()->addReport(LABEL, "pnl_cashflow", t0CashFlowReport);
     
     /*******************************************************************************************
      *
@@ -189,10 +189,10 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t0LaggedAddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->reports()[LABEL]["pnl_additional_results_lagged_t0"] = t0LaggedAddReport;
+        analytic()->addReport(LABEL, "pnl_additional_results_lagged_t0", t0LaggedAddReport);
         CONSOLE("OK");
     }
-    analytic()->reports()[LABEL]["pnl_npv_lagged_t0"] = t0NpvLaggedReport;
+    analytic()->addReport(LABEL, "pnl_npv_lagged_t0", t0NpvLaggedReport);
 
     /***********************************************************************************************
      *
@@ -219,7 +219,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         .writeNpv(*t1NpvLaggedReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
-    analytic()->reports()[LABEL]["pnl_npv_lagged_t1"] = t1NpvLaggedReport;
+    analytic()->addReport(LABEL, "pnl_npv_lagged_t1", t1NpvLaggedReport);
 
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional Results t1");
@@ -227,7 +227,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t1AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->reports()[LABEL]["pnl_additional_results_lagged_t1"] = t1AddReport;
+        analytic()->addReport(LABEL, "pnl_additional_results_lagged_t1", t1AddReport);
         CONSOLE("OK");
     }
 
@@ -250,7 +250,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         .writeNpv(*t1Npvt0PortReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
-    analytic()->reports()[LABEL]["pnl_npv_t1_port_t0"] = t1Npvt0PortReport;
+    analytic()->addReport(LABEL, "pnl_npv_t1_port_t0", t1Npvt0PortReport);
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1AddReport;
     if (inputs_->outputAdditionalResults()) {
@@ -259,7 +259,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t1AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
-        analytic()->reports()[LABEL]["pnl_additional_results_t1_port_t0"] = t1AddReport;
+        analytic()->addReport(LABEL, "pnl_additional_results_t1_port_t0", t1AddReport);
         CONSOLE("OK");
     }
 
@@ -297,9 +297,9 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     } else
         t1NpvReport = t1Npvt0PortReport;
 
-    analytic()->reports()[LABEL]["pnl_npv_t1"] = t1NpvReport;
+    analytic()->addReport(LABEL, "pnl_npv_t1", t1NpvReport);
     if (inputs_->outputAdditionalResults())
-        analytic()->reports()[LABEL]["pnl_additional_results_t1"] = t1AddReport;
+        analytic()->addReport(LABEL, "pnl_additional_results_t1", t1AddReport);
 
     /****************************
      *
@@ -313,19 +313,18 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         .writePnlReport(*pnlReport, t0NpvReport, t0NpvLaggedReport, t1NpvLaggedReport, t1Npvt0PortReport, t1NpvReport,
 			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
             marketConfig, analytic()->portfolio());
-    analytic()->reports()[LABEL]["pnl"] = pnlReport;
+    analytic()->addReport(LABEL, "pnl", pnlReport);
 
     /***************************
      *
      * 9. Write Scenario Reports
      *
      ***************************/
-
     QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     auto sw = ScenarioWriter(nullptr, scenarioReport);
     sw.writeScenario(asofBaseScenario, true);
     sw.writeScenario(mporBaseScenario, false);
-    analytic()->reports()[label()]["zero_scenarios"] = scenarioReport;    
+    analytic()->addReport(label(), "zero_scenarios", scenarioReport);
 }
 
 } // namespace analytics

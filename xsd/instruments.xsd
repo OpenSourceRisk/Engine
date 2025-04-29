@@ -1414,6 +1414,14 @@
       <xs:enumeration value="FixingFloor"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="barrierCompare">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="1"/>
+      <xs:enumeration value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="barrierStyle">
     <xs:restriction base="xs:string">
@@ -1425,6 +1433,7 @@
   <xs:complexType name="barrierData">
     <xs:all>
       <xs:element type="barrierType" name="Type"/>
+	  <xs:element type="barrierCompare" name="StrictComparison" minOccurs="0"/>
       <xs:element type="barrierStyle" name="Style" minOccurs="0"/>
       <xs:element name="Levels">
         <xs:complexType>
@@ -1454,6 +1463,8 @@
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
       <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyLows"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyHighs"  minOccurs="0"/>
       <xs:element type="currencyCode" name="BoughtCurrency"/>
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
@@ -1468,6 +1479,8 @@
       <xs:element type="date" name="StartDate"  minOccurs="0"/>
       <xs:element type="calendar" name="Calendar"  minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyLows"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyHighs"  minOccurs="0"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="PayoffAmount"/>
       <xs:element type="currencyCode" name="PayoffCurrency" minOccurs="0"/>
@@ -1486,6 +1499,8 @@
       <xs:element type="xs:float" name="PayoffAmount"/>
       <xs:element type="date" name="StartDate" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyLows"  minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndexDailyHighs"  minOccurs="0"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -2734,7 +2749,7 @@
       <xs:element name="Styles" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Style" maxOccurs="unbounded">
+            <xs:element name="Style" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -2749,7 +2764,7 @@
       <xs:element name="ConversionRatios" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="ConversionRatio" maxOccurs="unbounded">
+            <xs:element name="ConversionRatio" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -4531,7 +4546,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="Barriers">
+      <xs:element name="Barriers" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="barrierData" name="BarrierData" maxOccurs="unbounded"/>

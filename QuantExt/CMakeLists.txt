@@ -38,6 +38,11 @@ if (TARGET Eigen3::Eigen)
     endif()
 endif()
 
+if (ORE_PYTHON_INTEGRATION)
+    find_package(Python COMPONENTS Interpreter Development)
+    include_directories(${Python_INCLUDE_DIRS})
+endif()
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${ORETEST_SOURCE_DIR})

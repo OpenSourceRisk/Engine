@@ -19,15 +19,20 @@
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 
-#include <ql/termstructures/inflationtermstructure.hpp>
-#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
-
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/time/daycounters/thirty360.hpp>
+#include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/indexes/inflation/ukrpi.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/termstructures/inflation/inflationtraits.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -65,17 +70,21 @@ QuantLib::ext::shared_ptr<Seasonality> buildSeasonalityCurve() {
     return QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(seasonalityBaseDate, Monthly, factors);
 }
 
+QuantLib::ext::shared_ptr<YieldTermStructure> buildYts(double flatZeroRate, const DayCounter& dc) {
+    return  QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(ext::make_shared<SimpleQuote>(flatZeroRate)), dc);
+}
+
+
 QuantLib::ext::shared_ptr<ZeroInflationCurve>
 buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                         const bool isInterpolated, const QuantLib::ext::shared_ptr<Seasonality>& seasonality = nullptr) {
     Date today = Settings::instance().evaluationDate();
-    QuantLib::ext::shared_ptr<SimpleQuote> flatZero = QuantLib::ext::make_shared<SimpleQuote>(0.01);
+    double flatZero = 0.01;
     DayCounter dc = cd.dayCounter;
     Calendar fixingCalendar = NullCalendar();
     BusinessDayConvention bdc = ModifiedFollowing;
 
-    QuantLib::ext::shared_ptr<YieldTermStructure> discountTS =
-        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dc);
+    auto discountTS = buildYts(flatZero, dc);
 
     std::vector<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
@@ -311,6 +320,144 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
         auto forwardCPI = index->fixing(expectedPillarDates.at(i));
         BOOST_CHECK_CLOSE(forwardCPI, expectedCPIs.at(i), cd.tolerance);
     }
+}
+
+BOOST_AUTO_TEST_CASE(testPiecewiseInterpolatedCPICurve) {
+    // try the Zero UK
+    Calendar calendar = UnitedKingdom();
+    BusinessDayConvention bdc = ModifiedFollowing;
+    Date evaluationDate(13, August, 2007);
+    evaluationDate = calendar.adjust(evaluationDate);
+    Settings::instance().evaluationDate() = evaluationDate;
+
+    // fixing data
+    Date from(1, January, 2005);
+    Date to(1, July, 2007);
+    Schedule rpiSchedule = MakeSchedule().from(from).to(to).withFrequency(Monthly);
+
+    std::vector<double> fixData{189.9, 189.9, 189.6, 190.5, 191.6, 192.0, 192.2, 192.2, 192.6, 193.1, 193.3,
+                                193.6, 194.1, 193.4, 194.2, 195.0, 196.5, 197.7, 198.5, 198.5, 199.2, 200.1,
+                                200.4, 201.1, 202.7, 201.6, 203.1, 204.4, 205.4, 206.2, 207.3};
+
+    RelinkableHandle<ZeroInflationTermStructure> hz;
+    auto ii = ext::make_shared<UKRPI>(hz);
+    for (Size i = 0; i < fixData.size(); i++) {
+        ii->addFixing(rpiSchedule[i], fixData[i]);
+    }
+
+    Handle<YieldTermStructure> nominalTS{buildYts(0.01, Actual365Fixed())};
+
+    // now build the zero inflation curve
+    std::vector<std::pair<Date, double>> zcData = {
+        {Date(13, August, 2008), 2.93},  {Date(13, August, 2009), 2.95},  {Date(13, August, 2010), 2.965},
+        {Date(15, August, 2011), 2.98},  {Date(13, August, 2012), 3.0},   {Date(13, August, 2014), 3.06},
+        {Date(13, August, 2017), 3.175}, {Date(13, August, 2019), 3.243}, {Date(15, August, 2022), 3.293},
+        {Date(14, August, 2027), 3.338}, {Date(13, August, 2032), 3.348}, {Date(15, August, 2037), 3.348},
+        {Date(13, August, 2047), 3.308}, {Date(13, August, 2057), 3.228}};
+
+    Period observationLag = Period(3, Months);
+    DayCounter dc = Thirty360(Thirty360::BondBasis);
+    Frequency frequency = Monthly;
+
+    auto makeHelper = [&](const ext::shared_ptr<Quote>& quote, const Date& maturity) {
+        return ext::make_shared<ZeroCouponInflationSwapHelper>(Handle<Quote>(quote), observationLag, maturity, calendar,
+                                                               bdc, dc, ii, CPI::AsIndex, nominalTS);
+    };
+
+    std::vector<ext::shared_ptr<QuantExt::CPITraits::helper>> helpers;
+    for (const auto& [maturity, rate] : zcData) {
+        helpers.push_back(makeHelper(ext::make_shared<SimpleQuote>(rate / 100.0), maturity));
+    }
+
+    Date baseDate = ii->lastFixingDate();
+    Rate baseCPI = ii->fixing(baseDate);
+
+    ext::shared_ptr<QuantExt::PiecewiseCPIInflationCurve<Linear>> pZITS =
+        ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(evaluationDate, baseDate, baseCPI,
+                                                                       observationLag, frequency, dc, helpers);
+    hz.linkTo(pZITS);
+
+    //===========================================================================================
+    // first check that the quoted swaps are repriced correctly
+
+    const Real eps = 1.0e-7;
+    auto engine = ext::make_shared<DiscountingSwapEngine>(nominalTS);
+
+    for (const auto& [date, rate] : zcData) {
+        ZeroCouponInflationSwap nzcis(Swap::Payer, 1000000.0, evaluationDate, date, calendar, bdc, dc, rate / 100.0, ii,
+                                      observationLag, CPI::AsIndex);
+        nzcis.setPricingEngine(engine);
+
+        BOOST_CHECK_MESSAGE(std::fabs(nzcis.NPV()) < eps, "zero-coupon inflation swap does not reprice to zero"
+                                                              << "\n    NPV:      " << nzcis.NPV()
+                                                              << "\n    maturity: " << nzcis.maturityDate()
+                                                              << "\n    rate:     " << rate / 100.0);
+    }
+
+    //===========================================================================================
+    // now test the forecasting capability of the index.
+
+    from = hz->referenceDate();
+    to = hz->maxDate() - 1 * Months; // a bit of margin for adjustments
+    Schedule testIndex = MakeSchedule()
+                             .from(from)
+                             .to(to)
+                             .withTenor(1 * Months)
+                             .withCalendar(UnitedKingdom())
+                             .withConvention(ModifiedFollowing);
+
+    // we are testing UKRPI which is not interpolated
+    Date bd = hz->baseDate();
+    Real bf = ii->fixing(bd);
+    for (const auto& d : testIndex) {
+        Real z = hz->zeroRate(d, Period(0, Days));
+        Real t = hz->dayCounter().yearFraction(bd, inflationPeriod(d, ii->frequency()).first);
+        Real calc = bf * std::pow(1 + z, t);
+        if (t <= 0)
+            calc = ii->fixing(d, false); // still historical
+        if (std::fabs(calc - ii->fixing(d, true)) > eps)
+            BOOST_ERROR("inflation index does not forecast correctly"
+                        << "\n    date:        " << d << "\n    base date:   " << bd << "\n    base fixing: " << bf
+                        << "\n    expected:    " << calc << "\n    forecast:    " << ii->fixing(d, true));
+    }
+
+    //===========================================================================================
+    // Add a seasonality correction.  The curve should recalculate and still reprice the swaps.
+
+    Date nextBaseDate = inflationPeriod(hz->baseDate(), ii->frequency()).second;
+    Date seasonalityBaseDate(31, January, nextBaseDate.year());
+    vector<Rate> seasonalityFactors = {1.003245, 1.000000, 0.999715, 1.000495, 1.000929, 0.998687,
+                                       0.995949, 0.994682, 0.995949, 1.000519, 1.003705, 1.004186};
+
+    ext::shared_ptr<MultiplicativePriceSeasonality> nonUnitSeasonality =
+        ext::make_shared<MultiplicativePriceSeasonality>(seasonalityBaseDate, Monthly, seasonalityFactors);
+
+    pZITS->setSeasonality(nonUnitSeasonality);
+
+    for (const auto& d : testIndex) {
+        Real z = hz->zeroRate(d, Period(0, Days));
+        Real t = hz->dayCounter().yearFraction(bd, inflationPeriod(d, ii->frequency()).first);
+        Real calc = bf * std::pow(1 + z, t);
+        if (t <= 0)
+            calc = ii->fixing(d, false); // still historical
+        if (std::fabs(calc - ii->fixing(d, true)) > eps)
+            BOOST_ERROR("inflation index does not forecast correctly"
+                        << "\n    date:        " << d << "\n    base date:   " << bd << "\n    base fixing: " << bf
+                        << "\n    expected:    " << calc << "\n    forecast:    " << ii->fixing(d, true));
+    }
+
+    for (const auto& [date, rate] : zcData) {
+        ZeroCouponInflationSwap nzcis(Swap::Payer, 1000000.0, evaluationDate, date, calendar, bdc, dc, rate / 100.0, ii,
+                                      observationLag, CPI::AsIndex);
+        nzcis.setPricingEngine(engine);
+
+        BOOST_CHECK_MESSAGE(std::fabs(nzcis.NPV()) < eps, "zero-coupon inflation swap does not reprice to zero"
+                                                              << "\n    NPV:      " << nzcis.NPV() << "\n    maturity: "
+                                                              << nzcis.maturityDate() << "\n    rate:     " << rate);
+    }
+
+    // remove circular refernce
+    hz.linkTo(ext::shared_ptr<ZeroInflationTermStructure>());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

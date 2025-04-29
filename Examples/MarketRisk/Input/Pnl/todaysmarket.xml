@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+	<Configuration id="inccy">
+		<DiscountingCurvesId>inccy</DiscountingCurvesId>
+	</Configuration>
+	<Configuration id="default"/>
+	<YieldCurves id="default"/>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<DiscountingCurves id="inccy">
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+	</IndexForwardingCurves>
+	<FxSpots id="default"/>
+</TodaysMarket>

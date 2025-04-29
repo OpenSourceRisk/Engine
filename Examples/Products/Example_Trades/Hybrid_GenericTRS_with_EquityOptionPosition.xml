@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EquityTRS">
+        <TradeType>TotalReturnSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <TotalReturnSwapData>
+            <!-- a trade defining the underlying on which the return is computed -->
+            <!-- this can have types Bond, ConvertibleBond, EquityPosition, EquityOptionPosition -->
+            <UnderlyingData>
+                <Trade>
+                    <TradeType>EquityOptionPosition</TradeType>
+                    <EquityOptionPositionData>
+                        <!-- basket price = quantity x sum_i ( weight_i x equityOptionPrice_i x fx_i ) -->
+                        <Quantity>1000</Quantity>
+                        <!-- option #1 -->
+                        <Underlying>
+                            <Underlying>
+                                <Type>Equity</Type>
+                                <Name>.SPX</Name>
+                                <Weight>0.5</Weight>
+                                <IdentifierType>RIC</IdentifierType>
+                            </Underlying>
+                            <OptionData>
+                                <LongShort>Long</LongShort>
+                                <OptionType>Call</OptionType>
+                                <Style>European</Style>
+                                <Settlement>Cash</Settlement>
+                                <ExerciseDates>
+                                    <ExerciseDate>2025-10-03</ExerciseDate>
+                                </ExerciseDates>
+                            </OptionData>
+                            <Strike>3300</Strike>
+                        </Underlying>
+                        <!-- option #2 -->
+                        <Underlying>
+                            <Underlying>
+                                <Type>Equity</Type>
+                                <Name>.SPX</Name>
+                                <Weight>0.5</Weight>
+                                <IdentifierType>RIC</IdentifierType>
+                            </Underlying>
+                            <OptionData>
+                                <LongShort>Long</LongShort>
+                                <OptionType>Call</OptionType>
+                                <Style>European</Style>
+                                <Settlement>Cash</Settlement>
+                                <ExerciseDates>
+                                    <ExerciseDate>2025-10-03</ExerciseDate>
+                                </ExerciseDates>
+                            </OptionData>
+                            <Strike>3400</Strike>
+                        </Underlying>
+                        <!-- option #3 -->
+                        <!-- ... -->
+                    </EquityOptionPositionData>
+                </Trade>
+            </UnderlyingData>
+            <ReturnData>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <ScheduleData>
+                    <Dates>
+                        <Dates>
+                            <Date>2023-06-02</Date>
+                            <Date>2023-08-24</Date>
+                            <Date>2023-12-01</Date>
+                            <Date>2024-03-01</Date>
+                            <Date>2024-06-03</Date>
+                            <Date>2024-09-02</Date>
+                            <Date>2024-12-02</Date>
+                            <Date>2025-03-04</Date>
+                            <Date>2025-06-04</Date>
+                            <Date>2025-09-03</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <!-- valuation dates are derived from the above schedule -->
+                <!-- defaults to 0D -->
+                <ObservationLag>0D</ObservationLag>
+                <!-- defaults to P -->
+                <ObservationConvention>P</ObservationConvention>
+                <!-- defaults to schedule calendar -->
+                <ObservationCalendar>USD</ObservationCalendar>
+                <!-- payment dates can be derived from the above schedule ... -->
+                <!-- <PaymentLag>2D</PaymentLag> -->
+                <!-- <PaymentConvention>F</PaymentConvention> -->
+                <!-- <PaymentCalendar>US</PaymentCalendar> -->
+                <!-- ... or can be overwritten by a list of explicit dates -->
+                <PaymentDates>
+                    <PaymentDate>2023-08-26</PaymentDate>
+                    <PaymentDate>2023-12-05</PaymentDate>
+                    <PaymentDate>2024-03-05</PaymentDate>
+                    <PaymentDate>2024-06-05</PaymentDate>
+                    <PaymentDate>2024-09-05</PaymentDate>
+                    <PaymentDate>2024-12-04</PaymentDate>
+                    <PaymentDate>2025-03-06</PaymentDate>
+                    <PaymentDate>2025-06-06</PaymentDate>
+                    <PaymentDate>2025-09-08</PaymentDate>
+                </PaymentDates>
+                <!-- Optional initial (basket) price and currency -->
+                <InitialPrice>112.0</InitialPrice>
+                <!-- asset ccy or return ccy, if there is more than one asset ccy, must be in return ccy -->
+                <InitialPriceCurrency>USD</InitialPriceCurrency>
+                <!-- FX Conversion Details, one block required per asset ccy != return ccy -->
+                <FXTerms>
+                    <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+                    <FXIndex>FX-TR20H-GBP-USD</FXIndex>
+                </FXTerms>
+            </ReturnData>
+            <!-- the funding leg definition -->
+            <FundingData>
+                <!-- any number of legs, must all be in the return ccy -->
+                <LegData>
+                    <Payer>true</Payer>
+                    <LegType>Floating</LegType>
+                    <Currency>USD</Currency>
+                    <PaymentConvention>Following</PaymentConvention>
+                    <PaymentLag>2</PaymentLag>
+                    <DayCounter>A360</DayCounter>
+                    <FloatingLegData>
+                        <Index>USD-LIBOR-3M</Index>
+                        <Spreads>
+                            <Spread>0.005</Spread>
+                        </Spreads>
+                        <FixingDays>2</FixingDays>
+                        <IsInArrears>false</IsInArrears>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Dates>
+                            <Dates>
+                                <Date>2023-06-02</Date>
+                                <Date>2023-09-04</Date>
+                                <Date>2023-12-01</Date>
+                                <Date>2024-03-01</Date>
+                                <Date>2024-06-03</Date>
+                                <Date>2024-09-02</Date>
+                                <Date>2024-12-02</Date>
+                                <Date>2025-03-04</Date>
+                                <Date>2025-06-04</Date>
+                                <Date>2025-09-03</Date>
+                            </Dates>
+                        </Dates>
+                    </ScheduleData>
+                </LegData>
+            </FundingData>
+        </TotalReturnSwapData>
+    </Trade>
+</Portfolio>

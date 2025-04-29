@@ -56,6 +56,8 @@ public:
     void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
     void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
+    std::vector<std::string> failedAnalytics() { return failedAnalytics_; }
+
     // returns a vector of all analytics, including dependent analytics
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>>& analytics() const {
         return analytics_;
@@ -80,12 +82,18 @@ private:
     QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports reports_;
     std::set<std::string> validAnalytics_;
+    std::vector<std::string> failedAnalytics_;
     bool initialised_ = false;
 };
 
 QuantLib::ext::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
     const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader);
+
+//! get a report from analytic report collection or if not present an empty report
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+getReport(const ore::analytics::Analytic::analytic_reports& reports, const std::string& analytic,
+          const std::string& report);
 
 } // analytics
 } // ore

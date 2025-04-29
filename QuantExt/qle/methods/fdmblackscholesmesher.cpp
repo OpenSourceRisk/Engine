@@ -36,7 +36,7 @@ namespace QuantExt {
 FdmBlackScholesMesher::FdmBlackScholesMesher(Size size, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                              Time maturity, Real strike, Real xMinConstraint, Real xMaxConstraint,
                                              Real eps, Real scaleFactor,
-                                             const std::vector<QuantLib::ext::tuple<Real, Real, bool>>& cPoints,
+                                             const std::vector<std::tuple<Real, Real, bool>>& cPoints,
                                              const DividendSchedule& dividendSchedule,
                                              const ext::shared_ptr<FdmQuantoHelper>& fdmQuantoHelper,
                                              Real spotAdjustment)
@@ -107,7 +107,7 @@ FdmBlackScholesMesher::FdmBlackScholesMesher(Size size, const ext::shared_ptr<Ge
     }
 
     // filter cPoints on [xmin, xmax]
-    std::vector<QuantLib::ext::tuple<Real, Real, bool>> cPointsEff;
+    std::vector<std::tuple<Real, Real, bool>> cPointsEff;
     for (auto const& c : cPoints) {
         if (QuantLib::ext::get<0>(c) == Null<Real>() || QuantLib::ext::get<0>(c) < xMin || QuantLib::ext::get<0>(c) > xMax)
             continue;

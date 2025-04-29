@@ -165,8 +165,8 @@ public:
     };
 
     typedef std::pair<NettingSetDetails, AssetClass> AssetClassKey;
-    typedef QuantLib::ext::tuple<NettingSetDetails, AssetClass, std::string> HedgingSetKey;
-    typedef QuantLib::ext::tuple<NettingSetDetails, AssetClass, std::string, std::string> HedgingSubsetKey;
+    typedef std::tuple<NettingSetDetails, AssetClass, std::string> HedgingSetKey;
+    typedef std::tuple<NettingSetDetails, AssetClass, std::string, std::string> HedgingSubsetKey;
 
     SACCR(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
           const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager, const QuantLib::ext::shared_ptr<Market>& market, 

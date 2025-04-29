@@ -116,6 +116,7 @@
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/accumulator.hpp>
+#include <ored/portfolio/additionalfieldgetter.hpp>
 #include <ored/portfolio/ascot.hpp>
 #include <ored/portfolio/asianoption.hpp>
 #include <ored/portfolio/autocallable_01.hpp>
@@ -327,6 +328,7 @@
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradebarrier.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/tranche.hpp>
@@ -396,6 +398,7 @@
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/credit.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>

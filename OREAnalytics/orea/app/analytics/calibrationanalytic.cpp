@@ -361,7 +361,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     string xml = data->toXMLStringUnformatted();
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "CrossAssetModel", xml);
-    analytic()->reports()["CALIBRATION"]["calibration"] = report;
+    analytic()->addReport("CALIBRATION", "calibration", report);
 
     CONSOLE("OK");
 

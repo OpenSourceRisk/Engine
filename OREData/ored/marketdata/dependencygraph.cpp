@@ -26,6 +26,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -432,6 +433,57 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 buildErrors[g[*v].mapping] = "did not find required discount curve " + ccy2 + " (required from " +
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
+        }
+
+        // 9 Base correlation depends on credit curves and discount curves
+
+        if (g[*v].obj == MarketObject::BaseCorrelation){
+            const auto underlying = g[*v].name;
+            DLOG("Building dependency graph for base correlation" << underlying);
+            if(!curveConfigs_->hasBaseCorrelationCurveConfig(underlying)){
+                continue;
+            }
+            auto baseCorrelationConfig = curveConfigs_->baseCorrelationCurveConfig(underlying);
+            if (!baseCorrelationConfig->hasQuoteTypePrice()) {
+                DLOG("Base Correlation will be build from direct base correlation quotes, no dependencies for "
+                     << underlying);
+                continue;
+            }
+            if (referenceData_ != nullptr && referenceData_->hasData(CreditIndexReferenceDatum::TYPE, underlying)) {
+                auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+                    referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
+
+                std::set<std::string> constituentCurves{underlying, underlying + "_3Y", underlying + "_5Y",
+                                                        underlying + "_7Y", underlying + "_10Y"};
+                for (const auto& c : crd->constituents()) {
+                    const double weight = c.weight();
+                    if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
+                        constituentCurves.insert(c.name());
+                        auto assumedRecovery = baseCorrelationConfig->assumedRecovery(c.name());
+                        if (assumedRecovery != Null<double>()) {
+                            constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), assumedRecovery));
+                        }
+                    } else {
+                        DLOG("Skipping curve " << c.name() << ", having zero weight");
+                    }
+                }
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && g[*w].obj == MarketObject::DefaultCurve &&
+                        constituentCurves.count(g[*w].name) > 0) {
+                        DLOG("Adding edge between baseCorrelation " << underlying << " and creditCurve " << g[*w].name);
+                        g.add_edge(*v, *w);
+                        constituentCurves.erase(g[*w].name);
+                    }
+                }
+                for (const auto& creditCurve : constituentCurves) {
+                    WLOG("couldn't find required creditCurve "
+                         << creditCurve
+                         << ". This can be ignored if base correlation are given and not bootstrapped from upfronts");
+                }
+            } else {
+                WLOG("No reference data manager or data found for index, this could be an error, if base correlation "
+                     "are bootstrapped from upfronts");
+            }
         }
     }
 

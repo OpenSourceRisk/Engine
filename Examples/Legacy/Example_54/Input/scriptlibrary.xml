@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<ScriptLibrary>
+  <Script>
+    <Name>BermudanSwaption</Name>
+    <!-- default script -->
+    <Script>
+      <Code><![CDATA[
+      NUMBER UnderlyingNpv, EstimatedPayoff;
+      NUMBER i, j, lastFixedLegIndex, lastFloatLegIndex;
+      lastFixedLegIndex = SIZE(FixedLegSchedule);
+      lastFloatLegIndex = SIZE(FloatLegSchedule);
+      FOR i IN (SIZE(ExerciseDates), 1, -1) DO
+        FOR j IN (lastFixedLegIndex, 2, -1) DO
+          IF FixedLegSchedule[j-1] >= ExerciseDates[i] THEN
+            UnderlyingNpv = UnderlyingNpv + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[j-1], FixedLegSchedule[j] ),
+                                                 FixedLegSchedule[j], FixedLegSchedule[j], PayCurrency );
+            lastFixedLegIndex = j-1;
+          END;
+        END;
+        FOR j IN (lastFloatLegIndex, 2, -1) DO
+          IF FloatLegSchedule[j-1] >= ExerciseDates[i] THEN
+            UnderlyingNpv = UnderlyingNpv - PAY( Notional * (FloatIndex(FixingSchedule[j-1]) + FloatSpread) * dcf( FloatDayCounter, FloatLegSchedule[j-1], FloatLegSchedule[j] ),
+                                                 FixingSchedule[j-1], FloatLegSchedule[j], PayCurrency );
+            lastFloatLegIndex = j-1;
+          END;
+        END;
+        EstimatedPayoff = NPV( FixedRatePayer * UnderlyingNpv, ExerciseDates[i]);
+        IF EstimatedPayoff > 0 AND EstimatedPayoff > NPV( Option, ExerciseDates[i], EstimatedPayoff > 0 ) THEN
+          Option = FixedRatePayer * UnderlyingNpv;
+        END;
+      END;
+      Option = Option * OptionLongShort;
+      ]]></Code>
+      <NPV>Option</NPV>
+    </Script>
+    <!-- script that will be preferred in an AMC context -->
+    <Script purpose="AMC">
+      <Code><![CDATA[
+      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];
+      NUMBER Option[SIZE(ExerciseAndSimDates) + 1], UnderlyingNpv[SIZE(ExerciseAndSimDates) + 1], EstimatedPayoff;
+      NUMBER exIdx, ExerciseIndicator[SIZE(ExerciseDates)];
+      NUMBER i, j, k, lastFixedLegIndex, lastFloatLegIndex;
+      lastFixedLegIndex = SIZE(FixedLegSchedule);
+      lastFloatLegIndex = SIZE(FloatLegSchedule);
+      FOR i IN (SIZE(ExerciseAndSimDates), 1, -1) DO
+        UnderlyingNpv[i] = UnderlyingNpv[i + 1];
+        FOR j IN (lastFixedLegIndex, 2, -1) DO
+          IF FixedLegSchedule[j - 1] >= ExerciseAndSimDates[i] THEN
+            UnderlyingNpv[i] = UnderlyingNpv[i] + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[j-1], FixedLegSchedule[j] ),
+                                                   FixedLegSchedule[j], FixedLegSchedule[j], PayCurrency );
+            lastFixedLegIndex = j - 1;
+          END;
+        END;
+        FOR j IN (lastFloatLegIndex, 2, -1) DO
+          IF FloatLegSchedule[j - 1] >= ExerciseAndSimDates[i] THEN
+            UnderlyingNpv[i] = UnderlyingNpv[i] - PAY( Notional * (FloatIndex(FixingSchedule[j-1]) + FloatSpread) * dcf( FloatDayCounter, FloatLegSchedule[j-1], FloatLegSchedule[j] ),
+                                                 FixingSchedule[j-1], FloatLegSchedule[j], PayCurrency );
+            lastFloatLegIndex = j - 1;
+          END;
+        END;
+        Option[i] = Option[i + 1];
+        exIdx = DATEINDEX(ExerciseAndSimDates[i], ExerciseDates, EQ);
+        IF exIdx > 0 THEN
+          EstimatedPayoff = NPVMEM( FixedRatePayer * UnderlyingNpv[i], ExerciseAndSimDates[i], i);
+          IF EstimatedPayoff > 0 AND EstimatedPayoff > NPVMEM( Option[i], ExerciseAndSimDates[i], SIZE(ExerciseAndSimDates) + i , EstimatedPayoff > 0 ) THEN
+            ExerciseIndicator[exIdx] = 1;
+            FOR j IN (exIdx + 1, SIZE(ExerciseDates), 1) DO
+              ExerciseIndicator[j] = 0;
+            END;
+          END;
+          IF ExerciseIndicator[exIdx] > 0 THEN
+            Option[i] = FixedRatePayer * UnderlyingNpv[i];
+            FOR j IN (i + 1, SIZE(ExerciseAndSimDates), 1) DO
+              IF ExerciseSettlement == 0 THEN
+                Option[j] = 0;
+              ELSE
+                Option[j] = UnderlyingNpv[j];
+                FOR k IN (2, SIZE(FixedLegSchedule), 1) DO
+                  IF FixedLegSchedule[k-1] < ExerciseAndSimDates[j] AND FixedLegSchedule[k] > ExerciseAndSimDates[j] AND FixedLegSchedule[k-1] >= ExerciseAndSimDates[i] THEN
+                    Option[j] = Option[j] + PAY( Notional * FixedRate * dcf( FixedDayCounter, FixedLegSchedule[k-1], FixedLegSchedule[k] ),
+                                                   FixedLegSchedule[k], FixedLegSchedule[k], PayCurrency );
+                  END;
+                END;
+                FOR k IN (2, SIZE(FloatLegSchedule), 1) DO
+                  IF FloatLegSchedule[k-1] < ExerciseAndSimDates[j] AND FloatLegSchedule[k] > ExerciseAndSimDates[j] AND FloatLegSchedule[k-1] >= ExerciseAndSimDates[i] THEN
+                    Option[j] = Option[j] - PAY( Notional * (FloatIndex(FixingSchedule[k-1]) + FloatSpread) * dcf( FloatDayCounter, FloatLegSchedule[k-1], FloatLegSchedule[k] ),
+                                                 FixingSchedule[k-1], FloatLegSchedule[k], PayCurrency );
+                  END;
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
+        _AMC_NPV[i] = NPVMEM( Option[DATEINDEX(_AMC_SimDates[i], ExerciseAndSimDates, EQ)], _AMC_SimDates[i], 2 * SIZE(ExerciseAndSimDates) + i);
+      END;
+      OptionValue = Option[1] * OptionLongShort;
+      ]]></Code>
+      <NPV>OptionValue</NPV>
+      <!-- Create ExerciseAndSimDates schedule from AMC sim dates (if given) and exercise dates -->
+      <NewSchedules>
+        <NewSchedule>
+          <Name>ExerciseAndSimDates</Name>
+          <Operation>Join</Operation>
+          <Schedules>
+            <Schedule>_AMC_SimDates</Schedule>
+            <Schedule>ExerciseDates</Schedule>
+          </Schedules>
+        </NewSchedule>
+      </NewSchedules>
+      <!-- in sticky date mpor mode we'll determine the ExerciseIndicator in the valuation dates run and reuse in the closeout dates run -->
+      <StickyCloseOutStates>
+        <StickyCloseOutState>ExerciseIndicator</StickyCloseOutState>
+      </StickyCloseOutStates>
+    </Script>
+  </Script>
+<Script>
+    <Name>LPISwap</Name>
+    <Script>
+      <Code><![CDATA[
+      NUMBER i, lpi0, lpi;
+      NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];
+      Value = Value + PAY( FixedRatePayer * Notional * pow( 1 + FixedRate, dcf( DayCounter, Schedule[1], Schedule[SIZE(Schedule)] ) ),
+                           Schedule[1], Schedule[SIZE(Schedule)], PayCurrency );
+      lpi0 = CPIIndex(FixingSchedule[1]);
+      lpi = lpi0;
+      FOR i IN (2, SIZE(Schedule), 1) DO
+        lpi = lpi * min( max( CPIIndex(FixingSchedule[i]) / CPIIndex(FixingSchedule[i-1]), 1 + Floor ), 1 + Cap );
+      END;
+      Value = Value - PAY( FixedRatePayer * Notional * lpi / lpi0,
+                           Schedule[1], Schedule[SIZE(Schedule)], PayCurrency );
+      FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
+        IF _AMC_SimDates[i] < Schedule[SIZE(Schedule)] THEN
+          _AMC_NPV[i] = NPVMEM( Value, _AMC_SimDates[i], i);
+        END;
+      END;
+      ]]></Code>
+      <NPV>Value</NPV>
+      <!-- Create ExerciseAndSimDates schedule from AMC sim dates (if given) and exercise dates -->
+      <NewSchedules></NewSchedules>
+      <StickyCloseOutStates></StickyCloseOutStates>
+    </Script>
+  </Script>
+</ScriptLibrary>

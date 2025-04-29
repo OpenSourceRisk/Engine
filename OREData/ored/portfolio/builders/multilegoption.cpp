@@ -240,6 +240,10 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
 
@@ -249,7 +253,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
                                                         CrossAssetModel::Discretization::Exact,
                                                         SalvagingAlgorithm::Spectral),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate, continueOnCalibrationError, "", id);
+        configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks);
 
     modelBuilders_.insert(std::make_pair(id, builder));
 

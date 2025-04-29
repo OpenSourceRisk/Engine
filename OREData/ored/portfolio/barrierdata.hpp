@@ -38,9 +38,9 @@ public:
     //! Constructor
     BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
                 const std::vector<ore::data::TradeBarrier>& tradeBarriers, const std::string& style = std::string(),
-                const std::optional<bool>& overrideTriggered = std::nullopt)
+                const std::optional<string>& strictComparison = std::nullopt, const std::optional<bool>& overrideTriggered = std::nullopt)
         : initialized_(true), type_(barrierType), levels_(levels), rebate_(rebate), tradeBarriers_(tradeBarriers),
-          style_(style), overrideTriggered_(overrideTriggered) {}
+          style_(style), strictComparison_(strictComparison), overrideTriggered_(overrideTriggered) {}
 
     //! \name Inspectors
     //@{
@@ -51,6 +51,7 @@ public:
     const std::vector<ore::data::TradeBarrier>& levels() const { return tradeBarriers_; }
     const std::string& style() const { return style_; }
     bool initialized() const { return initialized_; }
+    const std::optional<string>& strictComparison() const { return strictComparison_; }
     const std::optional<bool> overrideTriggered() const { return overrideTriggered_; }
     //@}
 
@@ -69,6 +70,7 @@ private:
     std::string rebateCurrency_;
     std::string rebatePayTime_;
     std::string style_;
+    std::optional<string> strictComparison_;
     std::optional<bool> overrideTriggered_;
 };
 } // namespace data
