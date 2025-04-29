@@ -1,0 +1,166 @@
+\subsubsection{Bondfuture}
+\label{ss:bondfuture}
+
+Akin to the forward bond, a bondfuture is a contract that establishes an agreement to buy or sell (determined by LongInForward) 
+an underlying bond at a future point in time (expiry) at an agreed price (strike amount). In contrast to the forward bond, the 
+underlying bond is selected by the contract seller picked from a list of eligible securities (DeliveryBasket). By its nature 
+this particular security is called the "cheapest to deliver" (CTD). 
+
+The bondfuture instrument is on ore object of its own, but employs the bond forward instrument in the background and in turn uses the bond forward pricing engine. 
+However, the premium data segment is left blank and thus unused. At the outset, the bondfuture can specify a set of deliverable securities, 
+from which one is chosen, then the instrument "turns" into a bond forward referencing one specific underlying – the CTD bond.
+
+To match the traded market price of the future, we need to an imply a spread on the underlying CTD security. Depending on the flag FairPrice the market price is applied 
+as a strike (true) or as the final value (false). Obviously this spread differs slightly to the spread when solving for the bond price.
+
+A bondfuture is set up using a {\tt BondFutureData} block as shown below and the trade type is \emph{BondFuture}. 
+
+\begin{itemize}
+  \item ContractName: The id identifying the future contract. The ContractName is also used to identify which bond future reference datum to take. 
+  This defines the security specific spread to be used for pricing.
+  \item ContractNotional: The notional of the position, expressed in the currency of the bond. 
+  \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{true}) or short (\emph{false}) position.
+\end{itemize}
+
+
+{\tt ContractName}, {\tt ContractNotional} and {\tt LongShort} are mandatory fields for the "short" version.
+As one can see from the below example the trade exploits the reference data to fully specify the trade. 
+See the combination of listing \ref{lst:bondfuture_with_refdata} and listing \ref{lst:bondfuturerefdata}.
+
+For the long version, the bond future details are inlined in the trade as shown in listing \ref{lst:bondfuture_explicit}.
+The next set of fields can be provided explicitly within the trade (long version) or can be read from the bond future reference datum (short version). 
+
+\begin{itemize}
+  \item Currency: The currency of the notional, and thus of the future. Allowable values: See Table \ref{tab:currency}.
+  \item DeliveryBasket: A list of eligible securities/bond identifiers. For those Ids BondReferenceData should be available in the reference data manager. 
+  Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: ISIN:XXNNNNNNNNNN 
+  \item DeliverableGrade: This is used for derivation of the conversion factor, if the factor is not made available within the market data. 
+  The derivation is currently implemented for USD treasuries only. 
+  The deliverable grade identifies the nature of the eligible underlying bond, to be delivered. 
+  Allowable values are: \emph{ZT, Z3N, ZF, ZN, TN, TWE, ZB, UB} or the corresponding Bloomberg codes. 
+  \item FairPrice: indicates whether the strike amount is equal to zero (\emph{false}), or to the settlement price (\emph{true}) as given by the market data. 
+  Fallback value is true, leading to a "fair" MtM, i.e. NPV of zero, when the spread is implied from market quotes. 
+  \item Settlement [Optional]: Cash or Physical. Optional, defaults to Physcial.
+  \item SettlementDirty [Optional]: A flag that determines whether the settlement amount reflects a clean (\emph{false}) or dirty (\emph{true}) price. 
+  In either case, the dirty amount is actually paid on the forward maturity date, 
+  i.e. if SettlementDirty = false, the (forward) accruals are computed internally and added to the given amount to get the actual settlement amount. 
+  Optional, defaults to false, i.e. clean.
+  \item LastTradingDate: Serves as the expiry date of the future, akin to the ForwardMaturityDate of the forward bond (see \ref{ss:forwardbond}) 
+  \item LastDeliveryDate: Serves as the settlement date of the future, akin to the ForwardSettlementDate of the forward bond (see \ref{ss:forwardbond}) 
+\end{itemize}
+
+The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived from the following set of fields:
+
+\begin{itemize}
+  \item ContractMonth: specifies the delivery month. Allowable values are written English calendar month or its three letter abbreviation, e.g. "January" or "Jan".
+  \item RootDate: used to calculate the day of the month. 
+  Allowable values are "first" for the beginning of the month, "end" for month end or nth weekday (e.g. "Monday,3" for third Monday of the month). 
+  \item ExpiryBasis: used to set the basis for the expiry derivation. 
+  Allowable values are "ROOT" for the above root date as start date, "SETTLEMENT" for the settlement date as a start date
+  \item SettlementBasis: used to set the basis for the settlement date derivation. 
+  Allowable values are "ROOT" for the above root date as start date, "EXPIRY" for the expiry date as a start date
+  \item ExpiryLag: Period (positive/negative) which will be added/subtracted from the ExpiryBasis, to arrive at the expiry date. 
+  Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period. 
+  \item SettlementLag: Period (positive/negative) which will be added/subtracted from the SettlementBasis, to arrive at the settlement date. 
+  Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period. 
+\end{itemize}
+
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <BondFutureData>
+      <ContractName>with_ref</ContractName>
+      <ContractNotional>1000000</ContractNotional>
+      <LongShort>L</LongShort>
+      <FairPrice>false</FairPrice>
+    </BondFutureData>
+  \end{minted}
+  \caption{BondFutureData}
+  \label{lst:bondfuture_with_refdata}
+\end{listing}
+
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <BondFutureReferenceData>
+      <Currency>USD</Currency>
+      <ContractMonth>Mar</ContractMonth>
+      <DeliverableGrade>ZN</DeliverableGrade>
+      <RootDate>End</RootDate>
+      <ExpiryBasis>Settlement</ExpiryBasis>
+      <SettlementBasis>Root</SettlementBasis>
+      <ExpiryLag>-7D</ExpiryLag>
+      <SettlementLag>0D</SettlementLag>
+      <DeliveryBasket>
+        <SecurityId>ISIN:US91282CDJ71</SecurityId>
+        <SecurityId>ISIN:US91282CEP23</SecurityId>
+        <SecurityId>ISIN:US91282CLM19</SecurityId>
+        <SecurityId>ISIN:US91282CLU35</SecurityId>
+        <SecurityId>ISIN:US91282CMC28</SecurityId>
+        <SecurityId>ISIN:US91282CMK44</SecurityId>
+        <SecurityId>ISIN:US91282CMM00</SecurityId>
+        <SecurityId>ISIN:US91282CMR96</SecurityId>
+      </DeliveryBasket>
+    </BondFutureReferenceData>
+  \end{minted}
+  \caption{BondFutureReferenceData}
+  \label{lst:bondfuturerefdata}
+\end{listing}
+
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <BondFutureData>
+      <ContractName>explicit</ContractName>
+      <ContractNotional>1000000</ContractNotional>
+      <LongShort>L</LongShort>
+      <FairPrice>true</FairPrice>
+      <Currency>USD</Currency>
+      <DeliverableGrade>ZN</DeliverableGrade>
+      <LastTradingDate>2025-03-20</LastTradingDate>
+      <LastDeliveryDate>2025-03-31</LastDeliveryDate>
+      <DeliveryBasket>
+        <SecurityId>ISIN:US91282CDJ71</SecurityId>
+        <SecurityId>ISIN:US91282CEP23</SecurityId>
+        <SecurityId>ISIN:US91282CLM19</SecurityId>
+        <SecurityId>ISIN:US91282CLU35</SecurityId>
+        <SecurityId>ISIN:US91282CMC28</SecurityId>
+        <SecurityId>ISIN:US91282CMK44</SecurityId>
+        <SecurityId>ISIN:US91282CMM00</SecurityId>
+        <SecurityId>ISIN:US91282CMR96</SecurityId>
+      </DeliveryBasket>
+    </BondFutureData>
+  \end{minted}
+  \caption{BondFutureData Explicit}
+  \label{lst:bondfuture_explicit}
+\end{listing}
+
+\subsubsection*{Derivation of the LastTradingDate and LastDeliveryDate}
+The exampe with the reference data block above, i.e. listing \ref{lst:bondfuturerefdata}, shows how to set up a future referencing an USD 10-Year-T-Note. 
+The rules to derive last trading and last delivery date are taken from the CME Group primer "Understanding Treasury Futures". These are:
+\begin{itemize}
+  \item Last Delivery Day: Last business day of the delivery month
+  \item Last Trading Day: Seventh business day preceding the last business day of the delivery month
+\end{itemize}
+The year is derived form the as-of date. Being the following year or the same depending whether the contract month has been passed this year or not. 
+Our starting point, i.e. the root date, is the 'Last business day of the delivery month'. 
+We achieved this by setting {\tt ContractMonth} = \emph{March} and {\tt RootDate} = \emph{End}.
+From this root we can define the settlement date (last delivery) by {\tt SettlementBasis} = \emph{Root} in combination with {\tt SettlementLag} = \emph{0D}.
+From the settlement, we can define the expiry date (last trading) by {\tt ExpiryBasis} = \emph{Settlement} and {\tt ExpiryLag} = \emph{-7D}.
+From this we are getting the Last Trading Date to be the 20th of March and the Last Delivery Date to be the 31st of March, 
+which is the same as in the long version, i.e. listing \ref{lst:bondfuture_explicit}.
+
+\subsubsection*{CTD Selection}
+The selection of the CTD bond is implemented in ORE as described in Hull's "Options, Futures and Other Derivatives":
+Be \emph{sp} the quoted future settlement price, \emph{ai} accrued interest, \emph{cf} the bond specific conversion factor and \emph{bp} the bond price. 
+The party with the short position receives 
+$$ (sp \cdot cf) + ai $$ 
+and the cost of purchasing a bond is 
+$$ bp + ai $$
+The cheapest-to-deliver bond is the one for which
+$$ bp - (sp \cdot cf) $$
+is least. As the decision is taking place at future expiry, the bond price is a forward value. 
+
