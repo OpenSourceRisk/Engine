@@ -1,4 +1,7 @@
 #TradeId,ResultId,ResultType,ResultValue
+FX_TaRF,PricingConfigEngine,string,Generic
+FX_TaRF,PricingConfigModel,string,Generic
+FX_TaRF,PricingConfigProductType,string,ScriptedTrade
 FX_TaRF,isdaAssetClass,string,Foreign Exchange
 FX_TaRF,isdaBaseProduct,string,Complex Exotic
 FX_TaRF,isdaSubProduct,string,Generic

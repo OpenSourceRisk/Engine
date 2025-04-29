@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">15</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">fixings.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -14,6 +14,7 @@
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">tarf_exposure.xml</Parameter>
+	<Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
