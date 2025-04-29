@@ -46,11 +46,6 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     CONSOLE("OK");
 
     if (analytic()->getWriteIntermediateReports()) {
-        QuantLib::ext::shared_ptr<InMemoryReport> crifReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, simmAnalytic->crif());
-        analytic()->addReport(LABEL, "crif", crifReport);
-        LOG("CRIF report generated");
-
         QuantLib::ext::shared_ptr<Crif> simmDataCrif = simmAnalytic->crif()->aggregate();
         QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSIMMData(*simmDataCrif, simmDataReport, simmAnalytic->hasNettingSetDetails());
@@ -112,11 +107,26 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
 void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
-    QL_REQUIRE(inputs_->crif() && !inputs_->crif()->empty(), "CRIF loader does not contain any records");
-        
-    crif_ = inputs_->crif();
-    crif_->fillAmountUsd(market());
-    hasNettingSetDetails_ = crif_->hasNettingSetDetails();
+
+    if (inputs_->crif() && !inputs_->crif()->empty()) {
+        LOG("Loading CRIF input for SIMM");
+        crif_ = inputs_->crif();
+        crif_->fillAmountUsd(market());
+        hasNettingSetDetails_ = crif_->hasNettingSetDetails();
+    } else {
+        LOG("No CRIF input provided, generating CRIF for SIMM internally");
+        auto crifAnalytic = impl()->dependentAnalytic<CrifAnalytic>(crifLookupKey);
+        crifAnalytic->runAnalytic(loader);
+        crif_ = crifAnalytic->crif();
+        if (crif_) {
+            crif_->fillAmountUsd(market());
+	    hasNettingSetDetails_ = crif_->hasNettingSetDetails();
+	}
+	else {
+            QL_FAIL("Generating CRIF for SIMM failed");
+        }
+        LOG("Completed generating CRIF for SIMM internally");
+    }
 }
 
 } // namespace analytics
