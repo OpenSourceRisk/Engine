@@ -14,6 +14,20 @@
         </Conventions>
       </ParConversion>
     </DiscountCurve>
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">GBP-ON-DEPOSIT</Convention>
+          <Convention id="OIS">GBP-OIS</Convention>
+        </Conventions>
+      </ParConversion>
+    </DiscountCurve>
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -86,6 +100,62 @@
         </Conventions>
       </ParConversion>
     </IndexCurve>
+    <IndexCurve index="GBP-SONIA">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">GBP-ON-DEPOSIT</Convention>
+          <Convention id="OIS">GBP-OIS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="GBP-SONIA-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">GBP-ON-DEPOSIT</Convention>
+          <Convention id="OIS">GBP-SONIA-3M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="GBP-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">GBP-DEPOSIT</Convention>
+          <Convention id="IRS">GBP-LIBOR-3M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+    <IndexCurve index="GBP-LIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">GBP-DEPOSIT</Convention>
+          <Convention id="IRS">GBP-LIBOR-6M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
     <IndexCurve index="USD-FedFunds">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -152,9 +222,21 @@
       <ShiftSize>0.001</ShiftSize>
       <ShiftScheme>Central</ShiftScheme>
     </FxSpot>
+    <FxSpot ccypair="GBPEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftScheme>Central</ShiftScheme>
+    </FxSpot>
   </FxSpots>
   <FxVolatilities>
     <FxVolatility ccypair="USDEUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
+      <ShiftStrikes>0.0</ShiftStrikes>
+    </FxVolatility>
+    <FxVolatility ccypair="GBPEUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftScheme>Forward</ShiftScheme>
@@ -167,7 +249,17 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftScheme>Forward</ShiftScheme>
-      <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
+      <!--<ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>-->
+      <ShiftExpiries>1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
+      <ShiftStrikes>0.0</ShiftStrikes>
+      <ShiftTerms>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</ShiftTerms>
+    </SwaptionVolatility>
+    <SwaptionVolatility ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <!--<ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>-->
+      <ShiftExpiries>1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>0.0</ShiftStrikes>
       <ShiftTerms>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</ShiftTerms>
     </SwaptionVolatility>
@@ -175,7 +267,8 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftScheme>Forward</ShiftScheme>
-      <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
+      <!--<ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>-->
+      <ShiftExpiries>1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>0.0</ShiftStrikes>
       <ShiftTerms>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 15Y, 20Y, 25Y, 30Y</ShiftTerms>
     </SwaptionVolatility>

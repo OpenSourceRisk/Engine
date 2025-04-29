@@ -208,6 +208,21 @@ selected risk factor types by adding an optional block to the sensitivity config
 \label{lst:par_conversion_excludes}
 \end{longlisting}
 
+By default, par sensitivity excludes index historical fixings on valuation date when calculating the sensitivities of par instruments to zero rates. However, it is possible to exclude
+selected indexes by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_sensi_excludes_fixings}. It handles a regex.
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParSensiRemoveFixing>.*</ParSensiRemoveFixing>
+  
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par Sensitivity excludes fixings}
+\label{lst:par_sensi_excludes_fixings}
+\end{longlisting}
+
 Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
 
 \begin{longlisting}

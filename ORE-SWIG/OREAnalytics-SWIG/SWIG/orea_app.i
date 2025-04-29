@@ -22,6 +22,7 @@
 %include ored_market.i
 %include ored_reports.i
 %include ored_curveconfigurations.i
+%include ored_referencedatamanager.i
 %include ored_log.i
 %include std_map.i
 %include std_set.i
@@ -44,6 +45,10 @@ using ore::data::Portfolio;
 using ore::data::MarketImpl;
 using ore::data::PlainInMemoryReport;
 using ore::data::TodaysMarketParameters;
+using ore::data::ReferenceDatum;
+using ore::data::ReferenceDataManager;
+using ore::data::BasicReferenceDataManager;
+
 %}
 
 namespace std {
@@ -83,6 +88,7 @@ public:
     const std::string& marketDataLoaderOutput();
     const bool scenarioOutputStatistics();
     const bool scenarioOutputDistributions();
+    const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
 
     // and Setters
     void setAsOfDate(const std::string& s); 
@@ -114,6 +120,7 @@ public:
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
     void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
+    void setPortfolio(const ext::shared_ptr<Portfolio>& portfolio);
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i);
     void setEntireMarket(bool b);
@@ -372,6 +379,7 @@ class AnalyticsManager {
 public:
     AnalyticsManager(const ext::shared_ptr<InputParameters>& inputs,
                      const ext::shared_ptr<MarketDataLoader>& marketDataLoader);
+    void initialise();
     void runAnalytics(const ext::shared_ptr<MarketCalibrationReport>& marketCalibrationReport = nullptr);
 };
 
