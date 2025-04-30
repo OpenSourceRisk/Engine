@@ -3773,7 +3773,6 @@ Available Model/Engine pairs:
 
 \begin{itemize}
 \item BlackScholesMerton/FdBlackScholesVanillaEngine
-\item BlackScholesMerton/BaroneAdesiWhaleyApproximationEngine
 \end{itemize}
 
 Engine description:
@@ -3811,30 +3810,6 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine FdBlackScholesVanillaEngine}
 \label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
-\end{longlisting}
-
-BlackScholesMerton/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyApproximationEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="QuantoEquityOptionAmerican">
-    <Model>BlackScholesMerton</Model>
-    <ModelParameters/>
-    <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine BaroneAdesiWhaleyApproximationEngine}
-\label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_BaroneAdesiWhaleyApproximationEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
