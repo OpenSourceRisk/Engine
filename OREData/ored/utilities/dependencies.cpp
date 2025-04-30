@@ -207,13 +207,14 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
     }
     case CurveSpec::CurveType::Correlation: {
         // correlation name can be "foo:bar" or "foo&bar", we check the curve config
+        string cId = name;
         if (!curveConfigs->hasCorrelationCurveConfig(name)) {
             // if we have a &, lets try to change it to :
             string tmp = boost::replace_all_copy(name, "&", ":");
             if (curveConfigs->hasCorrelationCurveConfig(tmp))
-                cs = new CorrelationCurveSpec(tmp);
-        } else
-			cs = new CorrelationCurveSpec(name);
+                cId = tmp;
+        }
+		cs = new CorrelationCurveSpec(cId);
         break;
     }
     case CurveSpec::CurveType::YieldVolatility: {
