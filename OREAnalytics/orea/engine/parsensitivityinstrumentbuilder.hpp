@@ -43,6 +43,11 @@ public:
         std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::CapFloor>> parCaps_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parCapsYts_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::OptionletVolatilityStructure>> parCapsVts_;
+
+        //! par helpers: OIS IR cap/floors
+        std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::Leg>> oisParCaps_;
+        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> oisParCapsYts_;
+        std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::OptionletVolatilityStructure>> oisParCapsVts_;
         //! par helpers: YoY cap / floors
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parYoYCapsYts_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YoYInflationIndex>> parYoYCapsIndex_;

@@ -29,6 +29,7 @@
 #include <qle/termstructures/dynamicstype.hpp>
 
 #include <set>
+#include <optional>
 
 namespace ore {
 namespace analytics {
@@ -135,7 +136,7 @@ public:
         // If not given, we default to old behaviour of using the market's discount curve for
         // that currency. This string will be an index name that is searched for in the market.
         std::string discountCurve;
-
+        std::optional<Period> rateComputationPeriod;
         map<string, string> parInstrumentConventions;
     };
 
