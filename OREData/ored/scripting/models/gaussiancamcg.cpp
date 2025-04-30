@@ -1,6 +1,19 @@
 /*
  Copyright (C) 2023 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <ored/scripting/models/gaussiancamcg.hpp>
@@ -558,7 +571,37 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
                                       const bool includeSpread, const Real cap, const Real floor,
                                       const bool nakedOption, const bool localCapFloor) const {
     calculate();
-    QL_FAIL("GaussianCamCG::fwdCompAvg(): not implemented");
+    auto ir = std::find_if(irIndices_.begin(), irIndices_.end(),
+                           [&indexInput](const std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
+                               return p.first.name() == indexInput;
+                           });
+    QL_REQUIRE(ir != irIndices_.end(),
+               "GaussianCamCG::fwdCompAvg() ir index " << indexInput << " not found, this is unexpected");
+    Size currencyIdx = irIndexPositionInCam_[std::distance(irIndices_.begin(), ir)];
+    auto cam(cam_);
+    LgmCG lgmcg(
+        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
+        cachedParameters_);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
+    QL_REQUIRE(on, "GaussianCam::fwdCompAvg(): expected on index for " << indexInput);
+    // only used to extract fixing and value dates
+    auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
+        end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
+        rateCutoff, fixingDays);
+
+    // get model time and state
+    Date effobsdate = std::max(referenceDate(), obsdate);
+    if (isAvg) {
+        return lgmcg.averagedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
+                                    includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
+                                    nakedOption, effobsdate,
+                                    getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx));
+    } else {
+        return lgmcg.compoundedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
+                                      includeSpread, spread, gearing, lookback * Days, cap, floor, localCapFloor,
+                                      nakedOption, effobsdate,
+                                      getInterpolatedIrState(adjustForStickyCloseOut(effobsdate), currencyIdx));
+    }
 }
 
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
