@@ -1155,7 +1155,8 @@ public:
     FXForwardQuote() {}
     //! Constructor
     FXForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
-                   const boost::variant<QuantLib::Period, FxFwdString>& term, Real conversionFactor = 1.0)
+                   const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term,
+                   Real conversionFactor = 1.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_FWD), unitCcy_(unitCcy), ccy_(ccy),
           term_(term), conversionFactor_(conversionFactor) {}
 
@@ -1168,13 +1169,13 @@ public:
     //@{
     const string& unitCcy() const { return unitCcy_; }
     const string& ccy() const { return ccy_; }
-    const boost::variant<QuantLib::Period, FxFwdString>& term() const { return term_; }
+    const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term() const { return term_; }
     Real conversionFactor() const { return conversionFactor_; }
     //@}
 private:
     string unitCcy_;
     string ccy_;
-    boost::variant<QuantLib::Period, FxFwdString> term_;
+    boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date> term_;
     Real conversionFactor_;
     //! Serialization
     friend class boost::serialization::access;
