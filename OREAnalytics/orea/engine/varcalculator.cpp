@@ -23,20 +23,21 @@ namespace ore {
 namespace analytics {
 
 VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+                     const std::string& portfolioFilter, const vector<Real>& p,
+                     boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-                     std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs, const bool breakdown) 
-    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs), std::move(fullRevalArgs), nullptr, breakdown), p_(p) { 
-}
+                     std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
+                     const bool breakdown)
+    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
+                       std::move(fullRevalArgs), nullptr, breakdown),
+      p_(p) {}
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     int s = reports->reports().size();
     QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
-    report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
-    for (Size i = 0; i < p_.size(); ++i)
-        report->addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
+    writeHeader(report);
 
     createAdditionalReports(reports);
 
@@ -44,8 +45,8 @@ void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& 
 }
 
 void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
-                                const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
+                             const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                             const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
     int s = reports->reports().size();
     QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
@@ -54,17 +55,14 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
     auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
 
-    std::vector<Real> var;
-    auto quantiles = p();
-    for (auto q : quantiles)
-        var.push_back(varCalculator_->var(q));
+    std::vector<Real> vars = calcVarsForQuantiles();
 
-    if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
+    if (!close_enough(QuantExt::detail::absMax(varr), 0.0)) {
         report->next();
         report->add(tg->portfolioId());
         report->add(to_string(rg->riskClass()));
         report->add(to_string(rg->riskType()));
-        for (auto const& v : var)
+        for (auto const& v : vars)
             report->add(v);
     }
 
