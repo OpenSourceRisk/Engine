@@ -584,12 +584,12 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
         cachedParameters_);
     auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);
     QL_REQUIRE(on, "GaussianCam::fwdCompAvg(): expected on index for " << indexInput);
+
     // only used to extract fixing and value dates
     auto coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
         end, 1.0, start, end, on, gearing, spread, Date(), Date(), DayCounter(), false, includeSpread, lookback * Days,
         rateCutoff, fixingDays);
 
-    // get model time and state
     Date effobsdate = std::max(referenceDate(), obsdate);
     if (isAvg) {
         return lgmcg.averagedOnRate(on, coupon->fixingDates(), coupon->valueDates(), coupon->dt(), rateCutoff,
