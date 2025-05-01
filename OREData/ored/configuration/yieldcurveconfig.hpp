@@ -684,8 +684,8 @@ public:
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
 
-    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) override;
-    map<CurveSpec::CurveType, set<string>> requiredCurveIds() override;
+    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
     //@}
 
     //! \name Setters

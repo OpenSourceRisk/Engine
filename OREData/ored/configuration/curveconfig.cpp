@@ -21,7 +21,7 @@
 namespace ore {
 namespace data {
 
-set<string> CurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) {
+set<string> CurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
     static const set<string> empty;
     auto r = requiredCurveIds_.find(curveType);
     if (r == requiredCurveIds_.end())
@@ -30,7 +30,7 @@ set<string> CurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType)
         return r->second;
 }
 
-map<CurveSpec::CurveType, set<string>> CurveConfig::requiredCurveIds() { return requiredCurveIds_; }
+map<CurveSpec::CurveType, set<string>> CurveConfig::requiredCurveIds() const { return requiredCurveIds_; }
 
 void CurveConfig::setRequiredCurveIds(const CurveSpec::CurveType& curveType, const set<string>& ids) {
     requiredCurveIds_[curveType] = ids;

@@ -53,7 +53,7 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    BaseCorrelationCurveConfig(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr);
+    explicit BaseCorrelationCurveConfig(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr);
 
     //! Detailed constructor
     BaseCorrelationCurveConfig(
@@ -121,8 +121,8 @@ public:
     QuantLib::Period& indexTerm() { return indexTerm_; }
     //@}
     
-    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) override;
-    map<CurveSpec::CurveType, set<string>> requiredCurveIds() override;
+    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
 
 private:
     vector<string> detachmentPoints_;

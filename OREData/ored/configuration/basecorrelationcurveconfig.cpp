@@ -93,7 +93,7 @@ void addBaseCorrelationQuotes(vector<string>& quotes, const std::string& quoteNa
     }
 }
 
-set<string> BaseCorrelationCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) {
+set<string> BaseCorrelationCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
     auto rci = requiredCurveIds();
     static const set<string> empty;
     auto r = rci.find(curveType);
@@ -103,7 +103,7 @@ set<string> BaseCorrelationCurveConfig::requiredCurveIds(const CurveSpec::CurveT
         return r->second;
 }
 
-map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurveIds() {
+map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurveIds() const {
     auto rci = CurveConfig::requiredCurveIds();
     if (hasQuoteTypePrice() && refDataManager_) {
         if (refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, curveID_)) {

@@ -397,7 +397,7 @@ void YieldCurveConfig::populateRequiredCurveIds() {
     }
 }
 
-set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) {
+set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
     auto rci = CurveConfig::requiredCurveIds(curveType);
     Date asof = Settings::instance().evaluationDate();
     if (curveType == CurveSpec::CurveType::Yield &&
@@ -407,7 +407,7 @@ set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curve
     return rci;
 }
 
-map<CurveSpec::CurveType, set<string>> YieldCurveConfig::requiredCurveIds() {
+map<CurveSpec::CurveType, set<string>> YieldCurveConfig::requiredCurveIds() const {
     auto rci = CurveConfig::requiredCurveIds();
     Date asof = Settings::instance().evaluationDate();
     if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(curveID_, asof))

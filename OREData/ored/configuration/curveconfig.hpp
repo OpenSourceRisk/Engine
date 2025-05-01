@@ -53,8 +53,8 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
-    virtual set<string> requiredCurveIds(const CurveSpec::CurveType& curveType);
-    virtual map<CurveSpec::CurveType, set<string>> requiredCurveIds();
+    virtual set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const;
+    virtual map<CurveSpec::CurveType, set<string>> requiredCurveIds() const;
     //@}
 
     //! \name Setters
