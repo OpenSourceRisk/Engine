@@ -23,9 +23,3 @@ jobs:
       run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -G "Ninja" ..
     - name: cmake build
       run: cd build/; pwd; cmake --build . -j $(nproc)
-    - name: Save executables as artifacts
-      #if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
-      with:
-        name: ore-exe-linux
-        path: /home/runner/work/Engine/Engine/build/App/ore
