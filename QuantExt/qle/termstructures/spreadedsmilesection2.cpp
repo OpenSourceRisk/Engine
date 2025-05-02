@@ -75,9 +75,6 @@ Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     } else {
         tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike));
     }
-    if(effStrike != strike)
-        std::cout << std::setprecision(12) << "sim vs base " << simulatedAtmLevel_ << " " << getSafeBaseAtmLevel()
-                  << " effStrike " << effStrike << " vol = " << tmp << std::endl;
     return tmp;
 }
 
