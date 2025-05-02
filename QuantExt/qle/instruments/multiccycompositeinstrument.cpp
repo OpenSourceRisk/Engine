@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <qle/instruments/multiccycompositeinstrument.hpp>
 
 namespace QuantExt {
