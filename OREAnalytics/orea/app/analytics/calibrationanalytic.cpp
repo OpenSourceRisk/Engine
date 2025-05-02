@@ -127,7 +127,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             DLOG("CamData, updating IrLgm1fParametrization:"
                  << " name=" << irData->name() << " qualifier=" << irData->qualifier());
             QL_REQUIRE(lgmPara->numberOfParameters() == 2, "2 lgm1f model parameters expected");
-            ext::shared_ptr<LgmData> lgmData = boost::dynamic_pointer_cast<LgmData>(irData);
+            ext::shared_ptr<LgmData> lgmData = ext::dynamic_pointer_cast<LgmData>(irData);
             QL_REQUIRE(lgmData, "Failed to cast IrModelData to LgmData");
             // overwrite initial values with calibration results
             times = lgmPara->parameterTimes(0);
@@ -211,7 +211,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG("CamData, updating InfDkParametrization:"
                 << " ccy=" << infData->currency() << " index=" << infData->index());
             QL_REQUIRE(infPara->numberOfParameters() == 2, "2 model parameters for INF DK");
-            ext::shared_ptr<InfDkData> dkData = boost::dynamic_pointer_cast<InfDkData>(infData);
+            ext::shared_ptr<InfDkData> dkData = ext::dynamic_pointer_cast<InfDkData>(infData);
             QL_REQUIRE(dkData, "Failed to cast InflationModelData to InfDkData");
             // FIXME: Check order or model parameters
             times = infPara->parameterTimes(0);
@@ -231,7 +231,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG("CamData, updating InfJyParametrization:"
                 << " ccy=" << infData->currency() << " index=" << infData->index());
             QL_REQUIRE(infPara->numberOfParameters() == 3, "3 model parameters expected for INF JY");
-            ext::shared_ptr<InfJyData> jyData = boost::dynamic_pointer_cast<InfJyData>(infData);
+            ext::shared_ptr<InfJyData> jyData = ext::dynamic_pointer_cast<InfJyData>(infData);
             QL_REQUIRE(jyData, "Failed to cast InflationModelData to InfJyData");
             times = infPara->realRate()->parameterTimes(0);
             values = infPara->realRate()->parameterValues(0);
