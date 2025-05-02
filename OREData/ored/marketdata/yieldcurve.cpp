@@ -1184,7 +1184,7 @@ void YieldCurve::buildDiscountCurve() {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
         for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-            boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
+            ext::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
             if (marketQuote)
                 marketData.insert(marketQuote);
         }
