@@ -14,50 +14,64 @@ of cases.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
-\begin{tabular}{|l|p{8cm}|}
+\begin{tabular}{|l|p{6cm}|p{4cm}|}
 \hline
-Example topic & Description \\
+Example topic & Description & Contained Legacy Examples\\
 \hline
 \hline
-Academy & Basic ORE Academy examples, with minimal configuration \\
+Academy & Basic ORE Academy examples, with minimal configuration & \\
 \hline
 Minimal Setup & Example showing the minimal configuration required 
-  for pricing (market data, todays market, curve config, conventions) \\
+for pricing (market data, todays market, curve config, conventions)
+& 14 \\
 \hline
 Products & Demonstrate ORE's product coverage across asset classes,
-  150+ products, vanilla and complex \\
+150+ products, vanilla and complex
+& 18-21, 27, 45-48, 51, 65-66, 71, 74\\
 \hline
 Curve Building & Consistency check that market instruments are repriced correctly
-  after bootstrap, demo several curve building features \\
+after bootstrap, demo several curve building features
+& 26, 28-30, 49, 53, 59 \\
 \hline
 Market Risk & Sensitivity, Stress Testing, Par Conversion, Parametric and HistSim VaR,
-  P\&L and P\&L Explain, Market Risk Capital (SMRC) \\
+P\&L and P\&L Explain, Market Risk Capital (SMRC)
+& 15, 22, 40, 50, 57-58, 62-63, 68-69, 77\\
 \hline
 Initial Margin & ISDA SIMM and IM Schedule, Dynamic Initial Margin via Regression
-  and Dynamic Delta VaR \\
+and Dynamic Delta VaR
+& 13, 44\\
 \hline
 Exposure & Uncollateralised exposure simulation, product by product, mainly vanilla,
-  demo various simulation features \\
+demo various simulation features
+& 1-9, 11-12, 16-17, 23-25, 32-38, 64\\
 \hline
 Exposure with Collateral & Impact of Variation Margin and CSA details,
-  Impact of Initial Margin \\
+Impact of Initial Margin
+& 10, 31, 72\\
 \hline
-Scripted Trade & Introducing the Scripted Trade framework \\
+Scripted Trade & Introducing the Scripted Trade framework
+& 52 \\
 \hline
 American Monte Carlo & Fast and accurate Exposures using AMC,
-  selected vanilla and complex products \\
+selected vanilla and complex products
+& 39, 54, 55, 60, 73, 75\\
 \hline
 XVA Risk & Sensitivity, Stress Testing, P\&L Explain,
-  CVA Capital (SA-CVA and BA-CVA) \\
+CVA Capital (SA-CVA and BA-CVA)
+& 67, 68, 70\\
 \hline
-Credit Risk & Credit Portfolio Model, Derivatives Credit Risk Capital (SA-CCR) \\
+Credit Risk & Credit Portfolio Model, Derivatives Credit Risk Capital (SA-CCR)
+& 43, 68\\
 \hline
 Performance & NPV and CVA Sensitivities using AAD
-  and using bump \& reval with GPU parallelization \\
+and using bump \& reval with GPU parallelization
+& 41, 56, 61\\
 \hline
-ORE-Python & Python Wrapper covering ORE libraries and QuantLib \\
+ORE-Python & Python Wrapper covering ORE libraries and QuantLib
+& 42, and the Python examples previously in the ORE-SWIG repository\\
 \hline
-ORE-API & ORE Web Service prototype using ORE-Python \\
+ORE-API & ORE Web Service prototype using ORE-Python
+& 0\\
 \hline
 \end{tabular}
 \caption{ORE example topics.}
@@ -141,9 +155,14 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
 
-\subsection{Academy - TODO}\label{example:academy}
+\subsection*{Python}
 
-Basic ORE Academy examples, with minimal configuration.
+Running any of the examples described in the following sections needs a python3 installation.
+
+\subsection{Academy}\label{example:academy}
+
+This section contains a few examples with minimal configuration for demo cases shown in ORE Academy videos
+on youtube: \url{https://www.youtube.com/channel/UCrCpkb1-s3pxKd7U-YgJulA}
 
 \subsection{Minimal Setup}\label{example:minimal}
 
@@ -2076,8 +2095,8 @@ to generate exposures in ORE.
   in the script library.\\
   Run with: {\tt python run\_fxtarf.py}
 \item Forward Bond with AMC, run with: {\tt python run\_forwardbond.py}
-\item TODO - Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
-\item TODO - Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
+\item Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
+\item Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
 \end{itemize}
 
 \subsubsection{Benchmarking AMC vs Classic Simulation}
@@ -2487,7 +2506,7 @@ Otherwise the spread quote is used or none.
 
 In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
-\subsubsection{Overlapping Close-out Grids in AMC - TODO}
+\subsubsection{Overlapping Close-out Grids in AMC}
 
 Calling 
 
@@ -2495,10 +2514,10 @@ Calling
 \centerline {\tt python run\_overlapping.py} 
 
 \medskip
-demonstrates ...
+demonstrates the case where the primary and close-out grid overlap, using
+a daily simulation grid up to 15 days. This was not possible in releases earlier than ORE v13.
 
-\subsubsection{Extract Scenario Statistics - TODO}
-
+\subsubsection{Extract Scenario Statistics}
 
 Calling 
 
@@ -2506,7 +2525,8 @@ Calling
 \centerline {\tt python run\_scenariostatistics.py} 
 
 \medskip
-demonstrates ...
+demonstrates a basic statistical anylsis of the simulated raw scenario data (simulated yield curve discount factors, FX spot rates etc), generating a report
+with min, mean, max, standard deviation, skewness and kurtosis for each factor and at each simulated future date.
 
 \subsection{XVA Risk}\label{example:xvarisk}
 
