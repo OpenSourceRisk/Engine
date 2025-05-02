@@ -70,11 +70,11 @@ public:
 
     HistoricalSimulationVarReport(const std::string& baseCurrency,
                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                                  const std::string& portfolioFilter, 
-        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
-        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
-        std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
-        const bool includeExpectedShortfall = false);
+                                  const std::string& portfolioFilter, const vector<Real>& p,
+                                  boost::optional<ore::data::TimePeriod> period,
+                                  const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+                                  std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
+                                  const bool includeExpectedShortfall = false);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
@@ -83,16 +83,17 @@ protected:
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
     std::vector<Real> calcVarsForQuantiles() const override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
-        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
     void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                            const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
-                            const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
 private:
     std::vector<QuantLib::Real> pnls_;
     bool includeExpectedShortfall_ = false;
+};
 
 } // namespace analytics
 } // namespace ore

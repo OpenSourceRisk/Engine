@@ -57,7 +57,7 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
 
     std::vector<Real> vars = calcVarsForQuantiles();
 
-    if (!close_enough(QuantExt::detail::absMax(varr), 0.0)) {
+    if (!close_enough(QuantExt::detail::absMax(vars), 0.0)) {
         report->next();
         report->add(tg->portfolioId());
         report->add(to_string(rg->riskClass()));
