@@ -1457,6 +1457,45 @@ void OREAppInputParameters::loadParameters() {
             string file = (inputPath / tmp).generic_string();
             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
+	else {
+            // If an external CRIF is not provided we need to generate CRIF
+            // using the CRIF analytic settings below
+            tmp = params_->get("crif", "marketConfigFile", false);
+            if (tmp != "") {
+                string file = (inputPath / tmp).generic_string();
+                LOG("Loading sensitivity scenario sim market parameters from file" << file);
+                setSensiSimMarketParamsFromFile(file);
+            } else {
+                WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+            }
+
+            tmp = params_->get("crif", "sensitivityConfigFile", false);
+            if (tmp != "") {
+                string file = (inputPath / tmp).generic_string();
+                LOG("Load sensitivity scenario data from file" << file);
+                setSensiScenarioDataFromFile(file);
+            } else {
+                WLOG("Sensitivity scenario data not loaded");
+            }
+
+            auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+            tmp = params_->get("crif", "nameMappingInputFile", false);
+            if (tmp != "") {
+                string fileName = (inputPath / tmp).generic_string();
+                LOG("simmNameMapper file name: " << fileName);
+                nameMapper->fromFile(fileName);
+            }
+            simmNameMapper_ = nameMapper;
+
+            auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+            tmp = params_->get("crif", "bucketMappingInputFile", false);
+            if (tmp != "") {
+                string fileName = (inputPath / tmp).generic_string();
+                LOG("simmBucketMapper file name: " << fileName);
+                bucketMapper->fromFile(fileName);
+            }
+            simmBucketMapper_ = bucketMapper;
+        }
 
         tmp = params_->get("simm", "calculationCurrency", false);
         if (tmp != "") {
@@ -1792,6 +1831,10 @@ void OREAppInputParameters::loadParameters() {
             setXvaCgUseDoublePrecisionForExternalCalculation(parseBool(tmp));
 
         setXvaCgExternalComputeDevice(params_->get("simulation", "xvaCgExternalComputeDevice", false));
+
+        tmp = params_->get("simulation", "xvaCgUsePythonIntegration", false);
+        if (!tmp.empty())
+            setXvaCgUsePythonIntegration(parseBool(tmp));
 
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
@@ -2873,7 +2916,10 @@ void OREAppInputParameters::loadParameters() {
      *****************/
 
     tmp = params_->get("crif", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    bool doCrif = !tmp.empty() && parseBool(tmp);
+    // tmp = params_->get("simm", "active", false);
+    // bool doSimm = !tmp.empty() && parseBool(tmp);
+    if (doCrif) {
         insertAnalytic("CRIF");
 
 	// Use the same market and sensi configs as the the sensitivity analytic

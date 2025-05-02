@@ -51,6 +51,11 @@ if (ORE_ENABLE_CUDA)
   add_compile_definitions(ORE_ENABLE_CUDA)
 endif()
 
+# set compiler macro if ORE_PYTHON_INTEGRATION is set
+if (ORE_PYTHON_INTEGRATION)
+  add_compile_definitions(ORE_PYTHON_INTEGRATION)
+endif()
+
 # set compiler macro if zlib is enabled
 if(ORE_USE_ZLIB)
   add_compile_definitions(ORE_USE_ZLIB)

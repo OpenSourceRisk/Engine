@@ -16,7 +16,8 @@ WORKDIR /swig
 COPY ore/cmake ./cmake
 COPY ore/ORE-SWIG/CMakeLists.txt ./ORE-SWIG/CMakeLists.txt
 #COPY ore/ORE-SWIG/__init__.py ./ORE-SWIG/__init__.py
-COPY ore/ORE-SWIG/Examples ./ORE-SWIG/Examples
+#COPY ore/ORE-SWIG/Examples ./ORE-SWIG/Examples
+#COPY ore/Examples/ORE-Python ./ORE-SWIG/Examples
 COPY ore/ORE-SWIG/test ./ORE-SWIG/test
 COPY ore/ORE-SWIG/OREAnalytics-SWIG ./ORE-SWIG/OREAnalytics-SWIG
 COPY ore/ORE-SWIG/OREData-SWIG ./ORE-SWIG/OREData-SWIG
