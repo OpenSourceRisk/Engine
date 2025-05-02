@@ -194,7 +194,7 @@ with conversion factor set to 1.
     Quote Type & \emph{RATE} & \\ \hline
     Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
     Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
-    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity. Alternatively, the maturity date.\\ \hline
 %    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
   \end{tabular}
   \caption{FX Forward Rate}
@@ -216,7 +216,7 @@ with conversion factor set to 1.
     Quote Type & \emph{PRICE} & \\ \hline
     Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
     Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
-    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity. Alternatively, the maturity date.\\ \hline
 %    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
   \end{tabular}
   \caption{FX Forward Rate}
@@ -227,6 +227,7 @@ Example:
 \begin{itemize}
 \item {FXFWD/RATE/EUR/USD/1M}
 \item{FXFWD/PRICE/EUR/USD/3M}
+\item{FXFWD/PRICE/EUR/USD/2026-03-02}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
