@@ -610,7 +610,7 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, QuantLib::ext::sh
                     def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
                     def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(),
                     def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(),
-                    def->optionTerms(), def->optionStrikes());
+                    def->optionTerms(), def->optionStrikes(), def->floatSpreadMapping());
             } else {
                 QL_FAIL("Unexpected model data type,expect either HwModelData or IrLgmData");
             } 
