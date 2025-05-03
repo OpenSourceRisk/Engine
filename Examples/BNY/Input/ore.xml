@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<ORE>
+	<Setup>
+		<Parameter name="asofDate">2025-03-24</Parameter>
+		<Parameter name="inputPath">Input</Parameter>
+		<Parameter name="outputPath">Output</Parameter>
+		<Parameter name="logFile">log.txt</Parameter>
+		<Parameter name="logMask">15</Parameter>
+		<Parameter name="marketDataFile">marketdata.csv</Parameter>
+		<Parameter name="fixingDataFile">fixings.csv</Parameter>
+		<Parameter name="implyTodaysFixings">Y</Parameter>
+		<Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+		<Parameter name="conventionsFile">conventions.xml</Parameter>
+		<Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+		<Parameter name="pricingEnginesFile">pricingengines.xml</Parameter>
+		<Parameter name="portfolioFile">portfolio.xml</Parameter>
+		<Parameter name="iborFallbackConfig">ibor_fallback_config.xml</Parameter>
+		<Parameter name="observationModel">Disable</Parameter>
+		<Parameter name="continueOnError">True</Parameter>
+		<Parameter name="calendarAdjustment">calendar_adjustments.xml</Parameter>
+		<Parameter name="currencyConfiguration">currencies.xml</Parameter>
+		<Parameter name="lazyMarketBuilding">True</Parameter>
+		<Parameter name="nThreads">4</Parameter>
+	</Setup>
+	<Markets>
+		<Parameter name="lgmcalibration">inccy</Parameter>
+		<Parameter name="fxcalibration">default</Parameter>
+		<Parameter name="eqcalibration">default</Parameter>
+		<Parameter name="pricing">xois</Parameter>
+		<Parameter name="simulation">xois</Parameter>
+	</Markets>
+	<Analytics>
+		<Analytic type="npv">
+			<Parameter name="active">Y</Parameter>
+			<Parameter name="baseCurrency">USD</Parameter>
+			<Parameter name="outputFileName">npv.csv</Parameter>
+		</Analytic>
+		<Analytic type="sensitivity">
+			<Parameter name="active">Y</Parameter>
+			<Parameter name="marketConfigFile">simulation.xml</Parameter>
+			<Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+			<Parameter name="pricingEnginesFile">pricingengines.xml</Parameter>
+			<Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+			<Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+			<Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+			<Parameter name="recalibrateModels">Y</Parameter>
+			<Parameter name="parSensitivity">Y</Parameter>
+			<Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+		</Analytic>
+		<Analytic type="simulation">
+			<Parameter name="active">Y</Parameter>
+			<Parameter name="amc">Y</Parameter>
+			<Parameter name="amcTradeTypes">Swap,Swaption,CapFloor,ForwardRateAgreement,BermudanSwaption</Parameter>
+			<Parameter name="amcPricingEnginesFile">pricingengines_amc.xml</Parameter>
+			<Parameter name="simulationConfigFile">simulation.xml</Parameter>
+			<Parameter name="pricingEnginesFile">pricingengines.xml</Parameter>
+			<Parameter name="baseCurrency">USD</Parameter>
+			<Parameter name="storeFlows">Y</Parameter>
+		</Analytic>
+		<Analytic type="xva">
+			<Parameter name="active">Y</Parameter>
+			<Parameter name="useXvaRunner">N</Parameter>
+			<Parameter name="csaFile">netting.xml</Parameter>
+			<Parameter name="cubeFile">cube.dat</Parameter>
+			<Parameter name="scenarioFile">scenariodata.dat</Parameter>
+			<Parameter name="baseCurrency">USD</Parameter>
+			<Parameter name="exposureProfiles">Y</Parameter>
+			<Parameter name="exposureProfilesByTrade">N</Parameter>
+			<Parameter name="quantile">0.95</Parameter>
+			<Parameter name="allocationMethod">None</Parameter>
+			<Parameter name="marginalAllocationLimit">1.0</Parameter>
+			<Parameter name="exerciseNextBreak">Y</Parameter>
+			<Parameter name="cva">Y</Parameter>
+			<Parameter name="dva">Y</Parameter>
+			<Parameter name="dvaName">BANK</Parameter>
+			<Parameter name="fva">N</Parameter>
+			<Parameter name="fvaBorrowingCurve"/>
+			<Parameter name="fvaLendingCurve"/>
+			<Parameter name="colva">N</Parameter>
+			<Parameter name="collateralFloor">N</Parameter>
+			<Parameter name="creditMigration">N</Parameter>
+			<Parameter name="creditMigrationDistributionGrid">-2E7,1E7,300</Parameter>
+			<Parameter name="creditMigrationTimeSteps">3,11</Parameter>
+			<Parameter name="creditMigrationConfig">creditsimulation.xml</Parameter>
+			<Parameter name="creditMigrationOutputFiles">credit_migration</Parameter>
+			<Parameter name="farmCredit">Y</Parameter>
+			<Parameter name="farmCalibrateTransitionMatrix">Y</Parameter>
+		</Analytic>
+		<!--Analytic type="xvaSensitivity">
+			<Parameter name="active">Y</Parameter>
+			<Parameter name="parSensitivity">Y</Parameter>
+			<Parameter name="marketConfigFile">simulation.xml</Parameter>
+			<Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+		</Analytic-->
+	</Analytics>
+</ORE>

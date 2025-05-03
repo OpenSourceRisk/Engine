@@ -1,0 +1,7070 @@
+<?xml version="1.0" ?>
+<CalendarAdjustments>
+	<Calendar name="BDT">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-03-26</Date>
+			<Date>2025-03-30</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-02</Date>
+			<Date>2025-04-03</Date>
+			<Date>2025-04-14</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-11</Date>
+			<Date>2025-06-08</Date>
+			<Date>2025-07-01</Date>
+			<Date>2025-07-06</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-10-02</Date>
+			<Date>2025-12-16</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="DZD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-27</Date>
+			<Date>2025-09-05</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="FJD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-12</Date>
+			<Date>2025-05-30</Date>
+			<Date>2025-09-08</Date>
+			<Date>2025-10-10</Date>
+			<Date>2025-10-21</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="RWF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-02-03</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-07</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-07-01</Date>
+			<Date>2025-07-04</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="XAF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="AZN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-03</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-20</Date>
+			<Date>2025-01-29</Date>
+			<Date>2025-03-20</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-03-24</Date>
+			<Date>2025-03-25</Date>
+			<Date>2025-03-26</Date>
+			<Date>2025-03-27</Date>
+			<Date>2025-03-28</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-05-28</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-06-16</Date>
+			<Date>2025-06-26</Date>
+			<Date>2025-11-10</Date>
+			<Date>2025-11-11</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="TZS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-07</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-07-01</Date>
+			<Date>2025-07-07</Date>
+			<Date>2025-08-08</Date>
+			<Date>2025-09-05</Date>
+			<Date>2025-10-14</Date>
+			<Date>2025-12-09</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BWP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-03</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-29</Date>
+			<Date>2025-07-01</Date>
+			<Date>2025-07-21</Date>
+			<Date>2025-07-22</Date>
+			<Date>2025-09-30</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BSD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-10</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-07-10</Date>
+			<Date>2025-08-04</Date>
+			<Date>2025-10-13</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="RUONIA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="CUSTOM_DECJAN_WE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARCX">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATS">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="PINC">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="XASX">
+		<BaseCalendar>AUD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBKF">
+		<BaseCalendar>THB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBKK">
+		<BaseCalendar>THB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOM">
+		<BaseCalendar>INR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHKG">
+		<BaseCalendar>HKD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XJSE">
+		<BaseCalendar>ZAR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNCM">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNMS">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNSE">
+		<BaseCalendar>INR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNGS">
+		<BaseCalendar>XNYS</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPAR">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSEC">
+		<BaseCalendar>CNY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSES">
+		<BaseCalendar>SGD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSHE">
+		<BaseCalendar>CNY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSSC">
+		<BaseCalendar>CNY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTAI">
+		<BaseCalendar>TWD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTKS">
+		<BaseCalendar>JPY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XXXX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XALS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTIR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XALG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBDV">
+		<BaseCalendar>AOA</BaseCalendar>
+	</Calendar>
+	<Calendar name="BACE">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCFS">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MVCX">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ROFX">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBCC">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBCM">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBCX">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBUE">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCNF">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAB">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMEV">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMTB">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMVL">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XROS">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XROX">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTUC">
+		<BaseCalendar>AR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XARM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="APXL">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASXB">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASXC">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASXP">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASXT">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASXV">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="AWBX">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="AWEX">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLEV">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLXA">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFAU">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMA">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIA">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLAU">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSAU">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAC">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAF">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAM">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAN">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAP">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAQ">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAR">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAV">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXAW">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="MACB">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQX">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSAL">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="NSXB">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIGA">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIMV">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XFEX">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNEC">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSFE">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XYIE">
+		<BaseCalendar>AU</BaseCalendar>
+	</Calendar>
+	<Calendar name="APAW">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKSK">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EGSI">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXAA">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="LLAT">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="OBKL">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBIV">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="RLBO">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="SLHB">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="UCBA">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="WBAH">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="WBDM">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRCB">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVIE">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XWBO">
+		<BaseCalendar>AT</BaseCalendar>
+	</Calendar>
+	<Calendar name="BSEX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIBE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBAA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BFEX">
+		<BaseCalendar>BHD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBAH">
+		<BaseCalendar>BHD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCHG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDHA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAJM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBAB">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCSE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALXB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEAM">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BELB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BELF">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKBF">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKBR">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLPX">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMTS">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNPF">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBCB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLXB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTSD">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTSF">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMBB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="TNLB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="TNLK">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VPXB">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRD">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRU">
+		<BaseCalendar>BE</BaseCalendar>
+	</Calendar>
+	<Calendar name="24EX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="GTXE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBDA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLBF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBLB">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSSE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOTE">
+		<BaseCalendar>BW</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOTV">
+		<BaseCalendar>BW</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOT">
+		<BaseCalendar>BW</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCMM">
+		<BaseCalendar>BR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOVM">
+		<BaseCalendar>BR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRIX">
+		<BaseCalendar>BR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CETI">
+		<BaseCalendar>BR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SELC">
+		<BaseCalendar>BR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPB">
+		<BaseCalendar>BVMF</BaseCalendar>
+	</Calendar>
+	<Calendar name="ABUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="BDSK">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGHX">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="GBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBEX">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="JBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="MBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="PBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="T212">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZBUL">
+		<BaseCalendar>BGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCSX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDSX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNSX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAND">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="CANX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIC">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="COTC">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFCA">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="IVZX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="LICA">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="LYNX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="MATN">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEOC">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEOD">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEOE">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEON">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="NGXC">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="OMGA">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="PURE">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="VDRK">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XATS">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBBK">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCNQ">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCX2">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCXD">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDRK">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XICX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMOC">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMOD">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTNX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTSX">
+		<BaseCalendar>CA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBVC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCAY">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOVA">
+		<BaseCalendar>CL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBCL">
+		<BaseCalendar>CL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSGO">
+		<BaseCalendar>CL</BaseCalendar>
+	</Calendar>
+	<Calendar name="SAB">
+		<BaseCalendar>CL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCFX">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFBC">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSSX">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSXC">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGEX">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCFE">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDCE">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XINE">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSGE">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XZCE">
+		<BaseCalendar>CN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOG">
+		<BaseCalendar>CO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBNV">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCRO">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOTP">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTRZ">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XZAG">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XZAP">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZAPA">
+		<BaseCalendar>HRK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DCSX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="ATHL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ATLN">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCSC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFIF">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GPBC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MKAP">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="RENC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIBC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCYO">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCYS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XECM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CELP">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="CESI">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSAS">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSOB">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="FTFM">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="FTFS">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="KOME">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="RFBK">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBCZ">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="WOOD">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPRA">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPRM">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPXE">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRMO">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRMZ">
+		<BaseCalendar>CZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="ABSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DASI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DCSE">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DKTC">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DNDK">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DSME">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNDK">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="JBSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="JYSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="LASP">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCSE">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="MNDK">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="NPGA">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="NYSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SKSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SNSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SXSI">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCSE">
+		<BaseCalendar>DK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBVR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGUA">
+		<BaseCalendar>USD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XQUI">
+		<BaseCalendar>USD</BaseCalendar>
+	</Calendar>
+	<Calendar name="NILX">
+		<BaseCalendar>EGP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCAI">
+		<BaseCalendar>EGP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSVA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNEE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SWEE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTAL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="VMFX">
+		<BaseCalendar>DKK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSPS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="DHEL">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="DNFI">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="FGEX">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNFI">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="FSME">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHEL">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="MNFI">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="OPCO">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHEL">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNOR">
+		<BaseCalendar>FI</BaseCalendar>
+	</Calendar>
+	<Calendar name="AACA">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALXP">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AQEA">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AQEU">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AURB">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AURO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNPA">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNPS">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BPSX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMCI">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="COAL">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDRF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELXE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EPEX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSB">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSD">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSH">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSP">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSY">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXYY">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="FMTS">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFPO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GIPB">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMEO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMES">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMTF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSPX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HBFR">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HPCO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HPCS">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HPCV">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HPCX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICOT">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="KOTF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="LCHC">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHBP">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MKTF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLER">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLES">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLEX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSAX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSCX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSNT">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTCH">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUBP">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="NATX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOWX">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ODDO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ODOC">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMU">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMV">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMW">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGOE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMBP">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TDON">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TLCM">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPEU">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPIC">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPIO">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPIR">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRXE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSAF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="WFSE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAFR">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAPA">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBLK">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBLN">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETF">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAT">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMLI">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMON">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOW">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSGA">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSPM">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTXE">
+		<BaseCalendar>FR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGSE">
+		<BaseCalendar>GEL</BaseCalendar>
+	</Calendar>
+	<Calendar name="360T">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="AUTO">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAAD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BDEA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BERA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BERB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BERC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGFI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGFX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGSI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BINV">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLBB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLBS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLEQ">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLIQ">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="BSFX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CATS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKF">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBKG">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CDSI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGEC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGEE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGET">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSDA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DAPA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBAG">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBES">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBOX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DEKA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DUSA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DUSB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DUSC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DUSD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DZBK">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="ECGS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQTA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQTB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQTC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQTD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EUWX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FICX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAV">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRAW">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSBE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSEI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HAMA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HAMB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HAML">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HAMM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HAMN">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HANA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HANB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HELA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="HSBT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="IKBS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="JEFE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="JESI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPEU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LBBW">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LBCW">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LBWL">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LBWS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIGA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="LSSI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MESI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHBD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHEU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSEU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUNA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUNB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUNC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUND">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NCME">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NESI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NLBX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NORD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="OLBB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCG">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCAG">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMBD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMFF">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPEX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSBI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSBM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSWM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="STUA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="STUB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="STUC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="STUD">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="TGAT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="TGSI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSI">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSL">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="UCDE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VONT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VTLS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VTPS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VWDA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="VWDX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBER">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDEX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDUS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XECB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XECC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEEE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEEO">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEER">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEHQ">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEQT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XERE">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XERT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETA">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETB">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETS">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETV">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XETW">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUP">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUR">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGAT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGRM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHAM">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHAN">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XINV">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMUN">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOT">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPSF">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XQTX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSC1">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSC2">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSC3">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSCO">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTF">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTU">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XXSC">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZOBX">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGHA">
+		<BaseCalendar>GHS</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSXL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="AAPA">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ABFI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASEX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ENAX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ERBX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HDAT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HEDE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HEMO">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HESP">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HOTC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="PBGR">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XADE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XATH">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIPO">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGTG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCIE">
+		<BaseCalendar>GBP</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSCI">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBCV">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAEP">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAIP">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="BASE">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="BASP">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMH">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="EOTC">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSAL">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSPL">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSXH">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="HSXA">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPMI">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQH">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SHSC">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIGH">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="SZSC">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="TFSD">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="TOCP">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRAS">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSX">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCGS">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGEM">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHKF">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIHK">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPST">
+		<BaseCalendar>HK</BaseCalendar>
+	</Calendar>
+	<Calendar name="BETA">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIBH">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CONC">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBHU">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ERST">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="HUDX">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="HUPX">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KCCP">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KELR">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KHHU">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTPB">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBHU">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="UCHU">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBND">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBUD">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGAS">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTND">
+		<BaseCalendar>HU</BaseCalendar>
+	</Calendar>
+	<Calendar name="DICE">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="DNIS">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNIS">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="MICE">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="MNIS">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="XICE">
+		<BaseCalendar>IS</BaseCalendar>
+	</Calendar>
+	<Calendar name="ACEX">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASTR">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="BSME">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="CDSL">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXCL">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXSW">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICXL">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="IINX">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="INSE">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISEX">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCXX">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="NBOT">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="NMCE">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCX">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="PXIL">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBAN">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCAL">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDES">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIMC">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMDS">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNCD">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUSE">
+		<BaseCalendar>IN</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICDX">
+		<BaseCalendar>ID</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBBJ">
+		<BaseCalendar>ID</BaseCalendar>
+	</Calendar>
+	<Calendar name="XJNB">
+		<BaseCalendar>ID</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFBX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMEX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTEH">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIQS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="AREX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBIE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBIS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKDM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMLI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMLS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CEPL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFIL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSGI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="DAVY">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDBT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDGL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQIE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQSE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EUCC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXFM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXRQ">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="HREU">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICUR">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICXR">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFXA">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFXC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFXR">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ITGL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="LEUE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="LEUF">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCID">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSEL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="RMTF">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEMX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SISI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TDGF">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFIL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFSI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFXO">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XATL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCDE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEBI">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XESM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEYE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMSM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPAC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRFQ">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AKIS">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ATFX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEIS">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNLD">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="BREA">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGCM">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGDB">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGEB">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGGD">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGIT">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGND">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGQD">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGQT">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGTR">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CREM">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="DDTX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBMX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMDR">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMIB">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMID">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMIR">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ETFP">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ETLX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="FBSI">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="HCER">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="HMOD">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="HMTF">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="HRFQ">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBEQ">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBIS">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMMH">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISBA">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISBV">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCAD">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MIVX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MOTX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTAA">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTAH">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTSC">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTSO">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUBM">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEDX">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSOB">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBIM">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBIS">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="UCIT">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAIM">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDMI">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGME">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMOT">
+		<BaseCalendar>IT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRV">
+		<BaseCalendar>XOF</BaseCalendar>
+	</Calendar>
+	<Calendar name="XJAM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAJD">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="BASX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="BETP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIS">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIV">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CITD">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CITX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMET">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="DRCT">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICHK">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICKR">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICSH">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICSZ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICTW">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="KAIX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="LXJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="MIZX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSMS">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="NMRJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="NMSX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="NXJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="NXSE">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="NXVW">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBIJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBIU">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBIV">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIGJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWJP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWJT">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="UTSL">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XFKA">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XJAS">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XJPX">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKAC">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNGO">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNKS">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSE">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSJ">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSAP">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSBI">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTAM">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTFF">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTK1">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTK2">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTK3">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTKT">
+		<BaseCalendar>JP</BaseCalendar>
+	</Calendar>
+	<Calendar name="AMNL">
+		<BaseCalendar>JOD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAMM">
+		<BaseCalendar>JOD</BaseCalendar>
+	</Calendar>
+	<Calendar name="AIXK">
+		<BaseCalendar>KZT</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCEX">
+		<BaseCalendar>KZT</BaseCalendar>
+	</Calendar>
+	<Calendar name="ETSC">
+		<BaseCalendar>KZT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKAZ">
+		<BaseCalendar>KZT</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNAI">
+		<BaseCalendar>KES</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSXK">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKCM">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKEM">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKFB">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKFE">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKON">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKOS">
+		<BaseCalendar>KR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKUW">
+		<BaseCalendar>KWD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKSE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLAO">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNLV">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SWLV">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRIS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBEY">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLSM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLGT">
+		<BaseCalendar>CHF</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLLB">
+		<BaseCalendar>CHF</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVPB">
+		<BaseCalendar>CHF</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAPX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNLT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GETB">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMNR">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEBL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SWLT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLIT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCEE">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="BILU">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLUX">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCLX">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBLX">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="DHLX">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMTF">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBLC">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBLL">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBLS">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBLT">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCB">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBSI">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLUX">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVES">
+		<BaseCalendar>LU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMDG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMSW">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="MESQ">
+		<BaseCalendar>MY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAMT">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKLS">
+		<BaseCalendar>MY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLFX">
+		<BaseCalendar>MY</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRBM">
+		<BaseCalendar>MY</BaseCalendar>
+	</Calendar>
+	<Calendar name="MALX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="COMG">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFSM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="PROS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFEX">
+		<BaseCalendar>MUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="GBOT">
+		<BaseCalendar>MUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAFX">
+		<BaseCalendar>MUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAU">
+		<BaseCalendar>MUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BIVA">
+		<BaseCalendar>MX</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMX">
+		<BaseCalendar>MX</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEMD">
+		<BaseCalendar>MX</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMEX">
+		<BaseCalendar>MX</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMOL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XULA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMNX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCAS">
+		<BaseCalendar>MAD</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBVM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNAM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNEP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="NZFX">
+		<BaseCalendar>NZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNZE">
+		<BaseCalendar>NZ</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="NASX">
+		<BaseCalendar>NGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNSA">
+		<BaseCalendar>NGN</BaseCalendar>
+	</Calendar>
+	<Calendar name="BULK">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="CNSI">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELEU">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELNO">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELSE">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELUK">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="FISH">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="FREI">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="FSHX">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="MERD">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="MERK">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXO">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NIBR">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOPS">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NORX">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOSC">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOTC">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="OAPA">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="OSLC">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="SB1M">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPTR">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="STEE">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XABG">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDNB">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIMA">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOAA">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOAD">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOAM">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOAS">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOBD">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSA">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSC">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSD">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOSL">
+		<BaseCalendar>NO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMUS">
+		<BaseCalendar>OMR</BaseCalendar>
+	</Calendar>
+	<Calendar name="NCEL">
+		<BaseCalendar>PKR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKAR">
+		<BaseCalendar>PKR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPAE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPTY">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVPA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLIM">
+		<BaseCalendar>PE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLPH">
+		<BaseCalendar>PH</BaseCalendar>
+	</Calendar>
+	<Calendar name="PDEX">
+		<BaseCalendar>PH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPHS">
+		<BaseCalendar>PH</BaseCalendar>
+	</Calendar>
+	<Calendar name="BHWA">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNPP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOSP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BPKO">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAPL">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="HBPL">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="INGW">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MBPL">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PARK">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PKOP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PLPD">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PLPO">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PLPS">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="PTPG">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="RPWC">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIAB">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TBSP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WBCL">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WBKP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WBON">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WDER">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WETP">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WIND">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WIPO">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="WMTF">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNCO">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XWAR">
+		<BaseCalendar>PL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALXL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="BFPT">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ENXL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="MFOX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="OMIC">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="OMIP">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="OPEX">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="WQXL">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLIS">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="DSMD">
+		<BaseCalendar>QAR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRPX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRDE">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRDL">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRDS">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTPR">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRM">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBSD">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBSE">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCAN">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRAS">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRPM">
+		<BaseCalendar>RO</BaseCalendar>
+	</Calendar>
+	<Calendar name="NAMX">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RPDX">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RTSX">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="RUSX">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPIM">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMOS">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPET">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPIC">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRUS">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSAM">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSIB">
+		<BaseCalendar>RU</BaseCalendar>
+	</Calendar>
+	<Calendar name="ROTC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="RSEX">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XECS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="SVXI">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSAU">
+		<BaseCalendar>SAR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBEL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="SECC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="SECD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="SECE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEDC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="APCL">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="APEX">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTBS">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLTD">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="ECAL">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="EEAL">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="ENMS">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFSG">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="JADX">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="MALM">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="MASG">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="RTSP">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMEX">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="SYFX">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="TFSA">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSIG">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWSG">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSBT">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSCA">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSCE">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSIM">
+		<BaseCalendar>SG</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBSK">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBRA">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPXE">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRA">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="SKBB">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLJM">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLJU">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSOP">
+		<BaseCalendar>EUR</BaseCalendar>
+	</Calendar>
+	<Calendar name="4AXE">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="A2XX">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALTX">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="JSEB">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="JSER">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBES">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSAF">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSFA">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="YLDX">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZARX">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZFXM">
+		<BaseCalendar>ZA</BaseCalendar>
+	</Calendar>
+	<Calendar name="ABAN">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="AGBP">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALLT">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBVA">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCMA">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMCL">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMEA">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMEX">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CABK">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAPI">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIMA">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIMB">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIMD">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIME">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIMV">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMAP">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSMD">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="DOWE">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="DOWM">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="GROW">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBER">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBGH">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="MABX">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="MARF">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="MDRV">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="MERF">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="MIBG">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="OMEL">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="PAVE">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="SANT">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBAR">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBIL">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEND">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="SIMD">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="TOMG">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPES">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBAR">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBIL">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDPA">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDRF">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLAT">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAD">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMFX">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMPW">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMRV">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNAF">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVAL">
+		<BaseCalendar>ES</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCOL">
+		<BaseCalendar>LKR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKHA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSWA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="CASI">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CRYD">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CRYX">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSTO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DKED">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DKFI">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DNSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DOSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="DSTO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBON">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="ESTO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="EUWB">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FIED">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="GBWB">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFKS">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MNSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MOSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSTO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NAPA">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NMTF">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOCO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOED">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOFI">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="NSME">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="ONSE">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEPH">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEPM">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEPQ">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEPW">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEPY">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="PNED">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEBS">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEED">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSME">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SVES">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SVEX">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="SWBI">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="USWB">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XABC">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNGM">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOPV">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSAT">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTO">
+		<BaseCalendar>SE</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBOE">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCMS">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSAG">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSOT">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSZH">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="DOTS">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSC">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSS">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="KMUX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTXB">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="ROSR">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="S3FM">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="STOX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSC">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSF">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSG">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="VLEX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRN">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBTR">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XQMH">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XQOD">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XREP">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XROT">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSCU">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSDX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSEB">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTV">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSWM">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XVTX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZKBX">
+		<BaseCalendar>CH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDSE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="CFTW">
+		<BaseCalendar>TW</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSXT">
+		<BaseCalendar>TW</BaseCalendar>
+	</Calendar>
+	<Calendar name="ROCO">
+		<BaseCalendar>TW</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTAF">
+		<BaseCalendar>TW</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDAR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFET">
+		<BaseCalendar>TH</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEEX">
+		<BaseCalendar>TH</BaseCalendar>
+	</Calendar>
+	<Calendar name="TFEX">
+		<BaseCalendar>TH</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMAI">
+		<BaseCalendar>TH</BaseCalendar>
+	</Calendar>
+	<Calendar name="ABNA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSI">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSL">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFSX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAPE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARU">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEUO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEUP">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BEUT">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTAM">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTFE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTQE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CABV">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAPA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAVD">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCRM">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCXE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CEUD">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CEUO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CEUX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLMX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="COMM">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="CPTX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSF">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSN">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ECEU">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ETPA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="FLTB">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="FLTR">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="FLWX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="HCHC">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="IEBS">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCT">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMEQ">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="INGB">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="INGE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="INGF">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWN">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWP">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWT">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="JLEU">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="LISZ">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MANL">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHBE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUBE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUSN">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="MXNL">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NDEX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NDXS">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NIBC">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NLPX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NPEX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="NWNV">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="OHVO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="RABO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="RESF">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TNLA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TOWR">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TQEA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TQEB">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TQEM">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TQEX">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRNL">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWEA">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWEM">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWEO">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWEU">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAMS">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEMS">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUC">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUE">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEUI">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNXC">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNXD">
+		<BaseCalendar>NL</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTRN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTUN">
+		<BaseCalendar>TND</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXTR">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="TMEX">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDSM">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEDA">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEID">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XEQY">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XFNO">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIST">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPMS">
+		<BaseCalendar>TR</BaseCalendar>
+	</Calendar>
+	<Calendar name="ULTX">
+		<BaseCalendar>UGX</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUGA">
+		<BaseCalendar>UGX</BaseCalendar>
+	</Calendar>
+	<Calendar name="EESE">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="PFTQ">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="PFTS">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="SEPE">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="UICE">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="UKEX">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDFB">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKHR">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKIE">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKIS">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNDU">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XODE">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPRI">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUAX">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUKR">
+		<BaseCalendar>UA</BaseCalendar>
+	</Calendar>
+	<Calendar name="DEXE">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="DGCX">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="DIFX">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="DUMX">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLOM">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMGD">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFAD">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="KRME">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="MATX">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="XADS">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="XDFM">
+		<BaseCalendar>AED</BaseCalendar>
+	</Calendar>
+	<Calendar name="3579">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AFDL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AIMX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AMPX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ANLP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ANTS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ANZL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AQXA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AQXE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARAX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARCH">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARIA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ATLB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AUTB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AUTP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AUTX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BALT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BANA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAPA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BART">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BASI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBSX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCRM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCSL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCXE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BETX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGCB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGCI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGCO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGFU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BISI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKLF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKLN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLNK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLOX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLTX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMCM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMLB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BMTF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNPL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNTW">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOAL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOAT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOFS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOSC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOTC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BPLC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRFQ">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRGA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BRNX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BSLB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTEE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTLX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTQG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BUYN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="BVUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBAL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBNL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCML">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCO2">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CEPU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGML">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHEV">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHID">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CHIX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIBC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIBP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLCH">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLVE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMEC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMEE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMMT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CRYP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSBX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSCF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSEC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSIN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSLB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXOT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="CXRT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DAIW">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBCR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBCX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBDC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBIX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBLN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBMO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBSE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DOWG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="DVFX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EBSO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ECHO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ECSL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EIXE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ELIX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMBX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ENCL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ENSY">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQLD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EQSL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXBO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXCP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXDC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXLP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXMP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXOR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXOT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXVP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FAIR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FISU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FRTE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXOP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GEMX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFBM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFBO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFIB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFIC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFIF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFIN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFIR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFSM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GFSO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMEG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMGL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GRIF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GRIO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GRSE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSIB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSIL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="HRSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="HSBC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IBAL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICEO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICPM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IECL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFEN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFLL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFLO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFLS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFLX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFUT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IGDL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ILCM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMED">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMET">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMFD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMGI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMMM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMRD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMSB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMTF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="INVE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOCD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOED">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOFI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOFX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOGI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOIR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOMM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOTC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IOTF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IPSX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IPXP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IPXW">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISWV">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="IUOB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="JEFS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="JISI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPCB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="JSSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="KBLM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="KLEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LBCM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LCUR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LELE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIQF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIQH">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIQU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LISX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMAD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMAE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMAF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMAO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMAX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMEC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LOTC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LOUI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LOYD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="LPPM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAEL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAKX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAQU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAXD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MBSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCUR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCXR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCXS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="METZ">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MFGL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MFXA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MFXC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MFXR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHBL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MHIP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLIX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLRQ">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSBI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSIP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUBL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUFP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUSE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MUTI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MXLM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="MYTR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="N2EX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NABA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NABE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NABL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NABU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NBFL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NCML">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NDCM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NEXX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOFF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NOSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NWMS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="NXEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="OCSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PARX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PEEL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PFXD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PIEU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PIRM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PLDX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PPEX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="PVMF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="QWIX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="R5FX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBCT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RBSX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="REST">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RTSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="RTSL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SBEX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCOT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SECF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SFCL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMY">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMZ">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SHAR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SICS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SKYX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMBE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMBG">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SNUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPDX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPEC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SPRZ">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SQUA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSBT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSEX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSFX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSIL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="STAN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="STFL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SUNB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SUNO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="SWAP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TCDS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TCML">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TDBL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TECO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEFD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEFX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEGI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEIR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEMB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEMF">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEMI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEMM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TEMR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TERE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TIRD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TNLL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPEL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPEO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPIE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPSL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPSO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRAL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRAX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRDE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRDX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TREA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TREO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TREU">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRFW">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRQA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRQB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRQC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRQM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRQX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRSI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSCB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSCD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSED">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSFI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSGI">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSMM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSMR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSRE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TUOB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWGP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBIN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSY">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UKGD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UKOR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UKPX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="UKRE">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VAGL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VAGM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VCMO">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VEGA">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VIUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="VTBC">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WELN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WFLB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WINS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WINX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WSIL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="WSIN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XALT">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCOR">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGCL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGCX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGDX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGSX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIEL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLBM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLCH">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLDN">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLDX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLOD">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLOM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMTS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPAL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPHX">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOL">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPUK">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XRSP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSGB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSMP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSWB">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTXM">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUBS">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUMP">
+		<BaseCalendar>GB</BaseCalendar>
+	</Calendar>
+	<Calendar name="AATS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ACKF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ADVT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ALDP">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="AMXO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="AQUA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARCD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARCO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ARKX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASMT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASPI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ASPN">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAML">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BAMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BARX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BATY">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BBSF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BCDX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGCD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BGCF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BHSF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BIDS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BKKT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLKX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLTD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BLUE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNDD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BNYC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BOSD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BPOL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTEC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTEQ">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BTNL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BVUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BYXD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BZXD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="C2OX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAES">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CALH">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CAVE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBLC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBSX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CBTS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CCMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CDED">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CECS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CGMI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CIOI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CISD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CLST">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMES">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CMSF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CODA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="COHR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CORE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CPGX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CRED">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSCL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CSVW">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="CURX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DASH">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBAB">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DBSX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DEAL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DWFI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="DWSF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDDP">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDGA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDGD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDGO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EDGX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EGMT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EMLD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EPRD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EPRL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ERIS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="EXPM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FAST">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FCBT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FCME">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FICO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FINC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FINN">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FINO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FINR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FINY">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNCS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FNIX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FSEF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FTUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXAL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="FXCM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="G1XX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLBX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLLC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLPS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GLPX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GMNI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GOTC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GOVX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GREE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSCO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GSEF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GTCO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GTSX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="GTXS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="HEGX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="HPPO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="HRTF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="HRTX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="HSFX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IATS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICBX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICEL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICES">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICRO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ICSU">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IEPA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IEXD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IEXG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFED">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IFUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMAG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMBD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMCS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMEN">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMFX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="IMIR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="INCA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="INCR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ISDA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ITGI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JEFX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JLQD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JNST">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPBX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPMS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JPMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JSES">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="JSJX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="KNCM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="KNEM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="KNIG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="KNLI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LAMP">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LASF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LEDG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LEVL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIFI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIUH">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LIUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LMNX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LQED">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LQFI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LTAA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="LTSE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MAGM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MCRY">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MELO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MEMD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MEMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MIHI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MKAA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLCO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MLVX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MOCX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MPRL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSCO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSPL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSRP">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MSTX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTSB">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTXA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTXC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTXM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTXS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="MTXX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NASD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NBLX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NFSA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NFSC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NFSD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NLAX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NMRA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NODX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NXUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NYFX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NYMS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NYPC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="NYSD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OLLC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ONEC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OOTC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OPRA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCB">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCN">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="OTCQ">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PINI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PINL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PINX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PIPE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PIPR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PJCX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PRSE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PSGM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PSXD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PUMA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="PUMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="RCMA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="RICD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="RICX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SAGE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCXA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCXF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCXM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCXO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SCXS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGAS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SGMT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SHAD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SHAW">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SMFE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SOHO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SSTX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="STFX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="SUNT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TERA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TFSU">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="THEM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="THRE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TMCC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TMID">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPSE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TPSV">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRAI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRCK">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRCX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRU1">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRU2">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRUX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TRWB">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSAD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSBX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TSEF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="TWSF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSP">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="UBSS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VABD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VALX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VCRS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VERT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFCM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VFMI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VIRT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VNDM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VTEX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="VUSA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="WABR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="WELS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="WSAG">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XADF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XAQS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XASE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBOX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBRT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XBXO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCBF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCBO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCBT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCEC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCFF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCHI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCIS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCME">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCUR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XELX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XFCI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XFDA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XGMX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIMM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XINS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XIOM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XISA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XISE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XISX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKBT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMER">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMGE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMIO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNAS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNDQ">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNFI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNIM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNLI">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNYE">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNYL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XNYM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOCH">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOTC">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPBT">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPHL">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPHO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPOR">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPSX">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XPUS">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSEF">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTM">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="XTRD">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="YKNA">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZERO">
+		<BaseCalendar>US</BaseCalendar>
+	</Calendar>
+	<Calendar name="BVUR">
+		<BaseCalendar>UYU</BaseCalendar>
+	</Calendar>
+	<Calendar name="UFEX">
+		<BaseCalendar>UYU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XMNT">
+		<BaseCalendar>UYU</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCET">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XCUE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XKCE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XSTE">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XUNI">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="GXMA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="POTC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BVCA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="HSTC">
+		<BaseCalendar>VND</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHNF">
+		<BaseCalendar>VND</BaseCalendar>
+	</Calendar>
+	<Calendar name="XHNX">
+		<BaseCalendar>VND</BaseCalendar>
+	</Calendar>
+	<Calendar name="XLUS">
+		<BaseCalendar>ZMW</BaseCalendar>
+	</Calendar>
+	<Calendar name="XZIM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="BILT">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="XOFF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZUG">
+		<BaseCalendar>DE</BaseCalendar>
+	</Calendar>
+	<Calendar name="ZUR">
+		<BaseCalendar>CHF</BaseCalendar>
+	</Calendar>
+	<Calendar name="JE">
+		<BaseCalendar>UK</BaseCalendar>
+	</Calendar>
+	<Calendar name="PYG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-14</Date>
+			<Date>2025-05-15</Date>
+			<Date>2025-06-16</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-09-29</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="AMD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-28</Date>
+			<Date>2025-04-24</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-02</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-05-28</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MWK">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-15</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-14</Date>
+			<Date>2025-07-07</Date>
+			<Date>2025-09-16</Date>
+			<Date>2025-10-15</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="KGS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-03</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-07</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-02</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-05-06</Date>
+			<Date>2025-05-07</Date>
+			<Date>2025-05-08</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-06-06</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="UZS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-03-10</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-02</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-09-01</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-12-08</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="TJS">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-10</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-03-24</Date>
+			<Date>2025-03-25</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-27</Date>
+			<Date>2025-09-08</Date>
+			<Date>2025-09-09</Date>
+			<Date>2025-11-06</Date>
+			<Date>2025-11-07</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="ETB">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-07</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-05-28</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-09-04</Date>
+			<Date>2025-09-11</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MZN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-15</Date>
+			<Date>2025-02-03</Date>
+			<Date>2025-04-07</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-25</Date>
+			<Date>2025-09-08</Date>
+			<Date>2025-09-25</Date>
+			<Date>2025-11-10</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="ALL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-03</Date>
+			<Date>2025-03-14</Date>
+			<Date>2025-03-24</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-09-05</Date>
+			<Date>2025-11-24</Date>
+			<Date>2025-11-28</Date>
+			<Date>2025-12-01</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BYN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-07</Date>
+			<Date>2025-04-28</Date>
+			<Date>2025-04-29</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-07-03</Date>
+			<Date>2025-07-04</Date>
+			<Date>2025-11-07</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MDL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-07</Date>
+			<Date>2025-01-08</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-04-28</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-02</Date>
+			<Date>2025-05-09</Date>
+			<Date>2025-08-27</Date>
+			<Date>2025-10-14</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BBD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-21</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-04-28</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-08-04</Date>
+			<Date>2025-12-01</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BND">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-27</Date>
+			<Date>2025-01-29</Date>
+			<Date>2025-02-24</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-18</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-02</Date>
+			<Date>2025-06-27</Date>
+			<Date>2025-06-30</Date>
+			<Date>2025-07-15</Date>
+			<Date>2025-09-05</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="CRC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-11</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-07-25</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-12-01</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="GNF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="GYD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-02-24</Date>
+			<Date>2025-03-14</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-05-26</Date>
+			<Date>2025-07-07</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-09-05</Date>
+			<Date>2025-10-20</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="HNL">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-10</Date>
+			<Date>2025-04-14</Date>
+			<Date>2025-04-15</Date>
+			<Date>2025-04-16</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-10-02</Date>
+			<Date>2025-10-03</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="HTG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="IRR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-14</Date>
+			<Date>2025-01-28</Date>
+			<Date>2025-02-10</Date>
+			<Date>2025-02-12</Date>
+			<Date>2025-02-14</Date>
+			<Date>2025-02-24</Date>
+			<Date>2025-03-19</Date>
+			<Date>2025-03-20</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-03-23</Date>
+			<Date>2025-03-24</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-02</Date>
+			<Date>2025-04-24</Date>
+			<Date>2025-06-03</Date>
+			<Date>2025-06-04</Date>
+			<Date>2025-07-06</Date>
+			<Date>2025-08-14</Date>
+			<Date>2025-08-22</Date>
+			<Date>2025-08-24</Date>
+			<Date>2025-09-01</Date>
+			<Date>2025-09-10</Date>
+			<Date>2025-11-24</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="JMD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-05</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-23</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-08-06</Date>
+			<Date>2025-10-20</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="LBP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-02-10</Date>
+			<Date>2025-02-14</Date>
+			<Date>2025-03-25</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-26</Date>
+			<Date>2025-08-04</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-09-04</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="LYD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="NPR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>2025-04-14</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-09-19</Date>
+			<Date>2025-09-29</Date>
+			<Date>2025-09-30</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-10-02</Date>
+			<Date>2025-10-03</Date>
+			<Date>2025-10-20</Date>
+			<Date>2025-10-21</Date>
+			<Date>2025-10-22</Date>
+			<Date>2025-10-23</Date>
+			<Date>2025-10-24</Date>
+			<Date>2025-10-27</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="PAB">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-09</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-04</Date>
+			<Date>2025-03-05</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-11-03</Date>
+			<Date>2025-11-04</Date>
+			<Date>2025-11-05</Date>
+			<Date>2025-11-10</Date>
+			<Date>2025-11-28</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="PGK">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-02-26</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-06-17</Date>
+			<Date>2025-07-23</Date>
+			<Date>2025-08-26</Date>
+			<Date>2025-09-16</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="SBD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-06-13</Date>
+			<Date>2025-07-07</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="SRD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-29</Date>
+			<Date>2025-03-14</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-27</Date>
+			<Date>2025-07-01</Date>
+			<Date>2025-10-10</Date>
+			<Date>2025-10-21</Date>
+			<Date>2025-11-25</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="SYP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-03-30</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-02</Date>
+			<Date>2025-04-03</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-20</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-06</Date>
+			<Date>2025-06-08</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-06-26</Date>
+			<Date>2025-09-04</Date>
+			<Date>2025-10-06</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="TTD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-04</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-01</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-30</Date>
+			<Date>2025-06-19</Date>
+			<Date>2025-06-20</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-09-01</Date>
+			<Date>2025-09-24</Date>
+			<Date>2025-10-20</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="VES">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-13</Date>
+			<Date>2025-01-20</Date>
+			<Date>2025-02-17</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-04</Date>
+			<Date>2025-03-19</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-15</Date>
+			<Date>2025-05-26</Date>
+			<Date>2025-06-02</Date>
+			<Date>2025-06-16</Date>
+			<Date>2025-06-19</Date>
+			<Date>2025-06-23</Date>
+			<Date>2025-06-24</Date>
+			<Date>2025-07-04</Date>
+			<Date>2025-07-24</Date>
+			<Date>2025-08-18</Date>
+			<Date>2025-09-01</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-10-13</Date>
+			<Date>2025-11-11</Date>
+			<Date>2025-11-24</Date>
+			<Date>2025-11-27</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-24</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="VUV">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-16</Date>
+			<Date>2025-02-21</Date>
+			<Date>2025-03-05</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-29</Date>
+			<Date>2025-07-24</Date>
+			<Date>2025-07-30</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-10-06</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="XPF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="AFN">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="ANG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-29</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BAM">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-02</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="BOB">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-22</Date>
+			<Date>2025-03-03</Date>
+			<Date>2025-03-04</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-19</Date>
+			<Date>2025-08-06</Date>
+			<Date>2025-11-03</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="CDF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="DOP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-21</Date>
+			<Date>2025-02-27</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-06-19</Date>
+			<Date>2025-09-24</Date>
+			<Date>2025-11-10</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="GTQ">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-27</Date>
+			<Date>2025-06-30</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-10-13</Date>
+			<Date>2025-10-20</Date>
+			<Date>2025-11-03</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="IQD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="KYD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-27</Date>
+			<Date>2025-03-05</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-04-30</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-05-19</Date>
+			<Date>2025-06-23</Date>
+			<Date>2025-07-07</Date>
+			<Date>2025-11-10</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="LAK">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MGA">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-29</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-06-26</Date>
+			<Date>2025-08-15</Date>
+			<Date>2025-12-24</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MKD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-06</Date>
+			<Date>2025-01-07</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-08-28</Date>
+			<Date>2025-09-08</Date>
+			<Date>2025-10-23</Date>
+			<Date>2025-12-08</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MMK">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="MOP">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-29</Date>
+			<Date>2025-01-30</Date>
+			<Date>2025-01-31</Date>
+			<Date>2025-04-04</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-06-02</Date>
+			<Date>2025-10-01</Date>
+			<Date>2025-10-07</Date>
+			<Date>2025-10-29</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-22</Date>
+			<Date>2025-12-24</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="NAD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-05-26</Date>
+			<Date>2025-05-28</Date>
+			<Date>2025-05-29</Date>
+			<Date>2025-08-26</Date>
+			<Date>2025-12-10</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="SDG">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="SVC">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-06-17</Date>
+			<Date>2025-08-04</Date>
+			<Date>2025-08-05</Date>
+			<Date>2025-08-06</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-12-24</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-31</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="TMT">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-03-08</Date>
+			<Date>2025-03-21</Date>
+			<Date>2025-03-22</Date>
+			<Date>2025-03-31</Date>
+			<Date>2025-05-19</Date>
+			<Date>2025-06-06</Date>
+			<Date>2025-06-07</Date>
+			<Date>2025-09-27</Date>
+			<Date>2025-10-06</Date>
+			<Date>2025-12-12</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="XCD">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-01-02</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-04-21</Date>
+			<Date>2025-05-05</Date>
+			<Date>2025-06-09</Date>
+			<Date>2025-08-04</Date>
+			<Date>2025-08-05</Date>
+			<Date>2025-09-16</Date>
+			<Date>2025-09-19</Date>
+			<Date>2025-12-25</Date>
+			<Date>2025-12-26</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="YER">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="DJF">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="NIO">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+			<Date>2025-01-01</Date>
+			<Date>2025-04-17</Date>
+			<Date>2025-04-18</Date>
+			<Date>2025-05-01</Date>
+			<Date>2025-05-30</Date>
+			<Date>2025-08-01</Date>
+			<Date>2025-09-15</Date>
+			<Date>2025-09-16</Date>
+			<Date>2025-12-08</Date>
+			<Date>2025-12-25</Date>
+		</AdditionalHolidays>
+	</Calendar>
+	<Calendar name="KHR">
+		<BaseCalendar>WeekendsOnly</BaseCalendar>
+		<AdditionalHolidays>
+			<Date>1900-01-01</Date>
+			<Date>1900-01-01</Date>
+		</AdditionalHolidays>
+	</Calendar>
+</CalendarAdjustments>
