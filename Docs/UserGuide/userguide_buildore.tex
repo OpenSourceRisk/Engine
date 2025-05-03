@@ -247,12 +247,14 @@ or even use the pre-built ORE Python module in section \ref{example:orepython}.
 
 \subsection{Building ORE}\label{sec:build}
 
-ORE uses the CMake build system with the following options and default setting (see ore/CMakeLists.txt):
+ORE uses the CMake build system with the following options and default settings (see ore/CMakeLists.txt and
+ore/QuantLib/CMakeLists.txt):
 
-{\footnotesize
-\begin{tabular}{|p{5cm}|l||l|}
+%\begin{table}
+  {\footnotesize
+\begin{tabular}{|p{6cm}|p{7cm}|l|}
   \hline
-  Option & Description & Default \\
+  Option & Description & Default  \\
   \hline
   \hline
   ORE\_BUILD\_DOC & Build documentation & ON \\
@@ -261,17 +263,11 @@ ORE uses the CMake build system with the following options and default setting (
   \hline
   ORE\_BUILD\_TESTS & Build test suites  & ON \\
   \hline
-  ORE\_BUILD\_APP & Build commandline application & ON \\
+  ORE\_BUILD\_APP & Build commandline application {\tt ore[.exe]} & ON \\
   \hline
-  ORE\_BUILD\_SWIG & Build ORE Python & ON \\
+  ORE\_BUILD\_SWIG & Build the ORE Python module & ON \\
   \hline
-  MSVC\_LINK\_DYNAMIC \_RUNTIME & Link against dynamic runtime & ON \\
-  \hline
-  MSVC\_PARALLELBUILD & Use flag /MP & ON \\
-  \hline
-  QL\_USE\_PCH & Use precompiled headers & OFF \\
-  \hline
-  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration& OFF \\
+  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
   \hline
   ORE\_USE\_ZLIB & Use compression for boost::iostreams & OFF\\
   \hline
@@ -279,20 +275,37 @@ ORE uses the CMake build system with the following options and default setting (
   \hline
   ORE\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\ 
   \hline
+  MSVC\_LINK\_DYNAMIC \_RUNTIME & Link against dynamic runtime & ON \\
+  \hline
+  MSVC\_PARALLELBUILD & Use flag /MP & ON \\
+  \hline
+  \hline
+  QL\_USE\_PCH & Use precompiled headers & OFF \\
+  \hline
+  QL\_ENABLE\_SESSIONS & Singletons return different instances for different sessions; turn ON for ORE's multi-threading & OFF \\
+  \hline
+  QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
+  \hline
+  QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
+  \hline
 \end{tabular}
-}
+  }
+%  \caption{CMake options, all of ore/CMakeLists.txt, a small subset of ore/QuantLib/CMakeLists.txt essential for ORE}
+%  \label{tab::cmakeoptions}
+%\end{table}
 
-So the default CMake build includes the ORE Python module already which can be used to run ORE Python locally as shown in
+Note that there is a longer list of options named QL\_... and default settings in QuantLib's ore/QuantLib/CMakeLists.txt.
+
+The default CMake build includes the ORE Python module already which can be used to run ORE Python locally as shown in
 section \ref{example:orepython}.
 There are alternative ways of building ORE Python, in particular building Python wheels for distribution.
 Section \ref{sec:oreswig} points to related tutorials.
 
-Note that there is a longer list of options named QL\_... and default settings in QuantLib's ore/QuantLib/CMakeLists.txt.
 
 All options (ORE's and QuantLib's) can be amended by editing the respective files, or 
 by calling {\tt cmake} (see below) with corresponding command line switches such as \\
 \medskip
-    {\tt cmake ..  -D ORE\_USE\_ZLIB=ON  -D QL\_USE\_PCH=ON} \\
+    {\tt cmake ..  -D QL\_ENABLE\_SESSIONS=ON  -D ORE\_USE\_ZLIB=ON  -D QL\_USE\_PCH=ON} \\
 \medskip
 to override any default settings in ORE or QuantLib.
 
