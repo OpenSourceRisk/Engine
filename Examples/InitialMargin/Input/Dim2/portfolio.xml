@@ -478,7 +478,6 @@
   </Trade>
   -->
 
-  <!--
   <Trade id="Swap_SONIA_3M">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -548,5 +547,5 @@
 	</LegData>
     </SwapData>
   </Trade>
--->
+
 </Portfolio>

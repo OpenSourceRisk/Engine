@@ -15,11 +15,25 @@
       <TimeWeighting/>
       <Report/>
     </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPEUR</CurveId>
+      <CurveDescription>EUR GBP volatility surface</CurveDescription>
+      <Dimension>ATM</Dimension>
+      <Conventions>EUR-GBP-FXOPTION</Conventions>
+      <Expiries>*</Expiries>
+      <FXSpotID>FX/GBP/EUR</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/GBP/GBP</FXDomesticCurveID>
+      <Calendar>JoinHolidays(TARGET, UK settlement)</Calendar>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <TimeWeighting/>
+      <Report/>
+    </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>
     <SwaptionVolatility>
       <CurveId>EUR</CurveId>
-      <CurveDescription>EUR lognormal swaption volatilities</CurveDescription>
+      <CurveDescription>EUR swaption volatilities</CurveDescription>
       <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -34,7 +48,7 @@
     </SwaptionVolatility>
     <SwaptionVolatility>
       <CurveId>USD</CurveId>
-      <CurveDescription>USD lognormal swaption volatilities</CurveDescription>
+      <CurveDescription>USD swaption volatilities</CurveDescription>
       <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -45,6 +59,21 @@
       <SwapTenors>5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>USD-CMS-2Y</ShortSwapIndexBase>
       <SwapIndexBase>USD-CMS-30Y</SwapIndexBase>
+      <Report/>
+    </SwaptionVolatility>
+    <SwaptionVolatility>
+      <CurveId>GBP</CurveId>
+      <CurveDescription>GBP swaption volatilities</CurveDescription>
+      <Dimension>ATM</Dimension>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>UK settlement</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y</OptionTenors>
+      <SwapTenors>5Y,10Y</SwapTenors>
+      <ShortSwapIndexBase>GBP-CMS-2Y</ShortSwapIndexBase>
+      <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
       <Report/>
     </SwaptionVolatility>
   </SwaptionVolatilities>
