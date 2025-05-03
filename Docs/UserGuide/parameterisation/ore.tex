@@ -190,7 +190,7 @@ type can be (so far) in
 \item Sensitivity, Stress
 \item Value at Risk
 \item P\&L, P\&L Explain, Scenario
-\item ISDA SIMM, IM Schedule
+\item ISDA SIMM, IM Schedule, IR/FX CRIF generation for ISDA SIMM
 \item Par Conversion, Par Stress Conversion, Par Scenario, Zero Shift to Par Shift
 \item XVA Stress, XVA Sensitivities, XVA Explain
 \item SA-CCR, SA-CVA, BA-CVA, SMRC
@@ -1090,7 +1090,7 @@ n Listing \ref{lst:ore_scenario}.
 
 See the example in section \ref{example:marketrisk_basescenario}.
 
-\subsubsection{Initial Margin: ISDA SIMM and IM Schedule}
+\subsubsection{Initial Margin: ISDA SIMM and IM Schedule, CRIF Generation}
 
 The {\tt simm} 'analytic' provides computation of initial margin using ISDA's Standard Initial Margin Model (SIMM)
 based on sensitivities in the Common Risk Interchange Format (CRIF) defined by ISDA. Listing \ref{lst:ore_simm} shows
@@ -1124,7 +1124,10 @@ The parameters in Listing \ref{lst:ore_simm} have the following interpretation:
 
 \begin{itemize}
 \item {\tt version}: SIMM version, ORE supports versions 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.5A, 2.6, 2.6.5; the latest version as of December 2024
-\item {\tt crif}: CRIF file name
+\item {\tt crif}: CRIF file name. \\
+  If the crif.csv input is omitted, then the ORE crif analytic (see below) is used internally to generate the CRIF input.
+  However, CRIF generation in ORE is limited to IR/FX risks, whereas the SIMM analytic can process a full CRIF across
+  IR/FX/INF/EQ/CR/COM risks.
 \item {\tt calculationCurrency}: Determines which {\tt Risk\_FX} entries of the CRIF will be ignored
   in the SIMM calculation
 \item {\tt calculationCurrencyCall} [Optional]: Separate calculation currency for the SIMM to call
@@ -1137,6 +1140,33 @@ The parameters in Listing \ref{lst:ore_simm} have the following interpretation:
 \end{itemize}
 
 See the example in section \ref{example:initialmargin}.
+
+\medskip
+The {\tt crif} analytic generates a {\tt crif.csv}, input for the ISDA SIMM calculation.
+CRIF generation in ORE is limited to IR/FX risks.
+Listing \ref{lst:ore_crif} shows a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Analytics>
+    <Analytic type="crif">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="marketConfigFile">crifmarket.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="simmVersion">2.7</Parameter>
+      <Parameter name="crifOutputFile">crif.csv</Parameter>
+    </Analytic>
+  </Analytics>
+\end{minted}
+\caption{ORE analytic: CRIF Generation}
+\label{lst:ore_crif}
+\end{listing}
+
+CRIF generation is based on par sensitivity analysis with a SIMM specific sensitivity configuration
+and some subsequent labeleing of the sensitivities so that the resulting output file satisfies the ISDA CRIF format.
+The resulting crif.csv can be fed into the SIMM analytic in \ref{lst:ore_simm}.
 
 \medskip
 The {\tt imschedule} analytic computes the basic Initial Margin calculation using the ``IM Schedule''
