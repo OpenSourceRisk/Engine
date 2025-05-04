@@ -26,6 +26,7 @@
 #include <boost/optional/optional.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounter.hpp>
@@ -52,7 +53,7 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    BaseCorrelationCurveConfig();
+    explicit BaseCorrelationCurveConfig(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr);
 
     //! Detailed constructor
     BaseCorrelationCurveConfig(
@@ -66,7 +67,8 @@ public:
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
         bool calibrateConstituentsToIndexSpread = false, const bool useAssumedRecovery = false,
         const std::map<std::string, std::vector<double>>& rrGrids = {},
-        const std::map<std::string, std::vector<double>>& rrProbs = {});
+        const std::map<std::string, std::vector<double>>& rrProbs = {},
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr);
     //@}
 
     //! \name Serialisation
@@ -117,8 +119,10 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
-
     //@}
+    
+    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
 
 private:
     vector<string> detachmentPoints_;
@@ -140,6 +144,8 @@ private:
     bool useAssumedRecovery_;
     std::map<std::string, std::vector<double>> rrGrids_;
     std::map<std::string, std::vector<double>> rrProbs_;
+
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
 };
 } // namespace data
 } // namespace ore
