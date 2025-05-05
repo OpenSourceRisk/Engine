@@ -217,12 +217,12 @@ public:
 
     const std::string& curveID() const;
     const std::string& curveDescription() const;
-    const std::set<std::string>& requiredCurveIds(const CurveSpec::CurveType& curveType) const;
-    const std::map<CurveSpec::CurveType, std::set<std::string>>& requiredCurveIds() const;
     std::string& curveID();
-    std::string& curveDescription();
-    std::set<std::string>& requiredCurveIds(const CurveSpec::CurveType& curveType);
-    std::map<CurveSpec::CurveType, std::set<std::string>>& requiredCurveIds();
+    std::string& curveDescription();    
+    virtual std::set<std::string> requiredCurveIds(const CurveSpec::CurveType& curveType);
+    virtual std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds();
+    void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const std::set<std::string>& ids);
+    void setRequiredCurveIds(const std::map<CurveSpec::CurveType, std::set<std::string>>& ids);
     virtual const std::vector<std::string>& quotes();
 };
 

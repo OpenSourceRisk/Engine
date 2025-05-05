@@ -699,18 +699,5 @@ void DependencyMarket::addMarketObject(ore::data::MarketObject type, const strin
     marketObjects_[config][type].insert(name);
 }
 
-std::map<ore::data::MarketObject, std::set<std::string>>
-DependencyMarket::marketObjects(const boost::optional<string> config) const {
-    if (config)
-        return marketObjects_[*config];
-    std::map<ore::data::MarketObject, std::set<std::string>> result;
-    for (auto const& m : marketObjects_) {
-        for (auto const& e : m.second) {
-            result[e.first].insert(e.second.begin(), e.second.end());
-        }
-    }
-    return result;
-}
-
 } // namespace analytics
 } // namespace ore

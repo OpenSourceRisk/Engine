@@ -98,6 +98,18 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
 }
 
 void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!shortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
+    if (!swapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(swapIndexBase_);
+    if (!proxySourceShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceShortSwapIndexBase_);
+    if (!proxySourceSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceSwapIndexBase_);
+    if (!proxyTargetShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetShortSwapIndexBase_);
+    if (!proxyTargetSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetSwapIndexBase_);
     if (!proxySourceCurveId_.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
@@ -177,8 +189,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
                    "GenericYieldVolatilityCurveConfig::fromXML(): ProxyConfig requires child node 'Target'");
         proxyTargetShortSwapIndexBase_ = XMLUtils::getChildValue(target, "ShortSwapIndexBase");
         proxyTargetSwapIndexBase_ = XMLUtils::getChildValue(target, "SwapIndexBase");
-
-        populateRequiredCurveIds();
 
     } else {
         // read in quote-based config
@@ -294,6 +304,7 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
