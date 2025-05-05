@@ -4,7 +4,7 @@
     <Parameter name="inputPath">Input/DimValidation</Parameter>
     <Parameter name="outputPath">Output/DimValidation</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">marketdata.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -45,7 +45,7 @@
       <Parameter name="marketObjectFileName">marketObjects.csv</Parameter>
     </Analytic>
     <Analytic type="crif">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">crifmarket.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -55,9 +55,9 @@
     <Analytic type="simm">
       <Parameter name="active">Y</Parameter>
       <Parameter name="version">2.7</Parameter>
-      <Parameter name="crif">../../Output/DimValidation/crif.csv</Parameter>
+      <!--<Parameter name="crif">../../Output/DimValidation/crif.csv</Parameter>-->
       <Parameter name="calculationCurrency">EUR</Parameter>
-      <Parameter name="enforceIMRegulations">Y</Parameter>
+      <!--<Parameter name="enforceIMRegulations">Y</Parameter>-->
       <Parameter name="mporDays">10</Parameter>
     </Analytic>
   </Analytics>

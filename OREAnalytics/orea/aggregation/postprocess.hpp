@@ -321,6 +321,8 @@ public:
 
     //! Return the dynamic initial margin cube (regression approach)
     //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    //! Write DIM distributions through time for all netting sets
+    void exportDimDistribution(ore::data::Report& dimDistributionReport);
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step

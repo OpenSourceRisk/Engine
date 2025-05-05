@@ -21,6 +21,10 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/portfolio/trade.hpp>
 
+#include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
+#include <qle/math/distributioncount.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -28,9 +32,6 @@
 #include <ql/math/kernelfunctions.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-
-#include <qle/math/nadarayawatson.hpp>
-#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -161,6 +162,38 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
     }
     dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");
+}
+
+void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& dimDistributionReport) const {
+
+    dimDistributionReport.addColumn("NettingSet", string())
+        .addColumn("TimeStep", Size())
+        .addColumn("Date", Date())
+        .addColumn("Bound", Real(), 6)
+        .addColumn("Count", Size());
+
+    constexpr Size steps = 50;
+
+    std::vector<Real> bounds;
+    std::vector<Size> counts;
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size i = 0; i < datesLoopSize_; ++i) {
+            distributionCount(nettingSetDIM_.at(nettingSet).at(i).begin(), nettingSetDIM_.at(nettingSet).at(i).end(),
+                              steps, bounds, counts);
+            for (Size j = 0; j < steps; ++j)
+                dimDistributionReport.next()
+                    .add(nettingSet)
+                    .add(i)
+                    .add(dimCube_->dates()[i])
+                    .add(bounds[j])
+                    .add(counts[j]);
+        }
+    }
+
+    dimDistributionReport.end();
+
 }
 
 } // namespace analytics

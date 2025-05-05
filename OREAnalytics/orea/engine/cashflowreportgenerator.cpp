@@ -47,7 +47,7 @@ using namespace ore::data;
 using namespace QuantLib;
 using namespace QuantExt;
 
-std::vector<TradeCashflowReportData> generateCashflowReportData(const boost::shared_ptr<ore::data::Trade>& trade,
+std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::shared_ptr<ore::data::Trade>& trade,
                                                                 const std::string& baseCurrency,
                                                                 QuantLib::ext::shared_ptr<ore::data::Market> market,
                                                                 const std::string& configuration,
@@ -382,7 +382,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const boost::sha
                                 qlIndexName = cms->swapIndex()->iborIndex()->name();
                                 usesSwaptionVol = true;
                             } else if (auto cms =
-                                           boost::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
+                                           QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
                                 swaptionTenor = cms->swapIndex()->tenor();
                                 qlIndexName = cms->swapIndex()->iborIndex()->name();
                                 usesSwaptionVol = true;

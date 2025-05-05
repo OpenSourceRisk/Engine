@@ -53,6 +53,17 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
     }
 }
 
+std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::Type t) {
+    switch (t) {
+    case InflationCapFloorVolatilityCurveConfig::Type::ZC:
+        return out << "ZC";
+    case InflationCapFloorVolatilityCurveConfig::Type::YY:
+        return out << "YY";
+    default:
+        QL_FAIL("unknown Type(" << Integer(t) << ")");
+    }
+}
+
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Type type, const QuoteType& quoteType,
     const VolatilityType& volatilityType, const bool extrapolate, const vector<string>& tenors,
@@ -80,20 +91,14 @@ void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
 
-        string type;
-        if (type_ == Type::ZC)
-            type = "ZC";
-        else if (type_ == Type::YY)
-            type = "YY";
-
         // Determine the index string to use for the quotes.
         string index = quoteIndex_.empty() ? index_ : quoteIndex_;
 
         std::stringstream ssBase;
         if (quoteType_ == QuoteType::Price)
-            ssBase << type << "_INFLATIONCAPFLOOR/PRICE/" << index << "/";
+            ssBase << type_ << "_INFLATIONCAPFLOOR/PRICE/" << index << "/";
         else
-            ssBase << type << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index << "/";
+            ssBase << type_ << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index << "/";
         string base = ssBase.str();
 
         // TODO: how to tell if atmFlag or relative flag should be true
@@ -115,7 +120,7 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index + "/" + t);
+                quotes_.push_back(to_string(type_) + "_INFLATIONCAPFLOOR/SHIFT/" + index + "/" + t);
             }
         }
     }
@@ -215,13 +220,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-
-    if (type_ == Type::ZC) {
-        XMLUtils::addChild(doc, node, "Type", "ZC");
-    } else if (type_ == Type::YY) {
-        XMLUtils::addChild(doc, node, "Type", "YY");
-    } else
-        QL_FAIL("Unknown Type in InflationCapFloorVolatilityCurveConfig::toXML()");
+    XMLUtils::addChild(doc, node, "Type", to_string(type_));
 
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "QuoteType", "Price");
