@@ -74,6 +74,7 @@ void MultiCcyCompositeInstrument::updateAdditionalResults() const {
         }
         additionalResults_["__multiplier" + postFix] = mult;
         additionalResults_["__fx_conversion" + postFix] = fx->value();
+        additionalResults_["__npv" + postFix] = inst->NPV();
     }
 }
 
