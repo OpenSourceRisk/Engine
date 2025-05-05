@@ -31,7 +31,7 @@ ANALYTICS
 - optional static regression models for scripted trade scenario calculations
 - optional recalibration of scripted trade under scenario calculations
 - add decorrelated market risk backtesting following Piterbarg and Nowaczyk:
-  Backtesting correlated quantities, Risk, September 2024
+  "Backtesting correlated quantities, Risk, September 2024"
 - add stressed cashflows report
 - add settlement delay to AMC simulation
 - add cpu affinity setting in multithreaded valuation engine
@@ -49,17 +49,17 @@ DOCUMENTATION
   (2) products (trade type description and input), (3) methodology
 - release notes removed from the user guide to avoid overlap with News.txt
 
-LANGUAGE BINDINGS & PYTHON MODULE
-
-- ORE-SWIG project integrated into the OpenSourceRisk/Engine repository (get all with a single git clone)
-- Jupyter notebook examples moved to ORE-Python examples section
-
 EXAMPLES
 
 - reorganise examples, now grouped by subject, see Examples/Readme.md
 - numbered "legacy" examples still accessible in Examples/Legacy for the time being
 - user guide discussion follows new grouping
   
+LANGUAGE BINDINGS & PYTHON MODULE
+
+- ORE-SWIG project integrated into the OpenSourceRisk/Engine repository (get all with a single git clone)
+- Jupyter notebook examples moved to ORE-Python examples section
+
 OTHER
 
 - upgrade to version 1.38 of QuantLib and QuantLib-SWIG

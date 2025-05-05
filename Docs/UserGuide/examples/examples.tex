@@ -943,6 +943,77 @@ and xva analytic configurations.
 \label{fig_ex13c_evolution}
 \end{figure}
 
+\subsubsection{Dynamic SIMM}
+
+The batch kicked off with ({\tt python run\_dim2.py}) demonstrates a prototype ``Dynamic SIMM'' implementation,
+see Input/Dim2/ore\_amccg.xml with
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Analytic type="xva">
+      ...
+      <Parameter name="dimModel">DynamicIM</Parameter>
+      ...
+    </Analytic>
+\end{minted}
+\end{listing}
+and several related new parameters in the {\tt simulation} section. The new method is embedded into AMC simulation
+and uses Algorithmic Differentiation to generate sensitivities along paths which feed into the dynamic SIMM
+calculation. Results are -- among others -- a {\tt dim\_evolution.csv} report and a new {\tt dim\_distribution.csv}
+report in Output/Dim2/AmcCg.
+
+To validate the new method we apply the ``conventional'' SIMM calculator in ORE that we have enhanced with a CRIF
+generator limited to IR/FX risks for this purpose. The {\tt run\_dim2.py} script simulates a few paths, picks one
+of the paths and extracts the simulated market data (discount and index curves, FX rates, swaption volatilities)
+and writes them to {\tt Input/DimValidation/marketdata.csv}, a market data file in ORE format, and likewise simulated
+fixings to {\tt Input/DimValidation/fixings.csv}. The script then loops over simualtion dates of that single path
+and performs a conventional SIMM run for each date (see {\tt Input/DimValidation/ore\_simm.xml}).
+This is used to check the new method's output on individual paths: When switching off model calibration and setting
+model vols close to zero in {\tt Input/Dim2/simulation.xml} and {\tt Input/Dim2/simulation\_amccg.xml}, then we basically
+``roll down the forward curve'', and both calculations should yield ther same result, though the the new method
+Figure \ref{fig_dim2_comparison_1} shows the comparison.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{examples/mpl_dim_comparison_1.pdf}
+\end{center}
+\caption{Evolution of SIMM vs Expected Dynamic Initial Margin (DIM) for a Euribor and SOFR-3M Swap, simulation with zero
+  volatility, single path in case of the SIMM benchmark, 10k paths in case of DIM.}
+\label{fig_dim2_comparison_1}
+\end{figure}
+
+Next, we use a model with non-zero vols, i.e. re-activate calibration in {\tt Input/Dim2/simulation.xml} and
+{\tt Input/Dim2/simulation\_amccg.xml}. Running another script ({\tt python run\_dim2\_cube.py}) we now generate a few
+SIMM benchmark paths and compare to the expected DIM from 10k paths, see Figure  \ref{fig_dim2_comparison_3}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{examples/mpl_dim_comparison_3.pdf}
+\end{center}
+\caption{Evolution of SIMM vs Expected Dynamic Initial Margin (DIM) for a Euribor and SOFR-3M Swap;
+  simulation with non-zero volatility, three paths in case of the SIMM benchmark, 10k paths in case of DIM.}
+\label{fig_dim2_comparison_3}
+\end{figure}
+
+Preliminary note on performance:
+\begin{itemize}
+\item The script takes about one minute to generate the benchmark SIMM evolution on a single path with 120 time steps
+  for the example above
+\item Dynamic SIMM takes about 2 minutes for the expectation across 10k paths, on the same hardware (single core, Macbook Pro M2 Max),
+  a speedup factor of 5000 compared to the pedestrian benchmark
+\end{itemize}
+
+TODO:
+\begin{itemize}
+\item Compare a single-path DIM to benchmark with non-zero vol
+\item Show effect of IR volatility on expected DIM evolution
+\item Show FX Option and Swaption results
+\item Extend performance discussion, scaling with portfolio size
+\item Show Dynamic SIMM distribution
+\item Compare average Dynamic SIMM to scaled regression IM
+\item Outlook
+\end{itemize}
+
 \subsection{Exposure}\label{example:exposure}
 
 This section demonstrates exposure simulation and CVA for uncollateralised single trades across ORE's product range, mostly vanilla products.
