@@ -120,11 +120,11 @@
       <ShiftScheme>Forward</ShiftScheme>
       <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
       <ParConversion>
-        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
         <SingleCurve>true</SingleCurve>
         <Conventions>
           <Convention id="DEP">GBP-ON-DEPOSIT</Convention>
-          <Convention id="OIS">GBP-SONIA-3M-SWAP</Convention>
+          <Convention id="IRS">GBP-SONIA-3M-SWAP</Convention>
         </Conventions>
       </ParConversion>
     </IndexCurve>

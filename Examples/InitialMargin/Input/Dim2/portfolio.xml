@@ -213,6 +213,7 @@
     </SwapData>
   </Trade>
   -->
+
   <Trade id="Swap_SOFR_3M">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -282,6 +283,7 @@
 	</LegData>
     </SwapData>
   </Trade>
+
   <!--
   <Trade id="FXFWD_EURUSD">
     <TradeType>FxForward</TradeType>
@@ -548,5 +550,6 @@
 	</LegData>
     </SwapData>
   </Trade>
--->
+  -->
+  
 </Portfolio>

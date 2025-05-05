@@ -33,11 +33,13 @@ administration, through providing an initial release and a series of subsequent 
 analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021,
 Acadia \cite{acadia} has been committed to continue the sponsorship. The Open Source Risk project work continues with
 former Quaternion operating as Acadia's Quantitative Services unit. And with Acadia's acquisiton by London Stock
-Exchange Group (LSEG) in 2023, the journey continues under the roof of LSEG Post Trade.
+Exchange Group (LSEG) \cite{lseg} in 2023, the journey continues under the roof of LSEG Post Trade Solutions.
 
-The community is invited to contribute to ORE, for example through
-feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
-enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
+The community is invited to contribute to ORE, through feedback, discussions and suggested enhancements. Our forum 
+for that has moved to github, \url{https://github.com/OpenSourceRisk/Engine/discussions}. Issues can be reported at
+\url{https://github.com/OpenSourceRisk/Engine/Issues}. And contributions to the source code can be submitted via
+pull requests at \url{https://github.com/OpenSourceRisk/Engine/pulls}.
+See also the FAQ section on the ORE site \cite{ORE} on how to get involved.
 
 \subsection{Scope}
 
@@ -71,7 +73,8 @@ The market risk framework provides
 across all asset classes and products. 
 
 \medskip
-Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 to cover
+Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with
+a series of quarterly releases since version 7 to cover
 \begin{itemize}
 \item "First Generation" Equity and FX Exotics, released September with ORE v7
 \item Commodity products (Swaps, Basis Swaps, Average Price Options, Swaptions), released December 22 with ORE v8
@@ -92,6 +95,13 @@ These contributions were accompanied by analytics extensions to enhance ORE usab
 \item Portfolio Credit Model, released in June 23 with ORE v10
 \item ISDA's Standard Initial Margin Model (SIMM), released in June 23 with ORE v10
 \item Historical Simulation VaR, P\&L and P\&L Explain, released in May 24 with ORE v12
+\end{itemize}
+
+Recent analytics additions are
+\begin{itemize}
+\item XVA Risk with sensitivities, P\&L and P\&L explain
+\item Regulatory Capital for CCR and CVA Risk (SA-CCR, BA-CVA, SA-CVA)
+\item Dynamic SIMM based on path-wise sensitivities computed with Algorithmic Differentiation (AAD)
 \end{itemize}
 
 \medskip 
@@ -179,6 +189,7 @@ a cross currency model consisting of an arbitrage free combination of Linear Gau
 and lognormal processes for FX rates and EQ prices, Dodgson-Kainth (or Jarrow-Yildirim) models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors. With the 8th release, Commodity simulation has been added, as well as the foundation for a multi-factor Hull-White based IR/FX/COM simulation model. 
 
 \subsection{ORE in Python or Java}
+\label{sec:intro_wheels}
 
 ORE is written in C++ and comes with a command line executable {\tt ore.exe} that supports batch processes. 
 But since early versions of ORE we also provide language bindings following QuantLib's example using SWIG, in ORE's case with focus on Python and Java modules. 
@@ -191,17 +202,21 @@ Since ORE v9, Python {\em wheels} are provided for each release, so that users c
 \medskip
 See section \ref{example:orepython} on how to use ORE-Python. 
 
+\medskip
+Note that, technically, the ORE SWIG module source code has moved into the ORE Engine repository with release 13, see directory ORE-SWIG there. And we have removed the separate repository formerly located at https://github.com/OpenSourceRisk/ORE-SWIG.
+
 \subsection{Roadmap}
 
-It is planned that subsequent ORE releases will also provide the calculation of {\bf regulatory capital charges} 
+ORE grows with community contributions and the demand of clients who utilise ORE to replace existing risk applications with the help of the Quant Services team at Acadia/LSEG.
+
+Moreover, it is generally planned that subsequent ORE releases will extend the scope of the {\bf Regulatory Capital} analytics in ORE, with
 \begin{itemize}
-\item for Counterparty Credit Risk under the standardised approach (SA-CCR)
-\item for Market Risk (SMRC, FRTB-SA)
-\item for CVA Risk (BA-CVA, SA-CVA)
+\item broader product scope of SA-CCR and BA-CVA
+\item addition of Market Risk capital (FRTB-SA)
 \end{itemize}
 
 {\bf Performance:} ORE v12 contains applications of {\bf AAD} for sensitivity analysis, CVA sensitivity (proof-of concept stage),
-as well as applications of {\bf GPUs} to parallelize computations (see Examples 56 and 61), with significant
+as well as applications of {\bf GPUs} to parallelize computations (see legacy Examples 56 and 61), with significant
 speed-ups. Both areas are active work in progress, and further enhancements and tests should be released with the next versions.
 
 {\bf ORE Python:} Moreover, there is demand among ORE users for extended coverage of the ORE-Python version, so that we also expect steady growth
@@ -215,12 +230,15 @@ for demonstration purposes and to encourage the community to extend and contribu
 \begin{itemize}
 \item Open Source Risk Project site: \url{http://www.opensourcerisk.org}
 \item Source code and releases: \url{https://github.com/opensourcerisk/engine}
-\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
+% Relocated into the engine repository
+%\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
-\item Forum: \url{http://www.opensourcerisk.org/forum}
+% Relocated to github discusions
+%\item Forum: \url{http://www.opensourcerisk.org/forum}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \item ORE Product Catalogue \cite{products}
 \item ORE Methodology \cite{methods}
+\item ORE Academy on youtube: \url{https://www.youtube.com/channel/UCrCpkb1-s3pxKd7U-YgJulA}
 \end{itemize}
  
 \subsubsection*{Organisation of this document}
@@ -234,4 +252,4 @@ parametrisation.
 
 The description of products, pricing and trade representration in ORE XML has been carved out and moved to \cite{products}.
 
-And finally, a summary of methodology applied in ORE can be found in \cite{methods}.
+And finally, a summary of methodologies applied in ORE can be found in \cite{methods}.

@@ -1,6 +1,6 @@
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2035-03-12</Parameter>
+    <Parameter name="asofDate">2025-03-10</Parameter>
     <Parameter name="inputPath">Input/DimValidation</Parameter>
     <Parameter name="outputPath">Output/DimValidation</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
@@ -55,9 +55,7 @@
     <Analytic type="simm">
       <Parameter name="active">Y</Parameter>
       <Parameter name="version">2.7</Parameter>
-      <!--<Parameter name="crif">../../Output/DimValidation/crif.csv</Parameter>-->
       <Parameter name="calculationCurrency">EUR</Parameter>
-      <!--<Parameter name="enforceIMRegulations">Y</Parameter>-->
       <Parameter name="mporDays">10</Parameter>
     </Analytic>
   </Analytics>
