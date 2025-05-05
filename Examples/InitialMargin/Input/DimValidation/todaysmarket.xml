@@ -50,10 +50,12 @@
 	<YieldCurves id="default"/>
 	<DiscountingCurves id="default">
 		<DiscountingCurve currency="EUR">Yield/EUR/EUR</DiscountingCurve>
+		<DiscountingCurve currency="GBP">Yield/GBP/GBP</DiscountingCurve>
 		<DiscountingCurve currency="USD">Yield/USD/USD</DiscountingCurve>
 	</DiscountingCurves>
 	<DiscountingCurves id="inccy">
 		<DiscountingCurve currency="EUR">Yield/EUR/EUR</DiscountingCurve>
+		<DiscountingCurve currency="GBP">Yield/GBP/GBP</DiscountingCurve>
 		<DiscountingCurve currency="USD">Yield/USD/USD</DiscountingCurve>
 	</DiscountingCurves>
 	<IndexForwardingCurves id="default">
@@ -61,6 +63,10 @@
 		<Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
 		<Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
 		<Index name="EUR-EURIBOR-6M">Yield/EUR/EUR-EURIBOR-6M</Index>
+		<Index name="GBP-LIBOR-3M">Yield/GBP/GBP-LIBOR-3M</Index>
+		<Index name="GBP-LIBOR-6M">Yield/GBP/GBP-LIBOR-6M</Index>
+		<Index name="GBP-SONIA">Yield/GBP/GBP-SONIA</Index>
+		<Index name="GBP-SONIA-3M">Yield/GBP/GBP-SONIA-3M</Index>
 		<Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
 		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
 		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
@@ -96,10 +102,11 @@
 	</FxSpots>
 	<FxVolatilities id="default">
 		<FxVolatility pair="USDEUR">FXVolatility/USD/EUR/USDEUR</FxVolatility>
+		<FxVolatility pair="GBPEUR">FXVolatility/GBP/EUR/GBPEUR</FxVolatility>
 	</FxVolatilities>
 	<SwaptionVolatilities id="default">
 		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
-		<SwaptionVolatility key="EUR-EURIBOR-3M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="GBP">SwaptionVolatility/GBP/GBP</SwaptionVolatility>
 		<SwaptionVolatility key="USD">SwaptionVolatility/USD/USD</SwaptionVolatility>
 	</SwaptionVolatilities>
 	<YieldVolatilities id="default"/>

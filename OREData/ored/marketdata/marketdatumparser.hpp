@@ -56,17 +56,25 @@ Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar 
 /*!
   \ingroup marketdata
  */
-boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString> parseFxPeriod(const string& s);
+boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> parseFxPeriod(const string& s);
 
+QuantLib::Period
+fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term);
 
-QuantLib::Period fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term);
+QuantLib::Period
+fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
+                     const QuantLib::ext::shared_ptr<FXConvention>& fxConvention = nullptr);
 
-
-QuantLib::Period fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
-                                      const QuantLib::ext::shared_ptr<FXConvention>& fxConvention = nullptr);
-
-bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
+bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
                           const FXForwardQuote::FxFwdString& fxfwdString);
+
+QuantLib::Date
+fxFwdQuoteDate(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term);
+
+bool matchFxFwdDate(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
+                    const Date& d);
+
+bool isFxFwdDateBased(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term);
 
 } // namespace data
 } // namespace ore

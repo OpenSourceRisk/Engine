@@ -452,6 +452,15 @@ pair<bool, QuantLib::ext::shared_ptr<ZeroInflationIndex>> isInflationIndex(const
     return make_pair(true, index);
 }
 
+bool isIborIndex(const string& indexName) {
+    try {
+        parseIborIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
 bool isEquityIndex(const string& indexName) {
     try {
         parseEquityIndex(indexName);

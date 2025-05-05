@@ -630,8 +630,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
             inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(), true,
-            true);
+            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
+            inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -886,8 +886,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
             inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(), true,
-            true);
+            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
+            inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.run();
 
@@ -1163,6 +1163,11 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 postProcess_->exportDimEvolution(*dimEvolutionReport);
                 analytic()->addReport(LABEL, "dim_evolution", dimEvolutionReport);
+
+                // Generate DIM distribution report
+                auto dimDistributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                postProcess_->exportDimDistribution(*dimDistributionReport);
+                analytic()->addReport(LABEL, "dim_distribution", dimDistributionReport);
 
                 // Generate DIM regression reports
                 vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;

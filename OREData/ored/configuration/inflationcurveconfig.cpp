@@ -27,6 +27,17 @@ using namespace ore::data;
 
 namespace ore {
 namespace data {
+    
+std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t) {
+    switch (t) {
+    case InflationCurveConfig::Type::ZC:
+        return out << "ZC";
+    case InflationCurveConfig::Type::YY:
+        return out << "YY";
+    default:
+        QL_FAIL("unknown Type(" << Integer(t) << ")");
+    }
+}
 
 InflationCurveConfig::InflationCurveConfig(
     const string& curveID, const string& curveDescription, const string& nominalTermStructure, const Type type,
@@ -126,13 +137,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "NominalTermStructure", nominalTermStructure_);
-
-    if (type_ == Type::ZC) {
-        XMLUtils::addChild(doc, node, "Type", "ZC");
-    } else if (type_ == Type::YY) {
-        XMLUtils::addChild(doc, node, "Type", "YY");
-    } else
-        QL_FAIL("Unknown Type in InflationCurveConfig::toXML()");
+    XMLUtils::addChild(doc, node, "Type", to_string(type_));
 
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", swapQuotes_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);

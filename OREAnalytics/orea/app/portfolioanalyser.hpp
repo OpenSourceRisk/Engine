@@ -18,6 +18,7 @@
 
 #include <orea/engine/dependencymarket.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
@@ -39,7 +40,7 @@ public:
                       const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                       const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
-                      bool recordSecuritySpecificCreditCurves = false);
+                      bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
     //! Check if the portfolio has risk factors of a given type
     bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
@@ -49,6 +50,10 @@ public:
     //! Check if the portfolio has market objects of a given type
     bool hasMarketObjectType(const ore::data::MarketObject& marketObject) const {
         return market_->hasMarketObjectType(marketObject);
+    }
+    //! Return the rrisk factor names per risk factor key type in the portfolio
+    std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const {
+        return market_->riskFactors();
     }
 
     //! Return the risk factor names of the given risk factor type in the portfolio
@@ -61,8 +66,9 @@ public:
 
     //! Return all of the market objects needed by the portfolio
     std::map<ore::data::MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const {
-        return market_->marketObjects(config);
+    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const {
+        return marketObjects_;
     }
 
     //! Return the names of swap indices needed by the portfolio
@@ -87,13 +93,20 @@ public:
 
     //! return underlying indices of portfolio
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const { return underlyingIndices_; }
+    
+    //! add any missing market dependencies
+    void addDependencies();
 
 private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<DependencyMarket> market_;
+    mutable std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> marketObjects_;
     std::set<std::string> counterparties_;
     QuantLib::Date maturity_;
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
+    std::string baseCcy_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    std::string baseCcyDiscountCurve_;
 };
 
 } // namespace analytics

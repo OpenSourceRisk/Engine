@@ -90,12 +90,13 @@ public:
     map<string, QuantLib::ext::shared_ptr<Convention>> conventions_;
     QuantLib::ext::shared_ptr <CurveConfigurations> curveConfigs_;
     QuantLib::ext::shared_ptr <BasicReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> market_;
     string counterpartyId_;
     string nettingSetId_;
 
 private:
-    string getEndDate(string maturity, string startDate, Calendar cal);
-    LegData buildLeg(boost::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer);
+    string getEndDate(string maturity, string startDate, Calendar cal = QuantLib::NullCalendar());
+    LegData buildLeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer);
     string frequencyToTenor(const QuantLib::Frequency& freq);
     LegData buildCPILeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity, string currency,
                         Real baseRate, Real cpiRate, bool isPayer, std::map<string, string> mapPairs = {});

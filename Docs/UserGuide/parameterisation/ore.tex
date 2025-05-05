@@ -447,6 +447,35 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
 \label{lst:ore_xva}
 \end{listing}
 
+The PFE analytic type is the same as the XVA analytic, however it only returns results specific to PFE and only requires a subset of the XVA parameters.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="pfe">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="csaFile">netting.xml</Parameter>
+    <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="hyperCube">Y</Parameter>
+    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="exposureProfilesByTrade">Y</Parameter>
+    <Parameter name="quantile">0.95</Parameter>
+    <Parameter name="calculationType">Symmetric</Parameter>
+    <Parameter name="allocationMethod">None</Parameter>
+    <Parameter name="marginalAllocationLimit">1.0</Parameter>
+    <Parameter name="exerciseNextBreak">N</Parameter>
+    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: xva}
+\label{lst:ore_xva}
+\end{listing}
+
 Parameters:
 \begin{itemize}
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
@@ -650,6 +679,36 @@ Finally, the {\tt parStressConversion} analytic carves out the generation of a s
 \caption{ORE analytic: Par Stress Conversion}
 \label{lst:ore_parstressconversion}
 \end{listing}
+
+The new analytic type \emph{SENSITIVITY\_STRESS} combines the existing stresstest and sensitivity analysis frameworks. During the sensitivity calculation it replaces todaysMarket with a SimulationMarket in accordance with the stresstest scenario and runs sensitivity analytic afterwards. The analytic loops over all provided stresstest scenarios.
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <Analytics>
+      <Analytic type="sensitivityStress">
+        <Parameter name="active">Y</Parameter>
+        <Parameter name="marketConfigFile">simulation.xml</Parameter>
+        <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+        <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+        <Parameter name="calcBaseScenario">N</Parameter>
+      </Analytic>
+    </Analytics>
+  \end{minted}
+  \caption{ORE analytic: Stressed Sensitivity Analysis}
+  \label{lst:ore_sensistress}
+  \end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+  \item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+    see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+    \ref{sec:sim_market} for a detailed description).
+  \item {\tt stressConfigFile:} Stress Scenario definition, see section \ref{sec:stress}
+  \item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+  \item {\tt calcBaseScenario}: If set to true, unshifted BASE scenario will also be calculated. Defaults to false.
+\end{itemize}
 
 See the examples in sections \ref{example:marketrisk} for a demonstrations of these analytics.
 

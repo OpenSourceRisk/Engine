@@ -373,6 +373,7 @@ utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
+utilities/dependencies.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
 utilities/formulaparser.cpp
@@ -794,6 +795,7 @@ utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
+utilities/dependencies.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
 utilities/formulaparser.hpp
