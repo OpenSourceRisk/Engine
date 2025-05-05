@@ -294,20 +294,28 @@ ore/QuantLib/CMakeLists.txt):
 %  \label{tab::cmakeoptions}
 %\end{table}
 
-Note that there is a longer list of options named QL\_... and default settings in QuantLib's ore/QuantLib/CMakeLists.txt.
+The CMake build system is configured by calling {\tt cmake} in the command line with a series of
+command line parameters {\tt -D} which allow overriding the defaults above.
+The typical configuration is as follows
 
-The default CMake build includes the ORE Python module already which can be used to run ORE Python locally as shown in
-section \ref{example:orepython}.
+\medskip
+    {\tt cmake -D QL\_ENABLE\_SESSIONS=ON \bs } \\
+    \hspace{1cm} {\tt -D ORE\_USE\_ZLIB=ON \bs}  \\
+    \hspace{1cm} {\tt -D BOOST\_ROOT=<path/to/boost/includes> \bs } \\
+    \hspace{1cm} {\tt -D BOOST\_LIBRARIES=<path/to/boost/libraries> \bs } \\
+    \hspace{1cm} {\tt -D Python\_ROOT=<path/to/Python.h> \bs } \\
+    \hspace{1cm} {\tt -D Python\_LIBRARY=<path/to/PythonLibrary> } \\
+    \hspace{1cm} {\tt etc.}
+
+\medskip
+where the latter four help CMake locating Boost and Python includes and libraries, when CMake does
+not automatically.
+  
+\medskip
+The default CMake build includes the ORE Python module already (since {\tt ORE\_BUILD\_SWIG = ON} by default) which can
+be used to run ORE Python locally as shown in section \ref{example:orepython}.
 There are alternative ways of building ORE Python, in particular building Python wheels for distribution.
 Section \ref{sec:oreswig} points to related tutorials.
-
-
-All options (ORE's and QuantLib's) can be amended by editing the respective files, or 
-by calling {\tt cmake} (see below) with corresponding command line switches such as \\
-\medskip
-    {\tt cmake ..  -D QL\_ENABLE\_SESSIONS=ON  -D ORE\_USE\_ZLIB=ON  -D QL\_USE\_PCH=ON} \\
-\medskip
-to override any default settings in ORE or QuantLib.
 
 \subsubsection*{Windows}
 
