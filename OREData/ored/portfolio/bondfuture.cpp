@@ -134,7 +134,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(secList_.size() > 0, "BondFuture::build no DeliveryBasket given");
     ctdId_ = secList_.front();
     double ctdCf = Real();
-    if (secList_.size() > 1){
+    if (secList_.size() > 1) {
         auto res = identifyCtdBond(engineFactory, expiry);
         ctdId_ = res.first;
         ctdCf = res.second;
@@ -167,7 +167,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     double compensationPayment = 0.0;      // no compensation payments for bondfutures
     Date compensationPaymentDate = Date(); // no compensation payments for bondfutures
 
-    //define bondspread id, differentiate for purpose spreadimply (ctd id) or not (future id)
+    // define bondspread id, differentiate for purpose spreadimply (ctd id) or not (future id)
     string bondSpreadId = contractName_;
     auto it = engineFactory->engineData()->globalParameters().find("RunType");
     if (it != engineFactory->engineData()->globalParameters().end() && it->second == "BondSpreadImply")
@@ -180,8 +180,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
                                          : ext::make_shared<ForwardBondTypePayoff>(Position::Short, amount);
 
     ext::shared_ptr<Instrument> fwdBond =
-        ext::make_shared<ForwardBond>(ctdUnderlying_.bond, payoff, expiry, settlementDate,isPhysicallySettled,
-            settlementDirty, compensationPayment, compensationPaymentDate, contractNotional_);
+        ext::make_shared<ForwardBond>(ctdUnderlying_.bond, payoff, expiry, settlementDate, isPhysicallySettled,
+                                      settlementDirty, compensationPayment, compensationPaymentDate, contractNotional_);
 
     ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder = ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder);
     QL_REQUIRE(fwdBondBuilder, "BondFuture::build(): could not cast FwdBondEngineBuilder: " << id());
@@ -489,7 +489,7 @@ pair<string, double> BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFac
                     auto fixedLegData =
                         ext::dynamic_pointer_cast<FixedLegData>(bond.bondData.coupons().front().concreteLegData());
                     QL_REQUIRE(fixedLegData, "expecting FixedLegData object");
-                    if(fixedLegData->rates().size() > 1)
+                    if (fixedLegData->rates().size() > 1)
                         ALOG("calc conversionFactor: there is a vector of rates, took the first. sec " << sec);
                     coupon = fixedLegData->rates().front();
                 } else {
