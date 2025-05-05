@@ -336,6 +336,9 @@ std::size_t LgmCG::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightInd
     std::size_t resultNode;
 
     if (cap == Null<Real>() && floor == Null<Real>()) {
+
+        // no cap / floor
+
         resultNode = swapletRate;
 
     } else {
@@ -384,7 +387,188 @@ std::size_t LgmCG::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex
                                   const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
                                   const bool localCapFloor, const bool nakedOption, const Date& t,
                                   const std::size_t x) const {
-    QL_FAIL("not implemented");
+
+    // collect rate characteristics in hash value for caching
+
+    std::size_t hash = 0;
+    hash = std::accumulate(fixingDates.begin(), fixingDates.end(), hash,
+                           [](std::size_t a, const Date& b) { return boost::hash_combine(a, b.serialNumber()), a; });
+    hash = std::accumulate(valueDates.begin(), valueDates.end(), hash,
+                           [](std::size_t a, const Date& b) { return boost::hash_combine(a, b.serialNumber()), a; });
+    hash = std::accumulate(dt.begin(), dt.end(), hash,
+                           [](std::size_t a, const double b) { return boost::hash_combine(a, b), a; });
+    boost::hash_combine(hash, rateCutoff);
+    boost::hash_combine(hash, includeSpread);
+    boost::hash_combine(hash, spread);
+    boost::hash_combine(hash, gearing);
+    boost::hash_combine(hash, lookback.length());
+    boost::hash_combine(hash, lookback.units());
+    boost::hash_combine(hash, cap);
+    boost::hash_combine(hash, floor);
+    boost::hash_combine(hash, localCapFloor);
+    boost::hash_combine(hash, nakedOption);
+
+    // id for caching
+
+    ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::complexRate, index->name(), {}, t, {}, {}, 0, 0, hash);
+
+    if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
+        return m->node();
+
+    // calculate
+
+    QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
+               "LgmCG::compoundedOnRate(): if include spread = true, only a gearing 1.0 is allowed - scale "
+               "the notional in this case instead.");
+
+    QL_REQUIRE(rateCutoff < dt.size(), "LgmCG::compoundedOnRate(): rate cutoff ("
+                                           << rateCutoff << ") must be less than number of fixings in period ("
+                                           << dt.size() << ")");
+
+    /* See comment on t as in compoundedOnRate(), above applies here */
+
+    // the following is similar to the code in the overnight index coupon pricer
+
+    Size i = 0, n = dt.size();
+    Size nCutoff = n - rateCutoff;
+    std::size_t accumulatedRate = cg_const(g_, 0.0);
+
+    Date today = Settings::instance().evaluationDate();
+
+    while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+
+        Date fixingDate = fixingDates[std::min(i, nCutoff)];
+
+        std::size_t pastFixing = addModelParameter(
+            g_, modelParameters_,
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fix, index->name(), {}, fixingDate),
+            [index, fixingDate]() { return index->fixing(fixingDate); });
+
+        accumulatedRate = cg_add(g_, accumulatedRate, cg_mult(g_, pastFixing, cg_const(g_, dt[i])));
+        ++i;
+    }
+
+    // i < n && fixingDates[std::min(i, nCutoff)] == today is skipped, i.e. we assume that this fixing is projected
+
+    std::size_t accumulatedRateLgm = accumulatedRate;
+
+    if (i < n) {
+
+        Handle<YieldTermStructure> curve = index->forwardingTermStructure();
+        QL_REQUIRE(!curve.empty(),
+                   "LgmVectorised::compoundedOnRate(): null term structure set to this instance of " << index->name());
+
+        // the dates associated to the projection on the T0 curve
+
+        Date d1 = valueDates[i];
+        Date d2 = valueDates[std::max(nCutoff, i)];
+
+        std::size_t startDiscount = addModelParameter(
+            g_, modelParameters_,
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d1),
+            [curve, d1] { return curve->discount(d1); });
+        std::size_t endDiscount = addModelParameter(
+            g_, modelParameters_,
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d2),
+            [curve, d2] { return curve->discount(d2); });
+
+        if (nCutoff < n) {
+            Date cutoffDate = valueDates[nCutoff];
+            std::size_t discountCutoffDate =
+                cg_div(g_,
+                       addModelParameter(g_, modelParameters_,
+                                         ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                                 "fwd_" + index->name(), cutoffDate + 1),
+                                         [curve, cutoffDate] { return curve->discount(cutoffDate + 1); }),
+                       addModelParameter(g_, modelParameters_,
+                                         ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                                 "fwd_" + index->name(), cutoffDate),
+                                         [curve, cutoffDate] { return curve->discount(cutoffDate); }));
+            endDiscount = cg_mult(g_, endDiscount, cg_pow(g_, discountCutoffDate, valueDates[n] - valueDates[nCutoff]));
+        }
+
+        // the times we use for the projection in the LGM model, if t > d1 they are displaced by (t-d1)
+
+        Date d1_lgm = d1, d2_lgm = d2;
+        if (t > d1) {
+            d1_lgm += t - d1;
+            d2_lgm += t - d2;
+        }
+
+        // the discount factors estimated in the lgm model
+
+        std::size_t disc1 = reducedDiscountBond(t, d1_lgm, x, curve, "fwd_" + index->name());
+        std::size_t disc2 = reducedDiscountBond(t, d2_lgm, x, curve, "fwd_" + index->name());
+
+        // apply a correction to the discount factors
+
+        disc1 = cg_mult(g_, disc1,
+                        cg_div(g_, startDiscount,
+                               addModelParameter(g_, modelParameters_,
+                                                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                                         "fwd_" + index->name(), d1_lgm),
+                                                 [curve, d1_lgm] { return curve->discount(d1_lgm); })));
+        disc2 = cg_mult(g_, disc2,
+                        cg_div(g_, endDiscount,
+                               addModelParameter(g_, modelParameters_,
+                                                 ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                                         "fwd_" + index->name(), d2_lgm),
+                                                 [curve, d2_lgm] { return curve->discount(d2_lgm); })));
+
+        // continue with the usual computation
+
+        accumulatedRateLgm = cg_add(g_, accumulatedRateLgm, cg_log(g_, cg_div(g_, disc1, disc2)));
+    }
+
+    double tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
+    std::size_t rate = cg_add(g_, cg_mult(g_, cg_const(g_, gearing / tau), accumulatedRateLgm), cg_const(g_, spread));
+
+    std::size_t resultNode;
+
+    if (cap == Null<Real>() && floor == Null<Real>()) {
+
+        // no cap / floor
+
+        resultNode = rate;
+
+    } else {
+
+        // handle cap / floor - we compute the intrinsic value only
+
+        if (gearing < 0.0) {
+            std::swap(cap, floor);
+        }
+
+        std::size_t forwardRate = cg_div(g_, cg_subtract(g_, rate, cg_const(g_, spread)), cg_const(g_, gearing));
+        std::size_t floorletRate = cg_const(g_, 0.0);
+        std::size_t capletRate = cg_const(g_, 0.0);
+
+        if (nakedOption)
+            rate = cg_const(g_, 0.0);
+
+        if (floor != Null<Real>()) {
+            // ignore localCapFloor, treat as global
+            std::size_t effectiveStrike =
+                cg_div(g_, cg_subtract(g_, cg_const(g_, floor), cg_const(g_, spread)), cg_const(g_, gearing));
+            floorletRate = cg_mult(g_, cg_const(g_, gearing),
+                                   cg_max(g_, cg_const(g_, 0.0), cg_subtract(g_, effectiveStrike, forwardRate)));
+        }
+
+        if (cap != Null<Real>()) {
+            std::size_t effectiveStrike =
+                cg_div(g_, cg_subtract(g_, cg_const(g_, cap), cg_const(g_, spread)), cg_const(g_, gearing));
+            capletRate = cg_mult(g_, cg_const(g_, gearing),
+                                 cg_max(g_, cg_const(g_, 0.0), cg_subtract(g_, forwardRate, effectiveStrike)));
+            if (nakedOption && floor == Null<Real>())
+                capletRate = cg_negative(g_, capletRate);
+        }
+
+        resultNode = cg_add(g_, {rate, floorletRate, cg_negative(g_, capletRate)});
+    }
+
+    id.setNode(resultNode);
+    cachedParameters_.insert(id);
+    return id.node();
 }
 
 } // namespace ore::data
