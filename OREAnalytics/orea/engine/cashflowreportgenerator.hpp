@@ -58,7 +58,7 @@ struct TradeCashflowReportData {
     double effectiveCapVolatility;
 };
 
-std::vector<TradeCashflowReportData> generateCashflowReportData(const boost::shared_ptr<ore::data::Trade>& trade,
+std::vector<TradeCashflowReportData> generateCashflowReportData(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
                                                                 const std::string& baseCurrency,
                                                                 QuantLib::ext::shared_ptr<ore::data::Market> market,
                                                                 const std::string& configuration,

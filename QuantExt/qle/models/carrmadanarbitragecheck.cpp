@@ -23,6 +23,7 @@
 
 #include <numeric>
 #include <sstream>
+#include <algorithm>
 
 namespace QuantExt {
 

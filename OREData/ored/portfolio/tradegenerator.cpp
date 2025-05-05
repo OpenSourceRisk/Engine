@@ -588,7 +588,7 @@ string TradeGenerator::getEndDate(string maturity, string startDate, Calendar ca
     }
 }
 
-LegData TradeGenerator::buildLeg(boost::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer) {
+LegData TradeGenerator::buildLeg(ext::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer) {
     ore::data::LegData leg;
     switch (conv->type()) {
     case Convention::Type::OIS: {

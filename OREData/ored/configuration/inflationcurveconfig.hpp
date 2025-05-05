@@ -63,7 +63,7 @@ public:
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }
-    const Type& type() const { return type_; }
+    Type getType() const { return type_; }
     const string& conventions() const { return conventions_; }
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
@@ -122,5 +122,8 @@ private:
     vector<double> overrideSeasonalityFactors_;
     InterpolationVariable interpolationVariable_ = InterpolationVariable::ZeroRate;
 };
+
+std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t);
+
 } // namespace data
 } // namespace ore
