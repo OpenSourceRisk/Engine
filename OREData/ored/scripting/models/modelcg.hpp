@@ -62,13 +62,13 @@ public:
             dsc,                     // T0 ir discount
             fwdCompAvg,              // T0 compounded / avg ir rate (only bs)
             div,                     // T0 div yield dsc factor (only bs)
-            rfr,                     // T0 rfr       dsc factor (only gs)
+            rfr,                     // T0 rfr       dsc factor (only bs)
             defaultProb,             // T0 default prob
             lgm_H,                   // lgm1f parameters (only gcam)
             lgm_Hprime,              // ...
             lgm_zeta,                // ...
             fxbs_sigma,              // fxbs vol parameter (only gcam)
-            logX0,                   // stoch process log initial value
+            logX0,                   // stoch process log initial value (only bs)
             logFxSpot,               // log fx spot (initial value from T0)
             sqrtCorr,                // model sqrt correlation
             sqrtCov,                 // model sqrt covariance
