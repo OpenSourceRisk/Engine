@@ -11,9 +11,12 @@ jobs:
     runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
-    - name: get QuantLib
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }}  
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Install Boost
       run: |
         curl -O -L https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz

@@ -21,9 +21,12 @@ jobs:
             boost-lib: 64
     steps:
     - uses: actions/checkout@v4
-    - name: get QuantLib and QuantLib-SWIG
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
+    #- name: get QuantLib and QuantLib-SWIG
+    #  run: |
+    #    git submodule update --init --recursive
     - name: zlib
       run: |
         $Url = "https://www.zlib.net/zlib131.zip"
