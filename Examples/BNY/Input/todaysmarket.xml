@@ -72,7 +72,13 @@
 		<CommodityVolatilitiesId/>
 		<CorrelationsId/>
 	</Configuration>
-	<DiscountingCurves id="default">
+	<YieldCurves id="default">
+		<YieldCurve name="AUD-IN-USD">Yield/AUD/AUD-IN-USD</YieldCurve>
+		<YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
+		<YieldCurve name="GBP-IN-USD">Yield/GBP/GBP-IN-USD</YieldCurve>
+		<YieldCurve name="JPY-IN-USD">Yield/JPY/JPY-IN-USD</YieldCurve>
+	</YieldCurves>
+    <DiscountingCurves id="default">
 		<DiscountingCurve currency="AUD">Yield/AUD/AUD-AONIA</DiscountingCurve>
 		<DiscountingCurve currency="EUR">Yield/EUR/EUR-ESTER</DiscountingCurve>
 		<DiscountingCurve currency="GBP">Yield/GBP/GBP-SONIA</DiscountingCurve>
@@ -118,12 +124,6 @@
 		<Index name="JPY-LIBOR-1M">Yield/JPY/JPY-LIBOR-1M</Index>
 		<Index name="JPY-LIBOR-6M">Yield/JPY/JPY-LIBOR-6M</Index>
 	</IndexForwardingCurves>
-	<YieldCurves id="default">
-		<YieldCurve name="AUD-IN-USD">Yield/AUD/AUD-IN-USD</YieldCurve>
-		<YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
-		<YieldCurve name="GBP-IN-USD">Yield/GBP/GBP-IN-USD</YieldCurve>
-		<YieldCurve name="JPY-IN-USD">Yield/JPY/JPY-IN-USD</YieldCurve>
-	</YieldCurves>
 	<SwapIndexCurves id="default">
 		<SwapIndex name="USD-CMS-SOFR-1Y">
 			<Discounting>USD-SOFR</Discounting>
@@ -162,6 +162,18 @@
 			<Discounting>AUD-AONIA</Discounting>
 		</SwapIndex>
 	</SwapIndexCurves>
+    <FxSpots id="default">
+		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+		<FxSpot pair="USDJPY">FX/USD/JPY</FxSpot>
+		<FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
+		<FxSpot pair="AUDUSD">FX/AUD/USD</FxSpot>
+	</FxSpots>
+	<FxVolatilities id="default">
+		<FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+		<FxVolatility pair="USDJPY">FXVolatility/USD/JPY/USDJPY</FxVolatility>
+		<FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD</FxVolatility>
+		<FxVolatility pair="AUDUSD">FXVolatility/AUD/USD/AUDUSD</FxVolatility>
+	</FxVolatilities>
 	<SwaptionVolatilities id="default">
 		<SwaptionVolatility key="USD">SwaptionVolatility/USD/USD-SOFR</SwaptionVolatility>
 		<SwaptionVolatility key="USD-SOFR">SwaptionVolatility/USD/USD-SOFR</SwaptionVolatility>
@@ -179,19 +191,7 @@
 		<CapFloorVolatility key="USD-LIBOR-6M">CapFloorVolatility/USD/USD-SOFR</CapFloorVolatility>
 		<CapFloorVolatility key="USD-SIFMA">CapFloorVolatility/USD/USD-SOFR</CapFloorVolatility>
 		<CapFloorVolatility key="USD-Prime">CapFloorVolatility/USD/USD-SOFR</CapFloorVolatility>
-	</CapFloorVolatilities>
-	<FxSpots id="default">
-		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
-		<FxSpot pair="USDJPY">FX/USD/JPY</FxSpot>
-		<FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
-		<FxSpot pair="AUDUSD">FX/AUD/USD</FxSpot>
-	</FxSpots>
-	<FxVolatilities id="default">
-		<FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
-		<FxVolatility pair="USDJPY">FXVolatility/USD/JPY/USDJPY</FxVolatility>
-		<FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD</FxVolatility>
-		<FxVolatility pair="AUDUSD">FXVolatility/AUD/USD/AUDUSD</FxVolatility>
-	</FxVolatilities>
+	</CapFloorVolatilities>	
 	<DefaultCurves id="default">
 		<DefaultCurve name="Government-North_America-1">Default/USD/Government-North_America-1</DefaultCurve>
 		<DefaultCurve name="Government-North_America-2">Default/USD/Government-North_America-2</DefaultCurve>
@@ -5071,7 +5071,4 @@
 		<DefaultCurve name="V999997">Default/USD/Financials-North_America-5</DefaultCurve>
 		<DefaultCurve name="V999998">Default/USD/Financials-North_America-5</DefaultCurve>
 	</DefaultCurves>
-	<EquityCurves/>
-	<Securities/>
-	<EquityVolatilities/>
 </TodaysMarket>

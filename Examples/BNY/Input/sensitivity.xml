@@ -1,225 +1,225 @@
 <?xml version="1.0" ?>
 <SensitivityAnalysis>
-	<ComputeGamma>false</ComputeGamma>
-	<CrossGammaFilter/>
-	<DiscountCurves>
-		<DiscountCurve ccy="EUR">
-			<ParConversion>
-				<Conventions>
-					<Convention id="XBS">EUR-USD-ON-XCCY-BASIS</Convention>
-				</Conventions>
-				<Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</DiscountCurve>
-		<DiscountCurve ccy="GBP">
-			<ParConversion>
-				<Conventions>
-					<Convention id="XBS">USD-GBP-XCCY-ON-BASIS-CONVENTIONS</Convention>
-				</Conventions>
-				<Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</DiscountCurve>
-		<DiscountCurve ccy="JPY">
-			<ParConversion>
-				<Conventions>
-					<Convention id="XBS">USD-JPY-ON-XCCY-BASIS</Convention>
-				</Conventions>
-				<Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</DiscountCurve>
-		<DiscountCurve ccy="USD">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">USD-SOFR-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</DiscountCurve>
-		<DiscountCurve ccy="AUD">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">AUD-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</DiscountCurve>
-	</DiscountCurves>
-	<FxSpots>
-		<FxSpot ccypair="EURUSD">
-			<ShiftSize>0.01</ShiftSize>
-			<ShiftType>Relative</ShiftType>
-		</FxSpot>
-		<FxSpot ccypair="GBPUSD">
-			<ShiftSize>0.01</ShiftSize>
-			<ShiftType>Relative</ShiftType>
-		</FxSpot>
-		<FxSpot ccypair="USDJPY">
-			<ShiftSize>0.01</ShiftSize>
-			<ShiftType>Relative</ShiftType>
-		</FxSpot>
-		<FxSpot ccypair="AUDUSD">
-			<ShiftSize>0.01</ShiftSize>
-			<ShiftType>Relative</ShiftType>
-		</FxSpot>
-	</FxSpots>
-	<IndexCurves>
-		<IndexCurve index="USD-SOFR">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">USD-SOFR-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="USD-FedFunds">
-			<ParConversion>
-				<Conventions>
-					<Convention id="TBS">USD-FEDFUNDS-SOFR-BASIS-CONVENTIONS</Convention>
-				</Conventions>
-				<Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
-				<SingleCurve>false</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="USD-SIFMA">
-			<ParConversion>
-				<Conventions>
-					<Convention id="BMA">USD-SOFR-SIFMA-BASIS-CONVENTIONS</Convention>
-				</Conventions>
-				<DiscountCurve>USD-FedFunds</DiscountCurve>
-				<Instruments>BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA</Instruments>
-				<SingleCurve>false</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="USD-Prime">
-			<ParConversion>
-				<Conventions>
-					<Convention id="TBS">USD-PRIME-SOFR-BASIS-CONVENTIONS</Convention>
-				</Conventions>
-				<DiscountCurve>USD-FedFunds</DiscountCurve>
-				<Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
-				<SingleCurve>false</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="USD-SOFR-1M">
-			<ParConversion>
-				<Conventions>
-					<Convention id="TBS">USD-SOFR-1M-BASIS-CONVENTIONS</Convention>
-				</Conventions>
-				<Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="EUR-ESTER">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">EUR-ESTER-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="EUR-EURIBOR-3M">
-			<ParConversion>
-				<Conventions>
-					<Convention id="TBS">EURIBOR-3M-ESTER-TBASIS</Convention>
-				</Conventions>
-				<DiscountCurve>EUR-ESTER</DiscountCurve>
-				<Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
-				<SingleCurve>false</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="EUR-EURIBOR-6M">
-			<ParConversion>
-				<Conventions>
-					<Convention id="TBS">EURIBOR-3M-6M-TBASIS</Convention>
-				</Conventions>
-				<DiscountCurve>EUR-ESTER</DiscountCurve>
-				<Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
-				<SingleCurve>false</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="GBP-SONIA">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">GBP-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="AUD-AONIA">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">AUD-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-		<IndexCurve index="JPY-TONAR">
-			<ParConversion>
-				<Conventions>
-					<Convention id="OIS">JPY-OIS</Convention>
-				</Conventions>
-				<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-				<SingleCurve>true</SingleCurve>
-			</ParConversion>
-			<ShiftSize>0.0001</ShiftSize>
-			<ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
-			<ShiftType>Absolute</ShiftType>
-		</IndexCurve>
-	</IndexCurves>
-	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
-	<YieldCurves/>
+    <ComputeGamma>false</ComputeGamma>
+    <CrossGammaFilter/>
+    <DiscountCurves>
+        <DiscountCurve ccy="EUR">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="XBS">EUR-USD-ON-XCCY-BASIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </DiscountCurve>
+        <DiscountCurve ccy="GBP">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="XBS">USD-GBP-XCCY-ON-BASIS-CONVENTIONS</Convention>
+                </Conventions>
+            </ParConversion>
+        </DiscountCurve>
+        <DiscountCurve ccy="JPY">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="XBS">USD-JPY-ON-XCCY-BASIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </DiscountCurve>
+        <DiscountCurve ccy="USD">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">USD-SOFR-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </DiscountCurve>
+        <DiscountCurve ccy="AUD">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">AUD-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </DiscountCurve>
+    </DiscountCurves>
+    <FxSpots>
+        <FxSpot ccypair="EURUSD">
+            <ShiftType>Relative</ShiftType>
+            <ShiftSize>0.01</ShiftSize>
+        </FxSpot>
+        <FxSpot ccypair="GBPUSD">
+            <ShiftType>Relative</ShiftType>
+            <ShiftSize>0.01</ShiftSize>
+        </FxSpot>
+        <FxSpot ccypair="USDJPY">
+            <ShiftType>Relative</ShiftType>
+            <ShiftSize>0.01</ShiftSize>
+        </FxSpot>
+        <FxSpot ccypair="AUDUSD">
+            <ShiftType>Relative</ShiftType>
+            <ShiftSize>0.01</ShiftSize>
+        </FxSpot>
+    </FxSpots>
+    <IndexCurves>
+        <IndexCurve index="USD-SOFR">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">USD-SOFR-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="USD-FedFunds">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
+                <SingleCurve>false</SingleCurve>
+                <Conventions>
+                    <Convention id="TBS">USD-FEDFUNDS-SOFR-BASIS-CONVENTIONS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="USD-SIFMA">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA,BMA</Instruments>
+                <SingleCurve>false</SingleCurve>
+                <DiscountCurve>USD-FedFunds</DiscountCurve>
+                <Conventions>
+                    <Convention id="BMA">USD-SOFR-SIFMA-BASIS-CONVENTIONS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="USD-Prime">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
+                <SingleCurve>false</SingleCurve>
+                <DiscountCurve>USD-FedFunds</DiscountCurve>
+                <Conventions>
+                    <Convention id="TBS">USD-PRIME-SOFR-BASIS-CONVENTIONS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="USD-SOFR-1M">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="TBS">USD-SOFR-1M-BASIS-CONVENTIONS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="EUR-ESTER">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">EUR-ESTER-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="EUR-EURIBOR-3M">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
+                <SingleCurve>false</SingleCurve>
+                <DiscountCurve>EUR-ESTER</DiscountCurve>
+                <Conventions>
+                    <Convention id="TBS">EURIBOR-3M-ESTER-TBASIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="EUR-EURIBOR-6M">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS,TBS</Instruments>
+                <SingleCurve>false</SingleCurve>
+                <DiscountCurve>EUR-ESTER</DiscountCurve>
+                <Conventions>
+                    <Convention id="TBS">EURIBOR-3M-6M-TBASIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="GBP-SONIA">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">GBP-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="AUD-AONIA">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">AUD-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+        <IndexCurve index="JPY-TONAR">
+            <ShiftType>Absolute</ShiftType>
+            <ShiftSize>0.0001</ShiftSize>
+            <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+            <ParConversion>
+                <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+                <SingleCurve>true</SingleCurve>
+                <Conventions>
+                    <Convention id="OIS">JPY-OIS</Convention>
+                </Conventions>
+            </ParConversion>
+        </IndexCurve>
+    </IndexCurves>
+    <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+    <YieldCurves/>
 </SensitivityAnalysis>

@@ -63,12 +63,12 @@
 	<BMABasisSwap>
 		<BMAIndex>USD-SIFMA</BMAIndex>
 		<Id>USD-SOFR-SIFMA-BASIS-CONVENTIONS</Id>
-		<LiborIndex>USD-SOFR</LiborIndex>
+		<Index>USD-SOFR</Index>
 	</BMABasisSwap>
 	<BMABasisSwap>
 		<BMAIndex>USD-SIFMA</BMAIndex>
 		<Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
-		<LiborIndex>USD-LIBOR-3M</LiborIndex>
+		<Index>USD-LIBOR-3M</Index>
 	</BMABasisSwap>
 	<BondYield>
 		<Accuracy>1.0e-8</Accuracy>
@@ -21367,39 +21367,39 @@
 		<Id>NZD-CMS-OCR-30Y</Id>
 	</SwapIndex>
 	<TenorBasisSwap>
-		<Id>USD-PRIME-SOFR-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
+		<Id>USD-PRIME-SOFR-BASIS-CONVENTIONS</Id>		
 		<LongIndex>USD-Prime</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>1Y</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
-		<Id>USD-LIBOR-3M-12M-BASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
+		<Id>USD-LIBOR-3M-12M-BASIS</Id>	
 		<LongIndex>USD-LIBOR-12M</LongIndex>
 		<ShortIndex>USD-LIBOR-3M</ShortIndex>
 		<ShortPayTenor>12M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-LIBOR-3M-6M-BASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-LIBOR-6M</LongIndex>
 		<ShortIndex>USD-LIBOR-3M</ShortIndex>
 		<ShortPayTenor>6M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
-		<Id>USD-LIBOR-1M-3M-BASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
+		<Id>USD-LIBOR-1M-3M-BASIS</Id>		
 		<LongIndex>USD-LIBOR-3M</LongIndex>
 		<ShortIndex>USD-LIBOR-1M</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
@@ -21534,21 +21534,21 @@
 		<ShortIndex>HKD-HIBOR-1M</ShortIndex>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
-		<Id>USD-SOFR-BSBY-3M-BASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
+		<Id>USD-SOFR-BSBY-3M-BASIS</Id>	
 		<LongIndex>USD-BSBY-3M</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-SOFR-BSBY-1M-BASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-BSBY-1M</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>1M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
@@ -21559,11 +21559,11 @@
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-SOFR-1M-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-SOFR-1M</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>1M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
@@ -21583,112 +21583,110 @@
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-FEDFUNDS-SOFR-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-FedFunds</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>1Y</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-FEDFUNDS-FEDFUNDS-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-FedFunds</LongIndex>
 		<ShortIndex>USD-FedFunds</ShortIndex>
 		<ShortPayTenor>1Y</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-PRIME-FEDFUNDS-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-Prime</LongIndex>
 		<ShortIndex>USD-FedFunds</ShortIndex>
 		<ShortPayTenor>1Y</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>EUR-EONIA-ESTER-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>EUR-EONIA</LongIndex>
 		<ShortIndex>EUR-ESTER</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
-		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-LIBOR-3M-SOFR-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-LIBOR-3M</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-LIBOR-1M-SOFR-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-LIBOR-1M</LongIndex>
 		<ShortIndex>USD-SOFR</ShortIndex>
 		<ShortPayTenor>1M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>EURIBOR-3M-6M-TBASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>EUR-EURIBOR-6M</LongIndex>
 		<ShortIndex>EUR-EURIBOR-3M</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>EURIBOR-3M-ESTER-TBASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>EUR-EURIBOR-3M</LongIndex>
 		<ShortIndex>EUR-ESTER</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>GBP-LIBOR-6M-SONIA-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>GBP-LIBOR-6M</LongIndex>
 		<ShortIndex>GBP-SONIA</ShortIndex>
 		<ShortPayTenor>6M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-FEDFUNDS-FEDFUNDS-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-FedFunds</LongIndex>
 		<ShortIndex>USD-FedFunds</ShortIndex>
 		<ShortPayTenor>1Y</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>USD-FEDFUNDS-3M-BASIS-CONVENTIONS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>USD-LIBOR-3M</LongIndex>
 		<ShortIndex>USD-FedFunds</ShortIndex>
 		<ShortPayTenor>3M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisSwap>
 		<Id>EURIBOR-1M-6M-TBASIS</Id>
-		<IncludeSpread>false</IncludeSpread>
 		<LongIndex>EUR-EURIBOR-6M</LongIndex>
 		<ShortIndex>EUR-EURIBOR-1M</ShortIndex>
 		<ShortPayTenor>1M</ShortPayTenor>
 		<SpreadOnShort>true</SpreadOnShort>
+		<IncludeSpread>false</IncludeSpread>
 		<SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
 	</TenorBasisSwap>
 	<TenorBasisTwoSwap>
