@@ -2853,7 +2853,7 @@ In that case the steps are as follows.
 \begin{enumerate}
 \item To create a virtual environment: {\tt python -m venv env1} 
 \item To activate this environment on Windows: {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat}  \\
-or on macOS/Linux: {\tt ./env1/bin/activate }  
+or on macOS/Linux: {\tt source env1/bin/activate }  
 \item Then install the latest release of ORE:\\
 {\tt pip install open-source-risk-engine } 
 \item Try examples:\\
@@ -2878,6 +2878,32 @@ or on macOS/Linux: {\tt ./env1/bin/activate }
 Finally, you can build the Python module and installable packages yourself following the instructions in sections
 \ref{sec:oreswig} based on your local ORE code. 
 
+\subsubsection*{Jupyter Notebook Examples}
+
+With ORE release 13 we have merged the ORE-SWIG source code into the ORE repository and moved a range of related
+Jupyter notebook examples into this ORE-Python folder, see folders Notebooks/Example\_1 to Notebooks/Example\_9.
+
+To try, change e.g. to Notebooks/Example\_1 and launch the notebook there by calling
+
+\medskip
+{\tt python3 -m jupyterlab ore.ipynb \& }
+
+\medskip
+If not installed yet, this might require a
+
+\medskip
+{\tt python3 -m pip install jupyterlab }
+
+\medskip
+and some of the Jupyter notebooks require additional packages to be installed with pip:
+\begin{itemize}
+\item matplotlib
+\item pandas
+\item numpy
+\item scipy
+\item ipywidgets
+\end{itemize}
+
 \subsection{ORE-API}\label{example:oreapi}
 
 Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
@@ -2888,8 +2914,7 @@ The service is based on
 \item the flask web framework \url{https://flask.palletsprojects.com}, and
 \item the ORE Python module which can be installed using \\
   {\tt pip install open-source-risk-engine} \\
-  or built from sources following the instructions in the ORE-SWIG repository
-  at \url{https://github.com/opensourcerisk/ore-swig}.
+  or built from sources following the instructions in section \ref{sec:installation}
 \end{itemize}
 
 \medskip
