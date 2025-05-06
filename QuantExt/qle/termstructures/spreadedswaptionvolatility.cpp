@@ -55,9 +55,9 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
                     simulatedSwapIndexBase_ != nullptr && simulatedShortSwapIndexBase_ != nullptr),
                "SpreadedSwaptionVolatility: all swap index bases must be null or non-null at the same time.");
 
-    QL_REQUIRE(volSpreads_.size() == 1 || baseSwapIndexBase_ != nullptr,
-               "SpreadedSwaptionVolatility: if vol spreads size != 1 (got " << volSpreads.size()
-                                                                            << "), swap index bases must be given.");
+    QL_REQUIRE(strikeSpreads_.size() == 1 || baseSwapIndexBase_ != nullptr,
+               "SpreadedSwaptionVolatility: if strikeSpreads != 1 (got " << strikeSpreads_.size()
+                                                                         << "), swap index bases must be given.");
 
     enableExtrapolation(base_->allowsExtrapolation());
     registerWith(base_);
