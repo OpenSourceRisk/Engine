@@ -9,9 +9,12 @@ jobs:
     steps:
     - name: Checkout ORE
       uses: actions/checkout@v4
-    - name: get QuantLib
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
