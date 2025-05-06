@@ -870,10 +870,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                 }
                 eqFixing *= RandomVariable(n, eqLinkedQuantity);
             }
-            RandomVariable effectiveRate =
-                RandomVariable(n, sub->gearing()) * fixing + RandomVariable(n, sub->spread());
             return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()) *
-                   effectiveRate * fxFixing * eqFixing;
+                   fixing * fxFixing * eqFixing;
         };
 
         return info;
