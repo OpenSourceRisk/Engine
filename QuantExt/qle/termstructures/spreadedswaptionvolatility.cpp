@@ -137,7 +137,9 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
 Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
     if (baseSwapIndexBase_ == nullptr) {
         // if swap index base is not given, we assume base and this svts are atm only
-        return base_->volatility(optionTime, swapLength, Null<Real>());
+        calculate();
+        return std::max(0.0, base_->volatility(optionTime, swapLength, Null<Real>()) +
+                                 volSpreadInterpolation_.front().operator()(swapLength, optionTime));
     }
     return smileSectionImpl(optionTime, swapLength)->volatility(strike);
 }
