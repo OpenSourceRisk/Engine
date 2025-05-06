@@ -764,20 +764,21 @@ proof of concept state at the time of writing this text.
 The starting point are the conditional portfolio npvs on valuation times $t$
 
 $$
-E\left( \frac{X}{N(t)} \bigg| \mathcal{F}_t \right)
+E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
 $$
 
-where $X$ represents the sum of future flows, $N(t)$ is the numeraire at time $t$ and $\mathcal{F}_t$ is the filtration representing
-the infomration at time $t$. The goal is to compute sensitivities
+where $X_i$ are future flows paid at $t_i > t$, $S(t_i)$ is the fx rate to convert flow to base currency and $N(t_i)$ is
+the numeraire at time $t_i$ and $\mathcal{F}_t$ is the filtration representing the infomration at time $t$. The goal is
+to compute sensitivities
 
 $$
-\frac{\partial}{\partial p}E\left( \frac{X}{N(t)} \bigg| \mathcal{F}_t \right)
+\frac{\partial}{\partial p}E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
 $$
 
 w.r.t. a vector of par market risk factors $p$. We write
 
 $$
-\bar{X} := \frac{X}{N(t)}
+\bar{X} := \sum_i \frac{X_i S_i(t_i)}{N(t_i)}
 $$
 
 in what follows. We decompose the calculation of derivatives of $\bar{X}$ to par market risk factors into
@@ -926,7 +927,7 @@ $$
 where $r(s)$ and $d(s)$ are the instantaneous, stochastic domestic and foreign short rates. Now, obviously,
 
 $$
-\frac{\partial \ln S(t)}{\partial \ln S(0)} = \frac{\partial \ln S(0) + R(t) - D(t)}{\partial \ln S(0)} = 1
+\frac{\partial \ln S(t)}{\partial \ln S(0)} = \frac{\partial \left( \ln S(0) + R(t) - D(t) \right)}{\partial \ln S(0)} = 1
 $$
 
 and therefore
