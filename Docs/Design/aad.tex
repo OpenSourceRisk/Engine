@@ -880,13 +880,13 @@ $$
 We are ultimately interested in the derivative of $\bar{X}$ w.r.t. $\tilde{z}$. We have:
 
 $$
-\frac{\partial \bar{X}}{\partial{\tilde{z}}} = \frac{\partial \bar{X}}{\partial P(t,T)} \frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{Q(t,T,x)}{\tilde{z}}
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = \frac{\partial \bar{X}}{\partial P(t,T)} \frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}}
 $$
 
 Since
 
 $$
-\frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{Q(t,T,x)}{\tilde{z}} = \frac{1}{d} \left[ -(T-t) Q(t,T,x) \right] = -(T-t)P(t,T)
+\frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}} = \frac{1}{d} \left[ -(T-t) Q(t,T,x) \right] = -(T-t)P(t,T)
 $$
 
 we get
