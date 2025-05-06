@@ -33,7 +33,7 @@ using namespace QuantExt;
 SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std::string>& currencies,
                                      const std::vector<QuantLib::Period>& irDeltaTerms,
                                      const std::vector<Period>& irVegaTerms, const std::vector<Period>& fxVegaTerms,
-                                     const boost::shared_ptr<SimmConfiguration>& simmConfiguration)
+                                     const ext::shared_ptr<SimmConfiguration>& simmConfiguration)
     : n_(n), currencies_(currencies), irDeltaTerms_(irDeltaTerms), irVegaTerms_(irVegaTerms), fxVegaTerms_(fxVegaTerms),
       simmConfiguration_(simmConfiguration) {
 

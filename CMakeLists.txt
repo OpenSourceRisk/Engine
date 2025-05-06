@@ -9,8 +9,13 @@ option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
 option(ORE_BUILD_SWIG "Build ORE Python" ON)
+option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
+option(MSVC_PARALLELBUILD "Use flag /MP" ON)
+option(QL_USE_PCH "Use precompiled headers" OFF)
 option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" OFF)
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
+option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calculations" OFF)
+option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 
 include(CTest)
 

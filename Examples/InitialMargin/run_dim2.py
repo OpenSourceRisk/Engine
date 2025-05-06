@@ -48,6 +48,9 @@ crifFile = "Output/DimValidation/crif.csv"
 
 for asof in refDates:
 
+    numeraire = utilities.num(asof, numeraireData)
+    #print ("numeraire =", numeraire, " asof =", asof)
+           
     # delete output files
     if os.path.isfile(npvFile):
         os.remove(npvFile)
@@ -85,7 +88,7 @@ for asof in refDates:
             bucket = row['Bucket']
             simmSide = row['SimmSide']
             regulation = row['Regulation']
-            initialMargin = float(row['InitialMargin'])
+            initialMargin = float(row['InitialMargin']) / numeraire
             currency = row['Currency']
             if portfolio == nettingSet and productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
                 simmRowList.append([portfolio, asof, simmSide, '{:.6f}'.format(initialMargin), currency])

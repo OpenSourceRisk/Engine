@@ -94,6 +94,12 @@
 		<SwapIndex name="USD-CMS-30Y">
 		        <Discounting>USD-SOFR</Discounting>
 		</SwapIndex>
+		<SwapIndex name="GBP-CMS-2Y">
+			<Discounting>GBP-SONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="GBP-CMS-30Y">
+		        <Discounting>GBP-SONIA</Discounting>
+		</SwapIndex>
 	</SwapIndexCurves>
 	<ZeroInflationIndexCurves id="default"/>
 	<YYInflationIndexCurves id="default"/>

@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T = 1
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T = 1
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
         eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     double Annuity=0.0;
@@ -199,9 +199,9 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = 5; strike <= 10; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -216,9 +216,9 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = 10; strike <= 15; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, 
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, 
             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T = 1
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T = 1
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     double Annuity = 0.0;
@@ -291,9 +291,9 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -7; strike <= -1; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -308,9 +308,9 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = -11; strike <=-5; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -367,17 +367,17 @@ BOOST_AUTO_TEST_CASE(testTooLateExercise) {
         eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(settlementDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Receiver Swaptions");
     // Covering the whole range of strikes that matters
     for (int strike = -2; strike <= 14; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
             schedule, (double)strike/100.0, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(12, August, 2020)); // This is intentional
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(12, August, 2020)); // This is intentional
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
         swaption->setPricingEngine(eurSwEng1);
 
         try {
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(20, July, 2015)); // T=0
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(20, July, 2015)); // T=0
     double T = 0.0;
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
         eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     double Annuity=0.0;
@@ -448,9 +448,9 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
     for (int strike = 3; strike <= 7; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -466,9 +466,9 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -3; strike <= 1; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date ex = Date(12, July, 2016);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); // T=1
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(ex); // T=1
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -534,16 +534,16 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> swapEng= QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
    
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     // Starting 1% above market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = 3; strike < 7; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swap->setPricingEngine(swapEng);
         swaption->setPricingEngine(swaptionEngine);
@@ -559,9 +559,9 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -3; strike <=1; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         swap->setPricingEngine(swapEng);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date ex = Date(12, July, 2016);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); // T=1
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(ex); // T=1
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 50, Years);
@@ -625,16 +625,16 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> swapEng= QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
    
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     // Starting 1% above market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = 3; strike < 7; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swap->setPricingEngine(swapEng);
         swaption->setPricingEngine(swaptionEngine);
@@ -650,9 +650,9 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -3; strike <=1; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         swap->setPricingEngine(swapEng);
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm2) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date ex = Date(12, July, 2016);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); // T=1
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(ex); // T=1
 
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
@@ -720,15 +720,15 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm2) {
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> swapEng= QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
    
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = -10; strike <=10; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();
@@ -758,9 +758,9 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm2) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -10; strike < 10; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date ex = Date(12, July, 2016);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); 
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(ex); 
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 10, Years);
@@ -842,15 +842,15 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> swapEng= QuantLib::ext::make_shared<DiscountingSwapEngine>(eurYtsHandle, false, settlementDate, settlementDate);
    
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = -2; strike < 6; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();
@@ -880,9 +880,9 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -2; strike <=6; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();
@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(testSmallMaturity) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date ex = Date(18, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); 
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(ex); 
     Date startDate(15, July, 2015);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Days);
@@ -958,15 +958,15 @@ BOOST_AUTO_TEST_CASE(testSmallMaturity) {
 
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
    
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Daily), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (int strike = -2; strike < 6; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
             schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();
@@ -980,9 +980,9 @@ BOOST_AUTO_TEST_CASE(testSmallMaturity) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (int strike = -2; strike <=6; strike ++)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
             schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(swaptionEngine);
         Real npv = swaption->NPV();

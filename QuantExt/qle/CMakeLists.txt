@@ -660,6 +660,7 @@ math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/discretedistribution.hpp
+math/distributioncount.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
