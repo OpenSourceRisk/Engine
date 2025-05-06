@@ -136,7 +136,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     mv = std::abs(helper->marketValue());
     if (errorType != BlackCalibrationHelper::PriceError && mv < ore::data::LgmBuilder::smv) {
         errorType = BlackCalibrationHelper::PriceError;
-        TLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
+        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
                                    << std::scientific << mv << " which is lower than " << ore::data::LgmBuilder::smv
                                    << " so switching to a price error helper.");
         helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
@@ -476,7 +476,7 @@ void LgmBuilder::performCalculations() const {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         }
-        TLOG("LGM " << data_->qualifier() << " calibration errors:");
+        DLOG("LGM " << data_->qualifier() << " calibration errors:");
         error_ = getCalibrationError(swaptionBasket_);
     } catch (const std::exception& e) {
         // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
@@ -486,24 +486,24 @@ void LgmBuilder::performCalculations() const {
     if (fabs(error_) < bootstrapTolerance_ ||
         (data_->calibrationType() == CalibrationType::BestFit && error_ != QL_MAX_REAL)) {
         // we check the log level here to avoid unnecessary computations
-        if (Log::instance().filter(ORE_DATA) || setCalibrationInfo_) {
-            TLOGGERSTREAM("Basket details:");
+        if (Log::instance().filter(ORE_DEBUG) || setCalibrationInfo_) {
+            DLOGGERSTREAM("Basket details:");
             try {
                 auto d = getBasketDetails(calibrationInfo);
-                TLOGGERSTREAM(d);
+                DLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occurred: " << e.what());
             }
-            TLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
+            DLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
             try {
                 auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
-                TLOGGERSTREAM(d);
+                DLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occurred: " << e.what());
             }
-            TLOGGERSTREAM("Parameter details (with parameter time grid)");
-            TLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_))
-            TLOGGERSTREAM("rmse = " << error_);
+            DLOGGERSTREAM("Parameter details (with parameter time grid)");
+            DLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_))
+            DLOGGERSTREAM("rmse = " << error_);
             calibrationInfo.valid = true;
         }
     } else {
