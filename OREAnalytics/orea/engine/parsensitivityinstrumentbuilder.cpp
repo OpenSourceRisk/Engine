@@ -1352,23 +1352,24 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies_, const std::string& expDiscountCurve,
     const string& marketConfiguration) const {
 
-    QuantLib::ext::shared_ptr<Swap> inst;
+    QuantLib::ext::shared_ptr<Leg> oisCapFloor;
     auto conventions = InstrumentConventions::instance().conventions();
-
+    // TODO: Hard coded // get from conventions or config
+    Period rateComputationPeriod = 3 * Months;
     if (!market) {
         // No market so just return a dummy cap
         QuantLib::ext::shared_ptr<IborIndex> index = parseIborIndex(indexName);
-        QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index) != nullptr,
-                   "ParSensitivityInstrumentBuilder::makeOisCapFloor(): Index isnt OIS index, use makeCapFloor method instead");
-        auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, 3 * Months, 0.03, 0.01, index);
-        inst = Swap({helper->cap()}, {false});
+        auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
+        QL_REQUIRE(ois != nullptr, "ParSensitivityInstrumentBuilder::makeOisCapFloor(): Index isnt OIS index, use "
+                                   "makeCapFloor method instead");
+        auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, rateComputationPeriod, 0.03, Handle<Quote>(), ois,
+                                        QuantLib::Handle<QuantLib::YieldTermStructure>());
+        oisCapFloor = helper.capFloor();
     } else {
 
         QuantLib::ext::shared_ptr<IborIndex> index = *market->iborIndex(indexName, marketConfiguration);
-        QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index) == nullptr,
-                   "ParSensitivityInstrumentBuilder::makeCapFloor(): OIS indices are not yet supported for par "
-                   "conversion");
-        QL_REQUIRE(index, "ParSensitivityInstrumentBuilder::makeCapFloor(): Index not found with name " << indexName);
+        QuantLib::ext::shared_ptr<OvernightIndex> ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
+        QL_REQUIRE(ois, "ParSensitivityInstrumentBuilder::makeCapFloor(): Overnight index not found with name " << indexName);
         Handle<YieldTermStructure> discount;
         if (expDiscountCurve.empty())
             discount = market->discountCurve(ccy, marketConfiguration);
@@ -1380,18 +1381,23 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
 
         // Create a dummy cap just to get the ATM rate
         // Note this construction excludes the first caplet which is what we want
-        inst = MakeCapFloor(CapFloor::Cap, term, index, 0.03);
-        Rate atmRate = inst->atmRate(**discount);
+        auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, rateComputationPeriod, 0.03, Handle<Quote>(), ois,
+                                        discount);
+        Leg leg = helper.capFloor();
+        
+        Rate atmRate =  helper.atmStrike();
         // bool isAtm = strike == Null<Real>();
         // strike = isAtm ? atmRate : strike;
         strike = strike == Null<Real>() ? atmRate : strike;
-        CapFloor::Type type = strike >= atmRate ? CapFloor::Cap : CapFloor::Floor;
+        CapFloorHelper::Type type = strike >= atmRate ? CapFloorHelper::Cap : CapFloorHelper::Floor;
 
         // Create the actual cap or floor instrument that we will use
         if (isAtm) {
-            inst = MakeCapFloor(type, term, index, atmRate);
+            oisCapFloor = OISCapFloorHelper(CapFloorHelper::Cap, term, rateComputationPeriod, atmRate, Handle<Quote>(), ois,
+            discount).capFloor();
         } else {
-            inst = MakeCapFloor(type, term, index, strike);
+            oisCapFloor = OISCapFloorHelper(CapFloorHelper::Cap, term, rateComputationPeriod, strike, Handle<Quote>(), ois,
+            discount).capFloor()
         }
         Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(indexName, marketConfiguration);
         QL_REQUIRE(!ovs.empty(), "ParSensitivityInstrumentBuilder::makeCapFloor(): Optionlet volatility "
@@ -1400,7 +1406,14 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
         QL_REQUIRE(ovs->volatilityType() == ShiftedLognormal || ovs->volatilityType() == Normal,
                    "ParSensitivityInstrumentBuilder::makeCapFloor(): Optionlet volatility type "
                        << ovs->volatilityType() << " not covered");
-        QuantLib::ext::shared_ptr<PricingEngine> engine;
+        
+        auto pricer = QuantLib::ext::make_shared<BlackOvernight
+                       for(auto& cf : oisCapFloor){
+            auto cpn = ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+            cpn->setPricer()
+        }
+
+                       QuantLib::ext::shared_ptr<PricingEngine> engine;
         if (ovs->volatilityType() == ShiftedLognormal) {
             engine = QuantLib::ext::make_shared<BlackCapFloorEngine>(discount, ovs, ovs->displacement());
         } else {
