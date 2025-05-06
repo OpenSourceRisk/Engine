@@ -33,6 +33,16 @@
     <Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
     <FixingCalendar/>
   </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-2Y</Id>
+    <Conventions>GBP-LIBOR-3M-SWAP</Conventions>
+    <FixingCalendar/>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-30Y</Id>
+    <Conventions>GBP-LIBOR-3M-SWAP</Conventions>
+    <FixingCalendar/>
+  </SwapIndex>
   <Deposit>
     <Id>EUR-DEPOSIT</Id>
     <IndexBased>true</IndexBased>

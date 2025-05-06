@@ -6,7 +6,7 @@ systems such as MacOS and Linux.  The commands listed here were tested on
 Ubuntu and you will likely have to modify the commands slightly on other
 systems.
 
-[Back to tutorials index](tutorials.00.index.md)
+[Back to tutorials index](../tutorials_index.md)
 
 # Prerequisites
 

@@ -8,7 +8,7 @@ regarding specific details of managing Python wheels for the ORE project.  The
 commands listed here are for Ubuntu, the approach is similar for Windows and
 MacOS.
 
-[Back to tutorials index](tutorials.00.index.md)
+[Back to tutorials index](../tutorials_index.md)
 
 # Generating Source Tarballs
 
