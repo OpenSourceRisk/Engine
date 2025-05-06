@@ -17,6 +17,7 @@ MARKETS & TERMSTRUCTURES
 - make output vol types and shifts configurable for IR vol surfaces
 - weighted FX vol interpolation for holidays and events
 - speed up loading of historical fixings in QuantLib
+- add MonotonicLogCubicSpline interpolation method for rate curves
 
 ANALYTICS
 
@@ -36,7 +37,8 @@ ANALYTICS
 - add settlement delay to AMC simulation
 - add cpu affinity setting in multithreaded valuation engine
 - extend the Inflation JY model calibration for scripted exotics
-- add CAM calibration analytic and report (Example/Exposure)
+- add CAM calibration analytic and report (Examples/Exposure)
+- add PFE analytic, carved out from the broader XVA analytic 
 - add portfolio details analyic (see Example/Products)
 - optional caching of large in memory reports on disk
 - speed up the Cross Asset Model analytics (integral()) thanks to Dmitri Goloubentsev for the heads up
@@ -47,6 +49,7 @@ DOCUMENTATION
 
 - split the documentation into three parts: (1) user guide (ORE examples and parametrisation),
   (2) products (trade type description and input), (3) methodology
+  thanks to Fredrik Fredrik Gerdin Boerjesson and Roland Kapl for contributions to this
 - release notes removed from the user guide to avoid overlap with News.txt
 
 EXAMPLES
