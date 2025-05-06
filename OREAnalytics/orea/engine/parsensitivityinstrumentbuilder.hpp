@@ -135,9 +135,8 @@ private:
 
     //! Create Cap/Floor QuantLib::Instrument for implying flat vol sensitivity from optionlet vol sensitivity
     QuantLib::ext::shared_ptr<QuantLib::Swap> makeOisCapFloor(
-        const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string indexName, QuantLib::Period term, double strike,
-        bool generatePillar, // isAtm ?
-        std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& ccy, const std::string& indexName, const QuantLib::Period&  term,  const double strike,
+        const Period& rateCompPeriod,  const bool isAtm, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
         const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create Cross Ccy Basis Swap for implying par rate sensitivity from zero rate sensitivity

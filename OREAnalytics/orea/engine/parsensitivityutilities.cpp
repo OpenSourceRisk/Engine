@@ -46,6 +46,8 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
+#include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -295,8 +297,7 @@ bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore:
 }
 
 double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumentBuilder::Instruments& instruments) {
-    if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
-        QL_REQUIRE(instruments.parCaps_.count(key) == 1, "Can not convert capFloor par shifts to zero Vols");
+    if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility && instruments.parCaps_.count(key) == 1) {
         QL_REQUIRE(instruments.parCapsYts_.count(key) > 0,
                    "getTodaysAndTargetQuotes: no cap yts found for key " << key);
         QL_REQUIRE(instruments.parCapsVts_.count(key) > 0,
@@ -307,6 +308,71 @@ double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumen
                                               instruments.parCapsVts_.at(key)->volatilityType(),
                                               instruments.parCapsVts_.at(key)->displacement());
         return parVol;
+    } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility && instruments.oisParCaps_.count(key) == 1){
+        QL_REQUIRE(instruments.parCapsYts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap yts found for key " << key);
+        QL_REQUIRE(instruments.parCapsVts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap vts found for key " << key);
+        const auto cap = instruments.oisParCaps_.at(key);
+        Real price = cap->NPV();
+        // We dont have a analytical vega here can not use newton, use brent
+
+        QL_REQUIRE(cap != nullptr && cap->legs().size() == 1 && !cap->leg(0).empty(),
+                   "A ois cap floor, should have one floating leg with at least one coupon");
+        
+                   auto firstCoupon = ext::dynamic_pointer_cast<FloatingRateCoupon>(cap->leg(0).front());
+        
+        QL_REQUIRE(firstCoupon != nullptr, "A ois cap floor should have floating rate coupons");
+
+        auto firstPricer = firstCoupon->pricer();
+
+        QL_REQUIRE(firstPricer != nullptr, "Coupon pricer is missing");
+
+        auto implVolQuote = ext::make_shared<SimpleQuote>(0.01);
+        Handle<OptionletVolatilityStructure> constOvts;
+        Real accuracy = 1.0e-6;
+        Natural maxEvaluations = 100;
+        Volatility minVol= 1.0e-7;
+        Volatility maxVol = 4.0;
+        if (instruments.parCapsVts_.at(key)->volatilityType() == ShiftedLognormal) {
+            constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), ShiftedLognormal, instruments.parCapsVts_.at(key)->displacement()));
+        } else {
+            minVol = 1.0e-7;
+            maxVol = 0.05;
+            constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), Normal));
+        }
+        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts, true);
+
+
+        for (auto& cf : cap->leg(0)) {
+            auto cp = ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+            cp->setPricer(pricer);
+        }
+
+        Brent solver;
+
+        auto target = [&cap, &price, &implVolQuote](double x) -> double { 
+            implVolQuote->setValue(x);
+            return price - cap->NPV();
+        };
+
+        Real parVol = 0.0;
+        try {
+            parVol = solver.solve(target, accuracy, 0.01, minVol, maxVol);
+        } catch (std::exception& e){
+
+        }
+
+        // Restore pricer (move that in destructor, so it will done )
+        for(auto& cf : cap->leg(0)){
+            auto cp = ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+            cp->setPricer(firstPricer);
+        }
+
+        return parVol;
+
     } else if (key.keytype == RiskFactorKey::KeyType::YoYInflationCapFloorVolatility) {
         QL_REQUIRE(instruments.parYoYCaps_.count(key) == 1, "Can not convert capFloor par shifts to zero Vols");
         QL_REQUIRE(instruments.parYoYCapsYts_.count(key) > 0,
