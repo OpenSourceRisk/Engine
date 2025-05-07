@@ -4,7 +4,7 @@
 This tutorial explains how to build and run the ORE wrapper and wheel on
 Windows.
 
-[Back to tutorials index](tutorials.00.index.md)
+[Back to tutorials index](../tutorials_index.md)
 
 # Prerequisites
 

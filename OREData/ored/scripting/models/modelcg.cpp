@@ -46,18 +46,20 @@ ModelCG::getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& 
 
 ModelCG::ModelParameter::ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2,
                                         const QuantLib::Date& date, const QuantLib::Date& date2,
-                                        const QuantLib::Date& date3, const std::size_t index, const std::size_t index2)
+                                        const QuantLib::Date& date3, const std::size_t index, const std::size_t index2,
+                                        const std::size_t hash)
     : type_(type), qualifier_(qualifier), qualifier2_(qualifier2), date_(date), date2_(date2), date3_(date3),
-      index_(index), index2_(index2) {}
+      index_(index), index2_(index2), hash_(hash) {}
 
 bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y) {
     return x.type_ == y.type_ && x.qualifier_ == y.qualifier_ && x.qualifier2_ == y.qualifier2_ && x.date_ == y.date_ &&
-           x.date2_ == y.date2_ && x.date3_ == y.date3_ && x.index_ == y.index_ && x.index2_ == y.index2_;
+           x.date2_ == y.date2_ && x.date3_ == y.date3_ && x.index_ == y.index_ && x.index2_ == y.index2_ &&
+           x.hash_ == y.hash_;
 }
 
 bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y) {
-    return std::tie(x.type_, x.qualifier_, x.qualifier2_, x.date_, x.date2_, x.date3_, x.index_, x.index2_) <
-           std::tie(y.type_, y.qualifier_, y.qualifier2_, y.date_, y.date2_, x.date3_, y.index_, y.index2_);
+    return std::tie(x.type_, x.qualifier_, x.qualifier2_, x.date_, x.date2_, x.date3_, x.index_, x.index2_, x.hash_) <
+           std::tie(y.type_, y.qualifier_, y.qualifier2_, y.date_, y.date2_, x.date3_, y.index_, y.index2_, y.hash_);
 }
 
 std::size_t ModelCG::addModelParameter(const ModelParameter& p, const std::function<double(void)>& f) const {
@@ -83,6 +85,8 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
         return o << "none";
     case ModelCG::ModelParameter::Type::fix:
         return o << "fix";
+    case ModelCG::ModelParameter::Type::complexRate:
+        return o << "complexRate";
     case ModelCG::ModelParameter::Type::dsc:
         return o << "dsc";
     case ModelCG::ModelParameter::Type::fwdCompAvg:

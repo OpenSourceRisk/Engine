@@ -529,7 +529,7 @@ RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& inde
                                return p.first.name() == indexInput;
                            });
     QL_REQUIRE(ir != irIndices_.end(),
-               "GaussianCam::fwdComp() ir index " << indexInput << " not found, this is unexpected");
+               "GaussianCam::fwdCompAvg() ir index " << indexInput << " not found, this is unexpected");
     Size irIndexPos = irIndexPositionInCam_[std::distance(irIndices_.begin(), ir)];
     LgmVectorised lgmv(cam_->lgm(irIndexPos)->parametrization());
     auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ir->second);

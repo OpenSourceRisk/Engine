@@ -11,7 +11,7 @@
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>3</Samples>
+      <Samples>5</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>
@@ -29,19 +29,19 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
+	  <!--
           <Calibrate>N</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
           <InitialValue>0.00002</InitialValue>
-	  <!--
-          <Calibrate>Y</Calibrate>
+	  -->
+	  <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Piecewise</ParamType>
           <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
           <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
-	  -->
-        </Volatility>
+	</Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
@@ -65,16 +65,16 @@
         <DomesticCcy>EUR</DomesticCcy>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
-          <!--
 	  <Calibrate>Y</Calibrate>
 	  <ParamType>Piecewise</ParamType>
           <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
           <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-	  -->
+          <!--
 	  <Calibrate>N</Calibrate>
 	  <ParamType>Constant</ParamType>
 	  <TimeGrid/>
           <InitialValue>0.00001</InitialValue>
+	  -->
 	</Sigma>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>

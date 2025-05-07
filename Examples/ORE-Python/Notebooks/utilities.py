@@ -197,6 +197,10 @@ def getNpvScenarios(netCubeReport, dateIndex):
     
     return values
 
+def is_gz_file(filepath):
+    with open(filepath, 'rb') as test_f:
+        return test_f.read(2) == b'\x1f\x8b'
+
 def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
     import gzip
     import csv
@@ -206,18 +210,25 @@ def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
     # scenario data file starts with date = 1, i.e. does NOT contain t0
     dateSet.add(0)
 
-    with gzip.open(gzFileName, mode='rt') as file:
-        reader = csv.reader(file, delimiter = ',', quotechar="'")
-        for row in reader:
-            if (not row[0].startswith('#')):
-                #print("data", row)
-                date = int(row[0])
-                sample = int(row[1])
-                key = int(row[2])
-                value = float(row[3])
-                dateSet.add(int(date))
-                sampleSet.add(int(sample))
-                keySet.add(int(key))
+    if is_gz_file(gzFileName):
+        file = gzip.open(gzFileName, mode='rt')
+    else:
+        file = open(gzFileName)        
+    
+    reader = csv.reader(file, delimiter = ',', quotechar="'")
+    for row in reader:
+        if (not row[0].startswith('#')):
+            #print("data", row)
+            date = int(row[0])
+            sample = int(row[1])
+            key = int(row[2])
+            value = float(row[3])
+            dateSet.add(int(date))
+            sampleSet.add(int(sample))
+            keySet.add(int(key))
+
+    file.close()
+
     print("dates:  ", len(dateSet))
     print("samples:", len(sampleSet))
     print("keys:   ", len(keySet))
@@ -227,19 +238,25 @@ def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
     for i in range(0, len(sampleSet)):
         values.append([0] * len(dateSet))
 
-    with gzip.open("Output/scenariodata.csv.gz", mode='rt') as file:
-        reader = csv.reader(file, delimiter = ',', quotechar="'")
-        for row in reader:
-            if (not row[0].startswith('#')):
-                date = int(row[0])
-                sample = int(row[1])
-                key = int(row[2])
-                value = float(row[3])
-                if key == keyNumber:
-                    values[sample][date] = value
-                    # FIXME: copy to the left for now
-                    if date == 1:
-                        values[sample][0] = fixing
+    if is_gz_file(gzFileName):
+        file = gzip.open(gzFileName, mode='rt')
+    else:
+        file = open(gzFileName)        
+
+    reader = csv.reader(file, delimiter = ',', quotechar="'")
+    for row in reader:
+        if (not row[0].startswith('#')):
+            date = int(row[0])
+            sample = int(row[1])
+            key = int(row[2])
+            value = float(row[3])
+            if key == keyNumber:
+                values[sample][date] = value
+                # FIXME: copy to the left for now
+                if date == 1:
+                    values[sample][0] = fixing
+
+    file.close()
 
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
@@ -255,7 +272,7 @@ def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
         #ax0.legend()
     
     plt.show()
-    
+
 def getStateScenarios(gzFileName, keyNumber, dateIndex):
     import gzip
     import csv
@@ -265,34 +282,47 @@ def getStateScenarios(gzFileName, keyNumber, dateIndex):
     # scenario data file starts with date = 1, i.e. does NOT contain t0
     dateSet.add(0)
 
-    with gzip.open(gzFileName, mode='rt') as file:
-        reader = csv.reader(file, delimiter = ',', quotechar="'")
-        for row in reader:
-            if (not row[0].startswith('#')):
-                #print("data", row)
-                date = int(row[0])
-                sample = int(row[1])
-                key = int(row[2])
-                value = float(row[3])
-                dateSet.add(int(date))
-                sampleSet.add(int(sample))
-                keySet.add(int(key))
+    if is_gz_file(gzFileName):
+        file = gzip.open(gzFileName, mode='rt')
+    else:
+        file = open(gzFileName)        
+    
+    reader = csv.reader(file, delimiter = ',', quotechar="'")
+    for row in reader:
+        if (not row[0].startswith('#')):
+            #print("data", row)
+            date = int(row[0])
+            sample = int(row[1])
+            key = int(row[2])
+            value = float(row[3])
+            dateSet.add(int(date))
+            sampleSet.add(int(sample))
+            keySet.add(int(key))
+
+    file.close()
+    
     #print("dates:  ", len(dateSet))
     print("samples:", len(sampleSet))
     #print("keys:   ", len(keySet))
 
     values = [0] * (len(sampleSet) + 1)
     
-    with gzip.open("Output/scenariodata.csv.gz", mode='rt') as file:
-        reader = csv.reader(file, delimiter = ',', quotechar="'")
-        for row in reader:
-            if (not row[0].startswith('#')):
-                date = int(row[0])
-                sample = int(row[1])
-                key = int(row[2])
-                value = float(row[3])
-                if key == keyNumber and date == dateIndex:
-                    values[sample] = value
+    if is_gz_file(gzFileName):
+        file = gzip.open(gzFileName, mode='rt')
+    else:
+        file = open(gzFileName)        
+
+    reader = csv.reader(file, delimiter = ',', quotechar="'")
+    for row in reader:
+        if (not row[0].startswith('#')):
+            date = int(row[0])
+            sample = int(row[1])
+            key = int(row[2])
+            value = float(row[3])
+            if key == keyNumber and date == dateIndex:
+                values[sample] = value
+
+    file.close()
 
     values[0] = values[1]
     

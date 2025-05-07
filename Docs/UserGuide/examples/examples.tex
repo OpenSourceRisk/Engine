@@ -14,50 +14,64 @@ of cases.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
-\begin{tabular}{|l|p{8cm}|}
+\begin{tabular}{|l|p{6cm}|p{4cm}|}
 \hline
-Example topic & Description \\
+Example topic & Description & Contained Legacy Examples\\
 \hline
 \hline
-Academy & Basic ORE Academy examples, with minimal configuration \\
+Academy & Basic ORE Academy examples, with minimal configuration & \\
 \hline
 Minimal Setup & Example showing the minimal configuration required 
-  for pricing (market data, todays market, curve config, conventions) \\
+for pricing (market data, todays market, curve config, conventions)
+& 14 \\
 \hline
 Products & Demonstrate ORE's product coverage across asset classes,
-  150+ products, vanilla and complex \\
+150+ products, vanilla and complex
+& 18-21, 27, 45-48, 51, 65-66, 71, 74\\
 \hline
 Curve Building & Consistency check that market instruments are repriced correctly
-  after bootstrap, demo several curve building features \\
+after bootstrap, demo several curve building features
+& 26, 28-30, 49, 53, 59 \\
 \hline
 Market Risk & Sensitivity, Stress Testing, Par Conversion, Parametric and HistSim VaR,
-  P\&L and P\&L Explain, Market Risk Capital (SMRC) \\
+P\&L and P\&L Explain, Market Risk Capital (SMRC)
+& 15, 22, 40, 50, 57-58, 62-63, 68-69, 77\\
 \hline
 Initial Margin & ISDA SIMM and IM Schedule, Dynamic Initial Margin via Regression
-  and Dynamic Delta VaR \\
+and Dynamic Delta VaR
+& 13, 44\\
 \hline
 Exposure & Uncollateralised exposure simulation, product by product, mainly vanilla,
-  demo various simulation features \\
+demo various simulation features
+& 1-9, 11-12, 16-17, 23-25, 32-38, 64\\
 \hline
 Exposure with Collateral & Impact of Variation Margin and CSA details,
-  Impact of Initial Margin \\
+Impact of Initial Margin
+& 10, 31, 72\\
 \hline
-Scripted Trade & Introducing the Scripted Trade framework \\
+Scripted Trade & Introducing the Scripted Trade framework
+& 52 \\
 \hline
 American Monte Carlo & Fast and accurate Exposures using AMC,
-  selected vanilla and complex products \\
+selected vanilla and complex products
+& 39, 54, 55, 60, 73, 75\\
 \hline
 XVA Risk & Sensitivity, Stress Testing, P\&L Explain,
-  CVA Capital (SA-CVA and BA-CVA) \\
+CVA Capital (SA-CVA and BA-CVA)
+& 67, 68, 70\\
 \hline
-Credit Risk & Credit Portfolio Model, Derivatives Credit Risk Capital (SA-CCR) \\
+Credit Risk & Credit Portfolio Model, Derivatives Credit Risk Capital (SA-CCR)
+& 43, 68\\
 \hline
 Performance & NPV and CVA Sensitivities using AAD
-  and using bump \& reval with GPU parallelization \\
+and using bump \& reval with GPU parallelization
+& 41, 56, 61\\
 \hline
-ORE-Python & Python Wrapper covering ORE libraries and QuantLib \\
+ORE-Python & Python Wrapper covering ORE libraries and QuantLib
+& 42, and the Python examples previously in the ORE-SWIG repository\\
 \hline
-ORE-API & ORE Web Service prototype using ORE-Python \\
+ORE-API & ORE Web Service prototype using ORE-Python
+& 0\\
 \hline
 \end{tabular}
 \caption{ORE example topics.}
@@ -141,9 +155,14 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
 
-\subsection{Academy - TODO}\label{example:academy}
+\subsection*{Python}
 
-Basic ORE Academy examples, with minimal configuration.
+Running any of the examples described in the following sections needs a python3 installation.
+
+\subsection{Academy}\label{example:academy}
+
+This section contains a few examples with minimal configuration for demo cases shown in ORE Academy videos
+on youtube: \url{https://www.youtube.com/channel/UCrCpkb1-s3pxKd7U-YgJulA}
 
 \subsection{Minimal Setup}\label{example:minimal}
 
@@ -267,7 +286,7 @@ Also, in this example, an assumption is made that there are no direct GBP/EUR FX
 forward or cross currency quotes available which in general is false. The example 
 s merely for illustration.
 
-Both collateralizaton scenarios can be run calling {\tt python run.py}.
+Both collateralization scenarios can be run calling {\tt python run.py}.
 
 \subsubsection{Fixed vs Float Cross Currency Helpers}
 
@@ -590,12 +609,12 @@ The analytic is specified as usual in {\tt ore.xml} with the following parameter
 \begin{itemize}
 \item outputFile: csv file name of the resulting VaR report 
 %\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
-\item quantiles: comma searated list of quantiles to be reported
+\item quantiles: comma separated list of quantiles to be reported
 \item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
 \item historicalPeriod: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used
 \item mporDays: Number of calendar days between historical scenarios taken from the observation periods in order to compute P\&L effects (typically 1 or 10) 
 \item mporCalendar: Calendar applied in the scenario date calculation
-\item mporOverlappingPeriods: Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendate days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
+\item mporOverlappingPeriods: Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendar days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
 \item simulationConfigFile: defines the structure of the simulation market applied in the P\&L calculation, e.g. discount and index curves, yield curve tenor points used, FX pairs etc.
 \item historicalScenarioFile: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor 
 \end{itemize}
@@ -678,11 +697,11 @@ The portfolio used in this example includes zero sensitivities of
 \item CapFloor volatilities
 \end{itemize}
 
-ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
+ORE reads the raw sensitivities from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
 
 \begin{enumerate}
 \item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
-\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitivity. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
 \item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
 \item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
 \item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.
@@ -772,7 +791,7 @@ discussed in the following subsection.
 \subsubsection{ISDA SIMM and IM Schedule}
 
 This example ({\tt python run\_simm.py}) demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schedule" method to compute 
 initial margin.
 
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
@@ -823,11 +842,11 @@ The market data input and todays's market configuration required here is minimal
 
 \subsubsection*{IM Schedule}
 
-As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+As an additional case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
 The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
 {\tt Output/IM\_SCHEDULE}.
 The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
-so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+so that the  amounts in these CRIF lines are interpreted as NPV respectively notional. 
 Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
 \begin{itemize}
   \item Rates
@@ -923,6 +942,77 @@ and xva analytic configurations.
   around time step 100.}
 \label{fig_ex13c_evolution}
 \end{figure}
+
+\subsubsection{Dynamic SIMM}
+
+The batch kicked off with ({\tt python run\_dim2.py}) demonstrates a prototype ``Dynamic SIMM'' implementation,
+see Input/Dim2/ore\_amccg.xml with
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <Analytic type="xva">
+      ...
+      <Parameter name="dimModel">DynamicIM</Parameter>
+      ...
+    </Analytic>
+\end{minted}
+\end{listing}
+and several related new parameters in the {\tt simulation} section. The new method is embedded into AMC simulation
+and uses Algorithmic Differentiation to generate sensitivities along paths which feed into the dynamic SIMM
+calculation. Results are -- among others -- a {\tt dim\_evolution.csv} report and a new {\tt dim\_distribution.csv}
+report in Output/Dim2/AmcCg.
+
+To validate the new method we apply the ``conventional'' SIMM calculator in ORE that we have enhanced with a CRIF
+generator limited to IR/FX risks for this purpose. The {\tt run\_dim2.py} script simulates a few paths, picks one
+of the paths and extracts the simulated market data (discount and index curves, FX rates, swaption volatilities)
+and writes them to {\tt Input/DimValidation/marketdata.csv}, a market data file in ORE format, and likewise simulated
+fixings to {\tt Input/DimValidation/fixings.csv}. The script then loops over simualtion dates of that single path
+and performs a conventional SIMM run for each date (see {\tt Input/DimValidation/ore\_simm.xml}).
+This is used to check the new method's output on individual paths: When switching off model calibration and setting
+model vols close to zero in {\tt Input/Dim2/simulation.xml} and {\tt Input/Dim2/simulation\_amccg.xml}, then we basically
+``roll down the forward curve'', and both calculations should yield ther same result, though the the new method
+Figure \ref{fig_dim2_comparison_1} shows the comparison.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{examples/mpl_dim_comparison_1.pdf}
+\end{center}
+\caption{Evolution of SIMM vs Expected Dynamic Initial Margin (DIM) for a Euribor and SOFR-3M Swap, simulation with zero
+  volatility, single path in case of the SIMM benchmark, 10k paths in case of DIM.}
+\label{fig_dim2_comparison_1}
+\end{figure}
+
+Next, we use a model with non-zero vols, i.e. re-activate calibration in {\tt Input/Dim2/simulation.xml} and
+{\tt Input/Dim2/simulation\_amccg.xml}. Running another script ({\tt python run\_dim2\_cube.py}) we now generate a few
+SIMM benchmark paths and compare to the expected DIM from 10k paths, see Figure  \ref{fig_dim2_comparison_3}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{examples/mpl_dim_comparison_3.pdf}
+\end{center}
+\caption{Evolution of SIMM vs Expected Dynamic Initial Margin (DIM) for a Euribor and SOFR-3M Swap;
+  simulation with non-zero volatility, three paths in case of the SIMM benchmark, 10k paths in case of DIM.}
+\label{fig_dim2_comparison_3}
+\end{figure}
+
+Preliminary note on performance:
+\begin{itemize}
+\item The script takes about one minute to generate the benchmark SIMM evolution on a single path with 120 time steps
+  for the example above
+\item Dynamic SIMM takes about 2 minutes for the expectation across 10k paths, on the same hardware (single core, Macbook Pro M2 Max),
+  a speedup factor of 5000 compared to the pedestrian benchmark
+\end{itemize}
+
+TODO:
+\begin{itemize}
+\item Compare a single-path DIM to benchmark with non-zero vol
+\item Show effect of IR volatility on expected DIM evolution
+\item Show FX Option and Swaption results
+\item Extend performance discussion, scaling with portfolio size
+\item Show Dynamic SIMM distribution
+\item Compare average Dynamic SIMM to scaled regression IM
+\item Outlook
+\end{itemize}
 
 \subsection{Exposure}\label{example:exposure}
 
@@ -1111,7 +1201,7 @@ The batch in {\tt python run\_swaption.py} covers three cases
 \begin{center}
 \includegraphics[scale=0.45]{examples/mpl_callable_swap.pdf}
 \end{center}
-\caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has
+\caption{European callable Swap represented as a package consisting of non-callable Swap and Swaption. The Swaption has
   physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown
   here as 'EPE Netting Set' (green line). This is covered by the pink line, the exposure evolution of the same Swap but
   with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and
@@ -1528,7 +1618,7 @@ therefore 2 x 4. The reversion matrix is a 4 x 4 diagonal matrix and entered as 
 are constant in time. Their values are not calibrated to the option market, but hardcoded in simulation.xml.
 
 The values for the diffusion and reversion matrices were fitted to the first two principal components of a
-(hypothetical) analyis of absolute rate curve movements. These input principal components can be found in
+(hypothetical) analysis of absolute rate curve movements. These input principal components can be found in
 inputeigenvectors.csv in the input folder. The tenor is given in years, and the two components are given as column
 vectors, see table \ref{tab:ex37_1}.
 
@@ -1598,7 +1688,7 @@ number & sqrt(value)                \\
 \end{center}
 \end{table}
 
-matching the prescribed input values of 0.0070 and 0.0030 quite well. The correpsonding eigenvectors are given in etable
+matching the prescribed input values of 0.0070 and 0.0030 quite well. The corresponding eigenvectors are given in etable
 \ref{tab:ex37_4}.
 
 \begin{table}[hbt]
@@ -1621,7 +1711,7 @@ tenor & eigenvector 1       & eigenvector 2       \\
 \end{table}
 
 again matching the input principal components quite well. The second eigenvector is the negative of the input vector
-here (the principal compoennt analysis can not distinguish these of course).
+here (the principal component analysis can not distinguish these of course).
 
 The example also produces a plot comparing the input eigenvectors and the model implied eigenvectors as shown in figure \ref{fig:ex37}.
 
@@ -2005,7 +2095,7 @@ if the difference increases our exposure - a conservative measure.
 
 \subsection{Scripted Trade}\label{example:scriptedtrade}
 
-The scripted trade was added to ORE to gain more flexibility in representing exotic products, with hyprid payoffs across
+The scripted trade was added to ORE to gain more flexibility in representing exotic products, with hybrid payoffs across
 asset classes, path-dependence, multiple kinds of early termination options. The scripted trade module uses Monte Carlo and
 Finite Difference pricing approaches, it is an evolving interface to implement parallel processing with GPUs and a central
 interface to implement AD methods in ORE. See the separate documentation in folder Docs/ScriptedTrade for an introduction to trade
@@ -2076,8 +2166,8 @@ to generate exposures in ORE.
   in the script library.\\
   Run with: {\tt python run\_fxtarf.py}
 \item Forward Bond with AMC, run with: {\tt python run\_forwardbond.py}
-\item TODO - Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
-\item TODO - Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
+\item Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
+\item Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
 \end{itemize}
 
 \subsubsection{Benchmarking AMC vs Classic Simulation}
@@ -2218,7 +2308,7 @@ The \verb+Model+ differs by product type, table \ref{tbl:amcconfig} summarises t
 engine types. The engine parameters are the same for all products:
 
 \begin{enumerate}
-\item \verb+Training.Sequence+: The sequence type for the traning phase, can be \verb+MersenneTwister+,
+\item \verb+Training.Sequence+: The sequence type for the training phase, can be \verb+MersenneTwister+,
   \verb+MersenneTwisterAntithetc+, \verb+Sobol+, \verb+Burley2020Sobol+, \verb+SobolBrownianBridge+,
   \verb+Burley2020SobolBrownianBridge+
 \item \verb+Training.Seed+: The seed for the random number generation in the training phase
@@ -2407,7 +2497,7 @@ Model Parameters special to that product are
 \item \verb+IrCalibrationStrategy+ can be \verb+None+, \verb+CoterminalATM+, \verb+UnderlyingATM+
 \item \verb+FXCalibration+ can be \verb+None+ or \verb+Bootstrap+
 \item \verb+ExtrapolateFxVolatility+ can be \verb+true+ or \verb+false+; if false, no calibration instruments are used
-  that require extrapolation of the market fx volatilty surface in option expiry direction
+  that require extrapolation of the market fx volatility surface in option expiry direction
 \item \verb+Corr_Key1_Key2+: These entries describe the cross asset model correlations to be used; the syntax for
   \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model
 \end{enumerate}
@@ -2464,7 +2554,7 @@ demonstrates exposure simulation and XVA for another scripted product, an
 FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
 the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
 The trade type in this case is {\tt FxTARF} which has its own implementation in {\tt OREData/ored/portfolio/tarf.xpp}
-and a separate trade schema. However, the scipted trade framework is used under the hood, and the payoff
+and a separate trade schema. However, the scripted trade framework is used under the hood, and the payoff
 script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
 
 \subsubsection{Forward Bond}
@@ -2487,7 +2577,7 @@ Otherwise the spread quote is used or none.
 
 In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
-\subsubsection{Overlapping Close-out Grids in AMC - TODO}
+\subsubsection{Overlapping Close-out Grids in AMC}
 
 Calling 
 
@@ -2495,10 +2585,10 @@ Calling
 \centerline {\tt python run\_overlapping.py} 
 
 \medskip
-demonstrates ...
+demonstrates the case where the primary and close-out grid overlap, using
+a daily simulation grid up to 15 days. This was not possible in releases earlier than ORE v13.
 
-\subsubsection{Extract Scenario Statistics - TODO}
-
+\subsubsection{Extract Scenario Statistics}
 
 Calling 
 
@@ -2506,7 +2596,8 @@ Calling
 \centerline {\tt python run\_scenariostatistics.py} 
 
 \medskip
-demonstrates ...
+demonstrates a basic statistical anylsis of the simulated raw scenario data (simulated yield curve discount factors, FX spot rates etc), generating a report
+with min, mean, max, standard deviation, skewness and kurtosis for each factor and at each simulated future date.
 
 \subsection{XVA Risk}\label{example:xvarisk}
 
@@ -2645,6 +2736,7 @@ at a given future horizon which is driven by
 The model integrates Credit and Market Risk by jointly evolving systemic credit risk drivers
 alongside the usual risk factors in ORE's Cross Asset Model.
 See also the separate documentation in {\tt Docs/UserGuide/creditmodel.tex|pdf}.
+As mentioned there, this example will only run if the Eigen installation has been done before building ORE as described in section \ref{sec:build}.
 
 By running \\
 \medskip
@@ -2761,7 +2853,7 @@ In that case the steps are as follows.
 \begin{enumerate}
 \item To create a virtual environment: {\tt python -m venv env1} 
 \item To activate this environment on Windows: {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat}  \\
-or on macOS/Linux: {\tt ./env1/bin/activate }  
+or on macOS/Linux: {\tt source env1/bin/activate }  
 \item Then install the latest release of ORE:\\
 {\tt pip install open-source-risk-engine } 
 \item Try examples:\\
@@ -2786,6 +2878,32 @@ or on macOS/Linux: {\tt ./env1/bin/activate }
 Finally, you can build the Python module and installable packages yourself following the instructions in sections
 \ref{sec:oreswig} based on your local ORE code. 
 
+\subsubsection*{Jupyter Notebook Examples}
+
+With ORE release 13 we have merged the ORE-SWIG source code into the ORE repository and moved a range of related
+Jupyter notebook examples into this ORE-Python folder, see folders Notebooks/Example\_1 to Notebooks/Example\_9.
+
+To try, change e.g. to Notebooks/Example\_1 and launch the notebook there by calling
+
+\medskip
+{\tt python3 -m jupyterlab ore.ipynb \& }
+
+\medskip
+If not installed yet, this might require a
+
+\medskip
+{\tt python3 -m pip install jupyterlab }
+
+\medskip
+and some of the Jupyter notebooks require additional packages to be installed with pip:
+\begin{itemize}
+\item matplotlib
+\item pandas
+\item numpy
+\item scipy
+\item ipywidgets
+\end{itemize}
+
 \subsection{ORE-API}\label{example:oreapi}
 
 Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
@@ -2796,8 +2914,7 @@ The service is based on
 \item the flask web framework \url{https://flask.palletsprojects.com}, and
 \item the ORE Python module which can be installed using \\
   {\tt pip install open-source-risk-engine} \\
-  or built from sources following the instructions in the ORE-SWIG repository
-  at \url{https://github.com/opensourcerisk/ore-swig}.
+  or built from sources following the instructions in section \ref{sec:installation}
 \end{itemize}
 
 \medskip
