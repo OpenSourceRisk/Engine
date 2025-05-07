@@ -843,23 +843,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = parameters_->swapVolSmileDynamics(name) == "StickyStrike";
                                 QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 QuantLib::ext::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
-                                if (!stickyStrike) {
+                                if (!swapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(swapIndexBase);
+                                        simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
+                                }
+                                if (!shortSwapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(shortSwapIndexBase);
+                                        simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
-                                    simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
-                                    simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
-                                    if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
-                                        stickyStrike = true;
                                 }
                                 if (!swapIndexBase.empty())
                                     swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);

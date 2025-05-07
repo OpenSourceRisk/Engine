@@ -200,6 +200,7 @@ public:
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
+    void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
@@ -639,6 +640,7 @@ public:
     SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
+    bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
     Size mcVarSamples() const { return mcVarSamples_; }
@@ -1050,6 +1052,7 @@ protected:
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
+    bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
     std::string varMethod_ = "DeltaGammaNormal";
