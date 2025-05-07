@@ -32,7 +32,6 @@ def get_list_of_legacy_examples():
 
 def get_list_of_new_examples():
     return ["AmericanMonteCarlo",
-            "BNY",
             "CreditRisk",
             "CurveBuilding",
             "Exposure",
