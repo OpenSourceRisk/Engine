@@ -5,13 +5,14 @@
       <Discretization>Exact</Discretization>
       <!--<Grid>41,3M</Grid>-->
       <!--<Grid>52,1D</Grid>-->
-      <Grid>121,1M</Grid>
+      <!--<Grid>121,1M</Grid>-->
+      <Grid>1M,1Y,4Y,8Y</Grid>
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>5</Samples>
+      <Samples>1000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>
@@ -141,12 +142,16 @@
         <DiscountingIndex>EUR-ESTER</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
+        <Name>GBP-CMS-1Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
         <Name>GBP-CMS-10Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-30Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
     
