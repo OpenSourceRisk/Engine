@@ -83,10 +83,12 @@
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
+      <!--<Parameter name="dvaName">BANK</Parameter>-->
       <Parameter name="fva">N</Parameter>
+      <!--
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      -->
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
