@@ -457,8 +457,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                                     parHelperDependencies[rfkey], expDiscountCurve, marketConfiguration);
                             parCaps[rfkey] = tmp;
                         } else {
+                            //TODO: move to convention?
+                            QL_REQUIRE(datap->rateComputationPeriod.has_value(),
+                                       "Need to specify rateComputationPeriod to compute par sensisitivity");
                             auto tmp =
-                                makeOisCapFloor(simMarket, ccy, indexName, term, strike, isAtm,
+                                makeOisCapFloor(simMarket, ccy, indexName, term, strike, datap->rateComputationPeriod.value(), isAtm,
                                                 parHelperDependencies[rfkey], expDiscountCurve, marketConfiguration);
                             oisParCaps[rfkey] = tmp;
                         }

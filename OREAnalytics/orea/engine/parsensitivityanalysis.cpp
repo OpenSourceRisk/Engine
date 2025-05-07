@@ -264,6 +264,24 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         populateShiftSizes(c.first, parVol, simMarket);
     }
 
+    for (auto& c : instruments_.oisParCaps_) {
+
+        QL_REQUIRE(instruments_.parCapsYts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
+        QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
+
+        Volatility parVol = impliedVolatility(c.first, instruments_);
+        parCapVols[c.first] = parVol;
+        TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                    << parVol << ".");
+
+        // Populate zero and par shift size for the current risk factor
+        populateShiftSizes(c.first, parVol, simMarket);
+    }
+
+
+
     for (auto& c : instruments_.parYoYCaps_) {
 
         QL_REQUIRE(instruments_.parYoYCapsYts_.count(c.first) > 0,
@@ -429,6 +447,35 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
+
+        // process par caps
+
+        for (auto const& p : instruments_.oisParCaps_) {
+
+            if (p.second->isCalculated() && p.first != desc[i].key1())
+                continue;
+
+            auto fair = impliedVolatility(p.first, instruments_);
+            auto base = parCapVols.find(p.first);
+            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
+
+            Real tmp = (fair - base->second) / shiftSize;
+
+            // ensure Jacobi matrix is regular and not (too) ill-conditioned, this is necessary because
+            // a) the shift size used to compute dpar / dzero might be close to zero and / or
+            // b) the implied vol calculation has numerical inaccuracies
+
+            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
+                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
+                                                           << " to 0.01 (got " << tmp << ")");
+                tmp = 0.01;
+            }
+
+            // write sensitivity
+
+            writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
+        }
+
 
         // process par yoy caps
 

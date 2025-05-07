@@ -331,7 +331,7 @@ double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumen
         auto implVolQuote = ext::make_shared<SimpleQuote>(0.01);
         Handle<OptionletVolatilityStructure> constOvts;
         Real accuracy = 1.0e-6;
-        Natural maxEvaluations = 100;
+        
         Volatility minVol= 1.0e-7;
         Volatility maxVol = 4.0;
         if (instruments.parCapsVts_.at(key)->volatilityType() == ShiftedLognormal) {
