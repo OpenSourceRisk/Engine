@@ -1850,7 +1850,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding());
         }
     };
 
@@ -3879,7 +3879,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding());
         }
     };
 
@@ -4006,7 +4006,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding());
         }
     };
 
@@ -4188,7 +4188,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
+            data_ = QuantLib::ext::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding());
         }
     };
 
