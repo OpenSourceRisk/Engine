@@ -316,7 +316,7 @@ void MarketCalibrationReportBase::addCommodityCurve(const QuantLib::Date& refdat
     if (info == nullptr)
         return;
 
-    const string commodityStr = "commodityCuve";
+    const string commodityStr = "commodityCurve";
 
     // check if we have already processed this curve
     if (checkCalibrations(label, commodityStr, id)) {
