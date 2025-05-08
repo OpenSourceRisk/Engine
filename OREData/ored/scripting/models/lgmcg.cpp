@@ -254,14 +254,19 @@ std::size_t LgmCG::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightInd
         Date d1 = valueDates[i];
         Date d2 = valueDates[std::max(nCutoff, i)];
 
-        std::size_t startDiscount = addModelParameter(
-            g_, modelParameters_,
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d1),
-            [curve, d1] { return curve->discount(d1); });
-        std::size_t endDiscount = addModelParameter(
-            g_, modelParameters_,
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d2),
-            [curve, d2] { return curve->discount(d2); });
+        double td1 = p_()->termStructure()->timeFromReference(d1);
+        double td2 = p_()->termStructure()->timeFromReference(d2);
+
+        std::size_t startDiscount =
+            addModelParameter(g_, modelParameters_,
+                              ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                      "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1),
+                              [curve, d1] { return curve->discount(d1); });
+        std::size_t endDiscount =
+            addModelParameter(g_, modelParameters_,
+                              ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                      "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2),
+                              [curve, d2] { return curve->discount(d2); });
 
         if (nCutoff < n) {
             Date cutoffDate = valueDates[nCutoff];
@@ -288,8 +293,8 @@ std::size_t LgmCG::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightInd
             d2_lgm += t - d2;
         }
 
-        double td1 = p_()->termStructure()->timeFromReference(d1_lgm);
-        double td2 = p_()->termStructure()->timeFromReference(d2_lgm);
+        double td1_lgm = p_()->termStructure()->timeFromReference(d1_lgm);
+        double td2_lgm = p_()->termStructure()->timeFromReference(d2_lgm);
 
         // the discount factors estimated in the lgm model
 
@@ -303,14 +308,14 @@ std::size_t LgmCG::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightInd
             cg_div(g_, startDiscount,
                    addModelParameter(g_, modelParameters_,
                                      ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
-                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1),
+                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1_lgm),
                                      [curve, d1_lgm] { return curve->discount(d1_lgm); })));
         disc2 = cg_mult(
             g_, disc2,
             cg_div(g_, endDiscount,
                    addModelParameter(g_, modelParameters_,
                                      ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
-                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2),
+                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2_lgm),
                                      [curve, d2_lgm] { return curve->discount(d2_lgm); })));
 
         // continue with the usual computation
@@ -472,14 +477,19 @@ std::size_t LgmCG::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex
         Date d1 = valueDates[i];
         Date d2 = valueDates[std::max(nCutoff, i)];
 
-        std::size_t startDiscount = addModelParameter(
-            g_, modelParameters_,
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d1),
-            [curve, d1] { return curve->discount(d1); });
-        std::size_t endDiscount = addModelParameter(
-            g_, modelParameters_,
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_, "fwd_" + index->name(), d2),
-            [curve, d2] { return curve->discount(d2); });
+        double td1 = p_()->termStructure()->timeFromReference(d1);
+        double td2 = p_()->termStructure()->timeFromReference(d2);
+
+        std::size_t startDiscount =
+            addModelParameter(g_, modelParameters_,
+                              ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                      "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1),
+                              [curve, d1] { return curve->discount(d1); });
+        std::size_t endDiscount =
+            addModelParameter(g_, modelParameters_,
+                              ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
+                                                      "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2),
+                              [curve, d2] { return curve->discount(d2); });
 
         if (nCutoff < n) {
             Date cutoffDate = valueDates[nCutoff];
@@ -506,8 +516,8 @@ std::size_t LgmCG::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex
             d2_lgm += t - d2;
         }
 
-        double td1 = p_()->termStructure()->timeFromReference(d1_lgm);
-        double td2 = p_()->termStructure()->timeFromReference(d2_lgm);
+        double td1_lgm = p_()->termStructure()->timeFromReference(d1_lgm);
+        double td2_lgm = p_()->termStructure()->timeFromReference(d2_lgm);
 
         // the discount factors estimated in the lgm model
 
@@ -521,14 +531,14 @@ std::size_t LgmCG::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex
             cg_div(g_, startDiscount,
                    addModelParameter(g_, modelParameters_,
                                      ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
-                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1),
+                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td1_lgm),
                                      [curve, d1_lgm] { return curve->discount(d1_lgm); })));
         disc2 = cg_mult(
             g_, disc2,
             cg_div(g_, endDiscount,
                    addModelParameter(g_, modelParameters_,
                                      ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, qualifier_,
-                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2),
+                                                             "fwd_" + index->name(), {}, {}, {}, {}, {}, {}, td2_lgm),
                                      [curve, d2_lgm] { return curve->discount(d2_lgm); })));
 
         // continue with the usual computation
