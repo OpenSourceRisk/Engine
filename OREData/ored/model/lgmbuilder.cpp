@@ -78,7 +78,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                                                      settlementDays, averagingMethod);
     auto sd = swaptionData(helper);
 
-    // ensure point 1 from above
+    // ensure fallback rule 1
 
     Real atmStdDev = svts->volatility(sd.timeToExpiry, sd.swapLength, sd.atmForward) * std::sqrt(sd.timeToExpiry);
     if (vt == ShiftedLognormal) {
@@ -97,35 +97,6 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
         fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule1;
-    }
-
-    // ensure point 2 from above
-
-    auto mv = std::abs(helper->marketValue());
-    if (mv < ore::data::LgmBuilder::mmv) {
-        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than minimum market value "
-                                   << ore::data::LgmBuilder::mmv << " so switching to helper with atm rate "
-                                   << sd.atmForward);
-        strike = sd.atmForward;
-        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
-                                                    settlementDays, averagingMethod);
-        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule2;
-    }
-
-    // ensure point 3 from above
-
-    mv = std::abs(helper->marketValue());
-    if (errorType != BlackCalibrationHelper::PriceError && mv < ore::data::LgmBuilder::smv) {
-        errorType = BlackCalibrationHelper::PriceError;
-        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than " << ore::data::LgmBuilder::smv
-                                   << " so switching to a price error helper.");
-        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
-                                                    settlementDays, averagingMethod);
-        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule3;
     }
 
     DLOG("Created swaption helper with expiry " << expiry << " and term " << term << ": vol=" << vol->value()
