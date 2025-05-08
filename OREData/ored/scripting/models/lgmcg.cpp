@@ -99,7 +99,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
     Real T = p()->termStructure()->timeFromReference(e);
 
     ModelCG::ModelParameter id_P0T(ModelCG::ModelParameter::Type::dsc, qualifier_, discountCurveId, e, expiryDate, {},
-                                   {}, {}, {}, t);
+                                   {}, {}, {}, T);
     ModelCG::ModelParameter id_H(ModelCG::ModelParameter::Type::lgm_H, qualifier_, {}, {}, {}, {}, {}, {}, {}, T);
     ModelCG::ModelParameter id_zeta(ModelCG::ModelParameter::Type::lgm_zeta, qualifier_, {}, {}, {}, {}, {}, {}, {}, t);
 
