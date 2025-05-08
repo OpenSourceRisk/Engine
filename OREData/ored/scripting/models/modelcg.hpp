@@ -88,7 +88,7 @@ public:
         ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2 = {},
                        const QuantLib::Date& date = {}, const QuantLib::Date& date2 = {},
                        const QuantLib::Date& date3 = {}, const std::size_t index = 0, const std::size_t index2 = 0,
-                       const std::size_t hash = 0);
+                       const std::size_t hash = 0, const double time = 0.0);
         ModelParameter(const ModelParameter& p) = default;
         ModelParameter(ModelParameter&& p) = default;
         ModelParameter& operator=(ModelParameter&& p) = default;
@@ -102,6 +102,7 @@ public:
         const QuantLib::Date& date() const { return date_; }
         const QuantLib::Date& date2() const { return date2_; }
         const QuantLib::Date& date3() const { return date3_; }
+        double time() const { return time_; }
         std::size_t index() const { return index_; }
         std::size_t index2() const { return index2_; }
         std::size_t hash() const { return hash_; }
@@ -122,6 +123,7 @@ public:
         std::size_t index_;
         std::size_t index2_;
         std::size_t hash_;
+        double time_;
         // functor, only filled for primary model parameters, not filled for cached parameters
         mutable std::function<double(void)> functor_;
         // node in cg, this is filled for primary model parameters and cached parameters

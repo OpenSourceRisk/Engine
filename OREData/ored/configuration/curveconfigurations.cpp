@@ -133,6 +133,10 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 config = QuantLib::ext::make_shared<CorrelationCurveConfig>();
                 break;
             }
+            case CurveSpec::CurveType::SwapIndex: {
+                QL_FAIL("CurveConfigurations::parseNode(): internal error, SwapIndex is unexpected.");
+                break;
+            }
             }
             try {
                 config->fromXMLString(itc->second);
