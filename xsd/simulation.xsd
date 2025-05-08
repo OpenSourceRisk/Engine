@@ -29,6 +29,7 @@
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
       <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
       <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
+      <xs:element type="xs:integer" name="TimeStepsPerYear" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
