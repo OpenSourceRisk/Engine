@@ -215,7 +215,7 @@ void XvaEngineCG::buildCam() {
                    << ") - internal error!");
 
     Size timeStepsPerYear =
-        crossAssetModelData_->timeStepsPerYear() == Null<Size>() ? 1 : crossAssetModelData_->timeStepsPerYear();
+        scenarioGeneratorData_->timeStepsPerYear() == Null<Size>() ? 1 : scenarioGeneratorData_->timeStepsPerYear();
 
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
