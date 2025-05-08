@@ -1367,6 +1367,7 @@
       <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
       <xs:element type="xs:string" name="PillarDates" minOccurs="0"/>
       <xs:element type="xs:string" name="UnderlyingTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="ContinuationExpiry" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
