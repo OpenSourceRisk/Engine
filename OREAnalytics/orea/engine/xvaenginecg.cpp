@@ -214,8 +214,8 @@ void XvaEngineCG::buildCam() {
                    << stickyCloseOutDates_.size() << ") do not match simulation dates size (" << simulationDates_.size()
                    << ") - internal error!");
 
-    // note: this should be added to CrossAssetModelData
-    Size timeStepsPerYear = 1;
+    Size timeStepsPerYear =
+        crossAssetModelData_->timeStepsPerYear() == Null<Size>() ? 1 : crossAssetModelData_->timeStepsPerYear();
 
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
@@ -1105,25 +1105,25 @@ void XvaEngineCG::calculateDynamicIM() {
 
                 // zero rate sensi for T - t as seen from val date t is - ( T - t ) *  P(0,T) * d NPV / d P(0,T)
 
-                if (p.type() == ModelCG::ModelParameter::Type::dsc && p.date() > valDate &&
+                if (p.type() == ModelCG::ModelParameter::Type::dsc && p.time() > t &&
                     (p.date2() > valDate || p.date2() == Date())) {
                     std::size_t ccyIndex = currencyLookup.at(p.qualifier());
-                    Real T = model_->actualTimeFromReference(p.date());
                     std::size_t bucket = std::min<std::size_t>(
                         irDeltaTerms.size() - 1,
                         std::distance(irDeltaConverter[ccyIndex].times().begin(),
                                       std::lower_bound(irDeltaConverter[ccyIndex].times().begin(),
-                                                       irDeltaConverter[ccyIndex].times().end(), T - t)));
+                                                       irDeltaConverter[ccyIndex].times().end(), p.time() - t)));
                     Real w1 = 0.0, w2 = 1.0;
                     if (bucket > 0) {
-                        w1 = (irDeltaConverter[ccyIndex].times()[bucket] - (T - t)) /
+                        w1 = (irDeltaConverter[ccyIndex].times()[bucket] - (p.time() - t)) /
                              (irDeltaConverter[ccyIndex].times()[bucket] -
                               (bucket == 0 ? 0.0 : irDeltaConverter[ccyIndex].times()[bucket - 1]));
                         w2 = 1.0 - w1;
-                        pathIrDelta[ccyIndex][bucket - 1] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w1) *
-                                                             values_[p.node()] * dynamicIMDerivatives_[p.node()];
+                        pathIrDelta[ccyIndex][bucket - 1] +=
+                            RandomVariable(model_->size(), -(p.time() - t) * 1E-4 * w1) * values_[p.node()] *
+                            dynamicIMDerivatives_[p.node()];
                     }
-                    pathIrDelta[ccyIndex][bucket] += RandomVariable(model_->size(), -(T - t) * 1E-4 * w2) *
+                    pathIrDelta[ccyIndex][bucket] += RandomVariable(model_->size(), -(p.time() - t) * 1E-4 * w2) *
                                                      values_[p.node()] * dynamicIMDerivatives_[p.node()];
                 }
 
@@ -1140,9 +1140,9 @@ void XvaEngineCG::calculateDynamicIM() {
 
                 // ir vega, we collect the sensi w.r.t. zeta, unit shift per unit time
 
-                if (p.type() == ModelCG::ModelParameter::Type::lgm_zeta && p.date() > valDate) {
+                if (p.type() == ModelCG::ModelParameter::Type::lgm_zeta && p.time() > t) {
                     std::size_t ccyIndex = currencyLookup.at(p.qualifier());
-                    Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
+                    Real tte = p.time() - model_->actualTimeFromReference(valDate);
                     std::size_t bucket = std::min<std::size_t>(
                         irVegaTerms.size() - 1,
                         std::distance(irVegaConverter[ccyIndex].optionTimes().begin(),
@@ -1165,12 +1165,12 @@ void XvaEngineCG::calculateDynamicIM() {
 
                 // fx vega, we want the sensi w.r.t. an absolute shift of 0.01
 
-                if (p.type() == ModelCG::ModelParameter::Type::fxbs_sigma && p.date() >= valDate) {
+                if (p.type() == ModelCG::ModelParameter::Type::fxbs_sigma && p.time() >= t) {
                     std::size_t ccyIndex = currencyLookup.at(p.qualifier());
                     QL_REQUIRE(
                         ccyIndex > 0,
                         "XvaEngineCG::calculateDynamicIM(): internal error, fxbs_sigma qualifier is equal to base ccy");
-                    Real tte = model_->actualTimeFromReference(p.date()) - model_->actualTimeFromReference(valDate);
+                    Real tte = p.time() - model_->actualTimeFromReference(valDate);
                     std::size_t bucket = std::min<std::size_t>(
                         fxVegaTerms.size() - 1,
                         std::distance(fxVegaConverter[ccyIndex - 1].optionTimes().begin(),
