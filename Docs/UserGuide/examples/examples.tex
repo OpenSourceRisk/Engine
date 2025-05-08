@@ -970,8 +970,8 @@ fixings to {\tt Input/DimValidation/fixings.csv}. The script then loops over sim
 and performs a conventional SIMM run for each date (see {\tt Input/DimValidation/ore\_simm.xml}).
 This is used to check the new method's output on individual paths: When switching off model calibration and setting
 model vols close to zero in {\tt Input/Dim2/simulation.xml} and {\tt Input/Dim2/simulation\_amccg.xml}, then we basically
-``roll down the forward curve'', and both calculations should yield ther same result, though the the new method
-Figure \ref{fig_dim2_comparison_1} shows the comparison.
+``roll down the forward curve'', and both calculations should yield the same result.
+Figure \ref{fig_dim2_comparison_1} shows the comparison and expected outcome.
 
 \begin{figure}[h!]
 \begin{center}
@@ -1003,15 +1003,28 @@ Preliminary note on performance:
   a speedup factor of 5000 compared to the pedestrian benchmark
 \end{itemize}
 
-TODO:
+We now zoom in on four future time points (1M, 1Y, 4Y, 8Y) and illustrate the SIMM distribution from the new
+report {\tt dim\_distribution.csv}. To benchmark the distributions we re-run {\tt python run\_dim2\_cube.py}
+again, but with number of paths increased to 1000 and time steps reduced to the four dates we want to analyse,
+i.e. changing Input/Dim2/simulation.xml accordingly. This generates an updated output in Output/DimValidation/simm\_cube.csv.
+Running the script {\tt python plot\_dim\_distribution.py} then generates the comparison in Figure
+\ref{fig_dim2_distributions}. Note that the Dynamic SIMM calculation takes a few seconds with 10k paths and a handful of time points,
+while the brute force benchmark calculation crunches 1k paths on four dates in about half an hour.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{examples/mpl_simm_distribution.pdf}
+\end{center}
+\caption{SIMM distribution from Dynamic SIMM (lines) vs benchmark (histograms) at time points 1M, 1Y, 4Y, 8Y from as of date.}
+\label{fig_dim2_distributions}
+\end{figure}
+
+Further investigation of this new Dynamic SIMM method is work in progress:
 \begin{itemize}
-\item Compare a single-path DIM to benchmark with non-zero vol
-\item Show effect of IR volatility on expected DIM evolution
-\item Show FX Option and Swaption results
-\item Extend performance discussion, scaling with portfolio size
-\item Show Dynamic SIMM distribution
-\item Compare average Dynamic SIMM to scaled regression IM
-\item Outlook
+\item path-wise benchmarking
+\item more products - FX Options, Swaptions, FX TaRF as a complex scripted example
+\item investigation of alternative regression methods in AMC and their impact on quality of AAD sensitivities
+\item comparison to the simple regression DIM model of section \ref{example:initialmargin_dim}
 \end{itemize}
 
 \subsection{Exposure}\label{example:exposure}

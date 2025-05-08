@@ -3,9 +3,8 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
-      <!--<Grid>41,3M</Grid>-->
-      <!--<Grid>52,1D</Grid>-->
-      <Grid>121,1M</Grid>
+      <Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>
+      <TimeStepsPerYear>24</TimeStepsPerYear>
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
@@ -144,11 +143,11 @@
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-10Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-30Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>USD-CMS-1Y</Name>

@@ -5,4 +5,4 @@
 	ignore = dirty
 [submodule "ORE-SWIG/QuantLib-SWIG"]
 	path = ORE-SWIG/QuantLib-SWIG
-	url = https://github.com/OpenSourceRisk/QuantLib-SWIG.git
+	url = https://github.com/OpenSourceRisk/QuantLib-SWIG-Gitlab
