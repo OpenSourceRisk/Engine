@@ -2,13 +2,13 @@
 
 This tutorial is aimed at the user who wants to install the pre-built ORE
 Python module and use it to execute example Jupyter notebooks provided in
-[the notebooks directory](https://github.com/OpenSourceRisk/ORE-SWIG/tree/master/OREAnalytics-SWIG/Python/Examples/Notebooks). No compilation is necessary.
+[the notebooks directory](https://github.com/OpenSourceRisk/Engine/Examples/ORE-Python/Notebooks). No compilation is necessary.
 
 [Back to tutorials index](../tutorials_index.md)
 
-**Please note** that (as of October 2023) the published ORE Python wheels are
-available for Python versions 3.8 up to 3.11 for Windows, Linux and macOS arm64,
-and Python versions up to 3.10 for Intel Mac users.  
+**Please note** that (as of October 2024) the published ORE Python wheels are
+available for Python versions 3.8 up to 3.12 for Windows, Linux, macOS arm64,
+and Intel Mac users.  
 
 We assume below that the python executable points to a permissible Python 3 version. You can check your system's default python version with
 
