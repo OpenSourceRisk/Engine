@@ -34,11 +34,7 @@ using namespace QuantLib;
 
 class SpreadedSmileSection2 : public SmileSection {
 public:
-    /*! - If stickyAbsMoney = true or if strikes are relative to atm and more than one strike is giv en, the base smile
-          section must provide an ATM level that does not react to changes in the rate levels. Alternatively, baseAtmLevel
-          can be provided.
-        - If stickyAbsMoney = true, simulatedAtmLevel must be provided and represent the ATM
-          level that _does_ react to changes in the rate levels. */
+    //! baseAtmLevel, simulatedAtmLevel are required in some situations, exceptions are thrown if they are not
     SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base, const std::vector<Real>& volSpreads,
                           const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
                           const Real baseAtmLevel = Null<Real>(), const Real simulatedAtmLevel = Null<Real>(),
@@ -51,6 +47,9 @@ protected:
     Volatility volatilityImpl(Rate strike) const override;
 
 private:
+    Rate getSafeAtmLevel() const;
+    Rate getSafeBaseAtmLevel() const;
+
     QuantLib::ext::shared_ptr<SmileSection> base_;
     std::vector<Real> volSpreads_;
     std::vector<Real> strikes_;

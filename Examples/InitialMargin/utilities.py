@@ -240,6 +240,14 @@ def scenarioToFixings(gzFileName, asofDates, filterSample, outputDir):
 
     return numeraireData
 
+
+def num(asof, numeraireData):
+    for index, row in numeraireData.iterrows():
+        d = row["#asofDate"]
+        n = float(row["Numeraire"])
+        if d == asof:
+            return n
+
 def rawCubeFilter(rawCubeFileName, filterSample):
 
     print("read raw cube file:", rawCubeFileName)

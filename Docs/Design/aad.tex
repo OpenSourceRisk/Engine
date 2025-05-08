@@ -753,3 +753,245 @@ i.e. it replaces the entire XVA analytic and the post processing of the NPV cube
 
 For testing/validation purposes (accuracy of results, performance) we can activate bump \& revalue sensitivity
 calculation by setting the hard coded boolean {\tt bumpCvaSensis=true} in orea/engine/xvaenginecg.cpp.
+
+%-----------------------------------------------------------------------------------------------------
+\subsection{Dynamic Delta with AAD}
+%-----------------------------------------------------------------------------------------------------
+
+The Dynamic Delta sensitivity calculation for IM modeling using AAD is in development in ORE and in an experimental,
+proof of concept state at the time of writing this text.
+
+The starting point are the conditional portfolio npvs on valuation times $t$
+
+$$
+E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
+$$
+
+where $X_i$ are future flows paid at $t_i > t$, $S(t_i)$ is the fx rate to convert flow to base currency and $N(t_i)$ is
+the numeraire at time $t_i$ and $\mathcal{F}_t$ is the filtration representing the infomration at time $t$. The goal is
+to compute sensitivities
+
+$$
+\frac{\partial}{\partial p}E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
+$$
+
+w.r.t. a vector of par market risk factors $p$. We write
+
+$$
+\bar{X} := \sum_i \frac{X_i S_i(t_i)}{N(t_i)}
+$$
+
+in what follows. We decompose the calculation of derivatives of $\bar{X}$ to par market risk factors into
+
+\begin{itemize}
+\item computing derivatives of the conditional portfolio npvs to model parameters $m$
+\item computing derivatives of model parameters $m$ to zero market risk factors $z$
+\item computing derivatives of zero market risk factors $z$ to par market risk factors $p$
+\end{itemize}
+
+and using the multivariate chain rule to combine the results, i.e.
+
+$$
+\frac{\partial}{\partial p} = \frac{\partial}{\partial m} \frac{\partial m}{\partial z} \frac{\partial z}{\partial p}
+$$
+
+Table \ref{tab:aad_modelparams} lists the model parameters that we use\footnote{see modelcg.hpp, we only list
+non-derived parameters and those used in GaussianCamCG}. Model parameters are generally identified by their type and a
+subset of additional keys (qualifier1, qualifier2, date, date2, date3, index, index2, hash).
+
+\begin{table}[htb]
+  \begin{tabular}{l|l}
+            parameter name   & meaning \\
+    \hline
+            fix               & historical index fixing \\
+            dsc               & T0 ir discount \\
+            lgm\_H            & lgm1f parameter \\
+            lgm\_Hprime       & lgm1f parameter \\
+            lgm\_zeta,        & lgm1f parameter \\
+            fxbs\_sigma,      & fxbs parameter \\
+            logFxSpot,        & T0 log fx spot \\
+            sqrtCorr,         & model sqrt correlation \\
+            sqrtCov,          & model sqrt covariance \\
+            corr,             & model correlation \\
+            cov,              & model cov \\
+            cam\_corrzz,      & ir-ir corr \\
+            cam\_corrzx,      & ir-fx corr \\
+    \hline
+\end{tabular}
+\caption{Model parameters used by GaussianCamCG}
+\label{tab:aad_modelparams}
+\end{table}
+
+\underline{A Computing derivatives of conditional portfolio npvs to model parameters $m$}
+
+We use
+
+$$
+\frac{\partial}{\partial m}E\left( \bar{X} \bigg| \mathcal{F}_t \right) = E\left( \frac{\partial \bar{X}}{\partial m} \bigg| \mathcal{F}_t \right)
+$$
+
+and rely on the backward derivatives algorithm to compute pathwise derivatives
+
+$$
+\frac{\partial \bar{X}}{\partial m}
+$$
+
+to model parameters $m$.
+
+
+\underline{B Computing derivatives of model parameters $m$ to zero market risk factors $z$}
+
+The relevant model parameters are dsc, lgm\_zeta, fxbs\_sigma and logFxSpot.
+
+\underline{B1 IR zero rate deltas}
+
+Suppose we have a sensitivity $s$ of $\bar{X}$ to a model parameter of type dsc referencing a maturity time $T$, $T >
+t$, i.e.
+
+$$
+s = \frac{\partial\bar{X}}{\partial P(0,T)}
+$$
+
+with the deterministic T0 discount factor $P(0,T)$. The aim is to convert $s$ to a sensitivity to the conditional zero
+rate as seen from $t$ with maturity $T-t$. We write
+
+$$
+Q(t,T,x(t)) := P(t,T) d
+$$
+
+for the conditional zero bond with maturity $T$ as seen from $t$ conditional on the model state $x(t)$. In the LGM1F
+model we have
+
+$$
+d = e^{-(H(T)-H(t))x(t) - \frac{1}{2}( H(T)^2 - H(t)^2 ) \zeta(t)}
+$$
+
+but the calculation goes through for any model where we can decompose $Q(t,T)$ as $P(t,T)\cdot d$. We write the deterministic zero bond
+
+$$
+P(t,T) = e^{-z\cdot(T-t)}
+$$
+
+in terms of the deterministic zero rate $z$ and the conditional zero bond as
+
+$$
+Q(t,T,x(t)) = e^{-z (T-t)} d =: e^{-\tilde{z} (T-t)}
+$$
+
+We are ultimately interested in the derivative of $\bar{X}$ w.r.t. $\tilde{z}$. We have:
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = \frac{\partial \bar{X}}{\partial P(t,T)} \frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}}
+$$
+
+Since
+
+$$
+\frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}} = \frac{1}{d} \left[ -(T-t) Q(t,T,x) \right] = -(T-t)P(t,T)
+$$
+
+we get
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = -(T-t) \frac{\partial \bar{X}}{\partial P(t,T)} P(t,T)
+$$
+
+and since
+
+$$
+\frac{\partial \bar{X}}{\partial P(t,T)} = \frac{\partial \bar{X}}{\partial P(0,T)} \frac{\partial P(0,T)}{\partial P(t,T)} =  \frac{\partial \bar{X}}{\partial P(0,T)} P(0,t)
+$$
+
+we get the final formula to convert $s$ to a market zero risk factor sensitivity:
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = -(T-t) P(0,T) \frac{\partial \bar{X}}{\partial P(0,T)} = -(T-t) P(0,T) s
+$$
+
+As a final step, we distribute the sensitivity on predefined buckets linearly.
+
+\underline{B2  FX deltas}
+
+Assume a sensitivity $s$ of $\bar{X}$ to a model parameter of type logFxSpot:
+
+$$
+s = \frac{\partial\bar{X}}{\partial \ln S(0)}
+$$
+
+with $S(0)$ the T0 FX Spot rate. The log FX Spot rate $S(t)$ at time $t$ is given by
+
+$$
+\ln S(t) = \ln S(0) + \int_0^t r(s) ds - \int_0^t d(s) ds =: \ln S(0) + R(t) - D(t)
+$$
+
+where $r(s)$ and $d(s)$ are the instantaneous, stochastic domestic and foreign short rates. Now, obviously,
+
+$$
+\frac{\partial \ln S(t)}{\partial \ln S(0)} = \frac{\partial \left( \ln S(0) + R(t) - D(t) \right)}{\partial \ln S(0)} = 1
+$$
+
+and therefore
+
+$$
+\frac{\partial \bar{X}}{\partial \ln S(t)} = \frac{\partial \bar{X}}{\partial \ln S(0)}
+$$
+
+Note also that this is the derivative w.r.t. to a relative shift in $S(t)$ resp. $S(0)$.
+
+\underline{B3  IR vegas}
+
+A sensitivity $s$ of $\bar{X}$ to a model parameter of type lgm\_zeta
+
+$$
+s = \frac{\partial\bar{X}}{\partial \zeta(T)}
+$$
+
+with $T>t$ is directly distributed on the defined bucket structure linearly. The conversion to a market vega is done in
+par-conversion step, see below.
+
+
+\underline{B4  FX vegas}
+
+A sensitivity $s$ of $\bar{X}$ to a model parameter of type fxbs\_sigma
+
+$$
+s = \frac{\partial\bar{X}}{\partial \sigma(T)}
+$$
+
+with $T>t$ is converted to a market vega in the par-conversion step, see below.
+
+
+\underline{C Computing derivatives of zero market risk factors $z$ to par market risk factors $p$}
+
+\underline{C1 IR zero to par rate deltas}
+
+The conversion of IR zero to par rate deltas follow the usual procedure via Jacobian transformation. There are possible simplifications that can be exploited to speed up the conversion. We currently apply both of them in ore:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}
+
+\underline{C2 IR vega par conversion}
+
+The conversion of sensitivities to the lgm\_zeta parameter to sensitivities to implied swaption vol is done in analogy
+to the IR delta par conversion by specifying a set of swaptions and calculating the Jaocbian of these swaptions to the
+lgm zeta parameter. The same possible simplifications as for IR par delta conversion exist and we apply both in ore
+currently:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}
+
+\underline{C3 FX vega par conversion}
+
+The conversion of sensitivities to the fxbs\_sigma parameter to sensitivities to implied fx option vols is done in
+analogy to the IR delta par conversion by specifying a set of fx options and calculating the Jacobian of these fx
+swaptions to the fx bs sigma parameter. The same possible simplifications as for IR par delta conversion exist and we
+apply both in ore currently:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}

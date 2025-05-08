@@ -18,10 +18,10 @@
 
 #include <orea/engine/parametricvar.hpp>
 
-#include <orea/engine/riskfilter.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
-#include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/engine/riskfilter.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -37,7 +37,7 @@ using namespace ore::data;
 using namespace std;
 
 namespace ore {
-namespace analytics {   
+namespace analytics {
 
 ParametricVarCalculator::ParametricVarParams::ParametricVarParams(const string& m, Size samp, Size sd)
     : method(parseParametricVarMethod(m)), samples(samp), seed(sd) {}
@@ -48,8 +48,7 @@ ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(co
         {"DeltaGammaNormal", ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal},
         {"MonteCarlo", ParametricVarCalculator::ParametricVarParams::Method::MonteCarlo},
         {"Cornish-Fisher", ParametricVarCalculator::ParametricVarParams::Method::CornishFisher},
-        {"Saddlepoint", ParametricVarCalculator::ParametricVarParams::Method::Saddlepoint}
-    };
+        {"Saddlepoint", ParametricVarCalculator::ParametricVarParams::Method::Saddlepoint}};
 
     auto it = m.find(s);
     if (it != m.end())
@@ -75,8 +74,7 @@ ostream& operator<<(ostream& out, const ParametricVarCalculator::ParametricVarPa
     }
 }
 
-Real ParametricVarCalculator::var(Real confidence, const bool isCall, 
-    const set<pair<string, Size>>& tradeIds) {
+Real ParametricVarCalculator::var(Real confidence, const bool isCall, const set<pair<string, Size>>& tradeIds) const {
     Real factor = isCall ? 1.0 : -1.0;
 
     Array delta(deltas_.size(), 0.0);
@@ -108,16 +106,15 @@ Real ParametricVarCalculator::var(Real confidence, const bool isCall,
 
     if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Delta)
         return QuantExt::deltaVar(omega_, delta, confidence, *covarianceSalvage_);
-    else if (parametricVarParams_.method ==
-                ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal)
+    else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::DeltaGammaNormal)
         return QuantExt::deltaGammaVarNormal(omega_, delta, gamma, confidence, *covarianceSalvage_);
     else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::MonteCarlo) {
         QL_REQUIRE(parametricVarParams_.samples != Null<Size>(),
-                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
+                   "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         QL_REQUIRE(parametricVarParams_.seed != Null<Size>(),
-                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
+                   "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         return QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence, parametricVarParams_.samples,
-                                                        parametricVarParams_.seed, *covarianceSalvage_);
+                                                       parametricVarParams_.seed, *covarianceSalvage_);
     } else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::CornishFisher)
         return QuantExt::deltaGammaVarCornishFisher(omega_, delta, gamma, confidence, *covarianceSalvage_);
     else if (parametricVarParams_.method == ParametricVarCalculator::ParametricVarParams::Method::Saddlepoint) {
@@ -125,41 +122,37 @@ Real ParametricVarCalculator::var(Real confidence, const bool isCall,
         try {
             res = QuantExt::deltaGammaVarSaddlepoint(omega_, delta, gamma, confidence, *covarianceSalvage_);
         } catch (const std::exception& e) {
-            ALOG("Saddlepoint VaR computation exited with an error: " << e.what()
-                                                                        << ", falling back on Monte-Carlo");
-            res = QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence,
-                parametricVarParams_.samples, parametricVarParams_.seed, *covarianceSalvage_);
-        }        
+            ALOG("Saddlepoint VaR computation exited with an error: " << e.what() << ", falling back on Monte-Carlo");
+            res =
+                QuantExt::deltaGammaVarMc<PseudoRandom>(omega_, delta, gamma, confidence, parametricVarParams_.samples,
+                                                        parametricVarParams_.seed, *covarianceSalvage_);
+        }
         return res;
     } else
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << parametricVarParams_.method << " not known.");
 }
 
 ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const ext::shared_ptr<Portfolio>& portfolio,
-                                         const string& portfolioFilter,
-                                         const vector<Real>& p,
+                                         const string& portfolioFilter, const vector<Real>& p,
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                                          const SalvagingAlgorithm::Type varSalvagingAlgorithm,
                                          boost::optional<ore::data::TimePeriod> period,
-                                         std::unique_ptr<SensiRunArgs> sensiArgs,
-                                         const bool breakdown)
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
 
-ParametricVarReport::ParametricVarReport(
-    const std::string& baseCurrency,
-    const ext::shared_ptr<Portfolio>& portfolio,
-    const string& portfolioFilter,
-    const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-    const vector<Real>& p,
-    const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-    const SalvagingAlgorithm::Type varSalvagingAlgorithm,
-    boost::optional<ore::data::TimePeriod> period,
-    std::unique_ptr<SensiRunArgs> sensiArgs,
-    const bool breakdown)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr, breakdown),
+ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const ext::shared_ptr<Portfolio>& portfolio,
+                                         const string& portfolioFilter,
+                                         const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                                         const vector<Real>& p,
+                                         const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+                                         const SalvagingAlgorithm::Type varSalvagingAlgorithm,
+                                         boost::optional<ore::data::TimePeriod> period,
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr,
+                breakdown),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
@@ -167,6 +160,19 @@ ParametricVarReport::ParametricVarReport(
 void ParametricVarReport::createVarCalculator() {
     varCalculator_ = QuantLib::ext::make_shared<ParametricVarCalculator>(
         parametricVarParams_, covarianceMatrix_, deltas_, gammas_, salvage_, includeGammaMargin_, includeDeltaMargin_);
+}
+
+void ParametricVarReport::writeHeader(const ext::shared_ptr<Report>& report) const {
+    report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
+    for (const auto p : p())
+        report->addColumn("Quantile_" + std::to_string(p), double(), 6);
+}
+
+std::vector<Real> ParametricVarReport::calcVarsForQuantiles() const {
+    std::vector<Real> varRecords;
+    for (const auto p : p())
+        varRecords.push_back(varCalculator_->var(p));
+    return varRecords;
 }
 
 } // namespace analytics

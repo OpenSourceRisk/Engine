@@ -29,6 +29,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 \item {\tt ShiftType:} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
   {\tt Absolute} resp. {\tt Relative}.
 \item {\tt ShiftSize:} The size of the shift to apply.
+\item {\tt ShiftScheme:} The finite difference scheme to use ({\tt Forward}, {\tt Backward}, {\tt Central}), if not given, this parameter defaults to {\tt Forward}
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
@@ -40,6 +41,52 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
 \end{itemize}
+
+The ShiftType, ShiftSize, ShiftScheme nodes take an optional attribute key that allows to configure different values for
+different sensitivity templates. The sensitivity templates are defined in the pricing engine configuration. This is best
+explained by an example: In Example 15 the product type BermudanSwaption has a sensitivity template \verb+IR_FD+
+attached, see \ref{lst:sensi_template}. This can be used to specify different shifts for trades that were built against
+this engine configuration, see \ref{lst:sensi_config_template}: For Bermudan swaptions a larger shift size of 10bp and a
+central difference scheme is used to compute discount curve sensitivities in EUR. Since no separate shift type is
+specified, the default shift type {\tt Absolute} is used. Note regarding the reports:
+
+\begin{itemize}
+\item the sensi scenario report contains scenario NPVs related to the possibly product specific configured shift sizes
+\item the sensi report contains renormalized sensitivities, i.e. sensitivities are always expressed w.r.t. the default shift sizes
+\item the sensi config report only contains the default configuration
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      ...
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      ...
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_template}
+\end{longlisting}
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftScheme>Forward</ShiftScheme>
+      <ShiftSize key="IR_FD">0.001</ShiftSize>
+      <ShiftScheme key="IR_FD">Central</ShiftScheme>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+\end{minted}
+\caption{Sensitivity template definition}
+\label{lst:sensi_config_template}
+\end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)

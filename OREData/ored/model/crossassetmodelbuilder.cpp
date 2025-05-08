@@ -583,8 +583,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
-    TLOG("CAM correlation matrix:");
-    TLOGGERSTREAM(corrMatrix);
+    DLOG("CAM correlation matrix:");
+    DLOGGERSTREAM(corrMatrix);
 
     /*****************************
      * Build the cross asset model
@@ -668,10 +668,10 @@ void CrossAssetModelBuilder::buildModel() const {
             fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
@@ -737,10 +737,10 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "EQ BS " + eq->eqName() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
@@ -870,9 +870,9 @@ void CrossAssetModelBuilder::calibrateInflation(
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(cb);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + data.index() + " index " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
@@ -1039,20 +1039,20 @@ void CrossAssetModelBuilder::calibrateInflation(
     }
 
     // Log the calibration details.
-    TLOG("INF (JY) " << data.index() << " model parameters after calibration:");
-    TLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
-    TLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
-    TLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
-    TLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
-    TLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
-    TLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
+    DLOG("INF (JY) " << data.index() << " model parameters after calibration:");
+    DLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+    DLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+    DLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+    DLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+    DLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+    DLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << data.index() << " index " << modelIdx << " calibration error " << std::scientific

@@ -46,33 +46,16 @@ using namespace std;
 namespace {
 
 // Return swaption data
-SwaptionData swaptionData(const QuantLib::ext::shared_ptr<Swaption> swaption, const Handle<YieldTermStructure>& yts,
-                          const Handle<SwaptionVolatilityStructure>& svts) {
-
-    QuantLib::ext::shared_ptr<PricingEngine> engine;
-    switch (svts->volatilityType()) {
-    case ShiftedLognormal:
-        engine = QuantLib::ext::make_shared<BlackSwaptionEngine>(yts, svts);
-        break;
-    case Normal:
-        engine = QuantLib::ext::make_shared<BachelierSwaptionEngine>(yts, svts);
-        break;
-    default:
-        QL_FAIL("Could not construct swaption engine for volatility type: " << svts->volatilityType());
-        break;
-    }
-
-    swaption->setPricingEngine(engine);
-
+SwaptionData swaptionData(const QuantLib::ext::shared_ptr<SwaptionHelper>& h) {
     SwaptionData sd;
-    sd.timeToExpiry = yts->timeFromReference(swaption->exercise()->dates().back());
-    sd.swapLength = swaption->result<Real>("swapLength");
-    sd.strike = swaption->result<Real>("strike");
-    sd.atmForward = swaption->result<Real>("atmForward");
-    sd.annuity = swaption->result<Real>("annuity");
-    sd.vega = swaption->result<Real>("vega");
-    sd.stdDev = swaption->result<Real>("stdDev");
-
+    h->blackPrice(h->volatility()->value());
+    sd.timeToExpiry = h->timeToExpiry();
+    sd.swapLength = h->swapLength();
+    sd.strike = h->strike();
+    sd.atmForward = h->atmForward();
+    sd.annuity = h->annuity();
+    sd.vega = h->vega();
+    sd.stdDev = h->stdDev();
     return sd;
 }
 
@@ -93,7 +76,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                      settlementDays, averagingMethod);
-    auto sd = swaptionData(helper->swaption(), yts, svts);
+    auto sd = swaptionData(helper);
 
     // ensure point 1 from above
 
@@ -136,7 +119,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     mv = std::abs(helper->marketValue());
     if (errorType != BlackCalibrationHelper::PriceError && mv < ore::data::LgmBuilder::smv) {
         errorType = BlackCalibrationHelper::PriceError;
-        TLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
+        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
                                    << std::scientific << mv << " which is lower than " << ore::data::LgmBuilder::smv
                                    << " so switching to a price error helper.");
         helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
@@ -476,7 +459,7 @@ void LgmBuilder::performCalculations() const {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         }
-        TLOG("LGM " << data_->qualifier() << " calibration errors:");
+        DLOG("LGM " << data_->qualifier() << " calibration errors:");
         error_ = getCalibrationError(swaptionBasket_);
     } catch (const std::exception& e) {
         // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
@@ -486,24 +469,24 @@ void LgmBuilder::performCalculations() const {
     if (fabs(error_) < bootstrapTolerance_ ||
         (data_->calibrationType() == CalibrationType::BestFit && error_ != QL_MAX_REAL)) {
         // we check the log level here to avoid unnecessary computations
-        if (Log::instance().filter(ORE_DATA) || setCalibrationInfo_) {
-            TLOGGERSTREAM("Basket details:");
+        if (Log::instance().filter(ORE_DEBUG) || setCalibrationInfo_) {
+            DLOGGERSTREAM("Basket details:");
             try {
                 auto d = getBasketDetails(calibrationInfo);
-                TLOGGERSTREAM(d);
+                DLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occurred: " << e.what());
             }
-            TLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
+            DLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
             try {
                 auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
-                TLOGGERSTREAM(d);
+                DLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occurred: " << e.what());
             }
-            TLOGGERSTREAM("Parameter details (with parameter time grid)");
-            TLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_))
-            TLOGGERSTREAM("rmse = " << error_);
+            DLOGGERSTREAM("Parameter details (with parameter time grid)");
+            DLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_))
+            DLOGGERSTREAM("rmse = " << error_);
             calibrationInfo.valid = true;
         }
     } else {
@@ -762,8 +745,8 @@ std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
         << "vega" << std::setw(16) << "vol\n";
     info.swaptionData.clear();
     for (Size j = 0; j < swaptionBasket_.size(); ++j) {
-        auto swp = QuantLib::ext::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j])->swaption();
-        auto sd = swaptionData(swp, calibrationDiscountCurve_, svts_);
+        auto swp = QuantLib::ext::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j]);
+        auto sd = swaptionData(swp);
         log << std::right << std::setw(3) << j << std::setw(16) << sd.timeToExpiry << std::setw(16) << sd.swapLength
             << std::setw(16) << sd.strike << std::setw(16) << sd.atmForward << std::setw(16) << sd.annuity
             << std::setw(16) << sd.vega << std::setw(16) << std::setw(16) << sd.stdDev / std::sqrt(sd.timeToExpiry)

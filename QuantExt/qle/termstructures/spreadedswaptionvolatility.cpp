@@ -30,7 +30,8 @@ namespace QuantExt {
 SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
     const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
     const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+    const QuantLib::ext::shared_ptr<SwapIndex>& baseSwapIndexBase,
     const QuantLib::ext::shared_ptr<SwapIndex>& baseShortSwapIndexBase,
     const QuantLib::ext::shared_ptr<SwapIndex>& simulatedSwapIndexBase,
     const QuantLib::ext::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney)
@@ -39,16 +40,27 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
       base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), baseSwapIndexBase_(baseSwapIndexBase),
       baseShortSwapIndexBase_(baseShortSwapIndexBase), simulatedSwapIndexBase_(simulatedSwapIndexBase),
       simulatedShortSwapIndexBase_(simulatedShortSwapIndexBase), stickyAbsMoney_(stickyAbsMoney) {
+
+    QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
+    QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
+    QL_REQUIRE(!swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
+    QL_REQUIRE(optionTenors.size() * swapTenors.size() == volSpreads.size(),
+               "SpreadedSwaptionVolatility: optionTenors (" << optionTenors.size() << ") * swapTenors ("
+                                                            << swapTenors.size() << ") inconsistent with vol spreads ("
+                                                            << volSpreads.size() << ")");
+
+    QL_REQUIRE((baseSwapIndexBase_ == nullptr && baseShortSwapIndexBase_ == nullptr &&
+                simulatedSwapIndexBase_ == nullptr && simulatedShortSwapIndexBase_ == nullptr) ||
+                   (baseSwapIndexBase_ != nullptr && baseShortSwapIndexBase_ != nullptr &&
+                    simulatedSwapIndexBase_ != nullptr && simulatedShortSwapIndexBase_ != nullptr),
+               "SpreadedSwaptionVolatility: all swap index bases must be null or non-null at the same time.");
+
+    QL_REQUIRE(strikeSpreads_.size() == 1 || baseSwapIndexBase_ != nullptr,
+               "SpreadedSwaptionVolatility: if strikeSpreads != 1 (got " << strikeSpreads_.size()
+                                                                         << "), swap index bases must be given.");
+
     enableExtrapolation(base_->allowsExtrapolation());
     registerWith(base_);
-    QL_REQUIRE(
-        (baseSwapIndexBase_ == nullptr && baseShortSwapIndexBase_ == nullptr) ||
-            (baseSwapIndexBase_ != nullptr && baseShortSwapIndexBase_ != nullptr),
-        "SpreadedSwaptionVolatility: baseSwapIndexBase and baseShortSwapIndexBase must be both null or non-null");
-    QL_REQUIRE((simulatedSwapIndexBase_ == nullptr && simulatedShortSwapIndexBase_ == nullptr) ||
-                   (simulatedSwapIndexBase_ != nullptr && simulatedShortSwapIndexBase_ != nullptr),
-               "SpreadedSwaptionVolatility: simulatedSwapIndexBase and simulatedShortSwapIndexBase must be both null "
-               "or non-null");
     if (baseSwapIndexBase_)
         registerWith(baseSwapIndexBase_);
     if (baseShortSwapIndexBase_)
@@ -57,13 +69,6 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
         registerWith(simulatedSwapIndexBase_);
     if (simulatedShortSwapIndexBase_)
         registerWith(simulatedShortSwapIndexBase_);
-    QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
-    QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
-    QL_REQUIRE(!swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
-    QL_REQUIRE(optionTenors.size() * swapTenors.size() == volSpreads.size(),
-               "SpreadedSwaptionVolatility: optionTenors (" << optionTenors.size() << ") * swapTenors ("
-                                                            << swapTenors.size() << ") inconsistent with vol spreads ("
-                                                            << volSpreads.size() << ")");
     for (auto const& s : volSpreads_) {
         QL_REQUIRE(s.size() == strikeSpreads_.size(), "SpreadedSwaptionVolatility: got " << strikeSpreads_.size()
                                                                                          << " strike spreads, but "
@@ -107,20 +112,16 @@ Real SpreadedSwaptionVolatility::getAtmLevel(const Real optionTime, const Real s
     }
 }
 
-QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
+QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime,
+                                                                                     Time swapLength) const {
     calculate();
     auto baseSection = base_->smileSection(optionTime, swapLength);
     Real baseAtmLevel = Null<Real>();
     Real simulatedAtmLevel = Null<Real>();
-    if ((stickyAbsMoney_ || strikeSpreads_.size() > 1) && baseSection->atmLevel() == Null<Real>()) {
-        QL_REQUIRE(baseSwapIndexBase_ != nullptr,
-                   "SpreadedSwaptionVolatility::smileSecitonImpl: require baseSwapIndexBase, since stickyAbsMoney is "
-                   "true and the base vol smile section does not provide an ATM level.");
+    if (baseSection->atmLevel() == Null<Real>() && baseSwapIndexBase_) {
         baseAtmLevel = getAtmLevel(optionTime, swapLength, baseSwapIndexBase_, baseShortSwapIndexBase_);
     }
-    if (stickyAbsMoney_) {
-        QL_REQUIRE(simulatedSwapIndexBase_ != nullptr, "SpreadedSwaptionVolatility::smileSectionImpl: required "
-                                                       "simualtedSwapIndexBase, since stickyAbsMoney is true");
+    if (simulatedSwapIndexBase_ != nullptr) {
         simulatedAtmLevel = getAtmLevel(optionTime, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
     }
     // interpolate vol spreads
@@ -129,32 +130,18 @@ QuantLib::ext::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSection
         volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
     }
     // create smile section
-    return QuantLib::ext::make_shared<SpreadedSmileSection2>(base_->smileSection(optionTime, swapLength), volSpreads,
-                                                     strikeSpreads_, true, baseAtmLevel, simulatedAtmLevel,
-                                                     stickyAbsMoney_);
+    return QuantLib::ext::make_shared<SpreadedSmileSection2>(baseSection, volSpreads, strikeSpreads_, true,
+                                                             baseAtmLevel, simulatedAtmLevel, stickyAbsMoney_);
 }
 
 Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
-    if (strike == Null<Real>()) {
+    if (baseSwapIndexBase_ == nullptr) {
+        // if swap index base is not given, we assume base and this svts are atm only
         calculate();
-        // support input strike null, interpret this as atm
-        std::vector<Real> volSpreads(strikeSpreads_.size());
-        for (Size k = 0; k < volSpreads.size(); ++k) {
-            volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
-        }
-        Real volSpread;
-        if (volSpreads.size() > 1) {
-            auto spreadInterpolation =
-                LinearFlat().interpolate(strikeSpreads_.begin(), strikeSpreads_.end(), volSpreads.begin());
-            volSpread = spreadInterpolation(0.0);
-        } else {
-            volSpread = volSpreads.front();
-        }
-        return std::max(0.0, base_->volatility(optionTime, swapLength, strike) + volSpread);
-    } else {
-        // if input strike != null, use smile section implementation
-        return smileSectionImpl(optionTime, swapLength)->volatility(strike);
+        return std::max(0.0, base_->volatility(optionTime, swapLength, Null<Real>()) +
+                                 volSpreadInterpolation_.front().operator()(swapLength, optionTime));
     }
+    return smileSectionImpl(optionTime, swapLength)->volatility(strike);
 }
 
 Real SpreadedSwaptionVolatility::shiftImpl(const Date& optionDate, const Period& swapTenor) const {

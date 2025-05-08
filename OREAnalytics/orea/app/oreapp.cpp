@@ -1298,6 +1298,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setVarQuantiles(tmp);
 
+        tmp = params_->get("historicalSimulationVar", "includeExpectedShortfall", false);
+        if (tmp != "")
+            setIncludeExpectedShortfall(parseBool(tmp));
+
         tmp = params_->get("historicalSimulationVar", "breakdown", false);
         if (tmp != "")
             setVarBreakDown(parseBool(tmp));

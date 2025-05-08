@@ -308,7 +308,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                    "AmcCgBaseEngine::createCashflowInfo(): av coupon has lookback with units != Days ("
                        << av->lookback() << "), this is not allowed.");
         std::size_t fixing =
-            modelCg_->fwdCompAvg(false, indexName, av->valueDates().front(), av->valueDates().front(),
+            modelCg_->fwdCompAvg(true, indexName, av->valueDates().front(), av->valueDates().front(),
                                  av->valueDates().back(), av->spread(), av->gearing(), av->lookback().length(),
                                  av->rateCutoff(), av->fixingDays(), false, Null<Real>(), Null<Real>(), false, false);
         info.flowNode = modelCg_->pay(
