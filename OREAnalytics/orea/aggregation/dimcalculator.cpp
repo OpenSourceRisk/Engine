@@ -164,15 +164,14 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
     LOG("Exporting expected DIM through time done");
 }
 
-void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& dimDistributionReport) const {
+void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& dimDistributionReport,
+                                                           const Size gridSize, const Real coveredStdDevs) const {
 
     dimDistributionReport.addColumn("NettingSet", string())
         .addColumn("TimeStep", Size())
         .addColumn("Date", Date())
         .addColumn("Bound", Real(), 6)
         .addColumn("Count", Size());
-
-    constexpr Size steps = 50;
 
     std::vector<Real> bounds;
     std::vector<Size> counts;
@@ -181,8 +180,8 @@ void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& di
 
         for (Size i = 0; i < datesLoopSize_; ++i) {
             distributionCount(nettingSetDIM_.at(nettingSet).at(i).begin(), nettingSetDIM_.at(nettingSet).at(i).end(),
-                              steps, bounds, counts);
-            for (Size j = 0; j < steps; ++j)
+                              gridSize, bounds, counts, coveredStdDevs);
+            for (Size j = 0; j < gridSize; ++j)
                 dimDistributionReport.next()
                     .add(nettingSet)
                     .add(i)
@@ -193,7 +192,6 @@ void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& di
     }
 
     dimDistributionReport.end();
-
 }
 
 } // namespace analytics

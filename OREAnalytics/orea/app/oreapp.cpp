@@ -2103,6 +2103,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setDimOutputGridPoints(tmp);
 
+    tmp = params_->get("pfe", "dimDistributionCoveredStdDevs", false);
+    if (tmp != "")
+        setDimDistributionCoveredStdDevs(tmp == "inf" ? Null<Real>() : parseReal(tmp));
+
+    tmp = params_->get("pfe", "dimDistributionGridSize", false);
+    if (tmp != "")
+        setDimDistributionGridSize(parseInteger(tmp));
+
     tmp = params_->get("pfe", "dimOutputNettingSet", false);
     if (tmp != "")
         setDimOutputNettingSet(tmp);
@@ -2417,6 +2425,14 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "dimOutputGridPoints", false);
     if (tmp != "")
         setDimOutputGridPoints(tmp);
+
+    tmp = params_->get("xva", "dimDistributionCoveredStdDevs", false);
+    if (tmp != "")
+        setDimDistributionCoveredStdDevs(tmp == "inf" ? Null<Real>() : parseReal(tmp));
+
+    tmp = params_->get("xva", "dimDistributionGridSize", false);
+    if (tmp != "")
+        setDimDistributionGridSize(parseInteger(tmp));
 
     tmp = params_->get("xva", "dimOutputNettingSet", false);
     if (tmp != "")
