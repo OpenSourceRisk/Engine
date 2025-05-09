@@ -6,6 +6,8 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "pwd"
 pwd
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ls
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 CURRENT_DIR=$(pwd)
 
@@ -41,6 +43,7 @@ echo "XYZ END unpack boost"
 
 echo "XYZ BEGIN build ORE"
 pwd
+ls
 cd ORE
 mkdir build
 cd build
@@ -53,6 +56,6 @@ echo "XYZ END build ORE"
 echo "XYZ BEGIN wrap oreswig"
 pwd
 ls
-cd ORE-SWIG
+cd ORE/ORE-SWIG
 python setup.py wrap
 

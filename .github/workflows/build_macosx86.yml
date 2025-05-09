@@ -37,7 +37,7 @@ jobs:
         cd ORE-SWIG/OREAnalytics-SWIG/SWIG
         chmod +x oreanalytics.i
         cd ..
-        cd Python
+        cd ..
         pwd
         python setup.py wrap
     - name: Build Wheels

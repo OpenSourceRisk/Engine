@@ -70,14 +70,16 @@ jobs:
       run: |
         SET BOOST_INCLUDEDIR=C:\local\boost
         SET BOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
-        SET BOOST_LIB=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        SET BOOST_LIB64=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        SET BOOST_LIB32=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
         cd ${{ github.workspace }}\ORE-SWIG
         python setup.py wrap
     - name: Build ORE Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
         BOOST: C:\local\boost
-        BOOST_LIB: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        BOOST_LIB32: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
         ORE: ${{ github.workspace }}
         ORE_DIR: ${{ github.workspace }}
         ORE_STATIC_RUNTIME: 1

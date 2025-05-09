@@ -112,7 +112,7 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
 
 #else
 
-PythonFunctions::PythonFunctions() {}
+PythonFunctions::PythonFunctions() { initialized_ = true; }
 PythonFunctions::~PythonFunctions() {}
 
 RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
