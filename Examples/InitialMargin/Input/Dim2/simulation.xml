@@ -3,16 +3,14 @@
 
   <Parameters>
       <Discretization>Exact</Discretization>
-      <!--<Grid>41,3M</Grid>-->
-      <!--<Grid>52,1D</Grid>-->
-      <!--<Grid>121,1M</Grid>-->
-      <Grid>1M,1Y,4Y,8Y</Grid>
+      <Grid>121,1M</Grid>
+      <!--<Grid>1M,1Y,4Y,8Y</Grid>-->
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>1000</Samples>
+      <Samples>10</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>
