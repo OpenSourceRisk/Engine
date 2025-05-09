@@ -1737,13 +1737,13 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, std::vector<Size>(),
             conditionalExpectationModelStates, std::vector<Date>{},
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 1 : timeStepsPerYear_);
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
         model_ = QuantLib::ext::make_shared<GaussianCam>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
             modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, std::vector<Size>(),
             conditionalExpectationModelStates, params_,
-            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 1 : timeStepsPerYear_);
+            camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     }
 
     modelBuilders_.insert(std::make_pair(id, camBuilder));
