@@ -1166,7 +1166,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
                 // Generate DIM distribution report
                 auto dimDistributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                postProcess_->exportDimDistribution(*dimDistributionReport);
+                postProcess_->exportDimDistribution(*dimDistributionReport, inputs_->dimDistributionGridSize(),
+                                                    inputs_->dimDistributionCoveredStdDevs());
                 analytic()->addReport(LABEL, "dim_distribution", dimDistributionReport);
 
                 // Generate DIM regression reports
