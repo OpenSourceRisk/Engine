@@ -104,6 +104,10 @@
       <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- cover n std devs around mean of the data in dim distribution output, or "inf" to cover all of the  data -->
+      <Parameter name="dimDistributionCoveredStdDevs">5.0</Parameter>
+      <!-- grid size for dim distribution report -->
+      <Parameter name="dimDistributionGridSize">50</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
       <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->
