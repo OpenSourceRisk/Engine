@@ -91,6 +91,7 @@ protected:
     void buildBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildFdBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
+    void buildFdLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
     void buildFdGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
@@ -159,12 +160,9 @@ protected:
     std::string modelParam_, infModelType_, engineParam_, baseCcyParam_, gridCoarsening_;
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
-    Model::McParams mcParams_;
+    Model::Params params_;
     bool interactive_, zeroVolatility_, continueOnCalibrationError_;
     std::vector<Real> calibrationMoneyness_;
-    Real mesherEpsilon_, mesherScaling_, mesherConcentration_;
-    Size mesherMaxConcentratingPoints_;
-    bool mesherIsStatic_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;
     bool calibrate_;
@@ -177,7 +175,6 @@ protected:
     std::string externalComputeDevice_;
     bool includePastCashflows_;
     bool staticNpvMem_;
-    SalvagingAlgorithm::Type salvagingAlgorithm_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
 };
 

@@ -46,15 +46,15 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcparams, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm = SalvagingAlgorithm::Spectral);
+        const std::set<Date>& simulationDates,
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(), const Params& params = {});
 
     // ctor for a single underlying
     LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
              const std::string& index, const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-             const McParams& mcparams, const std::set<Date>& simulationDates,
-             const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+             const std::set<Date>& simulationDates,
+             const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+             const Params& params = {});
 
 private:
     // ModelImpl interface implementation

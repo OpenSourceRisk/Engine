@@ -33,10 +33,10 @@ using namespace QuantExt;
 
 LocalVol::LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                    const std::string& index, const std::string& indexCurrency,
-                   const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                   const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams, simulationDates,
-               iborFallbackConfig, SalvagingAlgorithm::None) {}
+                   const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
+                   const IborFallbackConfig& iborFallbackConfig, const Params& params)
+    : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
+               iborFallbackConfig, params) {}
 
 LocalVol::LocalVol(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -46,10 +46,9 @@ LocalVol::LocalVol(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
-    const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm)
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const Params& params)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig, salvagingAlgorithm) {}
+                       correlations, simulationDates, iborFallbackConfig, params) {}
 
 void LocalVol::performCalculations() const {
 
@@ -87,7 +86,7 @@ void LocalVol::performCalculations() const {
 
     // compute the sqrt correlation
 
-    Matrix sqrtCorr = pseudoSqrt(correlation, getSalvagingAlgorithm());
+    Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
 
     // precompute the deterministic part of the drift on each time step
 
@@ -133,16 +132,16 @@ void LocalVol::performCalculations() const {
     // evolve the process using correlated normal variates and set the underlying path values
 
     populatePathValues(size(), underlyingPaths_,
-                       makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(), timeGrid_.size() - 1,
-                                                     mcParams_.seed, mcParams_.sobolOrdering,
-                                                     mcParams_.sobolDirectionIntegers),
+                       makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(), timeGrid_.size() - 1,
+                                                     params_.seed, params_.sobolOrdering,
+                                                     params_.sobolDirectionIntegers),
                        correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
 
     if (trainingSamples() != Null<Size>()) {
         populatePathValues(trainingSamples(), underlyingPathsTraining_,
-                           makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
-                                                         timeGrid_.size() - 1, mcParams_.trainingSeed,
-                                                         mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                           makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
+                                                         timeGrid_.size() - 1, params_.trainingSeed,
+                                                         params_.sobolOrdering, params_.sobolDirectionIntegers),
                            correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
     }
 

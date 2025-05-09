@@ -32,13 +32,15 @@ namespace data {
 
 using namespace QuantLib;
 
-ModelImpl::ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
-                     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : Model(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
+ModelImpl::ModelImpl(
+    const Type type, const Params& params, const DayCounter& dayCounter, const Size size,
+    const std::vector<std::string>& currencies,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    : Model(size), type_(type), params_(params), dayCounter_(dayCounter), currencies_(currencies),
+      indexCurrencies_(indexCurrencies), simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 

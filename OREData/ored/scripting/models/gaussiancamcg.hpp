@@ -46,11 +46,11 @@ public:
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                   const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                  const std::set<Date>& simulationDates, const Size timeStepsPerYear = 1,
+                  const std::set<Date>& simulationDates,
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const std::vector<Date>& stickyCloseOutDates = {});
+                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
 
     // Model interface implementation
     Type type() const override { return Type::MC; }

@@ -18,8 +18,8 @@
 
 #include <ored/scripting/models/blackscholes.hpp>
 
-#include <ored/utilities/to_string.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
@@ -33,11 +33,11 @@ using namespace QuantLib;
 
 BlackScholes::BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                            const std::string& index, const std::string& indexCurrency,
-                           const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                           const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
-                           const std::string& calibration, const std::vector<Real>& calibrationStrikes)
-    : BlackScholes(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
-                   simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+                           const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
+                           const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
+                           const std::vector<Real>& calibrationStrikes, const Params& params)
+    : BlackScholes(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
+                   iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
 
 BlackScholes::BlackScholes(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -47,10 +47,10 @@ BlackScholes::BlackScholes(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
-    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig, SalvagingAlgorithm::None),
+                       correlations, simulationDates, iborFallbackConfig, params),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
 
 void BlackScholes::performCalculations() const {
@@ -199,16 +199,16 @@ void BlackScholes::performCalculations() const {
     // evolve the process using correlated normal variates and set the underlying path values
 
     populatePathValues(size(), underlyingPaths_,
-                       makeMultiPathVariateGenerator(mcParams_.sequenceType, indices_.size(),
-                                                     effectiveSimulationDates_.size() - 1, mcParams_.seed,
-                                                     mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                       makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(),
+                                                     effectiveSimulationDates_.size() - 1, params_.seed,
+                                                     params_.sobolOrdering, params_.sobolDirectionIntegers),
                        drift, sqrtCov);
 
     if (trainingSamples() != Null<Size>()) {
         populatePathValues(trainingSamples(), underlyingPathsTraining_,
-                           makeMultiPathVariateGenerator(mcParams_.trainingSequenceType, indices_.size(),
-                                                         effectiveSimulationDates_.size() - 1, mcParams_.trainingSeed,
-                                                         mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers),
+                           makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
+                                                         effectiveSimulationDates_.size() - 1, params_.trainingSeed,
+                                                         params_.sobolOrdering, params_.sobolDirectionIntegers),
                            drift, sqrtCov);
     }
 

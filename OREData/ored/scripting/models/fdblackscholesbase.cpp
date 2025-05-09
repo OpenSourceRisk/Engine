@@ -46,13 +46,9 @@ FdBlackScholesBase::FdBlackScholesBase(const Size stateGridPoints, const std::st
                                        const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
                                        const std::set<Date>& simulationDates,
                                        const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-                                       const std::vector<Real>& calibrationStrikes, const Real mesherEpsilon,
-                                       const Real mesherScaling, const Real mesherConcentration,
-                                       const Size mesherMaxConcentratingPoints, const bool staticMesher)
+                                       const std::vector<Real>& calibrationStrikes, const Params& params)
     : FdBlackScholesBase(stateGridPoints, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model,
-                         {}, simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}},
-                         mesherEpsilon, mesherScaling, mesherConcentration, mesherMaxConcentratingPoints,
-                         staticMesher) {}
+                         {}, simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
 
 FdBlackScholesBase::FdBlackScholesBase(
     const Size stateGridPoints, const std::vector<std::string>& currencies,
@@ -63,15 +59,11 @@ FdBlackScholesBase::FdBlackScholesBase(
     const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Real mesherEpsilon,
-    const Real mesherScaling, const Real mesherConcentration, const Size mesherMaxConcentratingPoints,
-    const bool staticMesher)
-    : ModelImpl(curves.at(0)->dayCounter(), stateGridPoints, currencies, irIndices, infIndices, indices,
-                indexCurrencies, simulationDates, iborFallbackConfig),
+    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Model::Params& params)
+    : ModelImpl(Model::Type::FD, params, curves.at(0)->dayCounter(), stateGridPoints, currencies, irIndices, infIndices,
+                indices, indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes), mesherEpsilon_(mesherEpsilon),
-      mesherScaling_(mesherScaling), mesherConcentration_(mesherConcentration),
-      mesherMaxConcentratingPoints_(mesherMaxConcentratingPoints), staticMesher_(staticMesher) {
+      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
 
     // check inputs
 
@@ -227,24 +219,26 @@ void FdBlackScholesBase::performCalculations() const {
         cPoints.push_back(std::vector<std::tuple<Real, Real, bool>>());
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
-            for (Size j = 0; j < std::min(f->second.size(), mesherMaxConcentratingPoints_); ++j) {
-                cPoints.back().push_back(QuantLib::ext::make_tuple(std::log(f->second[j]), mesherConcentration_, false));
+            for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
+                cPoints.back().push_back(
+                    QuantLib::ext::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
-                                                       << mesherConcentration_);
+                                                       << params_.mesherConcentration);
             }
         }
     }
 
     // 2 set up mesher if we do not have one already or if we want to rebuild it every time
 
-    if (mesher_ == nullptr || !staticMesher_) {
-        mesher_ = QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
-            size(), model_->processes()[0], timeGrid_.back(),
-            calibrationStrikes[0] == Null<Real>()
-                ? atmForward(model_->processes()[0]->x0(), model_->processes()[0]->riskFreeRate(),
-                             model_->processes()[0]->dividendYield(), timeGrid_.back())
-                : calibrationStrikes[0],
-            Null<Real>(), Null<Real>(), mesherEpsilon_, mesherScaling_, cPoints[0]));
+    if (mesher_ == nullptr || !params_.staticMesher) {
+        mesher_ =
+            QuantLib::ext::make_shared<FdmMesherComposite>(QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
+                size(), model_->processes()[0], timeGrid_.back(),
+                calibrationStrikes[0] == Null<Real>()
+                    ? atmForward(model_->processes()[0]->x0(), model_->processes()[0]->riskFreeRate(),
+                                 model_->processes()[0]->dividendYield(), timeGrid_.back())
+                    : calibrationStrikes[0],
+                Null<Real>(), Null<Real>(), params_.mesherEpsilon, params_.mesherScaling, cPoints[0]));
     }
 
     // 3 set up operator using atmf vol and without discounting, floor forward variances at zero

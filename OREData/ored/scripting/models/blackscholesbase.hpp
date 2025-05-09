@@ -56,17 +56,15 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
-        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm);
+        const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const Params& params = {});
 
     // ctor for single underlying
     BlackScholesBase(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                      const std::string& index, const std::string& indexCurrency,
-                     const Handle<BlackScholesModelWrapper>& model, const Model::McParams& mcParams,
-                     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
+                     const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
+                     const IborFallbackConfig& iborFallbackConfig, const Params& params);
 
     // Model interface implementation
-    Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
                        const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
@@ -94,16 +92,13 @@ protected:
 
     // helper function that constructs the correlation matrix
     Matrix getCorrelation() const;
-    QuantLib::SalvagingAlgorithm::Type getSalvagingAlgorithm() const { return salvagingAlgorithm_; }
 
     // input parameters
-    const std::vector<Handle<YieldTermStructure>> curves_;
-    const std::vector<Handle<Quote>> fxSpots_;
-    const Handle<BlackScholesModelWrapper> model_;
-    const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
-    const McParams mcParams_;
-    const std::vector<Date> simulationDates_;
-    const QuantLib::SalvagingAlgorithm::Type salvagingAlgorithm_;
+    std::vector<Handle<YieldTermStructure>> curves_;
+    std::vector<Handle<Quote>> fxSpots_;
+    Handle<BlackScholesModelWrapper> model_;
+    std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
+    std::vector<Date> simulationDates_;
 
     // these all except underlyingPaths_ are initialised when the interface functions above are called
     mutable Date referenceDate_;                      // the model reference date

@@ -59,20 +59,16 @@ public:
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
         const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
         const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
-        const Real mesherEpsilon = 1E-4, const Real mesherScaling = 1.5, const Real mesherConcentration = 0.1,
-        const Size mesherMaxConcentratingPoints = 9999, const bool staticMesher = false);
+        const Params& params = {});
 
     // ctor for single underlying
     FdBlackScholesBase(const Size stateGridPoints, const std::string& currency, const Handle<YieldTermStructure>& curve,
                        const std::string& index, const std::string& indexCurrency,
                        const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                        const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-                       const std::vector<Real>& calibrationStrikes = {}, const Real mesherEpsilon = 1E-4,
-                       const Real mesherScaling = 1.5, const Real mesherConcentration = 0.1,
-                       const Size mesherMaxConcentratingPoints = 9999, const bool staticMesher = false);
+                       const std::vector<Real>& calibrationStrikes = {}, const Params& params = {});
 
     // Model interface implementation
-    Type type() const override { return Type::FD; }
     const Date& referenceDate() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
                        const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
@@ -114,9 +110,6 @@ protected:
     const std::vector<Date> simulationDates_;
     const std::string calibration_;
     const std::map<std::string, std::vector<Real>> calibrationStrikes_;
-    const Real mesherEpsilon_, mesherScaling_, mesherConcentration_;
-    const Size mesherMaxConcentratingPoints_;
-    const bool staticMesher_;
 
     // quanto adjustment parameters
     bool applyQuantoAdjustment_ = false;

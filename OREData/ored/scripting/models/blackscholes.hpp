@@ -1,6 +1,6 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
- All rights reserved.
+ All rights reserved
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
@@ -45,18 +45,18 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcParams, const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates,
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const std::string& calibration = "ATM",
-        const std::map<std::string, std::vector<Real>>& calibrationStrikes = {});
+        const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
+        const Params& params = {});
 
     // ctor for one underlying
     BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                  const std::string& index, const std::string& indexCurrency,
-                 const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                 const std::set<Date>& simulationDates,
+                 const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                 const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
+                 const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
+                 const Params& params = {});
 
 private:
     // ModelImpl interface implementation

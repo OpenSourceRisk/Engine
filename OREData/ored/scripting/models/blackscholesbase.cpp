@@ -39,10 +39,10 @@ using namespace QuantExt;
 BlackScholesBase::BlackScholesBase(const Size paths, const std::string& currency,
                                    const Handle<YieldTermStructure>& curve, const std::string& index,
                                    const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                                   const Model::McParams& mcParams, const std::set<Date>& simulationDates,
-                                   const IborFallbackConfig& iborFallbackConfig)
-    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
-                       simulationDates, iborFallbackConfig, SalvagingAlgorithm::None) {}
+                                   const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+                                   const Params& params)
+    : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
+                       iborFallbackConfig, params) {}
 
 BlackScholesBase::BlackScholesBase(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -52,12 +52,10 @@ BlackScholesBase::BlackScholesBase(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const Model::McParams& mcParams, const std::set<Date>& simulationDates,
-    const IborFallbackConfig& iborFallbackConfig, const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm)
-    : ModelImpl(curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
-                simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), mcParams_(mcParams),
-      salvagingAlgorithm_(salvagingAlgorithm) {
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const Params& params)
+    : ModelImpl(Type::MC, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
+                indexCurrencies, simulationDates, iborFallbackConfig),
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations) {
 
     // check inputs
 
@@ -206,9 +204,9 @@ RandomVariable BlackScholesBase::fwdCompAvg(const bool isAvg, const std::string&
             end, 1.0, start, end, on, gearing, spread, rateCutoff, on->dayCounter(), lookback * Days, fixingDays);
         pricer = QuantLib::ext::make_shared<AverageONIndexedCouponPricer>();
     } else {
-        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(end, 1.0, start, end, on, gearing, spread, Date(),
-                                                                      Date(), on->dayCounter(), false, includeSpread,
-                                                                      lookback * Days, rateCutoff, fixingDays);
+        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
+            end, 1.0, start, end, on, gearing, spread, Date(), Date(), on->dayCounter(), false, includeSpread,
+            lookback * Days, rateCutoff, fixingDays);
         pricer = QuantLib::ext::make_shared<OvernightIndexedCouponPricer>();
     }
     coupon->setPricer(pricer);
@@ -290,23 +288,22 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
     std::vector<RandomVariable> transformedState;
 
-    if(!haveStoredModel) {
+    if (!haveStoredModel) {
 
         // factor reduction to reduce dimensionalitty and handle collinearity
 
-        if (mcParams_.regressionVarianceCutoff != Null<Real>()) {
-            coordinateTransform = pcaCoordinateTransform(state, mcParams_.regressionVarianceCutoff);
+        if (params_.regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(state, params_.regressionVarianceCutoff);
             transformedState = applyCoordinateTransform(state, coordinateTransform);
             state = vec2vecptr(transformedState);
         }
 
         // train coefficients
 
-        coeff =
-            regressionCoefficients(amount, state,
-                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                        {}, std::min(size(), trainingSamples())),
-                                   filter, RandomVariableRegressionMethod::QR);
+        coeff = regressionCoefficients(amount, state,
+                                       multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
+                                                            {}, std::min(size(), trainingSamples())),
+                                       filter, RandomVariableRegressionMethod::QR);
         DLOG("BlackScholesBase::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                       << " (got model state size " << nModelStates << " and " << nAddReg
                                       << " additional regressors, coordinate transform "
@@ -322,7 +319,7 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
         // apply the stored coordinate transform to the state
 
-        if(!coordinateTransform.empty()) {
+        if (!coordinateTransform.empty()) {
             transformedState = applyCoordinateTransform(state, coordinateTransform);
             state = vec2vecptr(transformedState);
         }
@@ -331,8 +328,8 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
     // compute conditional expectation and return the result
 
     return conditionalExpectation(state,
-                                  multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       {}, std::min(size(), trainingSamples())),
+                                  multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {},
+                                                       std::min(size(), trainingSamples())),
                                   coeff);
 }
 
@@ -348,11 +345,11 @@ void BlackScholesBase::toggleTrainingPaths() const {
     inTrainingPhase_ = !inTrainingPhase_;
 }
 
-Size BlackScholesBase::trainingSamples() const { return mcParams_.trainingSamples; }
+Size BlackScholesBase::trainingSamples() const { return params_.trainingSamples; }
 
 Size BlackScholesBase::size() const {
     if (inTrainingPhase_)
-        return mcParams_.trainingSamples;
+        return params_.trainingSamples;
     else
         return Model::size();
 }
