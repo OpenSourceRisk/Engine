@@ -1388,23 +1388,29 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
                    "ParSensitivityInstrumentBuilder::makeCapFloor(): Discount curve not found for cap floor index "
                        << indexName);
 
+
+        Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(indexName, marketConfiguration);
         // Create a dummy cap just to get the ATM rate
         // Note this construction excludes the first caplet which is what we want
-        auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, rateCompPeriod, 0.03, Handle<Quote>(), ois,
-                                        discount);
-        Leg leg = helper.capFloor();
+        Date effDate = ois->fixingCalendar().advance(
+            ois->fixingCalendar().adjust(ovs->referenceDate()), 0 * Days);
         
-        Rate atmRate =  helper.atmStrike();
-        // bool isAtm = strike == Null<Real>();
-        // strike = isAtm ? atmRate : strike;
-        double K = isAtm || strike == Null<Real>() ? atmRate : strike;
-        CapFloorHelper::Type type = K >= atmRate ? CapFloorHelper::Cap : CapFloorHelper::Floor;
 
-        // Create the actual cap or floor instrument that we will use
-        leg = OISCapFloorHelper(type, term, rateCompPeriod, K, Handle<Quote>(), ois,
-            discount).capFloor();
+            auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, rateCompPeriod, 0.03, Handle<Quote>(), ois,
+                                            discount, false, effDate);
+            Leg leg = helper.capFloor();
+
+            Rate atmRate = helper.atmStrike();
+            // bool isAtm = strike == Null<Real>();
+            // strike = isAtm ? atmRate : strike;
+            double K = isAtm || strike == Null<Real>() ? atmRate : strike;
+            //CapFloorHelper::Type type = K >= atmRate ? CapFloorHelper::Cap : CapFloorHelper::Floor;
+
+            // Create the actual cap or floor instrument that we will use
+            leg = OISCapFloorHelper(CapFloorHelper::Automatic, term, rateCompPeriod, K, Handle<Quote>(), ois, discount, false, effDate, CapFloorHelper::Volatility, ovs->volatilityType(), ovs->displacement()).capFloor();
         
-        Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(indexName, marketConfiguration);
+        
+        
         QL_REQUIRE(!ovs.empty(), "ParSensitivityInstrumentBuilder::makeCapFloor(): Optionlet volatility "
                                  "structure not found for index "
                                      << indexName);
