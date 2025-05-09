@@ -119,6 +119,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
     auto& zeroInflationPillars = instruments.zeroInflationPillars_;
 
     parHelpers.clear();
+    oisParCaps.clear();
     parCaps.clear();
     parYoYCaps.clear();
 
