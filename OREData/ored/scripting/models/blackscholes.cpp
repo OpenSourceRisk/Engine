@@ -58,7 +58,7 @@ BlackScholes::BlackScholes(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
-    : ModelImpl(Type::MC, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
+    : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
@@ -268,34 +268,15 @@ void BlackScholes::performCalculationsFdBs() const {
     auto locations = mesher_->locations(0);
     underlyingValues_ = exp(RandomVariable(locations));
 
-    // set additional results provided by this model
+    // 6 set additional results
 
-    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
-        additionalResults_["FdBlackScholes.CalibrationStrike_" + indices_[i].name()] =
-            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
-    }
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        Size timeStep = 0;
-        for (auto const& d : effectiveSimulationDates_) {
-            Real t = timeGrid_[positionInTimeGrid_[timeStep]];
-            Real forward = atmForward(model_->processes()[i]->x0(), model_->processes()[i]->riskFreeRate(),
-                                      model_->processes()[i]->dividendYield(), t);
-            if (timeStep > 0) {
-                Real volatility = model_->processes()[i]->blackVolatility()->blackVol(
-                    t, calibrationStrikes[i] == Null<Real>() ? forward : calibrationStrikes[i]);
-                additionalResults_["FdBlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
-                    volatility;
-            }
-            additionalResults_["FdBlackScholes.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
-                forward;
-            ++timeStep;
-        }
-    }
+    setAdditionalResults();
 }
 
 void BlackScholes::performCalculationsFdLv() const {
     // ************** TODO ***************
+
+    setAdditionalResults();
 }
 
 void BlackScholes::initUnderlyingPathsMc() const {
@@ -431,37 +412,8 @@ void BlackScholes::generatePathsBs() const {
                              drift, sqrtCov);
     }
 
-    // set additional results provided by this model
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            additionalResults_["BlackScholes.Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =
-                correlation(i, j);
-        }
-    }
-
-    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
-        additionalResults_["BlackScholes.CalibrationStrike_" + indices_[i].name()] =
-            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
-    }
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        Size timeStep = 0;
-        for (auto const& d : effectiveSimulationDates_) {
-            Real t = timeGrid_[positionInTimeGrid_[timeStep]];
-            Real forward = atmForward(model_->processes()[i]->x0(), model_->processes()[i]->riskFreeRate(),
-                                      model_->processes()[i]->dividendYield(), t);
-            if (timeStep > 0) {
-                Real volatility = model_->processes()[i]->blackVolatility()->blackVol(
-                    t, calibrationStrikes[i] == Null<Real>() ? forward : calibrationStrikes[i]);
-                additionalResults_["BlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
-                    volatility;
-            }
-            additionalResults_["BlackScholes.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
-            ++timeStep;
-        }
-    }
-} // performCalculationsBS()
+    setAdditionalResults();
+} // generatePathsBs()
 
 void BlackScholes::generatePathsLv() const {
 
@@ -530,7 +482,8 @@ void BlackScholes::generatePathsLv() const {
                              correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
     }
 
-} // performCalculationsLV()
+    setAdditionalResults();
+} // generatePathsLv()
 
 void BlackScholes::populatePathValuesBs(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                         const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
@@ -668,11 +621,45 @@ std::vector<Real> BlackScholes::getCalibrationStrikes() const {
                 TLOG("calibration strike for index '" << indices_[i] << "' is ATMF");
             }
         }
-    } else {
-        QL_FAIL("BlackScholes::getCalibrationStrikes(): calibration '" << calibration_
-                                                                       << "' not supported, expected ATM, Deal");
     }
     return calibrationStrikes;
+}
+
+void BlackScholes::setAdditionalResults() const {
+
+    Matrix correlation = getCorrelation();
+
+    for (Size i = 0; i < indices_.size(); ++i) {
+        for (Size j = 0; j < i; ++j) {
+            additionalResults_["BlackScholes.Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =
+                correlation(i, j);
+        }
+    }
+
+    std::vector<Real> calibrationStrikes = getCalibrationStrikes();
+
+    for (Size i = 0; i < calibrationStrikes_.size(); ++i) {
+        additionalResults_["BlackScholes.CalibrationStrike_" + indices_[i].name()] =
+            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
+    }
+
+    for (Size i = 0; i < indices_.size(); ++i) {
+        Size timeStep = 0;
+        for (auto const& d : effectiveSimulationDates_) {
+            Real t = timeGrid_[positionInTimeGrid_[timeStep]];
+            Real forward = atmForward(model_->processes()[i]->x0(), model_->processes()[i]->riskFreeRate(),
+                                      model_->processes()[i]->dividendYield(), t);
+            if (timeStep > 0) {
+                Real volatility = model_->processes()[i]->blackVolatility()->blackVol(
+                    t, (calibrationStrikes.empty() || calibrationStrikes[i] == Null<Real>()) ? forward
+                                                                                             : calibrationStrikes[i]);
+                additionalResults_["BlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
+                    volatility;
+            }
+            additionalResults_["BlackScholes.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
+            ++timeStep;
+        }
+    }
 }
 
 const Date& BlackScholes::referenceDate() const {

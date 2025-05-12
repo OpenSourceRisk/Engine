@@ -119,9 +119,10 @@ protected:
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                         const RandomVariable& barrier, const bool above) const override;
 
-    // helper functions to construct the correlation matrix and calibration strikes
+    // helper functions
     Matrix getCorrelation() const;
     std::vector<Real> getCalibrationStrikes() const;
+    void setAdditionalResults() const;
 
     // BS / LV and type specific code
     void performCalculationsMcBs() const;
