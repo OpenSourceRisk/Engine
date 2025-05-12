@@ -24,9 +24,20 @@ jobs:
       with:
         submodules: recursive
         token: ${{ secrets.ORG_ACTIONS_ACCESS }}
-    #- name: get QuantLib and QuantLib-SWIG
-    #  run: |
-    #    git submodule update --init --recursive
+    - name: uninstall SWIG 4.1.1
+      run: |
+        choco uninstall swig
+    - name: install SWIG (4.3.0)
+      run: |
+        curl -L -o swigwin-4.3.0.zip https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.0/swigwin-4.3.0.zip
+        Expand-Archive -Path swigwin-4.3.0.zip -DestinationPath $env:GITHUB_WORKSPACE
+        echo "$env:GITHUB_WORKSPACE\swigwin-4.3.0" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        cd swigwin-4.3.0
+        .\swig.exe -version
+    - name: check
+      run: |
+        swig -version
+        swig -help
     - name: zlib
       run: |
         $Url = "https://www.zlib.net/zlib131.zip"
