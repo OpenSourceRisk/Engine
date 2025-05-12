@@ -610,7 +610,7 @@ std::vector<Real> BlackScholes::getCalibrationStrikes() const {
     std::vector<Real> calibrationStrikes;
     if (calibration_ == "ATM") {
         calibrationStrikes.resize(indices_.size(), Null<Real>());
-    } else if (calibration_ == "Deal") {
+    } else if (calibration_ == "Deal" || calibration_ == "LocalVol") {
         for (Size i = 0; i < indices_.size(); ++i) {
             auto f = calibrationStrikes_.find(indices_[i].name());
             if (f != calibrationStrikes_.end() && !f->second.empty()) {
