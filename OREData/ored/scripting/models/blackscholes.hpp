@@ -127,8 +127,7 @@ protected:
     // BS / LV and type specific code
     void performCalculationsMcBs() const;
     void performCalculationsMcLv() const;
-    void performCalculationsFdBs() const;
-    void performCalculationsFdLv() const;
+    void performCalculationsFd() const;
     void initUnderlyingPathsMc() const;
     void setReferenceDateValuesMc() const;
     void generatePathsBs() const;

@@ -175,11 +175,7 @@ void BlackScholes::performCalculations() const {
             performCalculationsMcLv();
         }
     } else if (type_ == Model::Type::FD) {
-        if (calibration_ == "ATM" || calibration_ == "Deal") {
-            performCalculationsFdBs();
-        } else {
-            performCalculationsFdLv();
-        }
+            performCalculationsFd();
     }
 }
 
@@ -199,7 +195,7 @@ void BlackScholes::performCalculationsMcLv() const {
     generatePathsLv();
 }
 
-void BlackScholes::performCalculationsFdBs() const {
+void BlackScholes::performCalculationsFd() const {
 
     // 0c if we only have one effective sim date (today), we set the underlying values = spot
 
@@ -254,8 +250,8 @@ void BlackScholes::performCalculationsFdBs() const {
     }
 
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesOp>(
-        mesher_, model_->processes()[0], calibrationStrikes[0], false, -static_cast<Real>(Null<Real>()), 0,
-        quantoHelper, false, true);
+        mesher_, model_->processes()[0], calibrationStrikes[0], calibration_ == "LocalVol", 1E-10, 0, quantoHelper,
+        false, true);
 
     // 4 set up bwd solver, hardcoded Douglas scheme (= CrankNicholson)
 
@@ -269,12 +265,6 @@ void BlackScholes::performCalculationsFdBs() const {
     underlyingValues_ = exp(RandomVariable(locations));
 
     // 6 set additional results
-
-    setAdditionalResults();
-}
-
-void BlackScholes::performCalculationsFdLv() const {
-    // ************** TODO ***************
 
     setAdditionalResults();
 }
