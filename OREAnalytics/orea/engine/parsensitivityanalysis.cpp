@@ -251,11 +251,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                    "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
         QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
-
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parCapsYts_.at(c.first), 0.01,
-            instruments_.parCapsVts_.at(c.first)->volatilityType(), instruments_.parCapsVts_.at(c.first)->displacement());
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                     << parVol << ".");
@@ -291,11 +287,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         QL_REQUIRE(instruments_.parYoYCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parYoYCapsYts_.at(c.first), 0.01,
-            instruments_.parYoYCapsVts_.at(c.first)->volatilityType(),
-            instruments_.parYoYCapsVts_.at(c.first)->displacement(), instruments_.parYoYCapsIndex_.at(c.first));
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                         << parVol << ".");

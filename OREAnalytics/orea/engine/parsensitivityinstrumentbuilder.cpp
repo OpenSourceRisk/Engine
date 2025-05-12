@@ -458,7 +458,6 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                                     parHelperDependencies[rfkey], expDiscountCurve, marketConfiguration);
                             parCaps[rfkey] = tmp;
                         } else {
-                            //TODO: move to convention?
                             QL_REQUIRE(datap->rateComputationPeriod.has_value(),
                                        "Need to specify rateComputationPeriod to compute par sensisitivity");
                             auto tmp =
@@ -1358,9 +1357,6 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
     const string& marketConfiguration) const {
 
     ext::shared_ptr<QuantLib::Swap> capFloor;
-    auto conventions = InstrumentConventions::instance().conventions();
-    // TODO: Hard coded // get from conventions or config
-
     if (!market) {
         // No market so just return a dummy cap
         QuantLib::ext::shared_ptr<IborIndex> index = parseIborIndex(indexName);
@@ -1378,7 +1374,8 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
 
         QuantLib::ext::shared_ptr<IborIndex> index = *market->iborIndex(indexName, marketConfiguration);
         QuantLib::ext::shared_ptr<OvernightIndex> ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
-        QL_REQUIRE(ois, "ParSensitivityInstrumentBuilder::makeCapFloor(): Overnight index not found with name " << indexName);
+        QL_REQUIRE(ois, "ParSensitivityInstrumentBuilder::makeCapFloor(): Overnight index not found with name "
+                            << indexName);
         Handle<YieldTermStructure> discount;
         if (expDiscountCurve.empty())
             discount = market->discountCurve(ccy, marketConfiguration);
@@ -1388,43 +1385,33 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> ParSensitivityInstrumentBuilder::makeO
                    "ParSensitivityInstrumentBuilder::makeCapFloor(): Discount curve not found for cap floor index "
                        << indexName);
 
-
         Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(indexName, marketConfiguration);
-        // Create a dummy cap just to get the ATM rate
-        // Note this construction excludes the first caplet which is what we want
-        Date effDate = ois->fixingCalendar().advance(
-            ois->fixingCalendar().adjust(ovs->referenceDate()), 0 * Days);
-        
-
-            auto helper = OISCapFloorHelper(CapFloorHelper::Cap, term, rateCompPeriod, 0.03, Handle<Quote>(), ois,
-                                            discount, false, effDate);
-            Leg leg = helper.capFloor();
-
-            Rate atmRate = helper.atmStrike();
-            // bool isAtm = strike == Null<Real>();
-            // strike = isAtm ? atmRate : strike;
-            double K = isAtm || strike == Null<Real>() ? atmRate : strike;
-            //CapFloorHelper::Type type = K >= atmRate ? CapFloorHelper::Cap : CapFloorHelper::Floor;
-
-            // Create the actual cap or floor instrument that we will use
-            leg = OISCapFloorHelper(CapFloorHelper::Automatic, term, rateCompPeriod, K, Handle<Quote>(), ois, discount, false, effDate, CapFloorHelper::Volatility, ovs->volatilityType(), ovs->displacement()).capFloor();
-        
-        
-        
         QL_REQUIRE(!ovs.empty(), "ParSensitivityInstrumentBuilder::makeCapFloor(): Optionlet volatility "
                                  "structure not found for index "
                                      << indexName);
         QL_REQUIRE(ovs->volatilityType() == ShiftedLognormal || ovs->volatilityType() == Normal,
                    "ParSensitivityInstrumentBuilder::makeCapFloor(): Optionlet volatility type "
                        << ovs->volatilityType() << " not covered");
+        // Create a dummy cap just to get the ATM rate
+        // Note this construction excludes the first caplet which is what we want
+        Date effDate = ois->fixingCalendar().advance(ois->fixingCalendar().adjust(ovs->referenceDate()), 0 * Days);
+        double K = isAtm ? Null<Real>() : strike;
+        // CapFloorHelper::Type type = K >= atmRate ? CapFloorHelper::Cap : CapFloorHelper::Floor;
 
+        // Create the actual cap or floor instrument that we will use
+        OISCapFloorHelper helper(CapFloorHelper::Automatic, term, rateCompPeriod, K, Handle<Quote>(), ois, discount,
+                                 false, effDate, CapFloorHelper::Volatility, ovs->volatilityType(),
+                                 ovs->displacement());
+
+        auto leg = helper.capFloor();
         auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(ovs);
-        for (auto& cf : leg) {
-            auto cpn = ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-            if (cpn) {
-                cpn->setPricer(pricer);
+        for (auto c : leg) {
+            auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
+            if (f) {
+                f->setPricer(pricer);
             }
         }
+
         std::vector<Leg> legs{leg};
         std::vector<bool> payIndicator{false};
         capFloor = ext::make_shared<QuantLib::Swap>(legs, payIndicator);
