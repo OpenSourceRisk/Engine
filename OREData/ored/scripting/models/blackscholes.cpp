@@ -638,7 +638,7 @@ void BlackScholes::setAdditionalResults() const {
 
     std::vector<Real> calibrationStrikes = getCalibrationStrikes();
 
-    for (Size i = 0; i < calibrationStrikes_.size(); ++i) {
+    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
         additionalResults_["BlackScholes.CalibrationStrike_" + indices_[i].name()] =
             (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
     }
