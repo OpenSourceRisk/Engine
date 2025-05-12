@@ -21,31 +21,31 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
-#include <ored/scripting/scriptengine.hpp>
-#include <ored/scripting/staticanalyser.hpp>
-#include <ored/scripting/scriptparser.hpp>
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
+#include <ored/scripting/scriptengine.hpp>
+#include <ored/scripting/scriptparser.hpp>
+#include <ored/scripting/staticanalyser.hpp>
 
 #include <oret/toplevelfixture.hpp>
 
 #include <ored/model/localvolmodelbuilder.hpp>
 
-#include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/stochasticprocessarray.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 #include <iomanip>
 
@@ -58,9 +58,10 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(LocalVolTest)
 
 namespace {
-void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const std::vector<Real>& moneyness,
+void testCalibrationInstrumentRepricing(const Model::Type type, const std::vector<Date>& expiries,
+                                        const std::vector<Real>& moneyness,
                                         const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                        const Size timeStepsPerYear, const Size paths, const Real tol) {
+                                        const Size timeStepsPerYear, const Size size, const Real tol) {
 
     // set up a local vol model with simulation dates = expiries, calibrated to options (expiry, moneyness) with
     // the expiry taken from the expiries vector and the moneyness taken from the moneyness vector
@@ -73,7 +74,7 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
     Model::Params params;
     params.regressionOrder = 1;
     auto localVol = QuantLib::ext::make_shared<BlackScholes>(
-        Model::Type::MC, paths, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(), simDates,
+        type, size, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(), simDates,
         IborFallbackConfig::defaultConfig(), "LocalVol", std::vector<Real>{}, params);
 
     // loop over the calibration options and price them in the local vol model using MC
@@ -84,9 +85,9 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
 
     // context against we can run the script engine, add some variables here, the rest follows below
     auto context = QuantLib::ext::make_shared<Context>();
-    context->scalars["Option"] = RandomVariable(paths, 0.0);
-    context->scalars["Underlying"] = IndexVec{paths, "EQ-DUMMY"};
-    context->scalars["PayCcy"] = CurrencyVec{paths, "EUR"};
+    context->scalars["Option"] = RandomVariable(size, 0.0);
+    context->scalars["Underlying"] = IndexVec{size, "EQ-DUMMY"};
+    context->scalars["PayCcy"] = CurrencyVec{size, "EUR"};
 
     // script engine to price a vanilla option
     ScriptEngine scriptEngine(
@@ -116,16 +117,17 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
             Real marketPrice = option.NPV();
 
             // price the option in the script engine
-            context->scalars["PutCall"] = RandomVariable(paths, optionType == Option::Call ? 1.0 : -1.0);
-            context->scalars["Expiry"] = EventVec{paths, expiries[i]};
-            context->scalars["Strike"] = RandomVariable(paths, strike);
+            context->scalars["PutCall"] = RandomVariable(size, optionType == Option::Call ? 1.0 : -1.0);
+            context->scalars["Expiry"] = EventVec{size, expiries[i]};
+            context->scalars["Strike"] = RandomVariable(size, strike);
             scriptEngine.run();
-            Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
+            Real scriptPrice = localVol->extractT0Result(boost::get<RandomVariable>(context->scalars["Option"]));
             // check the market price and the script price are close
-            BOOST_TEST_MESSAGE("expiry=" << QuantLib::io::iso_date(expiries[i]) << " moneyness=" << moneyness[j]
-                                         << " marketVol = " << process->blackVolatility()->blackVol(t, strike, true)
-                                         << " marketPrice=" << marketPrice << " mcPrice=" << scriptPrice
-                                         << " error=" << (scriptPrice - marketPrice));
+            BOOST_TEST_MESSAGE("type=" << (type == Model::Type::MC ? "MC" : "FD") << " expiry="
+                                       << QuantLib::io::iso_date(expiries[i]) << " moneyness=" << moneyness[j]
+                                       << " marketVol = " << process->blackVolatility()->blackVol(t, strike, true)
+                                       << " marketPrice=" << marketPrice << " mcPrice=" << scriptPrice
+                                       << " error=" << (scriptPrice - marketPrice));
             BOOST_CHECK_SMALL(scriptPrice - marketPrice, tol);
             maxError = std::max(maxError, scriptPrice - marketPrice);
         }
@@ -148,12 +150,14 @@ BOOST_AUTO_TEST_CASE(testFlatVols) {
 
     Handle<YieldTermStructure> r(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
     Handle<YieldTermStructure> q(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.03, Actual365Fixed()));
-    Handle<BlackVolTermStructure> vol(QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.10, Actual365Fixed()));
+    Handle<BlackVolTermStructure> vol(
+        QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), 0.10, Actual365Fixed()));
     Handle<Quote> spot(QuantLib::ext::make_shared<SimpleQuote>(100.0));
 
     auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, q, r, vol);
 
-    testCalibrationInstrumentRepricing(expiries, moneyness, process, 20, 10000, 0.30);
+    testCalibrationInstrumentRepricing(Model::Type::MC, expiries, moneyness, process, 20, 10000, 0.30);
+    testCalibrationInstrumentRepricing(Model::Type::FD, expiries, moneyness, process, 20, 100, 0.30);
 }
 
 BOOST_AUTO_TEST_CASE(testSabrVols) {
@@ -175,7 +179,8 @@ BOOST_AUTO_TEST_CASE(testSabrVols) {
     public:
         SabrTestSurface(const Handle<Quote>& spot, const Handle<YieldTermStructure>& r,
                         const Handle<YieldTermStructure>& q)
-            : BlackVolatilityTermStructure(0, NullCalendar(), Following, ActualActual(ActualActual::ISDA)), spot_(spot), r_(r), q_(q) {}
+            : BlackVolatilityTermStructure(0, NullCalendar(), Following, ActualActual(ActualActual::ISDA)), spot_(spot),
+              r_(r), q_(q) {}
         Date maxDate() const override { return Date::maxDate(); }
         Real minStrike() const override { return 0.0; }
         Real maxStrike() const override { return QL_MAX_REAL; }
@@ -199,7 +204,8 @@ BOOST_AUTO_TEST_CASE(testSabrVols) {
 
     auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, q, r, vol);
 
-    testCalibrationInstrumentRepricing(expiries, moneyness, process, 20, 10000, 0.30);
+    testCalibrationInstrumentRepricing(Model::Type::MC, expiries, moneyness, process, 20, 10000, 0.30);
+    testCalibrationInstrumentRepricing(Model::Type::FD, expiries, moneyness, process, 20, 100, 0.30);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
