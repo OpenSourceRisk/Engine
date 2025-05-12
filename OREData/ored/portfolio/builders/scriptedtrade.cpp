@@ -27,7 +27,6 @@
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
 #include <ored/scripting/scriptparser.hpp>
 
@@ -1292,9 +1291,10 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
         modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, params_);
+        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, "LocalVol",
+        std::map<std::string, std::vector<Real>>{}, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1310,9 +1310,10 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(const std::string& id, const Ib
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<LocalVol>(
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
         modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, params_);
+        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, "LocalVol",
+        std::map<std::string, std::vector<Real>>{}, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 

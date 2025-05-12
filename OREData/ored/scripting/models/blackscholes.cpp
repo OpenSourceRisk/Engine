@@ -18,18 +18,22 @@
 
 #include <ored/scripting/models/blackscholes.hpp>
 
-#include <ored/model/utilities.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
+
 #include <ql/math/comparison.hpp>
-#include <ql/math/matrixutilities/choleskydecomposition.hpp>
-#include <ql/math/matrixutilities/pseudosqrt.hpp>
-#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/quotes/simplequote.hpp>
 
 namespace ore {
 namespace data {
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 BlackScholes::BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
                            const std::string& index, const std::string& indexCurrency,
@@ -49,13 +53,61 @@ BlackScholes::BlackScholes(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
-    : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, simulationDates, iborFallbackConfig, params),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
+    : ModelImpl(Type::MC, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
+                indexCurrencies, simulationDates, iborFallbackConfig),
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), calibration_(calibration),
+      calibrationStrikes_(calibrationStrikes) {
+
+    // check inputs
+
+    QL_REQUIRE(!model_.empty(), "model is empty");
+    QL_REQUIRE(!curves_.empty(), "no curves given");
+    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
+                                                                              << ") does not match number of curves ("
+                                                                              << curves_.size() << ")");
+    QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
+               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
+                                        << fxSpots_.size() << ") + 1");
+
+    QL_REQUIRE(indices_.size() == model_->processes().size(),
+               "mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
+                                              << indices_.size() << ")");
+
+    // register with observables
+
+    for (auto const& o : fxSpots_)
+        registerWith(o);
+    for (auto const& o : correlations_)
+        registerWith(o.second);
+
+    registerWith(model_);
+
+} // BlackScholes ctor
 
 void BlackScholes::performCalculations() const {
 
-    BlackScholesBase::performCalculations();
+    QL_REQUIRE(!inTrainingPhase_,
+               "BlackScholesBase::performCalculations(): state inTrainingPhase should be false, this was "
+               "not resetted appropriately.");
+
+    referenceDate_ = curves_.front()->referenceDate();
+
+    // set up time grid
+
+    effectiveSimulationDates_ = model_->effectiveSimulationDates();
+
+    std::vector<Real> times;
+    for (auto const& d : effectiveSimulationDates_) {
+        times.push_back(timeFromReference(d));
+    }
+
+    timeGrid_ = model_->discretisationTimeGrid();
+    positionInTimeGrid_.resize(times.size());
+    for (Size i = 0; i < positionInTimeGrid_.size(); ++i)
+        positionInTimeGrid_[i] = timeGrid_.index(times[i]);
+
+    underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
 
     // nothing to do if we do not have any indices
 
@@ -70,6 +122,32 @@ void BlackScholes::performCalculations() const {
             underlyingPathsTraining_[d] =
                 std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
     }
+
+    // set reference date values, if there are no future simulation dates we are done
+
+    for (Size l = 0; l < indices_.size(); ++l) {
+        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        if (trainingSamples() != Null<Size>()) {
+            underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
+        }
+    }
+
+    if (effectiveSimulationDates_.size() == 1)
+        return;
+
+    // continue with BS or LV specific code
+
+    if (calibration_ == "ATM" || calibration_ == "Deal") {
+        performCalculationsBS();
+    } else if (calibration_ == "LocalVol") {
+        performCalculationsLV();
+    } else {
+        QL_FAIL("BlackScholes::performCalculations(): invalid calibration string ("
+                << calibration_ << "), expected one of ATM, Deal, LocalVol");
+    }
+}
+
+void BlackScholes::performCalculationsBS() const {
 
     // compile the correlation matrix
 
@@ -91,21 +169,7 @@ void BlackScholes::performCalculations() const {
                 TLOG("calibration strike for index '" << indices_[i] << "' is ATMF");
             }
         }
-    } else {
-        QL_FAIL("BlackScholes: calibration '" << calibration_ << "' not supported, expected ATM, Deal");
     }
-
-    // set reference date values, if there are no future simulation dates we are done
-
-    for (Size l = 0; l < indices_.size(); ++l) {
-        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
-        if (trainingSamples() != Null<Size>()) {
-            underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(model_->processes()[l]->x0());
-        }
-    }
-
-    if (effectiveSimulationDates_.size() == 1)
-        return;
 
     // compute drift and covariances of log spots to evolve the process; the covariance computation is done
     // on the refined grid where we assume the volatilities to be constant
@@ -198,18 +262,18 @@ void BlackScholes::performCalculations() const {
 
     // evolve the process using correlated normal variates and set the underlying path values
 
-    populatePathValues(size(), underlyingPaths_,
-                       makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(),
-                                                     effectiveSimulationDates_.size() - 1, params_.seed,
-                                                     params_.sobolOrdering, params_.sobolDirectionIntegers),
-                       drift, sqrtCov);
+    populatePathValuesBS(size(), underlyingPaths_,
+                         makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(),
+                                                       effectiveSimulationDates_.size() - 1, params_.seed,
+                                                       params_.sobolOrdering, params_.sobolDirectionIntegers),
+                         drift, sqrtCov);
 
     if (trainingSamples() != Null<Size>()) {
-        populatePathValues(trainingSamples(), underlyingPathsTraining_,
-                           makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
-                                                         effectiveSimulationDates_.size() - 1, params_.trainingSeed,
-                                                         params_.sobolOrdering, params_.sobolDirectionIntegers),
-                           drift, sqrtCov);
+        populatePathValuesBS(trainingSamples(), underlyingPathsTraining_,
+                             makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
+                                                           effectiveSimulationDates_.size() - 1, params_.trainingSeed,
+                                                           params_.sobolOrdering, params_.sobolDirectionIntegers),
+                             drift, sqrtCov);
     }
 
     // set additional results provided by this model
@@ -242,11 +306,80 @@ void BlackScholes::performCalculations() const {
             ++timeStep;
         }
     }
-}
+} // performCalculationsBS()
 
-void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                                      const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                                      const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const {
+void BlackScholes::performCalculationsLV() const {
+
+    // compile the correlation matrix
+
+    Matrix correlation = getCorrelation();
+
+    // compute the sqrt correlation
+
+    Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
+
+    // precompute the deterministic part of the drift on each time step
+
+    std::vector<Array> deterministicDrift(timeGrid_.size() - 1, Array(indices_.size(), 0.0));
+
+    for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+        for (Size j = 0; j < indices_.size(); ++j) {
+            Real t0 = timeGrid_[i];
+            Real t1 = timeGrid_[i + 1];
+            deterministicDrift[i][j] = -std::log(model_->processes()[j]->riskFreeRate()->discount(t1) /
+                                                 model_->processes()[j]->dividendYield()->discount(t1) /
+                                                 (model_->processes()[j]->riskFreeRate()->discount(t0) /
+                                                  model_->processes()[j]->dividendYield()->discount(t0)));
+        }
+    }
+
+    // precompute index for drift adjustment for eq / com indices that are not in base ccy
+
+    std::vector<Size> eqComIdx(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        Size idx = Null<Size>();
+        if (!indices_[j].isFx()) {
+            // do we have an fx index with the desired currency?
+            for (Size jj = 0; jj < indices_.size(); ++jj) {
+                if (indices_[jj].isFx()) {
+                    if (indexCurrencies_[jj] == indexCurrencies_[j])
+                        idx = jj;
+                }
+            }
+        }
+        eqComIdx[j] = idx;
+    }
+
+    // precompute some time related quantities
+
+    std::vector<Real> t(timeGrid_.size() - 1), dt(timeGrid_.size() - 1), sqrtdt(timeGrid_.size() - 1);
+    for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+        t[i] = timeGrid_[i];
+        dt[i] = timeGrid_[i + 1] - timeGrid_[i];
+        sqrtdt[i] = std::sqrt(dt[i]);
+    }
+
+    // evolve the process using correlated normal variates and set the underlying path values
+
+    populatePathValuesLV(size(), underlyingPaths_,
+                         makeMultiPathVariateGenerator(params_.sequenceType, indices_.size(), timeGrid_.size() - 1,
+                                                       params_.seed, params_.sobolOrdering,
+                                                       params_.sobolDirectionIntegers),
+                         correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+
+    if (trainingSamples() != Null<Size>()) {
+        populatePathValuesLV(trainingSamples(), underlyingPathsTraining_,
+                             makeMultiPathVariateGenerator(params_.trainingSequenceType, indices_.size(),
+                                                           timeGrid_.size() - 1, params_.trainingSeed,
+                                                           params_.sobolOrdering, params_.sobolDirectionIntegers),
+                             correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
+    }
+
+} // performCalculationsLV()
+
+void BlackScholes::populatePathValuesBS(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                        const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                        const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const {
 
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
@@ -277,7 +410,137 @@ void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::v
                 rvs[j][i]->data()[path] = std::exp(logState[j]);
         }
     }
-} // populatePathValues()
+} // populatePathValuesBS()
+
+void BlackScholes::populatePathValuesLV(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                        const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                        const Matrix& correlation, const Matrix& sqrtCorr,
+                                        const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                                        const std::vector<Real>& t, const std::vector<Real>& dt,
+                                        const std::vector<Real>& sqrtdt) const {
+
+    Array stateDiff(indices_.size()), logState(indices_.size()), logState0(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        logState0[j] = std::log(model_->processes()[j]->x0());
+    }
+
+    std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
+                                                  std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
+    auto date = effectiveSimulationDates_.begin();
+    for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
+        ++date;
+        for (Size j = 0; j < indices_.size(); ++j) {
+            rvs[j][i] = &paths[*date][j];
+            rvs[j][i]->expand();
+        }
+    }
+
+    for (Size path = 0; path < size(); ++path) {
+        auto p = gen->next();
+        logState = logState0;
+        std::size_t date = 0;
+        auto pos = positionInTimeGrid_.begin();
+        ++pos;
+        // evolve the process on the refined time grid
+        for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+            for (Size j = 0; j < indices_.size(); ++j) {
+                // localVol might throw / return nan, inf, handle these cases here
+                // by setting the local vol to zero
+                Real volj = 0.0;
+                try {
+                    volj = model_->processes()[j]->localVolatility()->localVol(t[i], std::exp(logState[j]));
+                } catch (...) {
+                }
+                if (!std::isfinite(volj))
+                    volj = 0.0;
+                Real dw = 0;
+                for (Size k = 0; k < indices_.size(); ++k) {
+                    dw += sqrtCorr[j][k] * p.value[i][k];
+                }
+                stateDiff[j] = volj * dw * sqrtdt[i] - 0.5 * volj * volj * dt[i];
+                // drift adjustment for eq / com indices that are not in base ccy
+                if (eqComIdx[j] != Null<Size>()) {
+                    Real volIdx = model_->processes()[eqComIdx[j]]->localVolatility()->localVol(
+                        t[i], std::exp(logState[eqComIdx[j]]));
+                    stateDiff[j] -= correlation[eqComIdx[j]][j] * volIdx * volj * dt[i];
+                }
+            }
+            // update state with stateDiff from above and deterministic part of the drift
+            logState += stateDiff + deterministicDrift[i];
+            // on the effective simulation dates populate the underlying paths
+            if (i + 1 == *pos) {
+                for (Size j = 0; j < indices_.size(); ++j)
+                    rvs[j][date]->data()[path] = std::exp(logState[j]);
+                ++date;
+                ++pos;
+            }
+        }
+    }
+} // populatePathValuesLV()
+
+Matrix BlackScholes::getCorrelation() const {
+    Matrix correlation(indices_.size(), indices_.size(), 0.0);
+    for (Size i = 0; i < indices_.size(); ++i)
+        correlation[i][i] = 1.0;
+    for (auto const& c : correlations_) {
+        IndexInfo inf1(c.first.first), inf2(c.first.second);
+        auto ind1 = std::find(indices_.begin(), indices_.end(), inf1);
+        auto ind2 = std::find(indices_.begin(), indices_.end(), inf2);
+        if (ind1 != indices_.end() && ind2 != indices_.end()) {
+            // EQ, FX, COMM index
+            Size i1 = std::distance(indices_.begin(), ind1);
+            Size i2 = std::distance(indices_.begin(), ind2);
+            correlation[i1][i2] = correlation[i2][i1] = c.second->correlation(0.0); // we assume a constant correlation!
+        }
+    }
+    DLOG("BlackScholes correlation matrix:");
+    DLOGGERSTREAM(correlation);
+    return correlation;
+}
+
+const Date& BlackScholes::referenceDate() const {
+    calculate();
+    return referenceDate_;
+}
+
+RandomVariable BlackScholes::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFwd = fwd;
+    if (indices_[indexNo].isComm()) {
+        Date expiry = indices_[indexNo].comm(d)->expiryDate();
+        // if a future is referenced we set the forward date effectively used below to the future's expiry date
+        if (expiry != Date())
+            effFwd = expiry;
+        // if the future expiry is past the obsdate, we return the spot as of the obsdate, i.e. we
+        // freeze the future value after its expiry, but keep it available for observation
+        // TOOD should we throw an exception instead?
+        effFwd = std::max(effFwd, d);
+    }
+    QL_REQUIRE(underlyingPaths_.find(d) != underlyingPaths_.end(), "did not find path for " << d);
+    auto res = underlyingPaths_.at(d).at(indexNo);
+    // compute forwarding factor
+    if (effFwd != Null<Date>()) {
+        auto p = model_->processes().at(indexNo);
+        res *= RandomVariable(size(), p->dividendYield()->discount(effFwd) / p->dividendYield()->discount(d) /
+                                          (p->riskFreeRate()->discount(effFwd) / p->riskFreeRate()->discount(d)));
+    }
+    return res;
+}
+
+RandomVariable BlackScholes::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFixingDate = d;
+    if (fwd != Null<Date>())
+        effFixingDate = fwd;
+    // ensure a valid fixing date
+    effFixingDate = irIndices_.at(indexNo).second->fixingCalendar().adjust(effFixingDate);
+    return RandomVariable(size(), irIndices_.at(indexNo).second->fixing(effFixingDate));
+}
+
+RandomVariable BlackScholes::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFixingDate = d;
+    if (fwd != Null<Date>())
+        effFixingDate = fwd;
+    return RandomVariable(size(), infIndices_.at(indexNo).second->fixing(effFixingDate));
+}
 
 namespace {
 struct comp {
@@ -289,8 +552,161 @@ struct comp {
 };
 } // namespace
 
+RandomVariable BlackScholes::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
+                                        const Date& start, const Date& end, const Real spread, const Real gearing,
+                                        const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
+                                        const bool includeSpread, const Real cap, const Real floor,
+                                        const bool nakedOption, const bool localCapFloor) const {
+    calculate();
+    auto index = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
+    QL_REQUIRE(index != irIndices_.end(),
+               "BlackScholes::fwdCompAvg(): did not find ir index " << indexInput << " - this is unexpected.");
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->second);
+    QL_REQUIRE(on, "BlackScholes::fwdCompAvg(): expected on index for " << indexInput);
+    // if we want to support cap / floors we need the OIS CF surface
+    QL_REQUIRE(cap > 999998.0 && floor < -999998.0,
+               "BlackScholes:fwdCompAvg(): cap (" << cap << ") / floor (" << floor << ") not supported");
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
+    if (isAvg) {
+        coupon = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
+            end, 1.0, start, end, on, gearing, spread, rateCutoff, on->dayCounter(), lookback * Days, fixingDays);
+        pricer = QuantLib::ext::make_shared<AverageONIndexedCouponPricer>();
+    } else {
+        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
+            end, 1.0, start, end, on, gearing, spread, Date(), Date(), on->dayCounter(), false, includeSpread,
+            lookback * Days, rateCutoff, fixingDays);
+        pricer = QuantLib::ext::make_shared<OvernightIndexedCouponPricer>();
+    }
+    coupon->setPricer(pricer);
+    return RandomVariable(size(), coupon->rate());
+}
+
+RandomVariable BlackScholes::getDiscount(const Size idx, const Date& s, const Date& t) const {
+    return RandomVariable(size(), curves_.at(idx)->discount(t) / curves_.at(idx)->discount(s));
+}
+
+RandomVariable BlackScholes::getNumeraire(const Date& s) const {
+    return RandomVariable(size(), 1.0 / curves_.at(0)->discount(s));
+}
+
+Real BlackScholes::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
+
+RandomVariable BlackScholes::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+                                 const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                 const RandomVariable& addRegressor2) const {
+
+    calculate();
+
+    // short cut, if amount is deterministic and no memslot is given
+
+    if (amount.deterministic() && !memSlot)
+        return amount;
+
+    // if obsdate is today, take a plain expectation
+
+    if (obsdate == referenceDate())
+        return expectation(amount);
+
+    // build the state
+
+    std::vector<const RandomVariable*> state;
+
+    if (!underlyingPaths_.empty()) {
+        for (auto const& r : underlyingPaths_.at(obsdate))
+            state.push_back(&r);
+    }
+
+    Size nModelStates = state.size();
+
+    if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
+        state.push_back(&addRegressor1);
+    if (addRegressor2.initialised() && (memSlot || !addRegressor2.deterministic()))
+        state.push_back(&addRegressor2);
+
+    Size nAddReg = state.size() - nModelStates;
+
+    // if the state is empty, return the plain expectation (no conditioning)
+
+    if (state.empty()) {
+        return expectation(amount);
+    }
+
+    // the regression model is given by coefficients and an optional coordinate transform
+
+    Array coeff;
+    Matrix coordinateTransform;
+
+    // if a memSlot is given and coefficients / coordinate transform are stored, we use them
+
+    bool haveStoredModel = false;
+
+    if (memSlot) {
+        if (auto it = storedRegressionModel_.find(*memSlot); it != storedRegressionModel_.end()) {
+            coeff = std::get<0>(it->second);
+            coordinateTransform = std::get<2>(it->second);
+            QL_REQUIRE(std::get<1>(it->second) == state.size(),
+                       "BlackScholes::npv(): stored regression coefficients at mem slot "
+                           << *memSlot << " are for state size " << std::get<1>(it->second) << ", actual state size is "
+                           << state.size() << " (before possible coordinate transform).");
+            haveStoredModel = true;
+        }
+    }
+
+    // if we do not have retrieved a model in the previous step, we create it now
+
+    std::vector<RandomVariable> transformedState;
+
+    if (!haveStoredModel) {
+
+        // factor reduction to reduce dimensionalitty and handle collinearity
+
+        if (params_.regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(state, params_.regressionVarianceCutoff);
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
+        }
+
+        // train coefficients
+
+        coeff = regressionCoefficients(amount, state,
+                                       multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType,
+                                                            {}, std::min(size(), trainingSamples())),
+                                       filter, RandomVariableRegressionMethod::QR);
+        DLOG("BlackScholes::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
+                                  << " (got model state size " << nModelStates << " and " << nAddReg
+                                  << " additional regressors, coordinate transform " << coordinateTransform.columns()
+                                  << " -> " << coordinateTransform.rows() << ")");
+
+        // store model if requried
+
+        if (memSlot) {
+            storedRegressionModel_[*memSlot] = std::make_tuple(coeff, nModelStates, coordinateTransform);
+        }
+
+    } else {
+
+        // apply the stored coordinate transform to the state
+
+        if (!coordinateTransform.empty()) {
+            transformedState = applyCoordinateTransform(state, coordinateTransform);
+            state = vec2vecptr(transformedState);
+        }
+    }
+
+    // compute conditional expectation and return the result
+
+    return conditionalExpectation(state,
+                                  multiPathBasisSystem(state.size(), params_.regressionOrder, params_.polynomType, {},
+                                                       std::min(size(), trainingSamples())),
+                                  coeff);
+}
+
 RandomVariable BlackScholes::getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                                   const RandomVariable& barrier, const bool above) const {
+
+    QL_REQUIRE(calibration_ != "LocalVol",
+               "BlackScholes::getFutureBarrierProb(): not implemented for calibration == LocalVol");
 
     // get the underlying values at the start and end points of the period
 
@@ -431,6 +847,27 @@ RandomVariable BlackScholes::getFutureBarrierProb(const std::string& index, cons
     }
 
     return result;
+}
+
+void BlackScholes::releaseMemory() {
+    underlyingPaths_.clear();
+    underlyingPathsTraining_.clear();
+}
+
+void BlackScholes::resetNPVMem() { storedRegressionModel_.clear(); }
+
+void BlackScholes::toggleTrainingPaths() const {
+    std::swap(underlyingPaths_, underlyingPathsTraining_);
+    inTrainingPhase_ = !inTrainingPhase_;
+}
+
+Size BlackScholes::trainingSamples() const { return params_.trainingSamples; }
+
+Size BlackScholes::size() const {
+    if (inTrainingPhase_)
+        return params_.trainingSamples;
+    else
+        return Model::size();
 }
 
 } // namespace data

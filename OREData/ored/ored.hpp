@@ -370,7 +370,6 @@
 #include <ored/scripting/grammar.hpp>
 #include <ored/scripting/models/amcmodel.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
-#include <ored/scripting/models/blackscholesbase.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/blackscholescgbase.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
@@ -379,7 +378,6 @@
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
-#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/models/modelcgimpl.hpp>

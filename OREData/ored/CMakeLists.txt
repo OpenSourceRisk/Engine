@@ -342,7 +342,6 @@ scripting/engines/scriptedinstrumentpricingengine.cpp
 scripting/engines/scriptedinstrumentpricingenginecg.cpp
 scripting/grammar.cpp
 scripting/models/blackscholes.cpp
-scripting/models/blackscholesbase.cpp
 scripting/models/blackscholescg.cpp
 scripting/models/blackscholescgbase.cpp
 scripting/models/fdblackscholesbase.cpp
@@ -350,7 +349,6 @@ scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/lgmcg.cpp
-scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
@@ -759,7 +757,6 @@ scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
 scripting/models/blackscholes.hpp
-scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
 scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
@@ -768,7 +765,6 @@ scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
 scripting/models/lgmcg.hpp
-scripting/models/localvol.hpp
 scripting/models/model.hpp
 scripting/models/modelcg.hpp
 scripting/models/modelcgimpl.hpp

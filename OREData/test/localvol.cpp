@@ -22,7 +22,6 @@
 // clang-format on
 
 #include <ored/scripting/scriptengine.hpp>
-#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/staticanalyser.hpp>
 #include <ored/scripting/scriptparser.hpp>
 #include <ored/scripting/astprinter.hpp>
@@ -73,9 +72,9 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
 
     Model::Params params;
     params.regressionOrder = 1;
-    auto localVol =
-        QuantLib::ext::make_shared<LocalVol>(paths, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(),
-                                             simDates, IborFallbackConfig::defaultConfig(), params);
+    auto localVol = QuantLib::ext::make_shared<BlackScholes>(
+        paths, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(), simDates,
+        IborFallbackConfig::defaultConfig(), "LocalVol", std::vector<Real>{}, params);
 
     // loop over the calibration options and price them in the local vol model using MC
     // the result should be close to the market price of the options
