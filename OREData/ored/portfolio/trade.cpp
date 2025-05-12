@@ -196,7 +196,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
-                    additionalData_["initialPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
+                    additionalData_["currentPeriodStartPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
                     additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
                     if (arc.startFixing != Null<Real>())
                         additionalData_["startEquityFixing[" + legID + "]"] = arc.startFixing;
