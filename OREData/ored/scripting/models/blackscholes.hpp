@@ -36,6 +36,8 @@
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmmesher.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/timegrid.hpp>
 
@@ -61,12 +63,12 @@ public:
          strike will be atmf
     */
     BlackScholes(
-        const Size paths, const std::vector<std::string>& currencies,
+        const Type type, const Size size, const std::vector<std::string>& currencies,
         const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<BlackScholesModelWrapper>& model,
+        const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
         const std::set<Date>& simulationDates,
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
@@ -74,7 +76,7 @@ public:
         const Params& params = {});
 
     // ctor for single underlying
-    BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
+    BlackScholes(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
                  const std::string& index, const std::string& indexCurrency,
                  const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
@@ -97,6 +99,14 @@ public:
     Size trainingSamples() const override;
     Size size() const override;
 
+    // override for FD
+    Real extractT0Result(const RandomVariable& result) const override;
+
+    // override to handle cases where we use a quanto-adjusted pde for FD
+    const std::string& baseCcy() const override;
+    RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
+                       const std::string& currency) const override;
+
 protected:
     // ModelImpl interface implementation
     void performCalculations() const override;
@@ -109,20 +119,23 @@ protected:
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                         const RandomVariable& barrier, const bool above) const override;
 
-    // helper function that constructs the correlation matrix
+    // helper functions to construct the correlation matrix and calibration strikes
     Matrix getCorrelation() const;
+    std::vector<Real> getCalibrationStrikes() const;
 
-    // BS , LV specific code for path generation
-    void performCalculationsBS() const;
-    void performCalculationsLV() const;
-
-    // helper function to populate the mc path values for BS
-    void populatePathValuesBS(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+    // BS / LV and type specific code
+    void performCalculationsMcBs() const;
+    void performCalculationsMcLv() const;
+    void performCalculationsFdBs() const;
+    void performCalculationsFdLv() const;
+    void initUnderlyingPathsMc() const;
+    void setReferenceDateValuesMc() const;
+    void generatePathsBs() const;
+    void generatePathsLv() const;
+    void populatePathValuesBs(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                               const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                               const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-
-    // helper method to populate path values for LocalVol
-    void populatePathValuesLV(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+    void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                               const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                               const Matrix& correlation, const Matrix& sqrtCorr,
                               const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
@@ -132,24 +145,37 @@ protected:
     // input parameters
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
+    std::set<std::string> payCcys_;
     Handle<BlackScholesModelWrapper> model_;
     std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
     std::vector<Date> simulationDates_;
     std::string calibration_;
     std::map<std::string, std::vector<Real>> calibrationStrikes_;
 
+    // quanto adjustment parameters (used for model type FD only)
+    bool applyQuantoAdjustment_ = false;
+    Size quantoSourceCcyIndex_, quantoTargetCcyIndex_;
+    Real quantoCorrelationMultiplier_;
+
     // these all except underlyingPaths_ are initialised when the interface functions above are called
     mutable Date referenceDate_;                      // the model reference date
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
+    mutable Matrix correlation_;                      // the correlation matrix (constant in time)
+
+    // used for MC only:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
     mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
     mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
 
-    // stored regression coefficients
-    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_;
+    // used for FD only:
+    mutable QuantLib::ext::shared_ptr<FdmMesher> mesher_;              // the mesher for the FD solver
+    mutable QuantLib::ext::shared_ptr<FdmLinearOpComposite> operator_; // the operator
+    mutable QuantLib::ext::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
+    mutable RandomVariable underlyingValues_;                          // the discretised underlying
 };
 
 } // namespace data

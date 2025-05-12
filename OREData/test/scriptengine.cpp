@@ -703,10 +703,10 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
     Model::Params params;
     params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
+        Model::Type::MC, nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
         std::vector<Handle<Quote>>(), irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(),
-        std::vector<std::string>(), std::vector<std::string>(),
+        std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
         Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
         std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
         IborFallbackConfig::defaultConfig(), "ATM", std::map<std::string, std::vector<Real>>(), params);
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     Model::Params params;
     params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts0, "EQ-Dummy", "USD",
+        Model::Type::MC, nPaths, "USD", yts0, "EQ-Dummy", "USD",
         BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), simulationDates,
         IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
 
@@ -936,7 +936,7 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
     Model::Params params;
     params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
         IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
@@ -1048,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
     Model::Params params;
     params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
         IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
@@ -1146,7 +1146,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     Model::Params params;
     params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
         IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
@@ -1317,11 +1317,11 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     Model::Params params;
     params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
+        Model::Type::MC, nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
         std::vector<Handle<Quote>>(),
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
-        std::vector<std::string>(3, "USD"),
+        std::vector<std::string>(3, "USD"), std::set<std::string>{"USD"},
         BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations,
         simulationDates, IborFallbackConfig::defaultConfig(), "ATM", std::map<string, std::vector<Real>>(), params);
     ScriptEngine engine(parser.ast(), context, model);

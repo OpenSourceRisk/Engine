@@ -89,7 +89,7 @@ void CliquetOptionMcScriptEngine::calculate() const {
     Model::Params params;
     params.regressionOrder = regressionOrder_;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_, builder->model(),
+        Model::Type::MC, samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_, builder->model(),
         arguments_.valuationDates, IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
 
     // populate context

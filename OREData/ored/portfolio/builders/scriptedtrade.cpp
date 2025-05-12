@@ -23,7 +23,6 @@
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
-#include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
@@ -1257,9 +1256,9 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
             calibration_, filteredStrikes);
     } else {
         model_ = QuantLib::ext::make_shared<BlackScholes>(
-            modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-            modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
-            calibration_, filteredStrikes, params_);
+            Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+            iborFallbackConfig, calibration_, filteredStrikes, params_);
     }
     modelBuilders_.insert(std::make_pair(id, builder));
 }
@@ -1271,10 +1270,10 @@ void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id,
     auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
         getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<FdBlackScholesBase>(
-        modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
-        calibration_, filteredStrikes, params_);
+    model_ = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, calibration_, filteredStrikes, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1292,9 +1291,9 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
-        modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, "LocalVol",
-        std::map<std::string, std::vector<Real>>{}, params_);
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "LocalVol", std::map<std::string, std::vector<Real>>{}, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1311,9 +1310,9 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(const std::string& id, const Ib
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
-        modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-        modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig, "LocalVol",
-        std::map<std::string, std::vector<Real>>{}, params_);
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "LocalVol", std::map<std::string, std::vector<Real>>{}, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
