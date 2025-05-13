@@ -1251,9 +1251,9 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
         calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
-            modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
-            modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
-            calibration_, filteredStrikes);
+            ModelCG::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+            modelIndices_, modelIndicesCurrencies_, builder->model(), correlations_, simulationDates_,
+            iborFallbackConfig, calibration_, filteredStrikes);
     } else {
         model_ = QuantLib::ext::make_shared<BlackScholes>(
             Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
