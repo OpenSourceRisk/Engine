@@ -59,8 +59,23 @@ namespace data {
 
 using namespace QuantExt;
 
+// get model / engine qualifiers based on product tag, trade type and (optionally) an additional qualifier
+std::vector<std::string> ScriptedTradeEngineBuilder::getModelEngineQualifiers(const std::string& addQualifier) const {
+    std::vector<std::string> result;
+    if (!addQualifier.empty()) {
+        result.push_back(resolvedProductTag_ + "_" + tradeType_ + "_" + addQualifier);
+        result.push_back(resolvedProductTag_ + "_" + addQualifier);
+        result.push_back(tradeType_ + "_" + addQualifier);
+        result.push_back(addQualifier);
+    }
+    result.push_back(resolvedProductTag_ + "_" + tradeType_);
+    result.push_back(resolvedProductTag_);
+    result.push_back(tradeType_);
+    return result;
+}
+
 QuantLib::Handle<QuantExt::CorrelationTermStructure>
-ScriptedTradeEngineBuilder::correlationCurve(const std::string& index1, const std::string& index2) {
+ScriptedTradeEngineBuilder::correlationCurve(const std::string& index1, const std::string& index2) const {
     if (index1 == index2) {
         // need to handle this case here, we might have calls with index1 == index arising from COMM
         // indices with different spot / future reference, for which we expect the correlation on
@@ -94,15 +109,16 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     deriveProductClass(indices);
 
-    // 1b get product tag from scripted trade or library and build resolved product tag
+    // 1b get product tag from scripted trade or library and build resolved product tag, get trade type
 
+    tradeType_ = scriptedTrade.tradeType();
     std::string productTag = getScript(scriptedTrade, ScriptLibraryStorage::instance().get(), "", false).first;
     resolvedProductTag_ = boost::replace_all_copy(productTag, "{AssetClass}", assetClassReplacement_);
     DLOG("got product tag '" << productTag << "', resolved product tag is '" << resolvedProductTag_);
 
     // 2 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
 
-    engineParam_ = engineParameter("Engine", {resolvedProductTag_});
+    engineParam_ = engineParameter("Engine", getModelEngineQualifiers());
 
     std::string purpose = "";
     if (buildingAmc_)
@@ -500,41 +516,43 @@ void ScriptedTradeEngineBuilder::deriveProductClass(const std::vector<ScriptedTr
 }
 
 void ScriptedTradeEngineBuilder::populateModelParameters() {
-    DLOG("Retrieve model and engine parameters using product tag '" << resolvedProductTag_ << "'");
+    DLOG("Retrieve model and engine parameters using product tag '" << resolvedProductTag_ << "', trade type '"
+                                                                    << tradeType_ << "'");
 
     // mandatory parameters
 
-    modelParam_ = modelParameter("Model", {resolvedProductTag_});
-    baseCcyParam_ = modelParameter("BaseCcy", {resolvedProductTag_});
-    fullDynamicFx_ = parseBool(modelParameter("FullDynamicFx", {resolvedProductTag_}));
-    enforceBaseCcy_ = parseBool(modelParameter("EnforceBaseCcy", {resolvedProductTag_}));
-    gridCoarsening_ = modelParameter("GridCoarsening", {resolvedProductTag_});
+    modelParam_ = modelParameter("Model", getModelEngineQualifiers());
+    baseCcyParam_ = modelParameter("BaseCcy", getModelEngineQualifiers());
+    fullDynamicFx_ = parseBool(modelParameter("FullDynamicFx", getModelEngineQualifiers()));
+    enforceBaseCcy_ = parseBool(modelParameter("EnforceBaseCcy", getModelEngineQualifiers()));
+    gridCoarsening_ = modelParameter("GridCoarsening", getModelEngineQualifiers());
 
-    engineParam_ = engineParameter("Engine", {resolvedProductTag_});
-    timeStepsPerYear_ = parseInteger(engineParameter("TimeStepsPerYear", {resolvedProductTag_}));
-    interactive_ = parseBool(engineParameter("Interactive", {resolvedProductTag_}));
+    engineParam_ = engineParameter("Engine", getModelEngineQualifiers());
+    timeStepsPerYear_ = parseInteger(engineParameter("TimeStepsPerYear", getModelEngineQualifiers()));
+    interactive_ = parseBool(engineParameter("Interactive", getModelEngineQualifiers()));
 
     // optional parameters
 
-    zeroVolatility_ = parseBool(engineParameter("ZeroVolatility", {resolvedProductTag_}, false, "false"));
-    calibration_ = modelParameter("Calibration", {resolvedProductTag_}, false, "Deal");
-    useCg_ = parseBool(engineParameter("UseCG", {resolvedProductTag_}, false, "false"));
-    useAd_ = parseBool(engineParameter("UseAD", {resolvedProductTag_}, false, "false"));
+    zeroVolatility_ = parseBool(engineParameter("ZeroVolatility", getModelEngineQualifiers(), false, "false"));
+    calibration_ = modelParameter("Calibration", getModelEngineQualifiers(), false, "Deal");
+    useCg_ = parseBool(engineParameter("UseCG", getModelEngineQualifiers(), false, "false"));
+    useAd_ = parseBool(engineParameter("UseAD", getModelEngineQualifiers(), false, "false"));
     useExternalComputeDevice_ =
-        parseBool(engineParameter("UseExternalComputeDevice", {resolvedProductTag_}, false, "false"));
-    useDoublePrecisionForExternalCalculation_ =
-        parseBool(engineParameter("UseDoublePrecisionForExternalCalculation", {resolvedProductTag_}, false, "false"));
+        parseBool(engineParameter("UseExternalComputeDevice", getModelEngineQualifiers(), false, "false"));
+    useDoublePrecisionForExternalCalculation_ = parseBool(
+        engineParameter("UseDoublePrecisionForExternalCalculation", getModelEngineQualifiers(), false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
     externalDeviceCompatibilityMode_ =
         parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
-    includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
-    staticNpvMem_ = parseBool(engineParameter("StaticNpvMem", {resolvedProductTag_}, false, "false"));
-    params_.salvagingAlgorithm =
-        parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {resolvedProductTag_}, false, "Spectral"));
+    includePastCashflows_ =
+        parseBool(engineParameter("IncludePastCashflows", getModelEngineQualifiers(), false, "false"));
+    staticNpvMem_ = parseBool(engineParameter("StaticNpvMem", getModelEngineQualifiers(), false, "false"));
+    params_.salvagingAlgorithm = parseSalvagingAlgorithmType(
+        engineParameter("SalvagingAlgorithm", getModelEngineQualifiers(), false, "Spectral"));
     indicatorSmoothingForValues_ =
-        parseReal(engineParameter("IndicatorSmoothingForValues", {resolvedProductTag_}, false, "0.0"));
+        parseReal(engineParameter("IndicatorSmoothingForValues", getModelEngineQualifiers(), false, "0.0"));
     indicatorSmoothingForDerivatives_ =
-        parseReal(engineParameter("IndicatorSmoothingForDerivatives", {resolvedProductTag_}, false, "0.2"));
+        parseReal(engineParameter("IndicatorSmoothingForDerivatives", getModelEngineQualifiers(), false, "0.2"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -552,47 +570,49 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     DLOG("Retrieve model / engine specific parameters for " << modelParam_ << " / " << engineParam_);
 
     if (modelParam_ == "GaussianCam") {
-        fullDynamicIr_ = parseBool(modelParameter("FullDynamicIr", {resolvedProductTag_}));
-        referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", {resolvedProductTag_}, false, "");
-        bootstrapTolerance_ = parseReal(engineParameter("BootstrapTolerance", {resolvedProductTag_}));
-        infModelType_ = modelParameter("InfModelType", {resolvedProductTag_}, false, "DK");
+        fullDynamicIr_ = parseBool(modelParameter("FullDynamicIr", getModelEngineQualifiers()));
+        referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
+        bootstrapTolerance_ = parseReal(engineParameter("BootstrapTolerance", getModelEngineQualifiers()));
+        infModelType_ = modelParameter("InfModelType", getModelEngineQualifiers(), false, "DK");
     } else if (modelParam_ == "LocalVolAndreasenHuge") {
         calibrationMoneyness_ =
-            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", {resolvedProductTag_}), &parseReal);
+            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
     }
 
     if (engineParam_ == "MC") {
-        params_.seed = parseInteger(engineParameter("Seed", {resolvedProductTag_}, false, "42"));
-        modelSize_ = parseInteger(engineParameter("Samples", {resolvedProductTag_}));
-        params_.regressionOrder = parseInteger(engineParameter("RegressionOrder", {resolvedProductTag_}));
-        params_.sequenceType =
-            parseSequenceType(engineParameter("SequenceType", {resolvedProductTag_}, false, "SobolBrownianBridge"));
+        params_.seed = parseInteger(engineParameter("Seed", getModelEngineQualifiers(), false, "42"));
+        modelSize_ = parseInteger(engineParameter("Samples", getModelEngineQualifiers()));
+        params_.regressionOrder = parseInteger(engineParameter("RegressionOrder", getModelEngineQualifiers()));
+        params_.sequenceType = parseSequenceType(
+            engineParameter("SequenceType", getModelEngineQualifiers(), false, "SobolBrownianBridge"));
         params_.polynomType =
-            parsePolynomType(engineParameter("PolynomType", {resolvedProductTag_}, false, "Monomial"));
-        params_.trainingSequenceType =
-            parseSequenceType(engineParameter("TrainingSequenceType", {resolvedProductTag_}, false, "MersenneTwister"));
+            parsePolynomType(engineParameter("PolynomType", getModelEngineQualifiers(), false, "Monomial"));
+        params_.trainingSequenceType = parseSequenceType(
+            engineParameter("TrainingSequenceType", getModelEngineQualifiers(), false, "MersenneTwister"));
         params_.sobolOrdering = parseSobolBrownianGeneratorOrdering(
-            engineParameter("SobolOrdering", {resolvedProductTag_}, false, "Steps"));
+            engineParameter("SobolOrdering", getModelEngineQualifiers(), false, "Steps"));
         params_.sobolDirectionIntegers = parseSobolRsgDirectionIntegers(
-            engineParameter("SobolDirectionIntegers", {resolvedProductTag_}, false, "JoeKuoD7"));
-        if (auto tmp = engineParameter("TrainingSamples", {resolvedProductTag_}, false, ""); !tmp.empty()) {
+            engineParameter("SobolDirectionIntegers", getModelEngineQualifiers(), false, "JoeKuoD7"));
+        if (auto tmp = engineParameter("TrainingSamples", getModelEngineQualifiers(), false, ""); !tmp.empty()) {
             params_.trainingSamples = parseInteger(tmp);
-            params_.trainingSeed = parseInteger(engineParameter("TrainingSeed", {resolvedProductTag_}, false, "43"));
+            params_.trainingSeed =
+                parseInteger(engineParameter("TrainingSeed", getModelEngineQualifiers(), false, "43"));
         } else {
             params_.trainingSamples = Null<Size>();
         }
-        params_.regressionVarianceCutoff =
-            parseRealOrNull(engineParameter("RegressionVarianceCutoff", {resolvedProductTag_}, false, std::string()));
+        params_.regressionVarianceCutoff = parseRealOrNull(
+            engineParameter("RegressionVarianceCutoff", getModelEngineQualifiers(), false, std::string()));
         params_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
-        modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
-        params_.mesherEpsilon = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
-        params_.mesherScaling = parseReal(engineParameter("MesherScaling", {resolvedProductTag_}, false, "1.5"));
+        modelSize_ = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
+        params_.mesherEpsilon =
+            parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
+        params_.mesherScaling = parseReal(engineParameter("MesherScaling", getModelEngineQualifiers(), false, "1.5"));
         params_.mesherConcentration =
-            parseReal(engineParameter("MesherConcentration", {resolvedProductTag_}, false, "0.1"));
+            parseReal(engineParameter("MesherConcentration", getModelEngineQualifiers(), false, "0.1"));
         params_.mesherMaxConcentratingPoints =
-            parseInteger(engineParameter("MesherMaxConcentratingPoints", {resolvedProductTag_}, false, "9999"));
-        params_.staticMesher = parseBool(engineParameter("MesherIsStatic", {resolvedProductTag_}, false, "false"));
+            parseInteger(engineParameter("MesherMaxConcentratingPoints", getModelEngineQualifiers(), false, "9999"));
+        params_.staticMesher = parseBool(engineParameter("MesherIsStatic", getModelEngineQualifiers(), false, "false"));
     }
 
     // global parameters that are relevant
@@ -608,7 +628,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
 
     // sensitivity template
 
-    sensitivityTemplate_ = engineParameter("SensitivityTemplate", {resolvedProductTag_}, false, std::string());
+    sensitivityTemplate_ = engineParameter("SensitivityTemplate", getModelEngineQualifiers(), false, std::string());
 }
 
 void ScriptedTradeEngineBuilder::populateFixingsMap(const IborFallbackConfig& iborFallbackConfig) {
@@ -1053,9 +1073,9 @@ void ScriptedTradeEngineBuilder::setupIrReversions() {
         irCcys.insert(modelCcys_.begin(), modelCcys_.end());
     }
     for (auto const& ccy : irCcys) {
-        string revStr = modelParameter("IrReversion_" + ccy, {resolvedProductTag_}, false, "");
+        string revStr = modelParameter("IrReversion_" + ccy, getModelEngineQualifiers(), false, "");
         if (revStr.empty())
-            revStr = modelParameter("IrReversion", {resolvedProductTag_}, false, "");
+            revStr = modelParameter("IrReversion", getModelEngineQualifiers(), false, "");
         QL_REQUIRE(!revStr.empty(), "Did not find reversion for "
                                         << ccy
                                         << ", need IrReversion_CCY or IrReversion parameter in pricing engine config.");
@@ -1419,10 +1439,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                         lookupnames2.insert(s_2.substr(0, s_2.size() - 2));
                     for (auto const& l1 : lookupnames1) {
                         for (auto const& l2 : lookupnames2) {
-                            if (auto overwrite = modelParameter(
-                                    "Correlation",
-                                    {resolvedProductTag_ + "_" + l1 + "_" + l2, l1 + "_" + l2, resolvedProductTag_},
-                                    false);
+                            if (auto overwrite =
+                                    modelParameter("Correlation", getModelEngineQualifiers(l1 + "_" + l2), false);
                                 !overwrite.empty()) {
                                 camCorrelations[std::make_pair(f_1, f_2)] =
                                     Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(parseReal(overwrite)));
@@ -1470,9 +1488,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         auto config = QuantLib::ext::make_shared<IrLgmData>();
         config->qualifier() = getFirstIrIndexOrCcy(modelCcys_[i], irIndices_);
         config->reversionType() = LgmData::ReversionType::HullWhite;
-        config->volatilityType() = parseVolatilityType(modelParameter(
-            "IrVolatilityType", {resolvedProductTag_ + "_" + modelCcys_[i], modelCcys_[i], resolvedProductTag_}, false,
-            "Hagan"));
+        config->volatilityType() = parseVolatilityType(
+            modelParameter("IrVolatilityType", getModelEngineQualifiers(modelCcys_[i]), false, "Hagan"));
         config->calibrateH() = false;
         config->hParamType() = ParamType::Constant;
         config->hTimes() = std::vector<Real>();
@@ -1544,9 +1561,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             if (infModelType_ == "DK") {
                 // build DK config
                 std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
-                Real vol = parseReal(modelParameter("InfDkVolatility",
-                                                    {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
-                                                    false, "0.0050"));
+                Real vol =
+                    parseReal(modelParameter("InfDkVolatility", getModelEngineQualifiers(infName), false, "0.0050"));
                 config = QuantLib::ext::make_shared<InfDkData>(
                     CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
                     IndexInfo(modelInfIndices_[i].first).infName(),
@@ -1562,17 +1578,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                     std::distance(modelCcys_.begin(), std::find(modelCcys_.begin(), modelCcys_.end(),
                                                                 modelInfIndices_[i].second->currency().code()));
                 // check if vol / reversion is overwritten by pricing engine config parameters
-                if (auto tmp = modelParameter("InfJyTimes",
-                                              {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
-                                              false, std::string());
+                if (auto tmp = modelParameter("InfJyTimes", getModelEngineQualifiers(infName), false, std::string());
                     !tmp.empty()) {
-                    auto tmp2 = modelParameter(
-                        "InfJyRealRateVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
-                    auto tmp3 = modelParameter(
-                        "InfJyIndexVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
-                    auto tmp4 =
-                        modelParameter("InfJyRealRateReversion",
-                                       {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto tmp2 = modelParameter("InfJyRealRateVol", getModelEngineQualifiers(infName), true);
+                    auto tmp3 = modelParameter("InfJyIndexVol", getModelEngineQualifiers(infName), true);
+                    auto tmp4 = modelParameter("InfJyRealRateReversion", getModelEngineQualifiers(infName), true);
                     auto irVolType = *QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])
                                           ->volatilityParameter()
                                           .volatilityType();
@@ -1597,9 +1607,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                         QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->volatilityParameter();
                     realRateRev.setCalibrate(false);
                     realRateVol.setCalibrate(false);
-                    Real realRateToNominalRateRatio = parseReal(modelParameter(
-                        "InfJyRealToNominalVolRatio",
-                        {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, false, "1.0"));
+                    Real realRateToNominalRateRatio = parseReal(
+                        modelParameter("InfJyRealToNominalVolRatio", getModelEngineQualifiers(infName), false, "1.0"));
                     QL_REQUIRE(ccyIndex < modelCcys_.size(),
                                "ScriptedTrade::buildGaussianCam(): internal error, inflation index currency "
                                    << modelInfIndices_[i].second->currency().code() << " not found in model ccy list.");
