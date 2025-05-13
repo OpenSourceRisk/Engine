@@ -403,7 +403,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     cpu_timer timer;
     // use ibor / ois index as key, if possible, otherwise the npv currency
-    auto swaptionEngine = swaptionBuilder->engine(
+    auto swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers zurückgibt
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
         exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes, exerciseType_ == Exercise::American,
         envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
@@ -444,7 +444,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
         exerciseBuilder_->settlementDates(), settlementType_ == Settlement::Physical ? true : false,
-	underlyingSwaps, 1.0, 1.0, additionalInstruments,
+	underlyingSwaps, 1.0, 1.0, additionalInstruments, // Das muss so wie vorher sein.
         additionalMultipliers);
 
     maturity_ = std::max(maturity_, lastPremiumDate);
