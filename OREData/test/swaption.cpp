@@ -177,6 +177,78 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
 }
 
+
+BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionDefault) {
+
+    BOOST_TEST_MESSAGE("Testing Representative Swaption for varying notional ...");
+
+    Date today(2, January, 2017);
+    Settings::instance().evaluationDate() = today;
+
+    // build market
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+
+    // build Swaptions - expiry 5Y, term 10Y
+    Calendar calendar = TARGET();
+    Date qlStartDate = calendar.adjust(today + 5 * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + 10 * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, "6M", "TARGET", "MF", "MF", "Forward"));
+    ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, "1Y", "TARGET", "MF", "MF", "Forward"));
+
+    auto notionals = std::vector<Real>(1, 1000.0);
+    notionals[0]=1000;    
+    
+    auto notionals2 = std::vector<Real>(1, 1000.0);
+    notionals2[0]=1000;    
+
+    // fixed leg
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(std::vector<Real>(10, 0.03)), true, "EUR", fixedSchedule, "30/360",
+                     notionals2);
+    // float leg
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(20, 0.0)),
+                        false, "EUR", floatSchedule, "A360", notionals);
+
+    // leg vector
+    vector<LegData> legs;
+    legs.push_back(fixedLeg);
+    legs.push_back(floatingLeg);
+
+    // Coupon amount
+
+
+
+    Envelope env("CP1");
+    OptionData optionData("Long", "Call", "European", true, vector<string>(1, startDate), "Cash");
+    OptionData optionDataPhysical("Long", "Call", "European", true, vector<string>(1, startDate), "Physical");
+    Real premium = 700.0;
+    OptionData optionDataPremium("Long", "Call", "European", true, vector<string>(1, startDate), "Cash", "",
+                                 PremiumData(premium, "EUR", qlStartDate));
+    ore::data::Swaption swaptionCash(env, optionData, legs);
+    ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
+    ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
+
+    // Build and price
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->model("EuropeanSwaption") = "BlackBachelier";
+    engineData->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    engineData->model("Swap") = "DiscountedCashflows";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+
+    swaptionCash.build(engineFactory);
+    swaptionPhysical.build(engineFactory);
+    swaptionPremium.build(engineFactory);
+    
+    std::cout << "Swaption Cash NPV: " << swaptionCash.instrument()->NPV() << std::endl;
+
+
+}
+
 BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingNotional) {
 
     BOOST_TEST_MESSAGE("Testing Representative Swaption for varying notional ...");
@@ -199,23 +271,45 @@ BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingNotional) {
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, "6M", "TARGET", "MF", "MF", "Forward"));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, "1Y", "TARGET", "MF", "MF", "Forward"));
 
-    auto notionals = std::vector<Real>(10, 1000.0);
+    auto notionals = std::vector<Real>(20, 1000.0);
     notionals[0]=1000;
-    notionals[1]=900;
-    notionals[2]=800;
-    notionals[3]=700;
-    notionals[4]=600;
-    notionals[5]=500;
-    notionals[6]=400;
-    notionals[7]=300;
-    notionals[8]=200;
-    notionals[9]=100;
+    notionals[1]=100;
+    notionals[2]=900;
+    notionals[3]=900;
+    notionals[4]=800;
+    notionals[5]=800;
+    notionals[6]=700;
+    notionals[7]=700;
+    notionals[8]=600;
+    notionals[9]=600;    
+    notionals[10]=500;
+    notionals[11]=500;
+    notionals[12]=400;
+    notionals[13]=400;
+    notionals[14]=300;
+    notionals[15]=300;
+    notionals[16]=200;
+    notionals[17]=200;
+    notionals[18]=100;
+    notionals[19]=100;    
+    
+    auto notionals2 = std::vector<Real>(10, 1000.0);
+    notionals2[0]=1000;
+    notionals2[1]=900;
+    notionals2[2]=800;
+    notionals2[3]=700;
+    notionals2[4]=600;
+    notionals2[5]=500;
+    notionals2[6]=400;
+    notionals2[7]=300;
+    notionals2[8]=200;
+    notionals2[9]=100;
 
     // fixed leg
-    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(std::vector<Real>(1, 0.03)), true, "EUR", fixedSchedule, "30/360",
-                     notionals);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(std::vector<Real>(10, 0.03)), true, "EUR", fixedSchedule, "30/360",
+                     notionals2);
     // float leg
-    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0)),
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(20, 0.0)),
                         false, "EUR", floatSchedule, "A360", notionals);
 
     // leg vector
@@ -232,7 +326,7 @@ BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingNotional) {
     ore::data::Swaption swaptionCash(env, optionData, legs);
     ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
-    
+
     // Build and price
     QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("EuropeanSwaption") = "BlackBachelier";
@@ -248,7 +342,7 @@ BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingNotional) {
 
 BOOST_AUTO_TEST_CASE(testRepresentativeSwaptionVaryingRates) {
 
-    BOOST_TEST_MESSAGE("Testing Representative Swaption for varying notional ...");
+    BOOST_TEST_MESSAGE("Testing Representative Swaption for varying rates ...");
 
     Date today(2, January, 2017);
     Settings::instance().evaluationDate() = today;
