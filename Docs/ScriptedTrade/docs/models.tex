@@ -194,7 +194,7 @@ The engine parameters have the following meaning:
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \end{itemize}
 
-\subsection{Product Tags und pricing engine configuration}\label{producttags_engineconfig}
+\subsection{Product Tags, trade types, additional qualifiers in the pricing engine configuration}\label{producttags_engineconfig}
 
 All parameters in the pricing engine configuration can be differentiated by product tags, see \ref{scriptNode} for how
 to add these to a script definition. If a script has a product tag \verb+TAG+ assigned, parameters with suffix
@@ -229,6 +229,39 @@ meant to mark scripts that are suitable for AAD sensitivity computations.
     GaussianCrossAsset}
   \label{tab:producttag}
 \end{table}
+
+In addition to product tags, the trade type and for some parameters an additional qualifier can be used. The trade type
+is usually just ScriptedTrade, but for wrapped scripted trades, the trade type can be set to a different value, an
+example is the FxAccumulator trade type. Examples for additional qualifiers are index name pairs to overwrite
+correlations, a currency for the IrVolatilityType parameter, an inflation index name for InfDkVolatility, InfJyTimes,
+InfJyRealRateVol, InfJyIndexVol, InfJyRealRateReversion, InfJyRealToNominalVolRatio. The full waterfall of the parameter
+lookup in the presence of a product tag, trade type and additional qualifier is given by
+
+\begin{itemize}
+\item productTag\_tradeType\_addQualifier
+\item productTag\_addQualifier
+\item tradeType\_addQualifier
+\item addQualifier
+\item productTag\_tradeType
+\item productTag
+\item tradeType
+\end{itemize}
+
+As an example, assume we have a productTag = SingleAssetOption(EQ), tradeType = EqAccumulator, addQualifier =
+RIC:.SPX\_FX-GENERIC-EUR-USD. Then the Correlation parameter (overwriting correlations given as market data) is looked
+up in the following order:
+
+\begin{itemize}
+\item Correlation\_SingleAssetOption(EQ)\_EqAccumulator\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_SingleAssetOption(EQ)\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_EqAccumulator\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_RIC:.SPX\_FX-GENERIC-EUR-USD
+\item Correlation\_SingleAssetOption(EQ)\_EqAccumulator
+\item Correlation\_SingleAssetOption(EQ)
+\item Correlation\_EqAccumulator
+\end{itemize}
+
+Note: This example is fairly complicated, typical real-world use cases will have a much simpler form.
 
 \subsection{BlackScholes model}\label{blackscholes}
 
