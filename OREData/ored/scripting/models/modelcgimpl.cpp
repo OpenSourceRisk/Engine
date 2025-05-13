@@ -34,12 +34,13 @@ namespace data {
 
 using namespace QuantLib;
 
-ModelCGImpl::ModelCGImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
-                         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                         const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : ModelCG(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
+ModelCGImpl::ModelCGImpl(
+    const ModelCG::Type type, const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    : ModelCG(size), type_(type), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
       simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors

@@ -220,8 +220,8 @@ void XvaEngineCG::buildCam() {
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
-        indices, indexCurrencies, simulationDates_, timeStepsPerYear, iborFallbackConfig_, std::vector<Size>(),
-        std::vector<std::string>(), stickyCloseOutDates_);
+        indices, indexCurrencies, simulationDates_, iborFallbackConfig_, std::vector<Size>(),
+        std::vector<std::string>(), stickyCloseOutDates_, timeStepsPerYear);
     // this is actually necessary, FIXME why? There is a calculate() missing in the model impl. then?
     model_->calculate();
 
