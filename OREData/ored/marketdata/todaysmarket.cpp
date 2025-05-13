@@ -619,7 +619,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Adding InflationCapFloorVol (" << node.name << ") with spec " << *infcapfloorspec
                                                      << " to configuration " << configuration);
                 cpiInflationCapFloorVolatilitySurfaces_[make_pair(configuration, node.name)] =
-                    Handle<CPIVolatilitySurface>(itr->second->cpiInflationCapFloorVolSurface());
+                    Handle<QuantLib::CPIVolatilitySurface>(itr->second->cpiInflationCapFloorVolSurface());
             }
 
             if (node.obj == MarketObject::YoYInflationCapFloorVol) {
