@@ -47,7 +47,7 @@ BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const
                                const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
                                const std::string& calibration, const std::vector<Real>& calibrationStrikes)
     : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig) {}
+                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
 
 BlackScholesCG::BlackScholesCG(
     const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -61,7 +61,8 @@ BlackScholesCG::BlackScholesCG(
     const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations) {
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), calibration_(calibration),
+      calibrationStrikes_(calibrationStrikes) {
 
     QL_REQUIRE(type == ModelCG::Type::MC, "BlackScholesCG: FD is not yet supported as a model type");
 
