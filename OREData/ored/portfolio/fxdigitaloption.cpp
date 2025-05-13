@@ -59,18 +59,7 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
 
     // Handle PayoffCurrency, we might have to flip the trade here
     Real strike = strike_;
-    bool flipResults = false;
-    if (payoffCurrency_ == "") {
-        DLOG("PayoffCurrency defaulting to " << domesticCurrency_ << " for FxDigitalOption " << id());
-    } else if (payoffCurrency_ == foreignCurrency_) {
-        // Invert the trade, switch dom and for and flip Put/Call
-        strike = 1.0 / strike;
-        std::swap(domCcy, forCcy);
-        type = type == Option::Call ? Option::Put : Option::Call;
-        flipResults = true;
-    } else if (payoffCurrency_ != domesticCurrency_) {
-        QL_FAIL("Invalid Payoff currency (" << payoffCurrency_ << ") for FxDigitalOption " << forCcy << domCcy);
-    }
+
     DLOG("Setting up FxDigitalOption with strike " << strike << " foreign " << forCcy << " domestic " << domCcy);
 
     // Set up the CashOrNothing
