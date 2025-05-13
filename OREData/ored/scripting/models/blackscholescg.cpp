@@ -18,15 +18,22 @@
 
 #include <ored/scripting/models/blackscholescg.hpp>
 
-#include <ored/utilities/to_string.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/ad/computationgraph.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/math/randomvariablelsmbasissystem.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/quotes/simplequote.hpp>
 
 namespace ore {
 namespace data {
@@ -34,17 +41,17 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-BlackScholesCG::BlackScholesCG(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
-                               const std::string& index, const std::string& indexCurrency,
-                               const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
-                               const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
-                               const std::vector<Real>& calibrationStrikes)
-    : BlackScholesCG(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
-                     iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
+BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
+                               const Handle<YieldTermStructure>& curve, const std::string& index,
+                               const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
+                               const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+                               const std::string& calibration, const std::vector<Real>& calibrationStrikes)
+    : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
+                     iborFallbackConfig) {}
 
 BlackScholesCG::BlackScholesCG(
-    const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
-    const std::vector<Handle<Quote>>& fxSpots,
+    const ModelCG::Type type, const Size paths, const std::vector<std::string>& currencies,
+    const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
@@ -52,9 +59,37 @@ BlackScholesCG::BlackScholesCG(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes)
-    : BlackScholesCGBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                         correlations, simulationDates, iborFallbackConfig),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
+    : ModelCGImpl(type, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
+                  simulationDates, iborFallbackConfig),
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations) {
+
+    QL_REQUIRE(type == ModelCG::Type::MC, "BlackScholesCG: FD is not yet supported as a model type");
+
+    // check inputs
+
+    QL_REQUIRE(!model_.empty(), "model is empty");
+    QL_REQUIRE(!curves_.empty(), "no curves given");
+    QL_REQUIRE(currencies_.size() == curves_.size(), "number of currencies (" << currencies_.size()
+                                                                              << ") does not match number of curves ("
+                                                                              << curves_.size() << ")");
+    QL_REQUIRE(currencies_.size() == fxSpots_.size() + 1,
+               "number of currencies (" << currencies_.size() << ") does not match number of fx spots ("
+                                        << fxSpots_.size() << ") + 1");
+
+    QL_REQUIRE(indices_.size() == model_->processes().size(),
+               "mismatch of processes size (" << model_->processes().size() << ") and number of indices ("
+                                              << indices_.size() << ")");
+
+    // register with observables
+
+    for (auto const& o : fxSpots_)
+        registerWith(o);
+    for (auto const& o : correlations_)
+        registerWith(o.second);
+
+    registerWith(model_);
+
+} // BlackScholesBase ctor
 
 namespace {
 
@@ -239,9 +274,43 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
 
 } // namespace
 
+const Date& BlackScholesCG::referenceDate() const {
+    calculate();
+    return referenceDate_;
+}
+
 void BlackScholesCG::performCalculations() const {
 
-    BlackScholesCGBase::performCalculations();
+    // needed for base class performCalculations()
+
+    referenceDate_ = curves_.front()->referenceDate();
+
+    // update cg version if necessary (eval date changed)
+
+    ModelCGImpl::performCalculations();
+
+    // if cg version has changed => update time grid related members and clear paths, so that they
+    // are populated in derived classes
+
+    if (cgVersion() != underlyingPathsCgVersion_) {
+
+        // set up time grid
+
+        effectiveSimulationDates_ = model_->effectiveSimulationDates();
+
+        std::vector<Real> times;
+        for (auto const& d : effectiveSimulationDates_) {
+            times.push_back(curves_.front()->timeFromReference(d));
+        }
+
+        timeGrid_ = model_->discretisationTimeGrid();
+        positionInTimeGrid_.resize(times.size());
+        for (Size i = 0; i < positionInTimeGrid_.size(); ++i)
+            positionInTimeGrid_[i] = timeGrid_.index(times[i]);
+
+        underlyingPaths_.clear();
+        underlyingPathsCgVersion_ = cgVersion();
+    }
 
     // nothing to do if we do not have any indices or if underlying paths are populated already
 
@@ -282,9 +351,9 @@ void BlackScholesCG::performCalculations() const {
     // generate computation graph of underlying paths dependend on the drift and sqrtCov between simulation
     // dates, which we treat as model parameters
 
-    auto sqrtCovCalc =
-        QuantLib::ext::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_, effectiveSimulationDates_,
-                                              timeGrid_, positionInTimeGrid_, model_, calibrationStrikes);
+    auto sqrtCovCalc = QuantLib::ext::make_shared<SqrtCovCalculator>(indices_, indexCurrencies_, correlations_,
+                                                                     effectiveSimulationDates_, timeGrid_,
+                                                                     positionInTimeGrid_, model_, calibrationStrikes);
 
     std::vector<std::vector<std::size_t>> drift(effectiveSimulationDates_.size() - 1,
                                                 std::vector<std::size_t>(indices_.size(), ComputationGraph::nan));
@@ -353,7 +422,6 @@ void BlackScholesCG::performCalculations() const {
 
     // set required random variates
 
-
     randomVariates_ = std::vector<std::vector<std::size_t>>(
         indices_.size(), std::vector<std::size_t>(effectiveSimulationDates_.size() - 1));
 
@@ -415,7 +483,7 @@ void BlackScholesCG::performCalculations() const {
             ++timeStep;
         }
     }
-} // performCalculations()
+}
 
 namespace {
 struct comp {
@@ -590,6 +658,211 @@ std::size_t BlackScholesCG::getFutureBarrierProb(const std::string& index, const
 
     return barrierHit;
 } // getFutureBarrierProb()
+
+std::size_t BlackScholesCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFwd = fwd;
+    if (indices_[indexNo].isComm()) {
+        Date expiry = indices_[indexNo].comm(d)->expiryDate();
+        // if a future is referenced we set the forward date effectively used below to the future's expiry date
+        if (expiry != Date())
+            effFwd = expiry;
+        // if the future expiry is past the obsdate, we return the spot as of the obsdate, i.e. we
+        // freeze the future value after its expiry, but keep it available for observation
+        // TOOD should we throw an exception instead?
+        effFwd = std::max(effFwd, d);
+    }
+    QL_REQUIRE(underlyingPaths_.find(d) != underlyingPaths_.end(), "did not find path for " << d);
+    auto res = underlyingPaths_.at(d).at(indexNo);
+    // compute forwarding factor
+    if (effFwd != Null<Date>()) {
+        auto p = model_->processes().at(indexNo);
+        std::size_t div_d = addModelParameter(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::div, {}, {}, d, {}, {}, {}, indexNo),
+            [p, d]() { return p->dividendYield()->discount(d); });
+        std::size_t div_f = addModelParameter(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::div, {}, {}, effFwd, {}, {}, {}, indexNo),
+            [p, effFwd]() { return p->dividendYield()->discount(effFwd); });
+        std::size_t rfr_d = addModelParameter(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::rfr, {}, {}, d, {}, {}, {}, indexNo),
+            [p, d]() { return p->riskFreeRate()->discount(d); });
+        std::size_t rfr_f = addModelParameter(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::rfr, {}, {}, effFwd, {}, {}, {}, indexNo),
+            [p, effFwd]() { return p->riskFreeRate()->discount(effFwd); });
+        res = cg_mult(*g_, res, cg_mult(*g_, div_f, cg_div(*g_, rfr_d, cg_mult(*g_, div_d, rfr_f))));
+    }
+    return res;
+}
+
+std::size_t BlackScholesCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFixingDate = d;
+    if (fwd != Null<Date>())
+        effFixingDate = fwd;
+    // ensure a valid fixing date
+    effFixingDate = irIndices_.at(indexNo).second->fixingCalendar().adjust(effFixingDate);
+    auto index = irIndices_.at(indexNo).second;
+    return addModelParameter(
+        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fix, index->name(), {}, effFixingDate),
+        [index, effFixingDate]() { return index->fixing(effFixingDate); });
+}
+
+std::size_t BlackScholesCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    Date effFixingDate = d;
+    if (fwd != Null<Date>())
+        effFixingDate = fwd;
+    auto index = infIndices_.at(indexNo).second;
+    return addModelParameter(
+        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fix, index->name(), {}, effFixingDate),
+        [index, effFixingDate]() { return index->fixing(effFixingDate); });
+}
+
+std::size_t BlackScholesCG::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
+                                       const Date& start, const Date& end, const Real spread, const Real gearing,
+                                       const Integer lookback, const Natural rateCutoff, const Natural fixingDays,
+                                       const bool includeSpread, const Real cap, const Real floor,
+                                       const bool nakedOption, const bool localCapFloor) const {
+    calculate();
+    auto index = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
+    QL_REQUIRE(index != irIndices_.end(),
+               "BlackScholesCG::fwdCompAvg(): did not find ir index " << indexInput << " - this is unexpected.");
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->second);
+    QL_REQUIRE(on, "BlackScholesCG::fwdCompAvg(): expected on index for " << indexInput);
+    // if we want to support cap / floors we need the OIS CF surface
+    QL_REQUIRE(cap > 999998.0 && floor < -999998.0,
+               "BlackScholesCG:fwdCompAvg(): cap (" << cap << ") / floor (" << floor << ") not supported");
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
+    if (isAvg) {
+        coupon = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
+            end, 1.0, start, end, on, gearing, spread, rateCutoff, on->dayCounter(), lookback * Days, fixingDays);
+        pricer = QuantLib::ext::make_shared<AverageONIndexedCouponPricer>();
+    } else {
+        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(
+            end, 1.0, start, end, on, gearing, spread, Date(), Date(), on->dayCounter(), false, includeSpread,
+            lookback * Days, rateCutoff, fixingDays);
+        pricer = QuantLib::ext::make_shared<OvernightIndexedCouponPricer>();
+    }
+    coupon->setPricer(pricer);
+    return addModelParameter(
+        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fwdCompAvg, {}, {}, {}, {}, {}, {}, g_->size()),
+        [coupon]() { return coupon->rate(); });
+}
+
+std::size_t BlackScholesCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
+    auto c = curves_.at(idx);
+    std::size_t ns =
+        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[idx], {}, s),
+                          [c, s] { return c->discount(s); });
+    std::size_t nt =
+        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[idx], {}, t),
+                          [c, t] { return c->discount(t); });
+    return cg_div(*g_, nt, ns);
+}
+
+std::size_t BlackScholesCG::numeraire(const Date& s) const {
+    auto c = curves_.at(0);
+    std::size_t ds =
+        addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, currencies_[0], {}, s),
+                          [c, s] { return c->discount(s); });
+    return cg_div(*g_, cg_const(*g_, 1.0), ds);
+}
+
+std::size_t BlackScholesCG::getFxSpot(const Size idx) const {
+    auto c = fxSpots_.at(idx);
+    return cg_exp(
+        *g_, addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, currencies_[idx + 1]),
+                               [c] { return c->value(); }));
+}
+
+Real BlackScholesCG::getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const {
+    auto c1 = std::find(currencies_.begin(), currencies_.end(), forCcy);
+    auto c2 = std::find(currencies_.begin(), currencies_.end(), domCcy);
+    QL_REQUIRE(c1 != currencies_.end(), "currency " << forCcy << " not handled");
+    QL_REQUIRE(c2 != currencies_.end(), "currency " << domCcy << " not handled");
+    Size cidx1 = std::distance(currencies_.begin(), c1);
+    Size cidx2 = std::distance(currencies_.begin(), c2);
+    Real fx = 1.0;
+    if (cidx1 > 0)
+        fx *= fxSpots_.at(cidx1 - 1)->value();
+    if (cidx2 > 0)
+        fx /= fxSpots_.at(cidx2 - 1)->value();
+    return fx;
+}
+
+Real BlackScholesCG::getDirectDiscountT0(const Date& paydate, const std::string& currency) const {
+    auto c = std::find(currencies_.begin(), currencies_.end(), currency);
+    QL_REQUIRE(c != currencies_.end(), "currency " << currency << " not handled");
+    Size cidx = std::distance(currencies_.begin(), c);
+    return curves_.at(cidx)->discount(paydate);
+}
+
+std::set<std::size_t>
+BlackScholesCG::npvRegressors(const Date& obsdate,
+                              const std::optional<std::set<std::string>>& relevantCurrencies) const {
+
+    std::set<std::size_t> state;
+
+    if (obsdate == referenceDate()) {
+        return state;
+    }
+
+    if (!underlyingPaths_.empty()) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            if (relevantCurrencies && indices_[i].isFx()) {
+                if (relevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) == relevantCurrencies->end())
+                    continue;
+            }
+            state.insert(underlyingPaths_.at(obsdate).at(i));
+        }
+    }
+
+    return state;
+}
+
+std::size_t BlackScholesCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
+                                const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                                const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
+
+    calculate();
+
+    QL_REQUIRE(!memSlot, "BlackScholesCG::npv() with memSlot not yet supported!");
+
+    // if obsdate is today, take a plain expectation
+
+    if (obsdate == referenceDate()) {
+        return cg_conditionalExpectation(*g_, amount, {}, cg_const(*g_, 1.0));
+    }
+
+    // build the state
+
+    std::vector<std::size_t> state;
+
+    if (overwriteRegressors) {
+        state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
+    } else {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
+    }
+
+    for (auto const& r : addRegressors)
+        if (r != ComputationGraph::nan)
+            state.push_back(r);
+
+    // if the state is empty, return the plain expectation (no conditioning)
+
+    if (state.empty()) {
+        return cg_conditionalExpectation(*g_, amount, {}, cg_const(*g_, 1.0));
+    }
+
+    // if a memSlot is given and coefficients are stored, we use them
+    // TODO ...
+
+    // otherwise compute coefficients and store them if a memSlot is given
+    // TODO ...
+
+    // compute conditional expectation and return the result
+
+    return cg_conditionalExpectation(*g_, amount, state, filter);
+}
 
 } // namespace data
 } // namespace ore

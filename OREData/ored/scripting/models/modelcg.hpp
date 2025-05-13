@@ -32,6 +32,7 @@
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <boost/any.hpp>
+
 #include <optional>
 
 namespace QuantExt {
@@ -137,7 +138,7 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
 
     // model type
-    virtual Type type() const = 0;
+    virtual ModelCG::Type type() const = 0;
 
     // number of paths
     virtual QuantLib::Size size() const { return n_; }

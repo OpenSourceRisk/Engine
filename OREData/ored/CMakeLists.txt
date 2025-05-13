@@ -343,7 +343,6 @@ scripting/engines/scriptedinstrumentpricingenginecg.cpp
 scripting/grammar.cpp
 scripting/models/blackscholes.cpp
 scripting/models/blackscholescg.cpp
-scripting/models/blackscholescgbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
@@ -757,7 +756,6 @@ scripting/grammar.hpp
 scripting/models/amcmodel.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholescg.hpp
-scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp

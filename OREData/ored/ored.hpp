@@ -371,7 +371,6 @@
 #include <ored/scripting/models/amcmodel.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
-#include <ored/scripting/models/blackscholescgbase.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>

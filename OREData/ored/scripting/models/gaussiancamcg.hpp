@@ -53,7 +53,6 @@ public:
                   const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
 
     // Model interface implementation
-    Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
