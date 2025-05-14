@@ -132,13 +132,9 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // identify CTD bond
     QL_REQUIRE(secList_.size() > 0, "BondFuture::build no DeliveryBasket given");
-    ctdId_ = secList_.front();
-    double ctdCf = Real();
-    if (secList_.size() > 1) {
-        auto res = identifyCtdBond(engineFactory, expiry);
-        ctdId_ = res.first;
-        ctdCf = res.second;
-    }
+    auto res = identifyCtdBond(engineFactory, expiry);
+    ctdId_ = res.first;
+    double ctdCf = res.second;
     ctdUnderlying_ = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctdId_);
 
     // handle strike treatment
@@ -497,14 +493,21 @@ pair<string, double> BondFuture::identifyCtdBond(const ext::shared_ptr<EngineFac
                                              << " of LegType::Fixed "
                                              << bond.bondData.coupons().front().concreteLegData()->legType());
                 }
-                conversionFactor =
-                    conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), bond.trade->maturity(), expiry);
+                Date endDate = Date();
+                try {
+                    endDate = parseDate(bond.bondData.coupons().data()->schedule().rules().data()->endDate());
+                } catch (const std::exception& e) {
+                    endDate = bond.trade->maturity();
+                    ALOG("endDate for conversionfactor is set to maturity, given the calendar adjustment, this can "
+                         "lead to inaccuracy.")
+                }
+                conversionFactor = conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), endDate, expiry);
                 DLOG("calculated conversionFactor " << conversionFactor << " secId " << sec << " cpn " << coupon
                                                     << " deliverableGrade " << deliverableGrade_ << " secMat "
-                                                    << io::iso_date(bond.trade->maturity()) << " futureExpiry "
+                                                    << io::iso_date(endDate) << " futureExpiry "
                                                     << io::iso_date(expiry));
             } else {
-                QL_FAIL("Other currency than USD not supported ");
+                QL_FAIL("Conversion factor calculation for other currency than USD not supported ");
             }
         }
         // do the test, inspired by
