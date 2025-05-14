@@ -149,7 +149,8 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     maturity_ = Date();
     npvCurrency_ = legData_[0].currency();
-    Size payerLegId = legData_[0].isPayer() ? 0 : 1;
+    Size shortLegId = legData_[0].isPayer() ? 0 : 1;
+    Size longLegId = 1 - shortLegId;
 
     // build the relevant fxIndexes;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexes(2, nullptr);
@@ -169,7 +170,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     // Build the commodity legs
 
     for (Size i = 0; i < legData_.size();
-         ++i) { // The order is important, the first leg is always the long position, the second is the short;
+         ++i) {
         legPayers_.push_back(legData_[i].isPayer());
 
         // build legs
@@ -239,17 +240,27 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     vector<Real> additionalMultipliers;
 
     vector<Date> expiryDates;
-    for (size_t i = 0; i < legs_[0].size(); ++i) {
-        auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
-        auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
-        expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
+
+    if(csoData_.exerciseDates().has_value()){
+        const auto& exerciseDates = csoData_.exerciseDates().get();
+        QL_REQUIRE(
+            exerciseDates.size() == legs_[0].size(),
+            "CommoditySpreadOption: if explicit exercise dates are given, a exercise for each option is required. Got "
+                << legs_.size() << " options but " << exerciseDates.size() << "exercise dates, please check trade xml");
+        expiryDates = parseVectorOfValues<Date>(exerciseDates, &parseDate);
+    } else {
+        for (size_t i = 0; i < legs_[0].size(); ++i) {
+            auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[longLegId][i]);
+            auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[shortLegId][i]);
+            expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
+        }
     }
 
     auto paymentDateAdjuster = makeOptionPaymentDateAdjuster(csoData_, expiryDates);
 
     for (size_t i = 0; i < legs_[0].size(); ++i) {
-        auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
-        auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
+        auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[longLegId][i]);
+        auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[shortLegId][i]);
 
         QuantLib::Real quantity = longFlow->periodQuantity();
 
@@ -277,8 +288,8 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         // build the instrument for the i-th cfs
         QuantLib::ext::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
             QuantLib::ext::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity, strike_,
-                                                                optionType, paymentDate, fxIndexes[1 - payerLegId],
-                                                                fxIndexes[1 - payerLegId]);
+                                                                optionType, paymentDate, fxIndexes[longLegId],
+                                                                fxIndexes[shortLegId]);
 
         // build and assign the engine
         QuantLib::ext::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
@@ -365,6 +376,10 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
         optionStrip_ = OptionStripData();
         optionStrip_->fromXML(optionStripNode);
     }
+    XMLNode* exerciseNode = XMLUtils::getChildNode(csoNode, "ExerciseDates");
+    if (exerciseNode) {
+        exerciseDates_ = XMLUtils::getChildrenValues(csoNode, "ExerciseDates", "ExerciseDate", false);
+    }
 
     QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
                "CommoditySpreadOption: both a long and a short Assets are required.");
@@ -380,6 +395,10 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) const {
     if (optionStrip_.has_value()) {
         XMLUtils::appendNode(csoNode, optionStrip_->toXML(doc));
     }
+    if (exerciseDates_.has_value()){
+        XMLUtils::addChildren(doc, csoNode, "ExerciseDates", "ExerciseDate", exerciseDates_.get());
+    }
+
     return csoNode;
 }
 
