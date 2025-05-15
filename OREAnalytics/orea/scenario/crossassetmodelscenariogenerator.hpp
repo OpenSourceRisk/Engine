@@ -115,6 +115,7 @@ private:
     PathData pathData_;
     Size currentSample_ = 0;
     Size totalSamples_;
+    std::vector<Size> gridIndexInPath_;
 };
 
 } // namespace analytics
