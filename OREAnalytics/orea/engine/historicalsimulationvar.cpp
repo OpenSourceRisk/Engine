@@ -18,6 +18,7 @@
 
 #include <orea/engine/historicalsimulationvar.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -36,10 +37,11 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const string& portfolioFilter, const vector<Real>& p, boost::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-    const bool breakdown, const bool includeExpectedShortfall)
+    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)),
       includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
+    tradePnl_ = tradePnl;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -63,7 +65,11 @@ void HistoricalSimulationVarReport::createAdditionalReports(
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
+    if (!tradePnl_) {
+        pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
+    } else {
+        tradePnls_ = histPnlGen_->tradeLevelPnl(period_.get(), tradeIdIdxPairs_);
+    }
 }
 
 void HistoricalSimulationVarReport::writeAdditionalReports(
@@ -77,13 +83,25 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
 
     // Loop through all samples
     for (Size s = 0; s < histPnlGen_->cube()->samples(); ++s) {
-        report->next();
-        report->add(tg->portfolioId());
-        report->add(to_string(rg->riskClass()));
-        report->add(to_string(rg->riskType()));
-        report->add(hisScenGen_->startDates()[s]);
-        report->add(hisScenGen_->endDates()[s]);
-        report->add(pnls_.at(s));
+        if (tradePnl_) {
+            for (const auto& t : tradeIdIdxPairs_) {
+                report->next();
+                report->add(t.first);
+                report->add(to_string(rg->riskClass()));
+                report->add(to_string(rg->riskType()));
+                report->add(hisScenGen_->startDates()[s]);
+                report->add(hisScenGen_->endDates()[s]);
+                report->add(tradePnls_[s][t.second]);
+            }
+        } else {
+            report->next();
+            report->add(tg->portfolioId());
+            report->add(to_string(rg->riskClass()));
+            report->add(to_string(rg->riskType()));
+            report->add(hisScenGen_->startDates()[s]);
+            report->add(hisScenGen_->endDates()[s]);
+            report->add(pnls_.at(s));
+        }
     }
 }
 
@@ -144,6 +162,17 @@ QuantLib::Real HistoricalSimulationVarCalculator::expectedShortfall(
         }
     }
     return mean(accumulator);
+}
+
+bool HistoricalSimulationVarReport::disablesAll(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter) const {
+    // Return false if we hit any risk factor that is "allowed" i.e. enabled
+    for (const auto& key : hisScenGen_->baseScenario()->keys()) {
+        if (filter->allow(key)) {
+            return false;
+        }
+    }
+    // If we get to here, all risk factors are "not allowed" i.e. disabled
+    return true;
 }
 
 } // namespace analytics
