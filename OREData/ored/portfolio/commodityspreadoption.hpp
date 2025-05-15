@@ -58,7 +58,7 @@ public:
     const ore::data::OptionData& optionData() const { return optionData_; }
     QuantLib::Real strike() const { return strike_; }
     boost::optional<OptionStripData> optionStrip() { return optionStrip_; }
-    const boost::optional<std::vector<std::string>>& exerciseDates() { return exerciseDates_; }
+    //const boost::optional<std::vector<std::string>>& exerciseDates() { return exerciseDates_; }
 
 private:
     QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
@@ -68,7 +68,7 @@ private:
     QuantLib::Real strike_;
     
     boost::optional<OptionStripData> optionStrip_;
-    boost::optional<std::vector<std::string>> exerciseDates_;
+    //boost::optional<std::vector<std::string>> exerciseDates_;
 };
 
 class CommoditySpreadOption : public ore::data::Trade {

@@ -70,10 +70,10 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
     auto parameterFlow1 =
-        derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, arguments_.longAssetFxIndex);
+        derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, exerciseDate, arguments_.longAssetFxIndex);
 
     auto parameterFlow2 =
-        derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, arguments_.shortAssetFxIndex);
+        derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, exerciseDate, arguments_.shortAssetFxIndex);
 
     double F1 = parameterFlow1.atm;
     double F2 = parameterFlow2.atm;
@@ -172,25 +172,27 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
 CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                                       const ext::shared_ptr<BlackVolTermStructure>& vol,
-                                                                      const Date& expiryDate,
+                                                                      const Date& exerciseDate,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const {
     PricingParameter res;
     if (auto cf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(flow)) {
         res.accruals = 0.0;
-        res.tn = vol->timeFromReference(cf->pricingDate());
+        // In case exercise is after future expiry (e.g. calendar spreads)
+        auto pricingDate = std::min(exerciseDate, cf->pricingDate());
+        res.tn = vol->timeFromReference(pricingDate);
         double fxSpot = 1.0;
         if (fxIndex) {
-            fxSpot = fxIndex->fixing(cf->pricingDate());
+            fxSpot = fxIndex->fixing(pricingDate);
         }
-        double atmUnderlyingCurrency = cf->index()->fixing(cf->pricingDate());
+        double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
-        res.sigma = expiryDate > 0 && !QuantLib::close_enough(expiryDate, 0.0)
-                        ? vol->blackVol(expiryDate, atmUnderlyingCurrency, true)
+        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
+                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
                         : 0.0;
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);
-        res.pricingDates.push_back(cf->pricingDate());
+        res.pricingDates.push_back(pricingDate);
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
