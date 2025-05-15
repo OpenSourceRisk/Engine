@@ -29,6 +29,7 @@ Let us discuss this section using the following example
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Parameters>
   <Grid>80,3M</Grid>
+  <TimeStepsPerYear>24</TimeStepsPerYear>
   <Calendar>EUR,USD,GBP,CHF</Calendar>
   <DayCounter>ACT/ACT</DayCounter>
   <Sequence>SobolBrownianBridge</Sequence>
@@ -47,6 +48,9 @@ Let us discuss this section using the following example
 
 \begin{itemize}
 \item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
+\item {\tt TimeStepsPerYear}: Minimum number of time steps per year to be used to evolve the stochastic process. This is
+  useful if Euler discretization with a coarse Grid is used. Optional, defaults to null which means only the points
+  specified under Grid are used to evolve the stochastic process.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
@@ -132,7 +136,8 @@ The Measure tag allows switching between the LGM and the Bank Account (BA) measu
 The Discretization tag chooses between time discretization schemes for the risk factor evolution. {\em Exact} means
 exploiting the analytical tractability of the model to avoid any time discretization error. {\em Euler} uses a naive
 time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
-testing purposes or if more sophisticated component models are used.)
+testing purposes or if more sophisticated component models are used). If {\em Euler} is used, you should consider
+setting TimeStepsPerYear (see above) to a large enough value.
  
 \medskip
 
