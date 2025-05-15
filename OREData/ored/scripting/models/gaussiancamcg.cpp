@@ -147,7 +147,7 @@ void GaussianCamCG::performCalculations() const {
 
         std::vector<Real> times;
         for (auto const& d : effectiveSimulationDates_) {
-            times.push_back(curves_.front()->timeFromReference(d));
+            times.push_back(actualTimeFromReference(d));
         }
 
         Size steps = std::max(std::lround(timeStepsPerYear_ * times.back() + 0.5), 1l);
@@ -160,6 +160,8 @@ void GaussianCamCG::performCalculations() const {
         // clear underlying paths
 
         underlyingPaths_.clear();
+        irStates_.clear();
+        infStates_.clear();
         underlyingPathsCgVersion_ = cgVersion();
     }
 
@@ -181,6 +183,14 @@ void GaussianCamCG::performCalculations() const {
         infStates_[d] = std::vector<std::pair<std::size_t, std::size_t>>(
             infIndices_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan));
     }
+
+    underlyingPathsOnFullTimeGrid_.resize(indices_.size(),
+                                          std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
+    irStatesOnFullTimeGrid_.resize(currencies_.size(),
+                                   std::vector<std::size_t>(timeGrid_.size(), ComputationGraph::nan));
+    infStatesOnFullTimeGrid_.resize(
+        infIndices_.size(), std::vector<std::pair<std::size_t, std::size_t>>(
+                                timeGrid_.size(), std::make_pair(ComputationGraph::nan, ComputationGraph::nan)));
 
     // populate index mappings
 
@@ -407,11 +417,13 @@ void GaussianCamCG::performCalculations() const {
     // set initial model states
 
     for (Size j = 0; j < currencies_.size(); ++j) {
-        irStates_[*effectiveSimulationDates_.begin()][j] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+        irStates_[*effectiveSimulationDates_.begin()][j] = irStatesOnFullTimeGrid_[j][0] =
+            state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
     }
 
     for (Size j = 0; j < indices_.size(); ++j) {
-        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = cg_exp(*g_, state[indexPositionInProcess_[j]]);
+        underlyingPaths_[*effectiveSimulationDates_.begin()][j] = underlyingPathsOnFullTimeGrid_[j][0] =
+            cg_exp(*g_, state[indexPositionInProcess_[j]]);
     }
 
     // evolve model state
@@ -491,6 +503,15 @@ void GaussianCamCG::performCalculations() const {
 
             ++dateIndex;
         }
+
+        for (Size j = 0; j < currencies_.size(); ++j) {
+            irStatesOnFullTimeGrid_[j][i + 1] = state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)];
+        }
+
+        for (Size j = 0; j < indices_.size(); ++j) {
+            underlyingPathsOnFullTimeGrid_[j][i + 1] = cg_exp(*g_, state[indexPositionInProcess_[j]]);
+        }
+
     }
 
     QL_REQUIRE(dateIndex == effectiveSimulationDates_.size(),
@@ -509,32 +530,32 @@ Date GaussianCamCG::adjustForStickyCloseOut(const Date& d) const {
 }
 
 std::size_t GaussianCamCG::getInterpolatedUnderlyingPath(const Date& d, const Size indexNo) const {
-    if (d > *effectiveSimulationDates_.rbegin())
-        return underlyingPaths_.at(*effectiveSimulationDates_.rbegin()).at(indexNo);
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return underlyingPaths_.at(d).at(indexNo);
+    if (d > *effectiveSimulationDates_.rbegin())
+        return underlyingPaths_.at(*effectiveSimulationDates_.rbegin()).at(indexNo);
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_undpath, {}, {}, d, {}, {}, indexNo);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
-    auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    auto n = cg_add(*g_, cg_mult(*g_, w1, underlyingPaths_.at(d1).at(indexNo)),
-                    cg_mult(*g_, w2, underlyingPaths_.at(d2).at(indexNo)));
+    auto [d1, d2, w1, w2] = getInterpolationWeights(actualTimeFromReference(d), timeGrid_);
+    auto n = cg_add(*g_, cg_mult(*g_, w1, underlyingPathsOnFullTimeGrid_.at(indexNo).at(d1)),
+                    cg_mult(*g_, w2, underlyingPathsOnFullTimeGrid_.at(indexNo).at(d2)));
     id.setNode(n);
     cachedParameters_.insert(id);
     return n;
 }
 
 std::size_t GaussianCamCG::getInterpolatedIrState(const Date& d, const Size ccyIndex) const {
-    if (d > *effectiveSimulationDates_.rbegin())
-        return irStates_.at(*effectiveSimulationDates_.rbegin()).at(ccyIndex);
     if (effectiveSimulationDates_.find(d) != effectiveSimulationDates_.end())
         return irStates_.at(d).at(ccyIndex);
+    if (d > *effectiveSimulationDates_.rbegin())
+        return irStates_.at(*effectiveSimulationDates_.rbegin()).at(ccyIndex);
     ModelCG::ModelParameter id(ModelCG::ModelParameter::Type::interpolated_irstate, {}, {}, d, {}, {}, ccyIndex);
     if (auto m = cachedParameters_.find(id); m != cachedParameters_.end())
         return m->node();
-    auto [d1, d2, w1, w2] = getInterpolationWeights(d, effectiveSimulationDates_);
-    auto n =
-        cg_add(*g_, cg_mult(*g_, w1, irStates_.at(d1).at(ccyIndex)), cg_mult(*g_, w2, irStates_.at(d2).at(ccyIndex)));
+    auto [d1, d2, w1, w2] = getInterpolationWeights(actualTimeFromReference(d), timeGrid_);
+    auto n = cg_add(*g_, cg_mult(*g_, w1, irStatesOnFullTimeGrid_.at(ccyIndex).at(d1)),
+                    cg_mult(*g_, w2, irStatesOnFullTimeGrid_.at(ccyIndex).at(d2)));
     id.setNode(n);
     cachedParameters_.insert(id);
     return n;
