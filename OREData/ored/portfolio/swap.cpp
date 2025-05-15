@@ -180,6 +180,15 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     auto configuration = builder->configuration(MarketContext::pricing);
 
     for (Size i = 0; i < numLegs; ++i) {
+        Date today = Settings::instance().evaluationDate();
+        // We want to activate the FxReset when we hit the start date
+        if (!legData_[i].resetStartDate().empty() && today >= parseDate(legData_[i].resetStartDate())) {
+            string fixingTest = legData_[i].fxIndex();
+            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), fixingTest);
+            auto indexFixing = market->fxIndex(fixingTest);
+            Real resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
+            legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
+        }
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
