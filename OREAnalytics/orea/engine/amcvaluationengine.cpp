@@ -202,7 +202,7 @@ PathData getPathData(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>&
         std::vector<Size> gridIndexInPath;
         for (Size i = 0; i < sgd->getGrid()->timeGrid().size(); ++i) {
             gridIndexInPath.push_back(processTimeGrid.closestIndex(sgd->getGrid()->timeGrid()[i]));
-            QL_REQUIRE(QuantLib::close_enough(gridIndexInPath.back(), sgd->getGrid()->timeGrid()[i]),
+            QL_REQUIRE(QuantLib::close_enough(processTimeGrid[gridIndexInPath.back()], sgd->getGrid()->timeGrid()[i]),
                        "getPathData(): time in timeGrid (" << sgd->getGrid()->timeGrid()[i]
                                                            << ") is not found in process time grid.");
         }

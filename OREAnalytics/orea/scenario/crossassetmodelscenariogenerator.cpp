@@ -53,7 +53,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     gridIndexInPath_.clear();
     for (Size i = 0; i < timeGrid_.size(); ++i) {
         gridIndexInPath_.push_back(pathGenerator_->timeGrid().closestIndex(timeGrid_[i]));
-        QL_REQUIRE(QuantLib::close_enough(gridIndexInPath_.back(), timeGrid_[i]),
+        QL_REQUIRE(QuantLib::close_enough(pathGenerator_->timeGrid()[gridIndexInPath_.back()], timeGrid_[i]),
                    "CrossAssetModelScenarioGenerator: time in timeGrid ("
                        << timeGrid_[i] << ") is not found in path generator time grid");
     }
