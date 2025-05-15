@@ -45,7 +45,7 @@ ModelCG::getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& 
 }
 
 std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>
-ModelCG::getInterpolationWeights(const double t, const TimeGrid& knownTimes) const {
+ModelCG::getInterpolationWeights(const double t, const QuantLib::TimeGrid& knownTimes) const {
     auto u = std::upper_bound(knownTimes.begin(), knownTimes.end(), t);
     QL_REQUIRE(u != knownTimes.begin(), "getInterpolationWeights(" << t << "): outside knownTimes range");
     auto l = std::next(u, -1);
