@@ -30,6 +30,7 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/timegrid.hpp>
 
 #include <boost/any.hpp>
 #include <optional>
