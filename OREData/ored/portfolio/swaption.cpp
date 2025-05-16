@@ -44,8 +44,6 @@
 
 #include <qle/models/representativeswaption.hpp>
 
-#include <iostream>
-
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
 using namespace QuantLib;
@@ -399,40 +397,12 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
              << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
     }
 
-    // 9.3 get engine and set it
-
-    cpu_timer timer;
-    // use ibor / ois index as key, if possible, otherwise the npv currency
-    auto swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers zurückgibt
-        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes, exerciseType_ == Exercise::American,
-        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
-    timer.stop();
-    DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
-    swaption->setPricingEngine(swaptionEngine);
-    setSensitivityTemplate(*swaptionBuilder);
-    addProductModelEngine(*swaptionBuilder);
-
     // 9.4 build underlying swaps, add premiums, build option wrapper
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
                             envelope().additionalField("security_spread", false), {});
     
-    std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps;
-    
-    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, false);
-
-    if(calibrationStrategy == "Advanced") 
-    {
-        auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
-        Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
-        string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
-        Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
-        underlyingSwaps = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
-    } else
-    {
-        underlyingSwaps = buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
-    }
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
@@ -444,12 +414,46 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
         exerciseBuilder_->settlementDates(), settlementType_ == Settlement::Physical ? true : false,
-	underlyingSwaps, 1.0, 1.0, additionalInstruments, // Das muss so wie vorher sein.
-        additionalMultipliers);
+	    underlyingSwaps, 1.0, 1.0, additionalInstruments, additionalMultipliers);
 
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
+
+    // 9.3 get engine and set it
+
+    cpu_timer timer;
+
+    std::vector<Date> mat{underlying_->maturity()};
+
+    // use ibor / ois index as key, if possible, otherwise the npv currency
+    auto swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden
+        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+        exerciseBuilder_->noticeDates(), mat, strikes, exerciseType_ == Exercise::American,
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
+
+    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, false);
+
+    if(calibrationStrategy == "Advanced") 
+    {        
+        auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
+        Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
+        string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
+        Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
+        std::vector<QuantLib::ext::shared_ptr<Instrument>>  underlyingMatched = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+
+        // use ibor / ois index as key, if possible, otherwise the npv currency
+        swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden
+            id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+            exerciseBuilder_->noticeDates(), exerciseBuilder_->noticeDates(), strikes, exerciseType_ == Exercise::American,
+            envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
+    }
+
+    timer.stop();
+    DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
+    swaption->setPricingEngine(swaptionEngine);
+    setSensitivityTemplate(*swaptionBuilder);
+    addProductModelEngine(*swaptionBuilder);
 
     DLOG("Building Swaption done");
 }

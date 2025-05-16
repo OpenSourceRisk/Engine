@@ -72,7 +72,7 @@ namespace data {
 
 QuantLib::ext::shared_ptr<PricingEngine>
 EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                          const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+    const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                           const std::string& discountCurve, const std::string& securitySpread) {
     QuantLib::ext::shared_ptr<IborIndex> index;
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
@@ -88,7 +88,7 @@ EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key, c
 
 QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
                                                                  const std::vector<Date>& expiries,
-                                                                 const Date& maturity, const std::vector<Real>& strikes,
+                                                                 const std::vector<Date>& maturities, const std::vector<Real>& strikes,
                                                                  const bool isAmerican) {
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
@@ -130,7 +130,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     // compute horizon shift
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities[0]) * shiftHorizon; //TODO check
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
@@ -180,7 +180,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < effExpiries.size(); ++i) {
             expiryDates.push_back(to_string(effExpiries[i]));
-            termDates.push_back(to_string(maturity));
+            termDates.push_back(to_string(maturities[0])); //TODO check 
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
@@ -243,11 +243,11 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
 
 QuantLib::ext::shared_ptr<PricingEngine>
 LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
-                                         const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                         const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                          const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM Grid Bermudan/American Swaption engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturities, strikes, isAmerican);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -271,11 +271,11 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key, co
 
 QuantLib::ext::shared_ptr<PricingEngine>
 LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
-                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                       const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM FD Bermudan/American Swaption engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturities, strikes, isAmerican);
 
     DLOG("Get engine data");
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
@@ -283,7 +283,7 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
     Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
 
-    Real maxTime = lgm->termStructure()->timeFromReference(maturity);
+    Real maxTime = lgm->termStructure()->timeFromReference(maturities[0]);
 
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     QuantLib::ext::shared_ptr<IborIndex> index;
@@ -301,11 +301,11 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
 
 QuantLib::ext::shared_ptr<PricingEngine>
 LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
-                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                       const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building MC Bermudan/American Swaption engine for trade " << id);
 
-    auto lgm = model(id, key, expiries, maturity, strikes, isAmerican);
+    auto lgm = model(id, key, expiries, maturities, strikes, isAmerican);
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
@@ -324,7 +324,7 @@ LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
 
 QuantLib::ext::shared_ptr<PricingEngine>
 LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
-                                        const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                        const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                         const std::string& discountCurve, const std::string& securitySpread) {
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
@@ -351,7 +351,7 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
 
 QuantLib::ext::shared_ptr<PricingEngine>
 AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                       const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
     QuantLib::ext::shared_ptr<IborIndex> index;

@@ -201,7 +201,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const Date& maturity, const std::vector<Real>& strikes,
+                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
                                                 const bool isAmerican, const std::string& discountCurve,
                                                 const std::string& securitySpread) override;
 };
