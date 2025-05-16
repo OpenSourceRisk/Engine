@@ -229,8 +229,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     QL_REQUIRE(legs_[0].size() > 0, "CommoditySpreadOption: need at least one option, please check the trade xml");
 
-    
-
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
@@ -241,14 +239,15 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     vector<Date> expiryDates;
 
-    if(!optionData_.exerciseDates().empty()){
-        QL_REQUIRE(optionData_.exerciseDates().size() == legs_[0].size(),
-        "CommoditySpreadOption: if explicit exercise dates are given, a exercise for each option is required. Got "
-            << legs_[0].size() << " options but " << optionData_.exerciseDates().size()
-            << " exercise dates, please check trade xml");
+    if (!optionData_.exerciseDates().empty()) {
+        QL_REQUIRE(
+            optionData_.exerciseDates().size() == legs_[0].size(),
+            "CommoditySpreadOption: if explicit exercise dates are given, a exercise for each option is required. Got "
+                << legs_[0].size() << " options but " << optionData_.exerciseDates().size()
+                << " exercise dates, please check trade xml");
         expiryDates = parseVectorOfValues<Date>(optionData_.exerciseDates(), &parseDate);
         // Add required fixing if exercise is before pricingDate (future contract expiry)
-        for (size_t i = 0; i < expiryDates.size(); ++i){
+        for (size_t i = 0; i < expiryDates.size(); ++i) {
             const auto& expiryDate = expiryDates[i];
             auto flow1 = ext::dynamic_pointer_cast<CommodityCashFlow>(legs_[0][i]);
             auto flow2 = ext::dynamic_pointer_cast<CommodityCashFlow>(legs_[1][i]);

@@ -66,9 +66,7 @@ private:
     std::vector<ore::data::LegData> legData_;
     ore::data::OptionData optionData_;
     QuantLib::Real strike_;
-    
     boost::optional<OptionStripData> optionStrip_;
-
     
 };
 
@@ -98,7 +96,6 @@ public:
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
     underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
-    
 private:
     CommoditySpreadOptionData csoData_;
     std::vector<std::string> fxIndex_;    
