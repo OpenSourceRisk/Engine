@@ -238,7 +238,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     vector<Real> additionalMultipliers;
 
     vector<Date> expiryDates;
-
+    std::vector<Date> paymentDates;
     if (!optionData_.exerciseDates().empty()) {
         QL_REQUIRE(
             optionData_.exerciseDates().size() == legs_[0].size(),
@@ -246,6 +246,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
                 << legs_[0].size() << " options but " << optionData_.exerciseDates().size()
                 << " exercise dates, please check trade xml");
         expiryDates = parseVectorOfValues<Date>(optionData_.exerciseDates(), &parseDate);
+        paymentDates = expiryDates;
         // Add required fixing if exercise is before pricingDate (future contract expiry)
         for (size_t i = 0; i < expiryDates.size(); ++i) {
             const auto& expiryDate = expiryDates[i];
@@ -261,7 +262,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
         }
     }
-    std::vector<Date> paymentDates;
+    
     if (optionData_.paymentData().has_value()) {
         paymentDates = optionData_.paymentData().get().dates();
         QL_REQUIRE(
@@ -364,9 +365,10 @@ void CommoditySpreadOption::addAdditionalFixingsAtOptionExpiry(
     QL_REQUIRE(flow != nullptr, "Internal error, addAdditonalFixingAtOptionExpiry expect flow");
     for (const auto& [pricingDate, index] : flow->indices()) {
         if (expiryDate < pricingDate) {
-            LOG("Add FixingDate for index " << index->name() << " for pricing Date" << expiryDate
+            auto adjustedFixingDate = index->fixingCalendar().adjust(expiryDate, Preceding);
+            LOG("Add FixingDate for index " << index->name() << " for pricing Date" << adjustedFixingDate
                                             << " for pricing Date " << pricingDate);
-            requiredFixings_.addFixingDate(expiryDate, index->name(), pricingDate, false, false);
+            requiredFixings_.addFixingDate(adjustedFixingDate, index->name(), pricingDate, false, false);
         }
     }
 }

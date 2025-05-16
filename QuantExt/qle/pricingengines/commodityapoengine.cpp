@@ -67,7 +67,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
         res.pricingDates.push_back(fixingDate);
         res.indexExpiries.push_back(index->expiryDate());
         res.fixings.push_back(index->fixing(fixingDate) * fxRate);
-        if (pricingDate <= today) {
+        if (fixingDate <= today) {
             res.accruals += res.fixings.back();
         } else {
             atmUnderlyingCcy = index->fixing(fixingDate);
