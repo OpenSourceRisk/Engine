@@ -261,6 +261,15 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
         }
     }
+    std::vector<Date> paymentDates;
+    if (optionData_.paymentData().has_value()) {
+        paymentDates = optionData_.paymentData().get().dates();
+        QL_REQUIRE(
+            paymentDates.size() == legs_[0].size(),
+            "Commodityspread option: if explicit payment dates are given, a exercise for each option is required. Got "
+                << legs_[0].size() << " options but " << optionData_.exerciseDates().size()
+                << " exercise dates, please check trade xml");
+    }
 
     auto paymentDateAdjuster = makeOptionPaymentDateAdjuster(csoData_, expiryDates);
 
@@ -274,13 +283,16 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
         QuantLib::Date expiryDate = expiryDates[i];
 
-        QuantLib::Date paymentDate = longFlow->date();
-
-        QL_REQUIRE(paymentDate == shortFlow->date(),
-                   "all cashflows must refer to the same paymentDate, its used as the settlementDate of the option");
-
-        paymentDateAdjuster->updatePaymentDate(expiryDate, paymentDate);
-
+        QuantLib::Date paymentDate;
+        if (!paymentDates.empty()) {
+            paymentDate = paymentDates[i];
+        } else {
+            paymentDate = longFlow->date();
+            QL_REQUIRE(
+                paymentDate == shortFlow->date(),
+                "all cashflows must refer to the same paymentDate, its used as the settlementDate of the option");
+            paymentDateAdjuster->updatePaymentDate(expiryDate, paymentDate);
+        }
         QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
 
         QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
