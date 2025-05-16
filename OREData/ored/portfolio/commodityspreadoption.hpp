@@ -68,7 +68,6 @@ private:
     QuantLib::Real strike_;
     
     boost::optional<OptionStripData> optionStrip_;
-    //boost::optional<std::vector<std::string>> exerciseDates_;
 
     
 };

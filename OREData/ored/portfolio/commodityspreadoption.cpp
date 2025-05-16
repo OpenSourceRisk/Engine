@@ -394,12 +394,6 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
         optionStrip_ = OptionStripData();
         optionStrip_->fromXML(optionStripNode);
     }
-    /*
-    XMLNode* exerciseNode = XMLUtils::getChildNode(csoNode, "ExerciseDates");
-    if (exerciseNode) {
-        exerciseDates_ = XMLUtils::getChildrenValues(csoNode, "ExerciseDates", "ExerciseDate", false);
-    }
-    */
     QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
                "CommoditySpreadOption: both a long and a short Assets are required.");
 }
@@ -414,11 +408,6 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) const {
     if (optionStrip_.has_value()) {
         XMLUtils::appendNode(csoNode, optionStrip_->toXML(doc));
     }
-    /*
-    if (exerciseDates_.has_value()){
-        XMLUtils::addChildren(doc, csoNode, "ExerciseDates", "ExerciseDate", exerciseDates_.get());
-    }
-    */
     return csoNode;
 }
 
