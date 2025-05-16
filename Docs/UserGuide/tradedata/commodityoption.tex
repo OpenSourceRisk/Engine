@@ -132,13 +132,10 @@ Other than the two legs, the following nodes complete the \lstinline!CommoditySp
 The relevant fields in the \lstinline!OptionData! node for an CommoditySpreadOption are
 	\begin{itemize}
 		\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
-
 		\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. 
-
-		\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement date of the option payoff.
-
 		\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller. See section \ref{ss:premiums}
 		\item \lstinline!ExerciseDates! [Optional]: If given, there must be one exercise date for each option period. If omitted, the option expiry is derived from the cashflows and falls on the last pricing period of the commodity cashflow.
+		\item \lstinline!PaymentData! [Optional]:  This node is used to supply the date on which the option is cash settled if it is exercised. If omitted the settlement date is derived from the cashflow payment dates.
 	\end{itemize}
 	\item \lstinline!OptionStripPaymentDates! [Optional]: If the number of cashflows per leg is greater than 1, we can group options by their expiry date into strips. All option in a strip will have the same payment date as defined in this node. The payment date will be \emph{lag} business days after the latest expiry date in the strip. The node has following sub-nodes:
 	\begin{itemize}
