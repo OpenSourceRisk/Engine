@@ -59,12 +59,12 @@ struct MomentMatchingResults {
 
 // Matches the first two moments of a lognormal distribution
 // For options with accruals the strike of the options need to be adjusted by the accruals
-// See Iain Clark - Commodity Option Pricing A Practitioner’s Guide - Section 2.74
+// See Iain Clark - Commodity Option Pricing A Practitionerï¿½s Guide - Section 2.74
 MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>());
+    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date());
 }
 
 

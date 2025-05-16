@@ -71,6 +71,7 @@ public:
         QL_REQUIRE(optionStripSchedule_.size() >= 2,
                    "Need at least a start and end date in the optionstripschedule. Please check the trade xml");
         // Check if the optionstrip definition include all expiries
+                                           
         Date minExpiryDate = *std::min_element(expiryDates.begin(), expiryDates.end());
         Date maxExpiryDate = *std::max_element(expiryDates.begin(), expiryDates.end());
         Date minOptionStripDate =
@@ -246,6 +247,14 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             << legs_[0].size() << " options but " << optionData_.exerciseDates().size()
             << " exercise dates, please check trade xml");
         expiryDates = parseVectorOfValues<Date>(optionData_.exerciseDates(), &parseDate);
+        // Add required fixing if exercise is before pricingDate (future contract expiry)
+        for (size_t i = 0; i < expiryDates.size(); ++i){
+            const auto& expiryDate = expiryDates[i];
+            auto flow1 = ext::dynamic_pointer_cast<CommodityCashFlow>(legs_[0][i]);
+            auto flow2 = ext::dynamic_pointer_cast<CommodityCashFlow>(legs_[1][i]);
+            addAdditionalFixingsAtOptionExpiry(flow1, expiryDate);
+            addAdditionalFixingsAtOptionExpiry(flow2, expiryDate);
+        }
     } else {
         for (size_t i = 0; i < legs_[0].size(); ++i) {
             auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[longLegId][i]);
@@ -339,6 +348,17 @@ CommoditySpreadOption::underlyingIndices(const QuantLib::ext::shared_ptr<Referen
     return result;
 }
 
+void CommoditySpreadOption::addAdditionalFixingsAtOptionExpiry(
+    const QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>& flow, const QuantLib::Date& expiryDate) {
+    QL_REQUIRE(flow != nullptr, "Internal error, addAdditonalFixingAtOptionExpiry expect flow");
+    for (const auto& [pricingDate, index] : flow->indices()) {
+        if (expiryDate < pricingDate) {
+            LOG("Add FixingDate for index " << index->name() << " for pricing Date" << expiryDate
+                                            << " for pricing Date " << pricingDate);
+            requiredFixings_.addFixingDate(expiryDate, index->name(), pricingDate, false, false);
+        }
+    }
+}
 
 void CommoditySpreadOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);

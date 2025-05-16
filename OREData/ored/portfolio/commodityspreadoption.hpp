@@ -69,6 +69,8 @@ private:
     
     boost::optional<OptionStripData> optionStrip_;
     //boost::optional<std::vector<std::string>> exerciseDates_;
+
+    
 };
 
 class CommoditySpreadOption : public ore::data::Trade {
@@ -97,9 +99,10 @@ public:
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
     underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
-
+    
 private:
     CommoditySpreadOptionData csoData_;
     std::vector<std::string> fxIndex_;    
+    void addAdditionalFixingsAtOptionExpiry(const QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>& flow, const QuantLib::Date& expiryDate);
 };
 } // namespace ore::data

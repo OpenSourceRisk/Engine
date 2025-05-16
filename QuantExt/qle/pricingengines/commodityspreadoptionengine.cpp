@@ -197,7 +197,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
-                      std::placeholders::_2, vol));
+                      std::placeholders::_2, vol), Null<Real>(), exerciseDate);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
