@@ -150,7 +150,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     if (!fxIndex_.empty()) {
         payCcy = parseCurrency(payCcy_);
         requiredFixings_.addFixingDate(fixingDate_, fxIndex_, paymentDate);
-        fxIndex = buildFxIndex(fxIndex_, currency.code(), payCcy.code(), engineFactory->market(),
+        fxIndex = buildFxIndex(fxIndex_, payCcy.code(), currency.code(),engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
         npvCurrency_ = payCcy_;
     }

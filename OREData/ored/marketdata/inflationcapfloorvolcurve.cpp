@@ -690,7 +690,7 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
                         cpiVolSurface_->dayCounter(), lastKnownFixingDate, calibrationInfo_->optionObservationDates[i]);
                     stddev = std::sqrt(ttm * vol * vol);
                 } else {
-                    stddev = sqrt(cpiVolSurface_->totalVariance(calibrationInfo_->optionObservationDates[i], strike, 0 * Days));
+                    stddev = std::sqrt(cpiVolSurface_->totalVariance(calibrationInfo_->optionObservationDates[i], strike, 0 * Days));
                 }
 
                 strikeGrowths[i][j] = std::pow(1 + strike, ttm);

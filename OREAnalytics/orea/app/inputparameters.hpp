@@ -200,6 +200,7 @@ public:
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
+    void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
@@ -338,6 +339,8 @@ public:
     void setDimRegressionOrder(Size s) { dimRegressionOrder_ = s; }
     void setDimRegressors(const std::string& s); // parse to vector<string>
     void setDimOutputGridPoints(const std::string& s); // parse to vector<Size>
+    void setDimDistributionCoveredStdDevs(Real r) { dimDistributionCoveredStdDevs_ = r; }
+    void setDimDistributionGridSize(Size n) { dimDistributionGridSize_ = n; }
     void setDimOutputNettingSet(const std::string& s) { dimOutputNettingSet_ = s; }
     void setDimLocalRegressionEvaluations(Size s) { dimLocalRegressionEvaluations_ = s; }
     void setDimLocalRegressionBandwidth(Real r) { dimLocalRegressionBandwidth_ = r; }
@@ -639,6 +642,7 @@ public:
     SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
+    bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
     Size mcVarSamples() const { return mcVarSamples_; }
@@ -759,6 +763,8 @@ public:
     Size dimRegressionOrder() const { return dimRegressionOrder_; }
     const std::vector<std::string>& dimRegressors() const { return dimRegressors_; }
     const std::vector<Size>& dimOutputGridPoints() const { return dimOutputGridPoints_; }
+    Real dimDistributionCoveredStdDevs() const { return dimDistributionCoveredStdDevs_; }
+    Size dimDistributionGridSize() const { return dimDistributionGridSize_; }
     const std::string& dimOutputNettingSet() const { return dimOutputNettingSet_; }
     Size dimLocalRegressionEvaluations() const { return dimLocalRegressionEvaluations_; }
     Real dimLocalRegressionBandwidth() const { return dimLocalRegressionBandwidth_; }
@@ -1050,6 +1056,7 @@ protected:
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
+    bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
     std::string varMethod_ = "DeltaGammaNormal";
@@ -1161,6 +1168,8 @@ protected:
     Size dimRegressionOrder_ = 0;
     vector<string> dimRegressors_;
     vector<Size> dimOutputGridPoints_;
+    Real dimDistributionCoveredStdDevs_ = 5.0;
+    Size dimDistributionGridSize_ = 50;
     string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;

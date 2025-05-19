@@ -12,9 +12,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-    - name: get QuantLib
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }} 
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Set up Boost
       run: |
         sudo apt update

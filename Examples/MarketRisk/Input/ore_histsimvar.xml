@@ -34,7 +34,8 @@
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
       <Parameter name="mporOverlappingPeriods">true</Parameter>
-      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>  
+	  <Parameter name="includeExpectedShortfall">Y</Parameter>
       <!--<Parameter name="breakdown">Y</Parameter>-->
       <!--<Parameter name="portfolioFilter">PF1</Parameter>-->
       <Parameter name="outputFile">var.csv</Parameter>

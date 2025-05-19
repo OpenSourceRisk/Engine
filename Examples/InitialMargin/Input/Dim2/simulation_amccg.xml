@@ -3,9 +3,9 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
-      <!--<Grid>41,3M</Grid>-->
-      <!--<Grid>52,1D</Grid>-->
       <Grid>121,1M</Grid>
+      <!--<Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>-->
+      <TimeStepsPerYear>24</TimeStepsPerYear>
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
@@ -29,15 +29,18 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
+	  <!--
           <Calibrate>N</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
-          <!-- Hagan, HullWhite -->
           <ParamType>Constant</ParamType>
           <TimeGrid/>
           <InitialValue>0.00002</InitialValue>
-          <!--<ParamType>Piecewise</ParamType>-->
-          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
-          <!--<InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>-->
+	  -->
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
@@ -64,14 +67,17 @@
         <DomesticCcy>EUR</DomesticCcy>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+	  <!--
           <Calibrate>N</Calibrate>
-          <!--<ParamType>Piecewise</ParamType>-->
-          <!--<InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>-->
-          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
           <ParamType>Constant</ParamType>
 	  <TimeGrid/>
           <InitialValue>0.00001</InitialValue>
-        </Sigma>
+	  -->
+	</Sigma>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
@@ -138,11 +144,11 @@
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-10Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-30Y</Name>
-        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>USD-CMS-1Y</Name>

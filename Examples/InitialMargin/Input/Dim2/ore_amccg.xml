@@ -83,10 +83,12 @@
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
+      <!--<Parameter name="dvaName">BANK</Parameter>-->
       <Parameter name="fva">N</Parameter>
+      <!--
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      -->
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
@@ -102,6 +104,10 @@
       <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- cover n std devs around mean of the data in dim distribution output, or "inf" to cover all of the  data -->
+      <Parameter name="dimDistributionCoveredStdDevs">5.0</Parameter>
+      <!-- grid size for dim distribution report -->
+      <Parameter name="dimDistributionGridSize">50</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
       <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->

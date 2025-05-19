@@ -49,18 +49,11 @@ class LgmBuilder : public QuantExt::ModelBuilder {
 public:
     // We apply certain fallback rules to ensure a robust calibration:
 
-    enum class FallbackType { NoFallback, FallbackRule1, FallbackRule2, FallbackRule3 };
+    enum class FallbackType { NoFallback, FallbackRule1 };
 
     /* Rule 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
               calibration strike closer to the ATM level */
     static constexpr Real maxAtmStdDev = 3.0;
-
-    /* Rule 2 If the helper value is lower than mmv, replace it with a "more reasonable" helper. We replace
-              the helper with a helper that has the ATM strike. */
-    static constexpr Real mmv = 1.0E-20;
-
-    /* Rule 3 Switch to PriceError if helper's market value is below smv */
-    static constexpr Real smv = 1.0E-8;
 
     /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,

@@ -58,6 +58,8 @@ for s in sampleRange:
 
     for asof in refDates:
 
+        numeraire = utilities.num(asof, numeraireData)
+
         time = utilities.getTimeDifference(asof0, asof) 
 
         # delete output file
@@ -70,7 +72,7 @@ for s in sampleRange:
         docsimm.write(oresimm)
         print()
         print(oresimm, "updated with asofDate", nodes[0].text)
-        oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof)
+        oreex.print_headline("Run ORE for SIMM on the implied market as of " + asof + " for sample " + str(s))
         oreex.run(oresimm)
 
         # pick total SIMM to Call for the selected netting set and append to the simm row list
@@ -83,7 +85,7 @@ for s in sampleRange:
                 marginType = row['MarginType']
                 bucket = row['Bucket']
                 simmSide = row['SimmSide']
-                initialMargin = float(row['InitialMargin'])
+                initialMargin = float(row['InitialMargin']) / numeraire
                 currency = row['Currency']
                 if portfolio == nettingSet and productClass == 'All' and riskClass == 'All' and marginType == 'All' and bucket == 'All' and simmSide == 'Call':
                     simmRowList.append([asof, '{:.4f}'.format(time), '{:.6f}'.format(initialMargin), currency, simmSide, portfolio, s])
@@ -110,11 +112,16 @@ oreex.plot("DimValidation/simm_evolution_avg.csv", 1, 5, 'black', "Average")
 oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time")
 oreex.save_plot_to_file()
 
-#oreex.print_headline("Run ORE for Dynamic SIMM with AMC/CG")
-#oreex.run("Input/Dim2/ore_amccg.xml")
+oreex.print_headline("Run ORE for Dynamic SIMM with AMC/CG")
+oreex.run("Input/Dim2/ore_amccg.xml")
 
-#oreex.setup_plot("dim_comparison")
-#oreex.plot("DimValidation/simm_evolution.csv", 0, 4, 'b', "SIMM")
-#oreex.plot("Dim2/AmcCg/dim_evolution.csv", 0, 4, 'r', "Dynamic SIMM with AMC/CG")
-#oreex.decorate_plot(title="DIM Evolution", ylabel="IM", xlabel="Time Steps")
-#oreex.save_plot_to_file()
+oreex.setup_plot("dim_comparison")
+oreex.plot("DimValidation/simm_evolution_2.csv", 0, 3, 'g', "SIMM Sample 1")
+oreex.plot("DimValidation/simm_evolution_3.csv", 0, 3, 'b', "SIMM Sample 2")
+oreex.plot("DimValidation/simm_evolution_4.csv", 0, 3, 'y', "SIMM Sample 3")
+#oreex.plot("DimValidation/simm_evolution_4.csv", 0, 3, 'y', "SIMM Sample 4")
+#oreex.plot("DimValidation/simm_evolution_5.csv", 0, 3, 'm', "SIMM Sample 5")
+#oreex.plot("DimValidation/simm_evolution_avg.csv", 1, 5, 'grey', "Average SIMM")
+oreex.plot("Dim2/AmcCg/dim_evolution.csv", 0, 4, 'r', "Expected Dynamic SIMM")
+oreex.decorate_plot(title="DIM Evolution", ylabel="IM", xlabel="Time Steps")
+oreex.save_plot_to_file()

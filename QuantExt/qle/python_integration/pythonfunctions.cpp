@@ -98,6 +98,8 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
         for (std::size_t i = 0; i < n; ++i) {
             tmp.set(i, PyFloat_AsDouble(PyList_GET_ITEM(result, i)));
         }
+    } else {
+        QL_FAIL("PythonFunctions::conditionalExpectation(): no result returned.");
     }
 
     Py_DECREF(pArgs);
@@ -112,7 +114,7 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
 
 #else
 
-PythonFunctions::PythonFunctions() {}
+PythonFunctions::PythonFunctions() { initialized_ = true; }
 PythonFunctions::~PythonFunctions() {}
 
 RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
