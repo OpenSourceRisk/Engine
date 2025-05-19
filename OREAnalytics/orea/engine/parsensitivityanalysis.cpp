@@ -440,7 +440,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
 
-        // process par caps
+        // process ois par caps
 
         for (auto const& p : instruments_.oisParCaps_) {
 
@@ -453,9 +453,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             Real tmp = (fair - base->second) / shiftSize;
 
-            // ensure Jacobi matrix is regular and not (too) ill-conditioned, this is necessary because
-            // a) the shift size used to compute dpar / dzero might be close to zero and / or
-            // b) the implied vol calculation has numerical inaccuracies
+            // see par caps
 
             if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
                 WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
