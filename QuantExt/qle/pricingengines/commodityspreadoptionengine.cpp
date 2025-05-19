@@ -179,7 +179,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.accruals = 0.0;
         // In case exercise is after future expiry (e.g. calendar spreads)
         auto pricingDate = std::min(exerciseDate, cf->pricingDate());
-        res.tn = vol->timeFromReference(pricingDate);
+        res.tn = std::max(vol->timeFromReference(pricingDate), 0.0);
         double fxSpot = 1.0;
         if (fxIndex) {
             fxSpot = fxIndex->fixing(pricingDate);
