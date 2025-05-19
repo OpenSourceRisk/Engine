@@ -529,7 +529,6 @@ vector<QuantLib::ext::shared_ptr<Trade>> PortfolioBasketReferenceDatum::getTrade
 XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
         XMLNode* node = ReferenceDatum::toXML(doc);
         XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
-        XMLUtils::appendNode(node, rdNode);
         XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
         for (auto& u : getTrades()) {
             XMLUtils::appendNode(cNode, u->toXML(doc));
