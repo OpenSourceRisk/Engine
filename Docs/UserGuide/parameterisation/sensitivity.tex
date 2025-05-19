@@ -255,12 +255,12 @@ Using CapFloors as an example:
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
+			<ShiftExpiries>1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftExpiries>
 			<ShiftStrikes>-0.0075,-0.005,-0.0025,-0.0015,0.0,0.0025,0.005,0.0075,0.01,0.015,0.02,0.025</ShiftStrikes>
 			<Index>USD-SOFR</Index>
 			<IsRelative>false</IsRelative>
 			<ParConversion>
-				<Instruments>CapFloor</Instruments>
+				<Instruments>CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor</Instruments>
 				<DiscountCurve>USD-SOFR</DiscountCurve>
 				<RateComputationPeriod>3M</RateComputationPeriod>
 			</ParConversion>
