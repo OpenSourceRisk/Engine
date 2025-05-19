@@ -338,7 +338,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         for (std::size_t i = 1; i < currencies_.size(); ++i) {
             curvatureMarginFx += Kb[i - 1] * Kb[i - 1];
             for (std::size_t j = 1; j < i; ++j) {
-                curvatureMarginFx += RandomVariable(n_, 2.0 * irGamma_) * Sb[i - 1] * Sb[j - 1];
+                curvatureMarginFx += RandomVariable(n_, 2.0 * fxCorr_) * Sb[i - 1] * Sb[j - 1];
             }
         }
 

@@ -110,7 +110,11 @@ protected:
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
     mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
-        infStates_;                                       // per simulation date dk (x,y) or jy (x,y)
+        infStates_; // per simulation date dk (x,y) or jy (x,y)
+    mutable std::vector<std::vector<std::size_t>> underlyingPathsOnFullTimeGrid_; // index states on timeGrid_
+    mutable std::vector<std::vector<std::size_t>> irStatesOnFullTimeGrid_;        // ir states on timeGrid_
+    mutable std::vector<std::vector<std::pair<std::size_t, std::size_t>>>
+        infStatesOnFullTimeGrid_;                         // dk (x,y) or jy (x,y) on timeGrid_
     mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
     mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
     mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process
