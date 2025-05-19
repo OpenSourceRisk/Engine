@@ -36,10 +36,9 @@ class OptionPaymentDateAdjuster {
 public:
     virtual ~OptionPaymentDateAdjuster() = default;
     virtual void updatePaymentDate(const QuantLib::Date& exiryDate, Date& paymentDate) const {
-    // unadjusted
+        // unadjusted
     }
 };
-
 
 class OptionPaymentDataAdjuster : public OptionPaymentDateAdjuster {
 public:
@@ -71,7 +70,7 @@ public:
         QL_REQUIRE(optionStripSchedule_.size() >= 2,
                    "Need at least a start and end date in the optionstripschedule. Please check the trade xml");
         // Check if the optionstrip definition include all expiries
-                                           
+
         Date minExpiryDate = *std::min_element(expiryDates.begin(), expiryDates.end());
         Date maxExpiryDate = *std::max_element(expiryDates.begin(), expiryDates.end());
         Date minOptionStripDate =
@@ -110,8 +109,8 @@ private:
     int lag_;
 };
 
-QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData,
-                                                                           const std::vector<Date>& expiryDates) {
+QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster>
+makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData, const std::vector<Date>& expiryDates) {
 
     if (optionData.optionStrip().has_value()) {
         return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
@@ -164,16 +163,15 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     // get config
     auto config = builder->configuration(MarketContext::pricing);
 
-
     // Build the commodity legs
 
-    for (Size i = 0; i < legData_.size();
-         ++i) {
+    for (Size i = 0; i < legData_.size(); ++i) {
         legPayers_.push_back(legData_[i].isPayer());
 
         // build legs
 
-        auto commLegData = (QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()));
+        auto commLegData =
+            (QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()));
         QL_REQUIRE(commLegData, "CommoditySpreadOption leg data should be of type CommodityFloating");
 
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
@@ -262,7 +260,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
         }
     }
-    
+
     if (optionData_.paymentData().has_value()) {
         paymentDates = optionData_.paymentData().get().dates();
         QL_REQUIRE(
@@ -306,9 +304,9 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
         // build the instrument for the i-th cfs
         QuantLib::ext::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
-            QuantLib::ext::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity, strike_,
-                                                                optionType, paymentDate, fxIndexes[longLegId],
-                                                                fxIndexes[shortLegId]);
+            QuantLib::ext::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity,
+                                                                        strike_, optionType, paymentDate,
+                                                                        fxIndexes[longLegId], fxIndexes[shortLegId]);
 
         // build and assign the engine
         QuantLib::ext::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
@@ -334,7 +332,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         maturityType_ = "Last Premium Date";
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
-                                                        additionalMultipliers);
+                                                                additionalMultipliers);
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
         additionalData_["premiumAmount"] = -bsInd * premium.amount;
@@ -343,8 +341,8 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     }
 }
 
-std::map<ore::data::AssetClass, std::set<std::string>>
-CommoditySpreadOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<ore::data::AssetClass, std::set<std::string>> CommoditySpreadOption::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<ore::data::AssetClass, std::set<std::string>> result;
     auto legData = csoData_.legData();
     for (const auto& leg : legData) {
@@ -423,7 +421,6 @@ XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) const {
     }
     return csoNode;
 }
-
 
 void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "OptionStripPaymentDates");

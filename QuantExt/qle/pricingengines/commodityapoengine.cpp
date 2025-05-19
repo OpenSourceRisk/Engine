@@ -49,7 +49,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     Date today = Settings::instance().evaluationDate();
     MomentMatchingResults res;
     auto optionExerciseDate = exerciseDate == Date() ? flow->lastPricingDate() : exerciseDate;
-    
+
     res.tn = 0.0;
     res.accruals = 0.0;
     double EA = 0;
@@ -82,8 +82,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                     futureVols[expiry] = vol->blackVol(expiry, K);
                 }
             } else {
-                spotVariances.push_back(
-                    vol->blackVariance(res.times.back(), K));
+                spotVariances.push_back(vol->blackVariance(res.times.back(), K));
                 res.spotVols.push_back(std::sqrt(spotVariances.back() / res.times.back()));
             }
             EA += res.forwards.back();

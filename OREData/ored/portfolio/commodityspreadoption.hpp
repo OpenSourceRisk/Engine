@@ -25,7 +25,6 @@ namespace ore::data {
 
 class CommoditySpreadOptionData : public XMLSerializable {
 public:
-
     class OptionStripData : public XMLSerializable {
     public:
         ScheduleData schedule() const { return schedule_; }
@@ -58,16 +57,16 @@ public:
     const ore::data::OptionData& optionData() const { return optionData_; }
     QuantLib::Real strike() const { return strike_; }
     boost::optional<OptionStripData> optionStrip() { return optionStrip_; }
-    //const boost::optional<std::vector<std::string>>& exerciseDates() { return exerciseDates_; }
 
 private:
-    QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
+    QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const {
+        return QuantLib::ext::make_shared<ore::data::LegData>();
+    }
 
     std::vector<ore::data::LegData> legData_;
     ore::data::OptionData optionData_;
     QuantLib::Real strike_;
     boost::optional<OptionStripData> optionStrip_;
-    
 };
 
 class CommoditySpreadOption : public ore::data::Trade {
@@ -94,11 +93,13 @@ public:
     //@}
 
     //! Add underlying Commodity names
-    std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 private:
     CommoditySpreadOptionData csoData_;
-    std::vector<std::string> fxIndex_;    
-    void addAdditionalFixingsAtOptionExpiry(const QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>& flow, const QuantLib::Date& expiryDate);
+    std::vector<std::string> fxIndex_;
+    void addAdditionalFixingsAtOptionExpiry(const QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow>& flow,
+                                            const QuantLib::Date& expiryDate);
 };
 } // namespace ore::data

@@ -69,11 +69,11 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     Time ttp = discountCurve_->timeFromReference(paymentDate);
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
-    auto parameterFlow1 =
-        derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, exerciseDate, arguments_.longAssetFxIndex);
+    auto parameterFlow1 = derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, exerciseDate,
+                                                         arguments_.longAssetFxIndex);
 
-    auto parameterFlow2 =
-        derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, exerciseDate, arguments_.shortAssetFxIndex);
+    auto parameterFlow2 = derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, exerciseDate,
+                                                         arguments_.shortAssetFxIndex);
 
     double F1 = parameterFlow1.atm;
     double F2 = parameterFlow2.atm;
@@ -197,7 +197,8 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
-                      std::placeholders::_2, vol), Null<Real>(), exerciseDate);
+                      std::placeholders::_2, vol),
+            Null<Real>(), exerciseDate);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
@@ -228,7 +229,7 @@ Real CommoditySpreadOptionAnalyticalEngine::rho() const {
         return rho_->correlation(arguments_.exercise->lastDate());
     } else {
         return intraAssetCorrelation(arguments_.shortAssetLastPricingDate, arguments_.longAssetLastPricingDate,
-                                      *volTSLongAsset_);
+                                     *volTSLongAsset_);
     }
 }
 

@@ -95,6 +95,4 @@ void CommoditySpreadOption::arguments::validate() const {
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
 
-
-
 } // namespace QuantExt
