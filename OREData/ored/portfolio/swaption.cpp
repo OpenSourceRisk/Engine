@@ -397,7 +397,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
              << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
     }
 
-    // 9.4 build underlying swaps, add premiums, build option wrapper
+    // 9.3 build underlying swaps, add premiums, build option wrapper
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
                             envelope().additionalField("security_spread", false), {});
@@ -420,8 +420,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
 
-    // 9.3 get engine and set it
-
+    // 9.4 get engine and set it
     cpu_timer timer;
 
     std::vector<Date> mat{underlying_->maturity()};
@@ -450,7 +449,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         }
 
         // use ibor / ois index as key, if possible, otherwise the npv currency
-        swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden
+        swaptionEngine = swaptionBuilder->engine(
             id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
             exerciseBuilder_->noticeDates(), maturities, strikes, exerciseType_ == Exercise::American,
             envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
