@@ -179,10 +179,11 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
+
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < effExpiries.size(); ++i) {
             expiryDates.push_back(to_string(effExpiries[i]));
-            termDates.push_back(to_string(maturities[i])); //TODO check if only eff maturities are correct here
+            termDates.push_back(to_string(maturities[i]));
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
