@@ -130,7 +130,9 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     // compute horizon shift
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities[0]) * shiftHorizon; //TODO check
+
+    auto latest = *std::max_element(maturities.begin(), maturities.end());
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, latest) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
@@ -180,7 +182,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < effExpiries.size(); ++i) {
             expiryDates.push_back(to_string(effExpiries[i]));
-            termDates.push_back(to_string(maturities[0])); //TODO check 
+            termDates.push_back(to_string(maturities[i])); //TODO check if only eff maturities are correct here
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
@@ -283,7 +285,8 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
     Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
 
-    Real maxTime = lgm->termStructure()->timeFromReference(maturities[0]);
+    auto latest = *std::max_element(maturities.begin(), maturities.end());
+    Real maxTime = lgm->termStructure()->timeFromReference(latest); 
 
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     QuantLib::ext::shared_ptr<IborIndex> index;

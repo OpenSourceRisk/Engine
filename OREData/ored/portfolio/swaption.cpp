@@ -440,12 +440,19 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
         Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
-        std::vector<QuantLib::ext::shared_ptr<Instrument>>  underlyingMatched = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+        std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> underlyingMatched = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+
+        std::vector<Date> maturities;
+        std::vector<Rate> strikes;
+        for (const auto& swap : underlyingMatched) {
+            maturities.push_back(swap->maturityDate());
+            strikes.push_back(swap->fixedRate());
+        }
 
         // use ibor / ois index as key, if possible, otherwise the npv currency
         swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden
             id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-            exerciseBuilder_->noticeDates(), exerciseBuilder_->noticeDates(), strikes, exerciseType_ == Exercise::American,
+            exerciseBuilder_->noticeDates(), maturities, strikes, exerciseType_ == Exercise::American,
             envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
     }
 
@@ -458,9 +465,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building Swaption done");
 }
 
-std::vector<QuantLib::ext::shared_ptr<Instrument>> Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
+std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
     const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve, const std::vector<Date>& exerciseDates) {
-    std::vector<QuantLib::ext::shared_ptr<Instrument>> swaps;
+    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> swaps;
 
     for (Size i = 0; i < exerciseDates.size(); ++i) {
         Date ed = exerciseDates[i];
