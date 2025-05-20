@@ -609,6 +609,7 @@ The analytic is specified as usual in {\tt ore.xml} with the following parameter
 \begin{itemize}
 \item outputFile: csv file name of the resulting VaR report 
 %\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
+\item tradePnl: boolean, if true the VaR report will contain a breakdown by tradeID, risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
 \item quantiles: comma separated list of quantiles to be reported
 \item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
 \item historicalPeriod: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used
