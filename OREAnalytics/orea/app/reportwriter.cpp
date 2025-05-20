@@ -171,7 +171,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     for (auto [tradeId, trade]: portfolio->trades()) {
 
         if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+            DLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
             continue;
         }
 
