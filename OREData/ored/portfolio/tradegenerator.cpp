@@ -146,20 +146,20 @@ bool TradeGenerator::validateDate(string date) {
 }
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, Real rate, bool firstLegPays,
-                               string tradeId, std::map<string, string> mapPairs) {
+                               string start, string tradeId, std::map<string, string> mapPairs) {
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexId);
     QuantLib::ext::shared_ptr<IborIndex> iborIndex;
     tryParseIborIndex(indexId, iborIndex);
     
     string cal;
     string rule;
-    string startDate = to_string(today_);
     string convention;
     string ccy;
     string fixedFreq;
     string fixedDC;
     string type;
-    LegData floatingLeg = buildLeg(conv, notional, maturity, firstLegPays);
+    string forwardStart = start.empty() ? "0D" : start;
+    LegData floatingLeg = buildLeg(conv, notional, maturity, forwardStart, firstLegPays);
     
     switch (conv->type()) {
     case Convention::Type::OIS: {
@@ -181,6 +181,7 @@ void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, R
     }
     cal = floatingLeg.schedule().rules().front().calendar();
     rule = floatingLeg.schedule().rules().front().rule();
+    string startDate = floatingLeg.schedule().rules().front().startDate();
     ScheduleData fixedSchedule(ScheduleRules(startDate, floatingLeg.schedule().rules().back().endDate(), fixedFreq, cal,
                                              convention, convention, rule));
     vector<Real> rates(1, rate);
@@ -190,21 +191,22 @@ void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, R
     Envelope env = makeEnvelope();
     QuantLib::ext::shared_ptr<Swap> trade(
         QuantLib::ext::make_shared<Swap>( ore::data::Swap(env, floatingLeg, fixedLeg)));
-    trade->id() = tradeId != "" ? tradeId : to_string(size() + 1) + "_" + ccy + "_" + type + "_SWAP";
+    trade->id() = !tradeId.empty() ? tradeId : to_string(size() + 1) + "_" + ccy + "_" + type + "_SWAP";
     add(trade);
     return;
 }
 
 void TradeGenerator::buildSwap(string indexId, Real notional, string maturity, string recIndexId, Real spread,
-                               bool firstLegPays, string tradeId, std::map<string, string> mapPairs) {
+                               bool firstLegPays, string start, string tradeId, std::map<string, string> mapPairs) {
     Envelope env = makeEnvelope();
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexId);
     QuantLib::ext::shared_ptr<Convention> recConv = conventions_.at(recIndexId);
-    LegData floatingLeg = buildLeg(conv, notional, maturity, firstLegPays);
-    LegData recFloatingLeg = buildLeg(recConv, notional, maturity, firstLegPays);
+    string forwardStart = start.empty() ? "0D" : start;
+    LegData floatingLeg = buildLeg(conv, notional, maturity, forwardStart, firstLegPays);
+    LegData recFloatingLeg = buildLeg(recConv, notional, maturity, forwardStart, firstLegPays);
     QuantLib::ext::shared_ptr<Swap> trade(
         QuantLib::ext::make_shared<Swap>(ore::data::Swap(env, floatingLeg, recFloatingLeg)));
-    trade->id() = tradeId != "" ? tradeId : to_string(size() + 1) + "_" + indexId + "_" + recIndexId + "_SWAP";
+    trade->id() = !tradeId.empty() ? tradeId : to_string(size() + 1) + "_" + indexId + "_" + recIndexId + "_SWAP";
     add(trade);
     return;
 }
@@ -215,7 +217,7 @@ void TradeGenerator::buildInflationSwap(string inflationIndex, Real notional, st
     Envelope env = makeEnvelope();
     auto yoyConv = conventions_.at(inflationIndex);
     auto floatConv = conventions_.at(floatIndex);
-    LegData floatLeg = buildLeg(floatConv, notional, maturity, !firstLegPays);
+    LegData floatLeg = buildLeg(floatConv, notional, maturity, "0D", !firstLegPays);
     auto yoyLeg = buildCPILeg(yoyConv, notional, maturity, floatLeg.currency(), baseRate, cpiRate, firstLegPays);
     QuantLib::ext::shared_ptr<Swap> trade(QuantLib::ext::make_shared<Swap>(ore::data::Swap(env, yoyLeg, floatLeg)));
     trade->id() = tradeId != "" ? tradeId : to_string(size() + 1) + "_" + inflationIndex + "_INFLATION_SWAP";
@@ -236,7 +238,7 @@ void TradeGenerator::buildFxForward(string payCcy, Real payNotional, string recC
 void TradeGenerator::buildCapFloor(string indexName, Real capFloorRate, Real notional, string maturity, bool isLong,
                                    bool isCap, string tradeId, std::map<string, string> mapPairs) {
     QuantLib::ext::shared_ptr<Convention> conv = conventions_.at(indexName);
-    LegData floatingLeg = buildLeg(conv, notional, maturity, isLong);
+    LegData floatingLeg = buildLeg(conv, notional, maturity, "0D", isLong);
     vector<double> capRates(0, 0);
     vector<double> floorRates(0, 0);
     string longShort = isLong ? "Long" : "Short";
@@ -353,7 +355,7 @@ void TradeGenerator::buildEquitySwap(string equityCurveId, string returnType, Re
                                      std::map<string, string> mapPairs) {
     auto convention = conventions_.at(indexId);
     string indexName;
-    LegData floatingLeg = buildLeg(convention, notional, maturity, !firstLegPays);
+    LegData floatingLeg = buildLeg(convention, notional, maturity, "0D", !firstLegPays);
     QuantLib::ext::shared_ptr<IborIndex> iborIndex;
     Real dividendFactor = 1;
     tryParseIborIndex(indexName, iborIndex);
@@ -500,7 +502,7 @@ LegData TradeGenerator::buildCPILeg(QuantLib::ext::shared_ptr<Convention> conv, 
 }
 
 LegData TradeGenerator::buildOisLeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity,
-                                    bool isPayer, std::map<string, string> mapPairs) {
+                                    string start, bool isPayer, std::map<string, string> mapPairs) {
     QuantLib::ext::shared_ptr<OisConvention> oisConv = QuantLib::ext::dynamic_pointer_cast<OisConvention>(conv);
     string indexName = to_string(oisConv->indexName());
     QuantLib::ext::shared_ptr<IborIndex> oisIndex;
@@ -509,7 +511,7 @@ LegData TradeGenerator::buildOisLeg(QuantLib::ext::shared_ptr<Convention> conv, 
     string rule = to_string(oisConv->rule());
     string floatFreq = to_string(oisIndex->tenor());
     Date qlStartDate = today_ + oisConv->spotLag();
-    string startDate = to_string(qlStartDate);
+    string startDate = getEndDate(start, to_string(qlStartDate), oisConv->fixedCalendar());
     
     string endDate = getEndDate(maturity, startDate, oisConv->fixedCalendar());
     Natural spotDays = oisConv->spotLag();
@@ -525,7 +527,7 @@ LegData TradeGenerator::buildOisLeg(QuantLib::ext::shared_ptr<Convention> conv, 
 }
 
 LegData TradeGenerator::buildIborLeg(QuantLib::ext::shared_ptr<Convention> conv, Real notional, string maturity,
-                                     bool isPayer, std::map<string, string> mapPairs) {
+                                     string start, bool isPayer, std::map<string, string> mapPairs) {
     QuantLib::ext::shared_ptr<IRSwapConvention> iborConv = QuantLib::ext::dynamic_pointer_cast<IRSwapConvention>(conv);
     QuantLib::ext::shared_ptr<IborIndex> iborIndex;
     string indexName = to_string(iborConv->indexName());
@@ -543,7 +545,7 @@ LegData TradeGenerator::buildIborLeg(QuantLib::ext::shared_ptr<Convention> conv,
     {
         floatFreq = to_string(floatFreqEnum);
     }
-    string startDate = to_string(today_);
+    string startDate = getEndDate(start, to_string(today_), iborConv->fixedCalendar());
     string endDate = getEndDate(maturity, startDate, iborConv->fixedCalendar());
     Natural spotDays = 2;
     string floatDC = to_string(iborConv->fixedDayCounter());
@@ -588,15 +590,16 @@ string TradeGenerator::getEndDate(string maturity, string startDate, Calendar ca
     }
 }
 
-LegData TradeGenerator::buildLeg(ext::shared_ptr<Convention> conv, Real notional, string maturity, bool isPayer) {
+LegData TradeGenerator::buildLeg(ext::shared_ptr<Convention> conv, Real notional, string maturity, string start,
+                                 bool isPayer) {
     ore::data::LegData leg;
     switch (conv->type()) {
     case Convention::Type::OIS: {
-        leg = buildOisLeg(conv, notional, maturity, isPayer);
+        leg = buildOisLeg(conv, notional, maturity, start, isPayer);
         break;
     }
     case Convention::Type::Swap: {
-        leg = buildIborLeg(conv, notional, maturity, isPayer);
+        leg = buildIborLeg(conv, notional, maturity, start, isPayer);
         break;
     }
     default:
