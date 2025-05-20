@@ -110,7 +110,18 @@ map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurve
             auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
                 refDataManager_->getData(CreditIndexReferenceDatum::TYPE, curveID_));
 
-            std::set<std::string> constituentCurves{curveID_, curveID_ + "_3Y", curveID_ + "_5Y"};
+            std::set<std::string> constituentCurves{curveID_};
+            Date asof = Settings::instance().evaluationDate();
+            for (const auto& term : {3 * Years, 5 * Years}) {
+                if (startDate_ != Date()) {
+                    auto indexMat = QuantLib::cdsMaturity(startDate_, term, DateGeneration::CDS2015);
+                    if (indexMat > asof) {
+                        constituentCurves.insert(curveID_ + "_" + to_string(term));
+                    }
+                } else {
+                    constituentCurves.insert(curveID_ + "_" + to_string(term));
+                }
+            }
             for (const auto& c : crd->constituents()) {
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
