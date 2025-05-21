@@ -553,6 +553,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         parseReal(engineParameter("IndicatorSmoothingForValues", getModelEngineQualifiers(), false, "0.0"));
     indicatorSmoothingForDerivatives_ =
         parseReal(engineParameter("IndicatorSmoothingForDerivatives", getModelEngineQualifiers(), false, "0.2"));
+    referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -561,7 +562,6 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     // default values for parameters that are only read for specific models
 
     fullDynamicIr_ = false;
-    referenceCalibrationGrid_ = "";
     bootstrapTolerance_ = 0.0;
     infModelType_ = "DK";
 
@@ -571,7 +571,6 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
 
     if (modelParam_ == "GaussianCam") {
         fullDynamicIr_ = parseBool(modelParameter("FullDynamicIr", getModelEngineQualifiers()));
-        referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
         bootstrapTolerance_ = parseReal(engineParameter("BootstrapTolerance", getModelEngineQualifiers()));
         infModelType_ = modelParameter("InfModelType", getModelEngineQualifiers(), false, "DK");
     } else if (modelParam_ == "LocalVolAndreasenHuge") {
@@ -1307,13 +1306,15 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
         QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
     }
 
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "LocalVol", std::map<std::string, std::vector<Real>>{}, params_);
+        iborFallbackConfig, "LocalVol", filteredStrikes, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1326,13 +1327,16 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(const std::string& id, const Ib
     else {
         QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
     }
+
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "LocalVol", std::map<std::string, std::vector<Real>>{}, params_);
+        iborFallbackConfig, "LocalVol", filteredStrikes, params_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
