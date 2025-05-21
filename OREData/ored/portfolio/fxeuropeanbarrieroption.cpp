@@ -226,10 +226,12 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(digitalBuilder);
             vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
             vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
             setSensitivityTemplate(*fxOptBuilder);
             addProductModelEngine(*fxOptBuilder);
+            digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            setSensitivityTemplate(*fxDigitalOptBuilder);
+            addProductModelEngine(*fxDigitalOptBuilder);
             
         } else {
             // Payoff - European Option with strike K
