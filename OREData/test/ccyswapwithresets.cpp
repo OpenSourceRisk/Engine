@@ -355,8 +355,8 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsStartDatePrice) {
 
     // check CCYswapReset NPV
     BOOST_TEST_MESSAGE("CcySwapReset Price = " << swap2->instrument()->NPV() << " " << swap2->npvCurrency()
-                                               << ". BBG Price = " << npvCCYswapReset << " USD");
-    // check if difference between ore and bbg NPV does not exceed 250 USD (on 10M notional)
+                                               << ". Default Price = " << npvCCYswapReset << " USD");
+    // check if difference between ore and default NPV does not exceed 0.5 USD (on 10M notional)
     BOOST_CHECK_CLOSE(std::abs(swap2->instrument()->NPV() - npvCCYswapReset), 0.5, 5);
 
     // check if sum(XNL) on resetting leg is zero

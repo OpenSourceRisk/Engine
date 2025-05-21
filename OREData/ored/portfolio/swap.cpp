@@ -84,9 +84,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         }
         // We want to activate the FxReset when we hit the start date
         if (!legData_[i].resetStartDate().empty() && today >= parseDate(legData_[i].resetStartDate())) {
-            string fixingTest = legData_[i].fxIndex();
-            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), fixingTest);
-            auto indexFixing = market->fxIndex(fixingTest);
+            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
+            auto indexFixing = market->fxIndex(legData_[i].fxIndex());
             Real resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
             legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
         }
