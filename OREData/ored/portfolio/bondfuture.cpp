@@ -45,8 +45,6 @@ void populateFromBondFutureReferenceData(string& currency, string& contractMonth
                                          string& lastDelivery, vector<string>& secList,
                                          const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
     DLOG("populating data bondfuture from reference data");
-    // checked before
-    // QL_REQUIRE(bondFutureRefData, "populateFromBondFutureReferenceData(): empty bondfuture reference datum given");
     if (currency.empty()) {
         currency = bondFutureRefData->bondFutureData().currency;
         TLOG("overwrite currency with '" << currency << "'");
@@ -210,26 +208,27 @@ void BondFuture::fromXML(XMLNode* node) {
     longShort_ = XMLUtils::getChildValue(bondFutureNode, "LongShort", true);
 
     secList_.clear();
-    XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
-    if (basket) {
-        for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child;
-             child = XMLUtils::getNextSibling(child))
-            secList_.push_back(XMLUtils::getNodeValue(child));
-    }
-    currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false);
-    contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false);
-    deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false);
-    fairPrice_ = XMLUtils::getChildValue(bondFutureNode, "FairPrice", false);
-    settlement_ = XMLUtils::getChildValue(bondFutureNode, "Settlement", false);
-    settlementDirty_ = XMLUtils::getChildValue(bondFutureNode, "SettlementDirty", false);
-    rootDate_ = XMLUtils::getChildValue(bondFutureNode, "RootDate", false);
-    expiryBasis_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryBasis", false);
-    settlementBasis_ = XMLUtils::getChildValue(bondFutureNode, "SettlementBasis", false);
-    expiryLag_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryLag", false);
-    settlementLag_ = XMLUtils::getChildValue(bondFutureNode, "SettlementLag", false);
+    // only via reference data allowed
+    // XMLNode* basket = XMLUtils::getChildNode(bondFutureNode, "DeliveryBasket");
+    // if (basket) {
+    //     for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child;
+    //          child = XMLUtils::getNextSibling(child))
+    //         secList_.push_back(XMLUtils::getNodeValue(child));
+    // }
+    // currency_ = XMLUtils::getChildValue(bondFutureNode, "Currency", false);
+    // contractMonth_ = XMLUtils::getChildValue(bondFutureNode, "ContractMonth", false);
+    // deliverableGrade_ = XMLUtils::getChildValue(bondFutureNode, "DeliverableGrade", false);
+    // fairPrice_ = XMLUtils::getChildValue(bondFutureNode, "FairPrice", false);
+    // settlement_ = XMLUtils::getChildValue(bondFutureNode, "Settlement", false);
+    // settlementDirty_ = XMLUtils::getChildValue(bondFutureNode, "SettlementDirty", false);
+    // rootDate_ = XMLUtils::getChildValue(bondFutureNode, "RootDate", false);
+    // expiryBasis_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryBasis", false);
+    // settlementBasis_ = XMLUtils::getChildValue(bondFutureNode, "SettlementBasis", false);
+    // expiryLag_ = XMLUtils::getChildValue(bondFutureNode, "ExpiryLag", false);
+    // settlementLag_ = XMLUtils::getChildValue(bondFutureNode, "SettlementLag", false);
 
-    lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false);
-    lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false);
+    // lastTrading_ = XMLUtils::getChildValue(bondFutureNode, "LastTradingDate", false);
+    // lastDelivery_ = XMLUtils::getChildValue(bondFutureNode, "LastDeliveryDate", false);
 }
 
 XMLNode* BondFuture::toXML(XMLDocument& doc) const {
@@ -239,24 +238,25 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
 
-    XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
-    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
-    XMLUtils::addChild(doc, node, "FairPrice", fairPrice_);
-    XMLUtils::addChild(doc, node, "Settlement", settlement_);
-    XMLUtils::addChild(doc, node, "SettlementDirty", settlementDirty_);
-    XMLUtils::addChild(doc, node, "RootDate", rootDate_);
-    XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis_);
-    XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis_);
-    XMLUtils::addChild(doc, node, "ExpiryLag", expiryLag_);
-    XMLUtils::addChild(doc, node, "SettlementLag", settlementLag_);
+    // only via reference data allowed
+    // XMLUtils::addChild(doc, node, "Currency", currency_);
+    // XMLUtils::addChild(doc, node, "ContractMonth", contractMonth_);
+    // XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade_);
+    // XMLUtils::addChild(doc, node, "FairPrice", fairPrice_);
+    // XMLUtils::addChild(doc, node, "Settlement", settlement_);
+    // XMLUtils::addChild(doc, node, "SettlementDirty", settlementDirty_);
+    // XMLUtils::addChild(doc, node, "RootDate", rootDate_);
+    // XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis_);
+    // XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis_);
+    // XMLUtils::addChild(doc, node, "ExpiryLag", expiryLag_);
+    // XMLUtils::addChild(doc, node, "SettlementLag", settlementLag_);
 
-    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
-    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
+    // XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading_);
+    // XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery_);
 
-    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
-    for (auto& sec : secList_)
-        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
+    // XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
+    // for (auto& sec : secList_)
+    //     XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
 
     return node;
 }
@@ -553,8 +553,9 @@ void BondFuture::populateFromBondFutureReferenceData(const ext::shared_ptr<Refer
     QL_REQUIRE(!contractName_.empty(), "BondFuture::populateFromBondReferenceData(): no contract name given");
 
     if (!referenceData || !referenceData->hasData(BondFutureReferenceDatum::TYPE, contractName_)) {
-        DLOG("could not get BondFutureReferenceDatum for name " << contractName_ << " leave data in trade unchanged");
-
+        // DLOG("could not get BondFutureReferenceDatum for name " << contractName_ << " leave data in trade
+        // unchanged");
+        QL_FAIL("could not get BondFutureReferenceDatum for name " << contractName_ << " trade build failed");
     } else {
         auto bondFutureRefData = ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
             referenceData->getData(BondFutureReferenceDatum::TYPE, contractName_));

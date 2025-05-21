@@ -87,11 +87,11 @@ protected:
 private:
     // mandatory information
     std::string contractName_;
-    std::string currency_;
     double contractNotional_;
     std::string longShort_;
 
-    // can be in reference data
+    // shall be in reference data
+    std::string currency_;
     std::vector<std::string> secList_; // list of DeliveryBasket securities
     std::string deliverableGrade_;     // futureType differentiating the underlying -> USD conversion factor derivation
     std::string lastTrading_;          // expiry

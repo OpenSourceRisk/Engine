@@ -6,7 +6,7 @@ an underlying bond at a future point in time (expiry) at an agreed price (strike
 underlying bond is selected by the contract seller picked from a list of eligible securities (DeliveryBasket). By its nature 
 this particular security is called the "cheapest to deliver" (CTD). 
 
-The bondfuture instrument is on ore object of its own, but employs the bond forward instrument in the background and in turn uses the bond forward pricing engine. 
+The bondfuture instrument is an ore object of its own, but employs the bond forward instrument in the background and in turn uses the bond forward pricing engine. 
 However, the premium data segment is left blank and thus unused. At the outset, the bondfuture can specify a set of deliverable securities, 
 from which one is chosen, then the instrument "turns" into a bond forward referencing one specific underlying – the CTD bond.
 
@@ -16,19 +16,14 @@ as a strike (true) or as the final value (false). Obviously this spread differs 
 A bondfuture is set up using a {\tt BondFutureData} block as shown below and the trade type is \emph{BondFuture}. 
 
 \begin{itemize}
-  \item ContractName: The id identifying the future contract. The ContractName is also used to identify which bond future reference datum to take. 
-  This defines the security specific spread to be used for pricing.
+  \item ContractName: This ID defines both: which bond future reference datum to take and security specific spread to be used for pricing.
   \item ContractNotional: The notional of the position, expressed in the currency of the bond. 
   \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{true}) or short (\emph{false}) position.
 \end{itemize}
 
 
-{\tt ContractName}, {\tt ContractNotional} and {\tt LongShort} are mandatory fields for the "short" version.
 As one can see from the below example the trade exploits the reference data to fully specify the trade. 
-See the combination of listing \ref{lst:bondfuture_with_refdata} and listing \ref{lst:bondfuturerefdata}.
-
-For the long version, the bond future details are inlined in the trade as shown in listing \ref{lst:bondfuture_explicit}.
-The next set of fields can be provided explicitly within the trade (long version) or can be read from the bond future reference datum (short version). 
+See the combination of listing \ref{lst:bondfuturetradedata} and listing \ref{lst:bondfuturerefdata}.
 
 \begin{itemize}
   \item Currency: The currency of the notional, and thus of the future. Allowable values: See Table \ref{tab:currency}.
@@ -73,11 +68,10 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
       <ContractName>with_ref</ContractName>
       <ContractNotional>1000000</ContractNotional>
       <LongShort>L</LongShort>
-      <FairPrice>false</FairPrice>
     </BondFutureData>
   \end{minted}
   \caption{BondFutureData}
-  \label{lst:bondfuture_with_refdata}
+  \label{lst:bondfuturetradedata}
 \end{listing}
 
 
@@ -86,6 +80,7 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
   \begin{minted}[fontsize=\footnotesize]{xml}
     <BondFutureReferenceData>
       <Currency>USD</Currency>
+      <FairPrice>false</FairPrice>
       <ContractMonth>Mar</ContractMonth>
       <DeliverableGrade>ZN</DeliverableGrade>
       <RootDate>End</RootDate>
@@ -109,35 +104,6 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
   \label{lst:bondfuturerefdata}
 \end{listing}
 
-
-\begin{listing}[H]
-  %\hrule\medskip
-  \begin{minted}[fontsize=\footnotesize]{xml}
-    <BondFutureData>
-      <ContractName>explicit</ContractName>
-      <ContractNotional>1000000</ContractNotional>
-      <LongShort>L</LongShort>
-      <FairPrice>true</FairPrice>
-      <Currency>USD</Currency>
-      <DeliverableGrade>ZN</DeliverableGrade>
-      <LastTradingDate>2025-03-20</LastTradingDate>
-      <LastDeliveryDate>2025-03-31</LastDeliveryDate>
-      <DeliveryBasket>
-        <SecurityId>ISIN:US91282CDJ71</SecurityId>
-        <SecurityId>ISIN:US91282CEP23</SecurityId>
-        <SecurityId>ISIN:US91282CLM19</SecurityId>
-        <SecurityId>ISIN:US91282CLU35</SecurityId>
-        <SecurityId>ISIN:US91282CMC28</SecurityId>
-        <SecurityId>ISIN:US91282CMK44</SecurityId>
-        <SecurityId>ISIN:US91282CMM00</SecurityId>
-        <SecurityId>ISIN:US91282CMR96</SecurityId>
-      </DeliveryBasket>
-    </BondFutureData>
-  \end{minted}
-  \caption{BondFutureData Explicit}
-  \label{lst:bondfuture_explicit}
-\end{listing}
-
 \subsubsection*{Derivation of the LastTradingDate and LastDeliveryDate}
 The exampe with the reference data block above, i.e. listing \ref{lst:bondfuturerefdata}, shows how to set up a future referencing an USD 10-Year-T-Note. 
 The rules to derive last trading and last delivery date are taken from the CME Group primer "Understanding Treasury Futures". These are:
@@ -150,8 +116,7 @@ Our starting point, i.e. the root date, is the 'Last business day of the deliver
 We achieved this by setting {\tt ContractMonth} = \emph{March} and {\tt RootDate} = \emph{End}.
 From this root we can define the settlement date (last delivery) by {\tt SettlementBasis} = \emph{Root} in combination with {\tt SettlementLag} = \emph{0D}.
 From the settlement, we can define the expiry date (last trading) by {\tt ExpiryBasis} = \emph{Settlement} and {\tt ExpiryLag} = \emph{-7D}.
-From this we are getting the Last Trading Date to be the 20th of March and the Last Delivery Date to be the 31st of March, 
-which is the same as in the long version, i.e. listing \ref{lst:bondfuture_explicit}.
+From this we are getting the Last Trading Date to be the 20th of March and the Last Delivery Date to be the 31st of March.
 
 \subsubsection*{CTD Selection}
 The selection of the CTD bond is implemented in ORE as described in Hull's "Options, Futures and Other Derivatives":
