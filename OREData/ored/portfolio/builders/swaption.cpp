@@ -131,8 +131,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
 
-    //const Date& latest = *std::max_element(maturities.begin(), maturities.end());
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities[0]) * shiftHorizon;
+    const Date& latest = *std::max_element(maturities.begin(), maturities.end());
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, latest) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
