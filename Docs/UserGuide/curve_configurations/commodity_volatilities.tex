@@ -340,10 +340,10 @@ The allowable supported values are \lstinline!AtmSpot!, \lstinline!AtmFwd! and \
 This is only needed if the \lstinline!AtmType! is \lstinline!AtmDeltaNeutral!.
 
 \item \lstinline!PutDeltas!:
-A comma separated list of one or more put deltas to use in the volatility surface. Note that the put deltas should be given without a sign e.g.\ \lstinline!<PutDeltas>0.10,0.20,0.30,0.40</PutDeltas>! would be an example.
+A comma separated list of one or more put deltas to use in the volatility surface. Note that the put deltas should be given without a sign e.g.\ \lstinline!<PutDeltas>0.10,0.20,0.30,0.40</PutDeltas>! would be an example. The delta should match exactly the quote i.e 0.1 != 0.10
 
 \item \lstinline!CallDeltas!:
-A comma separated list of one or more call deltas to use in the volatility surface.
+A comma separated list of one or more call deltas to use in the volatility surface. The delta should match exactly the quote i.e 0.1 != 0.10
 
 \item \lstinline!Expiries!:
 A comma separated list of one or more expiries (e.g. 1W, 1M) to load. Supports using the single wildcard value \lstinline!*!.
