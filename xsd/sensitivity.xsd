@@ -42,6 +42,7 @@
       <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" maxOccurs="1" minOccurs="0"/>
       <xs:element type="currencyCode" name="OtherCurrency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="RateComputationPeriod" maxOccurs="1" minOccurs="0"/>
       <xs:element name="Conventions" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>

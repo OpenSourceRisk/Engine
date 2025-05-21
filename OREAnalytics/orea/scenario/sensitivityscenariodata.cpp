@@ -598,6 +598,10 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
             if (par) {
                 data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
+                XMLNode* rateComputationNode = XMLUtils::getChildNode(par, "RateComputationPeriod");
+                if(rateComputationNode){
+                    data.rateComputationPeriod = ore::data::parsePeriod(XMLUtils::getNodeValue(rateComputationNode));
+                }
             }
             capFloorVolShiftData_[key] = QuantLib::ext::make_shared<CapFloorVolShiftParData>(data);
         }
@@ -1006,6 +1010,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
                 XMLNode* parNode = doc.allocNode("ParConversion");
                 if (!data->discountCurve.empty())
                     XMLUtils::addChild(doc, parNode, "DiscountCurve", data->discountCurve);
+                if (data->rateComputationPeriod.has_value())
+                    XMLUtils::addChild(doc, parNode, "RateComputationPeriod", data->rateComputationPeriod.value());
                 XMLUtils::appendNode(child, parNode);
             }
         }

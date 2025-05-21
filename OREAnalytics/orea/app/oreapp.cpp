@@ -1306,6 +1306,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setVarBreakDown(parseBool(tmp));
 
+        tmp = params_->get("historicalSimulationVar", "tradePnl", false);
+            if (tmp != "")
+                setTradePnl(parseBool(tmp));
+
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
             setPortfolioFilter(tmp);
