@@ -160,7 +160,7 @@ public:
 
     virtual bool isExpired(const Date& d) const {
         ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-	return detail::simple_event(maturity_).hasOccurred(d, inc);
+        return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
     }
 
     const string& issuer() const { return issuer_; }

@@ -334,7 +334,6 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             if (level > strike) {
                 qlInstrument->add(vanillaK);
                 additionalData_["2_type"] = string("Put(K)");
-
             } else {
                 qlInstrument->add(vanillaB);
                 qlInstrument->add(digital);

@@ -369,7 +369,7 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
         if (strippedSecId.empty())
             strippedSecId = securityId;
 
-        if (referenceData->hasData(b.first, strippedSecId)) {
+        if (referenceData && referenceData->hasData(b.first, strippedSecId)) {
             auto tmp = b.second->build(engineFactory, referenceData, securityId);
             tmp.builderLabel = b.first;
             return tmp;

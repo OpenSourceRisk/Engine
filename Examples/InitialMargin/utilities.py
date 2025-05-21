@@ -4,7 +4,30 @@ import os
 import pandas as pd
 import numpy as np
 import csv
+import datetime
+from dateutil import parser
 from lxml import etree as et
+
+def getSamples(simulationXml):
+    tree = et.parse(simulationXml)
+    root = tree.getroot()
+    samples = int(root.find("Parameters/Samples").text.replace(' ', ''))
+    return samples
+    
+def getAsOfDate(oreXml):
+    doc = et.parse(oreXml)
+    nodes = doc.xpath('//ORE/Setup/Parameter[@name="asofDate"]')
+    asof = nodes[0].text
+    return asof
+
+def getTimeDifference(fromDateString, toDateString):   
+    d0 = parser.parse(fromDateString) 
+    d1 = parser.parse(toDateString) 
+    #print("d0 =", d0)
+    #print("d1 =", d1)
+    delta = d1 - d0
+    delta_fraction = delta.days / 365.25
+    return delta_fraction
 
 def scenarioToMarket(simulationXml, scenarioFile, filterSample, outputDir):
 
@@ -217,6 +240,14 @@ def scenarioToFixings(gzFileName, asofDates, filterSample, outputDir):
 
     return numeraireData
 
+
+def num(asof, numeraireData):
+    for index, row in numeraireData.iterrows():
+        d = row["#asofDate"]
+        n = float(row["Numeraire"])
+        if d == asof:
+            return n
+
 def rawCubeFilter(rawCubeFileName, filterSample):
 
     print("read raw cube file:", rawCubeFileName)
@@ -240,21 +271,44 @@ def rawCubeFilter(rawCubeFileName, filterSample):
 
     return cubeData
 
+def netCubeFilter(cubeFileName, nettingSetId, filterSample):
+
+    print("read net cube file:", cubeFileName)
+    data = pd.read_csv(cubeFileName)
+
+    columns = ["Id", "Date", "NPV"]
+    rowlist = []
+
+    for index, row in data.iterrows():
+
+        nid = row["#Id"]
+        date = row["Date"]
+        sample = row["Sample"]
+        depth = row["Depth"]
+        value = float(row["Value"])
+
+        if depth == 0 and sample == filterSample and nid == nettingSetId:
+            rowlist.append([nid, date, '{:.6f}'.format(value)])
+
+    cubeData = pd.DataFrame(rowlist, columns=columns)
+
+    return cubeData
+
 def npvComparison(undiscounted, discounted, numeraires):
 
     result = pd.concat([undiscounted, discounted, numeraires], axis=1)
 
-    columns = ["TradeId", "Date", "NPV(Base)", "NPV(Base)/Numeraire", "NPV", "Difference", "DifferenceWithoutDiscounting"]
+    columns = ["Id", "Date", "NPV(Base)", "NPV(Base)/Numeraire", "NPV", "Difference", "DifferenceWithoutDiscounting"]
     rowlist = []
     
     for index, row in result.iterrows():
         undisc = float(row["NPV(Base)"])
         disc = float(row["NPV"])
-        num = float(row["Numeraire"])
         date = row["asofDate"]
-        trade = row["TradeId"]
+        nid = row["Id"]
+        num = float(row["Numeraire"])
         
-        rowlist.append([trade, date,
+        rowlist.append([nid, date,
                         '{:.6f}'.format(undisc),
                         '{:.6f}'.format(undisc/num),
                         '{:.6f}'.format(disc),
@@ -264,3 +318,33 @@ def npvComparison(undiscounted, discounted, numeraires):
     comparisonData = pd.DataFrame(rowlist, columns=columns)
 
     return comparisonData
+
+def expectedSimmEvolution(simmCubeFile, outputFile):
+    print("read simm cube file:", simmCubeFile)
+    data = pd.read_csv(simmCubeFile)
+
+    samples = data["Sample"].unique()
+    
+    print ("number of samples:", len(samples))
+    print ("unique samples:", samples)
+    
+    print("add dataframe for sample", 0)
+    df = data[data["Sample"] == samples[0]]    
+    df = df.drop("Sample", axis=1)
+    df = df.set_index(["AsOfDate","Time","Currency","SimmSide","Portfolio"])
+    #print(df)
+    
+    for i in range(1,len(samples)):
+        print("add dataframe for sample", i)
+        df2 = data[data["Sample"] == samples[i]]
+        df2 = df2.drop("Sample", axis=1)
+        df2 = df2.set_index(["AsOfDate","Time","Currency","SimmSide","Portfolio"])
+        df = df + df2
+        #print(df)
+    
+    df["InitialMargin"] = df["InitialMargin"] / len(samples)
+
+    #print()
+    #print(df)
+
+    df.to_csv(outputFile, sep=',')

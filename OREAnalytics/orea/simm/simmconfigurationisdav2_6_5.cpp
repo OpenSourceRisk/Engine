@@ -101,10 +101,10 @@ SimmConfiguration_ISDA_V2_6_5::SimmConfiguration_ISDA_V2_6_5(const QuantLib::ext
 
     // Set up the correct concentration threshold getter
     if (mporDays == 10) {
-        simmConcentration_ = boost::make_shared<SimmConcentration_ISDA_V2_6_5>(simmBucketMapper_);
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V2_6_5>(simmBucketMapper_);
     } else {
         // SIMM:Technical Paper, Section I.4: "The Concentration Risk feature is disabled"
-        simmConcentration_ = boost::make_shared<SimmConcentrationBase>();
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationBase>();
     }
 
     // clang-format off

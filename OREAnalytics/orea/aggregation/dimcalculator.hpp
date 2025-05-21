@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
@@ -67,8 +67,8 @@ public:
         Real quantile = 0.99,
         //! VaR holding period in calendar days
         Size horizonCalendarDays = 14,
-	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
+        //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
 
     virtual ~DynamicInitialMarginCalculator() {}
 
@@ -83,6 +83,10 @@ public:
 
     //! DIM evolution report
     virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport) const;
+
+    //! DIM distribution report
+    virtual void exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize = 50,
+                                       const Real coveredStdDevs = 5.0) const;
 
     //! DIM by nettingSet, date, sample returned as a regular NPV cube
     const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }

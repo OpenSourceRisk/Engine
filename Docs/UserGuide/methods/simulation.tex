@@ -630,15 +630,15 @@ The AMC pricing engines perform a T0 pricing and - as a by-product - can be used
 corresponding engine builder is supplied, see Example 39 (Exposure Simulation using American Monte Carlo).
 
 In addition the AMC pricing engines perform the necessary calculations to yield conditional NPVs on the given global
-simulation grid. How these calculations are performed is completely the responsibility of the pricing engines, altough
+simulation grid. How these calculations are performed is completely the responsibility of the pricing engines, although
 some common framework for many trade types is given by a base engine, see \ref{sec:amc_base_engine}. This way the
-approximation of conditional NPVs on the simulation grid can be taylored to each product and also each single trade,
+approximation of conditional NPVs on the simulation grid can be tailored to each product and also each single trade,
 with regards to
 
 \begin{enumerate}
-\item the number of traning paths and the required date grid for the training (e.g. containing all relevant coupon and
+\item the number of training paths and the required date grid for the training (e.g. containing all relevant coupon and
   exercise event dates of a trade)
-\item the order and type of regressoin basis functions to be used
+\item the order and type of regression basis functions to be used
 \item the choice of the regressor (e.g. a TaRN might require a regressor augmented by the accumulated coupon amount)
 \end{enumerate}
 
@@ -660,7 +660,7 @@ $b$ and $X_{c,b}(t)$ is the FX rate at time $t$ converting from $c$ to $b$.
 The technical criterion for a trade to be processed within the AMC valuation is engine is that a) it can be built
 against the AMC engine factory described above and b) it provides an additional result \verb+amcCalculator+. If a trade
 does not meet these criteria it is simulated using the classic valuation engine. The logic that does this is located in
-the overide of the method \verb+OREAppPlus::generateNPVCube()+.
+the override of the method \verb+OREAppPlus::generateNPVCube()+.
 
 The AMC valuation engine can also populate an aggregation scenario data instance. This is done only if necessary,
 i.e. only if no classic simulation is performed anyway. The numeraire and fx spot values produced by the AMC valuation

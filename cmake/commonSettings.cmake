@@ -5,11 +5,6 @@ endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
-option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
-option(MSVC_PARALLELBUILD "Use flag /MP" ON)
-
-option(QL_USE_PCH OFF)
-
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
 
@@ -54,6 +49,11 @@ endif()
 # set compiler macro if CUDA is enabled
 if (ORE_ENABLE_CUDA)
   add_compile_definitions(ORE_ENABLE_CUDA)
+endif()
+
+# set compiler macro if ORE_PYTHON_INTEGRATION is set
+if (ORE_PYTHON_INTEGRATION)
+  add_compile_definitions(ORE_PYTHON_INTEGRATION)
 endif()
 
 # set compiler macro if zlib is enabled

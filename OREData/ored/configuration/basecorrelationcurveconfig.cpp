@@ -19,6 +19,8 @@
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/utilities/credit.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -28,10 +30,11 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
+BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager)
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
       quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()),
-      calibrateConstituentsToIndexSpread_(false), useAssumedRecovery_(false) {}
+      calibrateConstituentsToIndexSpread_(false), useAssumedRecovery_(false), refDataManager_(refDataManager) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
@@ -41,14 +44,15 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     const std::vector<MarketDatum::QuoteType>& quoteTypes, double indexSpread, const std::string& currency,
     const bool calibrateConstituentsToIndexSpread, bool useAssumedRecovery,
     const std::map<std::string, std::vector<double>>& rrGrids,
-    const std::map<std::string, std::vector<double>>& rrProbs)
+    const std::map<std::string, std::vector<double>>& rrProbs,
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager)
     : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms),
       settlementDays_(settlementDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
       dayCounter_(dayCounter), extrapolate_(extrapolate), quoteName_(quoteName.empty() ? curveID : quoteName),
       startDate_(startDate), indexTerm_(indexTerm), rule_(rule), adjustForLosses_(adjustForLosses),
       quoteTypes_(quoteTypes), indexSpread_(indexSpread), currency_(currency),
       calibrateConstituentsToIndexSpread_(calibrateConstituentsToIndexSpread), useAssumedRecovery_(useAssumedRecovery),
-      rrGrids_(rrGrids), rrProbs_(rrProbs) {
+      rrGrids_(rrGrids), rrProbs_(rrProbs), refDataManager_(refDataManager) {
     QL_REQUIRE(!quoteTypes_.empty(), "Required at least one valid quote type");
     for (const auto& quoteType : quoteTypes) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE,
@@ -87,6 +91,54 @@ void addBaseCorrelationQuotes(vector<string>& quotes, const std::string& quoteNa
         // Add legacy quote name
         quotes.push_back("CDS_INDEX/" + suffix + "/" + dp);
     }
+}
+
+set<string> BaseCorrelationCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
+    auto rci = requiredCurveIds();
+    static const set<string> empty;
+    auto r = rci.find(curveType);
+    if (r == rci.end())
+        return empty;
+    else
+        return r->second;
+}
+
+map<CurveSpec::CurveType, set<string>> BaseCorrelationCurveConfig::requiredCurveIds() const {
+    auto rci = CurveConfig::requiredCurveIds();
+    if (hasQuoteTypePrice() && refDataManager_) {
+        if (refDataManager_->hasData(CreditIndexReferenceDatum::TYPE, curveID_)) {
+            auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+                refDataManager_->getData(CreditIndexReferenceDatum::TYPE, curveID_));
+
+            std::set<std::string> constituentCurves{curveID_};
+            Date asof = Settings::instance().evaluationDate();
+            for (const auto& term : {3 * Years, 5 * Years}) {
+                if (startDate_ != Date()) {
+                    auto indexMat = QuantLib::cdsMaturity(startDate_, term, DateGeneration::CDS2015);
+                    if (indexMat > asof) {
+                        constituentCurves.insert(curveID_ + "_" + to_string(term));
+                    }
+                } else {
+                    constituentCurves.insert(curveID_ + "_" + to_string(term));
+                }
+            }
+            for (const auto& c : crd->constituents()) {
+                const double weight = c.weight();
+                if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
+                    constituentCurves.insert(c.name());
+                    auto ar = assumedRecovery(c.name());
+                    if (ar != Null<double>()) {
+                        constituentCurves.insert(indexTrancheSpecificCreditCurveName(c.name(), ar));
+                    }
+                } else {
+                    DLOG("Skipping curve " << c.name() << ", having zero weight");
+                }
+            }
+            for (const auto& c : constituentCurves)
+                rci[CurveSpec::CurveType::Default].insert(c);
+        }
+    }
+    return rci;
 }
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {

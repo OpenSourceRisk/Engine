@@ -9,9 +9,12 @@ jobs:
     steps:
     - name: Checkout ORE
       uses: actions/checkout@v4
-    - name: get QuantLib
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Install Boost
       run: |
         curl -O -L https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
@@ -19,6 +22,10 @@ jobs:
         cd boost_1_84_0
         ./bootstrap.sh
         ./b2 toolset=clang-darwin target-os=darwin architecture=x86 cxxflags="-arch x86_64" cflags="-arch x86_64" linkflags="-arch x86_64" abi=sysv binary-format=mach-o install
+    - name: Install Swig
+      run: |
+        brew install swig
+        swig -version
     - name: Build ORE CMake
       run: |
         mkdir build
@@ -26,11 +33,6 @@ jobs:
         cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64 -DORE_USE_ZLIB=ON -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DORE_BUILD_SWIG=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . -j4
         cmake --install .
-    - name: Save executables as artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ore-macos-x86
-        path: /Users/runner/work/Engine/Engine/build/App/ore
     - name: Wrap ORE-SWIG
       run: |
         pwd
@@ -39,7 +41,7 @@ jobs:
         cd ORE-SWIG/OREAnalytics-SWIG/SWIG
         chmod +x oreanalytics.i
         cd ..
-        cd Python
+        cd ..
         pwd
         python setup.py wrap
     - name: Build Wheels

@@ -21,9 +21,23 @@ jobs:
             boost-lib: 64
     steps:
     - uses: actions/checkout@v4
-    - name: get QuantLib and QuantLib-SWIG
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
+    - name: uninstall SWIG 4.1.1
       run: |
-        git submodule update --init --recursive
+        choco uninstall swig
+    - name: install SWIG (4.3.0)
+      run: |
+        curl -L -o swigwin-4.3.0.zip https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.0/swigwin-4.3.0.zip
+        Expand-Archive -Path swigwin-4.3.0.zip -DestinationPath $env:GITHUB_WORKSPACE
+        echo "$env:GITHUB_WORKSPACE\swigwin-4.3.0" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        cd swigwin-4.3.0
+        .\swig.exe -version
+    - name: check
+      run: |
+        swig -version
+        swig -help
     - name: zlib
       run: |
         $Url = "https://www.zlib.net/zlib131.zip"
@@ -63,24 +77,20 @@ jobs:
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }} -vcvars_ver=14.2 || exit 1
         cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -DZLIB_LIBRARY=C:\local\zlib-1.3.1\build\Release\zlib.lib -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2 -L
         cmake --build . -j 2 --verbose
-    - name: Save executables as artifacts
-      #if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
-      with:
-        name: ore-windows-${{ matrix.arch }}
-        path: D:\a\Engine\Engine\build\App\ore.exe
     - name: Wrap ORE-SWIG for Python Wheels
       run: |
         SET BOOST_INCLUDEDIR=C:\local\boost
         SET BOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
-        SET BOOST_LIB=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        SET BOOST_LIB64=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        SET BOOST_LIB32=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
         cd ${{ github.workspace }}\ORE-SWIG
         python setup.py wrap
     - name: Build ORE Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
         BOOST: C:\local\boost
-        BOOST_LIB: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        BOOST_LIB32: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
         ORE: ${{ github.workspace }}
         ORE_DIR: ${{ github.workspace }}
         ORE_STATIC_RUNTIME: 1
@@ -95,7 +105,7 @@ jobs:
         package-dir: ${{ github.workspace }}\ORE-SWIG
     - name: Save wheels as artifacts
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wheels-windows-${{ matrix.arch }}
         path: ./wheelhouse/*.whl

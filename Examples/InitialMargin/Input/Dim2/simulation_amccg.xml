@@ -3,9 +3,9 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
-      <!--<Grid>41,3M</Grid>-->
-      <!--<Grid>52,1D</Grid>-->
       <Grid>121,1M</Grid>
+      <!--<Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>-->
+      <TimeStepsPerYear>24</TimeStepsPerYear>
       <Calendar>EUR,USD</Calendar>
       <!--<Calendar>NullCalendar</Calendar>-->
       <Sequence>SobolBrownianBridge</Sequence>
@@ -20,6 +20,7 @@
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </Currencies>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
@@ -28,15 +29,18 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
+	  <!--
           <Calibrate>N</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
-          <!-- Hagan, HullWhite -->
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.00001</InitialValue>
-          <!--<ParamType>Piecewise</ParamType>-->
-          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
-          <!--<InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>-->
+          <InitialValue>0.00002</InitialValue>
+	  -->
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
@@ -63,14 +67,17 @@
         <DomesticCcy>EUR</DomesticCcy>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+	  <!--
           <Calibrate>N</Calibrate>
-          <!--<ParamType>Piecewise</ParamType>-->
-          <!--<InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>-->
-          <!--<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>-->
           <ParamType>Constant</ParamType>
 	  <TimeGrid/>
           <InitialValue>0.00001</InitialValue>
-        </Sigma>
+	  -->
+	</Sigma>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
@@ -91,6 +98,7 @@
 
     <Currencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </Currencies>
 
@@ -107,6 +115,10 @@
       <Index>EUR-EONIA</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EURIBOR-6M</Index>
+      <Index>GBP-SONIA</Index>
+      <Index>GBP-SONIA-3M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-LIBOR-6M</Index>
       <Index>USD-SOFR</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
@@ -129,6 +141,14 @@
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
         <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-10Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-30Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>USD-CMS-1Y</Name>
@@ -174,6 +194,7 @@
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
+        <Currency>GBP</Currency>
         <Currency>USD</Currency>
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
@@ -186,12 +207,14 @@
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
     
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
+      <Currency>GBP</Currency>
       <Currency>USD</Currency>
     </AggregationScenarioDataCurrencies>
 
@@ -200,6 +223,10 @@
       <Index>EUR-EONIA</Index>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EURIBOR-6M</Index>
+      <Index>GBP-SONIA</Index>
+      <Index>GBP-SONIA-3M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-LIBOR-6M</Index>
       <Index>USD-SOFR</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>

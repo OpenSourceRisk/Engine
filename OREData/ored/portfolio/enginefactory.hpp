@@ -113,9 +113,9 @@ public:
     const set<string>& tradeTypes() const { return tradeTypes_; }
 
     //! Return a configuration (or the default one if key not found)
-    const string& configuration(const MarketContext& key) {
-        if (configurations_.count(key) > 0) {
-            return configurations_.at(key);
+    const string& configuration(const MarketContext& key) const {
+        if (auto c = configurations_.find(key); c != configurations_.end()) {
+            return c->second;
         } else {
             return Market::defaultConfiguration;
         }
