@@ -176,6 +176,30 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
+
+\item ExerciseDates: This node contains child elements of type
+  \lstinline!ExerciseDate! or an \lstinline!ExerciseSchedule! node. 
+  
+  Options of style \emph{European}
+  require a single exercise date expressed by one
+  single \lstinline!ExerciseDate! child element. 
+  
+  \emph{American} style 
+  options must have exactly two  \lstinline!ExerciseDate! child
+  elements representing the start and end of the American exercise period.
+  
+  \emph{Bermudan} style options must have two or more \lstinline!ExerciseDate! child
+  elements. One can alternatively use \lstinline!ExerciseSchedule! to
+  specify the option exercise dates for \emph{Bermudan} style options.
+
+\item ExerciseSchedule [Optional]: This node can be provided instead of \lstinline!ExerciseDates! and
+should be specified in the same format as a Schedule (see Section \ref{ss:schedule_data}), e.g.\ for
+a list of Bermudan exercise dates.
+
 \item ExerciseFees [Optional]: This node contains child elements of type ExerciseFee. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either
 
@@ -209,22 +233,6 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
   the exercise date. Defaults to \emph{Unadjusted} if not given.
   
   Allowable values: See Table \ref{tab:convention} Roll Convention.
-
-\item ExerciseDates: This node contains child elements of type
-  \lstinline!ExerciseDate!. Options of style \emph{European} or
-  \emph{American} require a single exercise date expressed by one
-  single \lstinline!ExerciseDate! child element.  \emph{Bermudan}
-  style options must have two or more \lstinline!ExerciseDate! child
-  elements. One can alternatively use \lstinline!ExerciseSchedule! to
-  specify the option exercise dates.
-
-\item ExerciseSchedule [Optional]: This node can be provided instead of \lstinline!ExerciseDates! and
-should be specified in the same format as a Schedule (see Section \ref{ss:schedule_data}), e.g.\ for
-a list of Bermudan exercise dates.
-
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
-
-Allowable values:  See section \ref{ss:premiums}
 
 \item AutomaticExercise [Optional]: Used if the option expiry date is on the current date or in the past, and the payment date is in the future  - so that there still is an outstanding cashflow if the option was in the money on the expiry date. In this case, if AutomaticExercise is applied, the FX / Commodity / Equity fixing on the expiry date is used to automatically determine the payoff and thus whether the option was exercised or not.\\
 \medskip

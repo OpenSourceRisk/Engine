@@ -45,7 +45,9 @@ public:
     void setUpConfigurations() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
-        
+
+    void applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
+
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
         offsetScenario_ = offsetScenario;
     }
@@ -100,9 +102,10 @@ protected:
 
     bool runSimulation_ = false;
     bool runXva_ = false;
+    bool runPFE_ = false;
 };
 
-static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
+static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE", "PFE"};
 
 class XvaAnalytic : public Analytic {
 public:

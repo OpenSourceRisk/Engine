@@ -29,10 +29,11 @@
 #include <qle/models/modelbuilder.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <boost/any.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -46,8 +47,15 @@ class Model : public LazyObject {
 public:
     enum class Type { MC, FD };
 
-    struct McParams {
-        McParams() = default;
+    struct Params {
+        Params() = default;
+
+        // Shared parameters
+
+        QuantLib::SalvagingAlgorithm::Type salvagingAlgorithm = SalvagingAlgorithm::None;
+
+        // MC - related parameters
+
         Size seed = 42;
         Size trainingSeed = 43;
         Size trainingSamples = Null<Size>();
@@ -59,6 +67,14 @@ public:
         QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
         QuantLib::SobolRsg::DirectionIntegers sobolDirectionIntegers = QuantLib::SobolRsg::DirectionIntegers::JoeKuoD7;
         QuantLib::Real regressionVarianceCutoff = Null<QuantLib::Real>();
+
+        // FD - related parameters
+
+        Real mesherEpsilon = 1E-4;
+        Real mesherScaling = 1.5;
+        Real mesherConcentration = 0.1;
+        Size mesherMaxConcentratingPoints = 9999;
+        bool staticMesher = false;
     };
 
     explicit Model(const Size n) : n_(n) {}
@@ -66,6 +82,9 @@ public:
 
     // model type
     virtual Type type() const = 0;
+
+    // model params
+    virtual const Params& params() const = 0;
 
     // number of paths
     virtual Size size() const { return n_; }

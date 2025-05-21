@@ -40,17 +40,15 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-FdGaussianCam::FdGaussianCam(const Handle<CrossAssetModel>& cam, const std::string& currency,
-                             const Handle<YieldTermStructure>& curve,
-                             const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                             const std::set<Date>& simulationDates, const Size stateGridPoints,
-                             const Size timeStepsPerYear, const Real mesherEpsilon,
-                             const IborFallbackConfig& iborFallbackConfig)
-    : ModelImpl(curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {}, simulationDates,
-                iborFallbackConfig),
+FdGaussianCam::FdGaussianCam(
+    const Handle<CrossAssetModel>& cam, const std::string& currency, const Handle<YieldTermStructure>& curve,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::set<Date>& simulationDates, const Size stateGridPoints, const Size timeStepsPerYear,
+    const IborFallbackConfig& iborFallbackConfig, const Params& params)
+    : ModelImpl(Model::Type::FD, params, curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {},
+                simulationDates, iborFallbackConfig),
       cam_(cam), currency_(currency), curve_(curve), simulationDates_(simulationDates),
-      stateGridPoints_(stateGridPoints), timeStepsPerYear_(timeStepsPerYear), mesherEpsilon_(mesherEpsilon),
-      iborFallbackConfig_(iborFallbackConfig) {
+      stateGridPoints_(stateGridPoints), timeStepsPerYear_(timeStepsPerYear), iborFallbackConfig_(iborFallbackConfig) {
 
     // check inputs
 
@@ -82,7 +80,7 @@ void FdGaussianCam::performCalculations() const {
 
     solver_ = std::unique_ptr<LgmBackwardSolver>(
         new LgmFdSolver(cam_->lgm(0), timeFromReference(*simulationDates_.rbegin()), QuantLib::FdmSchemeDesc::Douglas(),
-                        stateGridPoints_, timeStepsPerYear_, mesherEpsilon_));
+                        stateGridPoints_, timeStepsPerYear_, params_.mesherEpsilon));
 
     // set up eff sim dates
 

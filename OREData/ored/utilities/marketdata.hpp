@@ -112,5 +112,11 @@ QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const Qu
                                                                         const std::string& configuration,
                                                                         const double assumedRecoveryRate);
 
+std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows);
+
+std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
+
+std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex);
+
 } // namespace data
 } // namespace ore

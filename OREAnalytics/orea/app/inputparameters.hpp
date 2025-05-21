@@ -200,6 +200,8 @@ public:
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
+    void setTradePnl(bool b) { tradePnL_ = b; }
+    void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
@@ -230,6 +232,7 @@ public:
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
     void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
+    void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -337,6 +340,8 @@ public:
     void setDimRegressionOrder(Size s) { dimRegressionOrder_ = s; }
     void setDimRegressors(const std::string& s); // parse to vector<string>
     void setDimOutputGridPoints(const std::string& s); // parse to vector<Size>
+    void setDimDistributionCoveredStdDevs(Real r) { dimDistributionCoveredStdDevs_ = r; }
+    void setDimDistributionGridSize(Size n) { dimDistributionGridSize_ = n; }
     void setDimOutputNettingSet(const std::string& s) { dimOutputNettingSet_ = s; }
     void setDimLocalRegressionEvaluations(Size s) { dimLocalRegressionEvaluations_ = s; }
     void setDimLocalRegressionBandwidth(Real r) { dimLocalRegressionBandwidth_ = r; }
@@ -372,6 +377,15 @@ public:
     void setXvaStressSensitivityScenarioData(const std::string& xml);
     void setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName);
     void setXvaStressWriteCubes(const bool writeCubes) { xvaStressWriteCubes_ = writeCubes; }
+
+    // Setters for sensitivityStress
+    void setSensitivityStressSimMarketParams(const std::string& xml);
+    void setSensitivityStressSimMarketParamsFromFile(const std::string& f);
+    void setSensitivityStressScenarioData(const std::string& s);
+    void setSensitivityStressScenarioDataFromFile(const std::string& s);
+    void setSensitivityStressSensitivityScenarioData(const std::string& xml);
+    void setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName);
+    void setSensitivityStressCalculateBaseScenario(const bool calcBaseScenario) { sensitivityStressCalcBaseScenario_ = calcBaseScenario; }
 
     // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
@@ -629,6 +643,8 @@ public:
     SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
+    bool tradePnl() const { return tradePnL_; }
+    bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
     Size mcVarSamples() const { return mcVarSamples_; }
@@ -659,6 +675,7 @@ public:
         return xvaCgUseDoublePrecisionForExternalCalculation_;
     }
     const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
+    bool xvaCgUsePythonIntegration() const { return xvaCgUsePythonIntegration_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
@@ -748,6 +765,8 @@ public:
     Size dimRegressionOrder() const { return dimRegressionOrder_; }
     const std::vector<std::string>& dimRegressors() const { return dimRegressors_; }
     const std::vector<Size>& dimOutputGridPoints() const { return dimOutputGridPoints_; }
+    Real dimDistributionCoveredStdDevs() const { return dimDistributionCoveredStdDevs_; }
+    Size dimDistributionGridSize() const { return dimDistributionGridSize_; }
     const std::string& dimOutputNettingSet() const { return dimOutputNettingSet_; }
     Size dimLocalRegressionEvaluations() const { return dimLocalRegressionEvaluations_; }
     Real dimLocalRegressionBandwidth() const { return dimLocalRegressionBandwidth_; }
@@ -771,6 +790,12 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaStressSensitivityScenarioData() const {
         return xvaStressSensitivityScenarioData_;
     }
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensitivityStressSimMarketParams() const { return sensitivityStressSimMarketParams_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& sensitivityStressScenarioData() const { return sensitivityStressScenarioData_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityStressSensitivityScenarioData() const {
+        return sensitivityStressSensitivityScenarioData_;
+    }
+    bool sensitivityStressCalcBaseScenario() const { return sensitivityStressCalcBaseScenario_; }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
@@ -1033,6 +1058,8 @@ protected:
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
+    bool tradePnL_ = false;
+    bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
     std::string varMethod_ = "DeltaGammaNormal";
@@ -1061,6 +1088,7 @@ protected:
     bool xvaCgExternalDeviceCompatibilityMode_ = false;
     bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
     string xvaCgExternalComputeDevice_;
+    bool xvaCgUsePythonIntegration_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
@@ -1143,6 +1171,8 @@ protected:
     Size dimRegressionOrder_ = 0;
     vector<string> dimRegressors_;
     vector<Size> dimOutputGridPoints_;
+    Real dimDistributionCoveredStdDevs_ = 5.0;
+    Size dimDistributionGridSize_ = 50;
     string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;
@@ -1164,6 +1194,10 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensitivityStressSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> sensitivityStressScenarioData_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityStressSensitivityScenarioData_;
+    bool sensitivityStressCalcBaseScenario_ = false;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
 
@@ -1298,6 +1332,7 @@ private:
     std::string stressTestFileName_;
     std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
+    std::string sensitivityStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
     std::string parConversionOutputFileName_;

@@ -419,6 +419,7 @@ XMLNode* XMLUtils::locateNode(XMLNode* n, const string& name) {
 void XMLUtils::appendNode(XMLNode* parent, XMLNode* child) {
     QL_REQUIRE(parent, "XMLUtils::appendNode() parent is NULL");
     QL_REQUIRE(child, "XMLUtils::appendNode() child is NULL");
+    QL_REQUIRE(!child->parent(), "XMLUtils::appendNode() child has a parent already.");
     parent->append_node(child);
 }
 

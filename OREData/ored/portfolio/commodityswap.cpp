@@ -76,7 +76,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag. 
     // This is by design i.e. use tags if you want to link specific legs.
     map<string, Leg> floatingLegs;
-    vector<Size> legsIdx;
+    std::vector<Size> legsIdx(legData_.size());
     for (Size t = 0; t < legData_.size(); t++) {
         const auto& legDatum = legData_.at(t);
 
@@ -86,7 +86,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, legDatum, configuration);
-        legsIdx.push_back(t);
+        legsIdx[t] = legs_.size() - 1;
 
         // Only add to map if CommodityFloatingLegData
         if (auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
@@ -148,7 +148,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, effLegDatum, configuration);
-        legsIdx.push_back(t);
+        legsIdx[t] = legs_.size() - 1;
     }
 
     // Reposition the leg-based data to match the original order according to legData_
@@ -160,9 +160,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         legPayersTmp.push_back(legPayers_.at(idx));
         legCurrenciesTmp.push_back(legCurrencies_.at(idx));
     }
-    legs_ = legsTmp;
-    legPayers_ = legPayersTmp;
-    legCurrencies_ = legCurrenciesTmp;
+    legs_.swap(legsTmp);
+    legPayers_.swap(legPayersTmp);
+    legCurrencies_.swap(legCurrenciesTmp);
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
@@ -378,7 +378,7 @@ void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
     legCurrencies_.push_back(legDatum.currency());
 
     // Update maturity
-    maturity_ = max(CashFlows::maturityDate(leg), maturity_);
+    maturity_ = std::max(CashFlows::maturityDate(leg), maturity_);
     if (maturity_ == CashFlows::maturityDate(leg))
         maturityType_ = "Leg Maturity Date";
 

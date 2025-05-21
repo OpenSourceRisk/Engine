@@ -234,6 +234,7 @@
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/discretedistribution.hpp>
+#include <qle/math/distributioncount.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
@@ -262,6 +263,7 @@
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
 #include <qle/methods/fdmlgmop.hpp>
 #include <qle/methods/fdmquantohelper.hpp>
+#include <qle/methods/irdeltaparconverter.hpp>
 #include <qle/methods/lgmswaptionvegaparconverter.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -292,6 +294,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedswaptionvoltermstructure.hpp>
 #include <qle/models/crstateparametrization.hpp>
 #include <qle/models/defaultableequityjumpdiffusionmodel.hpp>
 #include <qle/models/defaultlossmodel.hpp>
@@ -448,6 +451,7 @@
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
+#include <qle/python_integration/pythonfunctions.hpp>
 #include <qle/quotes/basecorrelationquote.hpp>
 #include <qle/quotes/compositevectorquote.hpp>
 #include <qle/quotes/exceptionquote.hpp>
@@ -520,8 +524,12 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/implieddefaulttermstructure.hpp>
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
+#include <qle/termstructures/inflation/cpicurve.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/inflationtraits.hpp>
+#include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
+#include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>

@@ -63,14 +63,19 @@ void XvaAnalyticImpl::setUpConfigurations() {
 void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
     // find the unique nettingset keys in portfolio
     std::map<std::string, std::string> nettingSetMap = portfolio->nettingSetMap();
-    std::vector<std::string> nettingSetKeys;
+    std::set<std::string> nettingSetKeys;
     for (std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it)
-        nettingSetKeys.push_back(it->second);
-    // unique nettingset keys
-    sort(nettingSetKeys.begin(), nettingSetKeys.end());
-    nettingSetKeys.erase(unique(nettingSetKeys.begin(), nettingSetKeys.end()), nettingSetKeys.end());
+        nettingSetKeys.insert(it->second);
     // controls on calcType and grid type, if netting-set has an active CSA in place
     for (auto const& key : nettingSetKeys) {
+        if (!inputs_->nettingSetManager()->has(key)) {
+            StructuredAnalyticsWarningMessage(
+                "XvaAnalytic", "Netting set definition not found",
+                "Definition for netting set " + key + " is not found. "
+                "Configuration check is not performed on this netting set.")
+                .log();
+            continue;
+        }
         LOG("For netting-set " << key << "CSA flag is " << inputs_->nettingSetManager()->get(key)->activeCsaFlag());
         if (inputs_->nettingSetManager()->get(key)->activeCsaFlag()) {
             string calculationType = inputs_->collateralCalculationType();
@@ -103,6 +108,32 @@ void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfo
                         .log();
             }
         }
+    }
+}
+
+void XvaAnalyticImpl::applyConfigurationFallback(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
+    // find the unique undefined nettingset keys in portfolio
+    std::map<std::string, std::string> nettingSetMap = portfolio->nettingSetMap();
+    std::set<std::string> nettingSetKeys;
+    for (std::map<std::string, std::string>::iterator it = nettingSetMap.begin(); it != nettingSetMap.end(); ++it) {
+        if (!inputs_->nettingSetManager()->has(it->second)) {
+            StructuredTradeErrorMessage(
+                it->first, portfolio->get(it->first)->tradeType(),
+                "Netting set definition is not found.",
+                "Definition for netting set " + it->second + " is not found. "
+                "A fallback of 'uncollateralised' netting set will be used, results for this netting set may be invalid.")
+                .log();
+                nettingSetKeys.insert(it->second);
+        }
+    }
+    // add fallback netting set definitions
+    for (auto const& key : nettingSetKeys) {
+        StructuredAnalyticsErrorMessage(
+            "XvaAnalytic", "Netting set definition not found",
+            "Definition for netting set " + key + " is not found. "
+            "A fallback of 'uncollateralised' netting set will be used, results for this netting set may be invalid.")
+            .log();
+        inputs_->nettingSetManager()->add(QuantLib::ext::make_shared<NettingSetDefinition>(key));
     }
 }
 
@@ -599,8 +630,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
             inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(), true,
-            true);
+            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
+            inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -721,6 +752,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
     bool firstMporCollateralAdjustment = inputs_->firstMporCollateralAdjustment();
     checkConfigurations(analytic()->portfolio());
+    applyConfigurationFallback(analytic()->portfolio());
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
@@ -827,6 +859,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (runTypes.find("XVA") != runTypes.end() || runTypes.empty())
         runXva_ = true;
 
+    if (runTypes.find("PFE") != runTypes.end() || runTypes.empty())
+        runPFE_ = true;
+
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->exposureObservationModel());
 
@@ -851,8 +886,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
             inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(), true,
-            true);
+            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
+            inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.run();
 
@@ -1017,13 +1052,22 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         analytic()->addReport(LABEL, "rawcube", report);
     }
 
-    if (runXva_) {
+    if (runXva_ || runPFE_) {
 
         /*********************************************************************
          * This is where the aggregation work is done: call the post-processor
          *********************************************************************/
 
-        string msg = "XVA: Aggregation";
+        string runStr = "";
+        if (runXva_ && runPFE_) {
+            runStr = "XVA and PFE";
+        } else if (!runXva_ && runPFE_) {
+            runStr = "PFE";
+        } else if (runXva_ && !runPFE_) {
+            runStr = "XVA";
+        }
+
+        string msg = runStr + ": Aggregation";
         CONSOLEW(msg);
         ProgressMessage(msg, 0, 1).log();
         runPostProcessor();
@@ -1034,10 +1078,10 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
          * Finally generate various (in-memory) reports/outputs
          ******************************************************/
 
-        msg = "XVA: Reports";
+        msg = runStr + ": Reports";
         CONSOLEW(msg);
         ProgressMessage(msg, 0, 1).log();
-        LOG("Generating XVA reports and cube outputs");
+        LOG("Generating " + runStr + " reports and cube outputs");
 
         if (inputs_->exposureProfilesByTrade()) {
             for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
@@ -1057,7 +1101,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             }
         }
 
-        if (inputs_->exposureProfiles()) {
+        if (inputs_->exposureProfiles() || runPFE_) {
             for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
                 auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
@@ -1069,88 +1113,97 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                                     e.what(), {{"nettingSetId", nettingSet}})
                         .log();
                 }
+                if (runXva_) {
+                    auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    try {
+                        ReportWriter(inputs_->reportNaString())
+                            .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
+                        analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
+                    } catch (const std::exception& e) {
+                        StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                                                        e.what(), {{"nettingSetId", nettingSet}})
+                            .log();
+                    }
 
-                auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                try {
-                    ReportWriter(inputs_->reportNaString())
-                        .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                    analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
-                } catch (const std::exception& e) {
-                    StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
-                                                    e.what(), {{"nettingSetId", nettingSet}})
-                        .log();
-                }
-
-                auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                try {
-                    ReportWriter(inputs_->reportNaString())
-                        .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                    analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
-                } catch (const std::exception& e) {
-                    StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
-                                                    {{"nettingSetId", nettingSet}})
-                        .log();
+                    auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    try {
+                        ReportWriter(inputs_->reportNaString())
+                            .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
+                        analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
+                    } catch (const std::exception& e) {
+                        StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
+                                                        {{"nettingSetId", nettingSet}})
+                            .log();
+                    }
                 }
             }
         }
 
-        auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
-            .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
-        analytic()->addReport(LABEL, "xva", xvaReport);
-
-        if (inputs_->netCubeOutput()) {
-            auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-            ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
-            analytic()->addReport(LABEL, "netcube", report);
-        }
-
-        if (inputs_->timeAveragedNettedExposureOutput()) {
-            auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        if (runXva_) {
+            auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
-                .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
-            analytic()->addReport(LABEL, "timeAveragedNettedExposure", report);
-        }
+                .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
+            analytic()->addReport(LABEL, "xva", xvaReport);
 
-        if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
-            // Generate DIM evolution report
-            auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-            postProcess_->exportDimEvolution(*dimEvolutionReport);
-            analytic()->addReport(LABEL, "dim_evolution", dimEvolutionReport);
-
-            // Generate DIM regression reports
-            vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
-            for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
-                auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                dimRegReports.push_back(rep);
-                analytic()->addReport(LABEL, "dim_regression_" + std::to_string(i), rep);
+            if (inputs_->netCubeOutput()) {
+                auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
+                analytic()->addReport(LABEL, "netcube", report);
             }
-            postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
-                                              dimRegReports);
-        }
 
-        if (inputs_->creditMigrationAnalytic()) {
-            QL_REQUIRE(
-                postProcess_->creditMigrationPdf().size() == inputs_->creditMigrationTimeSteps().size(),
-                "XvaAnalyticImpl::runAnalytic(): inconsistent post process results for credit migration pdf / cdf ("
-                    << postProcess_->creditMigrationPdf().size() << ") and input credit migration time steps ("
-                    << inputs_->creditMigrationTimeSteps().size() << ")");
-            for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
-                auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                analytic()
-                    ->addReport("XVA", "credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i]), rep);
-                (*rep)
-                    .addColumn("upperBucketBound", double(), 6)
-                    .addColumn("pdf", double(), 8)
-                    .addColumn("cdf", double(), 8);
-                for (Size j = 0; j < postProcess_->creditMigrationPdf()[i].size(); ++j) {
-                    (*rep)
-                        .next()
-                        .add(postProcess_->creditMigrationUpperBucketBounds()[j])
-                        .add(postProcess_->creditMigrationPdf()[i][j])
-                        .add(postProcess_->creditMigrationCdf()[i][j]);
+            if (inputs_->timeAveragedNettedExposureOutput()) {
+                auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString())
+                    .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
+                analytic()->addReport(LABEL, "timeAveragedNettedExposure", report);
+            }
+
+            if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
+                // Generate DIM evolution report
+                auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                postProcess_->exportDimEvolution(*dimEvolutionReport);
+                analytic()->addReport(LABEL, "dim_evolution", dimEvolutionReport);
+
+                // Generate DIM distribution report
+                auto dimDistributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                postProcess_->exportDimDistribution(*dimDistributionReport, inputs_->dimDistributionGridSize(),
+                                                    inputs_->dimDistributionCoveredStdDevs());
+                analytic()->addReport(LABEL, "dim_distribution", dimDistributionReport);
+
+                // Generate DIM regression reports
+                vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
+                for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
+                    auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    dimRegReports.push_back(rep);
+                    analytic()->addReport(LABEL, "dim_regression_" + std::to_string(i), rep);
                 }
-                rep->end();
+                postProcess_->exportDimRegression(inputs_->dimOutputNettingSet(), inputs_->dimOutputGridPoints(),
+                                                  dimRegReports);
+            }
+
+            if (inputs_->creditMigrationAnalytic()) {
+                QL_REQUIRE(
+                    postProcess_->creditMigrationPdf().size() == inputs_->creditMigrationTimeSteps().size(),
+                    "XvaAnalyticImpl::runAnalytic(): inconsistent post process results for credit migration pdf / cdf ("
+                        << postProcess_->creditMigrationPdf().size() << ") and input credit migration time steps ("
+                        << inputs_->creditMigrationTimeSteps().size() << ")");
+                for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
+                    auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    analytic()
+                        ->addReport("XVA", "credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i]), rep);
+                    (*rep)
+                        .addColumn("upperBucketBound", double(), 6)
+                        .addColumn("pdf", double(), 8)
+                        .addColumn("cdf", double(), 8);
+                    for (Size j = 0; j < postProcess_->creditMigrationPdf()[i].size(); ++j) {
+                        (*rep)
+                            .next()
+                            .add(postProcess_->creditMigrationUpperBucketBounds()[j])
+                            .add(postProcess_->creditMigrationPdf()[i][j])
+                            .add(postProcess_->creditMigrationCdf()[i][j]);
+                    }
+                    rep->end();
+                }
             }
         }
 

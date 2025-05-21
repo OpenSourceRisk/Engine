@@ -86,7 +86,9 @@ public:
             TimeSeries<Real> pastFixings;
             pastFixings[Date(1, Feb, 2016)] = 100;
             pastFixings[Date(2, Feb, 2016)] = 90;
+            QL_DEPRECATED_DISABLE_WARNING
             IndexManager::instance().setHistory("FX/Reuters JPY/EUR", pastFixings);
+            QL_DEPRECATED_ENABLE_WARNING
         }
     }
 

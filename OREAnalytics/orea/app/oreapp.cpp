@@ -34,6 +34,9 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+#include <orea/simm/simmbasicnamemapper.hpp>
+#include <orea/simm/simmbucketmapper.hpp>
+#include <orea/simm/simmbucketmapperbase.hpp>
 
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
@@ -1295,9 +1298,17 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setVarQuantiles(tmp);
 
+        tmp = params_->get("historicalSimulationVar", "includeExpectedShortfall", false);
+        if (tmp != "")
+            setIncludeExpectedShortfall(parseBool(tmp));
+
         tmp = params_->get("historicalSimulationVar", "breakdown", false);
         if (tmp != "")
             setVarBreakDown(parseBool(tmp));
+
+        tmp = params_->get("historicalSimulationVar", "tradePnl", false);
+            if (tmp != "")
+                setTradePnl(parseBool(tmp));
 
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
@@ -1453,6 +1464,45 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+	else {
+            // If an external CRIF is not provided we need to generate CRIF
+            // using the CRIF analytic settings below
+            tmp = params_->get("crif", "marketConfigFile", false);
+            if (tmp != "") {
+                string file = (inputPath / tmp).generic_string();
+                LOG("Loading sensitivity scenario sim market parameters from file" << file);
+                setSensiSimMarketParamsFromFile(file);
+            } else {
+                WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+            }
+
+            tmp = params_->get("crif", "sensitivityConfigFile", false);
+            if (tmp != "") {
+                string file = (inputPath / tmp).generic_string();
+                LOG("Load sensitivity scenario data from file" << file);
+                setSensiScenarioDataFromFile(file);
+            } else {
+                WLOG("Sensitivity scenario data not loaded");
+            }
+
+            auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+            tmp = params_->get("crif", "nameMappingInputFile", false);
+            if (tmp != "") {
+                string fileName = (inputPath / tmp).generic_string();
+                LOG("simmNameMapper file name: " << fileName);
+                nameMapper->fromFile(fileName);
+            }
+            simmNameMapper_ = nameMapper;
+
+            auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+            tmp = params_->get("crif", "bucketMappingInputFile", false);
+            if (tmp != "") {
+                string fileName = (inputPath / tmp).generic_string();
+                LOG("simmBucketMapper file name: " << fileName);
+                bucketMapper->fromFile(fileName);
+            }
+            simmBucketMapper_ = bucketMapper;
         }
 
         tmp = params_->get("simm", "calculationCurrency", false);
@@ -1611,9 +1661,17 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA");
 
+    tmp = params_->get("pfe", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("PFE");
+
     tmp = params_->get("xvaStress", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA_STRESS");
+    
+    tmp = params_->get("sensitivityStress", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("SENSITIVITY_STRESS");
 
     tmp = params_->get("xvaSensitivity", "active", false);
     if (!tmp.empty() && parseBool(tmp))
@@ -1782,6 +1840,10 @@ void OREAppInputParameters::loadParameters() {
 
         setXvaCgExternalComputeDevice(params_->get("simulation", "xvaCgExternalComputeDevice", false));
 
+        tmp = params_->get("simulation", "xvaCgUsePythonIntegration", false);
+        if (!tmp.empty())
+            setXvaCgUsePythonIntegration(parseBool(tmp));
+
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));
@@ -1805,6 +1867,328 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
         if (!tmp.empty())
             setXvaCgUseRedBlocks(parseBool(tmp));
+    }
+
+    /**********************
+     * PFE specifically
+     * Note: This is a copy from the XVA section and will be cut down to the PFE-only 
+     *       parameters during iterative dev testing
+     **********************/
+
+    tmp = params_->get("pfe", "baseCurrency", false);
+    if (tmp != "")
+        setXvaBaseCurrency(tmp);
+    else
+        setXvaBaseCurrency(exposureBaseCurrency());
+
+    if (analytics().find("PFE") != analytics().end() && analytics().find("EXPOSURE") == analytics().end()) {
+        setLoadCube(true);
+        tmp = params_->get("pfe", "cubeFile", false);
+        if (tmp != "") {
+            string cubeFile = (resultsPath() / tmp).generic_string();
+            LOG("Load cube from file " << cubeFile);
+            setCubeFromFile(cubeFile);
+            LOG("Cube loading done: ids=" << cube()->numIds() << " dates=" << cube()->numDates()
+                                          << " samples=" << cube()->samples() << " depth=" << cube()->depth());
+        } else {
+            ALOG("cube file name not provided");
+        }
+    }
+
+    if (analytics().find("PFE") != analytics().end()) {
+        tmp = params_->get("pfe", "csaFile", false);
+        QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
+        string csaFile = (inputPath / tmp).generic_string();
+        LOG("Loading netting and csa data from file " << csaFile);
+        setNettingSetManagerFromFile(csaFile);
+
+        tmp = params_->get("pfe", "collateralBalancesFile", false);
+        if (tmp != "") {
+            string collBalancesFile = (inputPath / tmp).generic_string();
+            LOG("Loading collateral balances from file " << collBalancesFile);
+            setCollateralBalancesFromFile(collBalancesFile);
+        }
+    }
+
+    tmp = params_->get("pfe", "nettingSetCubeFile", false);
+    if (loadCube() && tmp != "") {
+        string cubeFile = (resultsPath() / tmp).generic_string();
+        LOG("Load nettingset cube from file " << cubeFile);
+        setNettingSetCubeFromFile(cubeFile);
+        DLOG("NettingSetCube loading done: ids="
+             << nettingSetCube()->numIds() << " dates=" << nettingSetCube()->numDates()
+             << " samples=" << nettingSetCube()->samples() << " depth=" << nettingSetCube()->depth());
+    }
+
+    tmp = params_->get("pfe", "cptyCubeFile", false);
+    if (loadCube() && tmp != "") {
+        string cubeFile = resultsPath().string() + "/" + tmp;
+        LOG("Load cpty cube from file " << cubeFile);
+        setCptyCubeFromFile(cubeFile);
+        DLOG("CptyCube loading done: ids=" << cptyCube()->numIds() << " dates=" << cptyCube()->numDates()
+                                           << " samples=" << cptyCube()->samples() << " depth=" << cptyCube()->depth());
+    }
+
+    tmp = params_->get("pfe", "scenarioFile", false);
+    if (loadCube() && tmp != "") {
+        string cubeFile = resultsPath().string() + "/" + tmp;
+        LOG("Load agg scen data from file " << cubeFile);
+        setMarketCubeFromFile(cubeFile);
+        LOG("MktCube loading done");
+    }
+
+    tmp = params_->get("pfe", "flipViewXVA", false);
+    if (tmp != "")
+        setFlipViewXVA(parseBool(tmp));
+
+    tmp = params_->get("pfe", "mporCashFlowMode", false);
+    if (tmp != "")
+        setMporCashFlowMode(parseMporCashFlowMode(tmp));
+
+    tmp = params_->get("pfe", "fullInitialCollateralisation", false);
+    if (tmp != "")
+        setFullInitialCollateralisation(parseBool(tmp));
+
+    tmp = params_->get("pfe", "exposureProfilesByTrade", false);
+    if (tmp != "")
+        setExposureProfilesByTrade(parseBool(tmp));
+
+    tmp = params_->get("pfe", "exposureProfiles", false);
+    if (tmp != "")
+        setExposureProfiles(parseBool(tmp));
+
+    tmp = params_->get("pfe", "exposureProfilesUseCloseOutValues", false);
+    if (tmp != "")
+        setExposureProfilesUseCloseOutValues(parseBool(tmp));
+
+    tmp = params_->get("pfe", "quantile", false);
+    if (tmp != "")
+        setPfeQuantile(parseReal(tmp));
+
+    tmp = params_->get("pfe", "calculationType", false);
+    if (tmp != "")
+        setCollateralCalculationType(tmp);
+
+    tmp = params_->get("pfe", "allocationMethod", false);
+    if (tmp != "")
+        setExposureAllocationMethod(tmp);
+
+    tmp = params_->get("pfe", "marginalAllocationLimit", false);
+    if (tmp != "")
+        setMarginalAllocationLimit(parseReal(tmp));
+
+    tmp = params_->get("pfe", "exerciseNextBreak", false);
+    if (tmp != "")
+        setExerciseNextBreak(parseBool(tmp));
+
+    tmp = params_->get("pfe", "cva", false);
+    if (tmp != "")
+        setCvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "dva", false);
+    if (tmp != "")
+        setDvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "fva", false);
+    if (tmp != "")
+        setFvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "colva", false);
+    if (tmp != "")
+        setColvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "collateralFloor", false);
+    if (tmp != "")
+        setCollateralFloorAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "dim", false);
+    if (tmp != "")
+        setDimAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "dimModel", false);
+    if (tmp != "") {
+        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
+                       tmp == "DeltaGammaVaR",
+                   "DIM model " << tmp << " not supported, "
+                                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
+        setDimModel(tmp);
+    }
+
+    tmp = params_->get("pfe", "mva", false);
+    if (tmp != "")
+        setMvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "kva", false);
+    if (tmp != "")
+        setKvaAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "dynamicCredit", false);
+    if (tmp != "")
+        setDynamicCredit(parseBool(tmp));
+
+    tmp = params_->get("pfe", "cvaSensi", false);
+    if (tmp != "")
+        setCvaSensi(parseBool(tmp));
+
+    tmp = params_->get("pfe", "cvaSensiGrid", false);
+    if (tmp != "")
+        setCvaSensiGrid(tmp);
+
+    tmp = params_->get("pfe", "cvaSensiShiftSize", false);
+    if (tmp != "")
+        setCvaSensiShiftSize(parseReal(tmp));
+
+    tmp = params_->get("pfe", "dvaName", false);
+    if (tmp != "")
+        setDvaName(tmp);
+
+    tmp = params_->get("pfe", "rawCubeOutputFile", false);
+    if (tmp != "") {
+        setRawCubeOutputFile(tmp);
+        setRawCubeOutput(true);
+    }
+
+    tmp = params_->get("pfe", "netCubeOutputFile", false);
+    if (tmp != "") {
+        setNetCubeOutputFile(tmp);
+        setNetCubeOutput(true);
+    }
+
+    tmp = params_->get("pfe", "timeAveragedNettedExposureOutputFile", false);
+    if (tmp != "") {
+        setTimeAveragedNettedExposureOutputFile(tmp);
+        setTimeAveragedNettedExposureOutput(true);
+    }
+
+    // FVA
+
+    tmp = params_->get("pfe", "fvaBorrowingCurve", false);
+    if (tmp != "")
+        setFvaBorrowingCurve(tmp);
+
+    tmp = params_->get("pfe", "fvaLendingCurve", false);
+    if (tmp != "")
+        setFvaLendingCurve(tmp);
+
+    tmp = params_->get("pfe", "flipViewBorrowingCurvePostfix", false);
+    if (tmp != "")
+        setFlipViewBorrowingCurvePostfix(tmp);
+
+    tmp = params_->get("pfe", "flipViewLendingCurvePostfix", false);
+    if (tmp != "")
+        setFlipViewLendingCurvePostfix(tmp);
+
+    // DIM
+
+    tmp = params_->get("pfe", "deterministicInitialMarginFile", false);
+    if (tmp != "") {
+        string imFile = (inputPath / tmp).generic_string();
+        LOG("Load initial margin evolution from file " << tmp);
+        setDeterministicInitialMarginFromFile(imFile);
+    }
+
+    tmp = params_->get("pfe", "dimQuantile", false);
+    if (tmp != "")
+        setDimQuantile(parseReal(tmp));
+
+    tmp = params_->get("pfe", "dimHorizonCalendarDays", false);
+    if (tmp != "")
+        setDimHorizonCalendarDays(parseInteger(tmp));
+
+    tmp = params_->get("pfe", "dimRegressionOrder", false);
+    if (tmp != "")
+        setDimRegressionOrder(parseInteger(tmp));
+
+    tmp = params_->get("pfe", "dimRegressors", false);
+    if (tmp != "")
+        setDimRegressors(tmp);
+
+    tmp = params_->get("pfe", "dimOutputGridPoints", false);
+    if (tmp != "")
+        setDimOutputGridPoints(tmp);
+
+    tmp = params_->get("pfe", "dimDistributionCoveredStdDevs", false);
+    if (tmp != "")
+        setDimDistributionCoveredStdDevs(tmp == "inf" ? Null<Real>() : parseReal(tmp));
+
+    tmp = params_->get("pfe", "dimDistributionGridSize", false);
+    if (tmp != "")
+        setDimDistributionGridSize(parseInteger(tmp));
+
+    tmp = params_->get("pfe", "dimOutputNettingSet", false);
+    if (tmp != "")
+        setDimOutputNettingSet(tmp);
+
+    tmp = params_->get("pfe", "dimLocalRegressionEvaluations", false);
+    if (tmp != "")
+        setDimLocalRegressionEvaluations(parseInteger(tmp));
+
+    tmp = params_->get("pfe", "dimLocalRegressionBandwidth", false);
+    if (tmp != "")
+        setDimLocalRegressionBandwidth(parseReal(tmp));
+
+    // KVA
+
+    tmp = params_->get("pfe", "kvaCapitalDiscountRate", false);
+    if (tmp != "")
+        setKvaCapitalDiscountRate(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaAlpha", false);
+    if (tmp != "")
+        setKvaAlpha(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaRegAdjustment", false);
+    if (tmp != "")
+        setKvaRegAdjustment(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaCapitalHurdle", false);
+    if (tmp != "")
+        setKvaCapitalHurdle(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaOurPdFloor", false);
+    if (tmp != "")
+        setKvaOurPdFloor(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaTheirPdFloor", false);
+    if (tmp != "")
+        setKvaTheirPdFloor(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaOurCvaRiskWeight", false);
+    if (tmp != "")
+        setKvaOurCvaRiskWeight(parseReal(tmp));
+
+    tmp = params_->get("pfe", "kvaTheirCvaRiskWeight", false);
+    if (tmp != "")
+        setKvaTheirCvaRiskWeight(parseReal(tmp));
+
+    // credit simulation
+
+    tmp = params_->get("pfe", "creditMigration", false);
+    if (tmp != "")
+        setCreditMigrationAnalytic(parseBool(tmp));
+
+    tmp = params_->get("pfe", "creditMigrationDistributionGrid", false);
+    if (tmp != "")
+        setCreditMigrationDistributionGrid(parseListOfValues<Real>(tmp, &parseReal));
+
+    tmp = params_->get("pfe", "creditMigrationTimeSteps", false);
+    if (tmp != "")
+        setCreditMigrationTimeSteps(parseListOfValues<Size>(tmp, &parseInteger));
+
+    tmp = params_->get("pfe", "creditMigrationConfig", false);
+    if (tmp != "") {
+        string file = (inputPath / tmp).generic_string();
+        LOG("Loading credit migration config from file" << file);
+        setCreditSimulationParametersFromFile(file);
+    }
+
+    tmp = params_->get("pfe", "creditMigrationOutputFiles", false);
+    if (tmp != "")
+        setCreditMigrationOutputFiles(tmp);
+
+    tmp = params_->get("pfe", "firstMporCollateralAdjustment", false);
+    if (tmp != "") {
+        setfirstMporCollateralAdjustment(parseBool(tmp));
     }
 
     /**********************
@@ -2046,6 +2430,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setDimOutputGridPoints(tmp);
 
+    tmp = params_->get("xva", "dimDistributionCoveredStdDevs", false);
+    if (tmp != "")
+        setDimDistributionCoveredStdDevs(tmp == "inf" ? Null<Real>() : parseReal(tmp));
+
+    tmp = params_->get("xva", "dimDistributionGridSize", false);
+    if (tmp != "")
+        setDimDistributionGridSize(parseInteger(tmp));
+
     tmp = params_->get("xva", "dimOutputNettingSet", false);
     if (tmp != "")
         setDimOutputNettingSet(tmp);
@@ -2161,6 +2553,48 @@ void OREAppInputParameters::loadParameters() {
             setXvaStressSensitivityScenarioDataFromFile(file);
         } else {
             WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+    }
+
+    /*************
+     * Sensitivity Stress
+     *************/
+
+     if (analytics().find("SENSITIVITY_STRESS") != analytics().end()) {
+        tmp = params_->get("sensitivityStress", "marketConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity stress test scenario sim market parameters from file" << file);
+            setSensitivityStressSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity stress testing not loaded");
+        }
+
+        tmp = params_->get("sensitivityStress", "stressConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity stress test scenario data from file" << file);
+            setSensitivityStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity Stress scenario data not loaded");
+        }
+
+        tmp = params_->get("sensitivityStress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensitivityStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+
+        tmp = params_->get("sensitivityStress", "calcBaseScenario", false);
+        if (!tmp.empty()) {
+            bool calcBaseScenario = false;
+            bool success = tryParse<bool>(tmp, calcBaseScenario, parseBool);
+            if (success) {
+                setSensitivityStressCalculateBaseScenario(calcBaseScenario);
+            }
         }
     }
 
@@ -2499,6 +2933,64 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PORTFOLIO_DETAILS");
+    }
+
+    /*****************
+     * CRIF Generation
+     *****************/
+
+    tmp = params_->get("crif", "active", false);
+    bool doCrif = !tmp.empty() && parseBool(tmp);
+    // tmp = params_->get("simm", "active", false);
+    // bool doSimm = !tmp.empty() && parseBool(tmp);
+    if (doCrif) {
+        insertAnalytic("CRIF");
+
+	// Use the same market and sensi configs as the the sensitivity analytic
+	// FIXME: Warn if we override previous settings
+        tmp = params_->get("crif", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("crif", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+	tmp = params_->get("crif", "simmVersion", false);
+        if (tmp != "") {
+            setSimmVersion(tmp);
+        } else {
+            LOG("set SIMM version for CRIF generation to 2.6")
+            setSimmVersion("2.6");
+        }
+
+	auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+	tmp = params_->get("crif", "nameMappingInputFile", false);
+	if (tmp != "") {
+	   string fileName = (inputPath / tmp).generic_string();
+	   LOG("simmNameMapper file name: " << fileName);
+	   nameMapper->fromFile(fileName);
+	}
+	simmNameMapper_ = nameMapper;
+
+	auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+	tmp = params_->get("crif", "bucketMappingInputFile", false);
+	if (tmp != "") {
+	   string fileName = (inputPath / tmp).generic_string();
+	   LOG("simmBucketMapper file name: " << fileName);
+	   bucketMapper->fromFile(fileName);
+	}
+	simmBucketMapper_ = bucketMapper;
     }
 
     if (analytics().size() == 0) {

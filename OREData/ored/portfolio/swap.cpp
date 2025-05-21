@@ -276,7 +276,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Floating)
                     floatingNpv = swap->legNPV(i);            
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
-                    additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));
+                    additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
                     fixedBps = swap->legBPS(i);
                 }
             } else

@@ -174,6 +174,7 @@ methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
+methods/irdeltaparconverter.cpp
 methods/lgmswaptionvegaparconverter.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -323,6 +324,7 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -374,6 +376,7 @@ termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
+termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
 termstructures/oiccbasisswaphelper.cpp
@@ -657,6 +660,7 @@ math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/discretedistribution.hpp
+math/distributioncount.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
@@ -685,6 +689,7 @@ methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
+methods/irdeltaparconverter.hpp
 methods/lgmswaptionvegaparconverter.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -762,10 +767,10 @@ models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
-models/mcdefaultlossmodel.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/marketobserver.hpp
+models/mcdefaultlossmodel.hpp
 models/modelbuilder.hpp
 models/modelimpliedpricetermstructure.hpp
 models/modelimpliedyieldtermstructure.hpp
@@ -872,6 +877,7 @@ processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
@@ -944,8 +950,12 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
+termstructures/inflation/inflationtraits.hpp
+termstructures/inflation/interpolatedcpiinflationcurve.hpp
+termstructures/inflation/piecewisecpiinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
@@ -1053,6 +1063,10 @@ if (ORE_ENABLE_CUDA)
   target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
   target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
   target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
+endif()
+
+if (ORE_PYTHON_INTEGRATION)
+  target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
