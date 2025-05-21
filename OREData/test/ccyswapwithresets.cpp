@@ -255,6 +255,123 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     BOOST_CHECK_EQUAL(sumXNL, 0);
 }
 
+// Ccy Swap with notional resets test, example from Bloomberg
+BOOST_AUTO_TEST_CASE(testCcySwapWithResetsStartDatePrice) {
+
+    BOOST_TEST_MESSAGE("Testing CcySwapWithResets Price...");
+
+    // CCYswapReset prices (in USD)
+    Real npvCCYswapReset = -225;
+
+    // build market
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+
+    // test asof date
+    Date today = market->asofDate();
+    BOOST_CHECK_EQUAL(today, Date(22, Aug, 2016));
+
+    // Test if EUR discount curve is empty
+    Handle<YieldTermStructure> dts = market->discountCurve("EUR");
+    QL_REQUIRE(!dts.empty(), "EUR discount curve not found");
+
+    // Test EUR discount(today+3*Years)) against base value
+    BOOST_CHECK_CLOSE(market->discountCurve("EUR")->discount(today + 3 * Years), 1.006005, 0.0001);
+
+    // Test USD discount(today+3*Years)) against base value
+    BOOST_CHECK_CLOSE(market->discountCurve("USD")->discount(today + 3 * Years), 0.96908, 0.0001);
+
+    // Test EURUSD fx spot object against base value
+    BOOST_CHECK_EQUAL(market->fxSpot("EURUSD")->value(), 1.1306);
+
+    // envelope
+    Envelope env("CP");
+
+    // Start/End date
+    Date startDate = today;
+    Date endDate = today + 5 * Years;
+
+    // date 2 string
+    std::ostringstream oss;
+    oss << io::iso_date(startDate);
+    string start(oss.str());
+    oss.str("");
+    oss.clear();
+    oss << io::iso_date(endDate);
+    string end(oss.str());
+
+    // Schedules
+    string conv = "MF";
+    string rule = "Forward";
+    ScheduleData scheduleEUR(ScheduleRules(start, end, "6M", "TARGET", conv, conv, rule));
+    ScheduleData scheduleUSD(ScheduleRules(start, end, "3M", "US", conv, conv, rule));
+
+    // EUR Leg without and with Notional resets
+    bool isPayerEUR = true;
+    string indexEUR = "EUR-EURIBOR-6M";
+    bool isInArrears = false;
+    int days = 2;
+    vector<Real> spreadEUR(1, 0.000261);
+    string dc = "ACT/360";
+    vector<Real> notionalEUR(1, 8833141.95);
+    string paymentConvention = "F";
+    bool notionalInitialXNL = true;
+    bool notionalFinalXNL = true;
+    bool notionalAmortizingXNL = false;
+    string foreignCCY = "USD";
+    Real foreignAmount = 0;
+    string fxIndex = "FX-ECB-EUR-USD";
+    string resetStartDate = "2016-08-22";
+    auto legdataEUR = QuantLib::ext::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
+    LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+                    notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount, resetStartDate,
+                    fxIndex);
+
+    // USD Leg without notional resets
+    bool isPayerUSD = false;
+    string indexUSD = "USD-LIBOR-3M";
+    vector<Real> spreadUSD(1, 0);
+    vector<Real> notionalUSD(1, 10000000);
+    auto legdataUSD = QuantLib::ext::make_shared<FloatingLegData>(indexUSD, days, isInArrears, spreadUSD);
+    LegData legUSD(legdataUSD, isPayerUSD, "USD", scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
+                   notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL);
+
+    // Build swap trade
+    QuantLib::ext::shared_ptr<Trade> swap2(new ore::data::Swap(env, legUSD, legEUR2));
+
+    // engine data and factory
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
+    engineData->model("CrossCurrencySwap") = "DiscountedCashflows";
+    engineData->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory =
+        QuantLib::ext::make_shared<EngineFactory>(engineData, market);
+
+    // build swaps and portfolio
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
+    swap2->id() = "XCCY_Swap_EUR_USD_RESET";
+
+    portfolio->add(swap2);
+    portfolio->build(engineFactory);
+
+    // check CCYswapReset NPV
+    BOOST_TEST_MESSAGE("CcySwapReset Price = " << swap2->instrument()->NPV() << " " << swap2->npvCurrency()
+                                               << ". BBG Price = " << npvCCYswapReset << " USD");
+    // check if difference between ore and bbg NPV does not exceed 250 USD (on 10M notional)
+    BOOST_CHECK_CLOSE(std::abs(swap2->instrument()->NPV() - npvCCYswapReset), 0.5, 5);
+
+    // check if sum(XNL) on resetting leg is zero
+    Real sumXNL = 0;
+    const vector<Leg>& legs = swap2->legs();
+    for (Size i = 3; i < legs.size(); i++) {
+        const QuantLib::Leg& leg = legs[i];
+        for (Size j = 0; j < leg.size(); j++) {
+            QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
+            sumXNL += ptrFlow->amount();
+        }
+    }
+    BOOST_CHECK_EQUAL(sumXNL, 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
