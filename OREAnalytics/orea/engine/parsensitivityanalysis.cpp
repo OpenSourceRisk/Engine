@@ -251,11 +251,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                    "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
         QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
-
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parCapsYts_.at(c.first), 0.01,
-            instruments_.parCapsVts_.at(c.first)->volatilityType(), instruments_.parCapsVts_.at(c.first)->displacement());
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                     << parVol << ".");
@@ -263,6 +259,24 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
     }
+
+    for (auto& c : instruments_.oisParCaps_) {
+
+        QL_REQUIRE(instruments_.parCapsYts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
+        QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
+
+        Volatility parVol = impliedVolatility(c.first, instruments_);
+        parCapVols[c.first] = parVol;
+        TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                    << parVol << ".");
+
+        // Populate zero and par shift size for the current risk factor
+        populateShiftSizes(c.first, parVol, simMarket);
+    }
+
+
 
     for (auto& c : instruments_.parYoYCaps_) {
 
@@ -273,11 +287,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         QL_REQUIRE(instruments_.parYoYCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parYoYCapsYts_.at(c.first), 0.01,
-            instruments_.parYoYCapsVts_.at(c.first)->volatilityType(),
-            instruments_.parYoYCapsVts_.at(c.first)->displacement(), instruments_.parYoYCapsIndex_.at(c.first));
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                         << parVol << ".");
@@ -429,6 +439,33 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
+
+        // process ois par caps
+
+        for (auto const& p : instruments_.oisParCaps_) {
+
+            if (p.second->isCalculated() && p.first != desc[i].key1())
+                continue;
+
+            auto fair = impliedVolatility(p.first, instruments_);
+            auto base = parCapVols.find(p.first);
+            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
+
+            Real tmp = (fair - base->second) / shiftSize;
+
+            // see par caps
+
+            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
+                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
+                                                           << " to 0.01 (got " << tmp << ")");
+                tmp = 0.01;
+            }
+
+            // write sensitivity
+
+            writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
+        }
+
 
         // process par yoy caps
 
