@@ -68,7 +68,8 @@ public:
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                 const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
-                const Size regressionOrder = 4, const bool tradeLevelBreakDown = true, const bool useRedBlocks = true,
+                const Size regressionOrder = 4, const double regressionVarianceCutoff = Null<Real>(),
+                const bool tradeLevelBreakDown = true, const bool useRedBlocks = true,
                 const bool useExternalComputeDevice = false, const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
@@ -163,6 +164,7 @@ private:
     bool enableDynamicIM_;
     Size dynamicIMStepSize_;
     Size regressionOrder_;
+    Real regressionVarianceCutoff_;
     bool tradeLevelBreakDown_;
     bool useRedBlocks_;
     bool useExternalComputeDevice_;

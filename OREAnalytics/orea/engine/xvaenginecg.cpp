@@ -100,8 +100,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
                          const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
-                         const bool tradeLevelBreakDown, const bool useRedBlocks, const bool useExternalComputeDevice,
-                         const bool externalDeviceCompatibilityMode,
+                         const Real regressionVarianceCutoff, const bool tradeLevelBreakDown, const bool useRedBlocks,
+                         const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool continueOnCalibrationError,
                          const bool continueOnError, const std::string& context)
@@ -111,8 +111,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
       enableDynamicIM_(enableDynamicIM), dynamicIMStepSize_(dynamicIMStepSize), regressionOrder_(regressionOrder),
-      tradeLevelBreakDown_(tradeLevelBreakDown), useRedBlocks_(useRedBlocks),
-      useExternalComputeDevice_(useExternalComputeDevice),
+      regressionVarianceCutoff_(regressionVarianceCutoff), tradeLevelBreakDown_(tradeLevelBreakDown),
+      useRedBlocks_(useRedBlocks), useExternalComputeDevice_(useExternalComputeDevice),
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
@@ -663,9 +663,8 @@ void XvaEngineCG::doForwardEvaluation() {
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        // todo set regression variance cutoff
         ops_ = getRandomVariableOps(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial,
-                                    (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, Null<Real>(),
+                                    (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, regressionVarianceCutoff_,
                                     pfRegressorPosGroups_, usePythonIntegration_);
         grads_ = getRandomVariableGradients(model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, eps);
     }

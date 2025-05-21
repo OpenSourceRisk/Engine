@@ -1856,6 +1856,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgRegressionOrder(parseInteger(tmp));
 
+        tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoff", false);
+        if (!tmp.empty())
+            setXvaCgRegressionVarianceCutoff(parseReal(tmp));
+
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
