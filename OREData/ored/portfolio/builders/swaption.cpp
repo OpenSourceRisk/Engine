@@ -130,9 +130,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     // compute horizon shift
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
-
-    const Date& latest = *std::max_element(maturities.begin(), maturities.end());
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, latest) * shiftHorizon;
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities.back()) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
@@ -292,8 +290,7 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
     Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
 
-    const Date& latest = *std::max_element(maturities.begin(), maturities.end());
-    Real maxTime = lgm->termStructure()->timeFromReference(latest); 
+    Real maxTime = lgm->termStructure()->timeFromReference(maturities.back()); 
 
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     QuantLib::ext::shared_ptr<IborIndex> index;
