@@ -423,7 +423,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // 9.4 get engine and set it
     cpu_timer timer;
 
-    std::vector<Date> mat{underlying_->maturity()};
+    std::vector<Date> mat(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
 
     // use ibor / ois index as key, if possible, otherwise the npv currency
     auto swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden

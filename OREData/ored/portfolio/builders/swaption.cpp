@@ -152,11 +152,14 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
 
     std::vector<Date> effExpiries;
     std::vector<Real> effStrikes;
+    std::vector<Date> effMaturities;
+
     if (!isAmerican) {
         effExpiries = expiries;
         effStrikes = strikes;
+        effMaturities = maturities;
     } else {
-        QL_REQUIRE(expiries.size() == 2 && strikes.size() == 2,
+        QL_REQUIRE(expiries.size() == 2 && strikes.size() == 2 && maturities.size() ==2,
                    "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 2 expiries and strikes for exercise "
                    "style 'American', got "
                        << expiries.size() << " expiries and " << strikes.size() << " strikes.");
@@ -164,6 +167,11 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         DateGrid grid(referenceCalibrationGrid);
         std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
                      [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
+
+        effMaturities.resize(effExpiries.size(), maturities.back());
+        std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
+                     [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
+                     
         // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously
         effStrikes.resize(effExpiries.size(), Null<Real>());
         if (strikes[0] != Null<Real>() && strikes[1] != Null<Real>()) {
@@ -179,9 +187,6 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
-
-        Date lastMaturity = maturities.back();
-        std::vector<Date> effMaturities(effExpiries.size(), lastMaturity);
 
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < effExpiries.size(); ++i) {
