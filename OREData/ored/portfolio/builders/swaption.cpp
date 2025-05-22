@@ -180,10 +180,13 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
 
+        Date lastMaturity = maturities.back();
+        std::vector<Date> effMaturities(effExpiries.size(), lastMaturity);
+
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < effExpiries.size(); ++i) {
             expiryDates.push_back(to_string(effExpiries[i]));
-            termDates.push_back(to_string(maturities[0]));
+            termDates.push_back(to_string(effMaturities[i]));
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
