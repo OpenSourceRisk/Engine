@@ -169,8 +169,6 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
                      [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
 
         effMaturities.resize(effExpiries.size(), maturities.back());
-        std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
-                     [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
                      
         // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously
         effStrikes.resize(effExpiries.size(), Null<Real>());
