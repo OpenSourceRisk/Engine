@@ -324,6 +324,8 @@ public:
     //! Write DIM distributions through time for all netting sets
     void exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize = 50,
                                const Real coveredStdDevs = Null<Real>());
+    //! Write DIM cube for all netting sets
+    void exportDimCube(ore::data::Report& dimCubeReport);
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step

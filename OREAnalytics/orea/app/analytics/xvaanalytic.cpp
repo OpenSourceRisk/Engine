@@ -1170,7 +1170,11 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                                     inputs_->dimDistributionCoveredStdDevs());
                 analytic()->addReport(LABEL, "dim_distribution", dimDistributionReport);
 
-                // Generate DIM regression reports
+		auto dimCubeReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                postProcess_->exportDimCube(*dimCubeReport);
+                analytic()->addReport(LABEL, "dim_cube", dimCubeReport);
+
+	// Generate DIM regression reports
                 vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
                 for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                     auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

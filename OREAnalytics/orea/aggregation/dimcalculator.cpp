@@ -193,6 +193,43 @@ void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& di
 
     dimDistributionReport.end();
 }
+void DynamicInitialMarginCalculator::exportDimCube(ore::data::Report& dimCubeReport) const {
+
+    Size samples = dimCube_->samples();
+    Date asof = cube_->asof();
+    
+    dimCubeReport.addColumn("Portfolio", string())
+        .addColumn("Sample", Size())
+        .addColumn("DateIndex", Size())
+        .addColumn("AsOfDate", Date())
+        .addColumn("Time", Real(), 6)
+        .addColumn("InitialMargin", Real(), 6)
+        .addColumn("Currency", string())
+        .addColumn("SimmSide", string());
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size j = 0; j < samples; ++j) {
+
+            for (Size i = 0; i < datesLoopSize_; ++i) {
+
+                Date d = dimCube_->dates()[i];
+                Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, d);
+                Real dim = nettingSetDIM_.at(nettingSet).at(i).at(j);
+                dimCubeReport.next()
+                    .add(nettingSet)
+                    .add(j)
+                    .add(i)
+                    .add(d)
+                    .add(t)
+                    .add(dim)
+                    .add("") // currency
+                    .add("Call");
+            }
+        }
+    }
+    dimCubeReport.end();
+}
 
 } // namespace analytics
 } // namespace ore
