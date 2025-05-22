@@ -96,6 +96,7 @@ public:
     Real PFE(NettingSetDetails nettingSetDetails) const;
     Real multiplier(NettingSetDetails nettingSetDetails) const;
     Real addOn(NettingSetDetails nettingSetDetails) const;
+    Real NPV(NettingSetDetails nettingSetDetails) const;
     Real addOn(NettingSetDetails nettingSetDetails, SaccrTradeData::AssetClass assetClass) const;
     Real addOn(NettingSetDetails nettingSetDetails, SaccrTradeData::AssetClass assetClass, string hedgingSet) const;
 

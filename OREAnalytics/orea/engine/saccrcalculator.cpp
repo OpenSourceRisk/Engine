@@ -497,6 +497,12 @@ Real SaccrCalculator::addOn(NettingSetDetails nettingSetDetails) const {
     return addOnIt->second;
 }
 
+Real SaccrCalculator::NPV(NettingSetDetails nettingSetDetails) const {
+    auto npvIt = NPV_.find(nettingSetDetails);
+    QL_REQUIRE(npvIt != NPV_.end(), "netting set " << nettingSetDetails << " not found in npv");
+    return npvIt->second;
+}
+
 Real SaccrCalculator::addOn(NettingSetDetails nettingSetDetails, AssetClass assetClass) const {
     AssetClassKey key(nettingSetDetails, assetClass);
     auto addOnIt = addOnAssetClass_.find(key);
@@ -530,6 +536,7 @@ void SaccrCalculator::writeReports() {
         summaryReportIt->second->addColumn("AssetClass", string())
             .addColumn("HedgingSet", string())
             .addColumn("AddOn", string())
+            .addColumn("NPV", string())
             .addColumn("IndependentAmountHeld", string())
             .addColumn("InitialMargin", string())
             .addColumn("VariationMargin", string())
@@ -552,6 +559,7 @@ void SaccrCalculator::writeReports() {
         summaryReportIt->second->add("All")
             .add("All")
             .add("")
+            .add(to_string(totalNPV_))
             .add("")
             .add("")
             .add("")
@@ -577,6 +585,7 @@ void SaccrCalculator::writeReports() {
             summaryReportIt->second->add("All")
                 .add("All")
                 .add(std::to_string(addOn(nettingSetDetails)))
+                .add(std::to_string(NPV(nettingSetDetails)))
                 .add(std::to_string(amountsBase_[nettingSetDetails].iah))
                 .add(std::to_string(amountsBase_[nettingSetDetails].im))
                 .add(std::to_string(amountsBase_[nettingSetDetails].vm))
@@ -609,6 +618,7 @@ void SaccrCalculator::writeReports() {
                     .add("")
                     .add("")
                     .add("")
+                    .add("")
                     .add("");
 
                 const vector<string>& hedgingSets = this->hedgingSets(nettingSetDetails, assetClass);
@@ -622,6 +632,7 @@ void SaccrCalculator::writeReports() {
                     summaryReportIt->second->add(to_string(assetClass))
                         .add(hedgingSet)
                         .add(std::to_string(addOn(nettingSetDetails, assetClass, hedgingSet)))
+                        .add("")
                         .add("")
                         .add("")
                         .add("")
