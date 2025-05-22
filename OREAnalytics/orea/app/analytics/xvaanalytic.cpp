@@ -628,10 +628,10 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
-            inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
-            inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
-            inputs_->xvaCgUsePythonIntegration(), true, true);
+            inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -884,10 +884,10 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
-            inputs_->xvaCgRegressionOrder(), inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(),
-            inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-            inputs_->xvaCgUseDoublePrecisionForExternalCalculation(), inputs_->xvaCgExternalComputeDevice(),
-            inputs_->xvaCgUsePythonIntegration(), true, true);
+            inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true);
 
         engine.run();
 
