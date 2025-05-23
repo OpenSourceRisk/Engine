@@ -364,8 +364,8 @@ void CommoditySpreadOption::addAdditionalFixingsAtOptionExpiry(
     for (const auto& [pricingDate, index] : flow->indices()) {
         if (expiryDate < pricingDate) {
             auto adjustedFixingDate = index->fixingCalendar().adjust(expiryDate, Preceding);
-            LOG("Add FixingDate for index " << index->name() << " for pricing Date" << adjustedFixingDate
-                                            << " for pricing Date " << pricingDate);
+            TLOG("Add FixingDate for index " << index->name() << " for pricing Date" << adjustedFixingDate
+                                             << " for pricing Date " << pricingDate);
             requiredFixings_.addFixingDate(adjustedFixingDate, index->name(), pricingDate, false, false);
         }
     }
