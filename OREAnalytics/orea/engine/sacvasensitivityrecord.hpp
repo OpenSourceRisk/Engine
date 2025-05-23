@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <orea/scenario/scenario.hpp>
+#include <qle/termstructures/scenario.hpp>
 #include <orea/scenario/cvascenario.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/identity.hpp>
