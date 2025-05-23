@@ -433,7 +433,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, false);
 
-    if(calibrationStrategy == "Advanced") 
+    if(calibrationStrategy == "DeltaGammaAdjusted") 
     {        
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
