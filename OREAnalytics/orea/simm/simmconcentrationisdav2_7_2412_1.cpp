@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd.
+ Copyright (C) 2025 Quaternion Risk Management Ltd.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -33,10 +33,10 @@ SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const Qua
     : simmBucketMapper_(simmBucketMapper) {
 
     // Populate IR categories that are used for concentration thresholds
-    irCategories_ = {{"1", {}},{"2", {"USD", "EUR", "GBP"}},{"3", {"AUD", "CAD", "CHF", "DKK", "HKD", "KRW", "NOK", "NZD", "SEK", "SGD", "TWD"}},{"4", {"JPY"}}};
+    irCategories_ = {{"1", {}},{"2", {"EUR", "GBP", "USD"}},{"3", {"AUD", "CAD", "CHF", "DKK", "HKD", "KRW", "NOK", "NZD", "SEK", "SGD", "TWD"}},{"4", {"JPY"}}};
 
     // Populate FX categories that are used for concentration thresholds
-    fxCategories_ = {{"1", {"USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD"}},{"2", {"BRL", "CNY", "HKD", "INR", "KRW", "MXN", "NOK", "NZD", "RUB", "SEK", "SGD", "TRY", "ZAR"}},{"3", {}}};
+    fxCategories_ = {{"1", {"AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "USD"}},{"2", {"BRL", "CNY", "HKD", "INR", "KRW", "MXN", "NOK", "NZD", "RUB", "SEK", "SGD", "TRY", "ZAR"}},{"3", {}}};
 
     // Initialise the data
     // clang-format off
@@ -49,18 +49,18 @@ SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const Qua
     bucketedThresholds_[CrifRecord::RiskType::IRCurve] = {
         { "1", 51 },
         { "2", 210 },
-        { "3", 61 },
-        { "4", 150 }
+        { "3", 100 },
+        { "4", 230 }
     };
 
     bucketedThresholds_[CrifRecord::RiskType::CreditQ] = {
-        { "1", 1 },
+        { "1", 1.0 },
         { "2", 0.19 },
         { "3", 0.19 },
         { "4", 0.19 },
         { "5", 0.19 },
         { "6", 0.19 },
-        { "7", 1 },
+        { "7", 1.0 },
         { "8", 0.19 },
         { "9", 0.19 },
         { "10", 0.19 },
@@ -84,7 +84,7 @@ SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const Qua
         { "6", 14 },
         { "7", 14 },
         { "8", 14 },
-        { "9", 0.7 },
+        { "9", 0.70 },
         { "10", 0.33 },
         { "11", 730 },
         { "12", 730 },
@@ -152,8 +152,8 @@ SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const Qua
         { "9", 1300 },
         { "10", 100 },
         { "11", 520 },
-        { "12", 810 },
-        { "13", 740 },
+        { "12", 740 },
+        { "13", 790 },
         { "14", 790 },
         { "15", 790 },
         { "16", 62 },

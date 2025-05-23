@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd.
+ Copyright (C) 2025 Quaternion Risk Management Ltd.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_7.hpp
+/*! \file orea/simm/simmconfigurationisdav2_7_2412_1.hpp
     \brief SIMM configuration for SIMM version 2.7.2412.1
 */
 

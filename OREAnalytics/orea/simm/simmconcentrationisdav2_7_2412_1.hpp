@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd.
+ Copyright (C) 2025 Quaternion Risk Management Ltd.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -34,7 +34,7 @@ namespace analytics {
 
 /*! Class giving the SIMM concentration thresholds as outlined in the document
     <em>ISDA SIMM Methodology, version 2.7.2412.1 .
-        Effective Date: December 7, 2024.</em>
+        Effective Date: July 12, 2025.</em>
 */
 class SimmConcentration_ISDA_V2_7_2412_1 : public SimmConcentrationBase {
 public:
