@@ -131,6 +131,7 @@ scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
 scenario/historicalscenariogenerator.cpp
 scenario/lgmscenariogenerator.cpp
+scenario/scenario.cpp
 scenario/scenariofilereader.cpp
 scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
@@ -343,6 +344,7 @@ scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
 scenario/historicalscenariogenerator.hpp
 scenario/lgmscenariogenerator.hpp
+scenario/scenario.hpp
 scenario/scenariofactory.hpp
 scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
