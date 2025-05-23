@@ -41,6 +41,7 @@ using ore::analytics::MarketDataLoader;
 using ore::analytics::MarketDataInMemoryLoader;
 using ore::analytics::MarketCalibrationReport;
 using ore::analytics::DummyMarketDataLoader;
+using ore::analytics::PortfolioAnalyser;
 using ore::data::Portfolio;
 using ore::data::MarketImpl;
 using ore::data::PlainInMemoryReport;
@@ -48,6 +49,10 @@ using ore::data::TodaysMarketParameters;
 using ore::data::ReferenceDatum;
 using ore::data::ReferenceDataManager;
 using ore::data::BasicReferenceDataManager;
+using ore::data::CurveConfigurations;
+using ore::data::EngineData;
+using ore::data::IborFallbackConfig;
+using ore::data::MarketObject;
 
 %}
 
@@ -58,6 +63,7 @@ namespace std {
     %template() pair<Date, string>;
     %template(DateStringPairVector) vector<pair<Date, string>>;
     %template(SizeVector) vector<QuantLib::Size>;
+    %template(MarketObjectMap) std::map<ore::data::MarketObject, std::set<std::string>>;
 }
 
 // ORE Analytics
@@ -402,6 +408,35 @@ public:
 
     std::vector<std::pair<std::string, std::string>> marketDataQuotes();
     std::vector<std::pair<std::pair<std::string, std::string>, bool>> marketFixings();
+};
+
+
+class PortfolioAnalyser {
+public:
+    //! Constructor
+    PortfolioAnalyser(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p,
+                      const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed, const std::string& baseCcy,
+                      const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+                      const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                      const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+                      bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
+
+    bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const;
+    bool hasMarketObjectType(const ore::data::MarketObject& marketObject) const;
+    std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const;
+    std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
+    std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
+    std::map<ore::data::MarketObject, std::set<std::string>>
+    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const;
+    std::set<std::string> swapindices() const;
+    void riskFactorReport(ore::data::Report& reportOut) const;
+    void marketObjectReport(ore::data::Report& reportOut) const;
+    std::set<std::string> counterparties();
+    QuantLib::Date maturity();
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const;
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const;
+    void addDependencies();
 };
 
 #endif

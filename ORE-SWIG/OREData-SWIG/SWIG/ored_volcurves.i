@@ -72,7 +72,9 @@ class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
                               const Size timeStepsPerYear = 1,
                               const Type lvType = Type::Dupire,
                               const std::vector<Real>& calibrationMoneyness = { -2.0, -1.0, 0.0, 1.0, 2.0 },
-                              const bool dontCalibrate = false);
+                              const std::string& referenceCalibrationGrid = "",
+                              const bool dontCalibrate = false,
+                              const Handle<YieldTermStructure>& baseCurve = {});
          LocalVolModelBuilder(const Handle<YieldTermStructure>& curve,
                               const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                               const std::set<Date>& simulationDates = {},
@@ -80,7 +82,9 @@ class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
                               const Size timeStepsPerYear = 1,
                               const Type lvType = Type::Dupire,
                               const std::vector<Real>& calibrationMoneyness = { -2.0, -1.0, 0.0, 1.0, 2.0 },
-                              const bool dontCalibrate = false);
+                              const std::string& referenceCalibrationGrid = "", 
+                              const bool dontCalibrate = false,
+                              const Handle<YieldTermStructure>& baseCurve = {});
              
          std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
 };
