@@ -164,7 +164,7 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
 
     // open file
 
@@ -211,8 +211,8 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
 
     // set precision
 
-    out << std::setprecision(doublePrecision ? std::numeric_limits<double>::max_digits10
-                                             : std::numeric_limits<float>::max_digits10);
+    out << std::setprecision(cube.usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
+                                                        : std::numeric_limits<float>::max_digits10);
 
     // write cube data
 

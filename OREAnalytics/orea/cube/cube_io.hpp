@@ -44,7 +44,7 @@ struct NPVCubeWithMetaData {
 };
 
 NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision = false);
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision = false);
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube);
 
 QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
 void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube);
