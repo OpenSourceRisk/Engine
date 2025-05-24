@@ -115,7 +115,8 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
 }
 
 template <class T>
-void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance) {
+void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
+                    bool doublePrecision) {
 
     initCube(*cube);
 
@@ -222,7 +223,8 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, QuantL
 
 template <class T>
 void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
-                    QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& d) {
+                    QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& d,
+                    bool doublePrecision) {
 
     initCube(*cube, portfolio, d);
 
@@ -448,7 +450,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
     vector<Date> dates(100, d);
     Size samples = 1000;
     auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
-    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14);
+    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14, true);
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
@@ -458,7 +460,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
     Size samples = 200;
     Size depth = 6;
     auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(d, ids, dates, samples, depth);
-    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
+    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14, true);
 }
 
 BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {
