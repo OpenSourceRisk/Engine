@@ -211,8 +211,8 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
 
     // set precision
 
-    out << std::setprecision(cube.usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
-                                                        : std::numeric_limits<float>::max_digits10);
+    out << std::setprecision(cube.cube->usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
+                                                              : std::numeric_limits<float>::max_digits10);
 
     // write cube data
 
