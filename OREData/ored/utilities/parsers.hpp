@@ -37,6 +37,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/termstructures/scenario.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>

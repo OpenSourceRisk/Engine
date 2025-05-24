@@ -17,9 +17,12 @@
 */
 
 #include <orea/scenario/stressscenariodata.hpp>
+
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/scenario.hpp>
 
 using namespace QuantLib;
 using namespace std;
