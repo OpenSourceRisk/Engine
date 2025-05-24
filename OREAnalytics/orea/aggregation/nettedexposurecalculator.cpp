@@ -47,7 +47,7 @@ NettedExposureCalculator::NettedExposureCalculator(
     const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
     const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
     const MporCashFlowMode mporCashFlowMode, const bool firstMporCollateralAdjustment,
-    const bool exposureProfilesUseCloseOutValues)
+    const bool exposureProfilesUseCloseOutValues, const bool useDoublePrecisionCubes)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
       collateralBalances_(collateralBalances), nettingSetDefaultValue_(nettingSetDefaultValue),
@@ -71,18 +71,20 @@ NettedExposureCalculator::NettedExposureCalculator(
         }
     }
 
-    nettedCube_= QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            cube->samples()); // Exposure after collateral
-    if (multiPath) {
-        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            cube->samples(), EXPOSURE_CUBE_DEPTH); // EPE, ENE
+    if(useDoublePrecisionCubes) {
+        // Exposure after collateral
+        nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(market_->asofDate(), nettingSetIds,
+                                                                          cube->dates(), cube->samples());
+        // EPE, ENE
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(market_->asofDate(), nettingSetIds,
+                                                                            cube->dates(), 1, EXPOSURE_CUBE_DEPTH);
     } else {
-        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            1, EXPOSURE_CUBE_DEPTH); // EPE, ENE
+        nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market_->asofDate(), nettingSetIds,
+                                                                         cube->dates(), cube->samples());
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market_->asofDate(), nettingSetIds,
+                                                                           cube->dates(), 1, EXPOSURE_CUBE_DEPTH);
     }
+
 };
 
 void NettedExposureCalculator::build() {

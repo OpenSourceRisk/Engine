@@ -100,11 +100,11 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     nettingSetIds_ = std::move(nettingSets);
 
     if (cube_->usesDoublePrecision()) {
-        dimCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_,
-                                                                           cube_->dates(), cube_->samples());
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                       cube_->samples());
     } else {
-        dimCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_,
-                                                                           cube_->dates(), cube_->samples());
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                      cube_->samples());
     }
 }
 

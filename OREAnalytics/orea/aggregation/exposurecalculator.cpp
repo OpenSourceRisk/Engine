@@ -37,7 +37,8 @@ ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
     const QuantLib::ext::shared_ptr<Market>& market, bool exerciseNextBreak, const string& baseCurrency,
     const string& configuration, const Real quantile, const CollateralExposureHelper::CalculationType calcType,
-    const bool multiPath, const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError)
+    const bool multiPath, const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError,
+    bool useDoublePrecisionCubes)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
       aggregationScenarioData_(aggregationScenarioData), market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration), quantile_(quantile), calcType_(calcType),
@@ -47,14 +48,13 @@ ExposureCalculator::ExposureCalculator(
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
-    if (multiPath) {
-        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
-            market->asofDate(), portfolio_->ids(), dates_,
-            cube_->samples(), EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+    // EPE, ENE, allocatedEPE, allocatedENE
+    if (useDoublePrecisionCubes) {
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+            market->asofDate(), portfolio_->ids(), dates_, cube_->samples(), EXPOSURE_CUBE_DEPTH);
     } else {
-        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
-            market->asofDate(), portfolio_->ids(), dates_,
-            1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market->asofDate(), portfolio_->ids(),
+                                                                           dates_, 1, EXPOSURE_CUBE_DEPTH);
     }
 
     set<string> nettingSetIdsSet;

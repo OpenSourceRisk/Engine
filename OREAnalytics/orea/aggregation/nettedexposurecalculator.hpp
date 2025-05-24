@@ -69,7 +69,7 @@ public:
                              //  vm margin and mtm)  constant during first mpor period,
                              //  analog for overcollaterializations in case of negative mtm.
                              const bool firstMporCollateralAdjustment,
-			     const bool exposureProfilesUseCloseOutValues = false);
+                             const bool exposureProfilesUseCloseOutValues = false, const bool useDoublePrecisionCubes = false);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
