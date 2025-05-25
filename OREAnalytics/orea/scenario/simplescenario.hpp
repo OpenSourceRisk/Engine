@@ -43,11 +43,11 @@ public:
 
     SimpleScenario() {}
     //! if sharedData is not provided, the instance will create its own shared data block
-    SimpleScenario(Date asof, const std::string& label = std::string(), QuantLib::Real numeraire = 0,
+    SimpleScenario(QuantLib::Date asof, const std::string& label = std::string(), QuantLib::Real numeraire = 0,
                    const QuantLib::ext::shared_ptr<SharedData>& sharedData = nullptr);
 
-    const Date& asof() const override { return asof_; }
-    void setAsof(const Date& d) override { asof_ = d; }
+    const QuantLib::Date& asof() const override { return asof_; }
+    void setAsof(const QuantLib::Date& d) override { asof_ = d; }
 
     const std::string& label() const override { return label_; }
     void label(const string& s) override { label_ = s; }
@@ -87,7 +87,7 @@ private:
     QuantLib::ext::shared_ptr<SharedData> sharedData_;
     bool isAbsolute_ = true;
     bool isPar_ = false;
-    Date asof_;
+    QuantLib::Date asof_;
     std::string label_;
     QuantLib::Real numeraire_ = 0.0;
     std::vector<QuantLib::Real> data_;
