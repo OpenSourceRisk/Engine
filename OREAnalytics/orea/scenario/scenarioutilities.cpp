@@ -353,8 +353,8 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
     return recastScenario(scenario, oldCoordinates, newCoordinatesMap);
 }
 
-QuantLib::QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar,
-                                               const QuantLib::Real rawValue) {
+QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar,
+                                     const QuantLib::Real rawValue) {
     switch (keyType) {
     case RiskFactorKey::KeyType::CPR:
     case RiskFactorKey::KeyType::SecuritySpread:

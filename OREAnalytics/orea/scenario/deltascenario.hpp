@@ -52,7 +52,7 @@ public:
     void setAsof(const Date& d) override { delta_->setAsof(d); }
 
     //! Return the scenario label
-    const std::std::string& label() const override { return delta_->label(); }
+    const std::string& label() const override { return delta_->label(); }
     //! set the label
     void label(const std::string& s) override { delta_->label(s); }
 
@@ -72,7 +72,7 @@ public:
     const bool isPar() const override { return baseScenario_->isPar(); }
     void setPar(const bool b) override { baseScenario_->setPar(b); }
 
-    const std::map<std::pair<RiskFactorKey::KeyType, std::std::string>, std::vector<std::vector<Real>>>&
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
     coordinates() const override {
         return baseScenario_->coordinates();
     }
