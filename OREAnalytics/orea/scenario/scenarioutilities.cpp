@@ -25,7 +25,8 @@
 namespace ore {
 namespace analytics {
 
-Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, const Real v2) {
+QuantLib::Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const QuantLib::Real v1,
+                                     const QuantLib::Real v2) {
     switch (keyType) {
     case RiskFactorKey::KeyType::SwaptionVolatility:
     case RiskFactorKey::KeyType::YieldVolatility:
@@ -65,7 +66,8 @@ Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, 
     };
 }
 
-Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v, const Real d) {
+QuantLib::Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const QuantLib::Real v,
+                                       const QuantLib::Real d) {
     switch (keyType) {
     case RiskFactorKey::KeyType::SwaptionVolatility:
     case RiskFactorKey::KeyType::YieldVolatility:
@@ -150,8 +152,8 @@ bool checkKeyDifferences(const QuantLib::ext::shared_ptr<Scenario>& s1, const Qu
 
 QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::shared_ptr<Scenario>& s1,
                                                           const QuantLib::ext::shared_ptr<Scenario>& s2,
-                                                          const Date& targetScenarioAsOf,
-                                                          const Real targetScenarioNumeraire,
+                                                          const QuantLib::Date& targetScenarioAsOf,
+                                                          const QuantLib::Real targetScenarioNumeraire,
                                                           const bool allowAdditionalKeysInS2) {
 
     QL_REQUIRE(s1->isAbsolute() && s2->isAbsolute(), "getDifferenceScenario(): both scenarios must be absolute ("
@@ -161,13 +163,13 @@ QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::s
     QL_REQUIRE(checkKeyDifferences(s1, s2, allowAdditionalKeysInS2),
                "getDifferenceScenario(): scenario key sets are not compatible. Check log for details.");
 
-    Date asof = targetScenarioAsOf;
-    if (asof == Date() && s1->asof() == s2->asof())
+    QuantLib::Date asof = targetScenarioAsOf;
+    if (asof == QuantLib::Date() && s1->asof() == s2->asof())
         asof = s1->asof();
 
-    QL_REQUIRE(asof != Date(), "getDifferenceScenario(): either both scenarios have to have the same asof date ("
-                                   << s1->asof() << ", " << s2->asof()
-                                   << ") or the target scenario asof date must be given.");
+    QL_REQUIRE(asof != QuantLib::Date(),
+               "getDifferenceScenario(): either both scenarios have to have the same asof date ("
+                   << s1->asof() << ", " << s2->asof() << ") or the target scenario asof date must be given.");
 
     auto result = s1->clone();
     result->setAsof(asof);
@@ -184,20 +186,20 @@ QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::s
 
 QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
                                                             const QuantLib::ext::shared_ptr<Scenario>& d,
-                                                            const Date& targetScenarioAsOf,
-                                                            const Real targetScenarioNumeraire) {
+                                                            const QuantLib::Date& targetScenarioAsOf,
+                                                            const QuantLib::Real targetScenarioNumeraire) {
 
     QL_REQUIRE(!d->isAbsolute(), "addDifferenceToScenario(): second argument must be difference scenario");
     QL_REQUIRE(checkKeyDifferences(s, d, false),
                "addDifferenceToScenario(): scenario key sets are not compatible. Check log for details.");
 
-    Date asof = targetScenarioAsOf;
-    if (asof == Date() && s->asof() == d->asof())
+    QuantLib::Date asof = targetScenarioAsOf;
+    if (asof == QuantLib::Date() && s->asof() == d->asof())
         asof = s->asof();
 
-    QL_REQUIRE(asof != Date(), "addDifferenceToScenario(): either both scenarios have to have the same asof date ("
-                                   << s->asof() << ", " << d->asof()
-                                   << ") or the target scenario asof date must be given.");
+    QL_REQUIRE(asof != QuantLib::Date(),
+               "addDifferenceToScenario(): either both scenarios have to have the same asof date ("
+                   << s->asof() << ", " << d->asof() << ") or the target scenario asof date must be given.");
 
     auto result = s->clone();
     result->setAsof(asof);
@@ -214,7 +216,7 @@ QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext:
 
 namespace {
 
-Size getKeyIndex(const std::vector<std::vector<Real>>& oldCoordinates, const std::vector<Size>& indices) {
+Size getKeyIndex(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates, const std::vector<Size>& indices) {
     Size resultIndex = 0;
     Size multiplier = 1;
     int workingIndex = indices.size() - 1;
@@ -225,12 +227,12 @@ Size getKeyIndex(const std::vector<std::vector<Real>>& oldCoordinates, const std
     return resultIndex;
 }
 
-double interpolatedValue(const std::vector<std::vector<Real>>& oldCoordinates,
-                         const std::vector<std::vector<Real>>& newCoordinates, const std::vector<Size>& newIndex,
-                         const std::pair<RiskFactorKey::KeyType, std::string>& key,
+double interpolatedValue(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates,
+                         const std::vector<std::vector<QuantLib::Real>>& newCoordinates,
+                         const std::vector<Size>& newIndex, const std::pair<RiskFactorKey::KeyType, std::string>& key,
                          const QuantLib::ext::shared_ptr<Scenario>& scenario) {
 
-    Real w0, w1;
+    QuantLib::Real w0, w1;
     std::vector<Size> oldIndex0(oldCoordinates.size());
     std::vector<Size> oldIndex1(oldCoordinates.size());
 
@@ -268,10 +270,12 @@ double interpolatedValue(const std::vector<std::vector<Real>>& oldCoordinates,
 
 } // namespace
 
-QuantLib::ext::shared_ptr<Scenario> recastScenario(
-    const QuantLib::ext::shared_ptr<Scenario>& scenario,
-    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>& oldCoordinates,
-    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>& newCoordinates) {
+QuantLib::ext::shared_ptr<Scenario>
+recastScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
+               const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
+                   oldCoordinates,
+               const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
+                   newCoordinates) {
 
     auto result = QuantLib::ext::make_shared<SimpleScenario>(
         scenario->asof(), scenario->label() + " (mapped to new coordinates)", scenario->getNumeraire());
@@ -308,18 +312,18 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             RiskFactorKey key(k.first, k.second, 0);
             result->add(key, scenario->get(key));
 
-        } else{
+        } else {
             Size newKeyIndex = 0;
             std::vector<Size> indices(c1->second.size(), 0);
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
                 while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
-                        indices[workingIndex] = 0;
-                        --workingIndex;
-                        if (workingIndex >= 0) {
-                            indices[workingIndex]++;
-                        }
+                    indices[workingIndex] = 0;
+                    --workingIndex;
+                    if (workingIndex >= 0) {
+                        indices[workingIndex]++;
+                    }
                 }
                 if (workingIndex >= 0) {
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
@@ -336,17 +340,21 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
 
 QuantLib::ext::shared_ptr<Scenario> recastScenario(
     const QuantLib::ext::shared_ptr<Scenario>& scenario,
-    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>& oldCoordinates,
-    const std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>>& newCoordinates) {
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
+        oldCoordinates,
+    const std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<QuantLib::Real>>>>&
+        newCoordinates) {
 
-    std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>> newCoordinatesMap;
+    std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>
+        newCoordinatesMap;
     for (const auto& [key, name, coordinates] : newCoordinates) {
         newCoordinatesMap[{key, name}] = coordinates;
     }
     return recastScenario(scenario, oldCoordinates, newCoordinatesMap);
 }
 
-QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar, const Real rawValue) {
+QuantLib::QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar,
+                                               const QuantLib::Real rawValue) {
     switch (keyType) {
     case RiskFactorKey::KeyType::CPR:
     case RiskFactorKey::KeyType::SecuritySpread:
