@@ -393,6 +393,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/scenario.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -990,6 +991,7 @@ termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
+termstructures/scenario.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -1038,6 +1040,7 @@ utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp

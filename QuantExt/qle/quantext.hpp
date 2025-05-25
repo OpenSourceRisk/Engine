@@ -564,6 +564,7 @@
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/sabrstrippedoptionletadapter.hpp>
+#include <qle/termstructures/scenario.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
@@ -612,6 +613,7 @@
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
+#include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
 #include <qle/utilities/time.hpp>
