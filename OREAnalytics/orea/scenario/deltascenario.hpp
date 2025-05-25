@@ -25,6 +25,8 @@
 
 #include <orea/scenario/scenario.hpp>
 
+#include <string>
+
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -38,7 +40,7 @@ using namespace QuantLib;
 
   \ingroup scenario
 */
-class DeltaScenario : public virtual ore::analytics::Scenario {
+class DeltaScenario : public virtual QuantExt::Scenario {
 public:
     //! Constructor
     DeltaScenario() {}
@@ -50,9 +52,9 @@ public:
     void setAsof(const Date& d) override { delta_->setAsof(d); }
 
     //! Return the scenario label
-    const std::string& label() const override { return delta_->label(); }
+    const std::std::string& label() const override { return delta_->label(); }
     //! set the label
-    void label(const string& s) override { delta_->label(s); }
+    void label(const std::string& s) override { delta_->label(s); }
 
     //! Get Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
     Real getNumeraire() const override;
@@ -70,7 +72,7 @@ public:
     const bool isPar() const override { return baseScenario_->isPar(); }
     void setPar(const bool b) override { baseScenario_->setPar(b); }
 
-    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    const std::map<std::pair<RiskFactorKey::KeyType, std::std::string>, std::vector<std::vector<Real>>>&
     coordinates() const override {
         return baseScenario_->coordinates();
     }
@@ -90,5 +92,5 @@ protected:
     QuantLib::ext::shared_ptr<Scenario> delta_;
 };
 
-} // namespace sensitivity
+} // namespace analytics
 } // namespace ore
