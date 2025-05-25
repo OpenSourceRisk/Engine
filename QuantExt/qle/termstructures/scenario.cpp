@@ -19,6 +19,7 @@
 #include <qle/termstructures/scenario.hpp>
 
 #include <ql/errors.hpp>
+#include <ql/math/comparison.hpp>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/tokenizer.hpp>
