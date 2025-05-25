@@ -205,7 +205,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     vector<string> types = XMLUtils::getChildrenValues(node, "ParConversionExcludes", "Type", false);
     if (types.size() > 0) {
         for (Size i = 0; i < types.size(); ++i)
-            parConversionExcludes_.insert(parseRiskFactorKeyType(types[i]));
+            parConversionExcludes_.insert(QuantExt::parseRiskFactorKeyType(types[i]));
     }
 
     parConversionExcludeFixings_ = XMLUtils::getChildValue(node, "ParSensiRemoveFixing", false, ".*");
