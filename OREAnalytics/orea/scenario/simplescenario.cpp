@@ -39,7 +39,7 @@ bool SimpleScenario::has(const RiskFactorKey& key) const {
 }
 
 void SimpleScenario::add(const RiskFactorKey& key, QuantLib::Real value) {
-    Size dataIndex;
+    QuantLib::Size dataIndex;
     if (auto i = sharedData_->keyIndex.find(key); i != sharedData_->keyIndex.end()) {
         dataIndex = i->second;
     } else {
