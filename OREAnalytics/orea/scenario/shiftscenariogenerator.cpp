@@ -66,7 +66,7 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 2 && (tokens[0] == "Up" || tokens[0] == "Down")) {
         type_ = tokens[0] == "Up" ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
@@ -76,11 +76,11 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 3 && tokens[0] == "Cross") {
         type_ = ScenarioDescription::Type::Cross;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
-        temp = deconstructFactor(tokens[2]);
+        temp = QuantExt::deconstructFactor(tokens[2]);
         key2_ = temp.first;
         indexDesc2_ = temp.second;
 
