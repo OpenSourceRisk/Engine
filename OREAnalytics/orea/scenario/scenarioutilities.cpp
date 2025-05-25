@@ -216,9 +216,10 @@ QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext:
 
 namespace {
 
-Size getKeyIndex(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates, const std::vector<Size>& indices) {
-    Size resultIndex = 0;
-    Size multiplier = 1;
+QuantLib::Size getKeyIndex(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates,
+                           const std::vector<QuantLib::Size>& indices) {
+    QuantLib::Size resultIndex = 0;
+    QuantLib::Size multiplier = 1;
     int workingIndex = indices.size() - 1;
     do {
         resultIndex += multiplier * indices[workingIndex];
@@ -229,15 +230,16 @@ Size getKeyIndex(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates,
 
 double interpolatedValue(const std::vector<std::vector<QuantLib::Real>>& oldCoordinates,
                          const std::vector<std::vector<QuantLib::Real>>& newCoordinates,
-                         const std::vector<Size>& newIndex, const std::pair<RiskFactorKey::KeyType, std::string>& key,
+                         const std::vector<QuantLib::Size>& newIndex,
+                         const std::pair<RiskFactorKey::KeyType, std::string>& key,
                          const QuantLib::ext::shared_ptr<Scenario>& scenario) {
 
     QuantLib::Real w0, w1;
-    std::vector<Size> oldIndex0(oldCoordinates.size());
-    std::vector<Size> oldIndex1(oldCoordinates.size());
+    std::vector<QuantLib::Size> oldIndex0(oldCoordinates.size());
+    std::vector<QuantLib::Size> oldIndex1(oldCoordinates.size());
 
-    for (Size i = 0; i < oldCoordinates.size(); ++i) {
-        Size idx = std::distance(
+    for (QuantLib::Size i = 0; i < oldCoordinates.size(); ++i) {
+        QuantLib::Size idx = std::distance(
             oldCoordinates[i].begin(),
             std::upper_bound(oldCoordinates[i].begin(), oldCoordinates[i].end(), newCoordinates[i][newIndex[i]]));
         if (idx == 0) {
@@ -257,8 +259,8 @@ double interpolatedValue(const std::vector<std::vector<QuantLib::Real>>& oldCoor
         }
     }
 
-    Size keyIndex0 = getKeyIndex(oldCoordinates, oldIndex0);
-    Size keyIndex1 = getKeyIndex(oldCoordinates, oldIndex1);
+    QuantLib::Size keyIndex0 = getKeyIndex(oldCoordinates, oldIndex0);
+    QuantLib::Size keyIndex1 = getKeyIndex(oldCoordinates, oldIndex1);
     try {
         return w0 * scenario->get(RiskFactorKey(key.first, key.second, keyIndex0)) +
                w1 * scenario->get(RiskFactorKey(key.first, key.second, keyIndex1));
@@ -313,8 +315,8 @@ recastScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
             result->add(key, scenario->get(key));
 
         } else {
-            Size newKeyIndex = 0;
-            std::vector<Size> indices(c1->second.size(), 0);
+            QuantLib::Size newKeyIndex = 0;
+            std::vector<QuantLib::Size> indices(c1->second.size(), 0);
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
