@@ -76,13 +76,13 @@ NettedExposureCalculator::NettedExposureCalculator(
         nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(market_->asofDate(), nettingSetIds,
                                                                           cube->dates(), cube->samples());
         // EPE, ENE
-        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(market_->asofDate(), nettingSetIds,
-                                                                            cube->dates(), 1, EXPOSURE_CUBE_DEPTH);
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+            market_->asofDate(), nettingSetIds, cube->dates(), multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     } else {
         nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market_->asofDate(), nettingSetIds,
                                                                          cube->dates(), cube->samples());
-        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market_->asofDate(), nettingSetIds,
-                                                                           cube->dates(), 1, EXPOSURE_CUBE_DEPTH);
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(
+            market_->asofDate(), nettingSetIds, cube->dates(), multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     }
 
 };

@@ -51,10 +51,10 @@ ExposureCalculator::ExposureCalculator(
     // EPE, ENE, allocatedEPE, allocatedENE
     if (useDoublePrecisionCubes) {
         exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
-            market->asofDate(), portfolio_->ids(), dates_, cube_->samples(), EXPOSURE_CUBE_DEPTH);
+            market->asofDate(), portfolio_->ids(), dates_, multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     } else {
-        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market->asofDate(), portfolio_->ids(),
-                                                                           dates_, 1, EXPOSURE_CUBE_DEPTH);
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(
+            market->asofDate(), portfolio_->ids(), dates_, multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     }
 
     set<string> nettingSetIdsSet;
