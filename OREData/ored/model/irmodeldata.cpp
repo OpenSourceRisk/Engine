@@ -89,6 +89,8 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
         oss << "CoterminalAtm";
     else if (type == CalibrationStrategy::CoterminalDealStrike)
         oss << "CoterminalDealStrike";
+    else if (type == CalibrationStrategy::DeltaGammaAdjusted)
+        oss << "DeltaGammaAdjusted";
     else if (type == CalibrationStrategy::UnderlyingATM)
         oss << "UnderlyingAtm";
     else if (type == CalibrationStrategy::UnderlyingDealStrike)
