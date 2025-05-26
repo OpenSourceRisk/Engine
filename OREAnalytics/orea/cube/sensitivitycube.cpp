@@ -100,7 +100,7 @@ void SensitivityCube::initialise() {
             fd.targetShiftSize = targetShiftSize(des.key1());
             fd.actualShiftSize = actualShiftSize(des.key1());
             fd.rfkey = des.key1();
-            fd.factorDesc = deconstructFactor(des.factor1()).second;
+            fd.factorDesc = QuantExt::deconstructFactor(des.factor1()).second;
         }
         scenarioIdx_[des] = i;
 
