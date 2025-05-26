@@ -282,7 +282,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
         // build and assign the engine
         QuantLib::ext::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
-            engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
+            engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()), longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
         setSensitivityTemplate(*engineBuilder);
         addProductModelEngine(*engineBuilder);
