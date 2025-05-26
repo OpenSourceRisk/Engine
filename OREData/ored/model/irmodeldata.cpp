@@ -72,6 +72,8 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::CoterminalATM;
     else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
         return CalibrationStrategy::CoterminalDealStrike;
+    else if (boost::algorithm::to_upper_copy(s) == "DELTAGAMMAADJUSTED")
+        return CalibrationStrategy::DeltaGammaAdjusted;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
         return CalibrationStrategy::UnderlyingATM;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
