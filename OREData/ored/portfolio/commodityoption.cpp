@@ -49,7 +49,6 @@ CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionDa
 }
 
 void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
-
     // ISDA taxonomy, assuming Commodity follows the Equity template
     additionalData_["isdaAssetClass"] = std::string("Commodity");
     additionalData_["isdaBaseProduct"] = std::string("Option");
@@ -99,20 +98,32 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(option_.style());
-        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+        //if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+        if ((et == Exercise::European) && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
             forwardDate_ = expiryDate;
+        }
+        else if ((et == Exercise::American) && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+            forwardDate_ = expiryDate;
+            // add future contract'sexpiry date to the asset name
+            std::ostringstream so;
+            so<<QuantLib::io::iso_date(forwardDate_);
+            assetName_ += "_" + so.str();
         }
 
     }
 
     VanillaOptionTrade::build(engineFactory);
 
+    std::string delimiter = "_";
+    assetName_ = assetName_.substr(0, assetName_.find(delimiter));
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
         DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
                                 << " and strike " << strike_.value() << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
+
+    
 }
 
 std::map<AssetClass, std::set<std::string>>
