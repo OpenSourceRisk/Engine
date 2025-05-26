@@ -254,7 +254,7 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
         
-        std::string delimiter = "_";
+        std::string delimiter = "#";
         std::string assetNameLocal = assetName;
         if (assetName.find(delimiter) != std::string::npos ){
             assetNameLocal = assetName.substr(0, assetName.find(delimiter));

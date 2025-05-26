@@ -107,14 +107,14 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
             // add future contract'sexpiry date to the asset name
             std::ostringstream so;
             so<<QuantLib::io::iso_date(forwardDate_);
-            assetName_ += "_" + so.str();
+            assetName_ += "#" + so.str();
         }
 
     }
 
     VanillaOptionTrade::build(engineFactory);
 
-    std::string delimiter = "_";
+    std::string delimiter = "#";
     assetName_ = assetName_.substr(0, assetName_.find(delimiter));
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
