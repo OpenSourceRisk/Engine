@@ -428,17 +428,16 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     auto calibrationStrategy = parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy"));
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine; 
+    std::vector<Date> maturitiesFinal;
+    std::vector<Rate> strikesFinal;
 
     if (calibrationStrategy != CalibrationStrategy::DeltaGammaAdjusted)
     {   // Usual case
 
-        // use ibor / ois index as key, if possible, otherwise the npv currency
-        swaptionEngine = swaptionBuilder->engine( 
-        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), mat, strikes, exerciseType_ == Exercise::American,
-        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
-     }else
-     {  // Special Case 
+        maturitiesFinal = mat;
+        strikesFinal = strikes;
+    }else
+    {  // Special Case 
         
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
@@ -446,19 +445,17 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration), Market::defaultConfiguration);        
         std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> underlyingMatched = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
 
-        std::vector<Date> maturities;
-        std::vector<Rate> strikes;
         for (const auto& swap : underlyingMatched) {
-            maturities.push_back(swap->maturityDate());
-            strikes.push_back(swap->fixedRate());
+            maturitiesFinal.push_back(swap->maturityDate());
+            strikesFinal.push_back(swap->fixedRate());
         }
-
-        // use ibor / ois index as key, if possible, otherwise the npv currency
-        swaptionEngine = swaptionBuilder->engine(
-            id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-            exerciseBuilder_->noticeDates(), maturities, strikes, exerciseType_ == Exercise::American,
-            envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
     }
+
+    // use ibor / ois index as key, if possible, otherwise the npv currency
+    swaptionEngine = swaptionBuilder->engine(
+        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+        exerciseBuilder_->noticeDates(), maturitiesFinal, strikesFinal, exerciseType_ == Exercise::American,
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
 
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
