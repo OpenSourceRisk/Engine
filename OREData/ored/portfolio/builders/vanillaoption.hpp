@@ -39,8 +39,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/pricingengines/fdblackvanillaengine.hpp>
-#include <regex>
+
 namespace ore {
 namespace data {
 
@@ -55,9 +54,7 @@ protected:
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
                                                                              const std::vector<Time>& timePoints = {},
-                                                                             const bool useFxSpot = true,
-                                                                             const bool isSpotUnderlying = true,
-                                                                             const Date& forwardDate = Date()) {
+                                                                             const bool useFxSpot = true) {
 
         using VVTS = QuantExt::BlackMonotoneVarVolTermStructure;
         string config = this->configuration(ore::data::MarketContext::pricing);

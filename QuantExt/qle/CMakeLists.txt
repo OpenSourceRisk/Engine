@@ -289,7 +289,6 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
-#pricingengines/fdblackvanillaengine.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
@@ -842,7 +841,6 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
-#pricingengines/fdblackvanillaengine.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
