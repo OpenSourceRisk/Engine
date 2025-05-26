@@ -123,6 +123,7 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const std::string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate, const bool useFxSpot) override {
         std::vector<Time> bucketTimesDeltaGamma =

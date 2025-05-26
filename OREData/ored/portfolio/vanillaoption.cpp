@@ -258,9 +258,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
         if (forwardDate_ != Date()) {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate_, false));
         } else {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate_, true));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
         addProductModelEngine(*vanillaOptionBuilder);
