@@ -424,21 +424,17 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // 9.4 get engine and set it
     cpu_timer timer;
 
-    std::vector<Date> mat(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
-
     auto calibrationStrategy = parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy"));
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine; 
-    std::vector<Date> maturitiesFinal;
-    std::vector<Rate> strikesFinal;
+    std::vector<Date> maturitiesEngine;
+    std::vector<Rate> strikesEngine;
 
     if (calibrationStrategy != CalibrationStrategy::DeltaGammaAdjusted)
     {   // Usual case
-
-        maturitiesFinal = mat;
-        strikesFinal = strikes;
+        maturitiesEngine = std::vector<Date>(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
+        strikesEngine = strikes;
     }else
-    {  // Special Case 
-        
+    {  // Special Case         
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
@@ -446,15 +442,15 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> underlyingMatched = buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
 
         for (const auto& swap : underlyingMatched) {
-            maturitiesFinal.push_back(swap->maturityDate());
-            strikesFinal.push_back(swap->fixedRate());
+            maturitiesEngine.push_back(swap->maturityDate());
+            strikesEngine.push_back(swap->fixedRate());
         }
     }
 
     // use ibor / ois index as key, if possible, otherwise the npv currency
     swaptionEngine = swaptionBuilder->engine(
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), maturitiesFinal, strikesFinal, exerciseType_ == Exercise::American,
+        exerciseBuilder_->noticeDates(), maturitiesEngine, strikesEngine, exerciseType_ == Exercise::American,
         envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
 
     timer.stop();
