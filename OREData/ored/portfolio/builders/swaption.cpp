@@ -118,6 +118,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
         {CalibrationType::None, CalibrationStrategy::None},
         {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
+        {CalibrationType::Bootstrap, CalibrationStrategy::DeltaGammaAdjusted},
         {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
         {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
         {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
@@ -181,7 +182,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     }
 
     if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
-        calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
+        calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
+        calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
         DLOG("Build LgmData for co-terminal specification");
 
         vector<string> expiryDates, termDates;
@@ -192,7 +194,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
         data->optionStrikes().resize(expiryDates.size(), "ATM");
-        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
+        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike || 
+            calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
             for (Size i = 0; i < effExpiries.size(); ++i) {
                 if (effStrikes[i] != Null<Real>())
                     data->optionStrikes()[i] = std::to_string(effStrikes[i]);

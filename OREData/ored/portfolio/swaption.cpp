@@ -29,6 +29,7 @@
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
+#include <ored/model/irmodeldata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
@@ -425,16 +426,20 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<Date> mat(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
 
-    // use ibor / ois index as key, if possible, otherwise the npv currency
-    auto swaptionEngine = swaptionBuilder->engine( // Hier müssen die Ergebnisse des Matchers genutzt werden
+    auto calibrationStrategy = parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy"));
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine; 
+
+    if (calibrationStrategy != CalibrationStrategy::DeltaGammaAdjusted)
+    {   // Usual case
+
+        // use ibor / ois index as key, if possible, otherwise the npv currency
+        swaptionEngine = swaptionBuilder->engine( 
         id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
         exerciseBuilder_->noticeDates(), mat, strikes, exerciseType_ == Exercise::American,
         envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
-
-    auto calibrationStrategy = swaptionBuilder -> engineParameter("CalibrationStrategy", {}, false);
-
-    if(calibrationStrategy == "DeltaGammaAdjusted") 
-    {        
+     }else
+     {  // Special Case 
+        
         auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
         Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
@@ -457,6 +462,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
+    
     swaption->setPricingEngine(swaptionEngine);
     setSensitivityTemplate(*swaptionBuilder);
     addProductModelEngine(*swaptionBuilder);
