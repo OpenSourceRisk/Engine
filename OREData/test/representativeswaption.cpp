@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(testStandardUnderlying) {
 
         BOOST_REQUIRE_EQUAL(w->exercise()->dates().size(), 1);
         BOOST_CHECK_EQUAL(w->exercise()->date(0), exerciseDate);
-        auto s = w->underlyingSwap();
+        auto s = w->underlying();
         BOOST_CHECK_EQUAL(s->type(), VanillaSwap::Payer);
         BOOST_CHECK_CLOSE(s->nominal(), 10000.0, tol);
         BOOST_CHECK_CLOSE(s->fixedRate(), 0.03, tol);
@@ -251,7 +251,9 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
                 acc[i](std::max(lgmUnderlying.NPV(), 0.0) / lgm->numeraire(evalTimes[i], path[0][i + 1]));
             }
             Settings::instance().evaluationDate() = today;
+            QL_DEPRECATED_DISABLE_WARNING
             IndexManager::instance().clearHistory(lgmEuribor->name());
+            QL_DEPRECATED_ENABLE_WARNING
         }
         for (Size i = 0; i < nTimes; ++i) {
             epe_sim[i] = mean(acc[i]);

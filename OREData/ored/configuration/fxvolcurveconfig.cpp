@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -193,6 +194,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
     }
 
+    timeInterpolation_ =
+        parseFxVolatilityTimeInterpolation(XMLUtils::getChildValue(node, "TimeInterpolation", false, "V"));
+    timeWeighting_ = XMLUtils::getChildValue(node, "TimeWeighting", false);
+
+    butterflyErrorTolerance_ = parseReal(XMLUtils::getChildValue(node, "ButterflyErrorTolerance", false, "0.01"));
+
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -277,28 +284,34 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "TimeInterpolation", to_string(timeInterpolation_));
+    XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
+    XMLUtils::addChild(doc, node, "ButterflyErrorTolerance", butterflyErrorTolerance_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     
     return node;
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (!fxDomesticYieldCurveID_.empty() && !fxForeignYieldCurveID_.empty()) {
-        std::vector<string> domTokens, forTokens;
-        split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
-        split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
 
-        if (domTokens.size() == 3 && domTokens[0] == "Yield") {
-            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(domTokens[2]);
-        } else if (domTokens.size() == 1) {
+    if (!fxDomesticYieldCurveID_.empty()) {
+        std::vector<string> tokens;
+        split(tokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
+        if (tokens.size() == 3 && tokens[0] == "Yield") {
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(tokens[2]);
+        } else if (tokens.size() == 1) {
             requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxDomesticYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required domestic yield curve for fx vol curve " << curveID_);
         }
+    }
 
-        if (forTokens.size() == 3 && forTokens[0] == "Yield") {
-            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forTokens[2]);
-        } else if (forTokens.size() == 1) {
+    if (!fxForeignYieldCurveID_.empty()) {
+        std::vector<string> tokens;
+        split(tokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
+        if (tokens.size() == 3 && tokens[0] == "Yield") {
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(tokens[2]);
+        } else if (tokens.size() == 1) {
             requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxForeignYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);
@@ -309,11 +322,9 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
 
-        vector<string> tokens;
-        boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
-        QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << fxSpotID_);
-        auto forTarget = tokens[1];
-        auto domTarget = tokens[2];
+        auto spec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(fxSpotID_));
+        auto forTarget = spec->unitCcy();
+        auto domTarget = spec->ccy();
 
         // we need to include inverse ccy pairs as well
         QL_REQUIRE(baseVolatility1_.size() == 6, "invalid ccy pair length");
@@ -354,5 +365,27 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndexInverse);
     }
 }
+
+FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s) {
+    if (s == "V") {
+        return FXVolatilityCurveConfig::TimeInterpolation::V;
+    } else if (s == "V2T") {
+        return FXVolatilityCurveConfig::TimeInterpolation::V2T;
+    } else {
+        QL_FAIL("FxVolatilityCurveConfig::TimeInterpolation(): '" << s << "' not recognized, expected 'V' or 'V2T'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::TimeInterpolation t) {
+    if (t == FXVolatilityCurveConfig::TimeInterpolation::V)
+        return out << "V";
+    else if (t == FXVolatilityCurveConfig::TimeInterpolation::V2T)
+        return out << "V2T";
+    else {
+        QL_FAIL("operator<<(FXVolatilityCurveConfig::TimeInterpolation): enum "
+                << static_cast<int>(t) << " not recognized. Internal error, contact dev.");
+    }
+}
+
 } // namespace data
 } // namespace ore

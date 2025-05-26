@@ -39,17 +39,25 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
     if (flipResults_) {
         // Invert spot, costOfCarry
         auto it = results_.additionalResults.find("spot");
-        if (it != results_.additionalResults.end())
+        if (it != results_.additionalResults.end()) {
+            results_.additionalResults["spot_pricing"] = it->second;
             it->second = 1. / boost::any_cast<Real>(it->second);
+        }
         it = results_.additionalResults.find("costOfCarry");
         if (it != results_.additionalResults.end())
             it->second = -1. * boost::any_cast<Real>(it->second);
 
-        // Swap riskFreeRate and dividendYield
-        auto rfDiscountIt = results_.additionalResults.find("riskFreeRate");
-        auto divDiscountIt = results_.additionalResults.find("dividendYield");
-        if (rfDiscountIt != results_.additionalResults.end() && divDiscountIt != results_.additionalResults.end())
-            std::swap(rfDiscountIt->second, divDiscountIt->second);
+        // Swap riskFreeRate and dividendYield, discount factor stays what it is
+        Real rfRate = Null<Real>();
+        Real divYield = Null<Real>();
+
+        if (auto tmp = results_.additionalResults.find("riskFreeRate"); tmp != results_.additionalResults.end())
+            rfRate = boost::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendYield"); tmp != results_.additionalResults.end())
+            divYield = boost::any_cast<Real>(tmp->second);
+
+        results_.additionalResults["riskFreeRate"] = divYield;
+        results_.additionalResults["dividendYield"] = rfRate;
 
         // Invert and swap barrierLow and barrierHigh
         auto barrierLowIt = results_.additionalResults.find("barrierLow");

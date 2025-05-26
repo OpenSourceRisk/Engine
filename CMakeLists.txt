@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-
 cmake_policy(SET CMP0091 NEW)
-
 
 project(ORE CXX)
 
@@ -10,7 +8,14 @@ option(ORE_BUILD_DOC "Build documentation" ON)
 option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
+option(ORE_BUILD_SWIG "Build ORE Python" ON)
+option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
+option(MSVC_PARALLELBUILD "Use flag /MP" ON)
+option(QL_USE_PCH "Use precompiled headers" OFF)
+option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" OFF)
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
+option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calculations" OFF)
+option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 
 include(CTest)
 
@@ -18,20 +23,20 @@ include(CTest)
 if(NOT "${CMAKE_CURRENT_LIST_DIR}/cmake" IN_LIST CMAKE_MODULE_PATH)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 endif()
+
 include(commonSettings)
 
 set(USE_GLOBAL_ORE_BUILD ON)
 
-# work around boost issue https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=271488
-set(CMAKE_CXX_STANDARD 14)
 add_subdirectory("QuantLib")
-set(CMAKE_CXX_STANDARD 17)
-
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
 if (ORE_BUILD_APP)
     add_subdirectory("App")
+endif()
+if (ORE_BUILD_SWIG)
+    add_subdirectory("ORE-SWIG")
 endif()
 
 # add examples testsuite

@@ -72,6 +72,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -150,6 +151,27 @@ QuantLib::ext::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>
                                  CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative,
                                  0.0)));
          break;
+     case YieldCurve::InterpolationMethod::LogNaturalCubic:
+         yieldts.reset(new CurveType<LogCubic>(dates, rates, dayCounter, LogCubic(CubicInterpolation::Kruger, true)));
+         break;
+     case YieldCurve::InterpolationMethod::LogFinancialCubic:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::FirstDerivative)));
+         break;
+     case YieldCurve::InterpolationMethod::LogCubicSpline:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
+         break;
+     case YieldCurve::InterpolationMethod::MonotonicLogCubicSpline:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
+         break;
 
      default:
          QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
@@ -200,6 +222,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::LogFinancialCubic;
     else if (s == "LogCubicSpline")
         return YieldCurve::InterpolationMethod::LogCubicSpline;
+    else if (s == "MonotonicLogCubicSpline")
+        return YieldCurve::InterpolationMethod::MonotonicLogCubicSpline;
     else if (s == "Hermite")
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
@@ -254,6 +278,8 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "LogFinancialCubic";
     else if (m == YieldCurve::InterpolationMethod::LogCubicSpline)
         return out << "LogCubicSpline";
+    else if (m == YieldCurve::InterpolationMethod::MonotonicLogCubicSpline)
+        return out << "MonotonicLogCubicSpline";
     else if (m == YieldCurve::InterpolationMethod::Hermite)
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
@@ -358,8 +384,23 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         if (buildCalibrationInfo_) {
             if (calibrationInfo_ == nullptr)
                 calibrationInfo_ = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
+
+            try {
+                ReportConfig rc =
+                    effectiveReportConfig(curveConfigs.reportConfigYieldCurves(), curveConfig_->reportConfig());
+                std::vector<Date> pillarDates = *rc.pillarDates();
+                if (!pillarDates.empty()) {
+                    calibrationInfo_->pillarDates.clear();
+                    for (auto const& pd : pillarDates)
+                        calibrationInfo_->pillarDates.push_back(pd);
+                }
+            } catch (...) {
+                DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
+            }
+
             calibrationInfo_->dayCounter = zeroDayCounter_.name();
             calibrationInfo_->currency = currency_.code();
+
             if (calibrationInfo_->pillarDates.empty()) {
                 for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                     calibrationInfo_->pillarDates.push_back(asofDate_ + p);
@@ -499,6 +540,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
          } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
@@ -628,6 +678,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
          } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<Discount,LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
@@ -753,6 +812,15 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::MonotonicLogCubicSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
                        CubicInterpolation::SecondDerivative, 0.0),
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
                                           dontThrowSteps));
@@ -928,7 +996,7 @@ void YieldCurve::buildZeroCurve() {
             zeroes.push_back(tempRate.equivalentRate(Continuous, NoFrequency, t));
         }
         discounts.push_back(tempRate.discountFactor(t));
-        DLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
+        TLOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
                                         << setprecision(4) << zeroes.back() << " / " << discounts.back());
     }
 
@@ -1101,7 +1169,6 @@ void YieldCurve::buildDiscountCurve() {
     auto discountQuoteIDs = discountCurveSegment->quotes();
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    QuantLib::ext::shared_ptr<Convention> convention;
 
     vector<string> quotes;
     quotes.reserve(discountQuoteIDs.size()); // Reserve space for efficiency
@@ -1112,28 +1179,22 @@ void YieldCurve::buildDiscountCurve() {
                    });
 
     auto wildcard = getUniqueWildcard(quotes);
-
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> marketData;
     if (wildcard) {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
-        std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
-        Wildcard w(ss.str());
-        marketData = loader_.get(w, asofDate_);
+        for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
+            ext::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
+            if (marketQuote)
+                marketData.insert(marketQuote);
+        }
     }
 
+    int multipleQuotes = 0;
     for (const auto& marketQuote : marketData) {
         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                    "Market quote not of type Discount.");
+                   "Market quote not of type Discount.");
         QuantLib::ext::shared_ptr<DiscountQuote> discountQuote = QuantLib::ext::dynamic_pointer_cast<DiscountQuote>(marketQuote);
-
-        // filtering
-        if (!wildcard) {
-            vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
-            if (it == quotes.end())
-                continue;
-        }
 
         if (discountQuote->date() != Date()) {
 
@@ -1141,8 +1202,7 @@ void YieldCurve::buildDiscountCurve() {
 
         } else if (discountQuote->tenor() != Period()) {
 
-            if (!convention)
-                convention = conventions->get(discountCurveSegment->conventionsID());
+            QuantLib::ext::shared_ptr<Convention> convention = conventions->get(discountCurveSegment->conventionsID());
             QuantLib::ext::shared_ptr<ZeroRateConvention> zeroConvention =
                 QuantLib::ext::dynamic_pointer_cast<ZeroRateConvention>(convention);
             QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
@@ -1151,7 +1211,12 @@ void YieldCurve::buildDiscountCurve() {
             BusinessDayConvention rollConvention = zeroConvention->rollConvention();
             Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
             DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
-                                                            << io::iso_date(date));
+                                                           << io::iso_date(date));
+
+            //check if date already included
+            if(data.find(date) != data.end())
+                multipleQuotes++;
+
             data[date] = discountQuote->quote()->value();
 
         } else {
@@ -1163,9 +1228,9 @@ void YieldCurve::buildDiscountCurve() {
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
     if (!wildcard) {
-        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
-                                                          << quotes.size()
-                                                          << " quotes given in config " << curveConfig_->curveID());
+        QL_REQUIRE(data.size() == quotes.size() - multipleQuotes,
+                   "Found " << data.size() + multipleQuotes << " quotes, but " << quotes.size()
+                            << " quotes given in config " << curveConfig_->curveID());
     }
 
     if (data.begin()->first > asofDate_) {
@@ -1327,6 +1392,11 @@ void YieldCurve::buildBootstrappedCurve() {
 
     /* Set mixed interpolation size using the specified cutoff for the number of segments */
 
+    QL_REQUIRE(curveConfig_->mixedInterpolationCutoff() <= curveSegments_.size(),
+               "mixed interpolation cutoff (" << curveConfig_->mixedInterpolationCutoff()
+                                              << ") can not be greater than the number of curve segments ("
+                                              << curveSegments_.size() << ")");
+
     mixedInterpolationSize_ = 0;
     for (Size i = 0; i < curveConfig_->mixedInterpolationCutoff(); ++i)
         mixedInterpolationSize_ += instrumentsPerSegment[i].size();
@@ -1457,7 +1527,7 @@ void YieldCurve::buildFittedBondCurve() {
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
                 Real inflationFactor = res.inflationFactor();
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationFactor,
+                Real marketYield = qlInstr->yield({rescaledBondQuote->value() * inflationFactor, QuantLib::Bond::Price::Clean},
                                                   ActualActual(ActualActual::ISDA),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
@@ -1589,7 +1659,8 @@ void YieldCurve::buildFittedBondCurve() {
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
         modelPrices.push_back(bonds[i]->cleanPrice() / 100.0);
-        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
+        modelYields.push_back(bonds[i]->yield({bonds[i]->cleanPrice(), QuantLib::Bond::Price::Clean},
+                                              ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
         DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
                      << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
     }
@@ -1686,7 +1757,7 @@ void YieldCurve::buildBondYieldShiftedCurve() {
         if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
 
             Date thisMaturity = qlInstr->maturityDate();
-            bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
+            bondYield = qlInstr->yield({rescaledBondQuote->value() * inflationQuoteFactor, QuantLib::Bond::Price::Clean},
                                                       ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
 
             thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)
@@ -1826,16 +1897,11 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
 
                 // Create a Overnight index future helper
                 Date startDate, endDate;
-                if (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) {
-                    Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                    Date refStart = refEnd - futureQuote->tenor();
-                    startDate = IMM::nextDate(refStart, false);
-                    endDate = IMM::nextDate(refEnd, false);
-                } else if (futureConvention->dateGenerationRule() ==
-                           FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
-                    startDate = endDate - futureQuote->tenor();
-                }
+                std::pair<Date, Date> startEndDate;
+                startEndDate = getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                    futureQuote->tenor(), futureConvention->dateGenerationRule());
+                startDate = startEndDate.first;
+                endDate = startEndDate.second;
 
                 if (endDate <= asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
@@ -1865,8 +1931,7 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
                     "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                Date immDate = IMM::nextDate(refDate, false);
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
@@ -2342,48 +2407,44 @@ void YieldCurve::addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegm
     QL_REQUIRE(bmaBasisSwapSegment, "BMA basis swap segment of " + curveSpec_.ccy() + "/" + curveSpec_.curveConfigID() +
                                         " did not successfully cast to a BMA basis swap yield curve segment!");
 
-    // TODO: should be checking here whether or not the bma index is forwarding on this curve. either way, we make sure!
-    QuantLib::ext::shared_ptr<BMAIndexWrapper> bmaIndex = bmaBasisSwapConvention->bmaIndex();
-    bmaIndex = dynamic_pointer_cast<BMAIndexWrapper>(bmaIndex->clone(handle()));
+    auto bmaIndex = QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(bmaBasisSwapConvention->bmaIndex()->clone(h_));
 
-    // If libor index projection curve ID is not this curve.
-    string liborCurveID = bmaBasisSwapSegment->projectionCurveID();
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex = bmaBasisSwapConvention->liborIndex();
-    liborCurveID = yieldCurveKey(currency_, liborCurveID, asofDate_);
-    QuantLib::ext::shared_ptr<YieldCurve> liborCurve;
+    auto index = bmaBasisSwapConvention->index();
+    string indexCurveID = yieldCurveKey(currency_, bmaBasisSwapSegment->projectionCurveID(), asofDate_);
+    QuantLib::ext::shared_ptr<YieldCurve> indexCurve;
     map<string, QuantLib::ext::shared_ptr<YieldCurve>>::iterator it;
-    it = requiredYieldCurves_.find(liborCurveID);
-    if (it != requiredYieldCurves_.end()) {
-        liborCurve = it->second;
+    if(auto it = requiredYieldCurves_.find(indexCurveID); it != requiredYieldCurves_.end()) {
+        indexCurve = it->second;
     } else {
-        QL_FAIL("The libor side projection curve, " << liborCurveID
-                                                    << ", required in the building "
-                                                       "of the curve, "
-                                                    << curveSpec_.name() << ", was not found.");
+        QL_FAIL("The index projection curve, " << indexCurveID
+                                               << ", required in the building "
+                                                  "of the curve, "
+                                               << curveSpec_.name() << ", was not found.");
     }
-    liborIndex = liborIndex->clone(liborCurve->handle());
+    index = index->clone(indexCurve->handle());
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                "BMA swap segment does not support pillar choice " << segment->pillarChoice());
+
     auto bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i], asofDate_);
-
-        // Check that we have a valid bma basis swap quote
         if (marketQuote) {
             QuantLib::ext::shared_ptr<BMASwapQuote> bmaBasisSwapQuote;
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BMA_SWAP,
                        "Market quote not of type bma swap.");
             QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO, "Market quote not of type ratio.");
             bmaBasisSwapQuote = QuantLib::ext::dynamic_pointer_cast<BMASwapQuote>(marketQuote);
-
-            // Create bma basis swap helper if we do.
-            QuantLib::ext::shared_ptr<RateHelper> bmaSwapHelper;
-            bmaSwapHelper.reset(new BMASwapRateHelper(bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(),
-                                                      bmaIndex->fixingDays(), bmaIndex->fixingCalendar(),
-                                                      bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
-                                                      bmaIndex->dayCounter(), bmaIndex->bma(), liborIndex));
-            instruments.push_back(bmaSwapHelper);
+            instruments.push_back(QuantLib::ext::make_shared<BMASwapRateHelper>(
+                bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(), bmaIndex->fixingDays(),
+                bmaIndex->fixingCalendar(), bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
+                bmaIndex->dayCounter(), bmaIndex->bma(), bmaBasisSwapConvention->bmaPaymentCalendar(),
+                bmaBasisSwapConvention->bmaPaymentConvention(), bmaBasisSwapConvention->bmaPaymentLag(),
+                bmaBasisSwapConvention->indexSettlementDays(), bmaBasisSwapConvention->indexPaymentPeriod(),
+                bmaBasisSwapConvention->indexConvention(), index, bmaBasisSwapConvention->indexPaymentCalendar(),
+                bmaBasisSwapConvention->indexPaymentConvention(), bmaBasisSwapConvention->indexPaymentLag(),
+                bmaBasisSwapConvention->overnightLockoutDays(),
+                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
         }
     }
 }
@@ -2450,7 +2511,39 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                "FX Forward segment does not support pillar choice " << segment->pillarChoice());
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
+
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
+
+    /* Determine the absolute maturity dates associated to on, tn and sn quotes */
+
+    Calendar cal =  fxConvention->advanceCalendar();
+    Date adjustedAsof = cal.adjust(asofDate_);
+
+    Date onEarliestDate = cal.advance(adjustedAsof, 0 * Days);
+    Date tnEarliestDate = cal.advance(adjustedAsof, 1 * Days);
+    Date snEarliestDate = cal.advance(adjustedAsof, fxConvention->spotDays() * Days);
+
+    Date onDate = cal.advance(onEarliestDate, 1 * Days);
+    Date tnDate = cal.advance(tnEarliestDate, 1 * Days);
+    Date snDate = cal.advance(snEarliestDate, 1 * Days);
+
+    /* identify on, tn, sn quotes, if present in the curve config */
+
+    Size onIndex = Null<Size>(), tnIndex = Null<Size>(), snIndex = Null<Size>();
+    for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
+        if (auto q =
+                QuantLib::ext::dynamic_pointer_cast<FXForwardQuote>(loader_.get(fxForwardQuoteIDs[i], asofDate_))) {
+            if (matchFxFwdDate(q->term(), onDate) || matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::ON))
+                onIndex = i;
+            else if (matchFxFwdDate(q->term(), tnDate) ||
+                     matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::TN))
+                tnIndex = i;
+            else if (matchFxFwdDate(q->term(), snDate) ||
+                     matchFxFwdStringTerm(q->term(), FXForwardQuote::FxFwdString::SN))
+                snIndex = i;
+        }
+    }
+
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
 
@@ -2482,7 +2575,7 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
             }
 
             Natural spotDays = fxConvention->spotDays();
-            if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::ON)) {
+            if (i == onIndex) {
                 // Overnight rate is the spread over todays fx, for settlement on t+1. We need 'todays' rate in order
                 // to use this to determine yield curve value at t+1.
                 // If spotDays is 0 it is spread over Spot.
@@ -2503,33 +2596,26 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                 }
                 case 2: {
                     // find the TN quote
-                    for (auto q : loader_.loadQuotes(asofDate_)) {
-                        if (q->instrumentType() == MarketDatum::InstrumentType::FX_FWD) {
-                            auto fxq = QuantLib::ext::dynamic_pointer_cast<FXForwardQuote>(q);
-                            if (fxq && fxSpotQuote->unitCcy() == fxq->unitCcy() && fxSpotQuote->ccy() == fxq->ccy() &&
-                                matchFxFwdStringTerm(fxq->term(), FXForwardQuote::FxFwdString::TN)) {
-                                tnSpread = fxq->quote()->value() / fxConvention->pointsFactor();
-                                break;
-                            }
-                        }
-                    }
-                    if (tnSpread == Null<Real>()) {
+                    if(tnIndex == Null<Size>()) {
                         WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are 2 we also require the TN "
                              "rate");
                         continue;
                     }
+                    QuantLib::ext::shared_ptr<MarketDatum> fxq = loader_.get(fxForwardQuoteIDs[tnIndex], asofDate_);
+                    tnSpread = fxq->quote()->value() / fxConvention->pointsFactor();
                     totalSpread = tnSpread + qlFXForwardQuote->value();
                     // TODO: this isn't registeredWith the ON or TN basis quote
                     auto m2 = [totalSpread](Real x) { return x - totalSpread; };
                     spotFx = Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m2)>>(fxSpotQuote->quote(), m2));
                     break;
                 }
-                default:
-                    WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are " << spotDays << 
-                        ", only valid for SpotDays of 0, 1 or 2.");
+                default: {
+                    WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are "
+                         << spotDays << ", only valid for SpotDays of 0, 1 or 2.");
                     continue;
                 }
-            } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {
+                }
+            } else if (i == tnIndex) {
                 // TODO: this isn't registeredWith the TN basis quote
                 auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
                 spotFx = Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
@@ -2537,14 +2623,32 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                 spotFx = fxSpotQuote->quote();
             }
 
-            Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
-            Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
             bool isFxBaseCurrencyCollateralCurrency = knownCurrency == fxSpotSourceCcy;
+            QuantLib::ext::shared_ptr<RateHelper> fxForwardHelper;
 
-            QuantLib::ext::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
-                qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(), 
-                fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                knownDiscountCurve));
+            if(isFxFwdDateBased(fxForwardQuote->term())) {
+                Date earliestDate;
+                if (i == onIndex) {
+                    earliestDate = onEarliestDate;
+                } else if (i == tnIndex) {
+                    earliestDate = tnEarliestDate;
+                } else if (i == snIndex) {
+                    earliestDate = snEarliestDate;
+                } else {
+                    earliestDate =
+                        cal.advance(adjustedAsof, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
+                }
+                fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
+                    qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
+                    isFxBaseCurrencyCollateralCurrency, knownDiscountCurve);
+            } else {
+                Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
+                Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
+                fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
+                    qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(),
+                    fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
+                    knownDiscountCurve);
+            }
 
             instruments.push_back(fxForwardHelper);
         }

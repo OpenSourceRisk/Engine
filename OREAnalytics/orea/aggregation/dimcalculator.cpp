@@ -21,6 +21,10 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/portfolio/trade.hpp>
 
+#include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
+#include <qle/math/distributioncount.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -28,9 +32,6 @@
 #include <ql/math/kernelfunctions.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-
-#include <qle/math/nadarayawatson.hpp>
-#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -71,11 +72,9 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
-    size_t i = 0;
-    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
-        auto trade = tradeIt->second;
-        string tradeId = tradeIt->first;
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
         string nettingSetId = trade->envelope().nettingSetId();
+        std::size_t i = cube_->getTradeIndex(tradeId);
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
             nettingSets.insert(nettingSetId);
             nettingSetNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
@@ -88,7 +87,7 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         for (Size j = 0; j < datesLoopSize_; ++j) {
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
-                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k, scenarioData_);
                 Real mporFlow =
                     cubeInterpretation_->storeFlows() ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
@@ -98,7 +97,6 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         }
     }
 
-    
     nettingSetIds_ = std::move(nettingSets);
 
     dimCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_, cube_->dates(),
@@ -140,7 +138,7 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
         .addColumn("NettingSet", string())
         .addColumn("Time", Real(), 6);
 
-    for (auto [nettingSet, _] : dimCube_->idsAndIndexes()) {
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
         LOG("Export DIM evolution for netting set " << nettingSet);
         for (Size i = 0; i < stopDatesLoop; ++i) {
@@ -164,6 +162,36 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
     }
     dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");
+}
+
+void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& dimDistributionReport,
+                                                           const Size gridSize, const Real coveredStdDevs) const {
+
+    dimDistributionReport.addColumn("NettingSet", string())
+        .addColumn("TimeStep", Size())
+        .addColumn("Date", Date())
+        .addColumn("Bound", Real(), 6)
+        .addColumn("Count", Size());
+
+    std::vector<Real> bounds;
+    std::vector<Size> counts;
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size i = 0; i < datesLoopSize_; ++i) {
+            distributionCount(nettingSetDIM_.at(nettingSet).at(i).begin(), nettingSetDIM_.at(nettingSet).at(i).end(),
+                              gridSize, bounds, counts, coveredStdDevs);
+            for (Size j = 0; j < gridSize; ++j)
+                dimDistributionReport.next()
+                    .add(nettingSet)
+                    .add(i)
+                    .add(dimCube_->dates()[i])
+                    .add(bounds[j])
+                    .add(counts[j]);
+        }
+    }
+
+    dimDistributionReport.end();
 }
 
 } // namespace analytics

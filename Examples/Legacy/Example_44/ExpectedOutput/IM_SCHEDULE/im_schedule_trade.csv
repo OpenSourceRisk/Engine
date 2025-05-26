@@ -1,0 +1,10 @@
+#TradeId,Portfolio,ProductClass,EndDate,Maturity,Label,Multiplier,Notional,NotionalCurrency,PV,PVCurrency,Notional(Base),PV(Base),BaseCurrency,GrossIM(Base),CollectRegulations,PostRegulations
+IM_Schedule_1,nettingSetId_1,Rates,2022-08-23,1.65202,Interest Rate 0-2 years,0.01,6027.63,EUR,1014.05,EUR,7074.63,1190.19,USD,70.75,Unspecified,Unspecified
+IM_Schedule_2,nettingSetId_1,Rates,2022-08-23,1.65202,Interest Rate 0-2 years,0.01,1.14,GBP,874.35,GBP,1.51,1154.14,USD,0.02,Unspecified,Unspecified
+IM_Schedule_3,nettingSetId_1,Rates,2022-08-23,1.65202,Interest Rate 0-2 years,0.01,5496.62,USD,-1166.76,USD,5496.62,-1166.76,USD,54.97,Unspecified,Unspecified
+IM_Schedule_4,nettingSetId_1,Rates,2023-08-23,2.65202,Interest Rate 2-5 years,0.02,2909.05,EUR,1038.63,EUR,3414.35,1219.04,USD,68.29,Unspecified,Unspecified
+IM_Schedule_5,nettingSetId_1,Rates,2023-08-23,2.65202,Interest Rate 2-5 years,0.02,9726.84,GBP,-699.44,GBP,12839.43,-923.26,USD,256.79,Unspecified,Unspecified
+IM_Schedule_6,nettingSetId_1,Rates,2023-08-23,2.65202,Interest Rate 2-5 years,0.02,2067.19,USD,-308.77,USD,2067.19,-308.77,USD,41.34,Unspecified,Unspecified
+IM_Schedule_7,nettingSetId_1,Rates,2024-08-23,3.65301,Interest Rate 2-5 years,0.02,8212.29,EUR,-1061.78,EUR,9638.77,-1246.22,USD,192.78,Unspecified,Unspecified
+IM_Schedule_8,nettingSetId_1,Rates,2024-08-23,3.65301,Interest Rate 2-5 years,0.02,9779.90,GBP,940.53,GBP,12909.46,1241.49,USD,258.19,Unspecified,Unspecified
+IM_Schedule_9,nettingSetId_1,Rates,2024-08-23,3.65301,Interest Rate 2-5 years,0.02,2327.28,USD,-658.80,USD,2327.28,-658.80,USD,46.55,Unspecified,Unspecified

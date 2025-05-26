@@ -34,6 +34,7 @@
 #include <ql/time/daycounters/simpledaycounter.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/couponpricer.hpp>
+#include <optional>
 
 namespace QuantExt {
 
@@ -43,7 +44,7 @@ class DiscountingRiskyBondEngine;
 
 //! Bond Index
 /*! \ingroup indexes */
-class BondIndex : public Index, public Observer {
+class BondIndex : public Index {
 public:
     enum class PriceQuoteMethod { PercentageOfPar, CurrencyPerUnit };
 
@@ -96,7 +97,8 @@ public:
               const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
               const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
               const double priceQuoteBaseValue = 1.0, const bool isInflationLinked = false,
-              const double bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
+              const double bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false, 
+              const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean);
 
     //! \name Index interface
     //@{
@@ -114,7 +116,7 @@ public:
     //! \name Fixing calculations
     //@{
     virtual Rate forecastFixing(const Date& fixingDate) const;
-    Rate pastFixing(const Date& fixingDate) const;
+    Rate pastFixing(const Date& fixingDate) const override;
     //@}
 
     //! \name Inspectors
@@ -132,6 +134,7 @@ public:
     Date issueDate() const { return issueDate_; }
     PriceQuoteMethod priceQuoteMethod() const { return priceQuoteMethod_; }
     double priceQuoteBaseValue() const { return priceQuoteBaseValue_; }
+    const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
     //@}
 
 protected:
@@ -152,6 +155,7 @@ protected:
     double bidAskAdjustment_;
     QuantLib::ext::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
     bool bondIssueDateFallback_ = false;
+    std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
 };
 
 //! Bond Futures Index

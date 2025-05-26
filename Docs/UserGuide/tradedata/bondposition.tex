@@ -11,10 +11,18 @@ values of the elements in the block are as follows:
 \begin{itemize}
 \item Quantity: The number of units of the weighted basket held.\\
   Allowable values: Any positive real number
-\item Identifier: The identifier of the weighted basket. The Underlying data can be retrieved from the reference data
-  via this identifier, if not given in the trade itself.\\
-\item Underlying[Optional]: One or more underlying descriptions. If bond basket data is set up in the reference data for the given identifier, the underlying data will be populated from there and does not need to be provided in the trade. \\
-  Allowable values: See \ref{ss:underlying} for the definition of an underlying. Only bond underlyings are allowed.
+\item Identifier[Optional]: The identifier of the weighted basket. The Underlying data can be retrieved from the reference data
+  via this identifier, if not given in the trade itself. If the bond basket data is set up in the trade itself in Underlying blocks as in in listing \ref{lst:bondbasketdata}, no Identifier is required. \\
+    Allowable values: A string that matches the reference data.
+\item Underlying[Optional]: One or more underlying descriptions. If bond basket data is set up in the reference data for the given identifier, the underlying data will be populated from there and does not need to be provided in the trade. The weighted basket price is then given by\\
+  $$\text{Basket-Price} = \text{Quantity} \times \sum_i \text{Weight}_i \times B_i \times \text{FX}_i$$
+  where
+  \begin{itemize}
+  \item $B_i$ is the price of the ith Bond in the basket
+  \item $FX_i$ is the FX Spot converting from the currency of the ith Bond  to the return currency if the BondPosition is in a TotalReturnSwap, otherwise to the currency of the first Bond in the basket. 
+  \end{itemize}
+
+  Allowable values: See \ref{ss:underlying} for the definition of an underlying. Only underlyings of Type \emph{Bond} are allowed.
 \end{itemize}
 
 \begin{listing}[H]

@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/varcalculator.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 
 #include <ored/report/report.hpp>
 #include <ored/utilities/timeperiod.hpp>
@@ -60,7 +60,7 @@ public:
             Saddlepoint,
         };
 
-        ParametricVarParams() {};
+        ParametricVarParams(){};
         ParametricVarParams(const std::string& m, QuantLib::Size samples, QuantLib::Size seed);
 
         Method method = Method::Delta;
@@ -70,14 +70,15 @@ public:
 
     ParametricVarCalculator(const ParametricVarParams& parametricVarParams, const QuantLib::Matrix& omega,
                             const std::map<RiskFactorKey, QuantLib::Real>& deltas,
-                            const std::map<CrossPair, Real>& gammas, const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage,
-                            const bool& includeGammaMargin, const bool& includeDeltaMargin) : 
-        parametricVarParams_(parametricVarParams), omega_(omega), deltas_(deltas), gammas_(gammas), covarianceSalvage_(covarianceSalvage),
-        includeGammaMargin_(includeGammaMargin), includeDeltaMargin_(includeDeltaMargin) {}
+                            const std::map<CrossPair, Real>& gammas,
+                            const QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage>& covarianceSalvage,
+                            const bool& includeGammaMargin, const bool& includeDeltaMargin)
+        : parametricVarParams_(parametricVarParams), omega_(omega), deltas_(deltas), gammas_(gammas),
+          covarianceSalvage_(covarianceSalvage), includeGammaMargin_(includeGammaMargin),
+          includeDeltaMargin_(includeDeltaMargin) {}
 
-    
-    QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
-        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) override;
+    QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true,
+                       const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const override;
 
 private:
     const ParametricVarParams& parametricVarParams_;
@@ -95,36 +96,43 @@ private:
 class ParametricVarReport : public VarReport {
 public:
     virtual ~ParametricVarReport() {}
-    ParametricVarReport(
-        const std::string& baseCurrency,
-        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-        const std::string& portfolioFilter,
-        const std::vector<QuantLib::Real>& p,
-        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
-    
-    ParametricVarReport(
-        const std::string& baseCurrency,
-        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-        const std::string& portfolioFilter,
-        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-        const std::vector<QuantLib::Real>& p,
-        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
+    ParametricVarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                        const std::string& portfolioFilter, const std::vector<QuantLib::Real>& p,
+                        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+                        const SalvagingAlgorithm::Type varSalvagingAlgorithm,
+                        boost::optional<ore::data::TimePeriod> period,
+                        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
+
+    ParametricVarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                        const std::string& portfolioFilter,
+                        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
+                        const std::vector<QuantLib::Real>& p,
+                        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+                        const SalvagingAlgorithm::Type varSalvagingAlgorithm,
+                        boost::optional<ore::data::TimePeriod> period,
+                        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
 
     void createVarCalculator() override;
-    
+
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
 
-protected:    
+    void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override{};
+
+protected:
+    void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
+    std::vector<Real> calcVarsForQuantiles() const override;
+
     const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 
     //! The parameters to use for calculating the parametric VAR benchmark
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
-    bool salvageCovarianceMatrix_ = true;
+    // bool salvageCovarianceMatrix_ = true;  --> hence default spectral
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::Spectral;
+
+    void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override{};
 };
 
 ParametricVarCalculator::ParametricVarParams::Method parseParametricVarMethod(const std::string& method);

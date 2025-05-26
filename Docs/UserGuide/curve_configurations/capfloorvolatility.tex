@@ -21,7 +21,7 @@ If optionlet volatilities are given, no bootstrapping will be performed on the i
 
 The input volatilities may be normal, lognormal or shifted lognormal. The structure of the market quotes is provided in Table \ref{tab:capfloor_implvol_quote}.
 
-Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilites or \lstinline!OptionletVolatilities! for optionlet volatilities.
+Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilities or \lstinline!OptionletVolatilities! for optionlet volatilities.
 
 For term cap volatilities, the structure of the XML, i.e.\ the nodes that are necessary, used and ignored, and the way that the optionlet volatilities are stripped hinges on the value of the \lstinline!InterpolateOn! node. This node may be set to \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. This node will be ignored if the inputs are optionlet volatilities.
 
@@ -40,7 +40,20 @@ In the following sections, we describe six XML configurations separately for cla
 \item Optionlet volatility surface.
 \end{enumerate}
 
-Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
+Before describing the different configurations we summarize the usage of the various interpolation fields:
+
+\begin{enumerate}
+\item If \lstinline!InterpolateOn! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatilities of the final optionlet surface. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
+\item If \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are used to interpolate optionlet volatilities both during the bootstrap and on the final optionlet surface. \lstinline!InterpolationMethod! is ignored in this case.
+\end{enumerate}
+
+% ===========================================================================
+% Term vol ATM, interpolation on term vols
+% ===========================================================================
+
+Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve
+with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the
+schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
 \item
@@ -51,6 +64,14 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM cap floor curve and how they are interpreted when stripping the optionlets. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specifies the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 Indicates the extrapolation in the time direction before the first optionlet volatility and after the last optionlet volatility. The extrapolation occurs on the stripped optionlet volatilities. The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. If set to \lstinline!Flat!, the first optionlet volatility is used before the first time and the last optionlet volatility is used after the last time. If set to \lstinline!Linear!, the interpolation method configured in \lstinline!InterpolationMethod! is used to extrapolate.
@@ -105,6 +126,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <InterpolationMethod>...</InterpolationMethod>
   <IncludeAtm>true</IncludeAtm>
@@ -126,6 +150,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_atm_configuration_term}
 \end{longlisting}
 
+% ===========================================================================
+% Term vol ATM, interpolation on optionlet vols
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_atm_configuration_opt} shows the layout for parameterising an ATM cap volatility curve with interpolation on optionlet volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -137,6 +165,14 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM cap floor curve and how they are interpreted when stripping the optionlets. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -191,6 +227,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <IncludeAtm>true</IncludeAtm>
   <DayCounter>...</DayCounter>
@@ -212,6 +251,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_atm_configuration_opt}
 \end{longlisting}
 
+% ===========================================================================
+% Term vol surface, interpolation on term vols
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_surface_configuration_term} shows the layout for parameterising a cap tenor by absolute cap strike volatility surface with interpolation on term volatilities. This parameterisation also allows for the inclusion of a cap floor ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -223,6 +266,14 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the cap floor surface and how they are interpreted when stripping the optionlets. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/0/0/Strike!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/0/0/Strike! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/0/0/Strike! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 Indicates the extrapolation in the time and strike direction. The extrapolation occurs on the stripped optionlet volatilities. The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times or strikes. If set to \lstinline!Flat!, the optionlet volatility on the time strike boundary is used if the optionlet surface is queried outside the allowable times or strikes. If set to \lstinline!Linear!, the interpolation method configured in \lstinline!InterpolationMethod! is used to extrapolate either time or strike direction.
@@ -277,6 +328,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <InterpolationMethod>...</InterpolationMethod>
   <IncludeAtm>...</IncludeAtm>
@@ -298,6 +352,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_surface_configuration_term}
 \end{longlisting}
 
+% ===========================================================================
+% Term vol surface, interpolation on optionlet vols
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_surface_configuration_opt} shows the layout for parameterising a cap tenor by absolute cap strike volatility surface with interpolation on optionlet volatilities. This parameterisation also allows for the inclusion of a cap floor ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -309,6 +367,14 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the cap floor surface and how they are interpreted when stripping the optionlets. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/0/0/Strike!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/0/0/Strike! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/0/0/Strike! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times or strikes. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! node values described below.
@@ -360,7 +426,8 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to specify initial values
   for calibrated parameters, to exclude single parameters from calibration and to set calibration parameters. See
-  listing \ref{lst:capfloorvol_parametric_smile_config}.
+  listing \ref{lst:capfloorvol_parametric_smile_config}. See Example 59 for how to configure single value and
+  termstructures of sabr parameters for swaption and cap curve configs.
 
 \item \lstinline!QuoteIncludesIndexName! [Optional]:
 If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
@@ -379,6 +446,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <InterpolationMethod>...</InterpolationMethod>
   <IncludeAtm>...</IncludeAtm>
@@ -403,6 +473,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_surface_configuration_opt}
 \end{longlisting}
 
+% ===========================================================================
+% Opt vol ATM
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_optionlet_atm_configuration} shows the layout for parameterising an ATM optionlet volatility curve. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -414,6 +488,14 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM optionlet curve. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -462,6 +544,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <IncludeAtm>true</IncludeAtm>
   <DayCounter>...</DayCounter>
@@ -482,6 +567,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_optionlet_atm_configuration}
 \end{longlisting}
 
+% ===========================================================================
+% Opt vol surface
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_optionlet_surface_configuration} shows the layout for parameterising an optionlet tenor by absolute optionlet strike volatility surface. This parameterisation also allows for the inclusion of an optionlet ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -493,6 +582,15 @@ A description of the volatility structure. It is for information only and may be
 
 \item \lstinline!VolatilityType!:
 Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinline!Lognormal! or \lstinline!ShiftedLognormal!. Note that this then determines which market data points are looked up in the market when creating the ATM optionlet curve. In particular, the market will be searched for market data points of the form \lstinline!CAPFLOOR/RATE_NVOL/Currency/Tenor/IndexTenor/1/1/0!, \lstinline!CAPFLOOR/RATE_LNVOL/Currency/Tenor/IndexTenor/1/1/0! or \lstinline!CAPFLOOR/RATE_SLNVOL/Currency/Tenor/IndexTenor/1/1/0! respectively.
+
+\item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
+  {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release
+  1.83.0. Only available for SABR interpolation if input type is set to optionlet vols.
+
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -547,6 +645,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
   <VolatilityType>...</VolatilityType>
+  <OutputVolatilityType>...</OutputVolatilityType>
+  <OutputShift>...</OutputShift>
+  <ModelShift>...</ModelShift>
   <Extrapolation>...</Extrapolation>
   <IncludeAtm>...</IncludeAtm>
   <DayCounter>...</DayCounter>
@@ -575,22 +676,22 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
     <Parameter>
       <Name>alpha</Name>
       <InitialValue>0.0050</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Implied</Calibration>
     </Parameter>
     <Parameter>
       <Name>beta</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>true</IsFixed>
+      <Calibration>Fixed</Calibration>
     </Parameter>
     <Parameter>
       <Name>nu</Name>
       <InitialValue>0.30</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
     <Parameter>
       <Name>rho</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
   </Parameters>
   <Calibration>

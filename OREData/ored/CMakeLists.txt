@@ -102,6 +102,7 @@ model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
 portfolio/accumulator.cpp
+portfolio/additionalfieldgetter.cpp
 portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/autocallable_01.cpp
@@ -192,6 +193,7 @@ portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
+portfolio/cashposition.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
@@ -213,6 +215,9 @@ portfolio/compositetrade.cpp
 portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
 portfolio/convertiblebondreferencedata.cpp
+portfolio/counterpartycorrelationmatrix.cpp
+portfolio/counterpartyinformation.cpp
+portfolio/counterpartymanager.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
@@ -299,6 +304,7 @@ portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
+portfolio/tradegenerator.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
 portfolio/tranche.cpp
@@ -319,6 +325,12 @@ scripting/astresetter.cpp
 scripting/asttoscriptconverter.cpp
 scripting/computationgraphbuilder.cpp
 scripting/context.cpp
+scripting/engines/amccgbaseengine.cpp
+scripting/engines/amccgcurrencyswapengine.cpp
+scripting/engines/amccgfxforwardengine.cpp
+scripting/engines/amccgfxoptionengine.cpp
+scripting/engines/amccgmultilegoptionengine.cpp
+scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
 scripting/engines/cliquetoptionmcscriptengine.cpp
@@ -337,7 +349,6 @@ scripting/models/fdblackscholesbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
-scripting/models/hwcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
@@ -361,6 +372,7 @@ utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
+utilities/dependencies.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
 utilities/formulaparser.cpp
@@ -374,6 +386,7 @@ utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
 utilities/timeperiod.cpp
+utilities/timer.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
 utilities/xmlutils.cpp)
@@ -492,6 +505,7 @@ model/structuredmodelerror.hpp
 model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
+portfolio/additionalfieldgetter.hpp
 portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/autocallable_01.hpp
@@ -585,6 +599,7 @@ portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
+portfolio/cashposition.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
@@ -606,6 +621,9 @@ portfolio/compositetrade.hpp
 portfolio/convertiblebond.hpp
 portfolio/convertiblebonddata.hpp
 portfolio/convertiblebondreferencedata.hpp
+portfolio/counterpartycorrelationmatrix.hpp
+portfolio/counterpartyinformation.hpp
+portfolio/counterpartymanager.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
@@ -699,6 +717,7 @@ portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
+portfolio/tradegenerator.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
 portfolio/tranche.hpp
@@ -721,6 +740,13 @@ scripting/astresetter.hpp
 scripting/asttoscriptconverter.hpp
 scripting/computationgraphbuilder.hpp
 scripting/context.hpp
+scripting/engines/amccgbaseengine.hpp
+scripting/engines/amccgcurrencyswapengine.hpp
+scripting/engines/amccgfxforwardengine.hpp
+scripting/engines/amccgfxoptionengine.hpp
+scripting/engines/amccgmultilegoptionengine.hpp
+scripting/engines/amccgpricingengine.hpp
+scripting/engines/amccgswapengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp
 scripting/engines/cliquetoptionmcscriptengine.hpp
@@ -741,7 +767,6 @@ scripting/models/fdblackscholesbase.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
-scripting/models/hwcg.hpp
 scripting/models/lgmcg.hpp
 scripting/models/localvol.hpp
 scripting/models/model.hpp
@@ -762,11 +787,13 @@ utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
+utilities/credit.hpp
 utilities/csvfilereader.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
+utilities/dependencies.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
 utilities/formulaparser.hpp
@@ -778,11 +805,10 @@ utilities/marketdata.hpp
 utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
-utilities/serializationdate.hpp
 utilities/serializationdaycounter.hpp
-utilities/serializationperiod.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
+utilities/timer.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
 utilities/wildcard.hpp

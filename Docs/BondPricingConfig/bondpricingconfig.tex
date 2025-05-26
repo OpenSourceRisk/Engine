@@ -1,0 +1,405 @@
+\documentclass[12pt, a4paper]{article}
+
+%\usepackage[urlcolor=blue]{hyperref}
+
+\usepackage[disable]{todonotes}
+\usepackage{todonotes}
+
+\usepackage{booktabs}
+\usepackage{pbox}
+
+\usepackage{listings}
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+\usepackage[miktex]{gnuplottex}
+\ShellEscapetrue
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{minted}
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}
+\usepackage[utf8]{inputenc}
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{footnote}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+%\usepackage{float}
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true, %set true if you want colored links
+	linktoc=all,     %set to all if you want both sections and subsections linked
+	linkcolor=blue,  %choose some color if you want links to stand out
+}
+
+%\usepackage[colorlinks=true]{hyperref}
+
+\renewcommand\P{\ensuremath{\mathbb{P}}}
+\newcommand\E{\ensuremath{\mathbb{E}}}
+\newcommand\Q{\ensuremath{\mathbb{Q}}}
+\newcommand\I{\mathds{1}}
+\newcommand\F{\ensuremath{\mathcal F}}
+\newcommand\V{\ensuremath{\mathbb{V}}}
+\newcommand\YOY{{\rm YOY}}
+\newcommand\Prob{\ensuremath{\mathbb{P}}}
+\newcommand{\D}[1]{\mbox{d}#1}
+\newcommand{\NPV}{\mathit{NPV}}
+\newcommand{\CVA}{\mathit{CVA}}
+\newcommand{\DVA}{\mathit{DVA}}
+\newcommand{\FVA}{\mathit{FVA}}
+\newcommand{\COLVA}{\mathit{COLVA}}
+\newcommand{\FCA}{\mathit{FCA}}
+\newcommand{\FBA}{\mathit{FBA}}
+\newcommand{\KVA}{\mathit{KVA}}
+\newcommand{\MVA}{\mathit{MVA}}
+\newcommand{\PFE}{\mathit{PFE}}
+\newcommand{\EE}{\mathit{EE}}
+\newcommand{\EPE}{\mathit{EPE}}
+\newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\PD}{\mathit{PD}}
+\newcommand{\LGD}{\mathit{LGD}}
+\newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
+\newcommand\enforce{\,\raisebox{0.8 ex}{$\substack{!\\\displaystyle=}$} \,}
+
+
+\begin{document}
+
+\title{Bond Pricing Configuration in ORE}
+\author{Acadia - An LSEG Business}
+\date{21 August 2024}
+\maketitle
+
+\newpage
+
+%==========================================
+\section*{Document Change History}
+%==========================================
+
+\begin{supertabular}{|l|l|p{7cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+21 August 2024 & Peter Caspers & initial version\\
+\hline
+\end{supertabular}
+
+\vspace{3cm}
+
+\newpage
+
+\tableofcontents
+\vfill
+
+\textcircled{c} 2024 Quaternion Risk Management Limited.  All rights reserved.
+Quaternion\textsuperscript{\textregistered} is a trademark of Quaternion Risk Management Limited and is also registered
+at the UK Intellectual Property Office and the U.S. Patent and Trademark Office.  All other trademarks are the property
+of their respective owners. Open Source Risk Engine\textsuperscript{\textcircled{c}} (ORE) is sponsored by Quaternion
+Risk Management Limited.
+
+\newpage
+
+%==========================================
+\section{Summary}
+%==========================================
+
+This document describes the bond pricing configuration in ORE.
+
+%==========================================
+\section{Overview}\label{overview}
+%==========================================
+
+Bond pricing depends on a number of market data inputs
+
+\begin{itemize}
+\item ReferenceCurve: a rate curve determining the baseline discounting curve for bond valuation.
+\item CreditCurve [optional]: a credit curve determining the default probabilty during the lifetime of a bond. This can
+  e.g. be
+\begin{itemize}
+\item a CDS curve of the same issuer and seniority as the bond to proxy the credit risk
+\item a sector-rating curve representing the systematic part of the bond's credit risk
+\item a ``null'' - curve implying zero default risk for pricing, for the purpose of calculating default risk
+  sensitivities or to apply stress scenarios.
+\item omitted entirely, implying zero default risk. In this case no default risk sensitivities can be calculated though.
+\end{itemize}
+In all cases, the security spread can be used to represent additional credit / liquidity risk, see below.
+\item SecuritySpread [optional]: a single additional discounting spread. This can generally be interpreted as part of
+  the credit risk (generating additional default probabilty) or as part of the baseline discounting (liquidity
+  spread). Assumed to be zero if not given. Exception: If a price quote is given and the security spread is configured
+  in the security curve config, but no market data is given for the security spread, the security spread is implied from
+  the price quote.
+\item Recovery Rate [optional]: the recovery rate that applies in the event of a default of the bond. Assumed to be zero
+  if not given.
+\item PriceQuote [optional]: a liquid price for the bond, this can be used to imply a security spread such that the
+  market price of the bond matches the theoretical pricing of the bond.
+\item IncomeCurve [optional]: a repo curve, only relevant for bond forwards, falls back to reference curve if not given
+\item VolatilityCurve [optional]: a bond volatility surface, only relevant for bond options
+\end{itemize}
+
+The above information is configured in the bond reference data and curve configurations. If the curve configurations are
+not given as an input, they are auto-generated\footnote{this feature might not be available in the public version of
+ore}.
+
+Depending on the specific nature of the bond (vanilla fixed rate, floating rate, convertible, callable, ...) additional
+market data might be needed to price a bond, e.g.
+
+\begin{itemize}
+\item projection curves for floating rate indices
+\item equity curves, volatilities for convertible bonds
+\item fx curves, volatilities for cross-currency bonds
+\item swaption and cds volatilities to calibrate models to price callability 
+\item ...
+\end{itemize}
+
+%==========================================
+\section{Reference Data}\label{refdata}
+%==========================================
+
+Listing \ref{lst:bond_ref_data} shows and example of reference data of a bond.  The bond is identified via its security
+id (ISIN:XS2257580857). The CreditCurveId has the same name in this case, the reference curve is set to EURIBOR-3M. No
+income or vol curve is specified for the bond.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ReferenceData>
+  <ReferenceDatum id="ISIN:XS2257580857">
+    <Type>ConvertibleBond</Type>
+    <ConvertibleBondReferenceData>
+      <BondData>
+        <IssuerId>CELLNEX TELECOM SA</IssuerId>
+        <CreditCurveId>ISIN:XS2257580857</CreditCurveId>
+        <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
+        <IncomeCurveId/>
+        <VolatilityCurveId/>
+        ...
+\end{minted}
+\caption{Bond reference data (excerpt)}
+\label{lst:bond_ref_data}
+\end{listing}
+
+%==========================================
+\section{Curve Configurations}\label{curveconfigs}
+%==========================================
+
+\subsection{Credit Curve Config}
+
+The credit curve represents the survival probability entering the bond pricing. It also provides a recovery rate that is
+used as a fallback if the recovery rate from the security curve config is not available.
+
+The curve config can either be explicitly set up or ore can auto-generate it. Listing
+\ref{lst:autogen_default_curve_config} shows an auto-generated config for the bond from section \ref{refdata}:
+
+\begin{itemize}
+\item Type: The type is set to Null which means that the default probability of this curve is zero. It is set up
+  nevertheless to enable the generation of credit curve sensitivities. No market data is required to build a curve of
+  type Null.
+\item RecoveryRate: The curve has a recovery rate quote. The wild card allows for recovery rate market data points
+  referencing the security id and optionally seniority, currency, doc clause. Note: The recovery is not used to build
+  the curve in this case, since the type is Null. However, the curve's recovery rate is used in other contexts. For
+  example, it is the fallback value if the recovery rate from the security config is not available.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurve>
+  <CurveId>ISIN:XS2257580857</CurveId>
+  <CurveDescription>Autogenerated curve config for Bond Derivatives</CurveDescription>
+  <Currency>EUR</Currency>
+  <Configurations>
+    <Configuration priority="0">
+      <RecoveryRate>RECOVERY_RATE/RATE/ISIN:XS2257580857*</RecoveryRate>
+      <Type>Null</Type>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <DiscountCurve>Yield/EUR/EUR-EONIA</DiscountCurve>
+      <Conventions/>
+      <Extrapolation>true</Extrapolation>
+      <BootstrapConfig> ... </BootstrapConfig>
+      <AllowNegativeRates>false</AllowNegativeRates>
+    </Configuration>
+  </Configurations>
+</DefaultCurve>
+\end{minted}
+\caption{Auto-generated default curve config}
+\label{lst:autogen_default_curve_config}
+\end{listing}
+
+\subsection{Security Curve Config}
+
+The security curve config points to additional market data used for bond pricing.
+
+It can be explicitly set up or ore can auto-generate it. Listing \ref{lst:autogen_security_curve_config} shows an
+auto-generated config for the bond from section \ref{refdata}:
+
+\begin{itemize}
+\item SpreadQuote: Points to the security spread market data point. If it specified in the curve config but not present
+  in the market data feed and a PriceQuote is specified and available in the market data, the security spread value is
+  implied from the price quote. Note: If no SpreadQuote is specified, no security spread will be implied, no matter if a
+  price quote is available.
+\item RecoveryRateQuote: Points to the recovery rate used for pricing. If this is not available in the market data, the
+  credit curve recovery rate will be used as a fallback, or if no credit curve is specified either, zero will be used.
+\item PriceQuote: If specified and available in the market data and if SpreadQuote is specified but not available in the
+  market data, the security spread will be implied from the price quote.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Security>
+  <CurveId>ISIN:XS2257580857</CurveId>
+  <CurveDescription>Autogenerated Config</CurveDescription>
+  <SpreadQuote>BOND/YIELD_SPREAD/ISIN:XS2257580857</SpreadQuote>
+  <RecoveryRateQuote>RECOVERY_RATE/RATE/ISIN:XS2257580857</RecoveryRateQuote>
+  <PriceQuote>BOND/PRICE/ISIN:XS2257580857</PriceQuote>
+</Security>
+\end{minted}
+\caption{Auto-generated default curve config}
+\label{lst:autogen_security_curve_config}
+\end{listing}
+
+%==========================================
+\section{Market and Sensitivity Configs}\label{curveconfigs}
+%==========================================
+
+\subsection{Todays market configuration}\label{t0_config}
+
+The todays market configuration provides 
+
+\begin{itemize}
+\item a mapping from credit curve ids to default curve configurations
+\item a mapping from security ids to security curve configurations
+\end{itemize}
+
+Listing \ref{lst:autogen_t0_config} shows an auto-generated example. Note that there are two mappings for the default
+curve. The pricing engine builders will always attempt to retrieve the credit curve from the second label starting with
+\verb+__SECCRCRV_+. This internal label contains both the security id and the credit curve id from the reference data of
+this security. The builder will fallback to the usual first label only if the market object under the second label is
+not available.
+
+This allows to calculate security specific credit curve sensitivities even if several bonds share the same credit curve.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurves id="default">
+  <DefaultCurve name="ISIN:XS2257580857">Default/EUR/ISIN:XS2257580857</DefaultCurve>
+  <DefaultCurve name="__SECCRCRV_ISIN:XS2257580857_&amp;_ISIN:XS2257580857_&amp;_">
+                                         Default/EUR/ISIN:XS2257580857</DefaultCurve>
+</DefaultCurves>
+<Securities id="default">
+  <Security name="ISIN:XS2257580857">Security/ISIN:XS2257580857</Security>
+</Securities>
+\end{minted}
+\caption{Auto-generated todays market config for credit curves and securities}
+\label{lst:autogen_t0_config}
+\end{listing}
+
+Recovery rates are added to todays market for both default curves (the credit curve specific recovery rate) and
+securities (the security specific recovery rate). In case of an overlap of names, one value will overwrite the other, so
+it is important to ensure consistent values in this case.
+
+\subsection{Simulation configuration}\label{sim_config}
+
+Listing \ref{lst:autogen_sim_config} shows an auto-generated simulation market configuration. It lists the credit curves
+and securities to enable in the simulation. Note the usage of the security specific credit curve label starting with
+\verb+__SECCRCRV_+, see \ref{t0_config} for an explanation.
+
+Similar to todays market, recovery rates are added for both default curves (the credit curve specific recovery rate) and
+securities (the security specific recovery rate). In case of an overlap of names, one value will overwrite the other, so
+it is again important to ensure consistent values in this case.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurves>
+  <Names>
+    <Name>ISIN:XS2257580857</Name>
+    <Name>__SECCRCRV_ISIN:XS2257580857_&amp;_ISIN:XS2257580857_&amp;_</Name>
+  </Names>
+<Securities>
+  <Simulate>true</Simulate>
+  <Names>
+    <Name>ISIN:XS2257580857</Name>
+  </Names>
+...
+\end{minted}
+\caption{Auto-generated simulation market config for credit curves and securities}
+\label{lst:autogen_sim_config}
+\end{listing}
+
+\subsection{Sensitivity configuration}
+
+Listing \ref{lst:autogen_sensi_config} shows an auto-generated sensitivity config for credit curve sensitivities. Again,
+this uses the security specific credit curve label starting with \verb+__SECCRCRV_+, see \ref{t0_config} for an
+explanation.
+
+Note: The par conversion depends on the relevant recovery rate. As explained in \ref{sim_config}, recovery rates are
+added to the sim market for credit curves (the curve specific recovery rate) and for securities (the security specific
+recovery rate). 
+
+In this example, the credit curve recovery rate will be used though, because the name refers to the security specific
+credit curve starting with \verb+__SECCRCRV_+ and this name appears only in the default curve section of
+\ref{lst:autogen_sim_config}, and not the securities section.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CreditCurve name="__SECCRCRV_ISIN:XS2257580857_&amp;_ISIN:XS2257580857_&amp;_">
+  <Currency>EUR</Currency>
+  <ShiftType>Absolute</ShiftType>
+  <ShiftSize>0.0001</ShiftSize>
+  <ShiftScheme>Forward</ShiftScheme>
+  <ShiftTenors>1Y, 2Y, 3Y, 5Y, 10Y</ShiftTenors>
+  <ParConversion>
+    <Instruments>CDS, CDS, CDS, CDS, CDS</Instruments>
+    <SingleCurve>false</SingleCurve>
+    <DiscountCurve>EUR-EONIA</DiscountCurve>
+    <Conventions>
+      <Convention id="CDS">CDS-STANDARD-CONVENTIONS</Convention>
+    </Conventions>
+  </ParConversion>
+</CreditCurve>
+\end{minted}
+\caption{Auto-generated sensitivity config for credit curves}
+\label{lst:autogen_sensi_config}
+\end{listing}
+
+%==========================================
+% \begin{appendix}
+%==========================================
+% \end{appendix}
+
+%\addcontentsline{toc}{section}{Appendices}
+
+\begin{thebibliography}{1}
+
+\bibitem{oreug} ORE User Guide, \url{http://www.opensourcerisk.org/documentation/}
+
+\end{thebibliography}
+
+\end{document}

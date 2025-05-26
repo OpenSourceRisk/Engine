@@ -87,12 +87,12 @@ Real CollateralExposureHelper::marginRequirementCalc(const QuantLib::ext::shared
     Real threshold, csa;
     if (uncollatValueCsaCur + ia >= 0) {
         threshold = nettingSet->csaDetails()->thresholdRcv();
-        csa = max(uncollatValueCsaCur + ia - threshold, 0.0);
+        csa = std::max(uncollatValueCsaCur + ia - threshold, 0.0);
     }
     else {
         threshold = nettingSet->csaDetails()->thresholdPay();
         // N.B. the min and change of sign on threshold.
-        csa = min(uncollatValueCsaCur + ia + threshold, 0.0);
+        csa = std::min(uncollatValueCsaCur + ia + threshold, 0.0);
     }
     return csa;
 }

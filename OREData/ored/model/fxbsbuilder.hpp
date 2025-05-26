@@ -29,9 +29,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
-#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -55,7 +55,10 @@ public:
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,
         //! the reference calibration grid
-        const std::string& referenceCalibrationGrid = "");
+        const std::string& referenceCalibrationGrid = "",
+        //! id of the builder
+        const std::string& id = "unknown"
+    );
 
     //! Return calibration error
     Real error() const;
@@ -72,10 +75,11 @@ public:
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     //@}
-    
+
     void setCalibrationDone() const;
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     Real optionStrike(const Size j) const;
     Date optionExpiry(const Size j) const;
@@ -88,6 +92,7 @@ private:
     const std::string configuration_;
     const QuantLib::ext::shared_ptr<FxBsData> data_;
     const std::string referenceCalibrationGrid_;
+    const std::string id_;
 
     // computed
     mutable Real error_;

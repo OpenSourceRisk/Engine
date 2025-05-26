@@ -38,6 +38,7 @@ namespace data {
 /* This class provides an implementation of the model interface. Derived classes have to implement
    - ModelCG::referenceDate()
    - ModelCG::npv()
+   - ModelCG::numeraire()
    - ModelCG::fwdCompAvg()
    - ModelCG::getDirectFxSpotT0()
    - ModelCG::getDirectDiscountT0()
@@ -69,7 +70,9 @@ public:
                 const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // Model interface implementation (partial)
+    Real actualTimeFromReference(const Date& d) const override;
     const std::string& baseCcy() const override { return currencies_.front(); }
+    const std::vector<std::string>& currencies() const override { return currencies_; }
     std::size_t dt(const Date& d1, const Date& d2) const override;
     std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
                     const std::string& currency) const override;
@@ -87,8 +90,6 @@ public:
     // CG / AD part of the interface
     std::size_t cgVersion() const override;
     const std::vector<std::vector<std::size_t>>& randomVariates() const override; // dim / steps
-    std::vector<std::pair<std::size_t, double>> modelParameters() const override;
-    std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const override;
 
 protected:
     // get (non-ir) index (forward) value for index[indexNo] for (fwd >=) d >= reference date
@@ -101,8 +102,6 @@ protected:
     virtual std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const = 0;
     // get discount factor P(s,t) for ccy currencies[idx], t > s >= referenceDate
     virtual std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const = 0;
-    // get numeraire N(s) for ccy curencies[idx], s >= referenceDate
-    virtual std::size_t getNumeraire(const Date& s) const = 0;
     // get fx spot for currencies[idx] vs. currencies[0], as of the referenceDate, should be 1 for idx=0
     virtual std::size_t getFxSpot(const Size idx) const = 0;
     // get barrier probability for refDate <= obsdate1 <= obsdate2, the case obsdate1 < refDate is handled in this class
@@ -121,10 +120,6 @@ protected:
 
     // to be populated by derived classes when building the computation graph
     mutable std::vector<std::vector<size_t>> randomVariates_;
-    mutable std::vector<std::pair<std::size_t, std::function<double(void)>>> modelParameters_;
-
-    // convenience function to add model parameters
-    std::size_t addModelParameter(const std::string& id, std::function<double(void)> f) const;
 
     // manages cg version and triggers recalculations of random variate / model parameter nodes
     void performCalculations() const override;
@@ -139,10 +134,6 @@ private:
                                         const Date& limDate, const Date& obsdate, const Date& fwddate,
                                         const Date& baseDate) const;
 };
-
-// convenience function to add model parameters, standalone variant
-std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
-                              const std::string& id, std::function<double(void)> f);
 
 // map date to a coarser grid if sloppyDates = true, otherwise just return d
 Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates);

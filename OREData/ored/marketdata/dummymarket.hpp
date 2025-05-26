@@ -28,7 +28,7 @@
 #include <ored/utilities/indexparser.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 using namespace std;
 using namespace QuantLib;
 using namespace ore::data;
@@ -81,6 +81,8 @@ public:
             QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>()));
     }
     Handle<Quote> recoveryRate(const string&, const string&) const override { return Handle<Quote>(); }
+
+    Handle<Quote> conversionFactor(const string&, const string&) const override { return Handle<Quote>(); }
 
     Handle<QuantExt::CreditVolCurve> cdsVol(const string&, const string&) const override {
         return Handle<QuantExt::CreditVolCurve>();
@@ -155,5 +157,5 @@ public:
     }
 };
 
-} // namespace analytics
+} // namespace data
 } // namespace ore

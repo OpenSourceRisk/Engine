@@ -26,17 +26,22 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
+QL_DEPRECATED_DISABLE_WARNING
+
 YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                Size index, bool indexIsInterpolated)
-    : YoYInflationTermStructure(
-          inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
-          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency(),
-          indexIsInterpolated), // the QL constructor is not up to date, but the last argument here will go soon
+    : YoYInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
+                                inflationTermStructure(model, index)->baseRate(),
+                                inflationTermStructure(model, index)->observationLag(),
+                                inflationTermStructure(model, index)->frequency(), indexIsInterpolated,
+                                inflationTermStructure(model, index)->dayCounter()),
       model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
       referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
+
+QL_DEPRECATED_ENABLE_WARNING
 
 void YoYInflationModelTermStructure::update() {
     notifyObservers();

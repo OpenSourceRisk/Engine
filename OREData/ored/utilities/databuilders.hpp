@@ -47,13 +47,15 @@
 #define ORE_REGISTER_AMC_ENGINE_BUILDER(CLASS, OVERWRITE)                                                              \
     ore::data::EngineBuilderFactory::instance().addAmcEngineBuilder(                                                   \
         [](const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,                                            \
-           const std::vector<ore::data::Date>& grid) { return QuantLib::ext::make_shared<CLASS>(cam, grid); },         \
+           const std::vector<QuantExt::Date>& simDates, const std::vector<QuantExt::Date>& stickyCloseOutDates) {      \
+            return QuantLib::ext::make_shared<CLASS>(cam, simDates, stickyCloseOutDates);                              \
+        },                                                                                                             \
         OVERWRITE);
 
 #define ORE_REGISTER_AMCCG_ENGINE_BUILDER(CLASS, OVERWRITE)                                                            \
     ore::data::EngineBuilderFactory::instance().addAmcCgEngineBuilder(                                                 \
-        [](const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<ore::data::Date>& grid) {     \
-            return QuantLib::ext::make_shared<CLASS>(model, grid);                                                     \
+        [](const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<QuantExt::Date>& simDates) {  \
+            return QuantLib::ext::make_shared<CLASS>(model, simDates);                                                 \
         },                                                                                                             \
         OVERWRITE);
 

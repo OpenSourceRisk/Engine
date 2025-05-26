@@ -1,6 +1,15 @@
 \subsubsection{CMS Spread Leg Data}
 \label{ss:cmsspreadlegdata}
 
+A CMS Spread leg consists of coupons that are linked to differences (spreads)
+of CMS index fixings with different maturities. When these are capped and/or floored,
+then the leg (assuming NakedOption \emph{true}) contains a sequence of CMS Spread Options with payoff
+$$
+N\cdot\left[(\CMS_m -\CMS_n - K)\right]^+ = N\cdot \max(0,\CMS_m-\CMS_n - K)
+$$
+where $N$ is the notional amount, $\CMS_{n/m}$ is the $n/m$ year CMS rate,
+and $K$ is the strike.
+
 Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
 
 \begin{listing}[H]

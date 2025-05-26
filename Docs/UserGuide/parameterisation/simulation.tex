@@ -1,9 +1,5 @@
-\ifdefined\RiskCatalogue\newcommand{\simsection}{\section}\fi
-\ifdefined\RiskCatalogue\newcommand{\simsubsection}{\subsection}\fi
-\ifdefined\UserGuide\newcommand{\simsection}{\subsection}\fi
-\ifdefined\UserGuide\newcommand{\simsubsection}{\subsubsection}\fi
 %--------------------------------------------------------
-\simsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
+\subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------
 
 This file determines the behaviour of the risk factor simulation (scenario generation) module.
@@ -24,7 +20,7 @@ It is structured in three blocks of data.
 
 Each of the three blocks is sketched in the following.
 
-\simsubsection{Parameters}\label{sec:sim_params}
+\subsubsection{Parameters}\label{sec:sim_params}
 
 Let us discuss this section using the following example
 
@@ -56,8 +52,8 @@ required because the simulation must step over 'good' dates on which index fixin
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
-\item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic,
-  Sobol,Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
+item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
+  Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
@@ -72,7 +68,7 @@ to use if one of the {\em Forward } related methods is chosen.
 \item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
 
-\simsubsection{Model}\label{sec:sim_model}
+\subsubsection{Model}\label{sec:sim_model}
 
 The {\tt CrossAssetModel} section determines the cross asset model's number of currencies covered, composition, and each
 component's calibration. It is currently made of 
@@ -91,6 +87,8 @@ the target currency for all FX models listed subsequently. If the portfolio requ
 this will lead to an exception at run time, so that it is the user's responsibility to make sure that the list of
 currencies here is sufficient. The list can be larger than actually required by the portfolio. This will not lead to any
 exceptions, but add to the run time of ORE.
+
+When defining the currencies in the cross asset model, the domestic currency always has to be given as the first currency.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -171,6 +169,7 @@ Each interest rate model is specified by a block as follows
         <ShiftHorizon>0.0</ShiftHorizon>
         <Scaling>1.0</Scaling>
       </ParameterTransformation>
+      <FloatSpreadMapping>proRata</FloatSpreadMapping>
     </LGM>
     <LGM ccy="EUR">
       <!-- ... -->
@@ -208,6 +207,8 @@ the time grid is empty
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\item {\tt FloatSpreadMapping: } mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \end{itemize}
 
 The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
@@ -604,11 +605,13 @@ Finally, the instantaneous correlation structure is specified as follows.
 
 Any risk factor pair not specified explicitly here will be assumed to have zero correlation. Note that the commodity components can have non-zero correlations among each other, but correlations to all other CAM components must remain set to zero for the time being.
 
-\simsubsection{Market}\label{sec:sim_market}
+\subsubsection{Market}\label{sec:sim_market}
 
 The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
 simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
 yield curves that can be 'understood' by the instruments which we want to price under scenarios.  
+
+The specified currencies need to contain at least the currencies both defined above in the cross asset model and used in the portfolio, the order however is not important.
 
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 
@@ -621,11 +624,20 @@ There are two methods in ORE for equity volatility simulation:
 \item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
-Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
-There are two methods in ORE for swaption volatility cube simulation: 
+Commodity volatilities are taken as ATM slice by default. To simulate commodity volatility surface with smile a set of {\tt <Moneyness> } must be supplied.
+There are two methods in ORE for commodity volatility simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
-\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
+Swaption volatilities are taken to be a surface by default.
+There are two methods in ORE for swaption volatility cube simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this
+  case set {\tt <SimulateATMOnly>} to true and no surface node is given.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and
+  explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
@@ -643,6 +655,20 @@ For Default Curve, there is a similar choice for the extrapolation:
 \begin{itemize}
 \item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \end{itemize}
+
+For swap, yield, interest cap-floor, yoy inflation cap-floor, zc inflation cap-floor, cds, fx, equity, commodity
+volatilities the smile dynamics can be specified as shown in listing \ref{lst:smile_dynamics_configuration} for swap
+vols. The empty key serves as a default configuration for all keys for which no own smile dynamics node is present. The
+allowed smile dynamics values are StickyStrike and StickyMoneyness. If not given, the smile dynamics defaults to
+StickyStrike.
+\begin{listing}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <SmileDynamics key="">StickyStrike</SmileDynamics>
+    <SmileDynamics key="EUR-ESTER">StickyMoneyness</SmileDynamics>
+  \end{minted}
+\caption{Smile Configuration Node}
+\label{lst:smile_dynamics_configuration}
+\end{listing}
 
 \begin{longlisting}
 %\hrule\medskip
@@ -692,10 +718,8 @@ For Default Curve, there is a similar choice for the extrapolation:
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-    <Cube>
-     <SimulateATMOnly>false</SimulateATMOnly>
-     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
-    </Cube>
+    <SimulateATMOnly>false</SimulateATMOnly>
+    <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
     <DayCounter ccy="EUR">ACT/ACT</DayCounter> 
   </SwaptionVolatilities> 
@@ -727,12 +751,10 @@ For Default Curve, there is a similar choice for the extrapolation:
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Surface>
-        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
-        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness>
       </Surface>
       <TimeExtrapolation>Flat</TimeExtrapolation>
       <StrikeExtrapolation>Flat</StrikeExtrapolation>
-
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
@@ -782,15 +804,15 @@ For Default Curve, there is a similar choice for the extrapolation:
     </Pairs>
     <Expiries>1Y,2Y</Expiries>
   </Correlations>
-  <AdditionalScenarioDataCurrencies>
+  <AggregationScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
-  </AdditionalScenarioDataCurrencies>
-  <AdditionalScenarioDataIndices>
+  </AggregationScenarioDataCurrencies>
+  <AggregationScenarioDataIndices>
     <Index>EUR-EURIBOR-3M</Index>
     <Index>EUR-EONIA</Index>
     <Index>USD-LIBOR-3M</Index>
-  </AdditionalScenarioDataIndices>
+  </AggregationScenarioDataIndices>
 </Market>
 \end{minted}
 \caption{Simulation market configuration}

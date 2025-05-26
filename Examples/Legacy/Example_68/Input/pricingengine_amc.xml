@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">20000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">20000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

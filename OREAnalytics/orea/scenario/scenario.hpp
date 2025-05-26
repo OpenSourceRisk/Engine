@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 #include <ql/shared_ptr.hpp>
 #include <ql/math/array.hpp>
@@ -76,7 +76,8 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR
+        CPR,
+        ConversionFactor
     };
 
     //! Constructor
@@ -165,9 +166,13 @@ public:
     virtual Real get(const RiskFactorKey& key) const = 0;
 
     //! Is this an absolute or difference scenario?
-    virtual bool isAbsolute() const = 0;
+    virtual const bool isAbsolute() const = 0;
     //! Set if this is an absolute scenario
     virtual void setAbsolute(const bool b) = 0;
+    //! Does this scenario contain par rates
+    virtual const bool isPar() const = 0;
+    //! Set if this is a par scenario
+    virtual void setPar(const bool b) = 0;
     //! Get coordinates
     virtual const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
     coordinates() const = 0;

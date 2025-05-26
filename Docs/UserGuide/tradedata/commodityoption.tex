@@ -1,6 +1,11 @@
 \subsubsection{Commodity Option}
 \label{ss:input_commodity_option}
 
+A European Commodity Option gives the buyer the right, but not the obligation, 
+to buy a set amount of a commodity, at a predetermined price (the strike), at the 
+end of the contract. For this right the buyer pays a premium to the seller. 
+Settlement can be either cash or physical delivery.
+
 The \lstinline!CommodityOptionData! node is the trade data container for the \emph{CommodityOption} trade type.  Vanilla commodity 
 options are supported. The exercise style may be \emph{European} or \emph{American}. The \lstinline!CommodityOptionData! node includes exactly 
 one \lstinline!OptionData! trade component sub-node plus elements specific to the commodity option. The structure of 
@@ -99,7 +104,7 @@ and \emph{Put}, respectively, the digital call/put is constructed as
 \mbox{Digital Call} =  \frac{\mbox{Payoff}}{\Delta}  \times  \left( \mbox{Call}(K- \Delta/2) - \mbox{Call}(K+ \Delta/2) \right) \\
 \mbox{Digital Put} = \frac{\mbox{Payoff}}{\Delta}  \times \left( \mbox{Put}(K+ \Delta/2) - \mbox{Put}(K- \Delta/2)  \right)
 \end{align*}
-so that the long digital option has positive value in both cases. The strike spread $\Delta$ used here is set to 1\% of strike $K$.
+so that the long digital option has positive value in both cases. The strike spread $\Delta$ used here is set to 1\% of strike $K$. However, the default 1\% can be overriden by setting the 'StrikeSpread' parameter in the pricing engine global parameters.
 
 \subsubsection{Commodity Spread Option}
 \label{ss:input_commodity_spread_option}

@@ -145,6 +145,7 @@ void CalendarParser::reset() {
         {"Luxembourg", Luxembourg()},
         {"Spain", Spain()},
         {"Austria", QuantExt::Austria()},
+        {"New Zealand", QuantExt::NewZealand()},
 
         // city specific calendars
         {"FRA", Germany(Germany::Settlement)},
@@ -424,8 +425,8 @@ void CalendarParser::reset() {
         {"CME", CME()},
 
         // Simple calendars
-        {"IslamicWeekendsOnly", IslamicWeekendsOnly()},
         {"WeekendsOnly", WeekendsOnly()},
+        {"IslamicWeekendsOnly", IslamicWeekendsOnly()},
         {"UNMAPPED", WeekendsOnly()},
         {"NullCalendar", NullCalendar()},
         {"", NullCalendar()}};

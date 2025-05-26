@@ -38,27 +38,20 @@ public:
     PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
-        
-        auto sensiAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_);
-        if (sensiAnalytic.second)
-            addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
-
-        auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_);
-        if (pnlAnalytic.second)
-            addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
     }
 
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
-    virtual void setUpConfigurations() override;
+    void setUpConfigurations() override;
+    void buildDependencies() override;
 };
 
 class PnlExplainAnalytic : public Analytic {
 public:
-    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {
-
-    }
+    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, analyticsManager, true,
+                   true) {}
 };
 
 } // namespace analytics

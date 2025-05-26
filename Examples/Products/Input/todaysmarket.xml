@@ -1,0 +1,455 @@
+<TodaysMarket>
+	<Configuration id="inccy">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>inccy</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+		<YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<FxVolatilitiesId>default</FxVolatilitiesId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<YieldVolatilitiesId>default</YieldVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<CDSVolatilitiesId>default</CDSVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+		<ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+		<EquityCurvesId>default</EquityCurvesId>
+		<EquityVolatilitiesId>default</EquityVolatilitiesId>
+		<SecuritiesId>default</SecuritiesId>
+		<BaseCorrelationsId>default</BaseCorrelationsId>
+		<CommodityCurvesId>default</CommodityCurvesId>
+		<CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+		<CorrelationsId>default</CorrelationsId>
+	</Configuration>
+	<Configuration id="default">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>default</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+		<YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<FxVolatilitiesId>default</FxVolatilitiesId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<YieldVolatilitiesId>default</YieldVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<CDSVolatilitiesId>default</CDSVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+		<ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+		<EquityCurvesId>default</EquityCurvesId>
+		<EquityVolatilitiesId>default</EquityVolatilitiesId>
+		<SecuritiesId>default</SecuritiesId>
+		<BaseCorrelationsId>default</BaseCorrelationsId>
+		<CommodityCurvesId>default</CommodityCurvesId>
+		<CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+		<CorrelationsId>default</CorrelationsId>
+	</Configuration>
+	<YieldCurves id="default">
+		<YieldCurve name="AUD-IN-USD">Yield/AUD/AUD-IN-USD</YieldCurve>
+		<YieldCurve name="BENCHMARK-EUR">Yield/EUR/EUR-ESTER</YieldCurve>
+		<YieldCurve name="CAD-IN-USD">Yield/CAD/CAD-IN-USD</YieldCurve>
+		<YieldCurve name="CHF-IN-USD">Yield/CHF/CHF-IN-USD</YieldCurve>
+		<YieldCurve name="CLP-IN-USD">Yield/CLP/CLP-IN-USD</YieldCurve>
+		<YieldCurve name="CNY-IN-USD">Yield/CNY/CNY-IN-USD</YieldCurve>
+		<YieldCurve name="CZK-IN-EUR">Yield/CZK/CZK-IN-EUR</YieldCurve>
+		<YieldCurve name="CZK-IN-USD">Yield/CZK/CZK-IN-USD</YieldCurve>
+		<YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
+		<YieldCurve name="GBP-IN-USD">Yield/GBP/GBP-IN-USD</YieldCurve>
+		<YieldCurve name="HKD-IN-USD">Yield/HKD/HKD-IN-USD</YieldCurve>
+		<YieldCurve name="JPY-IN-USD">Yield/JPY/JPY-IN-USD</YieldCurve>
+		<YieldCurve name="MXN-IN-USD">Yield/MXN/MXN-IN-USD</YieldCurve>
+		<YieldCurve name="NOK-IN-USD">Yield/NOK/NOK-IN-USD</YieldCurve>
+		<YieldCurve name="SEK-IN-USD">Yield/SEK/SEK-IN-USD</YieldCurve>
+		<YieldCurve name="USD-IN-EUR">Yield/USD/USD-IN-EUR</YieldCurve>
+		<YieldCurve name="USDBENCHMARK-USD-3M">Yield/USD/USDBENCHMARK-USD-3M</YieldCurve>
+	</YieldCurves>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="AUD">Yield/AUD/AUD-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="CAD">Yield/CAD/CAD-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="CHF">Yield/CHF/CHF-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="CLP">Yield/CLP/CLP-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="CNY">Yield/CNY/CNY-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="CZK">Yield/CZK/CZK-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+		<DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="HKD">Yield/HKD/HKD-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="JPY">Yield/JPY/JPY-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="MXN">Yield/MXN/MXN-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="NOK">Yield/NOK/NOK-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="SEK">Yield/SEK/SEK-IN-EUR</DiscountingCurve>
+		<DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
+	</DiscountingCurves>
+	<DiscountingCurves id="inccy">
+		<DiscountingCurve currency="AUD">Yield/AUD/AUD-AONIA</DiscountingCurve>
+		<DiscountingCurve currency="CAD">Yield/CAD/CAD-CORRA</DiscountingCurve>
+		<DiscountingCurve currency="CHF">Yield/CHF/CHF-SARON</DiscountingCurve>
+		<DiscountingCurve currency="CLP">Yield/CLP/CLP-CAMARA</DiscountingCurve>
+		<DiscountingCurve currency="CNY">Yield/CNY/CNY-SHIBOR-3M</DiscountingCurve>
+		<DiscountingCurve currency="CZK">Yield/CZK/CZK-CZEONIA</DiscountingCurve>
+		<DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+		<DiscountingCurve currency="GBP">Yield/GBP/GBP-SONIA</DiscountingCurve>
+		<DiscountingCurve currency="HKD">Yield/HKD/HKD-HONIA</DiscountingCurve>
+		<DiscountingCurve currency="JPY">Yield/JPY/JPY-TONAR</DiscountingCurve>
+		<DiscountingCurve currency="MXN">Yield/MXN/MXN-FTIIE</DiscountingCurve>
+		<DiscountingCurve currency="NOK">Yield/NOK/NOK-NOWA</DiscountingCurve>
+		<DiscountingCurve currency="SEK">Yield/SEK/SEK-SIOR</DiscountingCurve>
+		<DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="AUD-AONIA">Yield/AUD/AUD-AONIA</Index>
+		<Index name="AUD-BBSW-3M">Yield/AUD/AUD-BBSW-3M</Index>
+		<Index name="AUD-BBSW-6M">Yield/AUD/AUD-BBSW-6M</Index>
+		<Index name="CAD-CORRA">Yield/CAD/CAD-CORRA</Index>
+		<Index name="CHF-SARON">Yield/CHF/CHF-SARON</Index>
+		<Index name="CLP-CAMARA">Yield/CLP/CLP-CAMARA</Index>
+		<Index name="CNY-REPOFIX-7D">Yield/CNY/CNY-REPOFIX-7D</Index>
+		<Index name="CZK-PRIBOR-3M">Yield/CZK/CZK-PRIBOR-3M</Index>
+		<Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+		<Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+		<Index name="EUR-EURIBOR-1M">Yield/EUR/EUR-EURIBOR-1M</Index>
+		<Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
+		<Index name="EUR-EURIBOR-6M">Yield/EUR/EUR-EURIBOR-6M</Index>
+		<Index name="GBP-LIBOR-3M">Yield/GBP/GBP-LIBOR-3M</Index>
+		<Index name="GBP-LIBOR-6M">Yield/GBP/GBP-LIBOR-6M</Index>
+		<Index name="GBP-SONIA">Yield/GBP/GBP-SONIA</Index>
+		<Index name="HKD-HIBOR-3M">Yield/HKD/HKD-HIBOR-3M</Index>
+		<Index name="HKD-HONIA">Yield/HKD/HKD-HONIA</Index>
+		<Index name="JPY-TONAR">Yield/JPY/JPY-TONAR</Index>
+		<Index name="MXN-TIIE-28D">Yield/MXN/MXN-TIIE-28D</Index>
+		<Index name="NOK-NIBOR-3M">Yield/NOK/NOK-NIBOR-3M</Index>
+		<Index name="NOK-NIBOR-6M">Yield/NOK/NOK-NIBOR-6M</Index>
+		<Index name="SEK-SIOR">Yield/SEK/SEK-SIOR</Index>
+		<Index name="SEK-STIBOR-3M">Yield/SEK/SEK-STIBOR-3M</Index>
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+		<Index name="USD-LIBOR-1M">Yield/USD/USD-LIBOR-1M</Index>
+		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+		<Index name="USD-LIBOR-6M">Yield/USD/USD-LIBOR-6M</Index>
+		<Index name="USD-SIFMA">Yield/USD/USD-SIFMA</Index>
+		<Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+		<Index name="USD-SOFR-3M">Yield/USD/USD-SOFR-3M</Index>
+	</IndexForwardingCurves>
+	<SwapIndexCurves id="default">
+		<SwapIndex name="EUR-CMS-10Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="EUR-CMS-1Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="EUR-CMS-20Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="EUR-CMS-2Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="EUR-CMS-30Y">
+			<Discounting>EUR-EONIA</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-2Y">
+			<Discounting>USD-SOFR</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-30Y">
+		        <Discounting>USD-SOFR</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-LIBOR3M-1Y">
+			<Discounting>USD-FedFunds</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-LIBOR3M-30Y">
+			<Discounting>USD-FedFunds</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-SOFR-1Y">
+			<Discounting>USD-SOFR</Discounting>
+		</SwapIndex>
+		<SwapIndex name="USD-CMS-SOFR-30Y">
+			<Discounting>USD-SOFR</Discounting>
+		</SwapIndex>
+	</SwapIndexCurves>
+	<ZeroInflationIndexCurves id="default">
+		<ZeroInflationIndexCurve name="AUCPI">Inflation/AUCPI/AUCPI_ZC_Swaps</ZeroInflationIndexCurve>
+		<ZeroInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</ZeroInflationIndexCurve>
+		<ZeroInflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</ZeroInflationIndexCurve>
+	</ZeroInflationIndexCurves>
+	<YYInflationIndexCurves id="default">
+		<YYInflationIndexCurve name="AUCPI">Inflation/AUCPI/AUCPI_YY_Swaps</YYInflationIndexCurve>
+		<YYInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_YY_Swaps</YYInflationIndexCurve>
+	</YYInflationIndexCurves>
+	<FxSpots id="default">
+		<FxSpot pair="EURAUD">FX/EUR/AUD</FxSpot>
+		<FxSpot pair="EURCAD">FX/EUR/CAD</FxSpot>
+		<FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
+		<FxSpot pair="EURCLP">FX/EUR/CLP</FxSpot>
+		<FxSpot pair="EURCNY">FX/EUR/CNY</FxSpot>
+		<FxSpot pair="EURCZK">FX/EUR/CZK</FxSpot>
+		<FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+		<FxSpot pair="EURHKD">FX/EUR/HKD</FxSpot>
+		<FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
+		<FxSpot pair="EURMXN">FX/EUR/MXN</FxSpot>
+		<FxSpot pair="EURNOK">FX/EUR/NOK</FxSpot>
+		<FxSpot pair="EURSEK">FX/EUR/SEK</FxSpot>
+		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+	</FxSpots>
+	<FxVolatilities id="default">
+		<FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
+		<FxVolatility pair="EURCZK">FXVolatility/EUR/CZK/EURCZK</FxVolatility>
+		<FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+		<FxVolatility pair="EURNOK">FXVolatility/EUR/NOK/EURNOK</FxVolatility>
+		<FxVolatility pair="EURSEK">FXVolatility/EUR/SEK/EURSEK</FxVolatility>
+		<FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+		<FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD</FxVolatility>
+		<FxVolatility pair="USDCAD">FXVolatility/USD/CAD/USDCAD</FxVolatility>
+		<FxVolatility pair="USDJPY">FXVolatility/USD/JPY/USDJPY</FxVolatility>
+		<FxVolatility pair="USDSEK">FXVolatility/USD/SEK/USDSEK</FxVolatility>
+	</FxVolatilities>
+	<SwaptionVolatilities id="default">
+		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="EUR-EURIBOR-1M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="EUR-EURIBOR-3M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="EUR-EURIBOR-6M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+		<SwaptionVolatility key="USD-LIBOR-3M">SwaptionVolatility/USD-LIBOR-3M/USD-LIBOR-3M</SwaptionVolatility>
+		<SwaptionVolatility key="USD-SOFR">SwaptionVolatility/USD-SOFR/USD-SOFR</SwaptionVolatility>
+	</SwaptionVolatilities>
+	<YieldVolatilities id="default">
+		<YieldVolatility name="BondOptionVols-EUR">YieldVolatility/BondOptionVols-EUR</YieldVolatility>
+	</YieldVolatilities>
+	<CapFloorVolatilities id="default">
+		<CapFloorVolatility key="EUR-EONIA">CapFloorVolatility/EUR/EUR</CapFloorVolatility>
+		<CapFloorVolatility key="EUR-EURIBOR-1M">CapFloorVolatility/EUR/EUR</CapFloorVolatility>
+		<CapFloorVolatility key="EUR-EURIBOR-6M">CapFloorVolatility/EUR/EUR</CapFloorVolatility>
+		<CapFloorVolatility key="GBP-LIBOR-6M">CapFloorVolatility/GBP/GBP</CapFloorVolatility>
+		<CapFloorVolatility key="MXN-TIIE-28D">CapFloorVolatility/MXN/MXN</CapFloorVolatility>
+		<CapFloorVolatility key="USD-FedFunds">CapFloorVolatility/USD/USD</CapFloorVolatility>
+		<CapFloorVolatility key="USD-SOFR">CapFloorVolatility/USD-SOFR/USD-SOFR</CapFloorVolatility>
+		<CapFloorVolatility key="USD-SOFR-3M">CapFloorVolatility/USD-SOFR-3M/USD-SOFR-3M</CapFloorVolatility>
+	</CapFloorVolatilities>
+        <CDSVolatilities id="default">
+	        <!--<CDSVolatility name="RED:2I65BRHH6">CDSVolatility/RED:2I65BRHH6</CDSVolatility>-->
+                <CDSVolatility name="RED:2I65BYEG6">CDSVolatility/RED:2I65BYEG6</CDSVolatility>
+        </CDSVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="CPTY_C">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
+		<DefaultCurve name="ISIN:DE000A3H2WP2">Default/EUR/ISIN:DE000A3H2WP2</DefaultCurve>
+		<DefaultCurve name="ISIN:IE00BH3SQ895">Default/EUR/ISIN:IE00BH3SQ895</DefaultCurve>
+		<DefaultCurve name="ISIN:IT0005177909">Default/EUR/ISIN:IT0005177909</DefaultCurve>
+		<DefaultCurve name="ISIN:US531229AR32">Default/USD/ISIN:US531229AR32</DefaultCurve>
+		<DefaultCurve name="ISIN:US682189AS48">Default/USD/ISIN:US682189AS48</DefaultCurve>
+                <DefaultCurve name="RED:007G93|SNRFOR|USD|XR14">Default/USD/RED:007G93|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:027A8A|SNRFOR|USD|XR14">Default/USD/RED:027A8A|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:027D97|SNRFOR|USD|XR14">Default/USD/RED:027D97|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:028EFB|SNRFOR|USD|XR14">Default/USD/RED:028EFB|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:03AB52|SNRFOR|USD|XR14">Default/USD/RED:03AB52|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:058B87|SNRFOR|USD|XR14">Default/USD/RED:058B87|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:06DG91|SNRFOR|USD|XR14">Default/USD/RED:06DG91|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:08CAD7|SNRFOR|USD|MR14">Default/USD/RED:08CAD7|SNRFOR|USD|MR14</DefaultCurve>
+                <DefaultCurve name="RED:08CAD7|SNRFOR|USD|XR14">Default/USD/RED:08CAD7|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:08EB67|SNRFOR|USD|XR14">Default/USD/RED:08EB67|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:09C9BK|SNRFOR|USD|XR14">Default/USD/RED:09C9BK|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:09G725|SNRFOR|USD|XR14">Default/USD/RED:09G725|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:09IG96|SNRFOR|USD|XR14">Default/USD/RED:09IG96|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0A143H|SNRFOR|USD|XR14">Default/USD/RED:0A143H|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0A226X|SNRFOR|USD|XR14">Default/USD/RED:0A226X|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0C2002|SNRFOR|USD|XR14">Default/USD/RED:0C2002|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0C205P|SNRFOR|USD|XR14">Default/USD/RED:0C205P|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0C4291|SNRFOR|USD|XR14">Default/USD/RED:0C4291|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0C5448|SNRFOR|USD|XR14">Default/USD/RED:0C5448|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0D4278|SNRFOR|USD|XR14">Default/USD/RED:0D4278|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0E69A8|SNRFOR|USD|XR14">Default/USD/RED:0E69A8|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0F8665|SNRFOR|USD|XR14">Default/USD/RED:0F8665|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:0H8994|SNRFOR|USD|XR14">Default/USD/RED:0H8994|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:138A48|SNRFOR|USD|XR14">Default/USD/RED:138A48|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:138CBK|SNRFOR|USD|XR14">Default/USD/RED:138CBK|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1B124A|SNRFOR|USD|XR14">Default/USD/RED:1B124A|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1C1134|SNRFOR|USD|XR14">Default/USD/RED:1C1134|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1C248K|SNRFOR|USD|XR14">Default/USD/RED:1C248K|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1E78AL|SNRFOR|USD|XR14">Default/USD/RED:1E78AL|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1E99BR|SNRFOR|USD|XR14">Default/USD/RED:1E99BR|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1F444H|SNRFOR|USD|XR14">Default/USD/RED:1F444H|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1F55D7|SNRFOR|USD|XR14">Default/USD/RED:1F55D7|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:1I99EM|SNRFOR|USD|XR14">Default/USD/RED:1I99EM|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:225DHN|SNRFOR|USD|XR14">Default/USD/RED:225DHN|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:258DD6|SNRFOR|USD|XR14">Default/USD/RED:258DD6|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:25A8AD|SNRFOR|USD|XR14">Default/USD/RED:25A8AD|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:26B72T|SNRFOR|USD|XR14">Default/USD/RED:26B72T|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:26BA97|SNRFOR|USD|XR14">Default/USD/RED:26BA97|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:27CA3F|SNRFOR|USD|XR14">Default/USD/RED:27CA3F|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:29EB75|SNRFOR|USD|XR14">Default/USD/RED:29EB75|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2BB75N|SNRFOR|USD|XR14">Default/USD/RED:2BB75N|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2BB9F4|SNRFOR|USD|XR14">Default/USD/RED:2BB9F4|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2C033N|SNRFOR|USD|XR14">Default/USD/RED:2C033N|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2E6448|SNRFOR|USD|XR14">Default/USD/RED:2E6448|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2F664B|SNRFOR|USD|XR14">Default/USD/RED:2F664B|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2F68AQ|SNRFOR|USD|XR14">Default/USD/RED:2F68AQ|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2G85AI|SNRFOR|USD|XR14">Default/USD/RED:2G85AI|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2H68GV|SNRFOR|USD|XR14">Default/USD/RED:2H68GV|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2I6597|SNRFOR|USD|XR14">Default/USD/RED:2I6597|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_10Y">Default/USD/RED:2I65BYEG6_10Y</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_1Y">Default/USD/RED:2I65BYEG6_1Y</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_2Y">Default/USD/RED:2I65BYEG6_2Y</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_3Y">Default/USD/RED:2I65BYEG6_3Y</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_5Y">Default/USD/RED:2I65BYEG6_5Y</DefaultCurve>
+                <DefaultCurve name="RED:2I65BYEG6_7Y">Default/USD/RED:2I65BYEG6_7Y</DefaultCurve>
+                <DefaultCurve name="RED:36AGC5|SNRFOR|USD|XR14">Default/USD/RED:36AGC5|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:38BD8L|SNRFOR|USD|XR14">Default/USD/RED:38BD8L|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:39FF64|SNRFOR|USD|XR14">Default/USD/RED:39FF64|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3A7367|SNRFOR|USD|XR14">Default/USD/RED:3A7367|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3A749R|SNRFOR|USD|XR14">Default/USD/RED:3A749R|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3D177O|SNRFOR|USD|XR14">Default/USD/RED:3D177O|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3D233N|SNRFOR|USD|XR14">Default/USD/RED:3D233N|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3E56A5|SNRFOR|USD|XR14">Default/USD/RED:3E56A5|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:3H98A7|SNRFOR|USD|XR14">Default/USD/RED:3H98A7|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:46A844|SNRFOR|USD|XR14">Default/USD/RED:46A844|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:46A89Q|SNRFOR|USD|XR14">Default/USD/RED:46A89Q|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:47A77D|SNRFOR|USD|XR14">Default/USD/RED:47A77D|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:47BD67|SNRFOR|USD|XR14">Default/USD/RED:47BD67|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:49D954|SNRFOR|USD|XR14">Default/USD/RED:49D954|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:49EB20|SNRFOR|USD|XR14">Default/USD/RED:49EB20|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4A615A|SNRFOR|USD|XR14">Default/USD/RED:4A615A|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4BF976|SNRFOR|USD|XR14">Default/USD/RED:4BF976|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4DD9BH|SNRFOR|USD|XR14">Default/USD/RED:4DD9BH|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4E452A|SNRFOR|USD|XR14">Default/USD/RED:4E452A|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4E477P|SNRFOR|USD|XR14">Default/USD/RED:4E477P|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4E6837|SNRFOR|USD|XR14">Default/USD/RED:4E6837|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:4I517N|SNRFOR|USD|XR14">Default/USD/RED:4I517N|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:58CHB3|SNRFOR|USD|XR14">Default/USD/RED:58CHB3|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:59CEC7|SNRFOR|USD|XR14">Default/USD/RED:59CEC7|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5A78DD|SNRFOR|USD|XR14">Default/USD/RED:5A78DD|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5BBDDF|SNRFOR|USD|XR14">Default/USD/RED:5BBDDF|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5D8148|SNRFOR|USD|XR14">Default/USD/RED:5D8148|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5EA6BX|SNRFOR|USD|XR14">Default/USD/RED:5EA6BX|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5F07CP|SNRFOR|USD|XR14">Default/USD/RED:5F07CP|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5F1148|SNRFOR|USD|XR14">Default/USD/RED:5F1148|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5H865C|SNRFOR|USD|XR14">Default/USD/RED:5H865C|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5I759F|SNRFOR|USD|XR14">Default/USD/RED:5I759F|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:5J4466|SNRFOR|USD|XR14">Default/USD/RED:5J4466|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:65339K|SNRFOR|USD|XR14">Default/USD/RED:65339K|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:669B27|SNRFOR|USD|XR14">Default/USD/RED:669B27|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:69AB75|SNRFOR|USD|XR14">Default/USD/RED:69AB75|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6A521L|SNRFOR|USD|XR14">Default/USD/RED:6A521L|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6B679I|SNRFOR|USD|XR14">Default/USD/RED:6B679I|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6BADC8|SNRFOR|USD|XR14">Default/USD/RED:6BADC8|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6CCE9H|SNRFOR|USD|XR14">Default/USD/RED:6CCE9H|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6DB9EI|SNRFOR|USD|XR14">Default/USD/RED:6DB9EI|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6E9AAA|SNRFOR|USD|XR14">Default/USD/RED:6E9AAA|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6EC42L|SNRFOR|USD|XR14">Default/USD/RED:6EC42L|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6F94BX|SNRFOR|USD|XR14">Default/USD/RED:6F94BX|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6FE66B|SNRFOR|USD|XR14">Default/USD/RED:6FE66B|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6FIB6J|SNRFOR|USD|XR14">Default/USD/RED:6FIB6J|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:6I209O|SNRFOR|USD|XR14">Default/USD/RED:6I209O|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7B6989|SNRFOR|USD|XR14">Default/USD/RED:7B6989|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7B8752|SNRFOR|USD|XR14">Default/USD/RED:7B8752|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7B9DFM|SNRFOR|USD|XR14">Default/USD/RED:7B9DFM|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7BCB7P|SNRFOR|USD|XR14">Default/USD/RED:7BCB7P|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7BDHBK|SNRFOR|USD|XR14">Default/USD/RED:7BDHBK|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7C5259|SNRFOR|USD|XR14">Default/USD/RED:7C5259|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7FB89D|SNRFOR|USD|XR14">Default/USD/RED:7FB89D|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:7I8789|SNRFOR|USD|XR14">Default/USD/RED:7I8789|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:897ECJ|SNRFOR|USD|XR14">Default/USD/RED:897ECJ|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8A677C|SNRFOR|USD|XR14">Default/USD/RED:8A677C|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8AAG87|SNRFOR|USD|XR14">Default/USD/RED:8AAG87|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8C67DF|SNRFOR|USD|XR14">Default/USD/RED:8C67DF|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8C8BB5|SNRFOR|USD|XR14">Default/USD/RED:8C8BB5|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8F97DO|SNRFOR|USD|XR14">Default/USD/RED:8F97DO|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8FD73G|SNRFOR|USD|XR14">Default/USD/RED:8FD73G|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8FFFB8|SNRFOR|USD|XR14">Default/USD/RED:8FFFB8|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8GHDBF|SNRFOR|USD|XR14">Default/USD/RED:8GHDBF|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:8HC878|SNRFOR|USD|XR14">Default/USD/RED:8HC878|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:997F99|SNRFOR|USD|XR14">Default/USD/RED:997F99|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9A2443|SNRFOR|USD|XR14">Default/USD/RED:9A2443|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9A456T|SNRFOR|USD|XR14">Default/USD/RED:9A456T|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9AAA4I|SNRFOR|USD|XR14">Default/USD/RED:9AAA4I|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9B579L|SNRFOR|USD|XR14">Default/USD/RED:9B579L|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9C58DM|SNRFOR|USD|XR14">Default/USD/RED:9C58DM|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9C645J|SNRFOR|USD|XR14">Default/USD/RED:9C645J|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9F837C|SNRFOR|USD|XR14">Default/USD/RED:9F837C|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9F9652|SNRFOR|USD|XR14">Default/USD/RED:9F9652|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9FFD9C|SNRFOR|USD|XR14">Default/USD/RED:9FFD9C|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:9J26DD|SNRFOR|USD|XR14">Default/USD/RED:9J26DD|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:GL6652|SNRFOR|USD|XR14">Default/USD/RED:GL6652|SNRFOR|USD|XR14</DefaultCurve>
+                <DefaultCurve name="RED:UZDD52|SNRFOR|USD|XR14">Default/USD/RED:UZDD52|SNRFOR|USD|XR14</DefaultCurve>
+	</DefaultCurves>
+	<YYInflationCapFloorVolatilities id="default">
+		<YYInflationCapFloorVolatility name="AUCPI">InflationCapFloorVolatility/AUCPI/AUCPI_YY_CF_VOL</YYInflationCapFloorVolatility>
+		<YYInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF_VOL</YYInflationCapFloorVolatility>
+	</YYInflationCapFloorVolatilities>
+	<ZeroInflationCapFloorVolatilities id="default">
+		<ZeroInflationCapFloorVolatility name="AUCPI">InflationCapFloorVolatility/AUCPI/AUCPI_ZC_CF_VOL</ZeroInflationCapFloorVolatility>
+		<ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF_VOL</ZeroInflationCapFloorVolatility>
+	</ZeroInflationCapFloorVolatilities>
+	<EquityCurves id="default">
+		<EquityCurve name="FIGI:BBG00R251JN8">Equity/USD/FIGI:BBG00R251JN8</EquityCurve>
+		<EquityCurve name="ISIN:GB0005405286:HKD:XHKG">Equity/HKD/ISIN:GB0005405286:HKD:XHKG</EquityCurve>
+		<EquityCurve name="RIC:.NDX">Equity/USD/RIC:.NDX</EquityCurve>
+		<EquityCurve name="RIC:.SPX">Equity/USD/RIC:.SPX</EquityCurve>
+		<EquityCurve name="RIC:.STOXX50">Equity/EUR/RIC:.STOXX50</EquityCurve>
+		<EquityCurve name="RIC:.STOXX50E">Equity/EUR/RIC:.STOXX50E</EquityCurve>
+		<EquityCurve name="RIC:0005.HK">Equity/HKD/RIC:0005.HK</EquityCurve>
+		<EquityCurve name="RIC:AMZN.O">Equity/USD/RIC:AMZN.O</EquityCurve>
+		<EquityCurve name="RIC:CR.N">Equity/USD/RIC:CR.N</EquityCurve>
+		<EquityCurve name="RIC:DHER.DE">Equity/EUR/RIC:DHER.DE</EquityCurve>
+		<EquityCurve name="RIC:LYV.N">Equity/USD/RIC:LYV.N</EquityCurve>
+		<EquityCurve name="RIC:MSFT.O">Equity/USD/RIC:MSFT.O</EquityCurve>
+		<EquityCurve name="RIC:ON.O">Equity/USD/RIC:ON.O</EquityCurve>
+	</EquityCurves>
+	<EquityVolatilities id="default">
+		<EquityVolatility name="ISIN:GB0005405286:HKD:XHKG">EquityVolatility/HKD/ISIN:GB0005405286:HKD:XHKG</EquityVolatility>
+		<EquityVolatility name="RIC:.NDX">EquityVolatility/USD/RIC:.NDX</EquityVolatility>
+		<EquityVolatility name="RIC:.SPX">EquityVolatility/USD/RIC:.SPX</EquityVolatility>
+		<EquityVolatility name="RIC:.STOXX50">EquityVolatility/EUR/RIC:.STOXX50</EquityVolatility>
+		<EquityVolatility name="RIC:.STOXX50E">EquityVolatility/EUR/RIC:.STOXX50E</EquityVolatility>
+		<EquityVolatility name="RIC:0005.HK">EquityVolatility/HKD/RIC:0005.HK</EquityVolatility>
+		<EquityVolatility name="RIC:DHER.DE">EquityVolatility/EUR/RIC:DHER.DE</EquityVolatility>
+		<EquityVolatility name="RIC:LYV.N">EquityVolatility/USD/RIC:LYV.N</EquityVolatility>
+		<EquityVolatility name="RIC:ON.O">EquityVolatility/USD/RIC:ON.O</EquityVolatility>
+	</EquityVolatilities>
+	<Securities id="default">
+		<Security name="ISIN:DE000A3H2WP2">Security/ISIN:DE000A3H2WP2</Security>
+		<Security name="ISIN:IE00BH3SQ895">Security/ISIN:IE00BH3SQ895</Security>
+		<Security name="ISIN:IT0005177909">Security/ISIN:IT0005177909</Security>
+		<Security name="ISIN:US531229AR32">Security/ISIN:US531229AR32</Security>
+		<Security name="ISIN:US682189AS48">Security/ISIN:US682189AS48</Security>
+		<Security name="ISIN:US912828X703">Security/ISIN:US912828X703</Security>
+		<Security name="ISIN:XS0983610930">Security/ISIN:XS0983610930</Security>
+		<Security name="SECURITY_1">Security/SECURITY_1</Security>
+	</Securities>
+	<BaseCorrelations id="default">
+	  <BaseCorrelation name="RED:2I65BYDX0">BaseCorrelation/RED:2I65BYDX0</BaseCorrelation>
+	  <BaseCorrelation name="RED:2I65BYEG6">BaseCorrelation/RED:2I65BYEG6</BaseCorrelation>
+	</BaseCorrelations>
+	<CommodityCurves id="default">
+		<CommodityCurve name="ICE:B">Commodity/USD/ICE:B</CommodityCurve>
+		<CommodityCurve name="NYMEX:A7Q">Commodity/USD/NYMEX:A7Q</CommodityCurve>
+		<CommodityCurve name="NYMEX:CL">Commodity/USD/NYMEX:CL</CommodityCurve>
+		<CommodityCurve name="NYMEX:CSX">Commodity/USD/NYMEX:CSX</CommodityCurve>
+		<CommodityCurve name="NYMEX:NG">Commodity/USD/NYMEX:NG</CommodityCurve>
+		<CommodityCurve name="PM:XAUUSD">Commodity/USD/PM:XAUUSD</CommodityCurve>
+		<CommodityCurve name="XLME:AH">Commodity/USD/XLME:AH</CommodityCurve>
+	</CommodityCurves>
+	<CommodityVolatilities id="default">
+		<CommodityVolatility name="ICE:B">CommodityVolatility/USD/ICE:B</CommodityVolatility>
+		<CommodityVolatility name="NYMEX:CL">CommodityVolatility/USD/NYMEX:CL</CommodityVolatility>
+		<CommodityVolatility name="NYMEX:NG">CommodityVolatility/USD/NYMEX:NG</CommodityVolatility>
+		<CommodityVolatility name="NYMEX:CSX">CommodityVolatility/USD/NYMEX:CSX</CommodityVolatility>
+	</CommodityVolatilities>
+	<Correlations id="default">
+		<Correlation name="COMM-NYMEX:CL&amp;COMM-ICE:B">Correlation/COMM-NYMEX:CL&amp;COMM-ICE:B</Correlation>
+		<Correlation name="EQ-RIC:.SPX&amp;EQ-RIC:.NDX">Correlation/EQ-RIC:.SPX&amp;EQ-RIC:.NDX</Correlation>
+		<Correlation name="EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX">Correlation/EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX</Correlation>
+		<Correlation name="EUR-CMS-10Y&amp;EUR-CMS-1Y">Correlation/EUR-CMS-10Y&amp;EUR-CMS-1Y</Correlation>
+		<Correlation name="EUR-CMS-10Y&amp;EUR-CMS-2Y">Correlation/EUR-CMS-10Y&amp;EUR-CMS-2Y</Correlation>
+		<Correlation name="FX-GENERIC-EUR-CZK&amp;FX-GENERIC-EUR-CHF">Correlation/FX-GENERIC-EUR-CZK&amp;FX-GENERIC-EUR-CHF</Correlation>
+		<Correlation name="FX-GENERIC-EUR-NOK&amp;FX-GENERIC-EUR-CHF">Correlation/FX-GENERIC-EUR-NOK&amp;FX-GENERIC-EUR-CHF</Correlation>
+		<Correlation name="FX-GENERIC-EUR-NOK&amp;FX-GENERIC-EUR-CZK">Correlation/FX-GENERIC-EUR-NOK&amp;FX-GENERIC-EUR-CZK</Correlation>
+		<Correlation name="FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-CHF">Correlation/FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-CHF</Correlation>
+		<Correlation name="FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-CZK">Correlation/FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-CZK</Correlation>
+		<Correlation name="FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-NOK">Correlation/FX-GENERIC-EUR-SEK&amp;FX-GENERIC-EUR-NOK</Correlation>
+		<Correlation name="FX-GENERIC-EUR-USD&amp;EQ-RIC:.SPX">Correlation/FX-GENERIC-EUR-USD&amp;EQ-RIC:.SPX</Correlation>
+		<Correlation name="FX-GENERIC-EUR-USD&amp;EQ-RIC:.STOXX50E">Correlation/FX-GENERIC-EUR-USD&amp;EQ-RIC:.STOXX50E</Correlation>
+		<Correlation name="FX-GENERIC-USD-CAD&amp;FX-GENERIC-EUR-USD">Correlation/FX-GENERIC-USD-CAD&amp;FX-GENERIC-EUR-USD</Correlation>
+		<Correlation name="FX-GENERIC-USD-JPY&amp;FX-GENERIC-EUR-USD">Correlation/FX-GENERIC-USD-JPY&amp;FX-GENERIC-EUR-USD</Correlation>
+		<Correlation name="FX-GENERIC-USD-SEK&amp;FX-GENERIC-EUR-USD">Correlation/FX-GENERIC-USD-SEK&amp;FX-GENERIC-EUR-USD</Correlation>
+		<Correlation name="FX-GENERIC-USD-SEK&amp;FX-GENERIC-USD-CAD">Correlation/FX-GENERIC-USD-SEK&amp;FX-GENERIC-USD-CAD</Correlation>
+		<Correlation name="USD-CMS-30Y&amp;USD-CMS-2Y">Correlation/USD-CMS-30Y&amp;USD-CMS-2Y</Correlation>
+	</Correlations>
+</TodaysMarket>
+

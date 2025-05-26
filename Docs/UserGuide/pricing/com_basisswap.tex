@@ -1,0 +1,29 @@
+\subsubsection{Commodity Basis Swap}
+\label{pricing:com_basisswap}
+
+The net present value of each calculation period in a Commodity Basis Swap 
+can be computed following \cite{Clark_2014}, and slightly extending
+Section \ref{pricing:com_swap}
+:
+$$
+\NPV = \mbox{Quantity}\cdot \omega\cdot \frac{1}{N}\sum_{i=1}^n
+  \left(F^{(1)}(0,T_i) - F^{(2)}(0,T_i) - K\right) \cdot P(T_i^{Set})
+$$
+where:
+\begin{itemize}
+\item Quantity: number of units of the underlying commodity
+\item $K$: strike price
+\item the sum runs over all fixing dates $t_i$ across all calculation
+  periods, $i=1, ..., N$
+\item $F^{(1,2)}(0,T_i)$: the forward price of commodity 1 resp. 2 for
+  maturity $T_i$ seen at time 0 (valuation date), $T_i$ is the prompt
+  futures expiry date  associated with the fixing date $t_i$ if the
+  Swap references Futures  prices, or it is the fixing date $t_i$ if
+  the  Swap references Commodity spot prices.
+\item $P(T_i^{Set})$: the discount factor for settlement date
+  following fixing date $T_i$, possibly a number of business days
+  (typically five) past the next calculation period end, or past the
+  Swap's final calculation period  end if all payouts are rolled up
+  into a single payment 
+\item $\omega$: +1 for a long Commodity Swap, -1 otherwise 
+\end{itemize}

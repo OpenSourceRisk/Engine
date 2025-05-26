@@ -30,11 +30,14 @@ namespace ore {
 namespace data {
 
 DateGrid::DateGrid()
-    : dates_(1, Settings::instance().evaluationDate()), tenors_(1, 0 * Days), times_(1, 0.0),
-      timeGrid_(times_.begin(), times_.end()), isValuationDate_(1, true), isCloseOutDate_(1, false) {}
+    : today_(Settings::instance().evaluationDate()), dates_(1, today_), valuationDates_(1, today_),
+      tenors_(1, 0 * Days), times_(1, 0.0), timeGrid_(times_.begin(), times_.end()), isValuationDate_(1, true),
+      isCloseOutDate_(1, false) {}
 
 DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, const QuantLib::DayCounter& dayCounter)
     : calendar_(gridCalendar), dayCounter_(dayCounter) {
+
+    today_ = Settings::instance().evaluationDate();
 
     if (grid == "ALPHA") {
         // ALPHA is
@@ -73,21 +76,22 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
     } else { // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
         vector<string> tokens;
         boost::split(tokens, grid, boost::is_any_of(","));
-        if (tokens.size() <= 2) {
+        QL_REQUIRE(!tokens.empty(), "DateGrid(): no tokens in grid spec '" << grid << "'");
+        QuantLib::Integer gridSize;
+        if (tokens.size() <= 2 &&
+            tryParse(tokens[0], gridSize, std::function<QuantLib::Integer(const std::string& s)>(parseInteger))) {
             // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
             Period gridTenor = 1 * Years; // default
-            Size gridSize = atoi(tokens[0].c_str());
-            QL_REQUIRE(gridSize > 0, "Invalid DateGrid string " << grid);
+            QL_REQUIRE(gridSize > 0, "DateGrid(): gridSize is zero, spec is '" << grid << "'");
             if (tokens.size() == 2)
                 gridTenor = data::parsePeriod(tokens[1]);
             if (gridTenor == Period(1, Days)) {
                 // we have a daily grid. Period and Calendar are not consistent with
                 // working & actual days, so we set the tenor grid
-                Date today = Settings::instance().evaluationDate();
-                Date d = today;
+                Date d = today_;
                 for (Size i = 0; i < gridSize; i++) {
                     d = gridCalendar.advance(d, Period(1, Days), Following); // next working day
-                    Size n = d - today;
+                    Size n = d - today_;
                     tenors_.push_back(Period(n, Days));
                 }
             } else {
@@ -109,6 +113,7 @@ DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridC
     QL_REQUIRE(!tenors_.empty(), "DateGrid requires a non-empty vector of tenors");
     QL_REQUIRE(is_sorted(tenors_.begin(), tenors_.end()),
                "Construction of DateGrid requires a sorted vector of unique tenors");
+    today_ = Settings::instance().evaluationDate();
     buildDates(gridCalendar, dayCounter);
 }
 
@@ -117,16 +122,16 @@ DateGrid::DateGrid(const vector<Date>& dates, const QuantLib::Calendar& cal, con
     QL_REQUIRE(!dates_.empty(), "Construction of DateGrid requires a non-empty vector of dates");
     QL_REQUIRE(is_sorted(dates_.begin(), dates_.end()),
                "Construction of DateGrid requires a sorted vector of unique dates");
-    Date today = Settings::instance().evaluationDate();
-    QL_REQUIRE(today < dates_.front(),
+    today_ = Settings::instance().evaluationDate();
+    QL_REQUIRE(today_ < dates_.front(),
                "Construction of DateGrid requires first element to be strictly greater than today");
 
     // Populate the tenors, times and timegrid
     tenors_.resize(dates_.size());
     times_.resize(dates_.size());
     for (Size i = 0; i < dates_.size(); i++) {
-        tenors_[i] = (dates_[i] - today) * Days;
-        times_[i] = dayCounter.yearFraction(today, dates_[i]);
+        tenors_[i] = (dates_[i] - today_) * Days;
+        times_[i] = dayCounter.yearFraction(today_, dates_[i]);
     }
     timeGrid_ = TimeGrid(times_.begin(), times_.end());
     isValuationDate_ = std::vector<bool>(dates_.size(), true);
@@ -139,24 +144,21 @@ DateGrid::DateGrid(const vector<Date>& dates, const QuantLib::Calendar& cal, con
 void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCounter& dc) {
     // build dates from tenors
     // this is called by both constructors
-    dates_.resize(tenors_.size());
+
+    dates_.clear();
     Date today = Settings::instance().evaluationDate();
-    for (Size i = 0; i < tenors_.size(); i++) {
-        if (tenors_[i].units() == Days)
-            dates_[i] = cal.adjust(today + tenors_[i]);
-        else
-            dates_[i] = cal.advance(today, tenors_[i], Following, false);
-        if (i > 0) {
-            QL_REQUIRE(dates_[i] >= dates_[i - 1], "DateGrid::buildDates(): tenors must be monotonic");
-            if (dates_[i] == dates_[i - 1]) {
-                dates_.erase(std::next(dates_.begin(), i));
-                tenors_.erase(std::next(tenors_.begin(), i));
-                --i;
-            }
+    std::vector<Period> tenorsTmp;
+    for(auto const& ten: tenors_) {
+        Date d = ten.units() == Days ? cal.adjust(today + ten) : cal.advance(today, ten, Following, false);
+        QL_REQUIRE(dates_.empty() || d >= dates_.back(), "DateGrid::buildDates(): tenors must be monotonic");
+        if(dates_.empty() || d != dates_.back()) {
+            dates_.push_back(d);
+            tenorsTmp.push_back(ten);
         }
     }
 
-    // Build times
+    tenors_.swap(tenorsTmp);
+
     times_.resize(dates_.size());
     for (Size i = 0; i < dates_.size(); i++)
         times_[i] = dc.yearFraction(today, dates_[i]);
@@ -164,6 +166,7 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
     timeGrid_ = TimeGrid(times_.begin(), times_.end());
     isValuationDate_ = std::vector<bool>(dates_.size(), true);
     isCloseOutDate_ = std::vector<bool>(dates_.size(), false);
+    valuationDates_ = dates_;
 
     // Log the date grid
     log();
@@ -176,167 +179,64 @@ void DateGrid::log() {
                  << ", Valuation:" << isValuationDate_[i] << ", CloseOut:" << isCloseOutDate_[i]);
 }
 
-void DateGrid::truncate(const Date& d, bool overrun) {
-    if (d >= dates_.back())
-        return; // no need for any truncation
-    DLOG("Truncating DateGrid beyond " << QuantLib::io::iso_date(d));
-    vector<Date>::iterator it = std::upper_bound(dates_.begin(), dates_.end(), d);
-    if (overrun)
-        ++it;
-    dates_.erase(it, dates_.end());
-    tenors_.resize(dates_.size());
-    times_.resize(dates_.size());
-    timeGrid_ = TimeGrid(times_.begin(), times_.end());
-    DLOG("DateGrid size now " << dates_.size());
-}
-
-void DateGrid::truncate(Size len) {
-    // Truncate grid up length len
-    if (dates_.size() > len) {
-        DLOG("Truncating DateGrid, removing elements " << dates_[len] << " to " << dates_.back());
-        dates_.resize(len);
-        tenors_.resize(len);
-        times_.resize(len);
-        timeGrid_ = TimeGrid(times_.begin(), times_.end());
-        isValuationDate_.resize(len);
-        isCloseOutDate_.resize(len);
-        DLOG("DateGrid size now " << dates_.size());
-    }
-}
-
 void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
-    valuationCloseOutMap_.clear();
+    QL_REQUIRE(closeOutDates_.empty(),
+               "DateGrid::addCloseOutDates(): close-out dates were already added, this can not be done twice.");
+    valuationDates_.clear();
     if (p == QuantLib::Period(0, QuantLib::Days)) {
         for (Size i = 0; i < dates_.size(); ++i) {
             if (i == 0) {
                 isCloseOutDate_.front() = false;
                 isValuationDate_.front() = true;
+                valuationDates_.push_back(dates_[i]);
             } else if (i == dates_.size() - 1) {
                 isCloseOutDate_.back() = true;
                 isValuationDate_.back() = false;
+                closeOutDates_.push_back(dates_[i]);
             } else {
                 isCloseOutDate_[i] = true;
                 isValuationDate_[i] = true;
+                valuationDates_.push_back(dates_[i]);
+                closeOutDates_.push_back(dates_[i]);
             }
-            if (isCloseOutDate_[i] && i > 0)
-                valuationCloseOutMap_[dates_[i-1]] = dates_[i];
         }
     } else {
-        std::set<QuantLib::Date> tmpCloseOutDates;
-        std::set<QuantLib::Date> tmpDates;
-        std::set<QuantLib::Date> tmpValueDates;
-        for (Size i = 0; i < dates_.size(); ++i) {
-            Date c;
-            if (p.units() == Days)
-                c = calendar_.adjust(dates_[i] + p);
-            else
-                c = calendar_.advance(dates_[i], p, Following, false);
-            tmpCloseOutDates.insert(c);
-            valuationCloseOutMap_[dates_[i]] = c;
-            tmpDates.insert(dates_[i]);
-            tmpDates.insert(c);
-            tmpValueDates.insert(dates_[i]);
+        valuationDates_ = dates_;
+        for (auto const& d : dates_) {
+            closeOutDates_.push_back(p.units() == Days ? calendar_.adjust(d + p)
+                                                       : calendar_.advance(d, p, Following, false));
+            QL_REQUIRE(
+                closeOutDates_.size() == 1 || closeOutDates_.back() >= closeOutDates_[closeOutDates_.size() - 2],
+                "DateGrid::addCloseOutDates(): internal error, added close-out date is earlier than the one before.");
         }
-        dates_.clear();
-        dates_.assign(tmpDates.begin(), tmpDates.end());
+        std::set<Date> tmp;
+        tmp.insert(valuationDates_.begin(), valuationDates_.end());
+        tmp.insert(closeOutDates_.begin(), closeOutDates_.end());
+        dates_.assign(tmp.begin(), tmp.end());
         isCloseOutDate_ = std::vector<bool>(dates_.size(), false);
         isValuationDate_ = std::vector<bool>(dates_.size(), true);
-        for(size_t i = 0; i < dates_.size(); ++i){
-            Date d = dates_[i];
-            if (tmpCloseOutDates.count(d) == 1) {
-                isCloseOutDate_[i] = true;
-            }
-            if(tmpValueDates.count(d) == 0){
-                isValuationDate_[i] = false;
-            }
+        for(Size i = 0; i < dates_.size(); ++i){
+            isCloseOutDate_[i] = std::binary_search(closeOutDates_.begin(), closeOutDates_.end(), dates_[i]);
+            isValuationDate_[i] = std::binary_search(valuationDates_.begin(), valuationDates_.end(), dates_[i]);
         }
-        // FIXME ... (is that needed anywhere ?)
-        tenors_ = std::vector<QuantLib::Period>(dates_.size(), 0 * Days);
+        tenors_.resize(dates_.size());
         times_.resize(dates_.size());
-        Date today = Settings::instance().evaluationDate();
-        for (Size i = 0; i < dates_.size(); i++)
-            times_[i] = dayCounter_.yearFraction(today, dates_[i]);
+        for(Size i=0;i<dates_.size();++i) {
+            tenors_[i] = (dates_[i] - today_) * Days;
+            times_[i] = dayCounter_.yearFraction(today_, dates_[i]);
+        }
         timeGrid_ = TimeGrid(times_.begin(), times_.end());
     }
-    // Log Grid
+    // Log updated grid
     DLOG("Added Close Out Dates to DateGrid , size = " << size());
     log();
 }
 
-std::vector<QuantLib::Date> DateGrid::valuationDates() const {
-    std::vector<Date> res;
-    for (Size i = 0; i < dates_.size(); ++i) {
-        if (isValuationDate_[i])
-            res.push_back(dates_[i]);
-    }
-    return res;
-}
-
-std::vector<QuantLib::Date> DateGrid::closeOutDates() const {
-    std::vector<Date> res;
-    for (Size i = 0; i < dates_.size(); ++i) {
-        if (isCloseOutDate_[i])
-            res.push_back(dates_[i]);
-    }
-    return res;
-}
-
-QuantLib::TimeGrid DateGrid::valuationTimeGrid() const {
-    std::vector<Real> times;
-    Date today = Settings::instance().evaluationDate();
-    for (Size i = 0; i < dates_.size(); ++i) {
-        if (isValuationDate_[i])
-            times.push_back(dayCounter_.yearFraction(today, dates_[i]));
-    }
-    return TimeGrid(times.begin(), times.end());
-}
-
-QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
-    std::vector<Real> times;
-    Date today = Settings::instance().evaluationDate();
-    for (Size i = 0; i < dates_.size(); ++i) {
-        if (isCloseOutDate_[i])
-            times.push_back(dayCounter_.yearFraction(today, dates_[i]));
-    }
-    return TimeGrid(times.begin(), times.end());
-}
-
 QuantLib::Date DateGrid::closeOutDateFromValuationDate(const QuantLib::Date& d) const {
-    auto it = valuationCloseOutMap_.find(d);
-    if(it == valuationCloseOutMap_.end()){
+    auto [f, _] = std::equal_range(valuationDates_.begin(), valuationDates_.end(), d);
+    if (f == valuationDates_.end() || closeOutDates_.empty())
         return Date();
-    } 
-    return it->second;
-}
-
-QuantLib::ext::shared_ptr<DateGrid> generateShiftedDateGrid(const QuantLib::ext::shared_ptr<DateGrid>& dg,
-                                                    const QuantLib::Period& shift) {
-    DLOG("Building shifted date grid with shift of " << shift);
-    vector<Date> defaultDates = dg->dates();
-    vector<Date> closeOutDates;
-    for (auto d : defaultDates) {
-        Date closeOut = dg->calendar().adjust(d + shift);
-        closeOutDates.push_back(closeOut);
-    }
-    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(closeOutDates, dg->calendar(), dg->dayCounter());
-    return newDg;
-}
-
-QuantLib::ext::shared_ptr<DateGrid> combineDateGrids(const QuantLib::ext::shared_ptr<DateGrid>& dg1,
-                                             const QuantLib::ext::shared_ptr<DateGrid>& dg2) {
-    DLOG("Combining date grids");
-    vector<Date> combinedVec;
-    vector<Date> dates1 = dg1->dates();
-    vector<Date> dates2 = dg2->dates();
-    combinedVec.reserve(dates1.size() + dates2.size());
-    combinedVec.insert(combinedVec.end(), dates1.begin(), dates1.end());
-    combinedVec.insert(combinedVec.end(), dates2.begin(), dates2.end());
-    std::sort(combinedVec.begin(), combinedVec.end());
-    auto last = std::unique(combinedVec.begin(), combinedVec.end());
-    combinedVec.erase(last, combinedVec.end());
-    // FIXME: Check that grid calendars and day counters match?
-    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(combinedVec, dg1->calendar(), dg1->dayCounter());
-    return newDg;
+    return closeOutDates_[std::distance(valuationDates_.begin(), f)];
 }
 
 } // namespace data

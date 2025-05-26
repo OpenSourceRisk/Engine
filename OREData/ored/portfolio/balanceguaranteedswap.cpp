@@ -60,6 +60,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     additionalData_["isdaBaseProduct"] = string("Exotic");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");  
+    additionalData_["underlyingSecurityId"] = referenceSecurity_;
 
     QuantLib::Schedule schedule = makeSchedule(this->schedule());
 
@@ -86,10 +87,10 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     Currency currency = parseCurrency(ccy_str);
 
     Size fixedLegIndex, floatingLegIndex;
-    if (swap_[0].legType() == "Floating" && swap_[1].legType() == "Fixed") {
+    if (swap_[0].legType() == LegType::Floating && swap_[1].legType() == LegType::Fixed) {
         floatingLegIndex = 0;
         fixedLegIndex = 1;
-    } else if (swap_[1].legType() == "Floating" && swap_[0].legType() == "Fixed") {
+    } else if (swap_[1].legType() == LegType::Floating && swap_[0].legType() == LegType::Fixed) {
         floatingLegIndex = 1;
         fixedLegIndex = 0;
     } else {
@@ -198,6 +199,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     bgSwap->setPricingEngine(
         builder->engine(id(), referenceSecurity(), ccy_str, expiryDates, bgSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // add required fixings
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
@@ -212,6 +214,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = bgSwap->maturityDate();
+    maturityType_ = "Swap Leg Maturity Date";
 }
 
 void BalanceGuaranteedSwap::fromXML(XMLNode* node) {

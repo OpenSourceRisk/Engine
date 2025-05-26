@@ -23,8 +23,10 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -38,8 +40,9 @@ struct CcyComp {
 };
 } // namespace
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
-                                                                             const Currency& base) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                            bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
 
     std::set<Currency, CcyComp> allCurrencies(ccys.begin(), ccys.end());
     allCurrencies.insert(base);
@@ -49,49 +52,34 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
         ccysStr += "_" + c.code();
     }
 
+    // add currencies from equities
+
+    for (auto const& eq : eqNames) {
+        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency());
+    }
+
     DLOG("Building multi leg option engine for ccys " << ccysStr << " (from externally given CAM)");
 
     QL_REQUIRE(!ccys.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
 
-    std::vector<Size> externalModelIndices;
-    std::vector<Handle<YieldTermStructure>> discountCurves;
-    std::vector<Size> cIdx;
-    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
-    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
-
-    // base ccy is the base ccy of the external cam by definition
-    // but in case we only have one currency, we don't need this
     bool needBaseCcy = allCurrencies.size() > 1;
 
-    // add the IR and FX components in the order they appear in the CAM; this way
-    // we can sort the external model indices and be sure that they match up with
-    // the indices 0,1,2,3,... of the projected model we build here
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
-                                                 cam_->irlgm1f(i)->currency()) != allCurrencies.end()) {
-            lgm.push_back(cam_->lgm(i));
-            externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::IR, i));
-            cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::IR, i));
-            if (i > 0) {
-                fx.push_back(cam_->fxbs(i - 1));
-                externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, i - 1));
-                cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::FX, i - 1));
-            }
-        }
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
     }
-
-    std::sort(externalModelIndices.begin(), externalModelIndices.end());
-    std::sort(cIdx.begin(), cIdx.end());
-
-    // build correlation matrix
-    Matrix corr(cIdx.size(), cIdx.size(), 1.0);
-    for (Size i = 0; i < cIdx.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            corr(i, j) = corr(j, i) = cam_->correlation()(cIdx[i], cIdx[j]);
-        }
+    for (auto const& c : allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
     }
-
-    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
+    for (auto const& eq : eqNames) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
+    }
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
@@ -105,12 +93,24 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                           bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    std::vector<std::string> ccysStr;
+    std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
+    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(ccysStr, modelCg_, simulationDates_);
 }
 
 } // namespace data

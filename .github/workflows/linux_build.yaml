@@ -2,25 +2,8 @@ name: C/C++ CI Ubuntu
 
 on:
   push:
-    branches: [master]
     tags:
        - 'v*'
-  release:
-   types: [published]
-  pull_request:
-    branches: [master]
-    types: [ready_for_review, opened, synchronize, reopened]
-    paths:
-      - .github/workflows/linux_build.yaml
-      - ./App/**
-      - ./OREAnalytics/**
-      - '!./OREAnalytics/doc/**'
-      - ./OREData/**
-      - '!./OREData/doc/**'
-      - ./ORETest/**
-      - ./QuantExt/**
-      - '!./QuantExt/doc/**'
-      - CMakeLists.txt
   workflow_dispatch:
 
 jobs:
@@ -29,20 +12,17 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-    - name: get QuantLib
-      run: |
-        git submodule update --init
+      with:
+        submodules: recursive
+        token: ${{ secrets.ORG_ACTIONS_ACCESS }} 
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Set up Boost
       run: |
         sudo apt update
         sudo apt install -y libboost-all-dev libboost-test-dev ninja-build
     - name: cmake configure
-      run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -G "Ninja" ..
+      run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -G "Ninja" ..
     - name: cmake build
       run: cd build/; pwd; cmake --build . -j $(nproc)
-    - name: Save executables as artifacts
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
-      with:
-        name: ore-exe-linux
-        path: /home/runner/work/Engine/Engine/build/App/ore

@@ -45,6 +45,7 @@ public:
     // read from log, the vectors are guaranteed to have all the same length size()
     Size size() const { return slots_.size(); }
     const std::vector<RandomVariable>& amounts() const { return amounts_; }
+    const std::vector<Date>& obsDates() const { return obsDates_; }
     const std::vector<Date>& dates() const { return dates_; }
     const std::vector<std::string>& currencies() const { return currencies_; }
     const std::vector<Size>& legNos() const { return legNos_; }
@@ -53,7 +54,7 @@ public:
 private:
     std::vector<Size> slots_;
     std::vector<RandomVariable> amounts_;
-    std::vector<Date> dates_;
+    std::vector<Date> obsDates_, dates_;
     std::vector<std::string> currencies_;
     std::vector<Size> legNos_;
     std::vector<std::string> cashflowTypes_;

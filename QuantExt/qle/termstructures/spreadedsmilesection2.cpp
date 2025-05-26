@@ -20,8 +20,6 @@
 
 #include <qle/math/flatextrapolation.hpp>
 
-#include <iostream>
-
 namespace QuantExt {
 
 SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base,
@@ -37,15 +35,6 @@ SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<Smi
     QL_REQUIRE(strikes_.size() == volSpreads_.size(), "SpreadedSmileSection2: strike spreads ("
                                                           << strikes_.size() << ") inconsistent with vol spreads ("
                                                           << volSpreads_.size() << ")");
-    if ((strikesRelativeToAtm_ && strikes.size() > 1) || stickyAbsMoney) {
-        QL_REQUIRE(baseAtmLevel_ != Null<Real>() || base_->atmLevel() != Null<Real>(),
-                   "SpreadedSmileSection2: if strikeRelativeToATM is true and more than one strike is given, or if "
-                   "stickyAbsMoney is true, the base atm level must be given.");
-    }
-    if (stickyAbsMoney) {
-        QL_REQUIRE(simulatedAtmLevel_ != Null<Real>(),
-                   "SpreadedSmileSection2: if stickyAbsMoney is true, the simulatedAtmLevel must be given");
-    }
     if (volSpreads_.size() > 1) {
         volSpreadInterpolation_ = LinearFlat().interpolate(strikes_.begin(), strikes_.end(), volSpreads_.begin());
         volSpreadInterpolation_.enableExtrapolation();
@@ -54,26 +43,39 @@ SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<Smi
 
 Rate SpreadedSmileSection2::minStrike() const { return base_->minStrike(); }
 Rate SpreadedSmileSection2::maxStrike() const { return base_->maxStrike(); }
-Rate SpreadedSmileSection2::atmLevel() const {
+
+Rate SpreadedSmileSection2::atmLevel() const { return simulatedAtmLevel_; }
+
+Rate SpreadedSmileSection2::getSafeAtmLevel() const {
+    QL_REQUIRE(simulatedAtmLevel_ != Null<Real>(), "SpreadedSmileSection2::atmLevel(): simulatedAtmLevel_ not set.");
+    return simulatedAtmLevel_;
+}
+
+Rate SpreadedSmileSection2::getSafeBaseAtmLevel() const {
+    QL_REQUIRE(baseAtmLevel_ != Null<Real>() || base_->atmLevel() != Null<Real>(),
+               "SpreadedSmileSection2::getSafeBaseAtmLevel(): neither baseAtmLevel_ nor base->atmLevel() provided.");
     return baseAtmLevel_ != Null<Real>() ? baseAtmLevel_ : base_->atmLevel();
 }
 
 Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
+    if (strike == Null<Real>()) {
+        strike = getSafeAtmLevel();
+    }
     Real effStrike;
     if (stickyAbsMoney_) {
-        effStrike = strike - (simulatedAtmLevel_ - atmLevel());
+        effStrike = strike - (getSafeAtmLevel() - getSafeBaseAtmLevel());
     } else {
         effStrike = strike;
     }
-    if (volSpreads_.size() == 1)
-        return base_->volatility(effStrike) + volSpreads_.front();
-    else if (strikesRelativeToAtm_) {
-        Real f = atmLevel();
-        QL_REQUIRE(f != Null<Real>(), "SpreadedSmileSection2: atm level required");
-        return base_->volatility(effStrike) + volSpreadInterpolation_(strike - f);
+    Real tmp;
+    if (volSpreads_.size() == 1) {
+        tmp= base_->volatility(effStrike) + volSpreads_.front();
+    } else if (strikesRelativeToAtm_) {
+        tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike - getSafeAtmLevel()));
     } else {
-        return base_->volatility(effStrike) + volSpreadInterpolation_(effStrike);
+        tmp= std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike));
     }
+    return tmp;
 }
 
 } // namespace QuantExt

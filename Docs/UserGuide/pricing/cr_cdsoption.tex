@@ -1,0 +1,77 @@
+%--------------------------------------------------------------------------------
+\subsubsection{CDS Option}
+\label{pricing:cr_cdsoption}
+
+The CDS Option payoff can be written
+$$
+\NPV_{CDSO}(t_e)=\left[ \NPV_{\CDS}(t_e) \right]^+
+$$
+where $\NPV_{\CDS}(t_e)$ is the present value of the underlying
+CDS on exercise date $t_e$ with specified reference credit,  
+CDS maturity and contractual CDS spread (strike).
+
+\medskip
+CDS Options are priced, in analogy to European Swaptions, using the
+Black model. Following the European Swaption pricing approach, we
+write the time $t$ price of a forward CDS (starting at time $t_s>t$
+and maturing on time $t_m>t_s$)
+$$
+\NPV_{CDS}(t) = \omega\,(S(t) - K)\,A(t;t_s,t_m)
+$$ 
+in terms of running spread $K$, fair forward CDS spread $S(t)$ and
+risky annuity $A(t;t_s,t_m)$
+\begin{align*}
+S(t) &= \frac{1}{A(t;t_s,t_m)} \times \mbox{Default Leg NPV} \\
+A(t;t_s,t_m) &=
+\frac{1}{K}\times(\mbox{Coupon Leg NPV + Accrual NPV})
+\end{align*}
+(see section \ref{pricing:cr_cds}). The option price in the risky
+annuity measure is then
+$$
+\NPV_{CDSO}(t) = A(t;t_s,t_m) \:\E^A_t\left[(\omega(S(T)-K))^+ \right]
+$$
+Assuming log-normal dynamics for thr forward CDS spread $S(t)$ we
+arrive at a Black formula for today's CDS Option price
+$$
+\NPV_{CDSO} = N \,\sum_{i=1}^n \mbox{Black}(K, S(t_0), \sigma_{t_s,t_m} \sqrt{t_s},\omega)\cdot A(t_s, t_m)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: CDS (running) premium 
+\item $S(t_0)$: today's forward CDS spread for CDS start $t_s$
+  and maturity $t_m$ 
+\item $\sigma_{t_s,t_m}$: volatility of the forward CDS spread corresponding 
+to the start $t_s$ and maturity $t_m$ of the period
+\item $\omega$: 1 for a protection buyer (premium payer), -1 for a
+  protection seller
+\item $A(t_s,t_m)$: risky annuity for the period from $t_s$ to $t_m$
+  as of today, 
+$$
+A(t_s, t_m)= \sum_{i=s+1}^m \delta_i\,P(t_i) \,S(t_i)
+$$
+\item $\delta_i$: the daycount fraction in years for the period from $t_{i-1}$ to $t_i$
+\item $P(t_i)$: the discount factor for time $t_i$
+\item $S(t_i)$: the survival probability for time $t_i$
+\end{itemize}
+
+See Black Model, Section \ref{models:black}, for more details.
+ 
+\medskip
+
+If the option underlying contains an upfront spread, this is 
+converted into a corresponding running spread adjustment.
+
+\medskip
+If the CDS Option contract contains {\em front end protection} and the
+underlying CDS is a protection buyer, then we add the value contribution
+$$
+N\cdot \LGD\cdot (1-S(t_s))\cdot P(t_s)
+$$
+
+\medskip
+Apart from discount curve, default/survival probability curves and
+LGDs, CDS Option pricing requires Black volatilities which may be
+available only for index CDS Options for a limited range of indices
+and short expiries.
+

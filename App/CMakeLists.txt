@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 project(App CXX)
 
-include(commonSettings)
-
 get_library_name("OREPlusBase" OREPBASE_LIB_NAME)
 get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)
@@ -32,6 +30,9 @@ target_link_libraries(ore ${ORED_LIB_NAME})
 target_link_libraries(ore ${QLE_LIB_NAME})
 target_link_libraries(ore ${QL_LIB_NAME})
 target_link_libraries(ore ${Boost_LIBRARIES})
+if (ORE_PYTHON_INTEGRATION)
+    target_link_libraries(ore ${Python_LIBRARIES})
+endif()
 
 if(MSVC AND MSVC_WHOLE_PROGRAM_OPTIMIZATION)
     target_compile_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/GL>")

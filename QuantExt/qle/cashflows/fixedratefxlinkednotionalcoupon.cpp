@@ -47,8 +47,9 @@ QuantLib::ext::shared_ptr<FixedRateCoupon> FixedRateFXLinkedNotionalCoupon::unde
     return underlying_; 
 }
 
-void FixedRateFXLinkedNotionalCoupon::update() { 
-    notifyObservers(); 
+void FixedRateFXLinkedNotionalCoupon::deepUpdate() { 
+    underlying_->update();
+    update();
 }
 
 void FixedRateFXLinkedNotionalCoupon::accept(AcyclicVisitor& v) {

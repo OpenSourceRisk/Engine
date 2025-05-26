@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="INDEX_CDS">
+        <TradeType>IndexCreditDefaultSwap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <IndexCreditDefaultSwapData>
+            <!--<CreditCurveId>RED:2I65BYEA9</CreditCurveId>-->
+            <CreditCurveId>RED:2I65BYEG6</CreditCurveId>
+	    <SettlesAccrual>Y</SettlesAccrual>
+            <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+            <LegData>
+                <LegType>Fixed</LegType>
+                <Payer>true</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>300000.000000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <FixedLegData>
+                    <Rates>
+                        <Rate>0.01</Rate>
+                    </Rates>
+                </FixedLegData>
+                <ScheduleData>
+                    <Rules>
+		        <!--
+                        <StartDate>20221014</StartDate>
+                        <EndDate>20270620</EndDate>
+                        -->
+			<StartDate>20240920</StartDate>
+                        <EndDate>20341220</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>CDS2015</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </IndexCreditDefaultSwapData>
+    </Trade>
+</Portfolio>

@@ -55,9 +55,10 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
 
     // Will need a YoY index below in the helpers.
+    QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationIndex> index =
         QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
-
+    QL_DEPRECATED_ENABLE_WARNING
     for (const auto& maturity : dts) {
 
         // Schedule for the YoY swap with maturity date equal to `maturity`
@@ -149,13 +150,14 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Use Linear here in line with what is in scenariosimmarket and todaysmarket but should probably be more generic.
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
+    QL_DEPRECATED_DISABLE_WARNING
     auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
         referenceDate_, calendar(), dayCounter(), lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {
-        result[maturity] = yoyCurve->yoyRate(maturity);
+        result[maturity] = yoyCurve->yoyRate(maturity, yoyCurve->observationLag());
     }
 
     return result;
@@ -186,28 +188,36 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
                (irTs->discount(S) * inflationGrowth(zts, S, indexIsInterpolated_));
 
     // Calculate the correction term C(t,S,T)
-    using CrossAssetAnalytics::ay;
-    using CrossAssetAnalytics::az;
-    using CrossAssetAnalytics::Hy;
-    using CrossAssetAnalytics::Hz;
-    using CrossAssetAnalytics::integral;
-    using CrossAssetAnalytics::LC;
-    using CrossAssetAnalytics::P;
-    using CrossAssetAnalytics::ryy;
-    using CrossAssetAnalytics::rzy;
-    using CrossAssetAnalytics::sy;
 
-    auto H_n_S = model_->irlgm1f(irIdx)->H(S);
-    auto zeta_r_S = rrParam->zeta(S);
+    Real c;
+    if (auto it = cache_C_.find(std::make_tuple(relativeTime_, S, T)); it == cache_C_.end()) {
+        using CrossAssetAnalytics::ay;
+        using CrossAssetAnalytics::az;
+        using CrossAssetAnalytics::Hy;
+        using CrossAssetAnalytics::Hz;
+        using CrossAssetAnalytics::integral;
+        using CrossAssetAnalytics::LC;
+        using CrossAssetAnalytics::P;
+        using CrossAssetAnalytics::ryy;
+        using CrossAssetAnalytics::rzy;
+        using CrossAssetAnalytics::sy;
 
-    auto c = H_r_S * (zeta_r_S - zeta_r_t);
-    c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
-    c += integral(*model_,
-                  LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
-                     P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
-                     P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),
-                  relativeTime_, S);
-    c *= (H_r_S - H_r_T);
+        auto H_n_S = model_->irlgm1f(irIdx)->H(S);
+        auto zeta_r_S = rrParam->zeta(S);
+
+        c = H_r_S * (zeta_r_S - zeta_r_t);
+        c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
+        c += integral(*model_,
+                      LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
+                         P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
+                         P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),
+                      relativeTime_, S);
+        c *= (H_r_S - H_r_T);
+        if (enableCache_)
+            cache_C_[std::make_tuple(relativeTime_, S, T)] = c;
+    } else {
+        c = it->second;
+    }
 
     return p_n_t_S * rrRatio * exp(c) - p_n_t_T;
 }

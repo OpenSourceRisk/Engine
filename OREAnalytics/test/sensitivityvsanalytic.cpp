@@ -164,7 +164,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarket
     simMarketData->setSwapVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP", "USD", "CHF", "JPY"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true); // false;
 
     simMarketData->setFxVolExpiries("",
@@ -274,14 +274,16 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData>(parConversion);
 
-    SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = ShiftType::Absolute;
-    fxsData.shiftSize = 1E-5;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
+    fxsData->shiftType = ShiftType::Absolute;
+    fxsData->shiftSize = 1E-5;
 
-    SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = ShiftType::Absolute;
-    fxvsData.shiftSize = 1E-5;
-    fxvsData.shiftExpiries = {5 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>();
+    fxvsData->shiftType = ShiftType::Absolute;
+    fxvsData->shiftSize = 1E-5;
+    fxvsData->shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = ShiftType::Absolute;
@@ -289,12 +291,13 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = ShiftType::Absolute;
-    swvsData.shiftSize = 1E-5;
-    swvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
+    swvsData->shiftType = ShiftType::Absolute;
+    swvsData->shiftSize = 1E-5;
+    swvsData->shiftExpiries = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
                               5 * Years,  7 * Years, 10 * Years, 20 * Years};
-    swvsData.shiftTerms = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
+    swvsData->shiftTerms = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
 
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> cvsData = createCurveData();
     cvsData->parInstrumentSingleCurve = true;
@@ -476,15 +479,15 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
         num << i++;
         numStr.push_back(num.str());
     }
-    for (auto const& p : sensiData->swaptionVolShiftData()["EUR"].shiftExpiries) {
+    for (auto const& p : sensiData->swaptionVolShiftData()["EUR"]->shiftExpiries) {
         bucketTimesVegaOpt.push_back(dc.yearFraction(today, today + p));
     }
-    for (auto const& p : sensiData->swaptionVolShiftData()["EUR"].shiftTerms) {
+    for (auto const& p : sensiData->swaptionVolShiftData()["EUR"]->shiftTerms) {
         bucketTimesVegaUnd.push_back(dc.yearFraction(today, today + p));
     }
     i = 0;
-    for (auto const& p1 : sensiData->swaptionVolShiftData()["EUR"].shiftExpiries) {
-        for (auto const& p2 : sensiData->swaptionVolShiftData()["EUR"].shiftTerms) {
+    for (auto const& p1 : sensiData->swaptionVolShiftData()["EUR"]->shiftExpiries) {
+        for (auto const& p2 : sensiData->swaptionVolShiftData()["EUR"]->shiftTerms) {
             ostringstream bs, num;
             bs << p1 << "/" << p2;
             num << i++;
@@ -493,7 +496,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
         }
     }
     i = 0;
-    for (auto const& p : sensiData->fxVolShiftData()["EURUSD"].shiftExpiries) {
+    for (auto const& p : sensiData->fxVolShiftData()["EURUSD"]->shiftExpiries) {
         bucketTimesFxOpt.push_back(dc.yearFraction(today, today + p));
         ostringstream bs, num;
         bs << p;

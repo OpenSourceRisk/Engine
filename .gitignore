@@ -218,6 +218,24 @@ QuantLib/test-suite/quantlib-benchmark
 QuantLib/test-suite/quantlib-test-suite
 QuantLib/test-suite/main.cpp
 
+##########################
+# SWIG generated code
+##########################
+*.idb
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib/QuantLib.py
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib/quantlib_wrap.cpp
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib_Python.egg-info/
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics/OREAnalytics.py
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics/oreanalytics_wrap.cpp
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics_Python.egg-info/
+ORE-SWIG/.build-stamp
+ORE-SWIG/examples/Output/
+ORE-SWIG/ORE.py
+ORE-SWIG/oreanalytics_wrap.cpp
+ORE-SWIG/dist/
+ORE-SWIG/open_source_risk_engine.egg-info/
+
+
 ###############################
 #generatedlog4cxxexecutables
 ###############################
@@ -245,6 +263,7 @@ build_debug/
 *.opensdf
 *.db
 .vs/
+*.pdb
 
 # Visual Studio Code files
 .vscode/
@@ -308,6 +327,7 @@ ipch/
 *log.txt
 *.dat
 
+QuantExt/qle/gitversion.hpp
 
 ##########################
 # Examples output
@@ -322,3 +342,4 @@ Examples/**/pricingstats.csv
 *.fls
 
 .gitmodules
+

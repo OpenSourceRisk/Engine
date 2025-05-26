@@ -40,10 +40,11 @@ public:
 
 class ParConversionAnalytic : public Analytic {
 public:
-    ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, false, false, false,
-                   false) {
-    }
+    ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                          const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, analyticsManager,
+                   false, false, false,
+                   false) {}
 
     std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const { 
         ZeroSensitivityLoader loader(inputs_->parConversionInputFile());

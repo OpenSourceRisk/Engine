@@ -45,10 +45,6 @@ public:
     */
     ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
-    // Deprecated constructor with interpolated index, index is always flat and the coupon is responsible for interpolation
-    QL_DEPRECATED
-    ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index, bool indexIsInterpolated);
-
     //! \name Observer interface
     //@{
     void update() override;
@@ -75,10 +71,12 @@ public:
     //! Set the current state and move the reference date to date \p d
     void move(const QuantLib::Date& d, const QuantLib::Array& s);
 
+    void enableCache(const bool b = true) const { enableCache_ = b; }
+    virtual void clearCache() const {}
+
 protected:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
-    QL_DEPRECATED bool indexIsInterpolated_;
     // Hides referenceDate_ in TermStructure.
     QuantLib::Date referenceDate_;
     QuantLib::Time relativeTime_;
@@ -88,6 +86,8 @@ protected:
         called.
     */
     virtual void checkState() const {}
+
+    mutable bool enableCache_ = false;
 };
 
 }

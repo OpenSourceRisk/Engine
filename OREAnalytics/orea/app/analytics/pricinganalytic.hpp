@@ -16,13 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/pricinganalytic.hpp
+    \brief Pricing Analytic
 */
 
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 
 namespace ore {
 namespace analytics {
@@ -39,15 +40,35 @@ public:
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
+    const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
+
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
+
+private:
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+
+protected:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
-                   inputs) {}
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
+                   analyticsManager) {}
 };
  
 } // namespace analytics

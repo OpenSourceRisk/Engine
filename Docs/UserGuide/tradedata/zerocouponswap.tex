@@ -1,5 +1,14 @@
 \subsubsection{Zero Coupon Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Zero-Coupon Swap has at least one zero-coupon leg. This leg has no interest rate 
+coupon payments during the life of the swap, just one final interest payment at 
+maturity, akin to a zero-coupon bond. The zero-coupon leg compounds at the tenor 
+of the swap. 
+
+{\bf Input}}\fi
+
 A Zero Coupon swap is set up as a swap (trade type \emph{Swap}) , with one leg of type {\tt ZeroCouponFixed}. Listing \ref{lst:zeroswap} shows an
 example. The ZeroCouponFixed leg contains an additional {\tt ZeroCouponFixedLegData} block. See \ref{ss:zerolegdata} for details on the ZeroCouponFixed leg
 specification.

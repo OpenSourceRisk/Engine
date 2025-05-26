@@ -209,7 +209,7 @@ QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib
         QuantLib::ext::shared_ptr<data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
-        QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
+        QL_REQUIRE(swap->legData()[0].legType() == LegType::Floating && swap->legData()[1].legType() == LegType::Fixed, "Leg mixup");
         if (fixedFreqs.find(fixFreq) == fixedFreqs.end())
             fixedFreqs[fixFreq] = 1;
         else
@@ -292,7 +292,7 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->swapVolKeys() = ccys;
-    parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDecayMode("ForwardVariance");
 
     parameters->setFxVolExpiries("",
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});

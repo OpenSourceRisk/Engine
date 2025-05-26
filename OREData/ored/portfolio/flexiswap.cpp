@@ -50,10 +50,10 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     Currency currency = parseCurrency(ccy_str);
 
     Size fixedLegIndex, floatingLegIndex;
-    if (swap_[0].legType() == "Floating" && swap_[1].legType() == "Fixed") {
+    if (swap_[0].legType() == LegType::Floating && swap_[1].legType() == LegType::Fixed) {
         floatingLegIndex = 0;
         fixedLegIndex = 1;
-    } else if (swap_[1].legType() == "Floating" && swap_[0].legType() == "Fixed") {
+    } else if (swap_[1].legType() == LegType::Floating && swap_[0].legType() == LegType::Fixed) {
         floatingLegIndex = 1;
         fixedLegIndex = 0;
     } else {
@@ -229,6 +229,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         builder->engine(id(), "", index.empty() ? ccy_str : IndexNameTranslator::instance().oreName(index->name()),
                         expiryDates, flexiSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // FIXME this won't work for exposure, currently not supported
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);
@@ -240,6 +241,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = flexiSwap->maturityDate();
+    maturityType_ = "FlexiSwap Leg Maturity Date";
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
 }
 

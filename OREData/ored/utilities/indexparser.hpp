@@ -101,6 +101,12 @@ bool isGenericIborIndex(const string& indexName);
 */
 std::pair<bool, QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName);
 
+//! Return true if the \p indexName is that of an IborIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isIborIndex(const std::string& indexName);
+
 //! Return true if the \p indexName is that of an EquityIndex, otherwise false
 /*!
     \ingroup utilities
@@ -138,11 +144,6 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  */
 QuantLib::ext::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
-
-QL_DEPRECATED
-QuantLib::ext::shared_ptr<ZeroInflationIndex>
-parseZeroInflationIndex(const string& s, bool isInterpolated,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
 //! Convert std::string to QuantExt::BondIndex
 /*!

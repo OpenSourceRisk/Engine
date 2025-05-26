@@ -6,6 +6,7 @@ analyticeuropeanenginedeltagamma.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
+blackmultilegoptionengine.cpp
 blackswaptionenginedeltagamma.cpp
 blacktriangulation.cpp
 blackvariancecurve.cpp
@@ -31,6 +32,8 @@ crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
+crossassetmodelpricing.cpp
+crossassetmodelvega.cpp
 crossccybasismtmresetswap.cpp
 crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
@@ -55,6 +58,7 @@ fillemptymatrix.cpp
 formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
+fxvoltimeweighting.cpp
 hullwhitebucketing.cpp
 index.cpp
 inflationcurve.cpp
@@ -62,6 +66,8 @@ inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 lgmbgsflexiswapengine.cpp
 lgmflexiswapengine.cpp
+lgmpricing.cpp
+lgmpricingedgecases.cpp
 logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
@@ -84,7 +90,6 @@ stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
-swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)

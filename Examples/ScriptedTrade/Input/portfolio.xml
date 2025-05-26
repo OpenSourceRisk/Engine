@@ -1,0 +1,881 @@
+<Portfolio>
+
+  <!--
+      ===============================
+      === Vanilla Euopean Options ===
+      ===============================
+  -->
+
+  <!-- Standard ORE format with analytical BS pricing -->
+  <Trade id="1:EquityOption:AN">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>true</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2023-09-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>RIC:.STOXX50E</Name>
+      <Currency>EUR</Currency>
+      <Strike>4350</Strike>
+      <StrikeCurrency>EUR</StrikeCurrency>
+      <Quantity>1000</Quantity>
+    </EquityOptionData>
+  </Trade>
+
+  <!-- Embedded script, default engine (MC), see pricingengine.xml -->
+  <Trade id="2:EquityOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <Script>
+        <Code><![CDATA[
+             NUMBER Payoff;
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+             Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
+        ]]></Code>
+        <NPV>Option</NPV>
+        <CalibrationSpec>
+          <Calibration>
+            <Index>Underlying</Index>
+            <Strikes>
+              <Strike>Strike</Strike>
+            </Strikes>
+          </Calibration>
+        </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <!-- Embedded script, product tag selects FD engine -->
+  <Trade id="3:EquityOption:FD">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
+      <Script>
+        <Code><![CDATA[
+             NUMBER Payoff;
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+             Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
+        ]]></Code>
+        <NPV>Option</NPV>
+        <CalibrationSpec>
+          <Calibration>
+            <Index>Underlying</Index>
+            <Strikes>
+              <Strike>Strike</Strike>
+            </Strikes>
+          </Calibration>
+        </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <!-- Reference to external script, default MC engine -->
+  <Trade id="4:EquityOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>EuropeanOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  
+  <!-- Same as trade 4 above, but in compact form, default MC engine -->
+  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd --> 
+  <!--
+  <Trade id="4b:EquityOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EuropeanOptionData>
+      <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+      <Strike type="number">4350</Strike>
+      <PutCall type="optionType">Call</PutCall>
+      <LongShort type="longShort">Long</LongShort>
+      <PayCcy type="currency">EUR</PayCcy>
+      <Expiry type="event">2023-11-07</Expiry>
+      <Settlement type="event">2023-11-07</Settlement>
+      <Quantity type="number">1000</Quantity>
+    </EuropeanOptionData>
+  </Trade>
+  -->
+  
+  <!-- 
+       =======================
+       === Barrier Options ===
+       =======================
+  -->  
+
+  <!-- Analytic pricer -->
+  <Trade id="5:EquityBarrierOption:AN">
+    <TradeType>EquityBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>true</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2023-09-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BarrierData>
+        <Type>UpAndOut</Type>
+        <Style>American</Style>
+        <Levels>
+          <Level>5000</Level>
+        </Levels>
+        <Rebate>0</Rebate>
+        <RebateCurrency>EUR</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>      
+      <StartDate>2023-06-05</StartDate>
+      <Calendar>TARGET</Calendar>
+      <Name>RIC:.STOXX50E</Name>
+      <Currency>EUR</Currency>
+      <Strike>4350</Strike>
+      <Quantity>1000</Quantity>
+    </EquityBarrierOptionData>
+  </Trade>  
+
+  <!-- Equity Barrier Option as scripted trade with daily observations -->
+  <Trade id="6:EquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>SingleBarrierOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-06-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value> <!-- 1:Call -1:Put -->
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value> <!-- 1:Long -1:Short -->
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        
+        <!-- barrier option specifics -->
+        <Number>
+          <Name>PayoffType</Name>
+          <Value>0</Value><!-- 0:Vanilla 1:CashOrNothing -->
+        </Number>
+        <Number>
+          <Name>Amount</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>BarrierLevel</Name>
+          <Value>5000</Value>
+        </Number>
+        <Number>
+          <Name>BarrierType</Name>
+          <Value>4</Value> <!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+        </Number>
+        <Number>
+          <Name>BarrierRebate</Name>
+          <Value>0</Value>
+        </Number>
+        <Currency>
+          <Name>BarrierRebateCurrency</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Number>
+          <Name>BarrierRebatePayTime</Name>
+          <Value>1</Value> <!-- 0:atHit 1:atExpiry -->
+        </Number>
+        <Event>
+          <Name>BarrierMonitoringDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </Event>       
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <!-- Same as trade 6 above, but in compact form -->
+  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd -->
+  <!--
+  <Trade id="6b:EquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SingleBarrierOptionData>
+      <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+      <StartDate type="event">2023-08-07</StartDate>
+      <Strike type="number">4350</Strike>
+      <PutCall type="optionType">Call</PutCall>
+      <LongShort type="longShort">Long</LongShort>
+      <PayCcy type="currency">EUR</PayCcy>
+      <Expiry type="event">2023-11-07</Expiry>
+      <Settlement type="event">2023-11-07</Settlement>
+      <Quantity type="number">1000</Quantity>
+
+      <PayoffType type="number">0</PayoffType>
+      <Amount type="number">0</Amount>
+      <BarrierLevel type="number">5000</BarrierLevel>
+      <BarrierType type="barrierType">UpOut</BarrierType>
+      <BarrierRebate type="number">0</BarrierRebate>
+      <BarrierRebateCurrency type="currency">EUR</BarrierRebateCurrency>
+      <BarrierRebatePayTime type="number">1</BarrierRebatePayTime>
+      <BarrierMonitoringDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2023-08-07</StartDate>
+            <EndDate>2023-11-07</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </BarrierMonitoringDates>       
+    </SingleBarrierOptionData>
+  </Trade>
+  -->
+  
+  <!-- Equity Barrier Option as scripted trade with continuous barrier observation between daily schedule dates -->
+  <Trade id="7:EquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>SingleContinuousBarrierOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-06-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value> <!-- 1:Call -1:Put -->
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value> <!-- 1:Long -1:Short -->
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <!-- barrier option specifics -->
+        <Number>
+          <Name>PayoffType</Name>
+          <Value>0</Value><!-- 0:Vanilla 1:CashOrNothing -->
+        </Number>
+        <Number>
+          <Name>Amount</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>BarrierLevel</Name>
+          <Value>5000</Value>
+        </Number>
+        <Number>
+          <Name>BarrierType</Name>
+          <Value>4</Value> <!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+        </Number>
+        <Number>
+          <Name>BarrierRebate</Name>
+          <Value>0</Value>
+        </Number>
+        <Currency>
+          <Name>BarrierRebateCurrency</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Number>
+          <Name>BarrierRebatePayTime</Name>
+          <Value>1</Value> <!-- 0:atHit 1:atExpiry -->
+        </Number>
+        <Event>
+          <Name>BarrierMonitoringDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </Event>       
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <!-- Same as trade 7 above, but in compact form -->
+  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd --> 
+  <!--
+  <Trade id="7b:EquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SingleContinuousBarrierOptionData>
+      <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+      <StartDate type="event">2023-08-07</StartDate>
+      <Strike type="number">4350</Strike>
+      <PutCall type="optionType">Call</PutCall>
+      <LongShort type="longShort">Long</LongShort>
+      <PayCcy type="currency">EUR</PayCcy>
+      <Expiry type="event">2023-11-07</Expiry>
+      <Settlement type="event">2023-11-07</Settlement>
+      <Quantity type="number">1000</Quantity>
+
+      <PayoffType type="number">0</PayoffType>
+      <Amount type="number">0</Amount>
+      <BarrierLevel type="number">5000</BarrierLevel>
+      <BarrierType type="barrierType">UpOut</BarrierType>
+      <BarrierRebate type="number">0</BarrierRebate>
+      <BarrierRebateCurrency type="currency">EUR</BarrierRebateCurrency>
+      <BarrierRebatePayTime type="number">1</BarrierRebatePayTime>
+      <BarrierMonitoringDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2023-08-07</StartDate>
+            <EndDate>2023-11-07</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </BarrierMonitoringDates>       
+    </SingleContinuousBarrierOptionData>
+  </Trade>
+  -->
+  
+  <!-- 
+       ===================
+       === Accumulator ===
+       ===================
+  -->  
+  <Trade id="8:EquityAccumulator">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>Accumulator</ScriptName>
+      <Data>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4400</Value>
+        </Number>
+        <Number>
+          <Name>FixingAmount</Name>
+          <Value>100</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-06-07</Value>
+        </Event>
+        <Event>
+          <Name>FixingDates</Name>
+          <ScheduleData>
+            <Dates>
+              <Dates>
+                <Date>2024-06-07</Date>
+                <Date>2025-06-07</Date>
+                <Date>2026-06-07</Date>
+                <Date>2027-06-07</Date>
+                <Date>2028-06-07</Date>
+              </Dates>
+            </Dates>
+          </ScheduleData>
+        </Event>
+        <Event>
+          <Name>SettlementDates</Name>
+          <DerivedSchedule>
+            <BaseSchedule>FixingDates</BaseSchedule>
+            <Shift>0D</Shift>
+            <Calendar>NullCalendar</Calendar>
+            <Convention>U</Convention>
+          </DerivedSchedule>
+        </Event>
+        <Number>
+          <Name>RangeLowerBounds</Name>
+          <Values>
+            <Value>0</Value>
+            <Value>4000</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeUpperBounds</Name>
+          <Values>
+            <Value>4000</Value>
+            <Value>10000</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeLeverages</Name>
+          <Values>
+            <Value>1</Value>
+            <Value>2</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>KnockOutLevel</Name>
+          <Value>5000</Value>
+        </Number>
+        <Number>
+          <Name>KnockOutType</Name>
+          <Value>4</Value><!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+        </Number>
+        <Number>
+          <Name>AmericanKO</Name>
+          <Value>-1</Value><!-- 1:true -1:false -->
+        </Number>
+        <Number>
+          <Name>GuaranteedFixings</Name>
+          <Value>2</Value>
+        </Number>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+
+
+
+  <!-- Same as trade 8 above, but in compact form -->
+  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd -->
+  <!--
+  <Trade id="8b:EquityAccumulator">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <AccumulatorData>
+      <Strike type="number">4400</Strike>
+      <FixingAmount type="number">100</FixingAmount>
+      <LongShort type="longShort">Long</LongShort>
+      <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+      <PayCcy type="currency">EUR</PayCcy>
+      <StartDate type="event">2023-08-09</StartDate>
+      <FixingDates type="event">
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2024-08-09</Date>
+              <Date>2025-08-09</Date>
+              <Date>2026-08-09</Date>
+              <Date>2027-08-09</Date>
+              <Date>2028-08-09</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+      </FixingDates>
+      <SettlementDates type="event">
+        <DerivedSchedule>
+          <BaseSchedule>FixingDates</BaseSchedule>
+          <Shift>0D</Shift>
+          <Calendar>NullCalendar</Calendar>
+          <Convention>U</Convention>
+        </DerivedSchedule>
+      </SettlementDates>
+      <RangeUpperBounds type="number">
+        <Value>4000</Value>
+        <Value>10000</Value>
+      </RangeUpperBounds>
+      <RangeLowerBounds type="number">
+        <Value>0</Value>
+        <Value>4000</Value>
+      </RangeLowerBounds>
+      <RangeLeverages type="number">
+        <Value>1</Value>
+        <Value>2</Value>
+      </RangeLeverages>
+      <KnockOutLevel type="number">5000</KnockOutLevel>
+      <KnockOutType type="barrierType">UpOut</KnockOutType>
+      <AmericanKO type="bool">false</AmericanKO>
+      <GuaranteedFixings type="number">2</GuaranteedFixings>
+    </AccumulatorData>
+  </Trade>
+  -->
+
+  <!-- 
+   Trade 9a and 9b are Type 2 EQ Accumulators using the c++ wrapped trade type using the same script 
+   Knockout barrier is set so that both trades immediatly knock out to show the difference between 
+   both KnockOutBarrierSettlement modes
+  -->
+  <Trade id="9a:EquityAccumulator02Wrapped">
+    <TradeType>EquityAccumulator</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityAccumulatorData>
+      <Currency>EUR</Currency>
+      <FixingAmount>100</FixingAmount>
+      <Strike>4400</Strike>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.STOXX50E</Name>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <PayoffType>Accumulator</PayoffType>
+      </OptionData>
+      <StartDate>2023-06-07</StartDate>
+      <ObservationDates>
+        <Rules>
+          <StartDate>2023-06-07</StartDate>
+          <EndDate>2023-09-07</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth />
+          <FirstDate />
+          <LastDate />
+        </Rules>
+      </ObservationDates>
+      <PricingDates>
+        <Dates>
+          <Dates>
+            <Date>20230707</Date>
+            <Date>20230807</Date>
+            <Date>20230907</Date>
+          </Dates>
+        </Dates>
+      </PricingDates>
+      <SettlementLag>2D</SettlementLag>
+      <SettlementCalendar>TARGET</SettlementCalendar>
+      <SettlementConvention>F</SettlementConvention>
+      <RangeBounds>
+        <RangeBound>
+          <RangeTo>4000</RangeTo>
+          <Leverage>1</Leverage>
+        </RangeBound>
+        <RangeBound>
+          <RangeFrom>4000</RangeFrom>
+          <Leverage>2</Leverage>
+        </RangeBound>
+      </RangeBounds>
+      <Barriers>
+        <BarrierData>
+          <Type>UpAndOut</Type>
+          <Levels>
+            <Level>3000</Level>
+          </Levels>
+        </BarrierData>
+        <BarrierData>
+          <Type>FixingFloor</Type>
+          <Levels>
+            <Level>2</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+    </EquityAccumulatorData>
+  </Trade>
+
+  <Trade id="9b:EquityAccumulator02WrappedKnockOutAtPeriodEnd">
+    <TradeType>EquityAccumulator</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityAccumulatorData>
+      <Currency>EUR</Currency>
+      <FixingAmount>100</FixingAmount>
+      <Strike>4400</Strike>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.STOXX50E</Name>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <PayoffType>Accumulator</PayoffType>
+      </OptionData>
+      <StartDate>2023-06-07</StartDate>
+      <ObservationDates>
+        <Rules>
+          <StartDate>2023-06-07</StartDate>
+          <EndDate>2023-09-07</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth />
+          <FirstDate />
+          <LastDate />
+        </Rules>
+      </ObservationDates>
+      <PricingDates>
+        <Dates>
+          <Dates>
+            <Date>20230707</Date>
+            <Date>20230807</Date>
+            <Date>20230907</Date>
+          </Dates>
+        </Dates>
+      </PricingDates>
+      <SettlementLag>2D</SettlementLag>
+      <SettlementCalendar>TARGET</SettlementCalendar>
+      <SettlementConvention>F</SettlementConvention>
+      <RangeBounds>
+        <RangeBound>
+          <RangeTo>4000</RangeTo>
+          <Leverage>1</Leverage>
+        </RangeBound>
+        <RangeBound>
+          <RangeFrom>4000</RangeFrom>
+          <Leverage>2</Leverage>
+        </RangeBound>
+      </RangeBounds>
+      <Barriers>
+        <BarrierData>
+          <Type>UpAndOut</Type>
+          <Levels>
+            <Level>3000</Level>
+          </Levels>
+        </BarrierData>
+        <BarrierData>
+          <Type>FixingFloor</Type>
+          <Levels>
+            <Level>2</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+      <KnockOutSettlementAtPeriodEnd>true</KnockOutSettlementAtPeriodEnd>
+    </EquityAccumulatorData>
+  </Trade>
+</Portfolio>

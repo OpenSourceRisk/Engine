@@ -162,59 +162,54 @@ void MarketDataLoader::addRelevantFixings(
 void MarketDataLoader::populateFixings(
     const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
     const std::set<QuantLib::Date>& loaderDates) {
-    if (inputs_->allFixings()) {
-        impl()->retrieveFixings(loader_);
-    } else {
-        LOG("Asking portfolio for its required fixings");
-        FixingMap portfolioFixings;
-        std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
+    LOG("Asking portfolio for its required fixings");
+    FixingMap portfolioFixings;
+    std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
         
-        // portfolio fixings will warn if missing
-        if (inputs_->portfolio()) {
-            portfolioFixings = inputs_->portfolio()->fixings();
-            LOG("The portfolio depends on fixings from " << portfolioFixings.size() << " indices");
-            for (const auto& it : portfolioFixings)
-                addRelevantFixings(it, lastAvailableFixingLookupMap);
-        }
+    // portfolio fixings will warn if missing
+    if (inputs_->portfolio()) {
+        portfolioFixings = inputs_->portfolio()->fixings();
+        LOG("The portfolio depends on fixings from " << portfolioFixings.size() << " indices");
+        for (const auto& it : portfolioFixings)
+            addRelevantFixings(it, lastAvailableFixingLookupMap);
+    }
 
-        LOG("Add fixings possibly required for bootstrapping TodaysMarket");
-        for (const auto& tmp : todaysMarketParameters) {
-            for (const auto d : loaderDates)
-                addMarketFixingDates(d, fixings_, *tmp);
-            LOG("Add fixing possibly required for equity index delta risk decomposition")
-            additional_equity_fixings(fixings_, *tmp, inputs_->refDataManager(),
-                                  inputs_->curveConfigs().get());
-        }
+    LOG("Add fixings possibly required for bootstrapping TodaysMarket");
+    for (const auto& tmp : todaysMarketParameters) {
+        for (const auto d : loaderDates)
+            addMarketFixingDates(d, fixings_, *tmp);
+        LOG("Add fixing possibly required for equity index delta risk decomposition")
+        additional_equity_fixings(fixings_, *tmp, inputs_->refDataManager(),
+                                inputs_->curveConfigs().get());
+    }
 
-        if (inputs_->eomInflationFixings()) {
-            LOG("Adjust inflation fixing dates to the end of the month before the request");
-            amendInflationFixingDates(fixings_);
-        }
+    if (inputs_->eomInflationFixings()) {
+        LOG("Adjust inflation fixing dates to the end of the month before the request");
+        amendInflationFixingDates(fixings_);
+    }
 
-        if (fixings_.size() > 0)
-            impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+    if (fixings_.size() > 0 && impl_)
+        impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+
+    applyFixings(loader_->loadFixings());
         
-        // apply all fixings now
-        applyFixings(loader_->loadFixings());
-
-        // check and warn any missing fixings - only warn for mandatory fixings
-        for (const auto& [indexName, fixingDates] : fixings_) {
-            for (const auto& [d, mandatory] :fixingDates) {
-                if (mandatory && !loader_->hasFixing(indexName, d)) {
-                    string fixingErr = "";
-                    if (isFxIndex(indexName)) {
-                        auto fxInd = parseFxIndex(indexName);
-                        try { 
-                            if(fxInd->fixingCalendar().isBusinessDay(d))
-                                fxInd->fixing(d);
-                            break;
-                        } catch (const std::exception& e) {
-                            fixingErr = ", error: " + ore::data::to_string(e.what());
-                        }
+    // check and warn any missing fixings - only warn for mandatory fixings
+    for (const auto& [indexName, fixingDates] : fixings_) {
+        for (const auto& [d, mandatory] :fixingDates) {
+            if (mandatory && !loader_->hasFixing(indexName, d)) {
+                string fixingErr = "";
+                if (isFxIndex(indexName)) {
+                    auto fxInd = parseFxIndex(indexName);
+                    try { 
+                        if(fxInd->fixingCalendar().isBusinessDay(d))
+                            fxInd->fixing(d);
+                        break;
+                    } catch (const std::exception& e) {
+                        fixingErr = ", error: " + ore::data::to_string(e.what());
                     }
-                    StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID.")
-                        .log();
                 }
+                StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID.")
+                    .log();
             }
         }
     }
@@ -250,7 +245,8 @@ void MarketDataLoader::populateLoader(
             }
         }
     }
-    if (equities.size() > 0)
+
+    if (equities.size() > 0 && impl_)
         impl()->loadCorporateActionData(loader_, equities);
 
     // apply dividends now
@@ -259,7 +255,7 @@ void MarketDataLoader::populateLoader(
     populateFixings(todaysMarketParameters, loaderDates);
 
     LOG("Adding the loaded fixings to the IndexManager");
-    applyFixings(loader_->loadFixings());
+    LOG("Fixings size = " << ore::data::to_string(fixings_.size()));
 
     // Get set of quotes we need
     LOG("Generating market datum set");
@@ -283,11 +279,20 @@ void MarketDataLoader::populateLoader(
         LOG("CurveConfigs require " << quotes.size() << " quotes");
 
         // Get the relevant market data loader for the pricing call
-        impl()->retrieveMarketData(loader_, quoteMap, d);
+        if (impl_)
+            impl()->retrieveMarketData(loader_, quoteMap, d);
 
         quotes_[d] = quotes;
     }
     LOG("Got market data");
+
+    if (!inputs_->marketDataLoaderOutput().empty()) {
+        LOG("Serialize market data loader to'" << inputs_->marketDataLoaderOutput() << "'");
+        std::ofstream os(inputs_->marketDataLoaderOutput(), std::ios::binary);
+        boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+        oa << *loader_;
+        os.close();
+    }
 }
 
 }

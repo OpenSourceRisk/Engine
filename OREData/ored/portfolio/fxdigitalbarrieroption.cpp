@@ -37,8 +37,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-bool checkBarrier(Real spot, Barrier::Type type, Real barrier);
-
 void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
@@ -119,9 +117,11 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Date expiryDate = parseDate(option_.exerciseDates().front());
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     // Create a CashOrNothing payoff for digital options
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff =
+        QuantLib::ext::make_shared<CashOrNothingPayoff>(type, strike, payoffAmount_);
 
     // QL does not have an FXDigitalBarrierOption, so we add a barrier option here and wrap
     // it in a composite
@@ -131,10 +131,26 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
 
     // Check if the barrier has been triggered already
     Calendar cal = ore::data::parseCalendar(calendar_);
-    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
-    if (!fxIndex_.empty())
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex, fxIndexLows, fxIndexHighs;
+    std::string indexNameDailyLows, indexNameDailyHighs;
+    if (!fxIndex_.empty()) {
         fxIndex = buildFxIndex(fxIndex_, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
+        indexNameDailyLows = !fxIndexDailyLowsStr_.empty() ? fxIndexDailyLowsStr_ : fxIndexNameForDailyLows(fxIndex);
+        DLOG("Got index name for daily lows: " << indexNameDailyLows << " and explicit index " << fxIndexDailyLowsStr_);
+        if (!indexNameDailyLows.empty()) {
+            fxIndexLows = buildFxIndex(indexNameDailyLows, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
+                                       engineFactory->configuration(MarketContext::pricing));
+        }
+
+        indexNameDailyHighs =
+            !fxIndexDailyHighsStr_.empty() ? fxIndexDailyHighsStr_ : fxIndexNameForDailyHighs(fxIndex);
+            DLOG("Got index name for daily highs: " << indexNameDailyHighs << " and explicit index " << fxIndexDailyHighsStr_);
+        if (!indexNameDailyHighs.empty()) {
+            fxIndexHighs = buildFxIndex(indexNameDailyHighs, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
+                                        engineFactory->configuration(MarketContext::pricing));
+        }
+    }
 
     // set pricing engines
     // we buy foreign with domestic(=sold ccy).
@@ -148,6 +164,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, flipResults));
@@ -167,28 +184,20 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
-    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-        barrier, positionType == Position::Long ? true : false, expiryDate,
-        settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
-        start, fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers));
+    instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
+        barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate,
+        settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy, start,
+        fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(), fxIndexLows,
+        fxIndexHighs);
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {
             requiredFixings_.addFixingDate(d, fxIndex_, expiryDate);
+            if (!indexNameDailyLows.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyLows, expiryDate, false, false);
+            if (!indexNameDailyHighs.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyHighs, expiryDate, false, false);
         }
-    }
-}
-
-bool checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
     }
 }
 
@@ -206,6 +215,8 @@ void FxDigitalBarrierOption::fromXML(XMLNode* node) {
     payoffCurrency_ = XMLUtils::getChildValue(fxNode, "PayoffCurrency", false); // optional
     foreignCurrency_ = XMLUtils::getChildValue(fxNode, "ForeignCurrency", true);
     domesticCurrency_ = XMLUtils::getChildValue(fxNode, "DomesticCurrency", true);
+    fxIndexDailyLowsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyLows", false);
+    fxIndexDailyHighsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyHighs", false);
 }
 
 XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
@@ -221,13 +232,16 @@ XMLNode* FxDigitalBarrierOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, fxNode, "Calendar", calendar_);
     if (fxIndex_ != "")
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+    if (!fxIndexDailyLowsStr_.empty())
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyLows", fxIndexDailyLowsStr_);
+    if (!fxIndexDailyHighsStr_.empty())
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     XMLUtils::addChild(doc, fxNode, "Strike", strike_);
     XMLUtils::addChild(doc, fxNode, "PayoffAmount", payoffAmount_);
     if (payoffCurrency_ != "")
         XMLUtils::addChild(doc, fxNode, "PayoffCurrency", payoffCurrency_);
     XMLUtils::addChild(doc, fxNode, "ForeignCurrency", foreignCurrency_);
     XMLUtils::addChild(doc, fxNode, "DomesticCurrency", domesticCurrency_);
-
     return node;
 }
 

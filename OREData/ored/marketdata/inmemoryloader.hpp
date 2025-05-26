@@ -20,6 +20,8 @@
 
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <boost/serialization/base_object.hpp>
 
 namespace ore {
 namespace data {
@@ -37,9 +39,13 @@ public:
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     bool hasQuotes(const QuantLib::Date& d) const override;
+    std::set<QuantLib::Date> asofDates() const override;
 
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);
+
+    // add a market datum
+    virtual void add(const QuantLib::ext::shared_ptr<MarketDatum>& md);
 
     // add a fixing
     virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value);
@@ -54,6 +60,11 @@ protected:
     std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Utility function for loading market quotes and fixings from an in memory csv buffer
@@ -70,3 +81,5 @@ void loadDataFromBuffers(
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::InMemoryLoader);

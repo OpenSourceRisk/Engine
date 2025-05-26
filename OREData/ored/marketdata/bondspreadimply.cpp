@@ -26,9 +26,12 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 
 #include <ql/instruments/bond.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
+
+#include <qle/pricingengines/discountingriskybondengine.hpp>
 
 #include <regex>
 
@@ -164,37 +167,59 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
     return loader;
 }
 
-Real BondSpreadImply::implySpread(const std::string& securityId, const Real cleanPrice,
+Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
+
+    // TODO refactor: make this independent of bond type and pricing engine
+
+    if (expiry != Date()) { // this is the fwd bond case
+        QuantLib::ext::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
+            QuantLib::ext::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(b.bond->pricingEngine());
+        QL_REQUIRE(drbe != nullptr,
+                   "fwd bond spread imply not supported for non-vanilla bonds or pe != discountingriskybondrengine");
+        return drbe->calculateNpv(expiry, expiry, b.bond->cashflows()).npv - b.bond->accruedAmount(expiry) / 100.0;
+    } else // this is the standaed bond case
+        return b.bond->cleanPrice() / 100.0;
+}
+
+Real BondSpreadImply::implySpread(const std::string& securityId, const Real price,
                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                   const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
 
     // checks, build bond from reference data
-
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
+    Real priceAdj = price;
+
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
                    : 1.0;
 
     Real inflationFactor = b.inflationFactor();
 
+    if (b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty) {
+        priceAdj -= b.bond->accruedAmount(b.bond->settlementDate()) / 100.0;
+    }
+
     DLOG("implySpread for securityId " << securityId << ":");
     DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
-    DLOG("market quote            = " << cleanPrice);
+    DLOG("market quote            = " << priceAdj);
     DLOG("accrueds                = " << b.bond->accruedAmount());
     DLOG("inflation factor        = " << inflationFactor);
     DLOG("price quote method adj  = " << adj);
-    DLOG("effective market price  = " << cleanPrice * inflationFactor * adj);
+    DLOG("effective market price  = " << priceAdj * inflationFactor * adj);
 
-    auto targetFunction = [&b, spreadQuote, cleanPrice, adj, inflationFactor](const Real& s) {
+    //check if fwd bond
+    Date expiry = BondBuilder::checkForwardBond(b.securityId).first;
+
+    auto targetFunction = [&b, spreadQuote, priceAdj, adj, inflationFactor, expiry](const Real& s) {
         spreadQuote->setValue(s);
         if (b.modelBuilder != nullptr)
             b.modelBuilder->recalibrate();
-        Real c = b.bond->cleanPrice() / 100.0;
+        Real c = getPrice(b, expiry);
         TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
-        return c - cleanPrice * inflationFactor * adj;
+        return c - priceAdj * inflationFactor * adj;
     };
 
     // edge case: bond has a zero settlement value -> skip spread imply
@@ -210,7 +235,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     Brent brent;
     Real s = brent.solve(targetFunction, 1E-8, 0.0, 0.001);
 
-    DLOG("theoretical pricing     = " << b.bond->cleanPrice() / 100.0);
+    DLOG("theoretical pricing     = " << getPrice(b, expiry));
     return s;
 }
 

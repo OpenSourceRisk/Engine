@@ -30,7 +30,7 @@ namespace QuantExt {
 
 template <class T>
 void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
-                       const std::vector<std::function<T(const std::vector<const T*>&)>>& ops,
+                       const std::vector<std::function<T(const std::vector<const T*>&, QuantLib::Size)>>& ops,
                        std::function<void(T&)> deleter = {}, bool keepValuesForDerivatives = true,
                        const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
                            opRequiresNodesForDerivatives = {},
@@ -83,7 +83,7 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                          (g.redBlockId(p) == 0 || redBlockReconstruction)))
                         continue;
 
-                    // apply the deleter
+                    // add to nodes to delete
 
                     nodesToDelete.insert(p);
 
@@ -95,7 +95,7 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                     preDeleter(values[n]);
             }
 
-            values[node] = ops[g.opId(node)](args);
+            values[node] = ops[g.opId(node)](args, node);
 
             QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
                                                        << node << " is not initialized, opId = " << g.opId(node));

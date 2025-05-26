@@ -38,12 +38,12 @@ using std::vector;
 class EquityMarginLegData : public ore::data::LegAdditionalData {
 public:
     //! Default constructor
-    EquityMarginLegData() : ore::data::LegAdditionalData("EquityMargin") {}
+    EquityMarginLegData() : ore::data::LegAdditionalData(LegType::EquityMargin, false) {}
     //! Constructor
     EquityMarginLegData(QuantLib::ext::shared_ptr<ore::data::EquityLegData>& equityLegData, const vector<double>& rates, 
         const vector<string>& rateDates = vector<string>(), const double& initialMarginFactor = QuantExt::Null<double>(),
         const double& multiplier = QuantExt::Null<double>())
-        : ore::data::LegAdditionalData("EquityMargin"), equityLegData_(equityLegData), rates_(rates), rateDates_(rateDates), 
+        : ore::data::LegAdditionalData(LegType::EquityMargin, false), equityLegData_(equityLegData), rates_(rates), rateDates_(rateDates), 
             initialMarginFactor_(initialMarginFactor), multiplier_(multiplier) {}
 
     //! \name Inspectors

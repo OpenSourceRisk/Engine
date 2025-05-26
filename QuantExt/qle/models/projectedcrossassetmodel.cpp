@@ -22,7 +22,7 @@ namespace QuantExt {
 
 QuantLib::ext::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
-                            const std::vector<std::pair<CrossAssetModel::AssetType, Size>>& selectedComponents,
+                            const std::set<std::pair<CrossAssetModel::AssetType, Size>>& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices) {
 
     projectedStateProcessIndices.clear();
@@ -58,8 +58,9 @@ getProjectedCrossAssetModel(const QuantLib::ext::shared_ptr<CrossAssetModel>& mo
 
     // build projected cam and return it
 
-    return QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm(),
-                                               model->measure(), model->discretization());
+    return QuantLib::ext::make_shared<CrossAssetModel>(
+        parametrizations, correlation, model->salvagingAlgorithm(), model->measure(), model->discretization(),
+        unwrapPiecewiseIntegrator(model->integrator()), model->piecewiseIntegrationWrapper());
 }
 
 std::vector<Size> getStateProcessProjection(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,

@@ -16,14 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -54,8 +58,8 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
-      interpolation_(interpolation), extrapolation_(extrapolation), optionTenors_(optionTenors),
-      underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
+      outputVolatilityType_(outputVolatilityType), interpolation_(interpolation), extrapolation_(extrapolation),
+      optionTenors_(optionTenors), underlyingTenors_(underlyingTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
       swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors),
       smileUnderlyingTenors_(smileUnderlyingTenors), smileSpreads_(smileSpreads),
@@ -94,6 +98,18 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
 }
 
 void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!shortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
+    if (!swapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(swapIndexBase_);
+    if (!proxySourceShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceShortSwapIndexBase_);
+    if (!proxySourceSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceSwapIndexBase_);
+    if (!proxyTargetShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetShortSwapIndexBase_);
+    if (!proxyTargetSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetSwapIndexBase_);
     if (!proxySourceCurveId_.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
@@ -174,8 +190,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetShortSwapIndexBase_ = XMLUtils::getChildValue(target, "ShortSwapIndexBase");
         proxyTargetSwapIndexBase_ = XMLUtils::getChildValue(target, "SwapIndexBase");
 
-        populateRequiredCurveIds();
-
     } else {
         // read in quote-based config
         if (allowSmile_) {
@@ -217,6 +231,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
             QL_FAIL("OutputVolatilityType '"
                     << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
         }
+
+        modelShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "ModelShift", false);
+        outputShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "OutputShift", false);
 
         string interp = XMLUtils::getChildValue(node, "Interpolation", false, "Linear");
         if (interp == "Linear") {
@@ -287,6 +304,7 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -335,6 +353,20 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, node, "OutputVolatilityType", "ShiftedLognormal");
         } else {
             QL_FAIL("Unknown OutputVolatilityType in GenericYieldVolatilityCurveConfig::toXML()");
+        }
+
+        if (!modelShift_.empty()) {
+            vector<string> tmp;
+            std::transform(modelShift_.begin(), modelShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc,node,"ModelShift", boost::join(tmp, ","));
+        }
+
+        if (!outputShift_.empty()) {
+            vector<string> tmp;
+            std::transform(outputShift_.begin(), outputShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc, node, "OutputShift", boost::join(tmp, ","));
         }
 
         std::string extr_string;

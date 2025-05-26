@@ -20,6 +20,7 @@
  \brief Discretized probability density and cumulative probability
  */
 
+#include <algorithm>
 #include <qle/math/discretedistribution.hpp>
 
 using namespace std;

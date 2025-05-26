@@ -49,10 +49,13 @@ using QuantLib::Matrix;
 
 class HistoricalSimulationVarCalculator : public VarCalculator {
 public:
-    HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls) : pnls_(pnls) {}
+    explicit HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls) : pnls_(pnls) {}
 
     QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true,
-        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) override;
+        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const override;
+
+    QuantLib::Real expectedShortfall(QuantLib::Real confidence, const bool isCall = true,
+                                     const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const;
 
 private:
     const std::vector<QuantLib::Real>& pnls_;
@@ -63,23 +66,33 @@ private:
  * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
 class HistoricalSimulationVarReport : public VarReport {
 public:
-    virtual ~HistoricalSimulationVarReport() {}
+    ~HistoricalSimulationVarReport() override = default;
 
     HistoricalSimulationVarReport(const std::string& baseCurrency,
                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                                  const std::string& portfolioFilter, 
-        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
-        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
-        std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false);
+                                  const std::string& portfolioFilter, const vector<Real>& p,
+                                  boost::optional<ore::data::TimePeriod> period,
+                                  const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+                                  std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
+                                  const bool includeExpectedShortfall = false);
+
+    void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 
 protected:
     void createVarCalculator() override;
+    void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const override;
+    std::vector<Real> calcVarsForQuantiles() const override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
-        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+
+    void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                                const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
 private:
     std::vector<QuantLib::Real> pnls_;
+    bool includeExpectedShortfall_ = false;
 };
 
 } // namespace analytics

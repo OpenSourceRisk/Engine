@@ -77,6 +77,7 @@ void EquityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         QuantLib::ext::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(eqOptBuilder->engine(assetName, ccy));
     setSensitivityTemplate(*eqOptBuilder);
+    addProductModelEngine(*eqOptBuilder);
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -95,6 +96,7 @@ void EquityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     notionalCurrency_ = payoffCurrency_; 
     npvCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;

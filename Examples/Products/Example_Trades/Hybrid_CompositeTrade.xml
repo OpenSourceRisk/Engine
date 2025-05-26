@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EQ_SYNTHETIC_FORWARD_RIC:.SPX">
+        <TradeType>CompositeTrade</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CompositeTradeData>
+            <Currency>USD</Currency>
+            <NotionalCalculation>Mean</NotionalCalculation>
+            <Components>
+                <Trade>
+                    <TradeType>EquityOption</TradeType>
+                    <EquityOptionData>
+                        <OptionData>
+                            <LongShort>Long</LongShort>
+                            <OptionType>Call</OptionType>
+                            <Style>European</Style>
+                            <Settlement>Cash</Settlement>
+                            <ExerciseDates>
+                                <ExerciseDate>2025-10-10</ExerciseDate>
+                            </ExerciseDates>
+                        </OptionData>
+                        <Name>RIC:.SPX</Name>
+                        <Currency>USD</Currency>
+                        <Strike>2147.56</Strike>
+                        <Quantity>775</Quantity>
+                    </EquityOptionData>
+                </Trade>
+                <Trade>
+                    <TradeType>EquityOption</TradeType>
+                    <EquityOptionData>
+                        <OptionData>
+                            <LongShort>Short</LongShort>
+                            <OptionType>Put</OptionType>
+                            <Style>European</Style>
+                            <Settlement>Cash</Settlement>
+                            <ExerciseDates>
+                                <ExerciseDate>2025-10-10</ExerciseDate>
+                            </ExerciseDates>
+                        </OptionData>
+                        <Name>RIC:.SPX</Name>
+                        <Currency>USD</Currency>
+                        <Strike>2147.56</Strike>
+                        <Quantity>775</Quantity>
+                    </EquityOptionData>
+                </Trade>
+            </Components>
+        </CompositeTradeData>
+    </Trade>
+</Portfolio>

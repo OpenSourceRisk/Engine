@@ -35,6 +35,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -73,9 +74,12 @@ public:
                                                                   index, nominalTs);
             instruments.push_back(anInstrument);
         };
-        QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
-            new PiecewiseYoYInflationCurve<Linear>(asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly,
-                                                   index->interpolated(), ratesZCII[0] / 100, instruments));
+        QuantLib::Date baseDate =
+            QuantExt::ZeroInflation::curveBaseDate(false, asof, Period(3, Months), Monthly, index);
+        QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs =
+            QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
+                asof, baseDate, ratesZCII[0] / 100, Period(3, Months), Monthly, index->interpolated(), Actual365Fixed(),
+                instruments);
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
@@ -166,13 +170,14 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     // check YoY cap NPV against pure QL pricing
     Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following, DateGeneration::Forward, false);
     Handle<YieldTermStructure> nominalTs = market->discountCurve("EUR");
+    QL_DEPRECATED_DISABLE_WARNING
     Leg yyLeg =
         yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
             .withNotionals(10000000)
             .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
             .withPaymentAdjustment(Following)
             .withRateCurve(nominalTs);
-
+    QL_DEPRECATED_ENABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");

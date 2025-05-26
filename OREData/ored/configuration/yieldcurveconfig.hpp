@@ -26,6 +26,8 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <ql/patterns/visitor.hpp>
@@ -35,13 +37,14 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <ql/shared_ptr.hpp>
+#include <ql/optional.hpp>
 
 #include <set>
 #include <map>
 
 namespace ore {
 namespace data {
-using boost::optional;
+using QuantLib::ext::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
@@ -565,7 +568,7 @@ public:
     IborFallbackCurveSegment() {}
     //! Detailed constructor
     IborFallbackCurveSegment(const string& typeID, const string& iborIndex, const string& rfrCurve,
-                             const boost::optional<string>& rfrIndex, const boost::optional<Real>& spread);
+                             const QuantLib::ext::optional<string>& rfrIndex, const QuantLib::ext::optional<Real>& spread);
 
     //! \name Serialisation
     //@{
@@ -577,8 +580,8 @@ public:
     //@{
     const string& iborIndex() const { return iborIndex_; }
     const string& rfrCurve() const { return rfrCurve_; }
-    const boost::optional<string>& rfrIndex() const { return rfrIndex_; }
-    const boost::optional<Real>& spread() const { return spread_; }
+    const QuantLib::ext::optional<string>& rfrIndex() const { return rfrIndex_; }
+    const QuantLib::ext::optional<Real>& spread() const { return spread_; }
     //@}
 
     //! \name Visitability
@@ -589,8 +592,8 @@ public:
 private:
     string iborIndex_;
     string rfrCurve_;
-    boost::optional<string> rfrIndex_;
-    boost::optional<Real> spread_;
+    QuantLib::ext::optional<string> rfrIndex_;
+    QuantLib::ext::optional<Real> spread_;
 };
 
 //! Bond yield shifted yield curve segment
@@ -635,8 +638,8 @@ private:
     string referenceCurveID_;
     map<string, string> iborIndexCurves_;
     bool extrapolateFlat_;
-    boost::optional<Real> spread_;
-    boost::optional<Real> bondYield_;
+    QuantLib::ext::optional<Real> spread_;
+    QuantLib::ext::optional<Real> bondYield_;
 };
 
 //! Yield Curve configuration
@@ -650,14 +653,15 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    YieldCurveConfig() {}
+    YieldCurveConfig(QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr) : iborFallbackConfig_(iborFallbackConfig) {}
     //! Detailed constructor
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                      const string& discountCurveID, const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
                      const string& zeroDayCounter = "A365", bool extrapolation = true,
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                     const Size mixedInterpolationCutoff = 1);
+                     const Size mixedInterpolationCutoff = 1,
+                     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr);
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -679,6 +683,9 @@ public:
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
+
+    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
     //@}
 
     //! \name Setters
@@ -690,6 +697,7 @@ public:
     bool& extrapolation() { return extrapolation_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
+    const ReportConfig& reportConfig() const { return reportConfig_; }
 
     const vector<string>& quotes() override;
 
@@ -708,6 +716,8 @@ private:
     bool extrapolation_;
     BootstrapConfig bootstrapConfig_;
     Size mixedInterpolationCutoff_;
+    ReportConfig reportConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 };
 
 // Map form curveID to YieldCurveConfig

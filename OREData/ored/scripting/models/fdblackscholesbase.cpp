@@ -222,9 +222,9 @@ void FdBlackScholesBase::performCalculations() const {
 
     // 1b set up the critical points for the mesher
 
-    std::vector<std::vector<QuantLib::ext::tuple<Real, Real, bool>>> cPoints;
+    std::vector<std::vector<std::tuple<Real, Real, bool>>> cPoints;
     for (Size i = 0; i < indices_.size(); ++i) {
-        cPoints.push_back(std::vector<QuantLib::ext::tuple<Real, Real, bool>>());
+        cPoints.push_back(std::vector<std::tuple<Real, Real, bool>>());
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), mesherMaxConcentratingPoints_); ++j) {
@@ -307,7 +307,7 @@ RandomVariable FdBlackScholesBase::getIndexValue(const Size indexNo, const Date&
 
     Date effFwd = fwd;
     if (indices_[indexNo].isComm()) {
-        const Date& expiry = indices_[indexNo].comm(d)->expiryDate();
+        Date expiry = indices_[indexNo].comm(d)->expiryDate();
         // if a future is referenced we set the forward date effectively used below to the future's expiry date
         if (expiry != Date())
             effFwd = expiry;

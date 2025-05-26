@@ -26,6 +26,7 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 #include <boost/optional.hpp>
 
@@ -142,6 +143,7 @@ public:
     const FundingData& fundingData() const { return fundingData_; }
     const AdditionalCashflowData& additionalCashflowData() const { return additionalCashflowData_; }
     const std::string& creditRiskCurrency() const { return creditRiskCurrency_; }
+    const string& portfolioId() const { return portfolioId_; }
     const std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping() const {
         return creditQualifierMapping_;
     }
@@ -168,9 +170,13 @@ protected:
     ReturnData returnData_;
     FundingData fundingData_;
     AdditionalCashflowData additionalCashflowData_;
-
     std::string creditRiskCurrency_;
     std::map<std::string, SimmCreditQualifierMapping> creditQualifierMapping_;
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
+    std::string portfolioId_;
+    bool portfolioDeriv_;
+    double indexQuantity_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

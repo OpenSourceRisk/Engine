@@ -34,6 +34,7 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -42,6 +43,7 @@
 #include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <typeindex>
@@ -59,7 +61,9 @@ using ore::data::XMLSerializable;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations() {}
+    CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr)
+        : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig) {}
 
     //! \name Setters and Getters
     //@{
@@ -68,6 +72,8 @@ public:
     const ReportConfig& reportConfigCommVols() const { return reportConfigCommVols_; }
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
+    const ReportConfig& reportConfigYieldCurves() const { return reportConfigYieldCurves_; }
+    const ReportConfig& reportConfigInflationCapFloorVols() const { return reportConfigInflationCapFloorVols_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
     QuantLib::ext::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
@@ -140,6 +146,12 @@ public:
 
     /*! Return the Yields curves available */
     std::set<string> yieldCurveConfigIds();
+  
+    /*! Return an inflation curveconfig based on a name lookup */
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationCurveConfig(const string& id,
+        InflationCurveConfig::Type type);
+    QuantLib::ext::shared_ptr<CurveConfig> findInflationVolCurveConfig(const string& id, 
+        InflationCapFloorVolatilityCurveConfig::Type type);
 
     /*! Return all curve ids required by a given curve id of a given type */
     std::map<CurveSpec::CurveType, std::set<string>> requiredCurveIds(const CurveSpec::CurveType& type,
@@ -161,11 +173,16 @@ public:
     //@}
 
  private:
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
     ReportConfig reportConfigCommVols_;
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
+    ReportConfig reportConfigYieldCurves_;
+    ReportConfig reportConfigInflationCapFloorVols_;
 
     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;
     mutable std::map<CurveSpec::CurveType, std::map<std::string, std::string>> unparsed_;
@@ -178,6 +195,7 @@ public:
 
     // add to XML doc
     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
+    void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
 };
 
 class CurveConfigurationsManager {

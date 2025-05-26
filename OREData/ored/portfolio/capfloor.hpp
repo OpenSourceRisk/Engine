@@ -66,7 +66,9 @@ private:
     string longShort_;
     LegData legData_;
     vector<double> caps_;
+    vector<string> capDates_;
     vector<double> floors_;
+    vector<string> floorDates_;
     PremiumData premiumData_;
 };
 } // namespace data

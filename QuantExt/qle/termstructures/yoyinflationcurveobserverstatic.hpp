@@ -52,6 +52,12 @@ public:
     //@{
     Date baseDate() const;
     Date maxDate() const;
+    Rate baseRate() const override {
+        calculate();
+        QL_REQUIRE(!quotes_.empty(),
+                   "YoYInflationCurveObserverStatic: Error while getting base rate, no quotes provided");
+        return quotes_.front()->value();
+    }
     //@}
 
     //! \name Inspectors
@@ -87,14 +93,16 @@ protected:
 
 // template definitions
 
+QL_DEPRECATED_DISABLE_WARNING
+
 template <class Interpolator>
 YoYInflationCurveObserverStatic<Interpolator>::YoYInflationCurveObserverStatic(
     const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
     Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : YoYInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                indexIsInterpolated, seasonality),
+    : YoYInflationTermStructure(referenceDate, Date(), Null<Real>(), lag, frequency, indexIsInterpolated, dayCounter,
+                                seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
 
@@ -166,6 +174,8 @@ template <class T> Date YoYInflationCurveObserverStatic<T>::maxDate() const {
     }
     return d;
 }
+
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class T> inline Rate YoYInflationCurveObserverStatic<T>::yoyRateImpl(Time t) const {
     calculate();
