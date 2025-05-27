@@ -17,7 +17,7 @@
 */
 
 /*! \file orea/simm/simmconfigurationisdav2_7_2412_1.hpp
-    \brief SIMM configuration for SIMM version 2.7.2412.1
+    \brief SIMM configuration for SIMM version 2.7+2412.1
 */
 
 #pragma once
@@ -35,8 +35,8 @@ class SimmConfiguration_ISDA_V2_7_2412_1 : public SimmConfigurationBase {
 public:
     SimmConfiguration_ISDA_V2_7_2412_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.7.2412.1 (12 July 2025)",
-                                const std::string version = "2.7.2412.1");
+                                const std::string& name = "SIMM ISDA 2.7+2412.1 (12 July 2025)",
+                                const std::string version = "2.7+2412");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
     std::string label2(const QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;

@@ -33,7 +33,7 @@ namespace ore {
 namespace analytics {
 
 /*! Class giving the SIMM concentration thresholds as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.7.2412.1 .
+    <em>ISDA SIMM Methodology, version 2.7+2412.1 .
         Effective Date: July 12, 2025.</em>
 */
 class SimmConcentration_ISDA_V2_7_2412_1 : public SimmConcentrationBase {
