@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <orea/engine/cvacalculator.hpp>
 #include <orea/engine/sacvasensitivityrecord.hpp>
 #include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/report/report.hpp>
@@ -46,7 +45,7 @@ struct SaCvaSummaryKey {
 };
 
 //! A class for calculating Standard Approach CVA capital charge
-class StandardApproachCvaCalculator : public CvaCalculator {
+class StandardApproachCvaCalculator {
 public:
     enum class ReportType { Summary, Detail };
     
@@ -56,7 +55,7 @@ public:
         const std::vector<std::string>& perfectHedges = std::vector<std::string>());
 
     //! a virtual function for calculating the CVA captial charge
-    virtual void calculate() override;
+    void calculate();
 
     const std::map<SaCvaSummaryKey, QuantLib::Real> cvaRiskTypeResults() { return cvaRiskTypeResults_; }
     const std::map<std::string, QuantLib::Real> cvaNettingSetResults() { return cvaNettingSetResults_; }

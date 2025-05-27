@@ -280,7 +280,6 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
-engine/cvacalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
