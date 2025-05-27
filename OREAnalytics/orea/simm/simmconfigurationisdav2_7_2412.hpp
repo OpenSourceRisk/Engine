@@ -28,14 +28,14 @@ namespace ore {
 namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.7.2412.1.
+    <em>ISDA SIMM Methodology, version 2.7.2412
         Effective Date: July 12, 2025.</em>
 */
-class SimmConfiguration_ISDA_V2_7_2412_1 : public SimmConfigurationBase {
+class SimmConfiguration_ISDA_V2_7_2412 : public SimmConfigurationBase {
 public:
-    SimmConfiguration_ISDA_V2_7_2412_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+    SimmConfiguration_ISDA_V2_7_2412(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                 const QuantLib::Size& mporDays = 10,
-                                const std::string& name = "SIMM ISDA 2.7+2412.1 (12 July 2025)",
+                                const std::string& name = "SIMM ISDA 2.7+2412 (12 July 2025)",
                                 const std::string version = "2.7+2412");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index

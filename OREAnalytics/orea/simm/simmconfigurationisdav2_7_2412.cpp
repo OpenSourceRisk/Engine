@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/simm/simmconcentrationisdav2_7_2412_1.hpp>
-#include <orea/simm/simmconfigurationisdav2_7_2412_1.hpp>
+#include <orea/simm/simmconcentrationisdav2_7_2412.hpp>
+#include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
 #include <ql/math/matrix.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -31,7 +31,7 @@ using std::vector;
 
 namespace ore {
 namespace analytics {
-QuantLib::Size SimmConfiguration_ISDA_V2_7_2412_1::group(const string& qualifier, const std::map<QuantLib::Size,
+QuantLib::Size SimmConfiguration_ISDA_V2_7_2412::group(const string& qualifier, const std::map<QuantLib::Size,
                                                   std::set<string>>& categories) const {
     QuantLib::Size result = 0;
     for (const auto& kv : categories) {
@@ -49,7 +49,7 @@ QuantLib::Size SimmConfiguration_ISDA_V2_7_2412_1::group(const string& qualifier
     return result;
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_7_2412_1::weight(const CrifRecord::RiskType& rt, boost::optional<string> qualifier,
+QuantLib::Real SimmConfiguration_ISDA_V2_7_2412::weight(const CrifRecord::RiskType& rt, boost::optional<string> qualifier,
                                                      boost::optional<std::string> label_1,
                                                      const std::string& calculationCurrency) const {
 
@@ -65,7 +65,7 @@ QuantLib::Real SimmConfiguration_ISDA_V2_7_2412_1::weight(const CrifRecord::Risk
     return SimmConfigurationBase::weight(rt, qualifier, label_1);
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_7_2412_1::correlation(const CrifRecord::RiskType& firstRt, const string& firstQualifier,
+QuantLib::Real SimmConfiguration_ISDA_V2_7_2412::correlation(const CrifRecord::RiskType& firstRt, const string& firstQualifier,
                                                         const string& firstLabel_1, const string& firstLabel_2,
                                                         const CrifRecord::RiskType& secondRt, const string& secondQualifier,
                                                         const string& secondLabel_1, const string& secondLabel_2,
@@ -89,7 +89,7 @@ QuantLib::Real SimmConfiguration_ISDA_V2_7_2412_1::correlation(const CrifRecord:
                                               secondQualifier, secondLabel_1, secondLabel_2);
 }
 
-SimmConfiguration_ISDA_V2_7_2412_1::SimmConfiguration_ISDA_V2_7_2412_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+SimmConfiguration_ISDA_V2_7_2412::SimmConfiguration_ISDA_V2_7_2412(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const QuantLib::Size& mporDays, const std::string& name,
                                                          const std::string version)
      : SimmConfigurationBase(simmBucketMapper, name, version, mporDays) {
@@ -101,7 +101,7 @@ SimmConfiguration_ISDA_V2_7_2412_1::SimmConfiguration_ISDA_V2_7_2412_1(const Qua
 
     // Set up the correct concentration threshold getter
     if (mporDays == 10) {
-        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V2_7_2412_1>(simmBucketMapper_);
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V2_7_2412>(simmBucketMapper_);
     } else {
         // SIMM:Technical Paper, Section I.4: "The Concentration Risk feature is disabled"
         simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationBase>();
@@ -1304,14 +1304,14 @@ SimmConfiguration_ISDA_V2_7_2412_1::SimmConfiguration_ISDA_V2_7_2412_1(const Qua
 is the historical volatility ratio for the interest-rate risk class (see page 8 section 11(d)
 of the ISDA-SIMM-v2.7.2412.1 documentation).
 */
-QuantLib::Real SimmConfiguration_ISDA_V2_7_2412_1::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfiguration_ISDA_V2_7_2412::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
 
-void SimmConfiguration_ISDA_V2_7_2412_1::addLabels2(const CrifRecord::RiskType& rt, const string& label_2) {
+void SimmConfiguration_ISDA_V2_7_2412::addLabels2(const CrifRecord::RiskType& rt, const string& label_2) {
     // Call the shared implementation
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfiguration_ISDA_V2_7_2412_1::label2(const QuantLib::ext::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfiguration_ISDA_V2_7_2412::label2(const QuantLib::ext::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";

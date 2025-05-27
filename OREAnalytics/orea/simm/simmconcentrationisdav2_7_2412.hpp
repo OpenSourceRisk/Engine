@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconcentrationisdav2_7_2412_1.hpp
-    \brief SIMM concentration thresholds for SIMM version 2.7.2412.1
+/*! \file orea/simm/simmconcentrationisdav2_7_2412.hpp
+    \brief SIMM concentration thresholds for SIMM version 2.7.2412
 */
 
 #pragma once
@@ -36,10 +36,10 @@ namespace analytics {
     <em>ISDA SIMM Methodology, version 2.7+2412.1 .
         Effective Date: July 12, 2025.</em>
 */
-class SimmConcentration_ISDA_V2_7_2412_1 : public SimmConcentrationBase {
+class SimmConcentration_ISDA_V2_7_2412 : public SimmConcentrationBase {
 public:
     //! Default constructor that adds fixed known mappings
-    SimmConcentration_ISDA_V2_7_2412_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper);
+    SimmConcentration_ISDA_V2_7_2412(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper);
 
     /*! Return the SIMM <em>concentration threshold</em> for a given SIMM
         <em>RiskType</em> and SIMM <em>Qualifier</em>.

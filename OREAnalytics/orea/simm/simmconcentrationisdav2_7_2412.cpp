@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/simm/simmconcentrationisdav2_7_2412_1.hpp>
+#include <orea/simm/simmconcentrationisdav2_7_2412.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
@@ -29,7 +29,7 @@ using std::string;
 namespace ore {
 namespace analytics {
 
-SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper)
+SimmConcentration_ISDA_V2_7_2412::SimmConcentration_ISDA_V2_7_2412(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper)
     : simmBucketMapper_(simmBucketMapper) {
 
     // Populate IR categories that are used for concentration thresholds
@@ -172,7 +172,7 @@ SimmConcentration_ISDA_V2_7_2412_1::SimmConcentration_ISDA_V2_7_2412_1(const Qua
     // clang-format on
 }
 
-Real SimmConcentration_ISDA_V2_7_2412_1::threshold(const CrifRecord::RiskType& riskType, const string& qualifier) const {
+Real SimmConcentration_ISDA_V2_7_2412::threshold(const CrifRecord::RiskType& riskType, const string& qualifier) const {
     return thresholdImpl(simmBucketMapper_, riskType, qualifier);
 }
 
