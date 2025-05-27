@@ -99,18 +99,23 @@ std::set<MarketObject> getMarketObjectTypes() {
     return result;
 }
 
-MarketConfiguration::MarketConfiguration(map<MarketObject, string> marketObjectIds) {
-    for (Size i = 0; i < marketObjectData.size(); ++i) {
-        marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
+MarketConfiguration::MarketConfiguration(const map<MarketObject, string>& marketObjectIds,
+                                         const bool populateAllMarketObjectTypes) {
+    if (populateAllMarketObjectTypes) {
+        for (Size i = 0; i < marketObjectData.size(); ++i) {
+            marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
+        }
     }
-    
+
     for (const auto& moi : marketObjectIds)
         setId(moi.first, moi.second);
 }
 
+bool MarketConfiguration::has(const MarketObject o) const { return marketObjectIds_.find(o) != marketObjectIds_.end(); }
+
 string MarketConfiguration::operator()(const MarketObject o) const {
     QL_REQUIRE(marketObjectIds_.find(o) != marketObjectIds_.end(),
-               "MarketConfiguration: did not find MarketObject " << o << " (this is unexpected)");
+               "MarketConfiguration: did not find MarketObject " << o);
     return marketObjectIds_.at(o);
 }
 
@@ -223,8 +228,10 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) const {
             XMLNode* configurationsNode = XMLUtils::addChild(doc, todaysMarketNode, "Configuration");
             XMLUtils::addAttribute(doc, configurationsNode, "id", iterator->first.c_str());
             for (Size i = 0; i < marketObjectData.size(); ++i) {
-                XMLUtils::addChild(doc, configurationsNode, marketObjectData[i].xmlName + "Id",
-                                   iterator->second(marketObjectData[i].obj)); // Added the "Id" for schema test
+                if (hasMarketObject(marketObjectData[i].obj, iterator->first.c_str())) {
+                    XMLUtils::addChild(doc, configurationsNode, marketObjectData[i].xmlName + "Id",
+                                       iterator->second(marketObjectData[i].obj));
+                }
             }
         }
     }
@@ -257,6 +264,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) const {
             }
         }
     }
+
     return todaysMarketNode;
 }
 
@@ -277,7 +285,8 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         MarketObject mo = marketObjectData[i].obj;
         // swap indices have to be excluded here...
-        if (mo != MarketObject::SwapIndexCurve && marketObjects_.find(mo) != marketObjects_.end()) {
+        if (mo != MarketObject::SwapIndexCurve && marketObjects_.find(mo) != marketObjects_.end() &&
+            hasMarketObject(mo, configuration)) {
             curveSpecs(marketObjects_.at(mo), marketObjectId(mo, configuration), specs);
         }
     }
@@ -332,9 +341,10 @@ void TodaysMarketParameters::addMarketObject(const MarketObject o, const string&
 
 const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o, const string& configuration) const {
     static map<string, string> empty;
-    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    QL_REQUIRE(hasConfiguration(configuration),
+               "TodaysMarketParameters::mapping(" << o << "," << configuration << "): configuration not found");
     auto it = marketObjects_.find(o);
-    if (it != marketObjects_.end()) {
+    if (it != marketObjects_.end() && hasMarketObject(o, configuration)) {
         auto it2 = it->second.find(marketObjectId(o, configuration));
         if (it2 != it->second.end()) {
             return it2->second;
@@ -345,6 +355,8 @@ const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o,
 
 map<string, string>& TodaysMarketParameters::mappingReference(const MarketObject o, const string& configuration) {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    QL_REQUIRE(hasMarketObject(o, configuration), "TodaysMarketParameters::mappingReference("
+                                                      << o << "," << configuration << "): no market object id found.");
     auto it = marketObjects_.find(o);
     if (it != marketObjects_.end()) {
         auto it2 = it->second.find(marketObjectId(o, configuration));

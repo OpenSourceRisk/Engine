@@ -57,7 +57,9 @@ MarketObject parseMarketObject(const std::string& mo);
 
 class MarketConfiguration {
 public:
-    MarketConfiguration(map<MarketObject, string> marketObjectIds = {});
+    explicit MarketConfiguration(const map<MarketObject, string>& marketObjectIds = {},
+                                 const bool populateAllMarketObjectTypes = true);
+    bool has(const MarketObject o) const;
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
     void add(const MarketConfiguration& o);
@@ -86,6 +88,7 @@ public:
     const vector<pair<string, MarketConfiguration>>& configurations() const;
     bool hasConfiguration(const string& configuration) const;
     bool hasMarketObject(const MarketObject& o) const;
+    bool hasMarketObject(const MarketObject o, const string& configuration) const;
 
     //! EUR => Yield/EUR/EUR6M, USD => Yield/USD/USD3M etc.
     const map<string, string>& mapping(const MarketObject o, const string& configuration) const;
@@ -166,6 +169,13 @@ inline bool TodaysMarketParameters::hasConfiguration(const string& configuration
 inline bool TodaysMarketParameters::hasMarketObject(const MarketObject& o) const {
     auto it = marketObjects_.find(o);
     return it != marketObjects_.end();
+}
+
+inline bool TodaysMarketParameters::hasMarketObject(const MarketObject o, const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = find_if(configurations_.begin(), configurations_.end(),
+                      [&configuration](const pair<string, MarketConfiguration>& s) { return s.first == configuration; });
+    return it->second.has(o);
 }
 
 inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const string& configuration) const {
