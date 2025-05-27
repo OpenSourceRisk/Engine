@@ -1625,6 +1625,39 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
+    /*************
+    * Correlation
+    *************/
+    tmp = params_->get("correlation", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CORRELATION");
+        tmp = params_->get("correlation", "historicalScenarioFile", false);
+        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
+        std::string scenarioFile = (inputPath / tmp).generic_string();
+        setScenarioReader(scenarioFile);
+
+        tmp = params_->get("correlation", "simulationConfigFile", false);
+        QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
+        string simulationConfigFile = (inputPath / tmp).generic_string();
+        setHistVarSimMarketParamsFromFile(simulationConfigFile);
+
+        tmp = params_->get("correlation", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("correlation", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("correlation", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("correlation", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+    }
+
     /************
      * Simulation
      ************/
