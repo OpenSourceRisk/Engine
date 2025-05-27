@@ -232,7 +232,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
                 Sabs += abs(tmp);
                 for (std::size_t j = 0; j < i; ++j) {
                     auto tmp2 = RandomVariable(n_, irCurvatureWeights_[j]) * irVega[ccy][j];
-                    Kb[ccy] += RandomVariable(n_, 2.0 * irVegaCorrelations_(i, j)) * tmp * tmp2;
+                    Kb[ccy] +=
+                        RandomVariable(n_, 2.0 * irVegaCorrelations_(i, j) * irVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
             Kb[ccy] = sqrt(Kb[ccy]);
@@ -242,7 +243,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         for (std::size_t i = 0; i < currencies_.size(); ++i) {
             curvatureMarginIr += Kb[i] * Kb[i];
             for (std::size_t j = 0; j < i; ++j) {
-                curvatureMarginIr += RandomVariable(n_, 2.0 * irGamma_) * Sb[i] * Sb[j];
+                curvatureMarginIr += RandomVariable(n_, 2.0 * irGamma_ * irGamma_) * Sb[i] * Sb[j];
             }
         }
 
@@ -321,14 +322,15 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         for (std::size_t ccy = 1; ccy < currencies_.size(); ++ccy) {
             for (std::size_t i = 0; i < fxVegaTerms_.size(); ++i) {
-                auto tmp = RandomVariable(n_, fxCurvatureWeights_[i] * fxSigma_ * fxHvr_) * fxVega[ccy - 1][i];
+                auto tmp = RandomVariable(n_, fxCurvatureWeights_[i] * fxSigma_) * fxVega[ccy - 1][i];
                 Kb[ccy - 1] += tmp * tmp;
                 Sb[ccy - 1] += tmp;
                 S += tmp;
                 Sabs += abs(tmp);
                 for (std::size_t j = 0; j < i; ++j) {
-                    auto tmp2 = RandomVariable(n_, fxCurvatureWeights_[j] * fxSigma_ * fxHvr_) * fxVega[ccy - 1][j];
-                    Kb[ccy - 1] += RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j)) * tmp * tmp2;
+                    auto tmp2 = RandomVariable(n_, fxCurvatureWeights_[j] * fxSigma_) * fxVega[ccy - 1][j];
+                    Kb[ccy - 1] +=
+                        RandomVariable(n_, 2.0 * fxVegaCorrelations_(i, j) * fxVegaCorrelations_(i, j)) * tmp * tmp2;
                 }
             }
             Kb[ccy - 1] = sqrt(Kb[ccy - 1]);
@@ -338,7 +340,7 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         for (std::size_t i = 1; i < currencies_.size(); ++i) {
             curvatureMarginFx += Kb[i - 1] * Kb[i - 1];
             for (std::size_t j = 1; j < i; ++j) {
-                curvatureMarginFx += RandomVariable(n_, 2.0 * fxCorr_) * Sb[i - 1] * Sb[j - 1];
+                curvatureMarginFx += RandomVariable(n_, 2.0 * fxCorr_ * fxCorr_) * Sb[i - 1] * Sb[j - 1];
             }
         }
 

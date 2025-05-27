@@ -226,6 +226,7 @@ public:
     void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
@@ -667,6 +668,7 @@ public:
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
@@ -1081,6 +1083,7 @@ protected:
     bool xvaCgDynamicIM_ = false;
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
+    double xvaCgRegressionVarianceCutoff_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;

@@ -1368,7 +1368,7 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
         // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
-        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(x / delta) )
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(-x / delta) )
         tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 

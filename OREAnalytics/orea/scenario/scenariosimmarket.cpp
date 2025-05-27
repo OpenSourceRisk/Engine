@@ -3042,11 +3042,22 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
+    // reset scenario info setter
+    scenarioInformationSetter_ = nullptr;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
 
     currentScenario_ = scenario;
+
+    QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+    if (!currentScenario_->isAbsolute())
+        currentScenarioAbsolute =
+            addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+
+    // the info will be available until reset() is called or the ScenarioSimMarket instance is destroyed
+    scenarioInformationSetter_ =
+        QuantLib::ext::make_shared<ScenarioInformationSetter>(baseScenarioAbsolute_, currentScenarioAbsolute);
 
     // 1 handle delta scenario
 

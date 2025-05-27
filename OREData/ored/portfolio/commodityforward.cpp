@@ -169,7 +169,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QuantLib::ext::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         QuantLib::ext::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
     commodityForward->setPricingEngine(
-        commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
+        commodityForwardEngineBuilder->engine(currency,
+        envelope().additionalField("discount_curve", false, std::string()))); // the engine accounts for NDF if settlement data are present
     setSensitivityTemplate(*commodityForwardEngineBuilder);
     addProductModelEngine(*commodityForwardEngineBuilder);
 

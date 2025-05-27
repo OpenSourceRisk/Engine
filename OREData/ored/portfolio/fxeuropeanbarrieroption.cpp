@@ -224,12 +224,16 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             digitalBuilder = engineFactory->builder("FxOptionForward");
             QL_REQUIRE(digitalBuilder, "No builder found for FxOptionForward");
             auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(digitalBuilder);
-            vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            vanillaK->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            vanillaB->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxOptBuilder);
             addProductModelEngine(*fxOptBuilder);
-            digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            digital->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxDigitalOptBuilder);
             addProductModelEngine(*fxDigitalOptBuilder);
             
@@ -253,12 +257,16 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             digitalBuilder = engineFactory->builder("FxOptionForward");
             QL_REQUIRE(digitalBuilder, "No builder found for FxOptionForward");
             auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(digitalBuilder);
-            vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            vanillaK->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            vanillaB->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxOptBuilder);
             addProductModelEngine(*fxOptBuilder);
-            digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+            digital->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxDigitalOptBuilder);
             addProductModelEngine(*fxDigitalOptBuilder);
         }
@@ -282,8 +290,10 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         digitalBuilder = engineFactory->builder("FxDigitalOption");
         QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOption");
         auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(digitalBuilder);
-        vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-        vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+        vanillaK->setPricingEngine(fxOptBuilder->engine(
+            boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+        vanillaB->setPricingEngine(fxOptBuilder->engine(
+            boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
         setSensitivityTemplate(*fxOptBuilder);
         addProductModelEngine(*fxOptBuilder);
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
@@ -291,7 +301,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         setSensitivityTemplate(*fxDigitalOptBuilder);
         addProductModelEngine(*fxDigitalOptBuilder);
     }
-    
+
     QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);
     additionalData_["1_type"] = string("Rebate");

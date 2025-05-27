@@ -11,11 +11,9 @@ jobs:
     name: building
     runs-on: windows-2022
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - arch: x86
-            platform: Win32
-            boost-lib: 32
           - arch: AMD64
             platform: x64
             boost-lib: 64
@@ -23,7 +21,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
     - name: uninstall SWIG 4.1.1
       run: |
         choco uninstall swig
@@ -59,7 +56,7 @@ jobs:
         cmake ..
     - name: Set up Boost
       run: |
-        $Url = "https://archives.boost.io/release/1.80.0/binaries/boost_1_80_0-msvc-14.2-${{ matrix.boost-lib }}.exe"
+        $Url = "https://archives.boost.io/release/1.80.0/binaries/boost_1_80_0-msvc-14.3-${{ matrix.boost-lib }}.exe"
         (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
         Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\local\boost"
         choco install -y ninja
@@ -71,31 +68,34 @@ jobs:
         SET ORE_DIR=%cd%
         SET ORE=%cd%
         SET ZLIB_ROOT=C:\local\zlib-1.3.1
+        SET ZLIB_INCLUDE_DIR=C:\local\zlib-1.3.1
         SET Eigen3_DIR=C:\local\eigen-3.4.0
         mkdir build
         cd build
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }} -vcvars_ver=14.2 || exit 1
-        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -DZLIB_LIBRARY=C:\local\zlib-1.3.1\build\Release\zlib.lib -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2 -L
+        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -DZLIB_LIBRARY=C:\local\zlib-1.3.1\build\Release\zlib.lib -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3 -L
         cmake --build . -j 2 --verbose
     - name: Wrap ORE-SWIG for Python Wheels
       run: |
+        SET BOOST=C:\local\boost
+        SET Boost_ROOT=C:\local\boost
         SET BOOST_INCLUDEDIR=C:\local\boost
-        SET BOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
-        SET BOOST_LIB64=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
-        SET BOOST_LIB32=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        SET BOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
+        SET BOOST_LIB64=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
+        SET BOOST_LIB32=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
         cd ${{ github.workspace }}\ORE-SWIG
         python setup.py wrap
     - name: Build ORE Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
         BOOST: C:\local\boost
-        BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
-        BOOST_LIB32: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2
+        BOOST_LIB64: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
+        BOOST_LIB32: C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.3
         ORE: ${{ github.workspace }}
         ORE_DIR: ${{ github.workspace }}
         ORE_STATIC_RUNTIME: 1
         ORE_USE_ZLIB: 1
-        CIBW_SKIP: cp36-* cp37-*
+        CIBW_SKIP: cp36-*
         #CIBW_BUILD: cp37-win_amd64
         #CIBW_BUILD: cp38-win32
         #CIBW_BUILD: cp37-*
@@ -104,7 +104,7 @@ jobs:
       with:
         package-dir: ${{ github.workspace }}\ORE-SWIG
     - name: Save wheels as artifacts
-      if: startsWith(github.ref, 'refs/tags/v')
+      #if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v4
       with:
         name: wheels-windows-${{ matrix.arch }}

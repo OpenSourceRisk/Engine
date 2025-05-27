@@ -69,7 +69,7 @@ void testCalibrationInstrumentRepricing(const Model::Type type, const std::vecto
     std::set<Date> simDates(expiries.begin(), expiries.end());
 
     LocalVolModelBuilder builder(process->riskFreeRate(), process, simDates, std::set<Date>(), timeStepsPerYear,
-                                 LocalVolModelBuilder::Type::AndreasenHuge, moneyness, false);
+                                 LocalVolModelBuilder::Type::AndreasenHuge, moneyness, {}, false);
 
     Model::Params params;
     params.regressionOrder = 1;
