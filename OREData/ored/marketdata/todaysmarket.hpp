@@ -147,6 +147,7 @@ private:
 
     // cached market objects, the key of the maps is the curve spec name
     mutable map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    mutable map<string, QuantLib::ext::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
     mutable map<string, std::pair<QuantLib::ext::shared_ptr<CapFloorVolCurve>, std::pair<std::string, QuantLib::Period>>>
         requiredCapFloorVolCurves_;
