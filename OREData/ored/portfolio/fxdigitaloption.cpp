@@ -148,7 +148,8 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, paymentDate, paymentDate);
         QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> fxOptBuilder =
             QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
-        vanilla->setPricingEngine(fxOptBuilder->engine(forCcy, domCcy, paymentDate));
+        vanilla->setPricingEngine(fxOptBuilder->engine(
+            forCcy, domCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
         setSensitivityTemplate(*fxOptBuilder);
         addProductModelEngine(*fxOptBuilder);
         Position::Type positionType = parsePositionType(option_.longShort());
