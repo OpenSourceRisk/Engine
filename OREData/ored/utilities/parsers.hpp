@@ -627,5 +627,7 @@ QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& 
 
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
+std::string splitByLastDelimeter(const std::string& s, const std::string& delimeter);
+std::string removeAfterLastDelimeter(const std::string& s, const std::string& delimeter);
 } // namespace data
 } // namespace ore

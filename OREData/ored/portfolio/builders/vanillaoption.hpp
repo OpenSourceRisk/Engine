@@ -29,6 +29,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
@@ -256,11 +257,13 @@ protected:
         
         std::string delimiter = "#";
         std::string assetNameLocal = assetName;
-        if (assetName.find(delimiter) != std::string::npos ){
-            assetNameLocal = assetName.substr(0, assetName.find(delimiter));
-            forwardDate_ =  QuantLib::DateParser::parseISO(assetName.substr(assetName.find(delimiter)+1, assetName.size()));
+        if (assetName.find(delimiter) != std::string::npos){
+            std::string forwardDateString = splitByLastDelimeter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate_, parseDate);
+            if (validDate)
+                assetNameLocal= removeAfterLastDelimeter(assetName, delimiter);
         }
-        
+
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
         Size xGrid = parseInteger(engineParameter("XGrid"));

@@ -114,13 +114,12 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
 
     VanillaOptionTrade::build(engineFactory);
 
-    std::string delimiter = "#";
-    assetName_ = assetName_.substr(0, assetName_.find(delimiter));
+    std::string assetNameLocal = removeAfterLastDelimeter(assetName_, "#");
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
-        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
+        DLOG("Implied vol for " << tradeType_ << " on " << assetNameLocal << " with expiry " << expiryDate_
                                 << " and strike " << strike_.value() << " is "
-                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
+                                << market->commodityVolatility(assetNameLocal)->blackVol(expiryDate_, strike_.value()));
     }
 
     
