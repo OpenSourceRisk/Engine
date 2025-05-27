@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simm/simmconfigurationisdav2_7_2412_1.hpp
-    \brief SIMM configuration for SIMM version 2.7+2412.1
+/*! \file orea/simm/simmconfigurationisdav2_7_2412.hpp
+    \brief SIMM configuration for SIMM version 2.7+2412
 */
 
 #pragma once
@@ -28,7 +28,7 @@ namespace ore {
 namespace analytics {
 
 /*! Class giving the SIMM configuration as outlined in the document
-    <em>ISDA SIMM Methodology, version 2.7.2412
+    <em>ISDA SIMM Methodology, version 2.7+2412.
         Effective Date: July 12, 2025.</em>
 */
 class SimmConfiguration_ISDA_V2_7_2412 : public SimmConfigurationBase {
