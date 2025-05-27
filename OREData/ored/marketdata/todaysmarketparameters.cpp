@@ -351,7 +351,7 @@ map<string, string>& TodaysMarketParameters::mappingReference(const MarketObject
         if (it2 != it->second.end()) {
             return it2->second;
         } else {
-	        return it->second[marketObjectId(o, configuration)];
+            return it->second[marketObjectId(o, configuration)];
         }
     } else {
         return marketObjects_[o][marketObjectId(o, configuration)];
