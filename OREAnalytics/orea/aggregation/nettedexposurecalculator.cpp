@@ -257,6 +257,8 @@ void NettedExposureCalculator::build() {
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
+        std::string csaCurrency = netting->csaDetails()->csaCurrency();
+
         for (Size j = 0; j < cube_->dates().size(); ++j) {
 
             Date date = cube_->dates()[j];
@@ -266,11 +268,10 @@ void NettedExposureCalculator::build() {
             for (Size k = 0; k < cube_->samples(); ++k) {
                 Real balance = 0.0;
                 if (collateral) {
-                    balance = collateral->at(k)->accountBalance(date);
-                    if (netting->csaDetails()->csaCurrency() != baseCurrency_) {
+                    balance = collateral[k]->accountBalance(date);
+                    if (csaCurrency != baseCurrency_) {
                         // Convert from CSACurrency to baseCurrency
-                        double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot,
-                                                           netting->csaDetails()->csaCurrency());
+                        double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaCurrency);
                         balance *= fxRate;
                     }
                 }
@@ -370,12 +371,11 @@ void NettedExposureCalculator::build() {
 
                 if (marginalAllocation_) {
                     for (auto const& [tradeId, trade] : portfolio_->trades()) {
-                        std::size_t i = cube_->getTradeIndex(tradeId);
-                        std::size_t i2 = tradeExposureCube_->getTradeIndex(tradeId);
-                        string nid = trade->envelope().nettingSetId();
+                        const string& nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;
-                        
+                        std::size_t i = cube_->getTradeIndex(tradeId);
+                        std::size_t i2 = tradeExposureCube_->getTradeIndex(tradeId);
                         Real allocation = 0.0;
                         if (balance == 0.0)
                             allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
