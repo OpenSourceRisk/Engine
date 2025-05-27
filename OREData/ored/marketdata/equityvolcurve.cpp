@@ -54,13 +54,14 @@ using namespace std;
 namespace ore {
 namespace data {
 
-EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
-                               const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves,
-                               const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
-                               const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
-                               const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                               const Market* fxIndices, const bool buildCalibrationInfo) {
+EquityVolCurve::EquityVolCurve(
+    Date asof, EquityVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
+    const Handle<EquityIndex2>& eqIndex,
+    const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves,
+    const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices,
+    const std::string& configuration, const bool buildCalibrationInfo) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
@@ -85,7 +86,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                 if (auto eqvc = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, requiredEquityCurves, requiredEquityVolCurves,
-                        requiredFxVolCurves, requiredCorrelationCurves, fxIndices);
+                        requiredFxVolCurves, requiredCorrelationCurves, fxIndices, configuration);
                 } else if (auto qvc = QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
                     // if the config is quote based (all except proxy surfaces?), do some checks
                     QL_REQUIRE(qvc->quoteType() == MarketDatum::QuoteType::PRICE ||
@@ -1006,7 +1007,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
                                      const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& eqVolCurves,
                                      const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                                     const Market* fxIndices) {
+                                     const Market* fxIndices, const std::string& configuration) {
 
     DLOG("EquityVolCurve: start building proxy vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1063,7 +1064,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->fxIndex(proxyVolConfig.ccy() + config.ccy()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.ccy() + config.ccy(), configuration).currentLink();
 
         CorrelationCurveSpec corrSpec(epvc.correlationCurve());
         auto corrIt = requiredCorrelationCurves.find(corrSpec.name());

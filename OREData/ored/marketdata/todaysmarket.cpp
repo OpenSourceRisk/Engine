@@ -175,8 +175,6 @@ void TodaysMarket::initialise(const Date& asof) {
 
         for (const auto& configuration : configurationNames) {
 
-            std::cout << "configuration " << configuration << std::endl;
-
             LOG("Build objects in TodaysMarket configuration " << configuration);
 
             // Sort the graph topologically
@@ -677,7 +675,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 Handle<EquityIndex2> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 QuantLib::ext::shared_ptr<EquityVolCurve> eqVolCurve = QuantLib::ext::make_shared<EquityVolCurve>(
                     asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
-                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this,
+                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this, configuration,
                     buildCalibrationInfo_);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                 calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
@@ -756,9 +754,11 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredCommodityVolCurves_.find(commodityVolSpec->name());
             if (itr == requiredCommodityVolCurves_.end()) {
                 DLOG("Building commodity volatility for asof " << asof_);
-                QuantLib::ext::shared_ptr<CommodityVolCurve> commodityVolCurve = QuantLib::ext::make_shared<CommodityVolCurve>(
-                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
-                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this, buildCalibrationInfo_);
+                QuantLib::ext::shared_ptr<CommodityVolCurve> commodityVolCurve =
+                    QuantLib::ext::make_shared<CommodityVolCurve>(
+                        asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_,
+                        requiredCommodityCurves_, requiredCommodityVolCurves_, requiredFxVolCurves_,
+                        requiredCorrelationCurves_, this, configuration, buildCalibrationInfo_);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
                 calibrationInfo_->commVolCalibrationInfo[commodityVolSpec->name()] = commodityVolCurve->calibrationInfo();
             }
