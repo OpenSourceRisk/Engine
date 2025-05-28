@@ -58,7 +58,7 @@ public:
 
     //! \name Trade
     //@{
-    bool hasCashflows() const override { return false; }
+    bool hasCashflows() const override { return true; }
     //@}
 
     //! \name Inspectors
