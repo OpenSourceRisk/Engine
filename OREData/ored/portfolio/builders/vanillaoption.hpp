@@ -258,10 +258,10 @@ protected:
         std::string delimiter = "#";
         std::string assetNameLocal = assetName;
         if (assetName.find(delimiter) != std::string::npos){
-            std::string forwardDateString = splitByLastDelimeter(assetName, delimiter);
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
             bool validDate = tryParse<Date>(forwardDateString, forwardDate_, parseDate);
             if (validDate)
-                assetNameLocal= removeAfterLastDelimeter(assetName, delimiter);
+                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
         }
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
