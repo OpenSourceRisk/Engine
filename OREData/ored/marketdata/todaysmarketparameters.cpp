@@ -154,7 +154,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration if we do not have one (may be overwritten below)
     if (!hasConfiguration(Market::defaultConfiguration))
-        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}, false));
+        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}, true));
 
     // fill data from XML
     XMLUtils::checkNode(node, "TodaysMarket");
@@ -162,7 +162,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     while (n) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
             string configName = XMLUtils::getAttribute(n, "id");
-            MarketConfiguration tmp{{}, false};
+            MarketConfiguration tmp{{}, configName = Market::defaultConfiguration};
             for (Size i = 0; i < marketObjectData.size(); ++i) {
                 if (auto v = XMLUtils::getChildNode(n, marketObjectData[i].xmlName + "Id")) {
                     tmp.setId(marketObjectData[i].obj, XMLUtils::getNodeValue(v));
