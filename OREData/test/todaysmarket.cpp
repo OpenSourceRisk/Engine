@@ -462,7 +462,7 @@ QuantLib::ext::shared_ptr<TodaysMarketParameters> marketParameters() {
     parameters->addMarketObject(MarketObject::DefaultCurve, "ois", emptyMap);
 
     // store this set of curves as "default" configuration
-    MarketConfiguration config;
+    MarketConfiguration config({}, true);
     config.setId(MarketObject::DiscountCurve, "ois");
     config.setId(MarketObject::YieldCurve, "ois");
     config.setId(MarketObject::IndexCurve, "ois");

@@ -100,8 +100,8 @@ std::set<MarketObject> getMarketObjectTypes() {
 }
 
 MarketConfiguration::MarketConfiguration(const map<MarketObject, string>& marketObjectIds,
-                                         const bool populateAllMarketObjectTypes) {
-    if (populateAllMarketObjectTypes) {
+                                         const bool generateDefaultAssignmentForAllMarketObjectTypes) {
+    if (generateDefaultAssignmentForAllMarketObjectTypes) {
         for (Size i = 0; i < marketObjectData.size(); ++i) {
             marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
         }
@@ -154,18 +154,20 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration if we do not have one (may be overwritten below)
     if (!hasConfiguration(Market::defaultConfiguration))
-        addConfiguration(Market::defaultConfiguration, MarketConfiguration());
+        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}, false));
 
     // fill data from XML
     XMLUtils::checkNode(node, "TodaysMarket");
     XMLNode* n = XMLUtils::getChildNode(node);
     while (n) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
-            MarketConfiguration tmp;
+            string configName = XMLUtils::getAttribute(n, "id");
+            MarketConfiguration tmp{{}, false};
             for (Size i = 0; i < marketObjectData.size(); ++i) {
-                tmp.setId(marketObjectData[i].obj,
-                          XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
-                addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
+                if (auto v = XMLUtils::getChildNode(n, marketObjectData[i].xmlName + "Id")) {
+                    tmp.setId(marketObjectData[i].obj, XMLUtils::getNodeValue(v));
+                }
+                addConfiguration(configName, tmp);
             }
         } else {
             Size i = 0;
