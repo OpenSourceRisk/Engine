@@ -424,7 +424,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // 9.4 get engine and set it
     cpu_timer timer;
 
-    auto calibrationStrategy = parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy", {}, false));
+    auto calibrationStrategy = CalibrationStrategy::None;
+    
+    try {
+        calibrationStrategy = parseCalibrationStrategy(swaptionBuilder->modelParameter("CalibrationStrategy", {}, false));
+    } 
+        catch(...){ }
+
     QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine; 
     std::vector<Date> maturitiesEngine;
     std::vector<Rate> strikesEngine;
