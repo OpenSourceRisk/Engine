@@ -169,6 +169,7 @@ void SaccrCalculator::processCrifRecord(const CrifRecord& record) {
             npv = record.amount * getFxRate(record.amountCurrency);
         else
             QL_FAIL("Could not get valid PV amount from CRIF record");
+        totalNPV_ += npv;
         NPV_[record.nettingSetDetails] += npv;
         tradeNPV_[record.tradeId] += npv;
 
@@ -204,8 +205,6 @@ void SaccrCalculator::processCrifRecord(const CrifRecord& record) {
                record.riskType == RiskType::CR_IX || record.riskType == RiskType::CR_SN) {
         auto assetClass = riskTypeToAssetClass(record.riskType);
         auto effectiveNotionalBase = record.amountUsd * usdBaseRate;
-        record.hedgingSet;
-        record.qualifier; // hedging subset
 
         // TODO: This should be updated once we've added the "_BASIS" convention prescribed by the Capital CRIF
         // docs/unit test
@@ -559,7 +558,7 @@ void SaccrCalculator::writeReports() {
         summaryReportIt->second->add("All")
             .add("All")
             .add("")
-            .add(to_string(totalNPV_))
+            .add(std::to_string(totalNPV_))
             .add("")
             .add("")
             .add("")
