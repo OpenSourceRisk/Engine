@@ -78,10 +78,8 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::UnderlyingATM;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
         return CalibrationStrategy::UnderlyingDealStrike;
-    else if (boost::algorithm::to_upper_copy(s) == "NONE")
+    else 
         return CalibrationStrategy::None;
-    else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
 }
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
