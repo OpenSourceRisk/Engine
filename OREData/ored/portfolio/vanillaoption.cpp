@@ -229,11 +229,15 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
-            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
             if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuilder = tradeType_ + "Forward";
+                if (exerciseType == QuantLib::Exercise::Type::European)
+                    tradeTypeBuilder = tradeType_ + "Forward";
+                else if (exerciseType == QuantLib::Exercise::Type::American) {
+                    vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                    tradeTypeBuilder = tradeType_ + "American";
+                }
         }
 
         // If the tradeTypeBuilder has not been modified yet..
