@@ -102,7 +102,7 @@ void ExposureCalculator::build() {
         TradeActions ta = trade->tradeActions();
         if (exerciseNextBreak_ && !ta.empty()) {
             // loop over actions and pick next mutual break, if available
-            vector<TradeAction> actions = ta.actions();
+            const vector<TradeAction>& actions = ta.actions();
             try {
                 for (Size j = 0; j < actions.size(); ++j) {
                     DLOG("TradeAction for " << tradeId << ", actionType " << actions[j].type() << ", actionOwner "

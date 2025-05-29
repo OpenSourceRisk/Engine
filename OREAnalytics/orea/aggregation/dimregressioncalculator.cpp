@@ -96,29 +96,101 @@ const vector<Real>& RegressionDynamicInitialMarginCalculator::simpleResultsLower
 }
 
 void RegressionDynamicInitialMarginCalculator::build() {
-    LOG("DIM Analysis by polynomial regression");
+    DLOG("DIM Analysis by polynomial regression");
 
-    map<string, Real> currentDim = unscaledCurrentDIM();
+    // Here, we proxy the model-implied T0 IM by looking at the
+    // cube grid horizon lying closest to t0+mpor. Wes measure diffs relative
+    // to the mean of the distribution at this same time horizon, thus avoiding
+    // any cashflow-specific jumps
+
+    Date today = cube_->asof();
+    Size relevantDateIdx = 0;
+    Real sqrtTimeScaling = 1.0;
+    for (Size i = 0; i < cube_->dates().size(); ++i) {
+        Size daysFromT0 = (cube_->dates()[i] - today);
+        if (daysFromT0 < horizonCalendarDays_) {
+            // iterate until we straddle t0+mpor
+            continue;
+        } else if (daysFromT0 == horizonCalendarDays_) {
+            // this date corresponds to t0+mpor, so use it
+            relevantDateIdx = i;
+            sqrtTimeScaling = 1.0;
+            break;
+        } else if (daysFromT0 > horizonCalendarDays_) {
+            // the first date greater than t0+MPOR, check if it is closest
+            Size lastIdx = (i == 0) ? 0 : (i - 1);
+            Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
+            int daysFromT0CloseOut = static_cast<int>(daysFromT0 - horizonCalendarDays_);
+            int prevDaysFromT0CloseOut = static_cast<int>(lastDaysFromT0 - horizonCalendarDays_);
+            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
+                relevantDateIdx = i;
+                sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(daysFromT0));
+            } else {
+                relevantDateIdx = lastIdx;
+                sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(lastDaysFromT0));
+            }
+            break;
+        }
+    }
+    // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
+    if (sqrtTimeScaling < std::sqrt(0.5) || sqrtTimeScaling > std::sqrt(2.0)) {
+        DLOG("T0 IM Estimation - The estimation time horizon from grid is not sufficiently close to t0+MPOR - "
+             << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx])
+             << ", the T0 IM estimate might be inaccurate. Consider inserting a first grid tenor closer to the dim "
+                "horizon");
+    }
+
+    // TODO: Ensure that the simulation containers read-from below are indeed populated
 
     Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
+    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
+    Size simple_dim_index_h = Size(floor(quantile_ * (cube_->samples() - 1) + 0.5));
+    Size simple_dim_index_p = Size(floor((1.0 - quantile_) * (samples - 1) + 0.5));
+
+    for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
+        string key = it_map->first;
+        vector<Real> t0_dist = it_map->second[relevantDateIdx];
+        Size dist_size = t0_dist.size();
+        QL_REQUIRE(dist_size == cube_->samples(),
+                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
+        Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
+        mean_t0_dist /= dist_size;
+        vector<Real> t0_delMtM_dist(dist_size, 0.0);
+        accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> acc_delMtm;
+        accumulator_set<double, stats<boost::accumulators::tag::mean>> acc_OneOverNum;
+        for (Size i = 0; i < dist_size; ++i) {
+            Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
+            Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;
+            t0_delMtM_dist[i] = deltaMtmFromMean;
+            acc_delMtm(deltaMtmFromMean);
+            acc_OneOverNum(1.0 / numeraire);
+        }
+        Real E_OneOverNumeraire = mean(acc_OneOverNum);
+        Real variance_t0 = boost::accumulators::variance(acc_delMtm);
+        Real sqrt_t0 = std::sqrt(variance_t0);
+        currentDIM_[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
+        std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
+        // just for logging
+        Real t0dimSimple = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
+
+        DLOG("T0 IM (Reg) - {" << key << "} = " << currentDIM_[key]);
+        DLOG("T0 IM (Simple) - {" << key << "} = " << t0dimSimple);
+    }
+    DLOG("T0 IM Calculations Completed");
+
 
     Size polynomOrder = regressionOrder_;
-    LOG("DIM regression polynom order = " << regressionOrder_);
+    DLOG("DIM regression polynom order = " << regressionOrder_);
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
-    LOG("DIM regression dimension = " << regressionDimension);
+    DLOG("DIM regression dimension = " << regressionDimension);
     std::vector<std::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
-    LOG("DIM confidence level " << confidenceLevel);
-
-    Size simple_dim_index_h = Size(floor(quantile_ * (samples - 1) + 0.5));
-    Size simple_dim_index_p = Size(floor((1.0 - quantile_) * (samples - 1) + 0.5));
 
     Size nettingSetCount = 0;
     for (auto n : nettingSetIds_) {
-        LOG("Process netting set " << n);
+        DLOG("Process netting set " << n);
 
         if (inputs_) {
             // Check whether a deterministic IM evolution was provided for this netting set
@@ -130,9 +202,9 @@ void RegressionDynamicInitialMarginCalculator::build() {
             // - nettingSetDIM_          by nettingSet, date and sample
             // - dimCube_                by nettingSet, date and sample
             TimeSeries<Real> im = inputs_->deterministicInitialMargin(n);
-            LOG("External IM evolution for netting set " << n << " has size " << im.size());
+            DLOG("External IM evolution for netting set " << n << " has size " << im.size());
             if (im.size() > 0) {
-                WLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
+                DLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
                 for (Size j = 0; j < stopDatesLoop; ++j) {
                     Date d = cube_->dates()[j];
                     try {
@@ -150,7 +222,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                                 << " at date " << io::iso_date(d));
                     }
                 }
-                WLOG("Overriding DIM for netting set " << n << " succeeded");
+                DLOG("Overriding DIM for netting set " << n << " succeeded");
                 // continue to the next netting set
                 continue;
             }
@@ -158,17 +230,17 @@ void RegressionDynamicInitialMarginCalculator::build() {
         
         if (currentIM_.find(n) != currentIM_.end()) {
             Real t0im = currentIM_[n];
-            QL_REQUIRE(currentDim.find(n) != currentDim.end(), "current DIM not found for netting set " << n);
-            Real t0dim = currentDim[n];
+            QL_REQUIRE(currentDIM_.find(n) != currentDIM_.end(), "current DIM not found for netting set " << n);
+            Real t0dim = currentDIM_[n];
             Real t0scaling = t0im / t0dim;
-            LOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
+            DLOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
                                               << " t0scaling=" << t0scaling);
             nettingSetScaling_[n] = t0scaling;
         }
 
         Real nettingSetDimScaling =
             nettingSetScaling_.find(n) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[n];
-        LOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
+        DLOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
 
         for (Size j = 0; j < stopDatesLoop; ++j) {
             accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> accDiff;
@@ -226,7 +298,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
 
             QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
             if (close_enough(stdevDiff, 0.0)) {
-                LOG("DIM: Zero std dev estimation at step " << j);
+                DLOG("DIM: Zero std dev estimation at step " << j);
                 // Skip IM calculation if all samples have zero NPV (e.g. after latest maturity)
                 for (Size k = 0; k < samples; ++k) {
                     nettingSetDIM_[n][j][k] = 0.0;
@@ -235,10 +307,10 @@ void RegressionDynamicInitialMarginCalculator::build() {
             } else {
                 // Least squares polynomial regression with specified polynom order
                 QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
-                LOG("DIM data normalisation at time step "
+                DLOG("DIM data normalisation at time step "
                     << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
                     << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
-                LOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
+                DLOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
                                                                 << ls.transformedCoefficients());
 
                 // Local regression versus first regression variable (i.e. we do not perform a
@@ -260,7 +332,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                     Array regressor = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                     Real e = ls.eval(regressor, v);
                     if (e < 0.0)
-                        LOG("Negative variance regression for date " << j << ", sample " << k
+                        DLOG("Negative variance regression for date " << j << ", sample " << k
                                                                      << ", regressor = " << regressor);
 
                     // Note:
@@ -289,7 +361,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
 
         nettingSetCount++;
     }
-    LOG("DIM by polynomial regression done");
+    DLOG("DIM by polynomial regression done");
 }
 
 Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet, Size dateIndex,
@@ -315,86 +387,7 @@ Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet
     return a;
 }
 
-map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM() {
-    // In this function we proxy the model-implied T0 IM by looking at the
-    // cube grid horizon lying closest to t0+mpor. We measure diffs relative
-    // to the mean of the distribution at this same time horizon, thus avoiding
-    // any cashflow-specific jumps
-
-    Date today = cube_->asof();
-    Size relevantDateIdx = 0;
-    Real sqrtTimeScaling = 1.0;
-    for (Size i = 0; i < cube_->dates().size(); ++i) {
-        Size daysFromT0 = (cube_->dates()[i] - today);
-        if (daysFromT0 < horizonCalendarDays_) {
-            // iterate until we straddle t0+mpor
-            continue;
-        } else if (daysFromT0 == horizonCalendarDays_) {
-            // this date corresponds to t0+mpor, so use it
-            relevantDateIdx = i;
-            sqrtTimeScaling = 1.0;
-            break;
-        } else if (daysFromT0 > horizonCalendarDays_) {
-            // the first date greater than t0+MPOR, check if it is closest
-            Size lastIdx = (i == 0) ? 0 : (i - 1);
-            Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            int daysFromT0CloseOut = static_cast<int>(daysFromT0 - horizonCalendarDays_);
-            int prevDaysFromT0CloseOut = static_cast<int>(lastDaysFromT0 - horizonCalendarDays_);
-            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
-                relevantDateIdx = i;
-                sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(daysFromT0));
-            } else {
-                relevantDateIdx = lastIdx;
-                sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(lastDaysFromT0));
-            }
-            break;
-        }
-    }
-    // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
-    if (sqrtTimeScaling < std::sqrt(0.5) || sqrtTimeScaling > std::sqrt(2.0)) {
-        WLOG("T0 IM Estimation - The estimation time horizon from grid is not sufficiently close to t0+MPOR - "
-             << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx])
-             << ", the T0 IM estimate might be inaccurate. Consider inserting a first grid tenor closer to the dim "
-                "horizon");
-    }
-
-    // TODO: Ensure that the simulation containers read-from below are indeed populated
-
-    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
-    Size simple_dim_index_h = Size(floor(quantile_ * (cube_->samples() - 1) + 0.5));
-    map<string, Real> t0dimReg, t0dimSimple;
-    for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
-        string key = it_map->first;
-        vector<Real> t0_dist = it_map->second[relevantDateIdx];
-        Size dist_size = t0_dist.size();
-        QL_REQUIRE(dist_size == cube_->samples(),
-                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
-        Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
-        mean_t0_dist /= dist_size;
-        vector<Real> t0_delMtM_dist(dist_size, 0.0);
-        accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> acc_delMtm;
-        accumulator_set<double, stats<boost::accumulators::tag::mean>> acc_OneOverNum;
-        for (Size i = 0; i < dist_size; ++i) {
-            Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
-            Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;
-            t0_delMtM_dist[i] = deltaMtmFromMean;
-            acc_delMtm(deltaMtmFromMean);
-            acc_OneOverNum(1.0 / numeraire);
-        }
-        Real E_OneOverNumeraire = mean(acc_OneOverNum);
-        Real variance_t0 = boost::accumulators::variance(acc_delMtm);
-        Real sqrt_t0 = std::sqrt(variance_t0);
-        t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
-        std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
-        t0dimSimple[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
-
-        LOG("T0 IM (Reg) - {" << key << "} = " << t0dimReg[key]);
-        LOG("T0 IM (Simple) - {" << key << "} = " << t0dimSimple[key]);
-    }
-    LOG("T0 IM Calculations Completed");
-
-    return t0dimReg;
-}
+const map<string, Real>& RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM() const { return currentDIM_; }
 
 void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 

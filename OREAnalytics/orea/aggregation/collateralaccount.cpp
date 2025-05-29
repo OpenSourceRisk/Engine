@@ -115,15 +115,8 @@ Real CollateralAccount::accountBalance(const Date& date) const {
     QL_REQUIRE(accountDates_.front() <= date, "CollateralAccount error, invalid date for balance request");
     if (date >= accountDates_.back())
         return accountBalances_.back(); // flat extrapolation at far end
-    for (unsigned i = 0; i < accountDates_.size(); i++) {
-        if (date == accountDates_[i])
-            return accountBalances_[i];
-        else if (date > accountDates_[i] && date < accountDates_[i + 1])
-            return accountBalances_[i];
-        else
-            continue;
-    }
-    QL_FAIL("CollateralAccount error, balance not found for date " << date);
+    return accountBalances_[std::distance(accountDates_.begin(),
+                                          std::lower_bound(accountDates_.begin(), accountDates_.end(), date))];
 }
 
 Real CollateralAccount::outstandingMarginAmount(const Date& simulationDate) const {
