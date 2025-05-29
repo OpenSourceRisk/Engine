@@ -103,23 +103,23 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
                                                                cube_->samples());
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) const {
     if (nettingSetDIM_.find(nettingSet) != nettingSetDIM_.end())
-        return nettingSetDIM_[nettingSet];
+        return nettingSetDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
 
-const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) {
+const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) const {
     if (nettingSetExpectedDIM_.find(nettingSet) != nettingSetExpectedDIM_.end())
-        return nettingSetExpectedDIM_[nettingSet];
+        return nettingSetExpectedDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in expected DIM results");
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) const {
     if (nettingSetFLOW_.find(nettingSet) != nettingSetFLOW_.end())
-        return nettingSetFLOW_[nettingSet];
+        return nettingSetFLOW_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
