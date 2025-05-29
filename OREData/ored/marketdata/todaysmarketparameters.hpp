@@ -57,8 +57,7 @@ MarketObject parseMarketObject(const std::string& mo);
 
 class MarketConfiguration {
 public:
-    MarketConfiguration(const map<MarketObject, string>& marketObjectIds,
-                        const bool generateDefaultAssignmentForAllMarketObjectTypes);
+    explicit MarketConfiguration(const map<MarketObject, string>& marketObjectIds);
     bool has(const MarketObject o) const;
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
@@ -111,7 +110,7 @@ public:
 
     //! \name Setters
     //@{
-    void addConfiguration(const string& name, const MarketConfiguration& configuration);
+    void addConfiguration(const string& name, MarketConfiguration configuration);
     void addMarketObject(const MarketObject o, const string& id, const map<string, string>& assignments);
     //@}
 

@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Set up a simple TodaysMarketParameters
     TodaysMarketParameters mktParams;
-    mktParams.addConfiguration(Market::defaultConfiguration, MarketConfiguration({}, true));
+    mktParams.addConfiguration(Market::defaultConfiguration, MarketConfiguration({}));
 
     // Add discount curves, we expect market fixings for EUR-EONIA
     map<string, string> m = {{"EUR", "Yield/EUR/EUR-EONIA"}, {"USD", "Yield/USD/USD-IN-EUR"}};

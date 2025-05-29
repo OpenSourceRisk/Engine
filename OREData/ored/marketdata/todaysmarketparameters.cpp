@@ -99,14 +99,7 @@ std::set<MarketObject> getMarketObjectTypes() {
     return result;
 }
 
-MarketConfiguration::MarketConfiguration(const map<MarketObject, string>& marketObjectIds,
-                                         const bool generateDefaultAssignmentForAllMarketObjectTypes) {
-    if (generateDefaultAssignmentForAllMarketObjectTypes) {
-        for (Size i = 0; i < marketObjectData.size(); ++i) {
-            marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
-        }
-    }
-
+MarketConfiguration::MarketConfiguration(const map<MarketObject, string>& marketObjectIds) {
     for (const auto& moi : marketObjectIds)
         setId(moi.first, moi.second);
 }
@@ -130,7 +123,14 @@ void MarketConfiguration::add(const MarketConfiguration& o) {
         marketObjectIds_[x.first] = x.second;
 }
 
-void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
+void TodaysMarketParameters::addConfiguration(const string& id, MarketConfiguration configuration) {
+    if (id == Market::defaultConfiguration) {
+        for (Size i = 0; i < marketObjectData.size(); ++i) {
+            if (!configuration.has(marketObjectData[i].obj))
+                configuration.setId(marketObjectData[i].obj, Market::defaultConfiguration);
+        }
+    }
+
     if (hasConfiguration(id)) {
         auto it =
             find_if(configurations_.begin(), configurations_.end(),
@@ -154,7 +154,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration if we do not have one (may be overwritten below)
     if (!hasConfiguration(Market::defaultConfiguration))
-        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}, true));
+        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}));
 
     // fill data from XML
     XMLUtils::checkNode(node, "TodaysMarket");
@@ -162,7 +162,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     while (n) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
             string configName = XMLUtils::getAttribute(n, "id");
-            MarketConfiguration tmp{{}, configName = Market::defaultConfiguration};
+            MarketConfiguration tmp{{}};
             for (Size i = 0; i < marketObjectData.size(); ++i) {
                 if (auto v = XMLUtils::getChildNode(n, marketObjectData[i].xmlName + "Id")) {
                     tmp.setId(marketObjectData[i].obj, XMLUtils::getNodeValue(v));
