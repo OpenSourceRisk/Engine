@@ -253,7 +253,7 @@ void NettedExposureCalculator::build() {
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
-        std::string csaCurrency = netting->csaDetails()->csaCurrency();
+        std::string csaCurrency = netting->activeCsaFlag() ? netting->csaDetails()->csaCurrency() : std::string();
 
         for (Size j = 0; j < cube_->dates().size(); ++j) {
 
