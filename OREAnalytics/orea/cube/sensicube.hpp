@@ -120,6 +120,8 @@ public:
 
     std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }
 
+    bool usesDoublePrecision() const override;
+
 private:
     std::map<std::string, Size> idIdx_;
     QuantLib::Date asof_;

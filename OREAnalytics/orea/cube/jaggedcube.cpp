@@ -16,28 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/cube/inmemorycube.hpp
-    \brief A cube implementation that stores the cube in memory
-    \ingroup cube
-*/
-
-#pragma once
-
-#include <orea/cube/inmemorycubeopt.hpp>
+#include <orea/cube/jaggedcube.hpp>
 
 namespace ore {
 namespace analytics {
 
-// redirecting to new implementation which has a better memory footprint...
-
-template <typename T> using InMemoryCubeBase = InMemoryCubeOpt<T>;
-template <typename T> using InMemoryCubeN = InMemoryCubeOpt<T>;
-template <typename T> using InMemoryCube1 = InMemoryCubeOpt<T>;
-
-using SinglePrecisionInMemoryCube = InMemoryCubeOpt<float>;
-using SinglePrecisionInMemoryCubeN = InMemoryCubeOpt<float>;
-using DoublePrecisionInMemoryCube = InMemoryCubeOpt<double>;
-using DoublePrecisionInMemoryCubeN = InMemoryCubeOpt<double>;
+template<> bool JaggedCube<double>::usesDoublePrecision() const { return true; }
+template<> bool JaggedCube<float>::usesDoublePrecision() const { return false; }
 
 } // namespace analytics
 } // namespace ore
