@@ -187,7 +187,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
-                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
+                        ? vol->blackVol(cf->pricingDate(), atmUnderlyingCurrency, true)
                         : 0.0;
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
