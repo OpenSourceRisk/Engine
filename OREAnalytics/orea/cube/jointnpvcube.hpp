@@ -75,6 +75,8 @@ public:
     Real get(Size id, Size date, Size sample, Size depth = 0) const override;
     void set(Real value, Size id, Size date, Size sample, Size depth = 0) override;
 
+    bool usesDoublePrecision() const override;
+
 private:
     std::set<std::pair<QuantLib::ext::shared_ptr<NPVCube>, Size>> cubeAndId(Size id) const;
 

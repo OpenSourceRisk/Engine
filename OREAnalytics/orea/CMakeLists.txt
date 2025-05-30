@@ -63,8 +63,11 @@ cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/inmemorycubeopt.cpp
+cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp

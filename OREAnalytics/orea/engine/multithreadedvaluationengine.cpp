@@ -123,7 +123,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     if (!cubeFactory_)
         cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
                           const std::vector<QuantLib::Date>& dates, const Size samples) {
-            return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
+            return QuantLib::ext::make_shared<ore::analytics::InMemoryCubeOpt<double>>(asof, ids, dates, samples);
         };
 
     if (!nettingSetCubeFactory_)

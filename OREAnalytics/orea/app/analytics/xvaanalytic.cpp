@@ -276,12 +276,12 @@ void XvaAnalyticImpl::initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const s
     for (Size i = 0; i < grid_->valuationDates().size(); ++i)
         DLOG("initCube: grid[" << i << "]=" << io::iso_date(grid_->valuationDates()[i]));
 
-    if (cubeDepth == 1)
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(inputs_->asof(), ids, grid_->valuationDates(),
-                                                                       samples_, 0.0f);
+    if (inputs_->xvaUseDoublePrecisionCubes())
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(inputs_->asof(), ids, grid_->valuationDates(),
+                                                                   samples_, cubeDepth, 0.0f);
     else
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(inputs_->asof(), ids, grid_->valuationDates(),
-                                                                        samples_, cubeDepth, 0.0f);
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(inputs_->asof(), ids, grid_->valuationDates(),
+                                                                  samples_, cubeDepth, 0.0f);
 }
 
 std::set<std::string> XvaAnalyticImpl::getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const {
@@ -468,21 +468,23 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
                                   const std::vector<QuantLib::Date>& dates,
                                   const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
-            if (cubeDepth_ == 1)
-                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            if (inputs_->xvaUseDoublePrecisionCubes())
+                return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, cubeDepth_, 0.0);
             else
-                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, cubeDepth_,
-                                                                                0.0f);
+                return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, cubeDepth_, 0.0);
         };
 
         std::function<QuantLib::ext::shared_ptr<NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                          const std::vector<QuantLib::Date>&, const QuantLib::Size)>
             cptyCubeFactory;
         if (inputs_->storeSurvivalProbabilities()) {
-            cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
-                                 const std::vector<QuantLib::Date>& dates,
-                                 const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
-                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+            cptyCubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                     const std::vector<QuantLib::Date>& dates,
+                                     const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
+                if (inputs_->xvaUseDoublePrecisionCubes())
+                    return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, 0.0f);
+                else
+                    return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, 0.0f);
             };
         } else {
             cptyCubeFactory = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
@@ -667,11 +669,12 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
                                       const std::vector<QuantLib::Date>& dates,
                                       const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
-                if (cubeDepth_ == 1)
-                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+                if (inputs_->xvaUseDoublePrecisionCubes())
+                    return QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, cubeDepth_,
+                                                                               0.0);
                 else
-                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
-                                                                                    cubeDepth_, 0.0f);
+                    return QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, cubeDepth_,
+                                                                              0.0);
             };
 
             auto simMarketParams =
@@ -825,7 +828,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
         inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(),
         analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), inputs_->mporCashFlowMode(),
-        firstMporCollateralAdjustment, inputs_->continueOnError());
+        firstMporCollateralAdjustment, inputs_->continueOnError(), inputs_->xvaUseDoublePrecisionCubes());
     LOG("post done");
 }
 

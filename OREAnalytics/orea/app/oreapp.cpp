@@ -1879,6 +1879,12 @@ void OREAppInputParameters::loadParameters() {
      *       parameters during iterative dev testing
      **********************/
 
+    tmp = params_->get("pfe", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
+
     tmp = params_->get("pfe", "baseCurrency", false);
     if (tmp != "")
         setXvaBaseCurrency(tmp);
@@ -2198,6 +2204,12 @@ void OREAppInputParameters::loadParameters() {
     /**********************
      * XVA specifically
      **********************/
+
+    tmp = params_->get("xva", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
 
     tmp = params_->get("xva", "baseCurrency", false);
     if (tmp != "")
