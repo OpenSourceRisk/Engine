@@ -29,10 +29,12 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/utilities/dataparsers.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
@@ -53,7 +55,8 @@ protected:
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
                                                                              const std::vector<Time>& timePoints = {},
-                                                                             const bool useFxSpot = true) {
+                                                                             const bool useFxSpot = true,
+                                                                             const QuantLib::Date forwardDate = QuantLib::Date()) {
 
         using VVTS = QuantExt::BlackMonotoneVarVolTermStructure;
         string config = this->configuration(ore::data::MarketContext::pricing);
@@ -95,14 +98,20 @@ protected:
 
             // Create the commodity convenience yield curve for the process
             Handle<QuantExt::PriceTermStructure> priceCurve = this->market_->commodityPriceCurve(assetName, config);
-            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
-            Handle<YieldTermStructure> discount = this->market_->discountCurve(ccy.code(), config);
-            Handle<YieldTermStructure> yield(
-                QuantLib::ext::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
-            yield->enableExtrapolation();
+            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve, forwardDate));
+            if (forwardDate != Date()){
+                Handle<YieldTermStructure> discount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(0, TARGET(), 0.0, Actual365Fixed()));
+                Handle<YieldTermStructure> yield = discount;
+                yield->enableExtrapolation();
+                return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);       
+            } else {
+                Handle<YieldTermStructure> discount = this->market_->discountCurve(ccy.code(), config);
+                Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));          
+                yield->enableExtrapolation();
+                return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);       
+            }
 
-            return QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
-
+            
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
         }
@@ -251,6 +260,16 @@ protected:
         Handle<YieldTermStructure> riskFreeRate = market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
                                                               std::max(riskFreeRate->referenceDate(), expiryDate));
+        
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos){
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
+        }
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
@@ -273,9 +292,9 @@ protected:
             for (Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
         } else {
-            gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
         return QuantLib::ext::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
     }

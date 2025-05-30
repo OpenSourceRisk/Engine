@@ -921,13 +921,14 @@ $$
 with $S(0)$ the T0 FX Spot rate. The log FX Spot rate $S(t)$ at time $t$ is given by
 
 $$
-\ln S(t) = \ln S(0) + \int_0^t r(s) ds - \int_0^t d(s) ds =: \ln S(0) + R(t) - D(t)
+\ln S(t) = \ln S(0) + \int_0^t \left( r(s) - d(s) - \frac{\sigma(s)^2}{2} \right) ds + \int_0^t \sigma(s) dW(s)
 $$
 
-where $r(s)$ and $d(s)$ are the instantaneous, stochastic domestic and foreign short rates. Now, obviously,
+where $r(s)$ and $d(s)$ are the instantaneous, stochastic domestic and foreign short rates and $\sigma(s)$ is the
+volatility of $S(t)$. We are assuming $S(t)$ follows a GBM here, but the argument is valid more generally. We get
 
 $$
-\frac{\partial \ln S(t)}{\partial \ln S(0)} = \frac{\partial \left( \ln S(0) + R(t) - D(t) \right)}{\partial \ln S(0)} = 1
+\frac{\partial \ln S(t)}{\partial \ln S(0)} = 1
 $$
 
 and therefore

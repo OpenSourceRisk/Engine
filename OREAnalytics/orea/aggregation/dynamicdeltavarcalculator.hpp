@@ -58,12 +58,13 @@ public:
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
         const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
-    std::map<std::string, QuantLib::Real> unscaledCurrentDIM() override;
+    const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const override;
     void build() override;
 
 private:
     QuantLib::ext::shared_ptr<DimHelper> dimHelper_;
     QuantLib::Size ddvOrder_;
+    map<string, Real> currentDIM_;
 };
 
 } // namespace analytics
