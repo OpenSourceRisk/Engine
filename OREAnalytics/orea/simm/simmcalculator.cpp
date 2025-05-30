@@ -1925,19 +1925,21 @@ void SimmCalculator::cleanDuplicateRegulations() {
 
                             break;
                         } else {
-                            duplicateFound = true;
-                            set<Regulation> newRegs;
-                            for (const auto& reg : regs) {
-                                if (comb.find(reg) == comb.end())
-                                    newRegs.insert(reg);
-                            }
-                            if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
-                                regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
-                            } else {
-                                regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
-                            }
-                            regulationsCrifMap.second.erase(regs);
-                            break;
+                            if (currIter > 250) {
+                                duplicateFound = true;
+                                set<Regulation> newRegs;
+                                for (const auto& reg : regs) {
+                                    if (comb.find(reg) == comb.end())
+                                        newRegs.insert(reg);
+                                }
+                                if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
+                                    regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
+                                } else {
+                                    regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
+                                }
+                                regulationsCrifMap.second.erase(regs);
+                                break; 
+                            }                          
                         }
                     }
                     if (duplicateFound)
