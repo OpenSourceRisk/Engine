@@ -38,10 +38,16 @@ namespace ore {
 namespace analytics {
 
 //! Return type for historical scenario generation (absolute, relative, log)
-class ReturnConfiguration {
-
+class ReturnConfiguration : public XMLSerializable {
 public:
-    enum class ReturnType { Absolute, Relative, Log };
+    struct ReturnType {
+        enum class Type { Log, Absolute, Relative };
+        Type type;
+        double displacement;
+    };
+
+    using IndividualRiskFactorConfig = std::map<std::string, ReturnType>;
+    using RiskFactorConfig = std::tuple<ReturnType, IndividualRiskFactorConfig>;
 
     //! default return types per risk factor
     ReturnConfiguration();
@@ -53,17 +59,23 @@ public:
         The date parameters are are used to improve the log messages
     */
     QuantLib::Real returnValue(const RiskFactorKey& key, const QuantLib::Real v1, const QuantLib::Real v2,
-        const QuantLib::Date& d1, const QuantLib::Date& d2) const;
+                               const QuantLib::Date& d1, const QuantLib::Date& d2) const;
 
     //! apply return from v1, v2 to base value
     QuantLib::Real applyReturn(const RiskFactorKey& key, const QuantLib::Real baseValue,
-        const QuantLib::Real returnValue) const;
+                               const QuantLib::Real returnValue) const;
 
     //! get return types
-    const std::map<RiskFactorKey::KeyType, ReturnType> returnTypes() const;
+    const ReturnType& returnTypes(const RiskFactorKey& key) const;
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
 
 private:
-    const std::map<RiskFactorKey::KeyType, ReturnType> returnType_;
+    const std::map<RiskFactorKey::KeyType, RiskFactorConfig> returnType_;
 
     //! Perform checks on key
     void check(const RiskFactorKey& key) const;
