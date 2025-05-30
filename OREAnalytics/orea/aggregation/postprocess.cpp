@@ -796,6 +796,10 @@ void PostProcess::exportDimDistribution(ore::data::Report& dimDistributionReport
     return dimCalculator_->exportDimDistribution(dimDistributionReport, gridSize, coveredStdDevs);
 }
 
+void PostProcess::exportDimCube(ore::data::Report& dimCubeReport) {
+    return dimCalculator_->exportDimCube(dimCubeReport);
+}
+
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
     dimCalculator_->exportDimEvolution(dimEvolutionReport);
 }
