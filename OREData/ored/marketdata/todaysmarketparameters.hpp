@@ -57,7 +57,7 @@ MarketObject parseMarketObject(const std::string& mo);
 
 class MarketConfiguration {
 public:
-    explicit MarketConfiguration(const map<MarketObject, string>& marketObjectIds);
+    explicit MarketConfiguration(const map<MarketObject, string>& marketObjectIds = {});
     bool has(const MarketObject o) const;
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
