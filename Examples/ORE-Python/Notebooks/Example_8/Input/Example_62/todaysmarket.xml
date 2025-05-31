@@ -2,6 +2,7 @@
 <TodaysMarket>
   <Configuration id="inccy">
     <DiscountingCurvesId>inccy</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="default"/>
   <YieldCurves id="default">
