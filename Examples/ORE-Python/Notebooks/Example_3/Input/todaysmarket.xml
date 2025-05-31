@@ -7,10 +7,12 @@
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
     <YieldCurvesId>inccy_swap</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
 
   <DiscountingCurves id="inccy_swap">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </DiscountingCurves>
 
   <IndexForwardingCurves id="default">
