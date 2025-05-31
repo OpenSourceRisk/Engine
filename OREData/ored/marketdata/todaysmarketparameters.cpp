@@ -154,7 +154,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration if we do not have one (may be overwritten below)
     if (!hasConfiguration(Market::defaultConfiguration))
-        addConfiguration(Market::defaultConfiguration, MarketConfiguration({}));
+        addConfiguration(Market::defaultConfiguration, MarketConfiguration());
 
     // fill data from XML
     XMLUtils::checkNode(node, "TodaysMarket");
