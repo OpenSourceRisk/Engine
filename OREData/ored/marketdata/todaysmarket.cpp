@@ -152,6 +152,8 @@ void TodaysMarket::initialise(const Date& asof) {
         dg.buildDependencyGraph(configuration.first, buildErrors);
     }
     dependencies_ = dg.dependencies();
+    cycles_ = dg.cycles();
+
     timings["4 build dep graphs"] = timer.elapsed().wall;
 
     // if market is not build lazily, sort the dependency graph and build the objects
@@ -181,48 +183,69 @@ void TodaysMarket::initialise(const Date& asof) {
 
             timer.start();
             Graph& g = dependencies_[configuration];
-            IndexMap index = boost::get(boost::vertex_index, g);
+
             std::vector<Vertex> order;
-            try {
-                boost::topological_sort(g, std::back_inserter(order));
-            } catch (const std::exception& e) {
-                // topological_sort() might have produced partial results, that we have to discard
-                order.clear();
-                // set error (most likely a circle), and output cycles if any
-                buildErrors["CurveDependencyGraph"] = "Topological sort of dependency graph failed for configuration " +
-                                                      configuration + " (" + ore::data::to_string(e.what()) +
-                                                      "). Got cycle(s): " + getCycles(g);
-            }
-            timings["5 topological sort dep graphs"] += timer.elapsed().wall;
 
-            TLOG("Can build objects in the following order:");
-            for (auto const& m : order) {
-                TLOG("vertex #" << index[m] << ": " << g[m]);
-            }
+            if (cycles_[configuration].empty()) {
 
-            // Build the objects in the graph in topological order
+                // no cycles -> build the nodes in topological order
 
-            Size countSuccess = 0, countError = 0;
-            for (auto const& m : order) {
-                timer.start();
+                IndexMap index = boost::get(boost::vertex_index, g);
                 try {
-                    buildNode(configuration, g[m]);
-                    ++countSuccess;
-                    DLOG("built node " << g[m] << " in configuration " << configuration);
+                    boost::topological_sort(g, std::back_inserter(order));
                 } catch (const std::exception& e) {
-                    if (g[m].curveSpec)
-                        buildErrors[g[m].curveSpec->name()] = e.what();
-                    else
-                        buildErrors[g[m].name] = e.what();
-                    ++countError;
-                    ALOG("error while building node " << g[m] << " in configuration " << configuration << ": "
-                                                      << e.what());
+                    // topological_sort() might have produced partial results, that we have to discard
+                    order.clear();
+                    buildErrors["CurveDependencyGraph"] =
+                        "Topological sort of dependency graph failed for configuration " + configuration + " (" +
+                        ore::data::to_string(e.what()) + ").";
                 }
-                timings["6 build " + ore::data::to_string(g[m].obj)] += timer.elapsed().wall;
-                counts["6 build " + ore::data::to_string(g[m].obj)].inc();
-            }
+                timings["5 topological sort dep graphs"] += timer.elapsed().wall;
 
-            LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+                TLOG("Can build objects in the following order:");
+                for (auto const& m : order) {
+                    TLOG("vertex #" << index[m] << ": " << g[m]);
+                }
+
+                Size countSuccess = 0, countError = 0;
+                for (auto const& m : order) {
+                    timer.start();
+                    try {
+                        buildNode(configuration, g[m]);
+                        ++countSuccess;
+                        DLOG("built node " << g[m] << " in configuration " << configuration);
+                    } catch (const std::exception& e) {
+                        if (g[m].curveSpec)
+                            buildErrors[g[m].curveSpec->name()] = e.what();
+                        else
+                            buildErrors[g[m].name] = e.what();
+                        ++countError;
+                        ALOG("error while building node " << g[m] << " in configuration " << configuration << ": "
+                                                          << e.what());
+                    }
+                    timings["6 build " + ore::data::to_string(g[m].obj)] += timer.elapsed().wall;
+                    counts["6 build " + ore::data::to_string(g[m].obj)].inc();
+                }
+
+                LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+
+            } else {
+
+                // cycles -> add them to build errors and skip configuration
+
+                std::ostringstream out;
+                for (std::size_t j = 0; j < cycles_[configuration].size(); ++j) {
+                    out << "cycle #" << j << ": ";
+                    for (auto const& d: cycles_[configuration][j]) {
+                        out << d << ",";
+                    }
+                    out << ".";
+                    if (j < cycles_[configuration].size() - 1)
+                        out << " ";
+                }
+                buildErrors["CurveDependencyGraph"] =
+                    "Graph has cycles for configuration " + configuration + ": " + out.str();
+            }
         }
 
     } else {
@@ -964,10 +987,6 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
         }
     }
 } // TodaysMarket::require()
-
-std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n) {
-    return o << n.obj << "(" << n.name << "," << n.mapping << ")";
-}
 
 } // namespace data
 } // namespace ore
