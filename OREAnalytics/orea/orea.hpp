@@ -215,7 +215,6 @@
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
-#include <orea/simm/simmconfigurationisdav2_7_2414.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/simmtradedata.hpp>
