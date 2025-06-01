@@ -413,7 +413,7 @@ simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
-simm/simmconfigurationisdav2_7_2414.hpp
+simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp
