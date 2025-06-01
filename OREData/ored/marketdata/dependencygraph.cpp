@@ -34,8 +34,8 @@ namespace ore {
 namespace data {
 
 namespace {
-struct CyclePusher {
-    explicit CyclePusher(std::vector<set<DependencyGraph::Node>>& cycles) : cycles_(cycles) {}
+struct CycleInserter {
+    explicit CycleInserter(std::vector<set<DependencyGraph::Node>>& cycles) : cycles_(cycles) {}
     template <typename Path, typename Graph> void cycle(const Path& p, const Graph& g) {
         cycles_.push_back({});
         typename Path::const_iterator i, end = p.end();
@@ -129,7 +129,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     // identify cycles and store them
 
     std::vector<std::set<Node>> cycles;
-    boost::tiernan_all_cycles(g, CyclePusher(cycles));
+    boost::tiernan_all_cycles(g, CycleInserter(cycles));
 
     DLOG("Identified " << cycles.size() << " cycles in dependency graph.");
 
