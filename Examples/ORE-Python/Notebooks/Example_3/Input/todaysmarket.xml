@@ -12,7 +12,6 @@
 
   <DiscountingCurves id="inccy_swap">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
-    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </DiscountingCurves>
 
   <IndexForwardingCurves id="default">
