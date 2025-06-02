@@ -23,7 +23,7 @@ namespace analytics {
 
 template<> bool SensiCube<double>::usesDoublePrecision() const { return true; }
 template<> bool SensiCube<float>::usesDoublePrecision() const { return false; }
-template <> std::map<QuantLib::Size, QuantLib::Real> SensiCube<double>::getTradeNPVs(QuantLib::Size i) const { return tradeNPVs_[i]; }
+template<> std::map<QuantLib::Size, QuantLib::Real> SensiCube<double>::getTradeNPVs(QuantLib::Size i) const { return tradeNPVs_[i]; }
 
 } // namespace analytics
 } // namespace ore
