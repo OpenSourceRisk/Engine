@@ -113,6 +113,7 @@ public:
         BOND,
         BOND_OPTION,
         INDEX_CDS_OPTION,
+        INDEX_CDS_TRANCHE,
         COMMODITY_SPOT,
         COMMODITY_FWD,
         CORRELATION,
@@ -1154,7 +1155,8 @@ public:
     FXForwardQuote() {}
     //! Constructor
     FXForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
-                   const boost::variant<QuantLib::Period, FxFwdString>& term, Real conversionFactor = 1.0)
+                   const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term,
+                   Real conversionFactor = 1.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_FWD), unitCcy_(unitCcy), ccy_(ccy),
           term_(term), conversionFactor_(conversionFactor) {}
 
@@ -1167,13 +1169,13 @@ public:
     //@{
     const string& unitCcy() const { return unitCcy_; }
     const string& ccy() const { return ccy_; }
-    const boost::variant<QuantLib::Period, FxFwdString>& term() const { return term_; }
+    const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term() const { return term_; }
     Real conversionFactor() const { return conversionFactor_; }
     //@}
 private:
     string unitCcy_;
     string ccy_;
-    boost::variant<QuantLib::Period, FxFwdString> term_;
+    boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date> term_;
     Real conversionFactor_;
     //! Serialization
     friend class boost::serialization::access;
@@ -1623,25 +1625,28 @@ public:
     BaseCorrelationQuote() {}
     //! Constructor
     BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
-                         Period term, Real detachmentPoint)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
-          term_(term), detachmentPoint_(detachmentPoint) {}
+                         Period term, Real attachmentPoint, Real detachmentPoint)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::INDEX_CDS_TRANCHE), cdsIndexName_(cdsIndexName),
+          term_(term), attachmentPoint_(attachmentPoint), detachmentPoint_(detachmentPoint) {}
 
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<BaseCorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, detachmentPoint_);
+        return QuantLib::ext::make_shared<BaseCorrelationQuote>(
+            quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, attachmentPoint_, detachmentPoint_);
     }
 
     //! \name Inspectors
     //@{
     const string& cdsIndexName() const { return cdsIndexName_; }
     Real detachmentPoint() const { return detachmentPoint_; }
+    Real attachmentPoint() const { return attachmentPoint_; }
     Period term() const { return term_; }
     //@}
 private:
     string cdsIndexName_;
     Period term_;
+    Real attachmentPoint_;
     Real detachmentPoint_;
     //! Serialization
     friend class boost::serialization::access;

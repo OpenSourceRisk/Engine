@@ -343,6 +343,8 @@ string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
 void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
+    if (!index_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(index_);
     if (!proxySourceCurveId_.empty())
         requiredCurveIds_[CurveSpec::CurveType::CapFloorVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());

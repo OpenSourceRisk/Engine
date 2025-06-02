@@ -93,6 +93,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                   strikePrice, CreditVolCurve::Type::Price);
+        Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
+                                                     Null<Real>(), CreditVolCurve::Type::Price);
         Real stdDev = volatility * std::sqrt(exerciseTime);
 
         // calculate the default-adjusted forward price
@@ -118,6 +120,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["strikePrice"] = arguments_.strike;
             results_.additionalResults["strikePriceDefaultAdjusted"] = strikePrice;
             results_.additionalResults["volatility"] = volatility;
+            results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
             results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
@@ -177,6 +180,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                   strikeSpread, CreditVolCurve::Type::Spread);
+        Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
+                                                     Null<Real>(), CreditVolCurve::Type::Spread);
         Real stdDev = volatility * std::sqrt(exerciseTime);
 
         // calculate the default-adjusted forward price
@@ -200,7 +205,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // calibrate the default-adjusted forward spread m to the forward price
 
-        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
+        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 16);
 
         auto target = [this, &Vc, &simpson, exerciseTime, maturityTime, averageInterestRate, stdDev,
                        forwardPrice](Real m) {
@@ -280,6 +285,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["strikeAdjustment"] = strikeAdjustment;
             results_.additionalResults["strikeSpread"] = strikeSpread;
             results_.additionalResults["volatility"] = volatility;
+            results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
             results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;

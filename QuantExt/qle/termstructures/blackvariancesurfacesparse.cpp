@@ -17,7 +17,7 @@
 */
 
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
-
+#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 using namespace std;
 using namespace QuantLib;
 
@@ -27,11 +27,11 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
-                                                       bool upperStrikeConstExtrap, bool timeFlatExtrapolation)
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter,
-                                                                                           lowerStrikeConstExtrap,
-                                                                                           upperStrikeConstExtrap),
-      timeFlatExtrapolation_(timeFlatExtrapolation) {
+                                                       bool upperStrikeConstExtrap,
+                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
+    : BlackVarianceTermStructure(referenceDate, cal),
+      OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
+      timeExtrapolation_(timeExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
                "dates, strikes and volatilities vectors not of equal size.");
@@ -59,12 +59,18 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
 }
 
 QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
-
     QuantLib::Time tb = times().back();
-    if (timeFlatExtrapolation_ && t > tb) {
-        return getValue(tb, strike) * t / tb;
-    } else {
+    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
         return getValue(t, strike);
+    }
+    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceFlat(t, strike, times_, varianceSurface);
+    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceInVolatility(t, strike, times_, varianceSurface);
+    } else {
+        QL_FAIL("Unknown time extrapolation method");
     }
 };
 } // namespace QuantExt

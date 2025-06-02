@@ -1,0 +1,26 @@
+RUN swap.py
+0.0443
+NPV         = 19066.26
+Fair spread = -0.4174 %
+Fair rate   =  4.4300 %
+NPV         = 19066.26
+Fair spread = -0.4174 %
+Fair rate   =  4.4300 %
+NPV         = 40533.04
+Fair spread = -0.9241 %
+Fair rate   =  4.9520 %
+NPV         = 37144.28
+Fair spread = -0.8469 %
+Fair rate   =  4.8724 %
+NPV         = 26604.08
+Fair spread = -0.5825 %
+Fair rate   =  4.6000 %
+NPV         = 46439.43
+Fair spread = -1.0588 %
+Fair rate   =  5.0907 %
+NPV         = 26604.08
+Fair spread = -0.5825 %
+Fair rate   =  4.6000 %
+NPV         = 43050.66
+Fair spread = -0.9815 %
+Fair rate   =  5.0111 %

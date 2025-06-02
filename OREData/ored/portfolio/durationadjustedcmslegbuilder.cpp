@@ -34,10 +34,11 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                            RequiredFixings& requiredFixings, const string& configuration,
-                                            const QuantLib::Date& openEndDateReplacement,
-                                            const bool useXbsCurves, const bool attachPricer) const {
+Leg DurationAdjustedCmsLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
 
     auto cmsData = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
@@ -84,6 +85,11 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const QuantLib:
             engineFactory->builder("DurationAdjustedCMS"));
         QL_REQUIRE(builder != nullptr, "No builder found for DurationAdjustedCmsLeg");
         couponPricer = builder->engine(IndexNameTranslator::instance().oreName(index->iborIndex()->name()));
+        if (productModelEngine) {
+            productModelEngine->insert(
+                std::make_tuple(builder->tradeTypes(), builder->model(),
+                                QuantLib::ext::static_pointer_cast<EngineBuilder>(builder)->engine()));
+        }
     }
 
     // Loop over the coupons in the leg and set pricer

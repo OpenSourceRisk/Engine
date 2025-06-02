@@ -117,6 +117,7 @@
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/accumulator.hpp>
+#include <ored/portfolio/additionalfieldgetter.hpp>
 #include <ored/portfolio/ascot.hpp>
 #include <ored/portfolio/asianoption.hpp>
 #include <ored/portfolio/autocallable_01.hpp>
@@ -328,6 +329,7 @@
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradebarrier.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/tranche.hpp>
@@ -369,16 +371,12 @@
 #include <ored/scripting/grammar.hpp>
 #include <ored/scripting/models/amcmodel.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
-#include <ored/scripting/models/blackscholesbase.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
-#include <ored/scripting/models/blackscholescgbase.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
-#include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
-#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/models/modelcgimpl.hpp>
@@ -397,11 +395,13 @@
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/credit.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/formulaparser.hpp>

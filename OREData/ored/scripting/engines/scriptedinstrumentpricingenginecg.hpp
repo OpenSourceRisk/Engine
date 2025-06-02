@@ -44,7 +44,7 @@ public:
     ScriptedInstrumentPricingEngineCG(
         const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
         const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-        const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
+        const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
         const bool includePastCashflows = false, const bool useCachedSensis = false,
@@ -53,7 +53,8 @@ public:
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
     std::string npvName() const override { return npv_; }
-    virtual std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
+    std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
+    bool hasVega() const override { return true; }
 
     void buildComputationGraph(const bool stickyCloseOutDateRun,
                                const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
@@ -109,7 +110,7 @@ private:
     std::set<std::string> minimalModelCcys_;
     ASTNodePtr ast_;
     QuantLib::ext::shared_ptr<Context> context_;
-    Model::McParams mcParams_;
+    Model::Params params_;
     double indicatorSmoothingForValues_;
     double indicatorSmoothingForDerivatives_;
     std::string script_;

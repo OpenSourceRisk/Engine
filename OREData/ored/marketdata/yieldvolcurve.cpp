@@ -48,7 +48,7 @@ YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loa
               term = q->term();
               return true;
           },
-          buildCalibrationInfo),
+          buildCalibrationInfo, spec.name()),
       spec_(spec) {}
 
 } // namespace data

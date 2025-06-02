@@ -26,6 +26,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 namespace ore {
@@ -36,17 +37,20 @@ namespace data {
 -
 \ingroup builders
 */
-class CommoditySwapEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
+class CommoditySwapEngineBuilder : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&, const std::string&> {
 public:
     CommoditySwapEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "CommoditySwapEngine", {"CommoditySwap"}) {}
 
 protected:
-    virtual std::string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    virtual std::string keyImpl(const Currency& ccy, const std::string& discountCurveName) override {
+        return ccy.code() + "_" + discountCurveName;
+    }
 
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy) override {
-
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurveName) override {
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
     };
 };

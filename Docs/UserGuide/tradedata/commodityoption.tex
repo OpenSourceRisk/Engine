@@ -104,7 +104,7 @@ and \emph{Put}, respectively, the digital call/put is constructed as
 \mbox{Digital Call} =  \frac{\mbox{Payoff}}{\Delta}  \times  \left( \mbox{Call}(K- \Delta/2) - \mbox{Call}(K+ \Delta/2) \right) \\
 \mbox{Digital Put} = \frac{\mbox{Payoff}}{\Delta}  \times \left( \mbox{Put}(K+ \Delta/2) - \mbox{Put}(K- \Delta/2)  \right)
 \end{align*}
-so that the long digital option has positive value in both cases. The strike spread $\Delta$ used here is set to 1\% of strike $K$.
+so that the long digital option has positive value in both cases. The strike spread $\Delta$ used here is set to 1\% of strike $K$. However, the default 1\% can be overriden by setting the 'StrikeSpread' parameter in the pricing engine global parameters.
 
 \subsubsection{Commodity Spread Option}
 \label{ss:input_commodity_spread_option}
@@ -118,7 +118,7 @@ The structure of a \lstinline!CommoditySpreadOptionData! node for a commodity op
 The \lstinline!CommoditySpreadOptionData! include exactly two \lstinline!LegData! nodes of type \emph{CommodityFloating}.
 Details on these are described in \ref{ss:commodityfloatingleg}.
 The resulting Legs must produce the same amount of cashflows (i.e.~the number of \emph{calculation period}s must be the same for the long and short positions).
-If the number of cashflows per leg is 1, this trade represents a vanilla commodity spread option.
+If the number of cashflows per leg is 1, this trade represents a single commodity spread option.
 If is greater than 1, it represents a multi-period commodity spread option.
 Exactly one payer and one receiver leg are required, the leg with \lstinline!isPayer! setto \emph{true} is the long (positive) position in the spread payoff. 
 
@@ -132,12 +132,10 @@ Other than the two legs, the following nodes complete the \lstinline!CommoditySp
 The relevant fields in the \lstinline!OptionData! node for an CommoditySpreadOption are
 	\begin{itemize}
 		\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
-
 		\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}. 
-
-		\item A \lstinline!PaymentData! [Optional] node can be added which defines the settlement date of the option payoff.
-
 		\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller. See section \ref{ss:premiums}
+		\item \lstinline!ExerciseDates! [Optional]: If given, there must be one exercise date for each option period. If omitted, the option expiry is derived from the cashflows and falls on the last pricing period of the commodity cashflow.
+		\item \lstinline!PaymentData! [Optional]:  This node is used to supply the date on which the option is cash settled if it is exercised. If omitted the settlement date is derived from the cashflow payment dates.
 	\end{itemize}
 	\item \lstinline!OptionStripPaymentDates! [Optional]: If the number of cashflows per leg is greater than 1, we can group options by their expiry date into strips. All option in a strip will have the same payment date as defined in this node. The payment date will be \emph{lag} business days after the latest expiry date in the strip. The node has following sub-nodes:
 	\begin{itemize}

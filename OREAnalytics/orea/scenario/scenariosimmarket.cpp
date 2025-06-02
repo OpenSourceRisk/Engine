@@ -843,23 +843,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = parameters_->swapVolSmileDynamics(name) == "StickyStrike";
                                 QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 QuantLib::ext::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
-                                if (!stickyStrike) {
+                                if (!swapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(swapIndexBase);
+                                        simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
+                                }
+                                if (!shortSwapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(shortSwapIndexBase);
+                                        simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
-                                    simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
-                                    simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
-                                    if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
-                                        stickyStrike = true;
                                 }
                                 if (!swapIndexBase.empty())
                                     swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
@@ -2660,9 +2660,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (!isSurface) {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
                                 if (useSpreadedTermStructures_) {
+                                    // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     newVol =
                                         Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<SpreadedBlackVolatilityCurve>(
-                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], true));
+                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], !parameters->simulateCommodityVolATMOnly()));
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
@@ -3040,11 +3042,22 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
+    // reset scenario info setter
+    scenarioInformationSetter_ = nullptr;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
 
     currentScenario_ = scenario;
+
+    QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+    if (!currentScenario_->isAbsolute())
+        currentScenarioAbsolute =
+            addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+
+    // the info will be available until reset() is called or the ScenarioSimMarket instance is destroyed
+    scenarioInformationSetter_ =
+        QuantLib::ext::make_shared<ScenarioInformationSetter>(baseScenarioAbsolute_, currentScenarioAbsolute);
 
     // 1 handle delta scenario
 

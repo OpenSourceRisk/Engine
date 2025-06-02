@@ -54,13 +54,14 @@ using namespace std;
 namespace ore {
 namespace data {
 
-EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
-                               const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves,
-                               const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
-                               const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
-                               const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                               const Market* fxIndices, const bool buildCalibrationInfo) {
+EquityVolCurve::EquityVolCurve(
+    Date asof, EquityVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
+    const Handle<EquityIndex2>& eqIndex,
+    const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves,
+    const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices,
+    const std::string& configuration, const bool buildCalibrationInfo) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
@@ -85,7 +86,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                 if (auto eqvc = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, requiredEquityCurves, requiredEquityVolCurves,
-                        requiredFxVolCurves, requiredCorrelationCurves, fxIndices);
+                        requiredFxVolCurves, requiredCorrelationCurves, fxIndices, configuration);
                 } else if (auto qvc = QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
                     // if the config is quote based (all except proxy surfaces?), do some checks
                     QL_REQUIRE(qvc->quoteType() == MarketDatum::QuoteType::PRICE ||
@@ -444,7 +445,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
-    bool flatTimeExtrap = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -462,7 +463,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType == Extrapolation::UseInterpolator) {
             TLOG("EquityVolCurve: Time extrapolation switched to using interpolator.");
-            flatTimeExtrap = false;
+            timeExtrapolation = BlackVolTimeExtrapolation::UseInterpolatorVariance;
         } else if (timeExtrapType == Extrapolation::None) {
             TLOG("EquityVolCurve: Time extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (timeExtrapType == Extrapolation::Flat) {
@@ -503,7 +504,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         DLOG("EquityVolCurve: Stripping equity volatility surface from the option premium surfaces");
         QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss = QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
             eqIndex, callSurface, putSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
-            flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney, solverOptions);
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
         vol_ = eoss->volSurface();
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
@@ -517,7 +518,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
                 QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
                                                                 dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                                                                flatTimeExtrap);
+                                                                timeExtrapolation);
 
             if (callSurfaceOnly) {
                 // if only a call surface provided use that
@@ -527,12 +528,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
                                                                     putData, dayCounter_, flatStrikeExtrap,
-                                                                    flatStrikeExtrap, flatTimeExtrap);
+                                                                    flatStrikeExtrap, timeExtrapolation);
 
                 QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss =
                     QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
                         eqIndex, callSurface, putSurface, calendar_, dayCounter_, Exercise::European,
-                        flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney);
+                        flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney);
                 vol_ = eoss->volSurface();
             }
         }
@@ -1006,7 +1007,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
                                      const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& eqVolCurves,
                                      const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                                     const Market* fxIndices) {
+                                     const Market* fxIndices, const std::string& configuration) {
 
     DLOG("EquityVolCurve: start building proxy vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1063,7 +1064,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->fxIndex(proxyVolConfig.ccy() + config.ccy()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.ccy() + config.ccy(), configuration).currentLink();
 
         CorrelationCurveSpec corrSpec(epvc.correlationCurve());
         auto corrIt = requiredCorrelationCurves.find(corrSpec.name());

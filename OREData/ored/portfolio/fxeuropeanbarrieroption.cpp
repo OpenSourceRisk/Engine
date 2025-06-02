@@ -256,26 +256,33 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         addProductModelEngine(*fxDigitalOptBuilder);
     }
 
-    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
     setSensitivityTemplate(*fxOptBuilder);
     addProductModelEngine(*fxOptBuilder);
 
     QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);
+    additionalData_["1_type"] = string("Rebate");
     if (type == Option::Call) {
         if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
             if (level > strike) {
                 qlInstrument->add(vanillaB);
                 qlInstrument->add(digital);
+                additionalData_["2_type"] = string("Call(B)");
+                additionalData_["3_type"] = string("DigiCall(B, B-K)");
             } else {
                 qlInstrument->add(vanillaK);
+                additionalData_["2_type"] = string("Call(K)");
             }
         } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
             if (level > strike) {
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
                 qlInstrument->add(digital, -1);
+                additionalData_["2_type"] = string("Call(K)");
+                additionalData_["3_type"] = string("Call(B)");
+                additionalData_["4_type"] = string("DigiCall(B, B-K)");
             } else {
                 // empty
             }
@@ -290,13 +297,19 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
                 qlInstrument->add(digital, -1);
+                additionalData_["2_type"] = string("Put(K)");
+                additionalData_["3_type"] = string("Put(B)");
+                additionalData_["4_type"] = string("DigiPut(B, K-B)");
             }
         } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
             if (level > strike) {
                 qlInstrument->add(vanillaK);
+                additionalData_["2_type"] = string("Put(K)");
             } else {
                 qlInstrument->add(vanillaB);
                 qlInstrument->add(digital);
+                additionalData_["2_type"] = string("Put(B)");
+                additionalData_["3_type"] = string("DigiPut(B, K-B)");
             }
         } else {
             QL_FAIL("Unknown Barrier Type: " << barrierType);

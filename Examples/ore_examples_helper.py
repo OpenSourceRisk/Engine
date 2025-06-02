@@ -14,18 +14,21 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
+skip_examples = [
+    "Example_54",
+    "Example_56",
+    "Example_68",
+    "Example_70"    
+    ]
 
 def get_list_of_examples():
-#    return sorted([e for e in os.listdir(os.getcwd())
-#                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#    return get_list_of_legacy_examples()
     return get_list_of_new_examples()
 
 def get_list_of_legacy_examples():
     legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
                      if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
-#                     if e == 'Example_8'])
-    return [ os.path.join("Legacy", e) for e in legacy ]
+#                     if e == 'Example_1'])
+    return [ os.path.join("Legacy", e) for e in legacy if e not in skip_examples ]
 
 def get_list_of_new_examples():
     return ["AmericanMonteCarlo",
@@ -74,32 +77,56 @@ class OreExample(object):
             if platform.machine()[-2:] == "64":
                 if os.path.isfile("..\\..\\App\\bin\\x64\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\App\\bin\\x64\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\App\\bin\\x64\\Release\\ore.exe"
                 elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
                     self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                elif os.path.isfile("..\..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\..\\..\\build\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\ore\\App\\ore.exe"):
-                    self.ore_exe = "..\..\\..\\build\\ore\\App\\ore.exe"
+                    self.ore_exe = "..\\..\\..\\build\\ore\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\..\\build\\ore\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\..\\build\\ore\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
                     self.ore_exe = "..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
                 elif os.path.isfile("..\\..\\build\\App\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\build\\App\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\App\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\App\\Release\\ore.exe"
                 else:
                     print_on_console("ORE executable not found.")
                     quit()
             else:
                 if os.path.isfile("..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\App\\bin\\Win32\\Release\\ore.exe"
                 elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
                     self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\App\\ore.exe"
                 else:
                     print_on_console("ORE executable not found.")
                     quit()
         else:
             if os.path.isfile("../../App/build/ore"):
                 self.ore_exe = "../../App/build/ore"
+            elif os.path.isfile("../../../App/build/ore"):
+                self.ore_exe = "../../../App/build/ore"
             elif os.path.isfile("../../build/App/ore"):
                 self.ore_exe = "../../build/App/ore"
+            elif os.path.isfile("../../../build/App/ore"):
+                self.ore_exe = "../../../build/App/ore"
+            elif os.path.isfile("../../../build/App/ore"):
+                self.ore_exe = "../../../build/App/ore"
+            elif os.path.isfile("../../../../build/App/ore"):
+                self.ore_exe = "../../../../build/App/ore"
             elif os.path.isfile("../../App/ore"):
                 self.ore_exe = "../../App/ore"
+            elif os.path.isfile("../../../App/ore"):
+                self.ore_exe = "../../../App/ore"
             elif os.path.isfile("../../../build/ore/App/ore"):
                 self.ore_exe = "../../../build/ore/App/ore"
                 self.ore_plus_exe = "../../../build/AppPlus/ore_plus"
@@ -217,7 +244,7 @@ class OreExample(object):
         self.ax.get_yaxis().set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: '{:1.2e}'.format(float(x))))
 
-    def plot_npv(self, filename, colIdx, color, label, marker='', offset=0, filter='', filterCol=0):
+    def plot_npv(self, filename, colIdx, color, label, marker='', offset=1, filter='', filterCol=0):
         data = self.get_output_data_from_column(filename, colIdx, offset, filter, filterCol)
         self.ax.plot(range(1, len(data) + 1),
                      data,
@@ -304,7 +331,10 @@ class OreExample(object):
     def run(self, xml):
         if not self.dry:
             if(self.use_python):
-                res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+                if(os.path.isfile(os.path.join(os.pardir, "ore_wrapper.py"))):
+                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "ore_wrapper.py"), xml])
+                elif(os.path.isfile(os.path.join(os.pardir, "..", "ore_wrapper.py"))):
+                    res = subprocess.call([sys.executable, os.path.join(os.pardir, "..", "ore_wrapper.py"), xml])
             else:
                 res = subprocess.call([self.ore_exe, xml])
             if res != 0:

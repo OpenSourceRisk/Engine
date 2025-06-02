@@ -21,6 +21,10 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/portfolio/trade.hpp>
 
+#include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
+#include <qle/math/distributioncount.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -28,9 +32,6 @@
 #include <ql/math/kernelfunctions.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-
-#include <qle/math/nadarayawatson.hpp>
-#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -86,7 +87,7 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
         for (Size j = 0; j < datesLoopSize_; ++j) {
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
-                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k, scenarioData_);
                 Real mporFlow =
                     cubeInterpretation_->storeFlows() ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
@@ -98,27 +99,32 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     nettingSetIds_ = std::move(nettingSets);
 
-    dimCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_, cube_->dates(),
-                                                               cube_->samples());
+    if (cube_->usesDoublePrecision()) {
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                       cube_->samples());
+    } else {
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                      cube_->samples());
+    }
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) const {
     if (nettingSetDIM_.find(nettingSet) != nettingSetDIM_.end())
-        return nettingSetDIM_[nettingSet];
+        return nettingSetDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
 
-const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) {
+const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) const {
     if (nettingSetExpectedDIM_.find(nettingSet) != nettingSetExpectedDIM_.end())
-        return nettingSetExpectedDIM_[nettingSet];
+        return nettingSetExpectedDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in expected DIM results");
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) const {
     if (nettingSetFLOW_.find(nettingSet) != nettingSetFLOW_.end())
-        return nettingSetFLOW_[nettingSet];
+        return nettingSetFLOW_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
@@ -161,6 +167,73 @@ void DynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEv
     }
     dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");
+}
+
+void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& dimDistributionReport,
+                                                           const Size gridSize, const Real coveredStdDevs) const {
+
+    dimDistributionReport.addColumn("NettingSet", string())
+        .addColumn("TimeStep", Size())
+        .addColumn("Date", Date())
+        .addColumn("Bound", Real(), 6)
+        .addColumn("Count", Size());
+
+    std::vector<Real> bounds;
+    std::vector<Size> counts;
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size i = 0; i < datesLoopSize_; ++i) {
+            distributionCount(nettingSetDIM_.at(nettingSet).at(i).begin(), nettingSetDIM_.at(nettingSet).at(i).end(),
+                              gridSize, bounds, counts, coveredStdDevs);
+            for (Size j = 0; j < gridSize; ++j)
+                dimDistributionReport.next()
+                    .add(nettingSet)
+                    .add(i)
+                    .add(dimCube_->dates()[i])
+                    .add(bounds[j])
+                    .add(counts[j]);
+        }
+    }
+
+    dimDistributionReport.end();
+}
+void DynamicInitialMarginCalculator::exportDimCube(ore::data::Report& dimCubeReport) const {
+
+    Size samples = dimCube_->samples();
+    Date asof = cube_->asof();
+    
+    dimCubeReport.addColumn("Portfolio", string())
+        .addColumn("Sample", Size())
+        .addColumn("DateIndex", Size())
+        .addColumn("AsOfDate", Date())
+        .addColumn("Time", Real(), 6)
+        .addColumn("InitialMargin", Real(), 6)
+        .addColumn("Currency", string())
+        .addColumn("SimmSide", string());
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size j = 0; j < samples; ++j) {
+
+            for (Size i = 0; i < datesLoopSize_; ++i) {
+
+                Date d = dimCube_->dates()[i];
+                Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, d);
+                Real dim = nettingSetDIM_.at(nettingSet).at(i).at(j);
+                dimCubeReport.next()
+                    .add(nettingSet)
+                    .add(j)
+                    .add(i)
+                    .add(d)
+                    .add(t)
+                    .add(dim)
+                    .add("") // currency
+                    .add("Call");
+            }
+        }
+    }
+    dimCubeReport.end();
 }
 
 } // namespace analytics

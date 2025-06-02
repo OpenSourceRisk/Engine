@@ -135,6 +135,17 @@ public:
         return sensiCubes_.front();
     }
 
+    //! A setter for the offset simMarket scenario
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
+    //! A setter for the offset simMarket parameters
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
+
 private:
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
@@ -172,6 +183,10 @@ private:
     Size nThreads_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
+
+protected:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 /*! Returns the absolute shift size corresponding to a particular risk factor \p key

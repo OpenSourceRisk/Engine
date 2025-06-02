@@ -98,8 +98,9 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<IborFallbackCurveSegment> {
 
 public:
-    SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
-        : curveID_(curveID), requiredCurveIds_(requiredCurveIds) {}
+    SegmentIDGetter(const string& curveID, const string& ccy,
+                    map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
+        : curveID_(curveID), ccy_(ccy), requiredCurveIds_(requiredCurveIds) {}
 
     void visit(YieldCurveSegment&) override;
     void visit(SimpleYieldCurveSegment& s) override;
@@ -116,6 +117,7 @@ public:
 
 private:
     string curveID_;
+    string ccy_;
     map<CurveSpec::CurveType, set<string>>& requiredCurveIds_;
 };
 
@@ -161,6 +163,12 @@ void SegmentIDGetter::visit(CrossCcyYieldCurveSegment& s) {
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
+
+    string spotRateID = s.spotRateID();
+    auto md = parseMarketDatum(Date(), spotRateID, Null<Real>());
+    QuantLib::ext::shared_ptr<FXSpotQuote> fxq = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(md);
+    string foreignCcy = ccy_ == fxq->unitCcy() ? fxq->ccy() : fxq->unitCcy();
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(foreignCcy);
 }
 
 void SegmentIDGetter::visit(ZeroSpreadedYieldCurveSegment& s) {
@@ -217,11 +225,12 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
-                                   const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
+                                   const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff,
+                                   QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff) {
+      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff), iborFallbackConfig_(iborFallbackConfig) {
     populateRequiredCurveIds();
 }
 
@@ -382,10 +391,28 @@ void YieldCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurveID_);
     }
 
-    SegmentIDGetter segmentIDGetter(curveID_, requiredCurveIds_);
+    SegmentIDGetter segmentIDGetter(curveID_, currency_, requiredCurveIds_);
     for (Size i = 0; i < curveSegments_.size(); i++) {
         curveSegments_[i]->accept(segmentIDGetter);
     }
+}
+
+set<string> YieldCurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
+    auto rci = CurveConfig::requiredCurveIds(curveType);
+    Date asof = Settings::instance().evaluationDate();
+    if (curveType == CurveSpec::CurveType::Yield &&
+        iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
+        rci.insert(iborFallbackConfig_->fallbackData(curveID_).rfrIndex);
+
+    return rci;
+}
+
+map<CurveSpec::CurveType, set<string>> YieldCurveConfig::requiredCurveIds() const {
+    auto rci = CurveConfig::requiredCurveIds();
+    Date asof = Settings::instance().evaluationDate();
+    if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(curveID_, asof))
+        rci[CurveSpec::CurveType::Yield].insert(iborFallbackConfig_->fallbackData(curveID_).rfrIndex);
+    return rci;
 }
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
@@ -586,14 +613,14 @@ void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     // handle deprecated fields...
     XMLNode* projectionCurveShort = XMLUtils::getChildNode(node, "ProjectionCurveShort");
     if (projectionCurveShort) {
-        DLOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, use node ProjectionCurveReceive instead");
         if (receiveProjectionCurveID_.empty())
             receiveProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveShort);
     }
 
     XMLNode* projectionCurveLong = XMLUtils::getChildNode(node, "ProjectionCurveLong");
     if (projectionCurveLong) {
-        DLOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, use node ProjectionCurvePay instead");
         if (payProjectionCurveID_.empty())
             payProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveLong);
     }

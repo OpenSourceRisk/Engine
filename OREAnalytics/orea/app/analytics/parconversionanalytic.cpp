@@ -119,7 +119,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
                     ALOG("Currency in the sensitivity input and config aren't consistent. Skip trade " << id);
                     break;
                 }
-                auto [rf, desc] = deconstructFactor(zero.riskFactor);
+                auto [rf, desc] = QuantExt::deconstructFactor(zero.riskFactor);
                 if (rf.keytype != RiskFactorKey::KeyType::None) {
                     auto it = factorToIndex.find(rf);
                     if (it == factorToIndex.end()) {

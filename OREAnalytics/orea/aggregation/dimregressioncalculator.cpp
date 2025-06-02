@@ -96,228 +96,10 @@ const vector<Real>& RegressionDynamicInitialMarginCalculator::simpleResultsLower
 }
 
 void RegressionDynamicInitialMarginCalculator::build() {
-    LOG("DIM Analysis by polynomial regression");
+    DLOG("DIM Analysis by polynomial regression");
 
-    map<string, Real> currentDim = unscaledCurrentDIM();
-
-    Size stopDatesLoop = datesLoopSize_;
-    Size samples = cube_->samples();
-
-    Size polynomOrder = regressionOrder_;
-    LOG("DIM regression polynom order = " << regressionOrder_);
-    LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
-    Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
-    LOG("DIM regression dimension = " << regressionDimension);
-    std::vector<ext::function<Real(Array)>> v(
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
-    LOG("DIM confidence level " << confidenceLevel);
-
-    Size simple_dim_index_h = Size(floor(quantile_ * (samples - 1) + 0.5));
-    Size simple_dim_index_p = Size(floor((1.0 - quantile_) * (samples - 1) + 0.5));
-
-    Size nettingSetCount = 0;
-    for (auto n : nettingSetIds_) {
-        LOG("Process netting set " << n);
-
-        if (inputs_) {
-            // Check whether a deterministic IM evolution was provided for this netting set
-            // If found then we use this external data to overwrite the following
-            // - nettingSetExpectedDIM_  by nettingSet and date
-            // - nettingSetZeroOrderDIM_ by nettingSet and date
-            // - nettingSetSimpleDIMh_   by nettingSet and date
-            // - nettingSetSimpleDIMp_   by nettingSet and date
-            // - nettingSetDIM_          by nettingSet, date and sample
-            // - dimCube_                by nettingSet, date and sample
-            TimeSeries<Real> im = inputs_->deterministicInitialMargin(n);
-            LOG("External IM evolution for netting set " << n << " has size " << im.size());
-            if (im.size() > 0) {
-                WLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
-                for (Size j = 0; j < stopDatesLoop; ++j) {
-                    Date d = cube_->dates()[j];
-                    try {
-                        Real value = im[d];
-                        nettingSetExpectedDIM_[n][j] = value;
-                        nettingSetZeroOrderDIM_[n][j] = value;
-                        nettingSetSimpleDIMh_[n][j] = value;
-                        nettingSetSimpleDIMp_[n][j] = value;
-                        for (Size k = 0; k < samples; ++k) {
-                            dimCube_->set(value, nettingSetCount, j, k);
-                            nettingSetDIM_[n][j][k] = value;
-                        }
-                    } catch(std::exception& ) {
-                        QL_FAIL("Failed to lookup external IM for netting set " << n
-                                << " at date " << io::iso_date(d));
-                    }
-                }
-                WLOG("Overriding DIM for netting set " << n << " succeeded");
-                // continue to the next netting set
-                continue;
-            }
-        }
-        
-        if (currentIM_.find(n) != currentIM_.end()) {
-            Real t0im = currentIM_[n];
-            QL_REQUIRE(currentDim.find(n) != currentDim.end(), "current DIM not found for netting set " << n);
-            Real t0dim = currentDim[n];
-            Real t0scaling = t0im / t0dim;
-            LOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
-                                              << " t0scaling=" << t0scaling);
-            nettingSetScaling_[n] = t0scaling;
-        }
-
-        Real nettingSetDimScaling =
-            nettingSetScaling_.find(n) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[n];
-        LOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
-
-        for (Size j = 0; j < stopDatesLoop; ++j) {
-            accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> accDiff;
-            accumulator_set<double, stats<boost::accumulators::tag::mean>> accOneOverNumeraire;
-            for (Size k = 0; k < samples; ++k) {
-                Real numDefault =
-                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut =
-                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real npvDefault = nettingSetNPV_[n][j][k];
-                Real flow = nettingSetFLOW_[n][j][k];
-                Real npvCloseOut = nettingSetCloseOutNPV_[n][j][k];
-                accDiff((npvCloseOut * numCloseOut) + (flow * numDefault) - (npvDefault * numDefault));
-                accOneOverNumeraire(1.0 / numDefault);
-            }
-
-            Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
-            Real horizonScaling = std::sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
-
-            Real stdevDiff = std::sqrt(boost::accumulators::variance(accDiff));
-            Real E_OneOverNumeraire =
-                mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
-
-            nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
-            nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
-
-            vector<Real> rx0(samples, 0.0);
-            vector<Array> rx(samples, Array());
-            vector<Real> ry1(samples, 0.0);
-            vector<Real> ry2(samples, 0.0);
-            for (Size k = 0; k < samples; ++k) {
-                Real numDefault =
-                    cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real numCloseOut =
-                    cubeInterpretation_->getCloseOutAggregationScenarioData(AggregationScenarioDataType::Numeraire, j, k);
-                Real x = nettingSetNPV_[n][j][k] * numDefault;
-                Real f = nettingSetFLOW_[n][j][k] * numDefault;
-                Real y = nettingSetCloseOutNPV_[n][j][k] * numCloseOut;
-                Real z = (y + f - x);
-                rx[k] = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
-                rx0[k] = rx[k][0];
-                ry1[k] = z;     // for local regression
-                ry2[k] = z * z; // for least squares regression
-                nettingSetDeltaNPV_[n][j][k] = z;
-                regressorArray_[n][j][k] = rx[k];
-            }
-            vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
-            sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
-            Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
-            Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
-            simpleDim_h *= horizonScaling;                                  // the usual scaling factors
-            simpleDim_p *= horizonScaling;                                  // the usual scaling factors
-            nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
-            nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
-
-            QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
-            if (close_enough(stdevDiff, 0.0)) {
-                LOG("DIM: Zero std dev estimation at step " << j);
-                // Skip IM calculation if all samples have zero NPV (e.g. after latest maturity)
-                for (Size k = 0; k < samples; ++k) {
-                    nettingSetDIM_[n][j][k] = 0.0;
-                    nettingSetLocalDIM_[n][j][k] = 0.0;
-                }
-            } else {
-                // Least squares polynomial regression with specified polynom order
-                QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
-                LOG("DIM data normalisation at time step "
-                    << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
-                    << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
-                LOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
-                                                                << ls.transformedCoefficients());
-
-                // Local regression versus first regression variable (i.e. we do not perform a
-                // multidimensional local regression):
-                // We evaluate this at a limited number of samples only for validation purposes.
-                // Note that computational effort scales quadratically with number of samples.
-                // NadarayaWatson needs a large number of samples for good results.
-                QuantExt::NadarayaWatson lr(rx0.begin(), rx0.end(), ry1.begin(),
-                                            GaussianKernel(0.0, localRegressionBandWidth_));
-                Size localRegressionSamples = samples;
-                if (localRegressionEvaluations_ > 0)
-                    localRegressionSamples = Size(floor(1.0 * samples / localRegressionEvaluations_ + .5));
-
-                // Evaluate regression function to compute DIM for each scenario
-                for (Size k = 0; k < samples; ++k) {
-                    // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
-                        AggregationScenarioDataType::Numeraire, j, k);
-                    Array regressor = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
-                    Real e = ls.eval(regressor, v);
-                    if (e < 0.0)
-                        LOG("Negative variance regression for date " << j << ", sample " << k
-                                                                     << ", regressor = " << regressor);
-
-                    // Note:
-                    // 1) We assume vanishing mean of "z", because the drift over a MPOR is usually small,
-                    //    and to avoid a second regression for the conditional mean
-                    // 2) In particular the linear regression function can yield negative variance values in
-                    //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
-                    //    variance approaching zero. We correct this here by taking the positive part.
-                    Real std = std::sqrt(std::max(e, 0.0));
-                    Real scalingFactor = horizonScaling * confidenceLevel * nettingSetDimScaling;
-                    // Real dim = std * scalingFactor / num1;
-                    Real dim = std * scalingFactor / numDefault;
-                    dimCube_->set(dim, nettingSetCount, j, k);
-                    nettingSetDIM_[n][j][k] = dim;
-                    nettingSetExpectedDIM_[n][j] += dim / samples;
-
-                    // Evaluate the Kernel regression for a subset of the samples only (performance)
-                    if (localRegressionEvaluations_ > 0 && (k % localRegressionSamples == 0))
-                        // nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / num1;
-                        nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / numDefault;
-                    else
-                        nettingSetLocalDIM_[n][j][k] = 0.0;
-                }
-            }
-        }
-
-        nettingSetCount++;
-    }
-    LOG("DIM by polynomial regression done");
-}
-
-Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet, Size dateIndex,
-                                                                           Size sampleIndex) {
-    Array a(regressors_.size());
-    for (Size i = 0; i < regressors_.size(); ++i) {
-        string variable = regressors_[i];
-        if (boost::to_upper_copy(variable) ==
-            "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
-            a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
-        else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::IndexFixing,
-                                                                      dateIndex, sampleIndex, variable);
-        else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::FXSpot, dateIndex,
-                                                                      sampleIndex, variable);
-        else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
-            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Generic, dateIndex,
-                                                                      sampleIndex, variable);
-        else
-            QL_FAIL("scenario data does not provide data for " << variable);
-    }
-    return a;
-}
-
-map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM() {
-    // In this function we proxy the model-implied T0 IM by looking at the
-    // cube grid horizon lying closest to t0+mpor. We measure diffs relative
+    // Here, we proxy the model-implied T0 IM by looking at the
+    // cube grid horizon lying closest to t0+mpor. Wes measure diffs relative
     // to the mean of the distribution at this same time horizon, thus avoiding
     // any cashflow-specific jumps
 
@@ -352,7 +134,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
     }
     // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
     if (sqrtTimeScaling < std::sqrt(0.5) || sqrtTimeScaling > std::sqrt(2.0)) {
-        WLOG("T0 IM Estimation - The estimation time horizon from grid is not sufficiently close to t0+MPOR - "
+        DLOG("T0 IM Estimation - The estimation time horizon from grid is not sufficiently close to t0+MPOR - "
              << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx])
              << ", the T0 IM estimate might be inaccurate. Consider inserting a first grid tenor closer to the dim "
                 "horizon");
@@ -360,9 +142,12 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
 
     // TODO: Ensure that the simulation containers read-from below are indeed populated
 
+    Size stopDatesLoop = datesLoopSize_;
+    Size samples = cube_->samples();
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
     Size simple_dim_index_h = Size(floor(quantile_ * (cube_->samples() - 1) + 0.5));
-    map<string, Real> t0dimReg, t0dimSimple;
+    Size simple_dim_index_p = Size(floor((1.0 - quantile_) * (samples - 1) + 0.5));
+
     for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
         string key = it_map->first;
         vector<Real> t0_dist = it_map->second[relevantDateIdx];
@@ -384,17 +169,225 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
         Real E_OneOverNumeraire = mean(acc_OneOverNum);
         Real variance_t0 = boost::accumulators::variance(acc_delMtm);
         Real sqrt_t0 = std::sqrt(variance_t0);
-        t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
+        currentDIM_[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
         std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
-        t0dimSimple[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
+        // just for logging
+        Real t0dimSimple = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
 
-        LOG("T0 IM (Reg) - {" << key << "} = " << t0dimReg[key]);
-        LOG("T0 IM (Simple) - {" << key << "} = " << t0dimSimple[key]);
+        DLOG("T0 IM (Reg) - {" << key << "} = " << currentDIM_[key]);
+        DLOG("T0 IM (Simple) - {" << key << "} = " << t0dimSimple);
     }
-    LOG("T0 IM Calculations Completed");
+    DLOG("T0 IM Calculations Completed");
 
-    return t0dimReg;
+
+    Size polynomOrder = regressionOrder_;
+    DLOG("DIM regression polynom order = " << regressionOrder_);
+    LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
+    Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
+    DLOG("DIM regression dimension = " << regressionDimension);
+    std::vector<std::function<Real(Array)>> v(
+        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
+
+    Size nettingSetCount = 0;
+    for (auto n : nettingSetIds_) {
+        DLOG("Process netting set " << n);
+
+        if (inputs_) {
+            // Check whether a deterministic IM evolution was provided for this netting set
+            // If found then we use this external data to overwrite the following
+            // - nettingSetExpectedDIM_  by nettingSet and date
+            // - nettingSetZeroOrderDIM_ by nettingSet and date
+            // - nettingSetSimpleDIMh_   by nettingSet and date
+            // - nettingSetSimpleDIMp_   by nettingSet and date
+            // - nettingSetDIM_          by nettingSet, date and sample
+            // - dimCube_                by nettingSet, date and sample
+            TimeSeries<Real> im = inputs_->deterministicInitialMargin(n);
+            DLOG("External IM evolution for netting set " << n << " has size " << im.size());
+            if (im.size() > 0) {
+                DLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
+                for (Size j = 0; j < stopDatesLoop; ++j) {
+                    Date d = cube_->dates()[j];
+                    try {
+                        Real value = im[d];
+                        nettingSetExpectedDIM_[n][j] = value;
+                        nettingSetZeroOrderDIM_[n][j] = value;
+                        nettingSetSimpleDIMh_[n][j] = value;
+                        nettingSetSimpleDIMp_[n][j] = value;
+                        for (Size k = 0; k < samples; ++k) {
+                            dimCube_->set(value, nettingSetCount, j, k);
+                            nettingSetDIM_[n][j][k] = value;
+                        }
+                    } catch(std::exception& ) {
+                        QL_FAIL("Failed to lookup external IM for netting set " << n
+                                << " at date " << io::iso_date(d));
+                    }
+                }
+                DLOG("Overriding DIM for netting set " << n << " succeeded");
+                // continue to the next netting set
+                continue;
+            }
+        }
+        
+        if (currentIM_.find(n) != currentIM_.end()) {
+            Real t0im = currentIM_[n];
+            QL_REQUIRE(currentDIM_.find(n) != currentDIM_.end(), "current DIM not found for netting set " << n);
+            Real t0dim = currentDIM_[n];
+            Real t0scaling = t0im / t0dim;
+            DLOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
+                                              << " t0scaling=" << t0scaling);
+            nettingSetScaling_[n] = t0scaling;
+        }
+
+        Real nettingSetDimScaling =
+            nettingSetScaling_.find(n) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[n];
+        DLOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
+
+        for (Size j = 0; j < stopDatesLoop; ++j) {
+            accumulator_set<double, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>> accDiff;
+            accumulator_set<double, stats<boost::accumulators::tag::mean>> accOneOverNumeraire;
+            for (Size k = 0; k < samples; ++k) {
+                Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut = cubeInterpretation_->getCloseOutAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real npvDefault = nettingSetNPV_[n][j][k];
+                Real flow = nettingSetFLOW_[n][j][k];
+                Real npvCloseOut = nettingSetCloseOutNPV_[n][j][k];
+                accDiff((npvCloseOut * numCloseOut) + (flow * numDefault) - (npvDefault * numDefault));
+                accOneOverNumeraire(1.0 / numDefault);
+            }
+
+            Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
+            Real horizonScaling = std::sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
+
+            Real stdevDiff = std::sqrt(boost::accumulators::variance(accDiff));
+            Real E_OneOverNumeraire =
+                mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
+
+            nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
+            nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
+
+            vector<Real> rx0(samples, 0.0);
+            vector<Array> rx(samples, Array());
+            vector<Real> ry1(samples, 0.0);
+            vector<Real> ry2(samples, 0.0);
+            for (Size k = 0; k < samples; ++k) {
+                Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real numCloseOut = cubeInterpretation_->getCloseOutAggregationScenarioData(
+                    scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                Real x = nettingSetNPV_[n][j][k] * numDefault;
+                Real f = nettingSetFLOW_[n][j][k] * numDefault;
+                Real y = nettingSetCloseOutNPV_[n][j][k] * numCloseOut;
+                Real z = (y + f - x);
+                rx[k] = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
+                rx0[k] = rx[k][0];
+                ry1[k] = z;     // for local regression
+                ry2[k] = z * z; // for least squares regression
+                nettingSetDeltaNPV_[n][j][k] = z;
+                regressorArray_[n][j][k] = rx[k];
+            }
+            vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
+            sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
+            Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
+            Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
+            simpleDim_h *= horizonScaling;                                  // the usual scaling factors
+            simpleDim_p *= horizonScaling;                                  // the usual scaling factors
+            nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
+            nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
+
+            QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
+            if (close_enough(stdevDiff, 0.0)) {
+                DLOG("DIM: Zero std dev estimation at step " << j);
+                // Skip IM calculation if all samples have zero NPV (e.g. after latest maturity)
+                for (Size k = 0; k < samples; ++k) {
+                    nettingSetDIM_[n][j][k] = 0.0;
+                    nettingSetLocalDIM_[n][j][k] = 0.0;
+                }
+            } else {
+                // Least squares polynomial regression with specified polynom order
+                QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
+                DLOG("DIM data normalisation at time step "
+                    << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
+                    << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
+                DLOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
+                                                                << ls.transformedCoefficients());
+
+                // Local regression versus first regression variable (i.e. we do not perform a
+                // multidimensional local regression):
+                // We evaluate this at a limited number of samples only for validation purposes.
+                // Note that computational effort scales quadratically with number of samples.
+                // NadarayaWatson needs a large number of samples for good results.
+                QuantExt::NadarayaWatson lr(rx0.begin(), rx0.end(), ry1.begin(),
+                                            GaussianKernel(0.0, localRegressionBandWidth_));
+                Size localRegressionSamples = samples;
+                if (localRegressionEvaluations_ > 0)
+                    localRegressionSamples = Size(floor(1.0 * samples / localRegressionEvaluations_ + .5));
+
+                // Evaluate regression function to compute DIM for each scenario
+                for (Size k = 0; k < samples; ++k) {
+                    // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
+                    Real numDefault = cubeInterpretation_->getDefaultAggregationScenarioData(
+                        scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
+                    Array regressor = regressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
+                    Real e = ls.eval(regressor, v);
+                    if (e < 0.0)
+                        DLOG("Negative variance regression for date " << j << ", sample " << k
+                                                                     << ", regressor = " << regressor);
+
+                    // Note:
+                    // 1) We assume vanishing mean of "z", because the drift over a MPOR is usually small,
+                    //    and to avoid a second regression for the conditional mean
+                    // 2) In particular the linear regression function can yield negative variance values in
+                    //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
+                    //    variance approaching zero. We correct this here by taking the positive part.
+                    Real std = std::sqrt(std::max(e, 0.0));
+                    Real scalingFactor = horizonScaling * confidenceLevel * nettingSetDimScaling;
+                    // Real dim = std * scalingFactor / num1;
+                    Real dim = std * scalingFactor / numDefault;
+                    dimCube_->set(dim, nettingSetCount, j, k);
+                    nettingSetDIM_[n][j][k] = dim;
+                    nettingSetExpectedDIM_[n][j] += dim / samples;
+
+                    // Evaluate the Kernel regression for a subset of the samples only (performance)
+                    if (localRegressionEvaluations_ > 0 && (k % localRegressionSamples == 0))
+                        // nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / num1;
+                        nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / numDefault;
+                    else
+                        nettingSetLocalDIM_[n][j][k] = 0.0;
+                }
+            }
+        }
+
+        nettingSetCount++;
+    }
+    DLOG("DIM by polynomial regression done");
 }
+
+Array RegressionDynamicInitialMarginCalculator::regressorArray(string nettingSet, Size dateIndex,
+                                                                           Size sampleIndex) {
+    Array a(regressors_.size());
+    for (Size i = 0; i < regressors_.size(); ++i) {
+        string variable = regressors_[i];
+        if (boost::to_upper_copy(variable) ==
+            "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
+            a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
+        else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::IndexFixing, dateIndex, sampleIndex, variable);
+        else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::FXSpot, dateIndex, sampleIndex, variable);
+        else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
+            a[i] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::Generic, dateIndex, sampleIndex, variable);
+        else
+            QL_FAIL("scenario data does not provide data for " << variable);
+    }
+    return a;
+}
+
+const map<string, Real>& RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM() const { return currentDIM_; }
 
 void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
@@ -464,8 +457,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         vector<Real> numeraires(samples, 0.0);
         for (Size k = 0; k < samples; ++k)
             // numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
-            numeraires[k] =
-                cubeInterpretation_->getDefaultAggregationScenarioData(AggregationScenarioDataType::Numeraire, timeStep, k);
+            numeraires[k] = cubeInterpretation_->getDefaultAggregationScenarioData(
+                scenarioData_, AggregationScenarioDataType::Numeraire, timeStep, k);
 
         auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
         vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);

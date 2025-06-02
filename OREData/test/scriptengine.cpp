@@ -700,15 +700,16 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
 
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
     irIndices.push_back(std::make_pair(indexName, on));
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
+    Model::Params params;
+    params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
+        Model::Type::MC, nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
         std::vector<Handle<Quote>>(), irIndices,
-        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), std::vector<std::string>(),
-        std::vector<std::string>(), Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
-        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), mcParams,
-        std::set<Date>{});
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(),
+        std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
+        Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
+        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
+        IborFallbackConfig::defaultConfig(), "ATM", std::map<std::string, std::vector<Real>>(), params);
 
     auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["underlying"] = IndexVec{nPaths, indexName};
@@ -786,11 +787,12 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts0, volts);
     std::set<Date> simulationDates = {date1, date2};
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
+    Model::Params params;
+    params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts0, "EQ-Dummy", "USD",
-        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts0, "EQ-Dummy", "USD",
+        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
@@ -931,11 +933,12 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
         payDates.insert(s.second.begin(), s.second.end());
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1042,11 +1045,12 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
@@ -1139,11 +1143,12 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1309,15 +1314,16 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     correlations[std::make_pair("EQ-2", "EQ-3")] = Handle<QuantExt::CorrelationTermStructure>(
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.6, ActualActual(ActualActual::ISDA)));
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
-        std::vector<Handle<Quote>>(), std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
+        Model::Type::MC, nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
+        std::vector<Handle<Quote>>(),
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
-        std::vector<std::string>(3, "USD"),
-        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations, mcParams,
-        simulationDates);
+        std::vector<std::string>(3, "USD"), std::set<std::string>{"USD"},
+        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations,
+        simulationDates, IborFallbackConfig::defaultConfig(), "ATM", std::map<string, std::vector<Real>>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);

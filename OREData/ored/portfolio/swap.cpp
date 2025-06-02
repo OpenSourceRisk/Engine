@@ -182,8 +182,10 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
+        std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration, Null<Date>(),
-                                        useXbsCurves);
+                                        useXbsCurves, true, &productModelEngines);
+        addProductModelEngine(productModelEngines);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
 
         // add notional leg, if applicable
@@ -273,7 +275,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Floating)
                     floatingNpv = swap->legNPV(i);            
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
-                    additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));
+                    additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
                     fixedBps = swap->legBPS(i);
                 }
             } else

@@ -49,8 +49,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
-                   const boost::shared_ptr<ore::data::Report>& report,
-                   const boost::shared_ptr<ore::data::Report>& cfReport, const double threshold, const Size precision,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport, const double threshold, const Size precision,
                    const bool includePastCashflows, const CurveConfigurations& curveConfigs,
                    const TodaysMarketParameters& todaysMarketParams,
                    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
@@ -84,7 +84,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     portfolio->reset();
     portfolio->build(factory, "stress analysis");
 
-    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
     std::vector<std::vector<std::vector<TradeCashflowReportData>>> cfCube;

@@ -177,7 +177,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             } else {
                 if (inverted)
                     fixing = 1.0 / fixing;
-                ALOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
+                LOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
                     knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel);
@@ -193,7 +193,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(builder, "No FxOption builder found");
     QuantLib::ext::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
 
     // Add additional premium payments
     Position::Type positionType = parsePositionType(option_.longShort());

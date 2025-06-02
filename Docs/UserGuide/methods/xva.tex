@@ -25,7 +25,7 @@ changed in the ORE source code or made configurable. \\
 
 Moreover, formulas (\ref{CVA}, \ref{DVA}) assume independence of credit and other market risk factors, so that $\PD$ and
 $\LGD$ factors are outside the expectations. With the extension of ORE to credit asset classes and in particular for
-wrong-way-risk analysis, CVA/DVA formulas is generaised and is applicable to calculations with dynamic credit
+wrong-way-risk analysis, CVA/DVA formulas is generalised and is applicable to calculations with dynamic credit
 
 \begin{align}
 \CVA^{dyn} &= \sum_{i} \E^N\left[\frac{\PD^{dyn}(t_{i-1},t_i)\times \PE(t_i)}{N(t)} \right]\times\LGD \label{CVA_dynamic} \\
@@ -97,7 +97,7 @@ We assume that we enter into an offsetting trade with (hypothetical) counterpart
 \item If $C<0$ we post collateral amount $-C$ and receive the overnight rate on this amount. Amount $-C$ needs to be funded in the market, and we pay our borrowing rate on it. This leads to a funding cost proportional to the borrowing spread $f_b$ (borrowing rate minus overnight). $C<0$ means $\NPV_1 - C_1 > 0$, so that we can cover this case with ``borrowing notional'' $[\NPV_1 - C_1]^+$. If the borrowing spread is positive, this term proportional to $f_b \times [\NPV_1 - C_1]^+$ is indeed a cost and therefore needs to be subtracted from the benefit above.
 \end{itemize}
    
-Formula \eqref{eq_simple_fva} evaluates these funding cost components on the basis of the original trade's or portfolio's $\NPV$. Perfectly collateralised portfolios hence do not contribute to FVA because under the hedging fiction, they are hedged with a perfectly collateralised opposite portfolio, so any collateral payments on portfolio 1 are canceled out by those of the opposite sign on portfolio 2.
+Formula \eqref{eq_simple_fva} evaluates these funding cost components on the basis of the original trade's or portfolio's $\NPV$. Perfectly collateralised portfolios hence do not contribute to FVA because under the hedging fiction, they are hedged with a perfectly collateralised opposite portfolio, so any collateral payments on portfolio 1 are cancelled out by those of the opposite sign on portfolio 2.
 
 \section{COLVA}
 
@@ -338,7 +338,7 @@ CSA(t_m) &=
 where
 \begin{itemize}
 \item $\NPV(t_m)$ is the value of the netting set as of
-  time $t_m$ from our persepctive,
+  time $t_m$ from our perspective,
   \item $\Th_{rec}$ is the threshold exposure below which we do not 
   require collateral, likewise $\TH_{pay}$ is the threshold that applies to collateral posted to the counterparty,
 %\item $MTA$ is the minimum transfer amount for collateral margin
@@ -400,7 +400,7 @@ The option ``sticky date'' is more aggressive in that it avoids any exposure evo
 
 \medskip On the other hand, in the {\em Lagged Approach} the simulation is conducted only on a default time grid. The collateral values are calculated, by delaying the delivery amounts between default times, specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure. 
 
-In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would habe been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ until 1M and hence a residual exposure of $2$. 
+In table \ref{table:lagged}, we present a toy example to illustrate how the delayed margin calls lead to residual exposures. In this example, we assume that the default time grid is equally-spaced with time steps that match the MPoR (which is 1M). Further, we assume zero threshold and MTA. At the initial time, the delivery amount is $2.00$, which is the difference between the initial value of the portfolio and the default value at 1M. If this amount were settled immediately, then the collateral value would have been $10$ and hence the residual exposure would have been zero at 1M. The delay of the delivery amount by MPoR implies a collateral value of $8.00$ until 1M and hence a residual exposure of $2$. 
 %
 \begin{table}[!ht]
     \centering

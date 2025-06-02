@@ -24,7 +24,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using ore::analytics::deconstructFactor;
 using ore::data::parseBool;
 using ore::data::parseReal;
 using std::getline;
@@ -60,12 +59,12 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     sr.tradeId = boost::get<std::string>(entries[0]);
     sr.isPar = parseBool(boost::get<std::string>(entries[1]));
 
-    auto p = deconstructFactor(boost::get<std::string>(entries[2]));
+    auto p = QuantExt::deconstructFactor(boost::get<std::string>(entries[2]));
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
     sr.shift_1 = boost::get<Real>(entries[3]);
 
-    p = deconstructFactor(boost::get<std::string>(entries[4]));
+    p = QuantExt::deconstructFactor(boost::get<std::string>(entries[4]));
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
     sr.shift_2 = boost::get<Real>(entries[5]);

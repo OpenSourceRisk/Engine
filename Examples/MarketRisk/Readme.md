@@ -48,6 +48,14 @@ is applied.
 Run with <code>python run_parstress.py</code>
 
 
+## Stressed Sensitivity Analysis
+
+Using the same portfolio as in the Sensitivity Analysis case above we demonstrate
+a sensitivity test run after applying stress scenario to T0 market.
+
+Run with <code>python run_sensistress.py</code>
+
+
 ## Historical Simulation VaR
 
 This case demonstrates the HistSim analytic based on precalculated historical market scenarios

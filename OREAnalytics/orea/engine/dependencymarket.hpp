@@ -39,10 +39,11 @@ namespace analytics {
 */
 class DependencyMarket : public ore::data::Market {
 public:
-    DependencyMarket(const std::string& baseCcy, bool useFxDominance = true,
-                     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-                     const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
-                     const bool recordSecuritySpecificCreditCurves = false)
+    DependencyMarket(
+        const std::string& baseCcy, bool useFxDominance = true,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const bool recordSecuritySpecificCreditCurves = false)
         : ore::data::Market(true), baseCcy_(baseCcy), useFxDominance_(useFxDominance), curveConfigs_(curveConfigs),
           iborFallbackConfig_(iborFallbackConfig),
           recordSecuritySpecificCreditCurves_(recordSecuritySpecificCreditCurves) {}
@@ -52,11 +53,12 @@ public:
 
     //! \name Market Interface
     //@{
-    virtual QuantLib::Handle<QuantLib::YieldTermStructure> yieldCurve(const ore::data::YieldCurveType&, const std::string&,
-                                                                      const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::YieldTermStructure>
+    yieldCurve(const ore::data::YieldCurveType&, const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::YieldTermStructure> discountCurveImpl(const std::string&,
                                                                              const std::string&) const override;
-    virtual QuantLib::Handle<QuantLib::YieldTermStructure> yieldCurve(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::YieldTermStructure> yieldCurve(const std::string&,
+                                                                      const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::IborIndex> iborIndex(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::SwapIndex> swapIndex(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::SwaptionVolatilityStructure> swaptionVol(const std::string&,
@@ -74,16 +76,20 @@ public:
     virtual QuantLib::Handle<QuantLib::Quote> recoveryRate(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditVolCurve> cdsVol(const std::string&, const std::string&) const override;
-    virtual QuantLib::Handle<QuantExt::BaseCorrelationTermStructure> baseCorrelation(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantExt::BaseCorrelationTermStructure> baseCorrelation(const std::string&,
+                                                                                     const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::OptionletVolatilityStructure> capFloorVol(const std::string&,
                                                                                  const std::string&) const override;
-    virtual std::pair<std::string, QuantLib::Period> capFloorVolIndexBase(const std::string&, const std::string&) const override;
+    virtual std::pair<std::string, QuantLib::Period> capFloorVolIndexBase(const std::string&,
+                                                                          const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::ZeroInflationIndex> zeroInflationIndex(const std::string&,
                                                                               const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::YoYInflationIndex> yoyInflationIndex(const std::string&,
                                                                             const std::string&) const override;
-    virtual QuantLib::Handle<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolatilitySurface(const std::string&, const std::string&) const override;
-    virtual QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> yoyCapFloorVol(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::CPIVolatilitySurface>
+    cpiInflationCapFloorVolatilitySurface(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> yoyCapFloorVol(const std::string&,
+                                                                                     const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> equitySpot(const std::string& eqName, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::YieldTermStructure> equityDividendCurve(const std::string&,
                                                                                const std::string&) const override;
@@ -110,11 +116,17 @@ public:
     std::set<std::string> riskFactorNames(const ore::analytics::RiskFactorKey::KeyType& riskFactorType) const;
     std::set<ore::analytics::RiskFactorKey::KeyType> riskFactorTypes() const;
     std::set<std::string> swapindices() const { return swapindices_; }
+    std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const {
+        return riskFactors_;
+    }
 
     bool hasMarketObjectType(const ore::data::MarketObject& marketObjectType) const;
     std::set<std::string> marketObjectNames(const ore::data::MarketObject& marketObjectType) const;
     std::set<ore::data::MarketObject> marketObjectTypes() const;
-    std::map<ore::data::MarketObject, std::set<std::string>> marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> marketObjects() const {
+        return marketObjects_;
+    }
+
     //@}
 
 private:
