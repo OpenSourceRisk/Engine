@@ -3007,6 +3007,8 @@ ScenarioSimMarket::ScenarioSimMarket(
         baseScenarioAbsolute_ = tmpAbs;
     }
     LOG("building base scenario done");
+
+    scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
@@ -3042,8 +3044,6 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
-    // reset scenario info setter
-    scenarioInformationSetter_ = nullptr;
 }
 
 void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
@@ -3055,9 +3055,8 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
         currentScenarioAbsolute =
             addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
 
-    // the info will be available until reset() is called or the ScenarioSimMarket instance is destroyed
-    scenarioInformationSetter_ =
-        QuantLib::ext::make_shared<ScenarioInformationSetter>(baseScenarioAbsolute_, currentScenarioAbsolute);
+    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+    scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
 
     // 1 handle delta scenario
 
