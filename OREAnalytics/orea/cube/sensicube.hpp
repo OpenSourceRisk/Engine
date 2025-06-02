@@ -116,7 +116,7 @@ public:
         }
     }
 
-    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override { return tradeNPVs_[i]; }
+    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override;
 
     std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }
 
