@@ -41,12 +41,13 @@ jobs:
       run: |
          pwd
          cp ORE-SWIG/Wheels/oreanalytics-config.linux ORE-SWIG/oreanalytics-config
+         chmod +x ORE-SWIG/oreanalytics-config
          cd ORE-SWIG/Wheels
          chmod +x before_all_linux.sh
     - name: Build ORE wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
-        CIBW_BUILD: "*-manylinux*"
+        CIBW_BUILD: "*-manylinux_x86_64"
         CIBW_SKIP: cp*
         #CIBW_BUILD: cp37-manylinux_x86_64
         #CIBW_BUILD: cp38-manylinux_x86_64
