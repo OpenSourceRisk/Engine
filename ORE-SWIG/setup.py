@@ -208,9 +208,9 @@ class my_build_ext(build_ext):
 
         elif compiler == 'unix':
             ql_compile_args = \
-                os.popen('../oreanalytics-config --cflags').read()[:-1].split()
+                os.popen('./oreanalytics-config --cflags').read()[:-1].split()
             ql_link_args = \
-                os.popen('../oreanalytics-config --libs').read()[:-1].split()
+                os.popen('./oreanalytics-config --libs').read()[:-1].split()
 
             self.define += [ (arg[2:],None) for arg in ql_compile_args
                              if arg.startswith('-D') ]
