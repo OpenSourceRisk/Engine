@@ -663,6 +663,8 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
 }
 
 QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
 
     // Make sure the prefix is correct
     string prefix = name.substr(0, 5);
@@ -734,6 +736,8 @@ QuantLib::ext::shared_ptr<ConstantMaturityBondIndex> parseConstantMaturityBondIn
 QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
                                                                 const Handle<PriceTermStructure>& ts,
                                                                 const Calendar& cal, const bool enforceFutureIndex) {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
 
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
