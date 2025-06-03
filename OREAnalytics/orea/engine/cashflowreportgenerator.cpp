@@ -42,8 +42,6 @@
 
 #include <vector>
 
-#include <iostream>
-
 namespace ore {
 namespace analytics {
 
@@ -57,13 +55,20 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                                                                 const std::string& configuration,
                                                                 const bool includePastCashflows) {
 
+    string specificDiscount = "";
+    Handle<YieldTermStructure> specificDiscountCurve;
 
-                                                                    
-    auto disc = trade->envelope().additionalField("discount_curve", false);
-    //auto ssp = trade->envelope().additionalField("security_spread", false);
-    //swap->setPricingEngine(swapBuilder->engine(npvCcy, disc, ssp, eqNames));
-    Handle<YieldTermStructure> specificDiscountCurve = indexOrYieldCurve(market, disc, configuration);
-
+    try
+    {
+        specificDiscount = trade->envelope().additionalField("discount_curve", false);
+        specificDiscountCurve = indexOrYieldCurve(market, specificDiscount, configuration);
+    }
+    catch(const std::exception& e)
+    {
+        DLOG("Could not find trade specific discount curve: " <<  e.what());
+        specificDiscount = "";
+    }
+    
     Date asof = Settings::instance().evaluationDate();
 
     std::vector<TradeCashflowReportData> result;
@@ -121,9 +126,10 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                 if (cf.discountFactor != Null<Real>())
                     discountFactor = cf.discountFactor;
                 else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
+                    auto discountCurve =  specificDiscount.empty()? market->discountCurve(cf.currency, configuration):specificDiscountCurve;
                     discountFactor = cf.payDate < asof
                                          ? 0.0
-                                         : specificDiscountCurve->discount(cf.payDate);
+                                         : discountCurve->discount(cf.payDate);
                 }
                 if (cf.presentValue != Null<Real>()) {
                     presentValue = cf.presentValue * multiplier;
@@ -208,7 +214,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             string ccy = trade->legCurrencies()[i];
             Handle<YieldTermStructure> discountCurve;
             if (market)
-                discountCurve = specificDiscountCurve;
+                discountCurve = specificDiscount.empty()? market->discountCurve(ccy, configuration):specificDiscountCurve;
             for (size_t j = 0; j < leg.size(); j++) {
                 QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                 Date payDate = ptrFlow->date();
@@ -375,7 +381,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                         effectiveAmount = amount * multiplier;
 
                     if (market) {
-                        discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : specificDiscountCurve->discount(payDate);
+                        auto dcurve=specificDiscount.empty()? discountCurve: specificDiscountCurve;
+                        discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : dcurve->discount(payDate);
                         if (effectiveAmount != Null<Real>())
                             presentValue = discountFactor * effectiveAmount;
                         try {
