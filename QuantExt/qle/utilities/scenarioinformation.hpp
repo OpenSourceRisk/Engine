@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <qle/termstructures/scenario.hpp>
+
 #include <ql/patterns/singleton.hpp>
 
 #include <map>
@@ -57,9 +59,10 @@ private:
 //! scenario information setter, ensuring that the info is cleared when the setter goes out of scope
 class ScenarioInformationSetter {
 public:
-    ScenarioInformationSetter(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& parentScenario,
-                              const QuantLib::ext::shared_ptr<QuantExt::Scenario>& childScenario) {
+    void setParentScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& parentScenario) {
         ScenarioInformation::instance().setParentScenarioAbsolute(parentScenario);
+    }
+    void setChildScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& childScenario) {
         ScenarioInformation::instance().setChildScenarioAbsolute(childScenario);
     }
     ~ScenarioInformationSetter() {
