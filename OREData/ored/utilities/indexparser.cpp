@@ -737,7 +737,6 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
                                                                 const Handle<PriceTermStructure>& ts,
                                                                 const Calendar& cal, const bool enforceFutureIndex) {
     static boost::mutex mutex_;
-    boost::lock_guard<boost::mutex> lock(mutex_);
 
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
@@ -757,18 +756,24 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
     // Check for form NAME-YYYY-MM-DD
     if (commName.size() > 10) {
         string test = commName.substr(commName.size() - 10);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
-            expiry = parseDate(test);
-            commName = commName.substr(0, commName.size() - test.size() - 1);
+        {
+            boost::lock_guard<boost::mutex> lock(mutex_);
+            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+                expiry = parseDate(test);
+                commName = commName.substr(0, commName.size() - test.size() - 1);
+            }
         }
     }
 
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
     if (expiry == Date() && commName.size() > 7) {
         string test = commName.substr(commName.size() - 7);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
-            expiry = parseDate(test + "-01");
-            commName = commName.substr(0, commName.size() - test.size() - 1);
+        {
+            boost::lock_guard<boost::mutex> lock(mutex_);
+            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+                expiry = parseDate(test + "-01");
+                commName = commName.substr(0, commName.size() - test.size() - 1);
+            }
         }
     }
 
