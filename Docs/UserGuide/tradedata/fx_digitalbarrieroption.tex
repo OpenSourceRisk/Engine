@@ -39,8 +39,7 @@ The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX
             <OptionData>
                 <LongShort>Long</LongShort>
                 <OptionType>Call</OptionType>
-                <Style>European</Style>
-                <Settlement>Cash</Settlement>                
+                <Style>European</Style>              
                 <ExerciseDates>
                  <ExerciseDate>2021-12-14</ExerciseDate>
                 </ExerciseDates> 
@@ -80,11 +79,11 @@ The relevant fields in the \lstinline!OptionData! node for an FxDigitalBarrierOp
 
 \item  \lstinline!Style! The FX Digital Barrier Option type allows for \emph{European} option exercise style only.
 
-\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+%\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
 
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
 
