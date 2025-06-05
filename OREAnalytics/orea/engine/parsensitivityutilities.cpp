@@ -180,8 +180,8 @@ public:
                                      const Handle<YieldTermStructure>& discountCurve)
         : cap_(cap), discountCurve_(discountCurve) {
         QL_REQUIRE(cap_ != nullptr, "instrument required");
-        QL_REQUIRE(cap_->type() == CapFloor::Type::Cap && !cap_->capRates().empty() ||
-                       cap_->type() == CapFloor::Type::Floor && !cap_->floorRates().empty(),
+        QL_REQUIRE((cap_->type() == CapFloor::Type::Cap && !cap_->capRates().empty()) ||
+                       (cap_->type() == CapFloor::Type::Floor && !cap_->floorRates().empty()),
                    "Only cap or floor with at least one coupon supported");
         QL_REQUIRE(!cap_->isExpired(), "instrument expired");
         QL_REQUIRE(cap->pricingEngine() != nullptr, "pricing engine need to be set");

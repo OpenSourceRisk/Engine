@@ -40,9 +40,9 @@ public:
                    std::string counterpartyId = "", std::string nettingSetId = "");
 
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, QuantLib::Real rate, bool firstLegPays,
-                   string start = string(), std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
+                   std::string start = std::string(), std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, std::string recIndexId, QuantLib::Real spread, bool firstLegPays,
-                   string start = string(), std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
+                   std::string start = std::string(), std::string tradeId = std::string(), std::map<std::string, std::string> mapPairs = {});
     void buildCapFloor(std::string indexName, QuantLib::Real capFloorRate, QuantLib::Real notional, std::string maturity, bool isLong, bool isCap,
                    std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
     void buildInflationSwap(std::string inflationIndex, QuantLib::Real notional, std::string maturity, std::string floatIndex, QuantLib::Real baseRate, QuantLib::Real cpiRate, bool firstLegPays,

@@ -396,7 +396,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);
     auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
-    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()), name_, id(), apo);
     apo->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
     addProductModelEngine(*engineBuilder);

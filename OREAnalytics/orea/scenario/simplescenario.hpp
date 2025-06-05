@@ -27,6 +27,7 @@
 
 namespace ore {
 namespace analytics {
+
 using std::string;
 
 /*! Simple Scenario class
@@ -36,27 +37,27 @@ public:
     struct SharedData {
         std::vector<RiskFactorKey> keys;
         std::map<RiskFactorKey, std::size_t> keyIndex;
-        std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>> coordinates;
+        std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>> coordinates;
         std::size_t keysHash = 0;
     };
 
     SimpleScenario() {}
     //! if sharedData is not provided, the instance will create its own shared data block
-    SimpleScenario(Date asof, const std::string& label = std::string(), Real numeraire = 0,
+    SimpleScenario(QuantLib::Date asof, const std::string& label = std::string(), QuantLib::Real numeraire = 0,
                    const QuantLib::ext::shared_ptr<SharedData>& sharedData = nullptr);
 
-    const Date& asof() const override { return asof_; }
-    void setAsof(const Date& d) override { asof_ = d; }
+    const QuantLib::Date& asof() const override { return asof_; }
+    void setAsof(const QuantLib::Date& d) override { asof_ = d; }
 
     const std::string& label() const override { return label_; }
     void label(const string& s) override { label_ = s; }
 
-    Real getNumeraire() const override { return numeraire_; }
-    void setNumeraire(Real n) override { numeraire_ = n; }
+    QuantLib::Real getNumeraire() const override { return numeraire_; }
+    void setNumeraire(QuantLib::Real n) override { numeraire_ = n; }
 
     const bool isAbsolute() const override { return isAbsolute_; }
     const bool isPar() const override { return isPar_; }
-    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<QuantLib::Real>>>&
     coordinates() const override {
         return sharedData_->coordinates;
     }
@@ -65,8 +66,8 @@ public:
 
     bool has(const RiskFactorKey& key) const override;
     const std::vector<RiskFactorKey>& keys() const override { return sharedData_->keys; }
-    void add(const RiskFactorKey& key, Real value) override;
-    Real get(const RiskFactorKey& key) const override;
+    void add(const RiskFactorKey& key, QuantLib::Real value) override;
+    QuantLib::Real get(const RiskFactorKey& key) const override;
 
     //! This does _not_ close the shared data
     QuantLib::ext::shared_ptr<Scenario> clone() const override;
@@ -74,22 +75,22 @@ public:
     void setAbsolute(const bool isAbsolute) override;
     void setPar(const bool isPar) override { isPar_ = isPar; };
     void setCoordinates(const RiskFactorKey::KeyType type, const std::string& name,
-                        const std::vector<std::vector<Real>>& coordinates);
+                        const std::vector<std::vector<QuantLib::Real>>& coordinates);
 
     //! get shared data block (for construction of sister scenarios)
     const QuantLib::ext::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
 
     //! get data, order is the same as in keys()
-    const std::vector<Real>& data() const { return data_; }
+    const std::vector<QuantLib::Real>& data() const { return data_; }
 
 private:
     QuantLib::ext::shared_ptr<SharedData> sharedData_;
     bool isAbsolute_ = true;
     bool isPar_ = false;
-    Date asof_;
+    QuantLib::Date asof_;
     std::string label_;
-    Real numeraire_ = 0.0;
-    std::vector<Real> data_;
+    QuantLib::Real numeraire_ = 0.0;
+    std::vector<QuantLib::Real> data_;
 };
 
 } // namespace analytics
