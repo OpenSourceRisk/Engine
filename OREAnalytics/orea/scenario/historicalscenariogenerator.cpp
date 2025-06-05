@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/find.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
@@ -25,61 +26,80 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-
-#include <boost/algorithm/string/find.hpp>
+#include <qle/termstructures/scenario.hpp>
 
 using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
 
-ReturnConfiguration::ReturnConfiguration()
-    : // Default Configuration for risk factor returns
-      // For all yield curves we have DFs in the Scenario, for credit we have SurvProbs,
-      // so a relative / log change is equivalent to an absolute zero / hazard rate change.
-      returnType_({{RiskFactorKey::KeyType::DiscountCurve, ReturnConfiguration::ReturnType::Log},
-                   {RiskFactorKey::KeyType::YieldCurve, ReturnConfiguration::ReturnType::Log},
-                   {RiskFactorKey::KeyType::IndexCurve, ReturnConfiguration::ReturnType::Log},
-                   {RiskFactorKey::KeyType::SwaptionVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::YieldVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::OptionletVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::FXSpot, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::FXVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::EquitySpot, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::EquityVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::DividendYield, ReturnConfiguration::ReturnType::Log},
-                   {RiskFactorKey::KeyType::SurvivalProbability, ReturnConfiguration::ReturnType::Log},
-                   {RiskFactorKey::KeyType::RecoveryRate, ReturnConfiguration::ReturnType::Absolute},
-                   {RiskFactorKey::KeyType::CDSVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::BaseCorrelation, ReturnConfiguration::ReturnType::Absolute},
-                   {RiskFactorKey::KeyType::CPIIndex, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::ZeroInflationCurve, ReturnConfiguration::ReturnType::Absolute},
-                   {RiskFactorKey::KeyType::YoYInflationCurve, ReturnConfiguration::ReturnType::Absolute},
-                   {RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::CommodityCurve, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::CommodityVolatility, ReturnConfiguration::ReturnType::Relative},
-                   {RiskFactorKey::KeyType::SecuritySpread, ReturnConfiguration::ReturnType::Absolute},
-                   {RiskFactorKey::KeyType::Correlation, ReturnConfiguration::ReturnType::Absolute}}) {}
+ReturnConfiguration::ReturnConfiguration() {
+    const static std::vector<std::pair<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType>> defaultConfig = {
+        {RiskFactorKey::KeyType::DiscountCurve, ReturnConfiguration::ReturnType::Log},
+        {RiskFactorKey::KeyType::YieldCurve, ReturnConfiguration::ReturnType::Log},
+        {RiskFactorKey::KeyType::IndexCurve, ReturnConfiguration::ReturnType::Log},
+        {RiskFactorKey::KeyType::SwaptionVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::YieldVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::OptionletVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::FXSpot, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::FXVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::EquitySpot, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::EquityVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::DividendYield, ReturnConfiguration::ReturnType::Log},
+        {RiskFactorKey::KeyType::SurvivalProbability, ReturnConfiguration::ReturnType::Log},
+        {RiskFactorKey::KeyType::RecoveryRate, ReturnConfiguration::ReturnType::Absolute},
+        {RiskFactorKey::KeyType::CDSVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::BaseCorrelation, ReturnConfiguration::ReturnType::Absolute},
+        {RiskFactorKey::KeyType::CPIIndex, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::ZeroInflationCurve, ReturnConfiguration::ReturnType::Absolute},
+        {RiskFactorKey::KeyType::YoYInflationCurve, ReturnConfiguration::ReturnType::Absolute},
+        {RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::CommodityCurve, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::CommodityVolatility, ReturnConfiguration::ReturnType::Relative},
+        {RiskFactorKey::KeyType::SecuritySpread, ReturnConfiguration::ReturnType::Absolute},
+        {RiskFactorKey::KeyType::Correlation, ReturnConfiguration::ReturnType::Absolute}};
 
-ReturnConfiguration::ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType)
-    : returnType_(returnType) {}
+    // Default Configuration for risk factor returns
+    // For all yield curves we have DFs in the Scenario, for credit we have SurvProbs,
+    // so a relative / log change is equivalent to an absolute zero / hazard rate change.
+    for (const auto& [key, rt] : defaultConfig) {
+        Return r;
+        r.displacement = 0.0;
+        r.type = rt;
+        RiskFactorConfig data = std::make_pair(r, IndividualRiskFactorConfig());
+        returnType_.insert(std::make_pair(key, data));
+    }
+}
+
+ReturnConfiguration::ReturnConfiguration(
+    const std::map<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType>& returnType) {
+    for (const auto& [key, rt] : returnType) {
+        Return r;
+        r.displacement = 0.0;
+        r.type = rt;
+        RiskFactorConfig data = std::make_pair(r, IndividualRiskFactorConfig());
+        returnType_.insert(std::make_pair(key, data));
+    }
+}
 
 Real ReturnConfiguration::returnValue(const RiskFactorKey& key, const Real v1, const Real v2, const QuantLib::Date& d1,
                                       const QuantLib::Date& d2) const {
 
     // Checks
     check(key);
-    
+
+    const auto rt = returnType(key);
+    // check if we have a config for the key otherwise use
+
     // Calculate the return
-    auto keyType = key.keytype;    
-    switch (returnType_.at(keyType)) {
+    switch (rt.type) {
     case ReturnConfiguration::ReturnType::Absolute:
         return v2 - v1;
         break;
     case ReturnConfiguration::ReturnType::Relative:
-        if (!close(v1, 0)) {
-            return v2 / v1 - 1.0;
+        if (!close(v1 + rt.displacement, 0)) {
+            return (v2 + rt.displacement) / (v1 + rt.displacement) - 1.0;
         } else {
             ALOG("Cannot calculate the relative return for key " << key << " so just returning 0: (" << d1 << "," << v1
                                                                  << ") to (" << d2 << "," << v2 << ")");
@@ -87,8 +107,8 @@ Real ReturnConfiguration::returnValue(const RiskFactorKey& key, const Real v1, c
         }
         break;
     case ReturnConfiguration::ReturnType::Log:
-        if (!close(v1, 0) && v2 / v1 > 0) {
-            return std::log(v2 / v1);
+        if (!close(v1 + rt.displacement, 0) && (v2 + rt.displacement) / (v1 + rt.displacement) > 0) {
+            return std::log((v2 + rt.displacement) / (v1 + rt.displacement));
         } else {
             ALOG("Cannot calculate the relative return for key " << key << " so just returning 0: (" << d1 << "," << v1
                                                                  << ") to (" << d2 << "," << v2 << ")");
@@ -104,11 +124,10 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
 
     // Checks
     check(key);
-
+    const auto rt = returnType(key);
     // Apply the return to the base value to generate the return value
-    auto keyType = key.keytype;
     Real value;
-    switch (returnType_.at(keyType)) {
+    switch (rt.type) {
     case ReturnConfiguration::ReturnType::Absolute:
         value = baseValue + returnValue;
         break;
@@ -121,17 +140,17 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
     default:
         QL_FAIL("ReturnConfiguration: return type for key " << key << " not covered");
     }
-
+    const auto keyType = key.keytype;
     // Apply cap / floors to guarantee admissable values
-    if ((keyType == RiskFactorKey::KeyType::BaseCorrelation || keyType == RiskFactorKey::KeyType::Correlation) && 
+    if ((keyType == RiskFactorKey::KeyType::BaseCorrelation || keyType == RiskFactorKey::KeyType::Correlation) &&
         (value > 1.0 || value < -1.0)) {
         DLOG("Base correlation value, " << value << ", is not in range [-1.0, 1.0]");
         value = std::max(std::min(value, 1.0), -1.0);
         DLOG("Base correlation value amended to " << value);
     }
 
-    if ((keyType == RiskFactorKey::KeyType::RecoveryRate || keyType == RiskFactorKey::KeyType::SurvivalProbability)
-        && (value > 1.0 || value < 0.0)) {
+    if ((keyType == RiskFactorKey::KeyType::RecoveryRate || keyType == RiskFactorKey::KeyType::SurvivalProbability) &&
+        (value > 1.0 || value < 0.0)) {
         DLOG("Value of risk factor " << key << ", " << value << ", is not in range [0.0, 1.0]");
         value = std::max(std::min(value, 1.0), 0.0);
         DLOG("Value of risk factor " << key << " amended to " << value);
@@ -140,8 +159,12 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
     return value;
 }
 
-const std::map<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType> ReturnConfiguration::returnTypes() const {
-    return returnType_;
+const ReturnConfiguration::Return& ReturnConfiguration::returnType(const RiskFactorKey& key) const {
+    const auto it = returnType_.find(key.keytype);
+    QL_REQUIRE(it != returnType_.end(), "No ReturnType found for keyType" << key.keytype);
+    const auto& [config, specializedConfigs] = it->second;
+    const auto specializedIt = specializedConfigs.find(key.name);
+    return (specializedIt == specializedConfigs.end()) ? config : specializedIt->second;
 }
 
 std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t) {
@@ -163,6 +186,83 @@ void ReturnConfiguration::check(const RiskFactorKey& key) const {
     QL_REQUIRE(keyType != RiskFactorKey::KeyType::None, "unsupported key type none for key " << key);
     QL_REQUIRE(returnType_.find(keyType) != returnType_.end(),
                "ReturnConfiguration: key type " << keyType << " for key " << key << " not found");
+}
+
+ReturnConfiguration::ReturnType parseReturnType(const std::string& typeStr) {
+    if (typeStr == "Log")
+        return ReturnConfiguration::ReturnType::Log;
+    else if (typeStr == "Absolute")
+        return ReturnConfiguration::ReturnType::Absolute;
+    else if (typeStr == "Relative")
+        return ReturnConfiguration::ReturnType::Relative;
+    else
+        QL_FAIL("Unknown ReturnType: " << typeStr);
+}
+
+void ReturnConfiguration::fromXML(XMLNode* node) {
+    returnType_.clear();
+    XMLUtils::checkNode(node, "ReturnConfigurations");
+    for (auto* rcNode : XMLUtils::getChildrenNodes(node, "ReturnConfiguration")) {
+        // Key für den RiskFactor (z.B. "IR:EUR")
+        std::string keyStr = XMLUtils::getAttribute(rcNode, "key");
+        auto key = QuantExt::parseRiskFactorKeyType(keyStr);
+        // Default Return
+        XMLNode* retNode = XMLUtils::getChildNode(rcNode, "Return");
+        QL_REQUIRE(retNode, "Return node missing in ReturnConfiguration");
+        Return defaultReturn;
+        std::string typeStr = XMLUtils::getChildValue(retNode, "Type", true);
+        defaultReturn.type = parseReturnType(typeStr);
+        defaultReturn.displacement = XMLUtils::getChildValueAsDouble(retNode, "Displacement", false, 0.0);
+
+        // Specialized Configurations
+        IndividualRiskFactorConfig specialized;
+        XMLNode* specNode = XMLUtils::getChildNode(rcNode, "SpecializedConfigurations");
+        if (specNode) {
+            for (auto* sRetNode : XMLUtils::getChildrenNodes(specNode, "Return")) {
+                std::string sKey = XMLUtils::getAttribute(sRetNode, "key");
+                Return specializedReturn = defaultReturn; // Default übernehmen, falls nicht überschrieben
+                std::string sTypeStr = XMLUtils::getChildValue(sRetNode, "Type", false);
+                if (!sTypeStr.empty()) {
+                    specializedReturn.type = parseReturnType(sTypeStr);
+                }
+                specializedReturn.displacement =
+                    XMLUtils::getChildValueAsDouble(sRetNode, "Displacement", false, specializedReturn.displacement);
+                specialized[sKey] = specializedReturn;
+            }
+        }
+        returnType_[key] = std::make_pair(defaultReturn, specialized);
+    }
+}
+
+XMLNode* ReturnConfiguration::toXML(XMLDocument& doc) const {
+    XMLNode* root = doc.allocNode("ReturnConfigurations");
+    for (const auto& [key, configPair] : returnType_) {
+        XMLNode* rcNode = doc.allocNode("ReturnConfiguration");
+        // Key als Attribut
+        XMLUtils::addAttribute(doc, rcNode, "key", ore::data::to_string(key));
+        // Default Return
+        const Return& defReturn = configPair.first;
+        XMLNode* retNode = doc.allocNode("Return");
+        XMLUtils::addChild(doc, retNode, "Type", ore::data::to_string(defReturn.type));
+        XMLUtils::addChild(doc, retNode, "Displacement", defReturn.displacement);
+        XMLUtils::appendNode(rcNode, retNode);
+
+        // Specialized Configurations
+        const IndividualRiskFactorConfig& specialized = configPair.second;
+        if (!specialized.empty()) {
+            XMLNode* specNode = doc.allocNode("SpecializedConfigurations");
+            for (const auto& [sKey, sReturn] : specialized) {
+                XMLNode* sRetNode = doc.allocNode("Return");
+                XMLUtils::addAttribute(doc, sRetNode, "key", sKey);
+                XMLUtils::addChild(doc, sRetNode, "Type", ore::data::to_string(sReturn.type));
+                XMLUtils::addChild(doc, sRetNode, "Displacement", sReturn.displacement);
+                XMLUtils::appendNode(specNode, sRetNode);
+            }
+            XMLUtils::appendNode(rcNode, specNode);
+        }
+        XMLUtils::appendNode(root, rcNode);
+    }
+    return root;
 }
 
 HistoricalScenarioGenerator::HistoricalScenarioGenerator(
@@ -302,11 +402,13 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
             // Add it
             scen->add(key, value);
 
+            auto returnType = returnConfiguration_.returnType(key);
             // Populate calculation details
             calculationDetails_[calcDetailsCounter].baseValue = base;
             calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
             calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
-            calculationDetails_[calcDetailsCounter].returnType = returnConfiguration_.returnTypes().at(key.keytype);
+            calculationDetails_[calcDetailsCounter].returnType = returnType.type;
+            calculationDetails_[calcDetailsCounter].displacement = returnType.displacement;
             calculationDetails_[calcDetailsCounter].scaling = scaling;
             calculationDetails_[calcDetailsCounter].returnValue = returnVal;
             calculationDetails_[calcDetailsCounter].scenarioValue = value;

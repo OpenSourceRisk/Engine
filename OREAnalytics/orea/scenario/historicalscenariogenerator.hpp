@@ -40,20 +40,21 @@ namespace analytics {
 //! Return type for historical scenario generation (absolute, relative, log)
 class ReturnConfiguration : public XMLSerializable {
 public:
-    struct ReturnType {
-        enum class Type { Log, Absolute, Relative };
-        Type type;
+    enum class ReturnType { Absolute, Relative, Log };
+
+    struct Return {
+        ReturnType type;
         double displacement;
     };
 
-    using IndividualRiskFactorConfig = std::map<std::string, ReturnType>;
-    using RiskFactorConfig = std::tuple<ReturnType, IndividualRiskFactorConfig>;
+    using IndividualRiskFactorConfig = std::map<std::string, Return>;
+    using RiskFactorConfig = std::pair<Return, IndividualRiskFactorConfig>;
 
     //! default return types per risk factor
     ReturnConfiguration();
 
     //! customised return types per risk factor
-    ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType);
+    explicit ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType);
 
     /*! Compute return from v1, v2.
         The date parameters are are used to improve the log messages
@@ -66,7 +67,7 @@ public:
                                const QuantLib::Real returnValue) const;
 
     //! get return types
-    const ReturnType& returnTypes(const RiskFactorKey& key) const;
+    const Return& returnType(const RiskFactorKey& key) const;
 
     //! \name Serialisation
     //@{
@@ -75,7 +76,7 @@ public:
     //@}
 
 private:
-    const std::map<RiskFactorKey::KeyType, RiskFactorConfig> returnType_;
+    std::map<RiskFactorKey::KeyType, RiskFactorConfig> returnType_;
 
     //! Perform checks on key
     void check(const RiskFactorKey& key) const;
@@ -106,6 +107,7 @@ public:
         double scenarioValue1;
         double scenarioValue2;
         ReturnConfiguration::ReturnType returnType;
+        double displacement;
         double scaling;
         double returnValue;
         double scenarioValue;
