@@ -83,7 +83,7 @@ public:
     };
 
     struct ReducedNode {
-        std::vector<Node> nodes;
+        std::set<Node> nodes;
     };
 
     // some typedefs for graph related data types
@@ -92,11 +92,15 @@ public:
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
+    using Edge = boost::graph_traits<Graph>::edge_descriptor;
+    using EdgeIterator = boost::graph_traits<Graph>::edge_iterator;
 
     using ReducedGraph = boost::directed_graph<ReducedNode>;
     using ReducedIndexMap = boost::property_map<ReducedGraph, boost::vertex_index_t>::type;
     using ReducedVertex = boost::graph_traits<ReducedGraph>::vertex_descriptor;
     using ReducedVertexIterator = boost::graph_traits<ReducedGraph>::vertex_iterator;
+    using ReducedEdge = boost::graph_traits<ReducedGraph>::edge_descriptor;
+    using ReducedEdgeIterator = boost::graph_traits<ReducedGraph>::edge_iterator;
 
     /* build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
        and an edge from x to y means that x must be built before y, since y depends on it. */
@@ -127,6 +131,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::ReducedNode& n);
 
 bool operator<(const DependencyGraph::Node& x, const DependencyGraph::Node& y);
 

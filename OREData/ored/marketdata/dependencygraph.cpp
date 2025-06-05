@@ -75,11 +75,14 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         }
     }
 
+    // declare vertex and edge iterators which we use below
+
+    VertexIterator v, vend, w, wend;
+    EdgeIterator e, eend;
+
     // add the dependencies based on the required curve ids stored in the curve configs; notice that no dependencies
     // to FXSpots are stored in the configs, these are not needed because a complete FXTriangulation object is created
     // upfront that is passed to all curve builders which require it.
-
-    VertexIterator v, vend, w, wend;
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
         std::map<CurveSpec::CurveType, std::set<string>> requiredIds;
@@ -128,6 +131,8 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     // identify cycles and store them
 
+    DLOG("Searching for cycles.");
+
     std::vector<std::set<Node>> cycles;
     boost::tiernan_all_cycles(g, CycleInserter(cycles));
 
@@ -147,7 +152,9 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     // join overlapping cycles
 
-    std::vector<std::set<std::size_t>> cyclesIndices; // to build intersection
+    DLOG("Joining overlapping cycles (if any).");
+
+    std::vector<std::set<std::size_t>> cyclesIndices;
 
     for (std::size_t i = 0; i < cycles.size(); ++i) {
         cyclesIndices.push_back({});
@@ -169,20 +176,80 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     cycles.erase(std::next(cycles.begin(), i));
                     cyclesIndices.erase(std::next(cyclesIndices.begin(), i));
                     updated = true;
+                    TLOG("joining overlapping cycles with temp indices " << i << ", " << j);
                 }
             }
         }
     } while (updated);
 
-    // ReducedGraph& rg = reducedDependencies_[configuration];
-    // ReducedIndexMap rindex = boost::get(boost::vertex_index, rg);
+    DLOG("Number of cycles after joining overlapping cycles: " << cycles.size());
 
-    // add the vertices to the reduced graph
+    ReducedGraph& rg = reducedDependencies_[configuration];
+    ReducedIndexMap rindex = boost::get(boost::vertex_index, rg);
+
+    // build the reduced graph
+
+    DLOG("Build the reduced dependency graph where cycles are replaced by a single reduced node containing the set of nodes in the cylce.");
+
+    std::map<Vertex, ReducedVertex> vertexMap;
+
+    std::vector<bool> haveCycleVertex(cycles.size(), false);
+    std::vector<ReducedVertex> cycleReducedVertices(cycles.size());
+
+    for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
+        std::size_t nodeIndex = index[*v];
+        auto c = std::find_if(cyclesIndices.begin(), cyclesIndices.end(),
+                              [nodeIndex](const std::set<std::size_t>& s) { return s.find(nodeIndex) != s.end(); });
+        if (c == cyclesIndices.end()) {
+            ReducedVertex rv = boost::add_vertex(rg);
+            vertexMap[*v] = rv;
+            rg[rv] = ReducedNode{std::set<Node>{g[*v]}};
+            TLOG("add vertex in reduced graph #" << index[rv] << ": " << rg[rv]);
+        } else {
+            std::size_t cycleIndex = std::distance(cyclesIndices.begin(), c);
+            if (haveCycleVertex[cycleIndex]) {
+                vertexMap[*v] = cycleReducedVertices[cycleIndex];
+            } else {
+                ReducedVertex rv = boost::add_vertex(rg);
+                cycleReducedVertices[cycleIndex] = rv;
+                haveCycleVertex[cycleIndex] = true;
+                vertexMap[*v] = rv;
+                rg[rv] = ReducedNode{cycles[cycleIndex]};
+                TLOG("add vertex in reduced graph #" << index[rv] << ": " << rg[rv]);
+            }
+        }
+    }
+
+    for (boost::tie(e, eend) = boost::edges(g); e != eend; ++e) {
+        ReducedVertex reducedSource = vertexMap.at(boost::source(*e, g));
+        ReducedVertex reducedTarget = vertexMap.at(boost::target(*e, g));
+        if (reducedSource == reducedTarget)
+            continue;
+        rg.add_edge(reducedSource, reducedTarget);
+        TLOG("add edge in reduced graph from vertex #"
+             << rindex[reducedSource] << " " << rg[reducedSource] << " to #"
+             << rindex[reducedTarget] << " " << rg[reducedTarget]);
+    }
+
+    DLOG("Reduced dependency graph built with " << boost::num_vertices(rg) << " vertices, " << boost::num_edges(rg) << " edges.");
+
 
 } // TodaysMarket::buildDependencyGraph
 
 std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n) {
     return o << n.obj << "(" << n.name << "," << n.mapping << ")";
+}
+
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::ReducedNode& n) {
+    o << "[";
+    if (n.nodes.size() > 1)
+        o << "cycle: ";
+    for (std::size_t i = 0; i < n.nodes.size(); ++i) {
+        o << *std::next(n.nodes.begin(), i);
+        if (i < n.nodes.size() - 1)
+            o << "#";
+    }
+    return o << "]";
 }
 
 bool operator<(const DependencyGraph::Node& x, const DependencyGraph::Node& y) { return x.index < y.index; }
