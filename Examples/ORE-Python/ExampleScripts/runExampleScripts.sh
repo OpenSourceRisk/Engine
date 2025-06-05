@@ -35,6 +35,8 @@ for file in *.py; do
     fi
 done
 
+python3 log.py || status=1
+
 # clean up
 rm $output_file
 exit $status
