@@ -83,6 +83,10 @@ ReturnConfiguration::ReturnConfiguration(
     }
 }
 
+ReturnConfiguration::ReturnConfiguration(
+    const std::map<RiskFactorKey::KeyType, ReturnConfiguration::RiskFactorConfig>& configs)
+    : returnType_(configs) {}
+
 Real ReturnConfiguration::returnValue(const RiskFactorKey& key, const Real v1, const Real v2, const QuantLib::Date& d1,
                                       const QuantLib::Date& d2) const {
 

@@ -56,6 +56,8 @@ public:
     //! customised return types per risk factor
     explicit ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType);
 
+    explicit ReturnConfiguration(const std::map<RiskFactorKey::KeyType, RiskFactorConfig>& configs);
+
     /*! Compute return from v1, v2.
         The date parameters are are used to improve the log messages
     */
