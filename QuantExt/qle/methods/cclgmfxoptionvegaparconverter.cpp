@@ -61,7 +61,7 @@ CcLgmFxOptionVegaParConverter::CcLgmFxOptionVegaParConverter(const QuantLib::ext
                        std::sqrt(optionTimes_[i]);
         baseImpliedVols_[i] = baseVol;
         for (Size j = 0; j <= i; ++j) {
-            engine.setSigmaShift(i == 0 ? 0.0 : optionTimes_[j - 1], optionTimes_[j], shift);
+            engine.setSigmaShift(j == 0 ? 0.0 : optionTimes_[j - 1], optionTimes_[j], shift);
             Real bumpedVol =
                 blackFormulaImpliedStdDev(Option::Type::Call, forwards[i], forwards[i],
                                           engine.value(0.0, optionTimes_[i], payoffs[i], discounts[i], forwards[i]),

@@ -152,7 +152,7 @@ void MarketRiskReport::initialise() {
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
-            ext::shared_ptr<NPVCube> cube = ext::make_shared<DoublePrecisionInMemoryCube>(
+            ext::shared_ptr<NPVCube> cube = ext::make_shared<InMemoryCubeOpt<double>>(
                 fullRevalArgs_->simMarket_->asofDate(), portfolio_->ids(),
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 

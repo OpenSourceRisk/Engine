@@ -61,12 +61,12 @@ public:
        - new and inverse currency pairs are implied from the existing ones in eval() for non-historical fixings
        - historical fixings are retrieved in eval() only; there they override today's spot if given
      */
-    ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
+    ModelImpl(const Model::Type type, const Model::Params& params, const DayCounter& dayCounter, const Size size,
+              const std::vector<std::string>& currencies,
               const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
               const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
               const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-              const std::set<Date>& simulationDates, 
-              const IborFallbackConfig& iborFallbackConfig);
+              const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
 
     // Model interface implementation (partial)
     const std::string& baseCcy() const override { return currencies_.front(); }
@@ -82,6 +82,8 @@ public:
                                       const RandomVariable& barrier, const bool above) const override;
     // provide default implementation for MC type models (taking a simple expectation)
     Real extractT0Result(const RandomVariable& value) const override;
+    Type type() const override { return type_; }
+    const Params& params() const override { return params_; }
     //
 
 protected:
@@ -103,11 +105,13 @@ protected:
     virtual RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                                 const RandomVariable& barrier, const bool above) const = 0;
 
-    const DayCounter dayCounter_;
-    const std::vector<std::string> currencies_;
-    const std::vector<std::string> indexCurrencies_;
-    const std::set<Date> simulationDates_;
-    const IborFallbackConfig iborFallbackConfig_;
+    Model::Type type_;
+    Model::Params params_;
+    DayCounter dayCounter_;
+    std::vector<std::string> currencies_;
+    std::vector<std::string> indexCurrencies_;
+    std::set<Date> simulationDates_;
+    IborFallbackConfig iborFallbackConfig_;
 
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices_;
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices_;

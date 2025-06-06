@@ -60,7 +60,7 @@ std::string getMetaData(const std::string& line, const std::string& tag, const b
 
 } // namespace
 
-NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision) {
+NPVCubeWithMetaData loadCube(const std::string& filename) {
 
     NPVCubeWithMetaData result;
 
@@ -89,6 +89,8 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     Size samples = ore::data::parseInteger(getMetaData(line, "samples"));
     std::getline(in, line);
     Size depth = ore::data::parseInteger(getMetaData(line, "depth"));
+    std::getline(in, line);
+    bool useDoublePrecision = ore::data::parseBool(getMetaData(line, "usesDblPrc"));
 
     std::getline(in, line);
     getMetaData(line, "dates");
@@ -127,14 +129,10 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     }
 
     QuantLib::ext::shared_ptr<NPVCube> cube;
-    if (doublePrecision && depth <= 1) {
-        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
-    } else if (doublePrecision && depth > 1) {
-        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
-    } else if (!doublePrecision && depth <= 1) {
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
-    } else if (!doublePrecision && depth > 1) {
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    if (useDoublePrecision) {
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, ids, dates, samples, depth, 0.0);
+    } else {
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, depth, 0.0);
     }
     result.cube = cube;
 
@@ -164,7 +162,7 @@ NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePreci
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
 
     // open file
 
@@ -184,6 +182,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
     out << "# numDates   : " << std::to_string(cube.cube->numDates()) << "\n";
     out << "# samples    : " << ore::data::to_string(cube.cube->samples()) << "\n";
     out << "# depth      : " << ore::data::to_string(cube.cube->depth()) << "\n";
+    out << "# usesDblPrc : " << std::boolalpha << cube.cube->usesDoublePrecision() << "\n";
     out << "# dates      : \n";
     for (auto const& d : cube.cube->dates())
         out << "# " << ore::data::to_string(d) << "\n";
@@ -211,8 +210,8 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
 
     // set precision
 
-    out << std::setprecision(doublePrecision ? std::numeric_limits<double>::max_digits10
-                                             : std::numeric_limits<float>::max_digits10);
+    out << std::setprecision(cube.cube->usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
+                                                              : std::numeric_limits<float>::max_digits10);
 
     // write cube data
 

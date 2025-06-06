@@ -200,6 +200,7 @@ public:
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
+    void setTradePnl(bool b) { tradePnL_ = b; }
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
@@ -225,6 +226,7 @@ public:
     void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
@@ -280,6 +282,7 @@ public:
     void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
+    void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
@@ -642,6 +645,7 @@ public:
     SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
+    bool tradePnl() const { return tradePnL_; }
     bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
@@ -665,6 +669,7 @@ public:
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
@@ -708,6 +713,7 @@ public:
     /*****************
      * Getters for xva
      *****************/
+    bool xvaUseDoublePrecisionCubes() const { return xvaUseDoublePrecisionCubes_; }
     const std::string& xvaBaseCurrency() const { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     const QuantLib::ext::shared_ptr<NPVCube>& cube() const { return cube_; }
@@ -1056,6 +1062,7 @@ protected:
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
+    bool tradePnL_ = false;
     bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
@@ -1078,6 +1085,7 @@ protected:
     bool xvaCgDynamicIM_ = false;
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
+    double xvaCgRegressionVarianceCutoff_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
@@ -1130,6 +1138,7 @@ protected:
     /**************
      * XVA analytic
      **************/
+    bool xvaUseDoublePrecisionCubes_ = false;
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;

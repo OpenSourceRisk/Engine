@@ -21,6 +21,7 @@ MARKETS & TERMSTRUCTURES
 
 ANALYTICS
 
+- Add SA-CCR, BA-CVA and SA-CVA analytics (see Examples/CreditRisk and Examples/XvaRisk)
 - AMC exposure framework supporting AAD based xva sensitivies and dynamic SIMM (Examples/InitialMargin and Examples/XvaRisk)
 - Add IR/FX CRIF analytic to support the Dynamic SIMM model validation (used in Examples/InitialMargin)
 - expose indicator smoothing parameters in scripted trade / AAD framework 

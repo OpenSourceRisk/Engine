@@ -28,6 +28,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
@@ -208,6 +209,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                         QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                     QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
                         QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
+                    QuantLib::ext::shared_ptr<QuantExt::TypedCashFlow> ptrTypedCf =
+                        QuantLib::ext::dynamic_pointer_cast<QuantExt::TypedCashFlow>(ptrFlow);
 
                     Real coupon;
                     Real accrual;
@@ -232,6 +235,13 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                         accrualStartDate = accrualEndDate = Null<Date>();
                         accruedAmount = Null<Real>();
                         flowType = "Notional (units)";
+                    } else if (ptrTypedCf) {
+                        coupon = Null<Real>();
+                        accrual = Null<Real>();
+                        notional = Null<Real>();
+                        accrualStartDate = accrualEndDate = Null<Date>();
+                        accruedAmount = Null<Real>();
+                        flowType = ore::data::to_string(ptrTypedCf->type());
                     } else {
                         coupon = Null<Real>();
                         accrual = Null<Real>();

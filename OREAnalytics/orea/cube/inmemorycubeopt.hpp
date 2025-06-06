@@ -108,6 +108,8 @@ public:
         data_[j][i][d * samples_ + k] = static_cast<T>(value);
     }
 
+    bool usesDoublePrecision() const override;
+
 private:
     void check(Size i, Size j, Size k, Size d) const {
         QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ", numIds=" << numIds() << ")");
