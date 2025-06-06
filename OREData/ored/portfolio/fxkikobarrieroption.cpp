@@ -136,7 +136,6 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         knockOutIndex = 0;
         knockOutType = tmpBarrier;
         knockInType = parseBarrierType(barriers_[1].type());
-        std::cout << "DownOut" << std::endl;
         if (barriers_[0].strictComparison()) {
             barrierStrictOut = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
         }
