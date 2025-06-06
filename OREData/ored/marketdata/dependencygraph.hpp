@@ -78,7 +78,7 @@ public:
         MarketObject obj;                               // the market object to build
         std::string name;                               // the LHS of the todays market mapping
         std::string mapping;                            // the RHS of the todays market mapping
-        QuantLib::ext::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
+        QuantLib::ext::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, this is never null
         bool built;                                     // true if we have built this node
     };
 
@@ -109,16 +109,11 @@ public:
     const std::map<std::string, Graph>& dependencies() const { return dependencies_; }
     const std::map<std::string, ReducedGraph>& reducedDependencies() const { return reducedDependencies_; }
 
-    const std::map<std::string, std::vector<std::set<Node>>>& cycles() const { return cycles_; }
-
 private:
     friend std::ostream& operator<<(std::ostream& o, const Node& n);
 
     // the dependency graphs for each configuration
     std::map<std::string, Graph> dependencies_;
-
-    // the set of cycles for each configuration
-    std::map<std::string, std::vector<std::set<Node>>> cycles_;
 
     // a reduced graph replacing cycles with single nodes
     std::map<std::string, ReducedGraph> reducedDependencies_;

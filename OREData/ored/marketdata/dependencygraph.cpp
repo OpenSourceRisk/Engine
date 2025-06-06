@@ -146,8 +146,6 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         TLOG("cycle #" << j << ": " << out.str());
     }
 
-    cycles_[configuration] = cycles;
-
     // join overlapping cycles
 
     DLOG("Joining overlapping cycles (if any).");

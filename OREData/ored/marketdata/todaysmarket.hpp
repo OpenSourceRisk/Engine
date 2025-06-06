@@ -135,14 +135,17 @@ private:
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
+    using ReducedNode = DependencyGraph::ReducedNode;
+    using ReducedGraph = boost::directed_graph<ReducedNode>;
+    using ReducedIndexMap = boost::property_map<ReducedGraph, boost::vertex_index_t>::type;
+    using ReducedVertex = boost::graph_traits<ReducedGraph>::vertex_descriptor;
+    using ReducedVertexIterator = boost::graph_traits<ReducedGraph>::vertex_iterator;
 
     // the dependency graphs for each configuration
-    mutable std::map<std::string, Graph> dependencies_;
-    // the cylces for each configuration
-    mutable std::map<std::string, std::vector<std::set<Node>>> cycles_;
+    mutable std::map<std::string, ReducedGraph> dependencies_;
 
     // build a single market object
-    void buildNode(const std::string& configuration, Node& node) const;
+    void buildNode(const std::string& configuration, ReducedNode& reducedNode) const;
 
     // calibration results
     QuantLib::ext::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
