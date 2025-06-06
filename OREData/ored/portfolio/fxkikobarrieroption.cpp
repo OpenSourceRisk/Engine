@@ -111,6 +111,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     Barrier::Type knockOutType;
 
     Barrier::Type tmpBarrier = parseBarrierType(barriers_[0].type());
+    int barrierStrict = 0, barrierStrictIn = 0, barrierStrictOut = 0;
+
     switch (tmpBarrier) {
     case Barrier::Type::UpIn:
     case Barrier::Type::DownIn:
@@ -118,6 +120,15 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         knockOutIndex = 1;
         knockInType = tmpBarrier;
         knockOutType = parseBarrierType(barriers_[1].type());
+        if (barriers_[1].strictComparison()) {
+            barrierStrictOut = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+        }
+        if (barriers_[0].strictComparison()) {
+            barrierStrictIn = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+        }
+        barrierStrictOut = barrierStrictIn == 1 ? 1 : barrierStrictOut;
+        barrierStrictIn = barrierStrictOut == 1 ? 1 : barrierStrictIn;
+        barrierStrict = barrierStrictIn;
         break;
     case Barrier::Type::UpOut:
     case Barrier::Type::DownOut:
@@ -125,6 +136,16 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         knockOutIndex = 0;
         knockOutType = tmpBarrier;
         knockInType = parseBarrierType(barriers_[1].type());
+        std::cout << "DownOut" << std::endl;
+        if (barriers_[0].strictComparison()) {
+            barrierStrictOut = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+        }
+        if (barriers_[1].strictComparison()) {
+            barrierStrictIn = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+        }
+        barrierStrictOut = barrierStrictIn == 1 ? 1 : barrierStrictOut;
+        barrierStrictIn = barrierStrictOut == 1 ? 1 : barrierStrictIn;
+        barrierStrict = barrierStrictIn;
         break;
     default:
         QL_FAIL("unsupported barrier type provided");
@@ -133,7 +154,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                "KIKO barrier requires one KnockOut barrier");
     QL_REQUIRE(knockInType == Barrier::Type::UpIn || knockInType == Barrier::Type::DownIn,
                "KIKO barrier requires one KnockIn barrier");
-
+    
     Real knockInLevel = barriers_[knockInIndex].levels()[0].value();
     Real knockOutLevel = barriers_[knockOutIndex].levels()[0].value();
 
@@ -180,9 +201,9 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 LOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
-                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel);
+                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel, barrierStrict);
                 if (!knockedOut)
-                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel);
+                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel, barrierStrict);
             }
             d = cal.advance(d, 1, Days);
         }
@@ -222,7 +243,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
 	    barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate, 
             settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockOutLevel, 0, soldCcy,
-            start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers));
+            start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers,
+            std::nullopt, nullptr, nullptr, barrierStrict));
 
     // if the trade is knocked in this is all we price
     if (knockedIn || knockedOut) {
@@ -261,7 +283,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
 		    barrier2, positionType == Position::Long ? false : true, expiryDate, expiryDate,
                     settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockInLevel, 0,
-                    soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));
+                    soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
+                    std::nullopt, nullptr, nullptr, barrierStrict));
 
             iw.push_back(koInstrument2);
             fxRates.push_back(fx);
@@ -282,13 +305,13 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
             setSensitivityTemplate(*fxDoubleBarrierOptBuilder);
             addProductModelEngine(*fxDoubleBarrierOptBuilder);
-
             QuantLib::ext::shared_ptr<InstrumentWrapper> dkoInstrument =
                 QuantLib::ext::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(
 		    doubleBarrier, positionType == Position::Long ? false : true, expiryDate, expiryDate, 
                     settleType == Settlement::Physical ? true : false, vanilla, DoubleBarrier::Type::KnockOut, spot,
-                    std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy,
-                    start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));
+                    std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy, start,
+                    fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
+                    std::nullopt, nullptr, nullptr, barrierStrict));
 
             iw.push_back(dkoInstrument);
             fxRates.push_back(fx);

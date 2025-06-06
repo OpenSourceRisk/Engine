@@ -26,14 +26,22 @@
 
 namespace QuantExt {
 
-bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier) {
+bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier, const int strictComparison) {
     switch (type) {
     case QuantLib::Barrier::DownIn:
     case QuantLib::Barrier::DownOut:
-        return spot <= barrier;
+        if (strictComparison == 1) {
+            return spot < barrier;
+        } else {
+            return spot <= barrier;
+        }       
     case QuantLib::Barrier::UpIn:
     case QuantLib::Barrier::UpOut:
-        return spot >= barrier;
+        if (strictComparison == 1) {
+            return spot > barrier;
+        } else {
+            return spot >= barrier;
+        }
     default:
         QL_FAIL("unhandled barrier type " << type);
     }

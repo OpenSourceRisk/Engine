@@ -26,6 +26,6 @@
 
 namespace QuantExt {
 
-bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier);
+bool checkBarrier(const double spot, const QuantLib::Barrier::Type type, const double barrier, const int strictComparison);
 
 } // namespace QuantExt

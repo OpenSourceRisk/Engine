@@ -89,6 +89,10 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     DoubleBarrier::Type barrierType = parseDoubleBarrierType(barrier_.type());
     bool payoffAtExpiry = option_.payoffAtExpiry();
     double rebate = barrier_.rebate();
+    int barrierStrict = 0;
+    if (barrier_.strictComparison()) {
+        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
+    }
     Position::Type positionType = parsePositionType(option_.longShort());
 
     QL_REQUIRE(rebate == 0, "Rebates not supported for FxDoubleTouchOptions");
@@ -182,7 +186,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, payDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
         start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
-        barrier_.overrideTriggered());
+        barrier_.overrideTriggered(), nullptr, nullptr, barrierStrict);
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
