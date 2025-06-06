@@ -87,7 +87,6 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/cptycalculator.hpp>
-#include <orea/engine/cvacalculator.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
 #include <orea/engine/cvasensitivityrecord.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>

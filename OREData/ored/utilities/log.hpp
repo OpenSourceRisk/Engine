@@ -281,8 +281,12 @@ protected:
     IndependentLogger(const std::string& name) : name_(name) {}
     std::vector<std::string> messages_;
 
+    //! mutex to acquire locks
+    boost::shared_mutex& mutex() { return mutex_; }
+
 private:
     std::string name_;
+    mutable boost::shared_mutex mutex_;
 };
 
 //! ProgressLogger
