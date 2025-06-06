@@ -92,7 +92,10 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Real level = barrier_.levels()[0].value();
     Date expiryDate = parseDate(option_.exerciseDates().front());
     std::optional<bool> overrideTriggered = barrier_.overrideTriggered();
-
+    int barrierStrict = 0;
+    if (barrier_.strictComparison()) {
+        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
+    }
     Natural payLag = 0;
     BusinessDayConvention payConvention = Unadjusted;
     Calendar payCalendar = NullCalendar();
@@ -188,7 +191,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     auto buildBarrierOptionWrapperInstr = [this, type, level, engineFactory, domCcy, fgnCcy, flipResults, positionType,
                                            market, barrierType, overrideTriggered, rebate, fxIndex, cal,
-                                           start, fxIndexLows, fxIndexHighs](const Date& expiryDate, const Date& payDate) {
+                                           start, fxIndexLows, fxIndexHighs, barrierStrict](const Date& expiryDate, const Date& payDate) {
         QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
         Leg leg;
 
@@ -233,7 +236,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
             barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start,
             fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
-            overrideTriggered, fxIndexLows, fxIndexHighs);
+            overrideTriggered, fxIndexLows, fxIndexHighs, barrierStrict);
 
         maturity_ = std::max(lastPremiumDate, payDate);
         maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date" : "Pay Date";

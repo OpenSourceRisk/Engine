@@ -88,6 +88,10 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Real rebate = barrier_.rebate();
     Position::Type positionType = parsePositionType(option_.longShort());
     Date start = ore::data::parseDate(startDate_);
+    int barrierStrict = 0;
+    if (barrier_.strictComparison()) {
+        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
+    }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
@@ -145,7 +149,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
         barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start,
         eqIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
-        barrier_.overrideTriggered());
+        barrier_.overrideTriggered(), nullptr, nullptr, barrierStrict);
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
