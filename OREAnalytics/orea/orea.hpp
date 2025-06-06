@@ -28,6 +28,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/crifanalytic.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/pricinganalytic.hpp>
 
 namespace ore {
 namespace analytics {
@@ -38,6 +39,10 @@ public:
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override{};
+    virtual QuantLib::ext::shared_ptr<SensitivityStream>
+    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+        return inputs_->sensitivityStream();
+    };
 };
 
 

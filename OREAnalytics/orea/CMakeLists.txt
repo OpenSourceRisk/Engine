@@ -23,6 +23,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
+app/analytics/correlationanalytic.cpp
 app/analytics/crifanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
@@ -225,6 +226,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
+app/analytics/correlationanalytic.hpp
 app/analytics/crifanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
