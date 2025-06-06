@@ -21,8 +21,7 @@
 namespace ore {
 namespace analytics {
 
-template<> bool SensiCube<double>::usesDoublePrecision() const { return true; }
-template<> bool SensiCube<float>::usesDoublePrecision() const { return false; }
+bool SensiCube::usesDoublePrecision() const { return true; }
 
 } // namespace analytics
 } // namespace ore
