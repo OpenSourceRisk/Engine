@@ -18,6 +18,8 @@
 
 #include <orea/engine/cashflowreportgenerator.hpp>
 
+#include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/commodityspreadoption.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
@@ -62,11 +64,29 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     auto addResults = trade->instrument()->additionalResults();
 
+    auto expectedFlow = addResults.find("expectedFlow");
+    double sumFlows = 0.0;
+
+    if (expectedFlow != addResults.end()) {  // TODO calculate sum of all flows (i.e. undiscounted payoffs) in the list
+
+        // Assuming expectedFlow->second is a container of numerical values
+        
+        for (const auto& flow : expectedFlow->second) {
+            sumFlows += flow;
+        }
+        
+
+    } else { // TODO Leave flow output empty
+       
+    }
+
+
+
     auto cashFlowResults = addResults.find("cashFlowResults");
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
-    auto upper = addResults.lower_bound("cashFlowResults_a");
+    auto upper = addResults.lower_bound("cashFlowResults_a"); //TODO why "a" and not upper?
 
     std::map<Size, Size> cashflowNumber;
 
@@ -176,6 +196,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                 result.back().capVolatility = capVolatility;
                 result.back().effectiveFloorVolatility = effectiveFloorVolatility;
                 result.back().effectiveCapVolatility = effectiveCapVolatility;
+                result.back().expectedFlow = sumFlows;
             }
         }
     }
