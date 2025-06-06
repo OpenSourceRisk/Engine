@@ -274,6 +274,10 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
     if (curveSpecBaseType == CurveSpec::CurveType::Yield) {
 
+        QL_REQUIRE(reducedNode.nodes.size() == 1, "TodaysMarket::buildNode("
+                                                      << configuration << "," << reducedNode
+                                                      << "): multiple subnodes for type Yield are TODO.");
+
         // handle yield curves, multiple sub-nodes are allowed in this case
 
         Node node = *reducedNode.nodes.begin();
