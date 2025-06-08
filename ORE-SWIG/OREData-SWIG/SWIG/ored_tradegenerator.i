@@ -33,7 +33,7 @@ using ore::data::XMLSerializable;
 
 %shared_ptr(TradeGenerator)
 class TradeGenerator : public Portfolio {
-  public:
+public:
 
     TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "");
     TradeGenerator(ext::shared_ptr<CurveConfigurations> curveConfig, ext::shared_ptr < BasicReferenceDataManager> refData,
@@ -71,12 +71,6 @@ class TradeGenerator : public Portfolio {
                                bool isLong, std::string tradeId = "");
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-
-private:
-    LegData buildOisLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
-                     std::map<std::string, std::string> mapPairs = {});
-    LegData buildIborLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
-                     std::map<std::string, std::string> mapPairs = {});
-    };
+};
 
 #endif
