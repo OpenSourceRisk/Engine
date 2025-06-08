@@ -174,6 +174,9 @@ void MarketRiskReport::initialise() {
 }
 
 void MarketRiskReport::initialiseRiskGroups() {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
     riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
 
