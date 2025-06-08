@@ -96,6 +96,11 @@ public:
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices(
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return true; }
+    //@}
+
 private:
     CommoditySpreadOptionData csoData_;
     std::vector<std::string> fxIndex_;

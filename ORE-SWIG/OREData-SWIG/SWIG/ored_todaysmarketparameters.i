@@ -37,7 +37,7 @@ MarketObject parseMarketObject(const std::string& mo);
 
 class MarketConfiguration {
 public:
-    MarketConfiguration(std::map<MarketObject, std::string> marketObjectIds = {});
+    explicit MarketConfiguration(const std::map<MarketObject, std::string>& marketObjectIds = {});
     std::string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const std::string& id);
     void add(const MarketConfiguration& o);
@@ -54,6 +54,7 @@ class TodaysMarketParameters : public XMLSerializable {
     const std::vector<std::pair<std::string, MarketConfiguration>>& configurations() const;
     bool hasConfiguration(const std::string& configuration) const;
     bool hasMarketObject(const MarketObject& o) const;
+    bool hasMarketObject(const MarketObject o, const string& configuration) const;
 
     const std::map<std::string, std::string>& mapping(const MarketObject o, const std::string& configuration) const;
     std::map<std::string, std::string>& mappingReference(const MarketObject o, const std::string& configuration);

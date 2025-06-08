@@ -55,7 +55,8 @@ protected:
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
                                                                              const std::vector<Time>& timePoints = {},
-                                                                             const bool useFxSpot = true) {
+                                                                             const bool useFxSpot = true,
+                                                                             const QuantLib::Date forwardDate = QuantLib::Date()) {
 
         using VVTS = QuantExt::BlackMonotoneVarVolTermStructure;
         string config = this->configuration(ore::data::MarketContext::pricing);
@@ -97,8 +98,8 @@ protected:
 
             // Create the commodity convenience yield curve for the process
             Handle<QuantExt::PriceTermStructure> priceCurve = this->market_->commodityPriceCurve(assetName, config);
-            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve, forwardDate_));
-            if (forwardDate_ != Date()){
+            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve, forwardDate));
+            if (forwardDate != Date()){
                 Handle<YieldTermStructure> discount = Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(0, TARGET(), 0.0, Actual365Fixed()));
                 Handle<YieldTermStructure> yield = discount;
                 yield->enableExtrapolation();
@@ -116,7 +117,6 @@ protected:
         }
     }
     AssetClass assetClass_;
-    Date forwardDate_ = Date();
 };
 
 //! Abstract Engine Builder for Vanilla Options
@@ -263,9 +263,10 @@ protected:
         
         std::string delimiter = "#";
         std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
         if (assetName.find(delimiter) != std::string::npos){
             std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
-            bool validDate = tryParse<Date>(forwardDateString, forwardDate_, parseDate);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
             if (validDate)
                 assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
         }
@@ -291,9 +292,9 @@ protected:
             for (Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, timePoints, true, forwardDate);
         } else {
-            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass);
+            gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
         return QuantLib::ext::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
     }

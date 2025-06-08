@@ -419,7 +419,7 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     string name = curveSpecToName(ct, cId, curveConfigs);
                     if (mo == MarketObject::IndexCurve && isGenericIborIndex(name))
                         continue;
-                    (*objects)[Market::defaultConfiguration][mo].insert(name);
+                    (*objects)[config][mo].insert(name);
                     auto deps = curveConfigs->requiredCurveIds(ct, cId);
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {

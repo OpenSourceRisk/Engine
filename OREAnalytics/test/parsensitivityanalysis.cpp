@@ -672,7 +672,7 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     ValuationEngine engine(today, dg, simMarket);
     // run scenarios and fill the cube
     boost::timer::cpu_timer t;
-    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
     double elapsed = t.elapsed().wall * 1e-9;

@@ -99,34 +99,30 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(option_.style());
-        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
-            forwardDate_ = expiryDate;
+        if (QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+            if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+                forwardDate_ = expiryDate;
+            } else if (et == Exercise::American && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+                forwardDate_ = expiryDate;
+                assetName_ += "#" + ore::data::to_string(forwardDate_);
+            }
         }
-        else if (et == Exercise::American && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
-            forwardDate_ = expiryDate;
-            // add future contract'sexpiry date to the asset name
-            std::ostringstream so;
-            so<<QuantLib::io::iso_date(forwardDate_);
-            assetName_ += "#" + so.str();
-        }
-
     }
 
     VanillaOptionTrade::build(engineFactory);
 
-    std::string assetNameLocal = assetName_;
     if (assetName_.find("#") != std::string::npos){
         std::string forwardDateString = splitByLastDelimiter(assetName_, "#");
         bool validDate = tryParse<Date>(forwardDateString, forwardDate_, parseDate);
         if (validDate)
-            assetNameLocal= removeAfterLastDelimiter(assetName_, "#");
+        assetName_= removeAfterLastDelimiter(assetName_, "#");
     }
 
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
-        DLOG("Implied vol for " << tradeType_ << " on " << assetNameLocal << " with expiry " << expiryDate_
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
                                 << " and strike " << strike_.value() << " is "
-                                << market->commodityVolatility(assetNameLocal)->blackVol(expiryDate_, strike_.value()));
+                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
     
 }
