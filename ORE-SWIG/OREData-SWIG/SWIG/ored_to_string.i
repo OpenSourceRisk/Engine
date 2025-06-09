@@ -25,6 +25,7 @@
 using ore::data::to_string;
 using QuantLib::Date;
 using QuantLib::Period;
+using ore::data::MarketObject;
 %}
 
 %typemap(typecheck) MarketObject * {
