@@ -47,18 +47,14 @@ public:
               std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
               const bool breakdown = false);
 
-    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};
 
     //const std::vector<Real>& p() const { return p_; }
 
 protected:
     QuantLib::ext::shared_ptr<CorrelationCalculator> correlationCalculator_;
-
-    virtual void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const = 0;
-    //virtual std::vector<Real> calcVarsForQuantiles() const = 0;
-
-    //virtual void createVarCalculator() = 0;
+    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
+    //virtual void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const = 0;
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                       const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                       const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
