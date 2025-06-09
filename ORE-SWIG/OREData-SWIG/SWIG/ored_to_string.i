@@ -32,8 +32,15 @@ using ore::data::MarketObject;
     $1 = (MarketObject *)0;  // Always allow typechecking to succeed
 }
 
+std::string to_string(const QuantLib::Date& date);
+std::string to_string(bool aBool);
+std::string to_string(const QuantLib::Period& period);
+
+template <class T> std::string to_string(const T& t);
+%template(MarketObjectToString) to_string<MarketObject>;
+
 %inline %{
-	template std::string to_string<MarketObject>(const MarketObject& mo);
+	//template std::string to_string<MarketObject>(const MarketObject& mo);
 
     MarketObject derefMarketObject(MarketObject* ptr) {
         if (!ptr) {
@@ -42,12 +49,5 @@ using ore::data::MarketObject;
         return *ptr;
     }
 %}
-
-std::string to_string(const QuantLib::Date& date);
-std::string to_string(bool aBool);
-std::string to_string(const QuantLib::Period& period);
-
-template <class T> std::string to_string(const T& t);
-%template(MarketObjectString) to_string<MarketObject>;
 
 #endif
