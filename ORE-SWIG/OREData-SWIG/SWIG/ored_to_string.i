@@ -33,7 +33,7 @@ using ore::data::MarketObject;
 }
 
 %inline %{
-	template std::string to_string<MarketObject>(const MarketObject&);
+	template std::string to_string<MarketObject>(const MarketObject& mo);
 
     MarketObject derefMarketObject(MarketObject* ptr) {
         if (!ptr) {
