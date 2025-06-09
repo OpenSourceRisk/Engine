@@ -35,14 +35,14 @@ public:
     CorrelationCalculator() {}
     virtual ~CorrelationCalculator() {}
 
-    virtual QuantLib::Real correlation(QuantLib::Real confidence, const bool isCall = true,
+    virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true,
                                const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const = 0;
 };
 
 class CorrelationReport : public MarketRiskReport {
 public:
     CorrelationReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-              const std::string& portfolioFilter, const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+              const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
               const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
               std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
               const bool breakdown = false);
@@ -50,7 +50,7 @@ public:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};
 
-    const std::vector<Real>& p() const { return p_; }
+    //const std::vector<Real>& p() const { return p_; }
 
 protected:
     QuantLib::ext::shared_ptr<CorrelationCalculator> correlationCalculator_;
@@ -58,7 +58,7 @@ protected:
     virtual void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const = 0;
     //virtual std::vector<Real> calcVarsForQuantiles() const = 0;
 
-    virtual void createVarCalculator() = 0;
+    //virtual void createVarCalculator() = 0;
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                       const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                       const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;

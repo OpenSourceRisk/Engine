@@ -7,11 +7,11 @@ from ore_examples_helper import OreExample
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 print("+----------------------------------------+")
-print("| Hist Sim VaR                           |")
+print("| Correlation                            |")
 print("+----------------------------------------+")
 
 # legacy example 58
 
-oreex.print_headline("Run ORE for HistSim VaR")
-oreex.run("Input/ore_histsimvar.xml")
+oreex.print_headline("Run ORE for Correlation")
+oreex.run("Input/ore_correlation.xml")
 

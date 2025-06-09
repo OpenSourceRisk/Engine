@@ -44,10 +44,10 @@ public:
     sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
         return inputs_->sensitivityStream();
     };
-    
-    void setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+        
 protected:
     QuantLib::ext::shared_ptr<CorrelationReport> correlationReport_;
+    void setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 };
 
 

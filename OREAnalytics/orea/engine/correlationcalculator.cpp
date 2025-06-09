@@ -23,13 +23,13 @@ namespace ore {
 namespace analytics {
 
 CorrelationReport::CorrelationReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, const vector<Real>& p,
+                     const std::string& portfolioFilter,
                      boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
                      const bool breakdown)
     : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                       std::move(fullRevalArgs), nullptr, breakdown), p_(p) {
+                       std::move(fullRevalArgs), nullptr, breakdown) {
     sensiBased_ = true;
 }
 
@@ -49,8 +49,8 @@ void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Rep
                              const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                              const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
-    int s = reports->reports().size();
-    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
+    //int s = reports->reports().size();
+    //QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
     //QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
     //auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);

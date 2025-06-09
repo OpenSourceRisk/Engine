@@ -58,14 +58,14 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
 
     QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
 
-    LOG("Build VaR calculator");
+    LOG("Build Correlation calculator");
     if (inputs_->covarianceData().size() > 0) {
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
-        //correlationReport_ = ext::make_shared<CorrelationReport>(
-        //    inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-        //    boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+        correlationReport_ = ext::make_shared<CorrelationReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
+            boost::none, nullptr, std::move(sensiArgs), nullptr, inputs_->varBreakDown());
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
@@ -98,9 +98,9 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
 
-        //correlationReport_ = ext::make_shared<CorrelationReport>(
-        //    inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
-        //    inputs_->varQuantiles(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+        correlationReport_ = ext::make_shared<CorrelationReport>(
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), boost::none, scenarios,
+            std::move(sensiArgs), nullptr, inputs_->varBreakDown());
     }
 
 }
