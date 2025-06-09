@@ -37,7 +37,7 @@ std::string to_string(bool aBool);
 std::string to_string(const QuantLib::Period& period);
 
 template <class T> std::string to_string(const T& t);
-%template(MarketObjectToString) to_string<MarketObject>;
+%template(MarketObjectString) to_string<MarketObject>;
 
 %inline %{
 	//template std::string to_string<MarketObject>(const MarketObject& mo);
