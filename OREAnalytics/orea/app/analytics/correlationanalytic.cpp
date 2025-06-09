@@ -17,12 +17,91 @@
 */
 
 #include <orea/app/analytics/correlationanalytic.hpp>
+#include <orea/app/reportwriter.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/marketdata/adjustmentfactors.hpp>
+#include <ored/marketdata/adjustedinmemoryloader.hpp>
+
+using namespace ore::data;
+using namespace boost::filesystem;
+using namespace QuantLib::ext;
 
 namespace ore {
 namespace analytics {
 
-    void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
+
+    MEM_LOG;
+    LOG("Running Correlation");
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    ObservationMode::instance().setMode(inputs_->observationModel());
+
+    LOG("CORRELATION: Build Market");
+    CONSOLEW("Risk: Build Market for Correlation");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
+
+    CONSOLEW("Risk: Build Portfolio for Correlation");
+    analytic()->buildPortfolio();
+    CONSOLE("OK");
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
+    setCorrelationReport(loader);
+}
+
+void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    LOG("Build trade to portfolio id mapping");
+
+    QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
+
+    LOG("Build VaR calculator");
+    if (inputs_->covarianceData().size() > 0) {
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
+
+        //correlationReport_ = ext::make_shared<CorrelationReport>(
+        //    inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
+        //    boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+    } else {
+        TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
+                                      inputs_->mporDays(), inputs_->mporCalendar());
+
+        QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+        if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+            adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
+
+        auto scenarios = buildHistoricalScenarioGenerator(
+            inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+            analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+            inputs_->mporOverlappingPeriods());
+
+        if (inputs_->outputHistoricalScenarios())
+            ReportWriter().writeHistoricalScenarios(
+                scenarios->scenarioLoader(), QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
+                                                 ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
+
+        auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
+            *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
+            false, false, *inputs_->iborFallbackConfig());
+        simMarket->scenarioGenerator() = scenarios;
+        scenarios->baseScenario() = simMarket->baseScenario();
+
+        QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
+            QuantLib::ext::make_shared<ScenarioShiftCalculator>(analytic()->configurations().sensiScenarioData,
+                                                                analytic()->configurations().simMarketParams);
+
+        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
+
+        //correlationReport_ = ext::make_shared<CorrelationReport>(
+        //    inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
+        //    inputs_->varQuantiles(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+    }
 
 }
 
