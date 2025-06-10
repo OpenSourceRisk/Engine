@@ -96,6 +96,11 @@ private:
     void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& data,
                                       QuantLib::ext::shared_ptr<Scenario>& scenario);
+    template<class StressTestShifts> 
+    map<string, QuantLib::ext::shared_ptr<StressTestShifts>>
+    populateShiftData(const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& stressTestShifts,
+                      const string& caller,
+                      RiskFactorKey::KeyType keyType) const;
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
