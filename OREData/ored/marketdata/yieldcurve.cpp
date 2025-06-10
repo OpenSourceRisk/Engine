@@ -361,6 +361,12 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         }
     }
 
+    // prepare containers for handles and calibration info
+
+    p_.resize(curveSpec_.size());
+    h_.resize(curveSpec_.size());
+    calibrationInfo_.resize(curveSpec_.size());
+
     // build all curves which do not require a bootstrap, collect indices of curves to be bootstrapped
 
     std::set<std::size_t> bootstrappedCurveIndices;

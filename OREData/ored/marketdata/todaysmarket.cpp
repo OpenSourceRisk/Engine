@@ -329,7 +329,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                         auto cs = parseCurveSpec(y.first);
                         if (cs) {
                             if (fallbackData.rfrIndex == cs->curveConfigID()) {
-                                rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle(ycspec->name()));
+                                rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle(cs->name()));
                                 foundRfr = true;
                                 break;
                             }
