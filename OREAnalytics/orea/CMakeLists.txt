@@ -75,7 +75,7 @@ engine/amcvaluationengine.cpp
 engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cashflowreportgenerator.cpp
-engine/correlationcalculator.cpp
+engine/correlationreport.cpp
 engine/cptycalculator.cpp
 engine/cvasensitivitycubestream.cpp
 engine/cvasensitivityrecord.cpp
@@ -287,7 +287,7 @@ engine/amcvaluationengine.hpp
 engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
-engine/correlationcalculator.hpp
+engine/correlationreport.hpp
 engine/cptycalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp

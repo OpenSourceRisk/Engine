@@ -29,15 +29,6 @@
 namespace ore {
 namespace analytics {
 
-//! Correlation Calculator
-class CorrelationCalculator {
-public:
-    CorrelationCalculator() {}
-    virtual ~CorrelationCalculator() {}
-
-    virtual QuantLib::Real correlation(QuantLib::Real confidence, const bool isCall = true,
-                               const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const = 0;
-};
 
 class CorrelationReport : public MarketRiskReport {
 public:
@@ -52,7 +43,6 @@ public:
     //const std::vector<Real>& p() const { return p_; }
 
 protected:
-    QuantLib::ext::shared_ptr<CorrelationCalculator> correlationCalculator_;
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report);
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,

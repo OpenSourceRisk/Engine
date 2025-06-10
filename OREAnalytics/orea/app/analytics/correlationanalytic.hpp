@@ -23,8 +23,9 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
-#include <orea/engine/correlationcalculator.hpp>
+#include <orea/engine/correlationreport.hpp>
 
 namespace ore {
 namespace analytics {
@@ -33,15 +34,14 @@ class CorrelationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CORRELATION";
 
-    explicit CorrelationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    CorrelationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations();
-    virtual QuantLib::ext::shared_ptr<SensitivityStream>
-    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    void setUpConfigurations() override;
+    virtual QuantLib::ext::shared_ptr<SensitivityStream>sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
         return inputs_->sensitivityStream();
     };
         
@@ -53,7 +53,7 @@ protected:
 
 class CorrelationAnalytic : public Analytic {
 public:
-    explicit CorrelationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    CorrelationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<CorrelationAnalyticImpl>(inputs), {"CORRELATION"}, inputs,
                    analyticsManager, false, false, false, false) {}

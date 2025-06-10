@@ -43,7 +43,6 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
     MEM_LOG;
     LOG("Running Correlation");
-    setUpConfigurations();
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());

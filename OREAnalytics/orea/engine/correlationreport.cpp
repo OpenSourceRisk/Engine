@@ -15,7 +15,7 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <orea/engine/correlationcalculator.hpp>
+#include <orea/engine/correlationreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/math/deltagammavar.hpp>
 
