@@ -499,7 +499,13 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     cfResults.emplace_back();
     cfResults.back().amount = optionValue;
     cfResults.back().payDate = exercise;
-   // cfResults.back().currency = optionValue; //TODO
+    cfResults.back().discountFactor = 1.00;
+   // cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
+    cfResults.back().notional = bc->notional();
+    cfResults.back().legNumber = 1.00;
+    cfResults.back().type = "ExpectedFlow";
+    //cfResults.back().accrualStartDate = ;
+    cfResults.back().accrualEndDate = exercise;
 
     results_.additionalResults["expectedFlow"] = swapValue;
     results_.additionalResults["cashFlowResults"] = cfResults;

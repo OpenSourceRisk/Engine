@@ -312,6 +312,10 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     cfResults.emplace_back();
     cfResults.back().amount = expectedflow;
     cfResults.back().payDate = arguments_.flow->date();
+    //cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
+    cfResults.back().discountFactor = 1.00;
+    cfResults.back().legNumber = 1.00;
+    cfResults.back().type = "ExpectedFlow";
 
     // Add more additional results
     // Could be part of a strip so we add the value also.
