@@ -55,19 +55,11 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                                                                 const std::string& configuration,
                                                                 const bool includePastCashflows) {
 
-    string specificDiscount = "";
+    string specificDiscount;
     Handle<YieldTermStructure> specificDiscountCurve;
 
-    try
-    {
-        specificDiscount = trade->envelope().additionalField("discount_curve", false);
-        specificDiscountCurve = indexOrYieldCurve(market, specificDiscount, configuration);
-    }
-    catch(const std::exception& e)
-    {
-        DLOG("Could not find trade specific discount curve: " <<  e.what());
-        specificDiscount = "";
-    }
+    specificDiscount = trade->envelope().additionalField("discount_curve", false);
+    specificDiscountCurve = indexOrYieldCurve(market, specificDiscount, configuration);
     
     Date asof = Settings::instance().evaluationDate();
 
@@ -208,8 +200,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
         for (size_t i = 0; i < legs.size(); i++) {
             const QuantLib::Leg& leg = legs[i];
             bool payer = trade->legPayers()[i];
-
-            //TODO in case of a commodity trade, derive specific discount curve here
 
             string ccy = trade->legCurrencies()[i];
             Handle<YieldTermStructure> discountCurve;
