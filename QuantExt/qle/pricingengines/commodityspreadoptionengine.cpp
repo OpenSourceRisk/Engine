@@ -167,6 +167,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
+    mp["expectedFlow"] = results_.value / df;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter

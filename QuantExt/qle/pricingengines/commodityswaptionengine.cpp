@@ -493,6 +493,8 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
+
+    results_.additionalResults["expectedFlow"] = swapValue;
 }
 
 void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxFloat, Real strike) const {
@@ -577,6 +579,7 @@ void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxF
     // Populate the results remembering to multiply by P(0, t_e)
     results_.value = discountExercise * optionValue;
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
+    results_.additionalResults["expectedFlow"] = swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
 }

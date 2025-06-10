@@ -303,6 +303,10 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
                                       matchedMoments.stdDev(), discount);
 
+    Real expectedflow = arguments_.quantity * arguments_.flow->gearing() *
+                         blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
+                                      matchedMoments.stdDev(), 1.00);
+
     // Add more additional results
     // Could be part of a strip so we add the value also.
     mp["effective_strike"] = effectiveStrike;
@@ -314,6 +318,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
+    mp["expectedFlow"] = expectedflow;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {

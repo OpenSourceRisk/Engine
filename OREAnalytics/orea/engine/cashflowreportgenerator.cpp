@@ -64,24 +64,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     auto addResults = trade->instrument()->additionalResults();
 
-    auto expectedFlow = addResults.find("expectedFlow");
-    double sumFlows = 0.0;
-
-    if (expectedFlow != addResults.end()) {  // TODO calculate sum of all flows (i.e. undiscounted payoffs) in the list
-
-        // Assuming expectedFlow->second is a container of numerical values
-        
-        for (const auto& flow : expectedFlow->second) {
-            sumFlows += flow;
-        }
-        
-
-    } else { // TODO Leave flow output empty
-       
-    }
-
-
-
     auto cashFlowResults = addResults.find("cashFlowResults");
 
     // ensures all cashFlowResults from composite trades are being accounted for
@@ -196,7 +178,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                 result.back().capVolatility = capVolatility;
                 result.back().effectiveFloorVolatility = effectiveFloorVolatility;
                 result.back().effectiveCapVolatility = effectiveCapVolatility;
-                result.back().expectedFlow = sumFlows;
+                //result.back().expectedFlow = cf.expectedFlow; //TODO find way
             }
         }
     }
@@ -518,6 +500,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                     result.back().capVolatility = capVolatility;
                     result.back().effectiveFloorVolatility = effectiveFloorVolatility;
                     result.back().effectiveCapVolatility = effectiveCapVolatility;
+                    //result.back().expectedFlow = cf.expectedFlow; //TODO find way
                 }
             }
         }
