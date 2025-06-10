@@ -274,92 +274,99 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
     if (curveSpecBaseType == CurveSpec::CurveType::Yield) {
 
-        QL_REQUIRE(reducedNode.nodes.size() == 1, "TodaysMarket::buildNode("
-                                                      << configuration << "," << reducedNode
-                                                      << "): multiple subnodes for type Yield are TODO.");
-
         // handle yield curves, multiple sub-nodes are allowed in this case
 
-        Node node = *reducedNode.nodes.begin();
-        auto spec = node.curveSpec;
+        std::vector<QuantLib::ext::shared_ptr<YieldCurveSpec>> ycspecs;
 
-        QuantLib::ext::shared_ptr<YieldCurveSpec> ycspec = QuantLib::ext::dynamic_pointer_cast<YieldCurveSpec>(spec);
-        QL_REQUIRE(ycspec, "TodaysMarket::buildNode(" << configuration << "," << reducedNode
-                                                      << "): Failed to convert spec " << *spec
-                                                      << " to yield curve spec");
-
-        auto itr = requiredYieldCurves_.find(ycspec->name());
-        if (itr == requiredYieldCurves_.end()) {
-            DLOG("Building YieldCurve for asof " << asof_);
-            QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = QuantLib::ext::make_shared<YieldCurve>(
-                asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
-                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this);
-            calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
-            itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
-            DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
-            if (itr->second->currency().code() != ycspec->ccy()) {
-                WLOG("Warning: YieldCurve has ccy " << itr->second->currency() << " but spec has ccy "
-                                                    << ycspec->ccy());
-            }
+        for (auto const& node : reducedNode.nodes) {
+            auto ycspec = QuantLib::ext::dynamic_pointer_cast<YieldCurveSpec>(node.curveSpec);
+            QL_REQUIRE(ycspec, "TodaysMarket::buildNode(" << configuration << "," << reducedNode
+                                                          << "): Failed to convert spec " << *ycspec
+                                                          << " to yield curve spec.");
+            ycspecs.push_back(ycspec);
         }
 
-        if (node.obj == MarketObject::DiscountCurve) {
-            DLOG("Adding DiscountCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
-                                         << configuration);
-            yieldCurves_[make_tuple(configuration, YieldCurveType::Discount, node.name)] = itr->second->handle();
+        QuantLib::ext::shared_ptr<YieldCurve> yieldCurve;
+        if (std::any_of(ycspecs.begin(), ycspecs.end(), [this](const auto& s) {
+                return requiredYieldCurves_.find(s->name()) == requiredYieldCurves_.end();
+            })) {
+            DLOG("Building YieldCurve " << reducedNode << " for asof " << asof_);
+            yieldCurve = QuantLib::ext::make_shared<YieldCurve>(
+                asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
+                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this);
+        }
 
-        } else if (node.obj == MarketObject::YieldCurve) {
-            DLOG("Adding YieldCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
-                                      << configuration);
-            yieldCurves_[make_tuple(configuration, YieldCurveType::Yield, node.name)] = itr->second->handle();
+        for (auto const& node: reducedNode.nodes) {
 
-        } else if (node.obj == MarketObject::IndexCurve) {
-            DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration " << configuration);
-            // ibor fallback handling
-            auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
-            if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
-                auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
-                QuantLib::ext::shared_ptr<IborIndex> rfrIndex;
-                bool foundRfr = false;
-                for (const auto& y : requiredYieldCurves_) {
-                    auto cs = parseCurveSpec(y.first);
-                    if (cs) {
-                        if (fallbackData.rfrIndex == cs->curveConfigID()) {
-                            rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle());
-                            foundRfr = true;
-                            break;
+            auto ycspec = QuantLib::ext::dynamic_pointer_cast<YieldCurveSpec>(node.curveSpec);
+
+            auto itr = requiredYieldCurves_.find(ycspec->name());
+            if (itr == requiredYieldCurves_.end()) {
+                itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
+                DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
+            }
+
+            if (node.obj == MarketObject::DiscountCurve) {
+                DLOG("Adding DiscountCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
+                                             << configuration);
+                yieldCurves_[make_tuple(configuration, YieldCurveType::Discount, node.name)] = itr->second->handle(ycspec->name());
+
+            } else if (node.obj == MarketObject::YieldCurve) {
+                DLOG("Adding YieldCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
+                                          << configuration);
+                yieldCurves_[make_tuple(configuration, YieldCurveType::Yield, node.name)] = itr->second->handle(ycspec->name());
+
+            } else if (node.obj == MarketObject::IndexCurve) {
+                DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
+                                     << configuration);
+                // ibor fallback handling
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
+                if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
+                    auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
+                    QuantLib::ext::shared_ptr<IborIndex> rfrIndex;
+                    bool foundRfr = false;
+                    for (const auto& y : requiredYieldCurves_) {
+                        auto cs = parseCurveSpec(y.first);
+                        if (cs) {
+                            if (fallbackData.rfrIndex == cs->curveConfigID()) {
+                                rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle(ycspec->name()));
+                                foundRfr = true;
+                                break;
+                            }
                         }
                     }
-                }
-                QL_REQUIRE(foundRfr,
-                           "Failed to build ibor fallback index '"
-                               << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
-                               << "' in configuration '" << configuration
-                               << "' or default - is the rfr index configuration in todays market parameters?");
-                auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex);
-                QL_REQUIRE(oi, "Found rfr index '"
+                    QL_REQUIRE(foundRfr,
+                               "Failed to build ibor fallback index '"
+                                   << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
+                                   << "' in configuration '" << configuration
+                                   << "' or default - is the rfr index configuration in todays market parameters?");
+                    auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex);
+                    QL_REQUIRE(oi,
+                               "Found rfr index '"
                                    << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
-                if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
-                    tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
-                        original, oi, fallbackData.spread, fallbackData.switchDate,
-                        iborFallbackConfig_.useRfrCurveInTodaysMarket());
-                else
-                    tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
-                        tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
-                        iborFallbackConfig_.useRfrCurveInTodaysMarket());
-                TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
-                                                        << " using rfr index '" << fallbackData.rfrIndex << "', spread "
-                                                        << fallbackData.spread
-                                                        << ", will use rfr curve in t0 market: " << std::boolalpha
-                                                        << iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                    if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
+                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
+                            original, oi, fallbackData.spread, fallbackData.switchDate,
+                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                    else
+                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+                            tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
+                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                    TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
+                                                            << " using rfr index '" << fallbackData.rfrIndex
+                                                            << "', spread " << fallbackData.spread
+                                                            << ", will use rfr curve in t0 market: " << std::boolalpha
+                                                            << iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                }
+                iborIndices_[make_pair(configuration, node.name)] = Handle<IborIndex>(tmpIndex);
+            } else {
+                QL_FAIL("TodaysMarket::buildNode("
+                        << configuration << "," << reducedNode << "): unexpected market object type '" << node.obj
+                        << "' for yield curve, should be DiscountCurve, YieldCurve, IndexCurve");
             }
-            iborIndices_[make_pair(configuration, node.name)] = Handle<IborIndex>(tmpIndex);
-        } else {
-            QL_FAIL("TodaysMarket::buildNode(" << configuration << "," << reducedNode
-                                               << "): unexpected market object type '" << node.obj
-                                               << "' for yield curve, should be DiscountCurve, YieldCurve, IndexCurve");
         }
+
     } else {
 
         // handle the other curve spec types, for those we only allow a single sub-node (at the moment at least)

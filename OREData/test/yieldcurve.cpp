@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
     Date asof(31, August, 2015);
     Settings::instance().evaluationDate() = asof;
 
-    YieldCurveSpec spec("JPY", "JPY6M");
+    auto spec = QuantLib::ext::make_shared<YieldCurveSpec>("JPY", "JPY6M");
 
     CurveConfigurations curveConfigs;
     vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments{QuantLib::ext::make_shared<SimpleYieldCurveSegment>(
@@ -238,13 +238,13 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
         QuantLib::ext::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
     conventions->add(convention);
 
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, {spec}, curveConfigs, loader));
 
     conventions->clear();
     convention = QuantLib::ext::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
                                                       "JPY-LIBOR-6M");
     conventions->add(convention);
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, {spec}, curveConfigs, loader));
 }
 
 BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
     Date asof(13, October, 2023);
     Settings::instance().evaluationDate() = asof;
 
-    YieldCurveSpec spec("EUR", "EUR-CURVE");
+    auto spec = QuantLib::ext::make_shared<YieldCurveSpec>("EUR", "EUR-CURVE");
 
     CurveConfigurations curveConfigs;
 
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
                         "2023-10-13 COMMODITY_FWD/PRICE/GOLD/USD/2023-11-02 1163.4"};
     MarketDataLoader loader(data);
 
-    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, spec, curveConfigs, loader));
+    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, {spec}, curveConfigs, loader));
 }
 
 BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
     Date asof(13, October, 2023);
     Settings::instance().evaluationDate() = asof;
 
-    YieldCurveSpec spec("EUR", "EUR-CURVE");
+    auto spec = QuantLib::ext::make_shared<YieldCurveSpec>("EUR", "EUR-CURVE");
 
     CurveConfigurations curveConfigs;
 
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
                         "2023-10-13 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00"};
     MarketDataLoader loader(data);
 
-    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, spec, curveConfigs, loader));
+    BOOST_CHECK_NO_THROW(YieldCurve yieldCurve(asof, {spec}, curveConfigs, loader));
 }
 
 // Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
@@ -412,9 +412,9 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         { "2045-03-27", -0.00149953900205779 },
         { "2050-03-28", -0.00228805321739911 },
     };
-    
-    YieldCurveSpec spec("CHF", "CHF-OIS");
-    
+
+    auto spec = QuantLib::ext::make_shared<YieldCurveSpec>("CHF", "CHF-OIS");
+
     vector<string> quotes(zero_data.size());
     for (Size i=0; i < zero_data.size(); ++i) {
         quotes[i] = "ZERO/RATE/CHF/CHF-OIS/A365/" + zero_data[i].date;
@@ -446,8 +446,8 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
     }
     
     MarketDataLoader loader(data);
-    YieldCurve chfYieldCurve(asof, spec, curveConfigs, loader);
-    
+    YieldCurve chfYieldCurve(asof, {spec}, curveConfigs, loader);
+
     BOOST_TEST_MESSAGE("Test zeroRate from YieldCurve against input");
     for (Size i=0; i < zero_data.size(); ++i) {
         BOOST_CHECK_CLOSE(

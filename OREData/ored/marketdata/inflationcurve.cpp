@@ -58,7 +58,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         Handle<YieldTermStructure> nominalTs;
         auto it = yieldCurves.find(config->nominalTermStructure());
         if (it != yieldCurves.end()) {
-            nominalTs = it->second->handle();
+            nominalTs = it->second->handle(config->nominalTermStructure());
         } else {
             QL_FAIL("The nominal term structure, " << config->nominalTermStructure()
                                                    << ", required in the building "

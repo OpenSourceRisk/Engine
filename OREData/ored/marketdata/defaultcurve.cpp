@@ -320,7 +320,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     QL_REQUIRE(it != yieldCurves.end(), "The discount curve, " << config.discountCurveID()
                                                                << ", required in the building of the curve, "
                                                                << spec.name() << ", was not found.");
-    Handle<YieldTermStructure> discountCurve = it->second->handle();
+    Handle<YieldTermStructure> discountCurve = it->second->handle(config.discountCurveID());
 
     // Get the CDS spread / price curve quotes
     set<QuoteData> quotes = getConfiguredQuotes(curveID, config, asof, loader);
@@ -639,9 +639,9 @@ void DefaultCurve::buildBenchmarkCurve(const std::string& curveID, const Default
     Date spot = cal.advance(asof, spotLag * Days);
     for (Size i = 0; i < pillars.size(); ++i) {
         dates.push_back(cal.advance(spot, pillars[i]));
-        Real tmp = dates[i] == asof
-                       ? 1.0
-                       : sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
+        Real tmp = dates[i] == asof ? 1.0
+                                    : sourceCurve->handle(config.sourceCurveID())->discount(dates[i]) /
+                                          benchmarkCurve->handle(config.benchmarkCurveID())->discount(dates[i]);
         // if a non-zero recovery rate is given, we adjust the implied surv probability according to a market value
         // recovery model (see the documentation of the benchmark curve in the user guide for more details)
         impliedSurvProb.push_back(std::pow(tmp, 1.0 / (1.0 - recoveryRate_)));
