@@ -26,6 +26,8 @@
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ored/utilities/correlationmatrix.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 #include <boost/regex.hpp>
 
 using namespace QuantLib;
@@ -409,8 +411,19 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
                                                                 covCalculator, tradeIds_, includeGammaMargin_,
                                                                 includeDeltaMargin_, runDetailTrd);
-
                         covarianceMatrix_ = covCalculator->covariance();
+                        if (correlation_) {
+                            if (correlationMethod_ == "Pearson") {
+                                CorrelationMatrixBuilder corrMatrix;
+                                correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
+                            } else if (correlationMethod_ == "KendallRank") {
+                                CorrelationMatrixBuilder corrMatrix;
+                                correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
+                            } else {
+                                QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
+                            }
+                            
+                        }
                     }
                     handleSensiResults(reports, riskGroup, tradeGroup);
                 }

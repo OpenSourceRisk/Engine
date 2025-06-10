@@ -204,6 +204,7 @@ public:
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
+    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
     void setMcVarSeed(long l) { mcVarSeed_ = l; }
     void setCovarianceData(ore::data::CSVReader& reader);  
@@ -657,6 +658,11 @@ public:
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
+
+    /*************************
+     * Getters for Correlation
+     *************************/
+    const std::string& correlationMethod() const { return correlationMethod_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -1067,6 +1073,8 @@ protected:
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
     std::string varMethod_ = "DeltaGammaNormal";
+    //Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
     Size mcVarSamples_ = 1000000;
     long mcVarSeed_ = 42;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;

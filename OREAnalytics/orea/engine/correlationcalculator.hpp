@@ -41,7 +41,7 @@ public:
 
 class CorrelationReport : public MarketRiskReport {
 public:
-    CorrelationReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    CorrelationReport(const std::string& correlationMethod, const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
               const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
               const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
               std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,

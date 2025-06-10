@@ -155,6 +155,8 @@ public:
     //! Get the raw correlation data
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations();
 
+    QuantLib::Matrix pearsonCorrelation(const QuantLib::Matrix& mCovariance);
+
 private:
     /*! Create the process information for each of the factors. Legacy method where each process is assumed to be 
         driven by one factor. Used to support the legacy \c correlationMatrix methods above that accept vectors of 

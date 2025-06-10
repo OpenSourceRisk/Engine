@@ -51,6 +51,25 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     analytic()->enrichIndexFixings(analytic()->portfolio());
 
     setCorrelationReport(loader);
+
+    QL_REQUIRE(correlationReport_, "No Var Report created");
+
+    LOG("Call VaR calculation");
+    CONSOLEW("Risk: VaR Calculation");
+    ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
+    QuantLib::ext::shared_ptr<InMemoryReport> correlationReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    reports->add(correlationReport);
+
+    //addAdditionalReports(reports);
+
+    correlationReport_->calculate(reports);
+    CONSOLE("OK");
+
+    analytic()->addReport(label_, "correlation", correlationReport);
+
+    LOG("Correlation completed");
+    MEM_LOG;
 }
 
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
@@ -64,6 +83,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
         correlationReport_ = ext::make_shared<CorrelationReport>(
+            inputs_->correlationMethod(),
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
             boost::none, nullptr, std::move(sensiArgs), nullptr, inputs_->varBreakDown());
     } else {
@@ -99,6 +119,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
 
         correlationReport_ = ext::make_shared<CorrelationReport>(
+            inputs_->correlationMethod(),
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), boost::none, scenarios,
             std::move(sensiArgs), nullptr, inputs_->varBreakDown());
     }

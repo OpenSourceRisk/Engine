@@ -1235,6 +1235,11 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setVarMethod(tmp);
 
+        //ToTest Correlation
+        tmp = params_->get("parametricVar", "correlation_method", false);
+        if (tmp != "")
+            setCorrelationMethod(tmp);
+
         tmp = params_->get("parametricVar", "mcSamples", false);
         if (tmp != "")
             setMcVarSamples(parseInteger(tmp));
@@ -1648,6 +1653,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("correlation", "historicalPeriod", false);
         if (tmp != "")
             setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("correlation", "correlation_method", false);
+        if (tmp != "")
+            setCorrelationMethod(tmp);
 
         tmp = params_->get("correlation", "mporDays", false);
         if (tmp != "")
