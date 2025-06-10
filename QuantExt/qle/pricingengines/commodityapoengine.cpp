@@ -20,6 +20,7 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 
@@ -307,6 +308,11 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
                                       matchedMoments.stdDev(), 1.00);
 
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = expectedflow;
+    cfResults.back().payDate = arguments_.flow->date();
+
     // Add more additional results
     // Could be part of a strip so we add the value also.
     mp["effective_strike"] = effectiveStrike;
@@ -318,7 +324,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
-    mp["expectedFlow"] = expectedflow;
+    mp["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {

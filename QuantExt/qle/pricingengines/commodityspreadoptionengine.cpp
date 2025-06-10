@@ -22,6 +22,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
@@ -130,6 +131,12 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
     }
 
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / df;
+    cfResults.back().payDate = paymentDate;
+    //cfResults.back().currency = optionValue; //TODO
+
     // Calendar spread adjustment if observation period is before the exercise date
     mp["eff_strike"] = effectiveStrike;
     mp["F1"] = F1;
@@ -167,7 +174,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
-    mp["expectedFlow"] = results_.value / df;
+    mp["cashFlowResults"] = cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter

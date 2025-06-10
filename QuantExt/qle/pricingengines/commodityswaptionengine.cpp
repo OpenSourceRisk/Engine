@@ -27,6 +27,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
 
 using std::map;
@@ -494,7 +495,14 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
 
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = optionValue;
+    cfResults.back().payDate = exercise;
+   // cfResults.back().currency = optionValue; //TODO
+
     results_.additionalResults["expectedFlow"] = swapValue;
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxFloat, Real strike) const {
