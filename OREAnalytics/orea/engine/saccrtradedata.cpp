@@ -342,6 +342,8 @@ string SaccrTradeData::getUnderlyingName(const string& index, const OREAssetClas
     }
 
     if (assetClass == OREAssetClass::COM) {
+        static boost::mutex mutex_;
+        boost::lock_guard<boost::mutex> lock(mutex_);
         // Remove expiry of form NAME-YYYY-MM-DD
         Date expiry;
         if (name.size() > 10) {

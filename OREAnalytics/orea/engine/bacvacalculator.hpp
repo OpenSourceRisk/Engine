@@ -17,11 +17,9 @@
  */
 
 #pragma once
-#include <orea/engine/saccr.hpp>
-#include <ored/utilities/timer.hpp>
-#include <orea/engine/cvacalculator.hpp>
-#include <orea/engine/saccrtradedata.hpp>
 #include <orea/engine/saccrcalculator.hpp>
+#include <orea/engine/saccrtradedata.hpp>
+#include <ored/utilities/timer.hpp>
 
 namespace ore {
 namespace analytics {
