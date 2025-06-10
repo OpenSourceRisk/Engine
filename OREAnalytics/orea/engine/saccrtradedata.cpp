@@ -199,6 +199,7 @@ using ore::data::StructuredTradeWarningMessage;
 using ore::data::Trade;
 using QuantLib::Barrier;
 using QuantLib::Currency;
+using QuantLib::Date;
 using QuantLib::DoubleBarrier;
 using QuantLib::Leg;
 using QuantLib::Null;
