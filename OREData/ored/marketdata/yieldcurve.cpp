@@ -459,7 +459,8 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         try {
 
             if (buildCalibrationInfo_) {
-                calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
+                if (calibrationInfo_[index] == nullptr)
+                    calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
                 try {
                     ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigYieldCurves(),

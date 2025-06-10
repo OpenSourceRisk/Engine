@@ -304,6 +304,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             if (itr == requiredYieldCurves_.end()) {
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
+                calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] =
+                    yieldCurve->calibrationInfo(ycspec->name());
             }
 
             if (node.obj == MarketObject::DiscountCurve) {

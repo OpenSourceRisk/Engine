@@ -324,10 +324,9 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles
     TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "failing/" + curveConfigFile);
 
     QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
-    BOOST_CHECK_EXCEPTION(todaysMarket =
-                              QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
-                                                               tma.curveConfigs, false, false),
-                          Error, ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
+    BOOST_CHECK_EXCEPTION(todaysMarket = QuantLib::ext::make_shared<TodaysMarket>(
+                              tma.asof, tma.todaysMarketParameters, tma.loader, tma.curveConfigs, false, false),
+                          Error, ExpErrorPred("yield curve building failed for curve(s) Yield/ARS/ARS-IN-USD"));
 }
 
 // Test ARS-IN-USD passes using the new QuantExt::IterativeBootstrap parameters
