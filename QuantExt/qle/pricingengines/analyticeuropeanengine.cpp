@@ -18,8 +18,10 @@
 
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackcalculator.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <utility>
+#include <iostream>
 
 using std::vector;
 using std::string;
@@ -59,6 +61,20 @@ void AnalyticEuropeanEngine::calculate() const {
        results_.additionalResults["riskFreeDiscount"] = divDiscount;
        results_.additionalResults["dividendDiscount"] = rfDiscount;
 
+        //std::cout<<" Here ----" <<std::endl;
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount =  results_.value /rfDiscount;
+        //cfResults.back().payDate = arguments_.exercise->lastDate();
+        cfResults.back().discountFactor = 1.00;
+        // cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
+        //cfResults.back().notional = bc->notional();
+        cfResults.back().legNumber = 1.00;
+        cfResults.back().type = "ExpectedFlow";
+        //cfResults.back().accrualStartDate = ;
+        //cfResults.back().accrualEndDate = exercise;
+
+        results_.additionalResults["cashFlowResults"] = cfResults;
     }
 }
 

@@ -501,7 +501,7 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     cfResults.back().payDate = exercise;
     cfResults.back().discountFactor = 1.00;
    // cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
-    cfResults.back().notional = bc->notional();
+    //cfResults.back().notional = bc->notional();
     cfResults.back().legNumber = 1.00;
     cfResults.back().type = "ExpectedFlow";
     //cfResults.back().accrualStartDate = ;
