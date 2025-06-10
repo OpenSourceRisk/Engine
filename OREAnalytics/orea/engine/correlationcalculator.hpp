@@ -35,7 +35,7 @@ public:
     CorrelationCalculator() {}
     virtual ~CorrelationCalculator() {}
 
-    virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true,
+    virtual QuantLib::Real correlation(QuantLib::Real confidence, const bool isCall = true,
                                const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const = 0;
 };
 
@@ -54,7 +54,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<CorrelationCalculator> correlationCalculator_;
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
-    //virtual void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const = 0;
+    void writeHeader(const QuantLib::ext::shared_ptr<Report>& report);
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                       const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                       const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;

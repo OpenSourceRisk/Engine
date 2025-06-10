@@ -35,12 +35,18 @@ CorrelationReport::CorrelationReport(const std::string& correlationMethod, const
     correlationMethod_ = correlationMethod;
 }
 
+void CorrelationReport::writeHeader(const ext::shared_ptr<Report>& report) {
+    report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
+    /*for (const auto p : p())
+        report->addColumn("Quantile_" + std::to_string(p), double(), 6);*/
+}
+
 void CorrelationReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    //int s = reports->reports().size();
-    //QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
-    //QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
-    //// prepare report
-    //writeHeader(report);
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
+    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
+    // prepare report
+    writeHeader(report);
 
     //createAdditionalReports(reports);
 

@@ -30,11 +30,20 @@ using namespace QuantLib::ext;
 namespace ore {
 namespace analytics {
 
+void CorrelationAnalyticImpl::setUpConfigurations() {
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    if (inputs_->covarianceData().size() == 0) {
+        analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+        analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
+    }
+}
+
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
 
     MEM_LOG;
     LOG("Running Correlation");
+    setUpConfigurations();
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -98,11 +107,6 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
             inputs_->mporOverlappingPeriods());
-
-        if (inputs_->outputHistoricalScenarios())
-            ReportWriter().writeHistoricalScenarios(
-                scenarios->scenarioLoader(), QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
-                                                 ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,

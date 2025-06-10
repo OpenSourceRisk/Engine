@@ -39,7 +39,7 @@ public:
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations() override{};
+    void setUpConfigurations();
     virtual QuantLib::ext::shared_ptr<SensitivityStream>
     sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
         return inputs_->sensitivityStream();
