@@ -238,7 +238,7 @@ Leg CommodityAveragePriceOption::buildLeg(const QuantLib::ext::shared_ptr<Engine
     // Create the LegData. All defaults are as in the LegData ctor.
     vector<string> paymentDates = paymentDate_.empty() ? vector<string>() : vector<string>(1, paymentDate_);
     LegData legData(commLegData, true, currency_, scheduleData, "", vector<Real>(), vector<string>(),
-                    paymentConvention_, false, false, false, true, "", 0, "", vector<AmortizationData>(), 
+                    paymentConvention_, false, false, false, true, "", 0, "", "", vector<AmortizationData>(), 
                     paymentLag_, "", paymentCalendar_, paymentDates);
 
     // Get the leg builder, set the allAveraging_ flag and build the leg
@@ -396,7 +396,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);
     auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
-    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()), name_, id(), apo);
     apo->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
     addProductModelEngine(*engineBuilder);

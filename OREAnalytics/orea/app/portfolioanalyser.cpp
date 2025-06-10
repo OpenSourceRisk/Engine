@@ -149,17 +149,24 @@ void PortfolioAnalyser::marketObjectReport(Report& report) const {
     report.addColumn("MarketObjectType", string())
         .addColumn("MarketObjectName", string());
 
+    map<MarketObject, string> nameMap;
+    for (const auto& [k,v] : marketObjects_) {
+        for (const auto& [mo, names] : v) {
+            for (const string& name : names) {
+                if (nameMap.find(mo) == nameMap.end()) {
+					nameMap[mo] = name;
+                }
+                else {
+					nameMap[mo] += "|" + name;
+				}
+			}
+		}
+    }
+
     // Build report
-    for (const auto& type : market_->marketObjectTypes()) {
-        string strType = to_string(type);
-        string names;
-        for (const string& name : market_->marketObjectNames(type)) {
-            if (names.empty())
-                names += name;
-            else
-                names += "|" + name;
-        }            
-        report.next().add(strType).add(names);
+    for (const auto& [k, v] : nameMap) {
+        string strType = to_string(k);        
+        report.next().add(strType).add(v);
     }
 }
 

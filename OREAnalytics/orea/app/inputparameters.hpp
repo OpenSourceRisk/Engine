@@ -226,6 +226,7 @@ public:
     void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
@@ -281,6 +282,7 @@ public:
     void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
+    void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
@@ -667,6 +669,7 @@ public:
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
@@ -710,6 +713,7 @@ public:
     /*****************
      * Getters for xva
      *****************/
+    bool xvaUseDoublePrecisionCubes() const { return xvaUseDoublePrecisionCubes_; }
     const std::string& xvaBaseCurrency() const { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     const QuantLib::ext::shared_ptr<NPVCube>& cube() const { return cube_; }
@@ -1081,6 +1085,7 @@ protected:
     bool xvaCgDynamicIM_ = false;
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
+    double xvaCgRegressionVarianceCutoff_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
@@ -1133,6 +1138,7 @@ protected:
     /**************
      * XVA analytic
      **************/
+    bool xvaUseDoublePrecisionCubes_ = false;
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;

@@ -8,12 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.ORG_ACTIONS_ACCESS }}  
+    #    token: ${{ secrets.ORG_ACTIONS_ACCESS }}  
     #- name: get QuantLib
     #  run: |
     #    git submodule update --init --recursive
@@ -27,7 +27,6 @@ jobs:
     - name: Install Swig
       run: |
         sudo brew install swig
-        swig -version
     - name: cmake configure and build
       run: |
         mkdir build
@@ -40,8 +39,9 @@ jobs:
         pwd
         cd ORE-SWIG
         sudo python -m pip install setuptools
-        cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
-        cd ORE-SWIG/OREAnalytics-SWIG
+        cp Wheels/oreanalytics-config.macos oreanalytics-config
+        chmod +x oreanalytics-config
+        cd OREAnalytics-SWIG
         ls -al
         cd SWIG
         ls -al
@@ -57,7 +57,9 @@ jobs:
         CIBW_SKIP: cp36-*
         #CIBW_BUILD: cp311-macosx_arm64
         CIBW_ARCHS_MACOS: arm64
-        CXXFLAGS: -std=c++17 -g0 -O3
+        MACOSX_DEPLOYMENT_TARGET: "13.7"
+        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=13.7
+        CXXFLAGS: -std=c++17 -g0 -O3 -mmacosx-version-min=13.7
         CIBW_BUILD_VERBOSITY: 2
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&

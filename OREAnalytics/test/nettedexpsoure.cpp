@@ -356,8 +356,8 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     // Calculate Cube
     boost::timer::cpu_timer t;
     //BOOST_TEST_MESSAGE("dg->numDates() " << dateGrid->valuationDates().size()<<", " <<"dg->dates() "<<dateGrid->dates().size());
-    QuantLib::ext::shared_ptr<NPVCube> cube =
-        QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+        today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
 
     vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
     QuantLib::ext::shared_ptr<NPVCalculator> npvCalc = QuantLib::ext::make_shared<NPVCalculator>("EUR");

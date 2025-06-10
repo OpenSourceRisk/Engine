@@ -84,18 +84,12 @@ void BaCvaCalculator::calculate() {
     }
 
     Real sCvaSum = 0.0;
-    //Real sCvaSumSquare = 0.0;
-    for (auto cp : counterpartySCVA_) {
+    Real sCvaSumSquare = 0.0;
+    for (const auto& cp : counterpartySCVA_) {
         sCvaSum += cp.second;
-        //sCvaSumSquare += cp.second * cp.second;
+        sCvaSumSquare += cp.second * cp.second;
     }
-
-    // full formula
-    // cvaResult_ = discount_ * std::sqrt(rho_ * rho_ * sCvaSum * sCvaSum + (1 - rho_ * rho_) * sCvaSumSquare);
-
-    // reduced forumula for gfma
-    cvaResult_ = discount_ * rho_ * sCvaSum;
-
+    cvaResult_ = discount_ * std::sqrt(rho_ * rho_ * sCvaSum * sCvaSum + (1 - rho_ * rho_) * sCvaSumSquare);
     timer_.stop("calculate()");
 }
 

@@ -511,9 +511,9 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="active">Y</Parameter>
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
+    <Parameter name="useDoublePrecisionCubes">false</Parameter>
     <Parameter name="nettingSetCubeFile">nettingSetCube.csv.gz</Parameter>
     <Parameter name="cptyCubeFile">cptyCube.csv.gz</Parameter>
-    <Parameter name="hyperCube">Y</Parameter>
     <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
     <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
@@ -579,9 +579,9 @@ The PFE analytic type is the same as the XVA analytic, however it only returns r
   <Analytic type="pfe">
     <Parameter name="active">Y</Parameter>
     <Parameter name="csaFile">netting.xml</Parameter>
-    <Parameter name="cubeFile">cube.dat</Parameter>
-    <Parameter name="hyperCube">Y</Parameter>
-    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="cubeFile">cube.csv.gz</Parameter>
+    <Parameter name="useDoublePrecisionCubes">false</Parameter>
+    <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -604,8 +604,7 @@ Parameters:
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
 transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
-\item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is
-expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
+\item {\tt useDoublePrecisionCubes:} whether NPV cubes are constructed wit double precision, optional, defaults to false (single precision)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt collateralBalancesFile:} References an xml file that contains current VM and IM balances by netting set

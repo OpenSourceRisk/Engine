@@ -171,7 +171,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     for (auto [tradeId, trade]: portfolio->trades()) {
 
         if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+            DLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
             continue;
         }
 
@@ -787,9 +787,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -836,9 +836,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(it != tradeNettingSetMap.end() ? it->second : "");
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -858,9 +858,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(sr.tradeId);
             report.add("");
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);

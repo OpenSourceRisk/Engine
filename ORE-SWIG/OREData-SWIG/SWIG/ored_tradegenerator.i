@@ -33,16 +33,16 @@ using ore::data::XMLSerializable;
 
 %shared_ptr(TradeGenerator)
 class TradeGenerator : public Portfolio {
-  public:
+public:
 
     TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "");
     TradeGenerator(ext::shared_ptr<CurveConfigurations> curveConfig, ext::shared_ptr < BasicReferenceDataManager> refData,
                    std::string counterpartyId = "", std::string nettingSetId = "");
 
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, QuantLib::Real rate, bool firstLegPays,
-                   std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
+                   std::string start = std::string(), std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, std::string recIndexId, QuantLib::Real spread, bool firstLegPays,
-                   std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
+                   std::string start = std::string(), std::string tradeId = std::string(), std::map<std::string, std::string> mapPairs = {});
     void buildCapFloor(std::string indexName, QuantLib::Real capFloorRate, QuantLib::Real notional, std::string maturity, bool isLong, bool isCap,
                    std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
     void buildInflationSwap(std::string inflationIndex, QuantLib::Real notional, std::string maturity, std::string floatIndex, QuantLib::Real baseRate, QuantLib::Real cpiRate, bool firstLegPays,
@@ -71,12 +71,6 @@ class TradeGenerator : public Portfolio {
                                bool isLong, std::string tradeId = "");
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
-
-private:
-    LegData buildOisLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
-                     std::map<std::string, std::string> mapPairs = {});
-    LegData buildIborLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
-                     std::map<std::string, std::string> mapPairs = {});
-    };
+};
 
 #endif

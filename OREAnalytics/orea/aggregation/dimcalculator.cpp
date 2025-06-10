@@ -99,27 +99,32 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     nettingSetIds_ = std::move(nettingSets);
 
-    dimCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(cube_->asof(), nettingSetIds_, cube_->dates(),
-                                                               cube_->samples());
+    if (cube_->usesDoublePrecision()) {
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                       cube_->samples());
+    } else {
+        dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(cube_->asof(), nettingSetIds_, cube_->dates(),
+                                                                      cube_->samples());
+    }
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::dynamicIM(const std::string& nettingSet) const {
     if (nettingSetDIM_.find(nettingSet) != nettingSetDIM_.end())
-        return nettingSetDIM_[nettingSet];
+        return nettingSetDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
 
-const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) {
+const vector<Real>& DynamicInitialMarginCalculator::expectedIM(const std::string& nettingSet) const {
     if (nettingSetExpectedDIM_.find(nettingSet) != nettingSetExpectedDIM_.end())
-        return nettingSetExpectedDIM_[nettingSet];
+        return nettingSetExpectedDIM_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in expected DIM results");
 }
 
-const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) {
+const vector<vector<Real>>& DynamicInitialMarginCalculator::cashFlow(const std::string& nettingSet) const {
     if (nettingSetFLOW_.find(nettingSet) != nettingSetFLOW_.end())
-        return nettingSetFLOW_[nettingSet];
+        return nettingSetFLOW_.at(nettingSet);
     else
         QL_FAIL("netting set " << nettingSet << " not found in DIM results");
 }
@@ -192,6 +197,43 @@ void DynamicInitialMarginCalculator::exportDimDistribution(ore::data::Report& di
     }
 
     dimDistributionReport.end();
+}
+void DynamicInitialMarginCalculator::exportDimCube(ore::data::Report& dimCubeReport) const {
+
+    Size samples = dimCube_->samples();
+    Date asof = cube_->asof();
+    
+    dimCubeReport.addColumn("Portfolio", string())
+        .addColumn("Sample", Size())
+        .addColumn("DateIndex", Size())
+        .addColumn("AsOfDate", Date())
+        .addColumn("Time", Real(), 6)
+        .addColumn("InitialMargin", Real(), 6)
+        .addColumn("Currency", string())
+        .addColumn("SimmSide", string());
+
+    for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
+
+        for (Size j = 0; j < samples; ++j) {
+
+            for (Size i = 0; i < datesLoopSize_; ++i) {
+
+                Date d = dimCube_->dates()[i];
+                Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, d);
+                Real dim = nettingSetDIM_.at(nettingSet).at(i).at(j);
+                dimCubeReport.next()
+                    .add(nettingSet)
+                    .add(j)
+                    .add(i)
+                    .add(d)
+                    .add(t)
+                    .add(dim)
+                    .add("") // currency
+                    .add("Call");
+            }
+        }
+    }
+    dimCubeReport.end();
 }
 
 } // namespace analytics

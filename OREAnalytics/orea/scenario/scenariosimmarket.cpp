@@ -3007,6 +3007,10 @@ ScenarioSimMarket::ScenarioSimMarket(
         baseScenarioAbsolute_ = tmpAbs;
     }
     LOG("building base scenario done");
+
+    scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
+    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+    scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
@@ -3044,9 +3048,17 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
 
     currentScenario_ = scenario;
+
+    QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+    if (!currentScenario_->isAbsolute())
+        currentScenarioAbsolute =
+            addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+
+    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+    scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
 
     // 1 handle delta scenario
 

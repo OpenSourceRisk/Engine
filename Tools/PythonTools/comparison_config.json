@@ -1499,7 +1499,9 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12

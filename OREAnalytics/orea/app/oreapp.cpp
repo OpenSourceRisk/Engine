@@ -1860,6 +1860,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgRegressionOrder(parseInteger(tmp));
 
+        tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoff", false);
+        if (!tmp.empty())
+            setXvaCgRegressionVarianceCutoff(parseReal(tmp));
+
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
@@ -1874,6 +1878,12 @@ void OREAppInputParameters::loadParameters() {
      * Note: This is a copy from the XVA section and will be cut down to the PFE-only 
      *       parameters during iterative dev testing
      **********************/
+
+    tmp = params_->get("pfe", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
 
     tmp = params_->get("pfe", "baseCurrency", false);
     if (tmp != "")
@@ -2194,6 +2204,12 @@ void OREAppInputParameters::loadParameters() {
     /**********************
      * XVA specifically
      **********************/
+
+    tmp = params_->get("xva", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
 
     tmp = params_->get("xva", "baseCurrency", false);
     if (tmp != "")
