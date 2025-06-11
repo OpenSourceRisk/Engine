@@ -38,6 +38,17 @@ void CorrelationAnalyticImpl::setUpConfigurations() {
     }
 }
 
+void CorrelationAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+    //auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
+    //if (pnlAnalytic.second)
+    //    addDependentAnalytic(pnlLookupKey, pnlAnalytic.second, true);
+}
+
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
 

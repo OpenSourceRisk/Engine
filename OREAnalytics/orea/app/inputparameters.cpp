@@ -845,6 +845,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    correlationOutputFileName_ = params->get("correlation", "outputFileName", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
@@ -881,6 +882,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    fileNameMap_["correlation"] = correlationOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
     fileNameMap_["calibration"] = calibrationOutputFileName_;

@@ -1354,7 +1354,8 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
-    std::string pnlExplainOutputFileName_;    
+    std::string pnlExplainOutputFileName_; 
+    std::string correlationOutputFileName_;
     std::string riskFactorsOutputFileName_;
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
