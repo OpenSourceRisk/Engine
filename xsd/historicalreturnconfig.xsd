@@ -1,0 +1,57 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:include schemaLocation="ore_types.xsd"/>  
+    <!-- Enum for Return Type -->
+    <xs:simpleType name="ReturnEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Log" />
+            <xs:enumeration value="Absolute" />
+            <xs:enumeration value="Relative" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Reusable type for a Return -->
+    <xs:complexType name="ReturnType">
+        <xs:sequence>
+            <xs:element name="Type" type="ReturnEnum" />
+            <xs:element name="Displacement" type="xs:decimal" />
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- Specialized Return for overrides -->
+    <xs:complexType name="OverrideReturn">
+        <xs:complexContent>
+            <xs:extension base="ReturnType">
+                <xs:attribute name="key" type="xs:string" use="required" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- OverrideConfigurations type -->
+    <xs:complexType name="OverrideConfigurationsType">
+        <xs:sequence>
+            <xs:element name="Return" type="OverrideReturn" minOccurs="1"
+                maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- ReturnConfiguration type -->
+    <xs:complexType name="ReturnConfigurationType">
+        <xs:sequence>
+            <xs:element name="Return" type="ReturnType" />
+            <xs:element name="OverrideConfigurations" type="OverrideConfigurationsType"
+                minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="key" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <!-- Root element -->
+    <xs:element name="ReturnConfigurations">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ReturnConfiguration" type="ReturnConfigurationType" minOccurs="1"
+                    maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
