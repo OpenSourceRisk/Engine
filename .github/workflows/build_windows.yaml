@@ -81,6 +81,7 @@ jobs:
         ORE: ${{ github.workspace }}
         ORE_DIR: ${{ github.workspace }}
         ORE_STATIC_RUNTIME: 1
+        ORE_USE_ZLIB: 1
         CIBW_SKIP: cp36-*
         #CIBW_BUILD: cp37-win_amd64
         #CIBW_BUILD: cp38-win32
