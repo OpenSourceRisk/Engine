@@ -58,24 +58,24 @@ void AnalyticEuropeanEngine::calculate() const {
         if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
             divDiscount = boost::any_cast<Real>(tmp->second);
 
-       results_.additionalResults["riskFreeDiscount"] = divDiscount;
-       results_.additionalResults["dividendDiscount"] = rfDiscount;
-
-        //std::cout<<" Here ----" <<std::endl;
-        std::vector<QuantExt::CashFlowResults> cfResults;
-        cfResults.emplace_back();
-        cfResults.back().amount =  results_.value /rfDiscount;
-        //cfResults.back().payDate = arguments_.exercise->lastDate();
-        cfResults.back().discountFactor = 1.00;
-        // cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
-        //cfResults.back().notional = bc->notional();
-        cfResults.back().legNumber = 1.00;
-        cfResults.back().type = "ExpectedFlow";
-        //cfResults.back().accrualStartDate = ;
-        //cfResults.back().accrualEndDate = exercise;
-
-        results_.additionalResults["cashFlowResults"] = cfResults;
+        results_.additionalResults["riskFreeDiscount"] = divDiscount;
+        results_.additionalResults["dividendDiscount"] = rfDiscount;
     }
+
+    Real rfDiscount = Null<Real>();
+    
+    if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+        rfDiscount = boost::any_cast<Real>(tmp->second);
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / rfDiscount;
+    cfResults.back().payDate = arguments_.exercise->lastDate();
+    cfResults.back().legNumber = 0.00;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults;
+    
 }
 
 } // namespace QuantExt
