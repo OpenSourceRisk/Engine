@@ -95,16 +95,16 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     LOG("Build trade to portfolio id mapping");
 
     QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
-    TimePeriod period({inputs_->asof(), inputs_->mporDate()});
+    
     LOG("Build Correlation calculator");
     if (inputs_->covarianceData().size() > 0) {
+        TimePeriod period({inputs_->asof(), inputs_->mporDate()});
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
         correlationReport_ = ext::make_shared<CorrelationReport>(
             inputs_->correlationMethod(), inputs_->baseCurrency(), analytic()->portfolio(),
-            inputs_->portfolioFilter(), period,
-            nullptr, std::move(sensiArgs), nullptr, nullptr, true);
+            inputs_->portfolioFilter(), period, nullptr, std::move(sensiArgs));
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
@@ -131,11 +131,10 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
 
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
-
+        // No FullRevelArgs, no MultiThreadsArgs, no requireTradePnL
         correlationReport_ = ext::make_shared<CorrelationReport>(
-            inputs_->correlationMethod(),
-            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), benchmarkVarPeriod, scenarios,
-            std::move(sensiArgs), nullptr, nullptr, false);
+            inputs_->correlationMethod(), inputs_->baseCurrency(), analytic()->portfolio(), 
+            inputs_->portfolioFilter(), benchmarkVarPeriod, scenarios, std::move(sensiArgs));
     }
 
 }

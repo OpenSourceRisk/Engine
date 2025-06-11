@@ -412,6 +412,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                                                 covCalculator, tradeIds_, includeGammaMargin_,
                                                                 includeDeltaMargin_, runDetailTrd);
                         covarianceMatrix_ = covCalculator->covariance();
+                        // Concerns Correlation analytic
                         if (correlation_) {
                             if (correlationMethod_ == "Pearson") {
                                 CorrelationMatrixBuilder corrMatrix;

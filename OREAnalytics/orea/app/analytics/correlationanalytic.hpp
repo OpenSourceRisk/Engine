@@ -35,9 +35,7 @@ public:
     static constexpr const char* LABEL = "CORRELATION";
     static constexpr const char* sensiLookupKey = "SENSI";
     CorrelationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
-        setLabel(LABEL);
-    }
+        : Analytic::Impl(inputs) { setLabel(LABEL); }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;

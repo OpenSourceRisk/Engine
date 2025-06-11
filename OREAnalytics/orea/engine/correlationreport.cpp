@@ -35,8 +35,6 @@ void CorrelationReport::createReports(const ext::shared_ptr<MarketRiskReport::Re
     // prepare report
     writeHeader(report);
 
-    //createAdditionalReports(reports);
-
     //createVarCalculator();
 }
 

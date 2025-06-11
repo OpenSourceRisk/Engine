@@ -45,6 +45,8 @@ public:
         correlation_ = true;
         correlationMethod_ = correlationMethod;
     }
+    const QuantLib::Matrix& getCorrelation() const { return m_; }
+    void setCorrelation(const QuantLib::Matrix& m) { m_ = m; }
 
 protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
@@ -58,7 +60,7 @@ protected:
                                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
 
 private:
-    QuantLib::Matrix results_;
+    QuantLib::Matrix m_;
 };
 
 } // namespace analytics
