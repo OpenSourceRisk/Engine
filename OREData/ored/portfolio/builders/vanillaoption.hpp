@@ -31,12 +31,12 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
+#include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -178,7 +178,8 @@ protected:
             spotDays = fixingDays;
             spotCalendar = calendar;
         }
-        return QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve, spotDays, spotCalendar);
+
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, true); // discountCurve, spotDays, spotCalendar);
     }
 };
 
