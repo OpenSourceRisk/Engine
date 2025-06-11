@@ -63,8 +63,11 @@ cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/inmemorycubeopt.cpp
+cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
@@ -175,6 +178,7 @@ simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
+simm/simmconcentrationisdav2_7_2412.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -190,6 +194,7 @@ simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
+simm/simmconfigurationisdav2_7_2412.cpp
 simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
@@ -281,7 +286,6 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
-engine/cvacalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
@@ -394,6 +398,7 @@ simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
+simm/simmconcentrationisdav2_7_2412.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -409,6 +414,7 @@ simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
+simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp

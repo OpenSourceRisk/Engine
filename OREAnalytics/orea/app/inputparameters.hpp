@@ -282,6 +282,7 @@ public:
     void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
+    void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
@@ -712,6 +713,7 @@ public:
     /*****************
      * Getters for xva
      *****************/
+    bool xvaUseDoublePrecisionCubes() const { return xvaUseDoublePrecisionCubes_; }
     const std::string& xvaBaseCurrency() const { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     const QuantLib::ext::shared_ptr<NPVCube>& cube() const { return cube_; }
@@ -1136,6 +1138,7 @@ protected:
     /**************
      * XVA analytic
      **************/
+    bool xvaUseDoublePrecisionCubes_ = false;
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;
