@@ -130,7 +130,8 @@ public:
         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
             QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
-        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation = QuantLib::ext::shared_ptr<CubeInterpretation>(),
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation =
+            QuantLib::ext::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! CVA spread sensitivity grid
@@ -176,7 +177,9 @@ public:
         //! and vice-versa for over-collateralisation in case of positive mtm
         const bool firstMporCollateralAdjustment = false,
         //! Continue with the calculation if possible when there is an error
-        bool continueOnError = false);
+        bool continueOnError = false,
+        //! use double precision cubes
+        bool useDoublePrecisionCubes = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -408,6 +411,7 @@ protected:
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_;
     bool continueOnError_;
+    bool useDoublePrecisionCubes_;
 };
 
 } // namespace analytics

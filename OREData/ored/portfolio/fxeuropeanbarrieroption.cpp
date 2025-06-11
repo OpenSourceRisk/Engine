@@ -256,8 +256,8 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         addProductModelEngine(*fxDigitalOptBuilder);
     }
 
-    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
+    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
     setSensitivityTemplate(*fxOptBuilder);
     addProductModelEngine(*fxOptBuilder);
 

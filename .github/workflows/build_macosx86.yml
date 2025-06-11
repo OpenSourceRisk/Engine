@@ -11,7 +11,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        token: ${{ secrets.ORG_ACTIONS_ACCESS }}
     #- name: get QuantLib
     #  run: |
     #    git submodule update --init --recursive
@@ -30,14 +29,15 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64 -DORE_USE_ZLIB=ON -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DORE_BUILD_SWIG=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
+        cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64 -DORE_USE_ZLIB=OFF -DBUILD_SHARED_LIBS=false -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DORE_BUILD_SWIG=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . -j4
         cmake --install .
     - name: Wrap ORE-SWIG
       run: |
         pwd
         python -m pip install setuptools
-        cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
+        cp ORE-SWIG/Wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
+        chmod +x ORE-SWIG/oreanalytics-config
         cd ORE-SWIG/OREAnalytics-SWIG/SWIG
         chmod +x oreanalytics.i
         cd ..
@@ -47,10 +47,10 @@ jobs:
     - name: Build Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
-        CIBW_SKIP: cp36-*
+        CIBW_SKIP: cp36-* pp*
         CIBW_ARCHS_MACOS: x86_64
         MACOSX_DEPLOYMENT_TARGET: "13.7"
-        CXXFLAGS: -std=c++17 -g0 -O3 -mmacosx-version-min=13
+        CXXFLAGS: -std=c++17 -g0 -O3 -mmacosx-version-min=13.7
         CIBW_BUILD_VERBOSITY: 2
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&

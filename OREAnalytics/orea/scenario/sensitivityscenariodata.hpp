@@ -54,12 +54,12 @@ public:
 
         // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
         ShiftType shiftType = ShiftType::Absolute;
-        Real shiftSize = 0.0;
+        QuantLib::Real shiftSize = 0.0;
         ShiftScheme shiftScheme = ShiftScheme::Forward;
 
         // product specific shift size, type, scheme
         map<string, ShiftType> keyedShiftType;
-        map<string, Real> keyedShiftSize;
+        map<string, QuantLib::Real> keyedShiftSize;
         map<string, ShiftScheme> keyedShiftScheme;
     };
 
@@ -83,7 +83,7 @@ public:
         BaseCorrelationShiftData() : ShiftData() {}
         BaseCorrelationShiftData(const ShiftData& d) : ShiftData(d) {}
         vector<Period> shiftTerms;
-        vector<Real> shiftLossLevels;
+        vector<QuantLib::Real> shiftLossLevels;
         string indexName;
     };
 
@@ -91,7 +91,7 @@ public:
         VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
         VolShiftData(const ShiftData& d) : ShiftData(d), shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
-        vector<Real> shiftStrikes;
+        vector<QuantLib::Real> shiftStrikes;
         bool isRelative;
     };
 

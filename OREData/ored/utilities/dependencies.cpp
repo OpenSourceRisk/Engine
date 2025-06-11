@@ -419,7 +419,7 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     string name = curveSpecToName(ct, cId, curveConfigs);
                     if (mo == MarketObject::IndexCurve && isGenericIborIndex(name))
                         continue;
-                    (*objects)[Market::defaultConfiguration][mo].insert(name);
+                    (*objects)[config][mo].insert(name);
                     auto deps = curveConfigs->requiredCurveIds(ct, cId);
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {
@@ -575,10 +575,10 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
 
         set<string> baseCcys = getCollateralisedDiscountCcy(ccy, curveConfigs);
 
-        string commonDiscount = "";
+        string commonDiscount;
         // Look for a common discount curve curve to use as a cross
         auto it = baseCcys.begin();
-        while (it != baseCcys.end() && commonDiscount == "") {
+        while (it != baseCcys.end() && commonDiscount.empty()) {
             auto pos = baseDiscountCcys.find(*it);
             if (pos != baseDiscountCcys.end()) {
                 commonDiscount = *pos;
@@ -591,11 +591,11 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
         } else {
             vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments;
             segments.push_back(QuantLib::ext::make_shared<DiscountRatioYieldCurveSegment>(
-                "Discount Ratio", baseCurve, baseCcy, ccy + "-IN-" + commonDiscount, ccy,
-                baseCcy + "-IN-" + commonDiscount, baseCcy));
+                "Discount Ratio", baseCurve, base, ccy + "-IN-" + commonDiscount, ccy,
+                base + "-IN-" + commonDiscount, base));
 
             QuantLib::ext::shared_ptr<YieldCurveConfig> ycc = QuantLib::ext::make_shared<YieldCurveConfig>(
-                id, ccy + " collateralised in " + baseCcy, ccy, "", segments);
+                id, ccy + " collateralised in " + base, ccy, "", segments);
 
             curveConfigs->add(CurveSpec::CurveType::Yield, id, ycc);
         }

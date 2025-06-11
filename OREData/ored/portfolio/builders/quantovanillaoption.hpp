@@ -73,8 +73,8 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& underlyingCcy,
-                                                        const Currency& payCcy, const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate) override {
+                                                        const Currency& payCcy,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
 

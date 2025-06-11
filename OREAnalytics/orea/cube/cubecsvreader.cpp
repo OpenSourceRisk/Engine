@@ -33,7 +33,8 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-CubeCsvReader::CubeCsvReader(const std::string& filename) : filename_(filename) {}
+CubeCsvReader::CubeCsvReader(const std::string& filename, const bool useDoublePrecision)
+    : filename_(filename), useDoublePrecision_(useDoublePrecision) {}
 
 void CubeCsvReader::read(QuantLib::ext::shared_ptr<NPVCube>& cube, std::map<std::string, std::string>& nettingSetMap) {
 
@@ -96,10 +97,10 @@ void CubeCsvReader::read(QuantLib::ext::shared_ptr<NPVCube>& cube, std::map<std:
             QL_REQUIRE(dateVec[i] > dateVec[i - 1], "CubeCsvReader - date grid must be monotonic increasing");
         }
     }
-    if (cubeDepth == 1)
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, tradeIds, dateVec, numSamples);
-    else if (cubeDepth > 1)
-        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, tradeIds, dateVec, numSamples, cubeDepth);
+    if (useDoublePrecision_)
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(asof, tradeIds, dateVec, numSamples, cubeDepth);
+    else
+        cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, tradeIds, dateVec, numSamples, cubeDepth);
 
     // Now re-open the file and loop through its contents AGAIN
     std::ifstream file2;

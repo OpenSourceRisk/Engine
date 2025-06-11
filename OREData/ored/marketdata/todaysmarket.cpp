@@ -158,28 +158,29 @@ void TodaysMarket::initialise(const Date& asof) {
 
     if (!lazyBuild_) {
 
-        // We need to build all discount curves first, since some curve builds ask for discount
-        // curves from specific configurations
-        timer.start();
-        for (const auto& configuration : params_->configurations()) {
-            map<string, string> discountCurves;
-            if (params_->hasMarketObject(MarketObject::DiscountCurve)) {
-                discountCurves = params_->mapping(MarketObject::DiscountCurve, configuration.first);
-            }
-            for (const auto& dc : discountCurves)
-                require(MarketObject::DiscountCurve, dc.first, configuration.first, true);
+        // collate config names and place inccy first, if that is present (see next step)
+
+        std::vector<std::string> configurationNames;
+        std::for_each(params_->configurations().begin(), params_->configurations().end(),
+                      [&configurationNames](const std::pair<std::string, MarketConfiguration>& p) {
+                          configurationNames.push_back(p.first);
+                      });
+        if (auto f = std::find(configurationNames.begin(), configurationNames.end(), Market::inCcyConfiguration);
+            f != configurationNames.end()) {
+            std::swap(*f, configurationNames.front());
         }
-        timings["6 build " + ore::data::to_string(MarketObject::DiscountCurve)] += timer.elapsed().wall;
-        counts["6 build " + ore::data::to_string(MarketObject::DiscountCurve)].inc();
 
-        for (const auto& configuration : params_->configurations()) {
+        /* build objects for configurations, starting with inccy, because objects in other configs might require
+           discount curves from configuration inccy */
 
-            LOG("Build objects in TodaysMarket configuration " << configuration.first);
+        for (const auto& configuration : configurationNames) {
+
+            LOG("Build objects in TodaysMarket configuration " << configuration);
 
             // Sort the graph topologically
 
             timer.start();
-            Graph& g = dependencies_[configuration.first];
+            Graph& g = dependencies_[configuration];
             IndexMap index = boost::get(boost::vertex_index, g);
             std::vector<Vertex> order;
             try {
@@ -189,7 +190,7 @@ void TodaysMarket::initialise(const Date& asof) {
                 order.clear();
                 // set error (most likely a circle), and output cycles if any
                 buildErrors["CurveDependencyGraph"] = "Topological sort of dependency graph failed for configuration " +
-                                                      configuration.first + " (" + ore::data::to_string(e.what()) +
+                                                      configuration + " (" + ore::data::to_string(e.what()) +
                                                       "). Got cycle(s): " + getCycles(g);
             }
             timings["5 topological sort dep graphs"] += timer.elapsed().wall;
@@ -205,16 +206,16 @@ void TodaysMarket::initialise(const Date& asof) {
             for (auto const& m : order) {
                 timer.start();
                 try {
-                    buildNode(configuration.first, g[m]);
+                    buildNode(configuration, g[m]);
                     ++countSuccess;
-                    DLOG("built node " << g[m] << " in configuration " << configuration.first);
+                    DLOG("built node " << g[m] << " in configuration " << configuration);
                 } catch (const std::exception& e) {
                     if (g[m].curveSpec)
                         buildErrors[g[m].curveSpec->name()] = e.what();
                     else
                         buildErrors[g[m].name] = e.what();
                     ++countError;
-                    ALOG("error while building node " << g[m] << " in configuration " << configuration.first << ": "
+                    ALOG("error while building node " << g[m] << " in configuration " << configuration << ": "
                                                       << e.what());
                 }
                 timings["6 build " + ore::data::to_string(g[m].obj)] += timer.elapsed().wall;
@@ -662,8 +663,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QuantLib::ext::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
 
             QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
-            auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
-            if (itr == requiredEquityVolCurves_.end()) {
+            auto itr = requiredEquityVolCurves_[configuration].find(eqvolspec->name());
+            if (itr == requiredEquityVolCurves_[configuration].end()) {
                 LOG("Building EquityVol for asof " << asof_);
                 // First we need the Equity Index, we don't have a dependency for this in the graph, rather
                 // pull it directly from MarketImpl, which will trigger the build if necessary -
@@ -674,9 +675,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 Handle<EquityIndex2> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 QuantLib::ext::shared_ptr<EquityVolCurve> eqVolCurve = QuantLib::ext::make_shared<EquityVolCurve>(
                     asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
-                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this,
-                    buildCalibrationInfo_);
-                itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
+                    requiredEquityVolCurves_[configuration], requiredFxVolCurves_, requiredCorrelationCurves_, this,
+                    configuration, buildCalibrationInfo_);
+                itr = requiredEquityVolCurves_[configuration].insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                 calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
             }
             string eqName = node.name;
@@ -750,14 +751,19 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             QuantLib::ext::shared_ptr<CommodityVolatilityCurveSpec> commodityVolSpec =
                 QuantLib::ext::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
             QL_REQUIRE(commodityVolSpec, "Failed to convert spec " << *spec << " to commodity volatility spec");
-            auto itr = requiredCommodityVolCurves_.find(commodityVolSpec->name());
-            if (itr == requiredCommodityVolCurves_.end()) {
+            auto itr = requiredCommodityVolCurves_[configuration].find(commodityVolSpec->name());
+            if (itr == requiredCommodityVolCurves_[configuration].end()) {
                 DLOG("Building commodity volatility for asof " << asof_);
-                QuantLib::ext::shared_ptr<CommodityVolCurve> commodityVolCurve = QuantLib::ext::make_shared<CommodityVolCurve>(
-                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
-                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, this, buildCalibrationInfo_);
-                itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
-                calibrationInfo_->commVolCalibrationInfo[commodityVolSpec->name()] = commodityVolCurve->calibrationInfo();
+                QuantLib::ext::shared_ptr<CommodityVolCurve> commodityVolCurve =
+                    QuantLib::ext::make_shared<CommodityVolCurve>(
+                        asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_,
+                        requiredCommodityCurves_, requiredCommodityVolCurves_[configuration], requiredFxVolCurves_,
+                        requiredCorrelationCurves_, this, configuration, buildCalibrationInfo_);
+                itr = requiredCommodityVolCurves_[configuration]
+                          .insert(make_pair(commodityVolSpec->name(), commodityVolCurve))
+                          .first;
+                calibrationInfo_->commVolCalibrationInfo[commodityVolSpec->name()] =
+                    commodityVolCurve->calibrationInfo();
             }
 
             string commodityName = node.name;

@@ -37,6 +37,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/termstructures/scenario.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
@@ -627,5 +628,7 @@ QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& 
 
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
+std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
+std::string removeAfterLastDelimiter(const std::string& s, const std::string& delimeter);
 } // namespace data
 } // namespace ore
