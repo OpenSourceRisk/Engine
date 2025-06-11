@@ -134,7 +134,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
 
         correlationReport_ = ext::make_shared<CorrelationReport>(
             inputs_->correlationMethod(),
-            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), period, scenarios,
+            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), benchmarkVarPeriod, scenarios,
             std::move(sensiArgs), nullptr, nullptr, false);
     }
 
