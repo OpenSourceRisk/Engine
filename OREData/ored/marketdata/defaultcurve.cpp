@@ -102,6 +102,9 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
         auto mdit = md->instrumentType();
         auto mdqt = md->quoteType();
 
+        QL_REQUIRE(mdqt != MDQT::CONV_CREDIT_SPREAD, 
+                   "Conventional credit spread are currently not supported for default curves");
+
         // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
         if (type == DCCT::SpreadCDS && mdit == MDIT::CDS &&
             (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
