@@ -312,9 +312,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     cfResults.emplace_back();
     cfResults.back().amount = expectedflow;
     cfResults.back().payDate = arguments_.flow->date();
-    //cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
-    cfResults.back().discountFactor = 1.00;
-    cfResults.back().legNumber = 1.00;
+    //cfResults.back().discountFactor = 1.00;
+    cfResults.back().legNumber = 0.00;
     cfResults.back().type = "ExpectedFlow";
 
     // Add more additional results
@@ -438,6 +437,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = arguments_.quantity * arguments_.flow->gearing() * payoff;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0.00;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults; //TODO Does this remove the real flow
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
