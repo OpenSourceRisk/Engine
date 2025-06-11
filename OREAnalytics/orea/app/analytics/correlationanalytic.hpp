@@ -57,7 +57,7 @@ public:
     CorrelationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<CorrelationAnalyticImpl>(inputs), {"CORRELATION"}, inputs,
-                   analyticsManager, false, false, false, false) {}
+                   analyticsManager) {}
 };
 
 } // namespace analytics
