@@ -116,7 +116,10 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   None}
 \item OutputVolatilityType: Optional, defaults to input volatility type. Possible values: Normal, Lognormal (alias for
   ShiftedLognormal, shift is taken from OutputShift if given, or input market data shift. Input market quotes will be
-  converted to output volatility type and shift before building the vol surfaces.
+  converted to output volatility type and shift before building the vol surfaces, except for parametric models (SABR),
+  where the model is calibrated to the input market data directly (without conversion) and the output volatility type
+  and shift is handled by the calibrated parametric model. An early conversion of the input market data would not be an
+  advantage in this case, we could only loose information.
 \item OutputShift: Optional, defaults to input market data shift. Specifies the shift if OutputVolatilityType is
   Lognormal / ShiftedLognormal
 \item ModelShift: Optional, defaults to input market data shift. Specifies the shift used for SABR model if applicable
