@@ -44,8 +44,8 @@ public:
         double displacement;
     };
 
-    using IndividualRiskFactorConfig = std::map<std::string, Return>;
-    using RiskFactorConfig = std::pair<Return, IndividualRiskFactorConfig>;
+    using OverrideConfigs = std::map<std::string, Return>;
+    using RiskFactorConfig = std::pair<Return, OverrideConfigs>;
 
     //! default return types per risk factor
     ReturnConfiguration();

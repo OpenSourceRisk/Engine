@@ -3,12 +3,11 @@
  All rights reserved.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include "testmarket.hpp"
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/historicalscenariogenerator.hpp>
-
-#include "testmarket.hpp"
+#include <oret/toplevelfixture.hpp>
 
 using namespace std;
 using namespace ore;
@@ -43,23 +42,20 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfiguration) {
 
     // Absolute
     ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
-    configs[RiskFactorKey::KeyType::DiscountCurve] =
-        std::make_pair(absRet, ReturnConfiguration::IndividualRiskFactorConfig{});
+    configs[RiskFactorKey::KeyType::DiscountCurve] = std::make_pair(absRet, ReturnConfiguration::OverrideConfigs{});
 
     // Relative
     ReturnConfiguration::Return relRet{ReturnConfiguration::ReturnType::Relative, 0.5};
-    configs[RiskFactorKey::KeyType::IndexCurve] =
-        std::make_pair(relRet, ReturnConfiguration::IndividualRiskFactorConfig{});
+    configs[RiskFactorKey::KeyType::IndexCurve] = std::make_pair(relRet, ReturnConfiguration::OverrideConfigs{});
 
     // Log
     ReturnConfiguration::Return logRet{ReturnConfiguration::ReturnType::Log, 0.1};
-    configs[RiskFactorKey::KeyType::SurvivalProbability] =
-        std::make_pair(logRet, ReturnConfiguration::IndividualRiskFactorConfig{});
+    configs[RiskFactorKey::KeyType::SurvivalProbability] = std::make_pair(logRet, ReturnConfiguration::OverrideConfigs{});
 
     // 3. Configs with a specialized config for crude oil with displacement
     ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
     ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
-    ReturnConfiguration::IndividualRiskFactorConfig relSpecialized;
+    ReturnConfiguration::OverrideConfigs relSpecialized;
     relSpecialized["WTI"] = relRetSpecial;
     configs[RiskFactorKey::KeyType::CommodityCurve] = std::make_pair(relRetDefault, relSpecialized);
 
@@ -104,12 +100,12 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationFromXML) {
                 <Type>Relative</Type>
                 <Displacement>0.0</Displacement>
             </Return>
-            <SpecializedConfigurations>
+            <OverrideConfigurations>
                 <Return key="WTI">
                     <Type>Relative</Type>
                     <Displacement>0.7</Displacement>
                 </Return>
-            </SpecializedConfigurations>
+            </OverrideConfigurations>
         </ReturnConfiguration>
         <ReturnConfiguration key="DiscountCurve">
             <Return>
@@ -151,12 +147,11 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationXmlRoundtrip) {
     std::map<RiskFactorKey::KeyType, ReturnConfiguration::RiskFactorConfig> configs;
 
     ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
-    configs[RiskFactorKey::KeyType::DiscountCurve] =
-        std::make_pair(absRet, ReturnConfiguration::IndividualRiskFactorConfig{});
+    configs[RiskFactorKey::KeyType::DiscountCurve] = std::make_pair(absRet, ReturnConfiguration::OverrideConfigs{});
 
     ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
     ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
-    ReturnConfiguration::IndividualRiskFactorConfig relSpecialized;
+    ReturnConfiguration::OverrideConfigs relSpecialized;
     relSpecialized["WTI"] = relRetSpecial;
     configs[RiskFactorKey::KeyType::CommodityCurve] = std::make_pair(relRetDefault, relSpecialized);
 
@@ -233,8 +228,10 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>();
     histScenariosLoader->scenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true), TARGET(), nullptr, 1);
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios =
+        QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
+            histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true),
+            QuantLib::ext::make_shared<ReturnConfiguration>(), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market

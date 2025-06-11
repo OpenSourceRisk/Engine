@@ -62,7 +62,7 @@ ReturnConfiguration::ReturnConfiguration() {
         Return r;
         r.displacement = 0.0;
         r.type = rt;
-        RiskFactorConfig data = std::make_pair(r, IndividualRiskFactorConfig());
+        RiskFactorConfig data = std::make_pair(r, OverrideConfigs());
         returnType_.insert(std::make_pair(key, data));
     }
 }
@@ -73,7 +73,7 @@ ReturnConfiguration::ReturnConfiguration(
         Return r;
         r.displacement = 0.0;
         r.type = rt;
-        RiskFactorConfig data = std::make_pair(r, IndividualRiskFactorConfig());
+        RiskFactorConfig data = std::make_pair(r, OverrideConfigs());
         returnType_.insert(std::make_pair(key, data));
     }
 }
@@ -161,9 +161,9 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
 const ReturnConfiguration::Return& ReturnConfiguration::returnType(const RiskFactorKey& key) const {
     const auto it = returnType_.find(key.keytype);
     QL_REQUIRE(it != returnType_.end(), "No ReturnType found for keyType" << key.keytype);
-    const auto& [config, specializedConfigs] = it->second;
-    const auto specializedIt = specializedConfigs.find(key.name);
-    return (specializedIt == specializedConfigs.end()) ? config : specializedIt->second;
+    const auto& [config, overrideConfigs] = it->second;
+    const auto overrideIt = overrideConfigs.find(key.name);
+    return (overrideIt == overrideConfigs.end()) ? config : overrideIt->second;
 }
 
 std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t) {
@@ -213,48 +213,47 @@ void ReturnConfiguration::fromXML(XMLNode* node) {
         defaultReturn.type = parseReturnType(typeStr);
         defaultReturn.displacement = XMLUtils::getChildValueAsDouble(retNode, "Displacement", false, 0.0);
 
-        // Specialized Configurations
-        IndividualRiskFactorConfig specialized;
-        XMLNode* specNode = XMLUtils::getChildNode(rcNode, "SpecializedConfigurations");
+        // OverrideConfigs
+        OverrideConfigs overrideConfigs;
+        XMLNode* specNode = XMLUtils::getChildNode(rcNode, "OverrideConfigurations");
         if (specNode) {
             for (auto* sRetNode : XMLUtils::getChildrenNodes(specNode, "Return")) {
                 std::string sKey = XMLUtils::getAttribute(sRetNode, "key");
-                Return specializedReturn = defaultReturn; // Default übernehmen, falls nicht überschrieben
+                Return overrideReturn = defaultReturn; // Default übernehmen, falls nicht überschrieben
                 std::string sTypeStr = XMLUtils::getChildValue(sRetNode, "Type", false);
                 if (!sTypeStr.empty()) {
-                    specializedReturn.type = parseReturnType(sTypeStr);
+                    overrideReturn.type = parseReturnType(sTypeStr);
                 }
-                specializedReturn.displacement =
-                    XMLUtils::getChildValueAsDouble(sRetNode, "Displacement", false, specializedReturn.displacement);
-                specialized[sKey] = specializedReturn;
+                overrideReturn.displacement =
+                    XMLUtils::getChildValueAsDouble(sRetNode, "Displacement", false, overrideReturn.displacement);
+                overrideConfigs[sKey] = overrideReturn;
             }
         }
-        returnType_[key] = std::make_pair(defaultReturn, specialized);
+        returnType_[key] = std::make_pair(defaultReturn, overrideConfigs);
     }
 }
 
 XMLNode* ReturnConfiguration::toXML(XMLDocument& doc) const {
     XMLNode* root = doc.allocNode("ReturnConfigurations");
-    for (const auto& [key, configPair] : returnType_) {
+    for (const auto& [key, config] : returnType_) {
+        const auto& [returnConfig, overrideConfigs] = config;
         XMLNode* rcNode = doc.allocNode("ReturnConfiguration");
         // Key als Attribut
         XMLUtils::addAttribute(doc, rcNode, "key", ore::data::to_string(key));
         // Default Return
-        const Return& defReturn = configPair.first;
         XMLNode* retNode = doc.allocNode("Return");
-        XMLUtils::addChild(doc, retNode, "Type", ore::data::to_string(defReturn.type));
-        XMLUtils::addChild(doc, retNode, "Displacement", defReturn.displacement);
+        XMLUtils::addChild(doc, retNode, "Type", ore::data::to_string(returnConfig.type));
+        XMLUtils::addChild(doc, retNode, "Displacement", returnConfig.displacement);
         XMLUtils::appendNode(rcNode, retNode);
 
         // Specialized Configurations
-        const IndividualRiskFactorConfig& specialized = configPair.second;
-        if (!specialized.empty()) {
-            XMLNode* specNode = doc.allocNode("SpecializedConfigurations");
-            for (const auto& [sKey, sReturn] : specialized) {
+        if (!overrideConfigs.empty()) {
+            XMLNode* specNode = doc.allocNode("OverrideConfigurations");
+            for (const auto& [overrideName, overrideRetrun] : overrideConfigs) {
                 XMLNode* sRetNode = doc.allocNode("Return");
-                XMLUtils::addAttribute(doc, sRetNode, "key", sKey);
-                XMLUtils::addChild(doc, sRetNode, "Type", ore::data::to_string(sReturn.type));
-                XMLUtils::addChild(doc, sRetNode, "Displacement", sReturn.displacement);
+                XMLUtils::addAttribute(doc, sRetNode, "key", overrideName);
+                XMLUtils::addChild(doc, sRetNode, "Type", ore::data::to_string(overrideRetrun.type));
+                XMLUtils::addChild(doc, sRetNode, "Displacement", overrideRetrun.displacement);
                 XMLUtils::appendNode(specNode, sRetNode);
             }
             XMLUtils::appendNode(rcNode, specNode);
