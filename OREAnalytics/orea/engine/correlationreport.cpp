@@ -22,19 +22,6 @@
 namespace ore {
 namespace analytics {
 
-CorrelationReport::CorrelationReport(const std::string& correlationMethod, const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter,
-                     boost::optional<ore::data::TimePeriod> period,
-                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-                     std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-                     const bool breakdown)
-    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                       std::move(fullRevalArgs), nullptr, breakdown) {
-    sensiBased_ = true;
-    correlation_ = true;
-    correlationMethod_ = correlationMethod;
-}
-
 void CorrelationReport::writeHeader(const ext::shared_ptr<Report>& report) {
     report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
     /*for (const auto p : p())

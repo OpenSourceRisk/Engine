@@ -32,15 +32,19 @@ namespace analytics {
 
 class CorrelationReport : public MarketRiskReport {
 public:
-    CorrelationReport(const std::string& correlationMethod, const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-              const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
-              const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-              std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-              const bool breakdown = false);
-
-    virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};
-
-    //const std::vector<Real>& p() const { return p_; }
+    CorrelationReport(const std::string& correlationMethod, const std::string& baseCurrency,
+                      const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter,
+                      boost::optional<ore::data::TimePeriod> period,
+                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
+                      std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+                      std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool requireTradePnl = false)
+        : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
+                           std::move(fullRevalArgs), false, false) {
+        sensiBased_ = true;
+        correlation_ = true;
+        correlationMethod_ = correlationMethod;
+    }
 
 protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
@@ -53,10 +57,8 @@ protected:
                                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
 
-    std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
-
 private:
-    std::vector<Real> p_;
+    QuantLib::Matrix results_;
 };
 
 } // namespace analytics
