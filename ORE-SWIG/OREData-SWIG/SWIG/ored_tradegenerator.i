@@ -36,7 +36,7 @@ using ore::data::XMLSerializable;
 
 %shared_ptr(TradeGenerator)
 class TradeGenerator : public Portfolio {
-  public:
+public:
 
     TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "", std::string startDate = "");
     TradeGenerator(ext::shared_ptr<CurveConfigurations> curveConfig, ext::shared_ptr < BasicReferenceDataManager> refData,

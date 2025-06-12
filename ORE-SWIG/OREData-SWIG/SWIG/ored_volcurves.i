@@ -79,7 +79,6 @@ class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
                               const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
                               const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                               const Handle<YieldTermStructure>& baseCurve = {});
-
          std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
 };
 
