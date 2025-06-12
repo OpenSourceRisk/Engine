@@ -44,8 +44,7 @@ public:
         double displacement;
     };
 
-    using OverrideConfigs = std::map<std::string, Return>;
-    using RiskFactorConfig = std::pair<Return, OverrideConfigs>;
+    using RiskFactorReturnConfig = std::map<std::pair<RiskFactorKey::KeyType, std::string>, Return>;
 
     //! default return types per risk factor
     ReturnConfiguration();
@@ -53,7 +52,7 @@ public:
     //! customised return types per risk factor
     explicit ReturnConfiguration(const std::map<RiskFactorKey::KeyType, ReturnType>& returnType);
 
-    explicit ReturnConfiguration(const std::map<RiskFactorKey::KeyType, RiskFactorConfig>& configs);
+    explicit ReturnConfiguration(const RiskFactorReturnConfig& configs);
 
     /*! Compute return from v1, v2.
         The date parameters are are used to improve the log messages
@@ -75,7 +74,7 @@ public:
     //@}
 
 private:
-    std::map<RiskFactorKey::KeyType, RiskFactorConfig> returnType_;
+    RiskFactorReturnConfig returnType_;
 
     //! Perform checks on key
     void check(const RiskFactorKey& key) const;

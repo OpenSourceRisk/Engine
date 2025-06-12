@@ -58,28 +58,28 @@ ReturnConfiguration::ReturnConfiguration() {
     // Default Configuration for risk factor returns
     // For all yield curves we have DFs in the Scenario, for credit we have SurvProbs,
     // so a relative / log change is equivalent to an absolute zero / hazard rate change.
-    for (const auto& [key, rt] : defaultConfig) {
+    for (const auto& [rfKeyType, rt] : defaultConfig) {
         Return r;
         r.displacement = 0.0;
         r.type = rt;
-        RiskFactorConfig data = std::make_pair(r, OverrideConfigs());
-        returnType_.insert(std::make_pair(key, data));
+        auto key = std::make_pair(rfKeyType, std::string(""));
+        returnType_.insert(std::make_pair(key, r));
     }
 }
 
 ReturnConfiguration::ReturnConfiguration(
     const std::map<RiskFactorKey::KeyType, ReturnConfiguration::ReturnType>& returnType) {
-    for (const auto& [key, rt] : returnType) {
+    for (const auto& [rfKeyType, rt] : returnType) {
         Return r;
         r.displacement = 0.0;
         r.type = rt;
-        RiskFactorConfig data = std::make_pair(r, OverrideConfigs());
-        returnType_.insert(std::make_pair(key, data));
+        auto key = std::make_pair(rfKeyType, std::string(""));
+        returnType_.insert(std::make_pair(key, r));
     }
 }
 
 ReturnConfiguration::ReturnConfiguration(
-    const std::map<RiskFactorKey::KeyType, ReturnConfiguration::RiskFactorConfig>& configs)
+    const ReturnConfiguration::RiskFactorReturnConfig& configs)
     : returnType_(configs) {}
 
 Real ReturnConfiguration::returnValue(const RiskFactorKey& key, const Real v1, const Real v2, const QuantLib::Date& d1,
@@ -159,11 +159,16 @@ Real ReturnConfiguration::applyReturn(const RiskFactorKey& key, const Real baseV
 }
 
 const ReturnConfiguration::Return& ReturnConfiguration::returnType(const RiskFactorKey& key) const {
-    const auto it = returnType_.find(key.keytype);
-    QL_REQUIRE(it != returnType_.end(), "No ReturnType found for keyType" << key.keytype);
-    const auto& [config, overrideConfigs] = it->second;
-    const auto overrideIt = overrideConfigs.find(key.name);
-    return (overrideIt == overrideConfigs.end()) ? config : overrideIt->second;
+    // Check for the specific override first
+    const auto it = returnType_.find(std::make_pair(key.keytype, key.name));
+    if (it != returnType_.end()) {
+        return it->second;
+    }
+    // If not found, check for the default return type for the key type
+    const auto defaultKey = std::make_pair(key.keytype, "");
+    const auto defaultIt = returnType_.find(defaultKey);
+    QL_REQUIRE(defaultIt != returnType_.end(), "No ReturnType found for keyType" << key.keytype);
+    return defaultIt->second;
 }
 
 std::ostream& operator<<(std::ostream& out, const ReturnConfiguration::ReturnType t) {
@@ -183,7 +188,7 @@ void ReturnConfiguration::check(const RiskFactorKey& key) const {
 
     auto keyType = key.keytype;
     QL_REQUIRE(keyType != RiskFactorKey::KeyType::None, "unsupported key type none for key " << key);
-    QL_REQUIRE(returnType_.find(keyType) != returnType_.end(),
+    QL_REQUIRE(returnType_.find(std::make_pair(keyType, "")) != returnType_.end(),
                "ReturnConfiguration: key type " << keyType << " for key " << key << " not found");
 }
 
@@ -200,65 +205,39 @@ ReturnConfiguration::ReturnType parseReturnType(const std::string& typeStr) {
 
 void ReturnConfiguration::fromXML(XMLNode* node) {
     returnType_.clear();
-    XMLUtils::checkNode(node, "ReturnConfigurations");
-    for (auto* rcNode : XMLUtils::getChildrenNodes(node, "ReturnConfiguration")) {
-        // Key für den RiskFactor (z.B. "IR:EUR")
+    XMLUtils::checkNode(node, "ReturnConfiguration");
+    for (auto* rcNode : XMLUtils::getChildrenNodes(node, "Return")) {
         std::string keyStr = XMLUtils::getAttribute(rcNode, "key");
-        auto key = QuantExt::parseRiskFactorKeyType(keyStr);
-        // Default Return
-        XMLNode* retNode = XMLUtils::getChildNode(rcNode, "Return");
-        QL_REQUIRE(retNode, "Return node missing in ReturnConfiguration");
-        Return defaultReturn;
-        std::string typeStr = XMLUtils::getChildValue(retNode, "Type", true);
-        defaultReturn.type = parseReturnType(typeStr);
-        defaultReturn.displacement = XMLUtils::getChildValueAsDouble(retNode, "Displacement", false, 0.0);
-
-        // OverrideConfigs
-        OverrideConfigs overrideConfigs;
-        XMLNode* specNode = XMLUtils::getChildNode(rcNode, "OverrideConfigurations");
-        if (specNode) {
-            for (auto* sRetNode : XMLUtils::getChildrenNodes(specNode, "Return")) {
-                std::string sKey = XMLUtils::getAttribute(sRetNode, "key");
-                Return overrideReturn = defaultReturn; // Default übernehmen, falls nicht überschrieben
-                std::string sTypeStr = XMLUtils::getChildValue(sRetNode, "Type", false);
-                if (!sTypeStr.empty()) {
-                    overrideReturn.type = parseReturnType(sTypeStr);
-                }
-                overrideReturn.displacement =
-                    XMLUtils::getChildValueAsDouble(sRetNode, "Displacement", false, overrideReturn.displacement);
-                overrideConfigs[sKey] = overrideReturn;
-            }
-        }
-        returnType_[key] = std::make_pair(defaultReturn, overrideConfigs);
+        std::vector<std::string> tokens;
+        boost::split(tokens, keyStr, boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() ==1 || tokens.size() == 2,
+                   "ReturnConfiguration: key '" << keyStr << "' must be of the form 'RiskFactorKeyType' or 'RiskFactorKeyType/Name'");
+        Return historicalReturnConfig;
+        std::string typeStr = XMLUtils::getChildValue(rcNode, "Type", true);
+        historicalReturnConfig.type = parseReturnType(typeStr);
+        historicalReturnConfig.displacement = XMLUtils::getChildValueAsDouble(rcNode, "Displacement", false, 0.0);
+        
+        auto name = (tokens.size() == 2) ? tokens[1] : "";
+        auto key = std::make_pair(QuantExt::parseRiskFactorKeyType(tokens[0]), name);
+        QL_REQUIRE(returnType_.find(key) == returnType_.end(),
+                   "ReturnConfiguration: key '" << keyStr << "' already defined as default return");
+        returnType_[key] = historicalReturnConfig;
     }
 }
 
 XMLNode* ReturnConfiguration::toXML(XMLDocument& doc) const {
-    XMLNode* root = doc.allocNode("ReturnConfigurations");
-    for (const auto& [key, config] : returnType_) {
-        const auto& [returnConfig, overrideConfigs] = config;
-        XMLNode* rcNode = doc.allocNode("ReturnConfiguration");
-        // Key als Attribut
-        XMLUtils::addAttribute(doc, rcNode, "key", ore::data::to_string(key));
-        // Default Return
+    XMLNode* root = doc.allocNode("ReturnConfiguration");
+    for (const auto& [key, returnConfig] : returnType_) {
+        const auto& [rfKeyType, name] = key;
+        std::string keyStr = ore::data::to_string(rfKeyType);
+        if (!name.empty()) {
+            keyStr += "/" + name;
+        }
         XMLNode* retNode = doc.allocNode("Return");
+        XMLUtils::addAttribute(doc, retNode, "key", keyStr);
         XMLUtils::addChild(doc, retNode, "Type", ore::data::to_string(returnConfig.type));
         XMLUtils::addChild(doc, retNode, "Displacement", returnConfig.displacement);
-        XMLUtils::appendNode(rcNode, retNode);
-
-        // Specialized Configurations
-        if (!overrideConfigs.empty()) {
-            XMLNode* specNode = doc.allocNode("OverrideConfigurations");
-            for (const auto& [overrideName, overrideRetrun] : overrideConfigs) {
-                XMLNode* sRetNode = doc.allocNode("Return");
-                XMLUtils::addAttribute(doc, sRetNode, "key", overrideName);
-                XMLUtils::addChild(doc, sRetNode, "Type", ore::data::to_string(overrideRetrun.type));
-                XMLUtils::addChild(doc, sRetNode, "Displacement", overrideRetrun.displacement);
-                XMLUtils::appendNode(specNode, sRetNode);
-            }
-            XMLUtils::appendNode(rcNode, specNode);
-        }
-        XMLUtils::appendNode(root, rcNode);
+        XMLUtils::appendNode(root, retNode);
     }
     return root;
 }

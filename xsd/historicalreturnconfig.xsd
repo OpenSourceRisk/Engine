@@ -15,42 +15,14 @@
             <xs:element name="Type" type="ReturnEnum" />
             <xs:element name="Displacement" type="xs:decimal" />
         </xs:sequence>
-    </xs:complexType>
-
-
-    <!-- Specialized Return for overrides -->
-    <xs:complexType name="OverrideReturn">
-        <xs:complexContent>
-            <xs:extension base="ReturnType">
-                <xs:attribute name="key" type="xs:string" use="required" />
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-
-    <!-- OverrideConfigurations type -->
-    <xs:complexType name="OverrideConfigurationsType">
-        <xs:sequence>
-            <xs:element name="Return" type="OverrideReturn" minOccurs="1"
-                maxOccurs="unbounded" />
-        </xs:sequence>
-    </xs:complexType>
-
-    <!-- ReturnConfiguration type -->
-    <xs:complexType name="ReturnConfigurationType">
-        <xs:sequence>
-            <xs:element name="Return" type="ReturnType" />
-            <xs:element name="OverrideConfigurations" type="OverrideConfigurationsType"
-                minOccurs="0" />
-        </xs:sequence>
-        <xs:attribute name="key" type="xs:string" use="required" />
+         <xs:attribute name="key" type="xs:string" use="required" />
     </xs:complexType>
 
     <!-- Root element -->
-    <xs:element name="ReturnConfigurations">
+    <xs:element name="ReturnConfiguration">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="ReturnConfiguration" type="ReturnConfigurationType" minOccurs="1"
-                    maxOccurs="unbounded" />
+                <xs:element name="Return" type="ReturnType" minOccurs="1" maxOccurs="unbounded"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

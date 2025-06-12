@@ -2,39 +2,29 @@
 \subsection{Historical Return Configuration} \label{sec:historicalreturnconfiguration}
 %--------------------------------------------------------
 
-The \lstinline|ReturnConfigurations| allows the user to specify, for each risk factor type, how historical returns are computed in historical scenario generation and backtesting. This configuration controls the return type (e.g., log, absolute, relative) and an optional displacement for each risk factor. Additionally, it is possible to override the default return configuration for specific names (e.g., for a particular equity or commodity).
+The \lstinline|ReturnConfiguration| allows the user to specify, for each risk factor type, how historical returns are computed in historical scenario generation and backtesting. This configuration controls the return type (e.g., log, absolute, relative) and an optional displacement for each risk factor. Additionally, it is possible to override the default return configuration for specific names (e.g., for a particular equity or commodity).
 
-The root element is \lstinline|ReturnConfigurations|, which contains one or more 
-\lstinline|<ReturnConfiguration>| blocks. Each \lstinline|ReturnConfiguration| must have a
- \lstinline|key| attribute specifying the risk factor type (e.g., \texttt{DiscountCurve}, \texttt{FXSpot}, \texttt{EquitySpot}, etc.).
-
-Each \lstinline|ReturnConfiguration| contains a mandatory \lstinline|Return| element, which defines the 
-default return calculation for this risk factor type. Optionally, an \lstinline|OverrideConfiguration| block can
- be provided to specify overrides for particular names.
+The root element is \lstinline|ReturnConfiguration|, which contains one or more 
+\lstinline|<Return>| blocks. Each \lstinline|Return| must have a
+ \lstinline|key| attribute, either the risk factor key type for the default configuration (e.g., \texttt{DiscountCurve}, \texttt{FXSpot}, \texttt{EquitySpot}, etc.). or the risk factor key type plus the underlying name for a specific override (e.g \texttt{EquitySpot/EQUITY1}.
 
 \begin{listing}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<ReturnConfigurations>
-    <ReturnConfiguration key="DiscountCurve">
-        <Return>
-            <Type>Log</Type>
-            <Displacement>0.0</Displacement>
-        </Return>
-    </ReturnConfiguration>
-    <ReturnConfiguration key="EquitySpot">
-        <Return>
-            <Type>Relative</Type>
-            <Displacement>0.0</Displacement>
-        </Return>
-        <OverrideConfigurations>
-            <Return key="EQUITY_1">
-                <Type>Absolute</Type>
-                <Displacement>0.0</Displacement>
-            </Return>
-        </OverrideConfigurations>
-    </ReturnConfiguration>
-    <!-- ... more configurations ... -->
-</ReturnConfigurations>
+<ReturnConfiguration>
+    <Return key="DiscountCurve">
+        <Type>Log</Type>
+        <Displacement>0.0</Displacement>
+    </Return>
+    <Return key="EquitySpot">
+        <Type>Relative</Type>
+        <Displacement>0.0</Displacement>
+    </Return>
+    <Return key="EquitySpot/EQUITY_1">
+        <Type>Absolute</Type>
+        <Displacement>0.0</Displacement>
+    </Return>
+    <!-- ... more configurations ... -->    
+</ReturnConfiguration>
 \end{minted}
 \caption{Historical return configuration}
 \label{lst:historical_return_configuration}
@@ -43,13 +33,11 @@ default return calculation for this risk factor type. Optionally, an \lstinline|
 \subsubsection*{Elements and Attributes}
 
 \begin{itemize}
-    \item \lstinline|ReturnConfiguration key="..."|: Specifies the configuration for a risk factor type. The \lstinline|key| attribute must match a valid risk factor type.
-    \item \lstinline|Return|: Defines the return calculation. Used both as the default and in overrides.
+    \item \lstinline|Return key="..."|: Specifies the configuration for a risk factor type. The \lstinline|key| attribute must match a valid risk factor key type or the specific key type and name.
     \begin{itemize}
         \item \lstinline|Type|: The return type. Allowed values are \texttt{Log}, \texttt{Absolute}, and \texttt{Relative}.
         \item \lstinline|Displacement|: The displacement value (floating point). Used to avoid division by zero or negative values in relative/log returns.
     \end{itemize}
-    \item \lstinline|OverrideConfigurations| (Optional): Contains one or more \lstinline|Return| elements with a \lstinline|key| attribute, specifying overrides for particular names (e.g., a specific equity ticker).
 \end{itemize}
 
 \subsubsection*{Notes}

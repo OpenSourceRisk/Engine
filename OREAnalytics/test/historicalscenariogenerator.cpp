@@ -33,32 +33,32 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfiguration) {
 
     // 1. Default constructor should be log for discount curve
     ReturnConfiguration defaultConfig;
+    defaultConfig.toFile("defaultReturnConfig.xml");
     RiskFactorKey keyAbs(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
     Real absReturn = defaultConfig.returnValue(keyAbs, v1, v2, d1, d2);
     BOOST_CHECK_CLOSE(absReturn, std::log(v2 / v1), 1e-12);
 
     // 2. Configs with displacement
-    std::map<RiskFactorKey::KeyType, ReturnConfiguration::RiskFactorConfig> configs;
+    std::map<std::pair<RiskFactorKey::KeyType, string>, ReturnConfiguration::Return> configs;
 
     // Absolute
     ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
-    configs[RiskFactorKey::KeyType::DiscountCurve] = std::make_pair(absRet, ReturnConfiguration::OverrideConfigs{});
+    configs[std::make_pair(RiskFactorKey::KeyType::DiscountCurve, string(""))] = absRet;
 
     // Relative
     ReturnConfiguration::Return relRet{ReturnConfiguration::ReturnType::Relative, 0.5};
-    configs[RiskFactorKey::KeyType::IndexCurve] = std::make_pair(relRet, ReturnConfiguration::OverrideConfigs{});
+    configs[std::make_pair(RiskFactorKey::KeyType::IndexCurve, string(""))] = relRet;
 
     // Log
     ReturnConfiguration::Return logRet{ReturnConfiguration::ReturnType::Log, 0.1};
-    configs[RiskFactorKey::KeyType::SurvivalProbability] = std::make_pair(logRet, ReturnConfiguration::OverrideConfigs{});
+    configs[std::make_pair(RiskFactorKey::KeyType::SurvivalProbability, string(""))] = logRet;
 
     // 3. Configs with a specialized config for crude oil with displacement
     ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
     ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
-    ReturnConfiguration::OverrideConfigs relSpecialized;
-    relSpecialized["WTI"] = relRetSpecial;
-    configs[RiskFactorKey::KeyType::CommodityCurve] = std::make_pair(relRetDefault, relSpecialized);
-
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string(""))] = relRetDefault;
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string("WTI"))] = relRetSpecial;
+    
     ReturnConfiguration config2(configs);
 
     // Absolute
@@ -94,26 +94,20 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationFromXML) {
     using ore::analytics::RiskFactorKey;
 
     std::string xml = R"(
-    <ReturnConfigurations>
-        <ReturnConfiguration key="CommodityCurve">
-            <Return>
-                <Type>Relative</Type>
-                <Displacement>0.0</Displacement>
-            </Return>
-            <OverrideConfigurations>
-                <Return key="WTI">
-                    <Type>Relative</Type>
-                    <Displacement>0.7</Displacement>
-                </Return>
-            </OverrideConfigurations>
-        </ReturnConfiguration>
-        <ReturnConfiguration key="DiscountCurve">
-            <Return>
-                <Type>Absolute</Type>
-                <Displacement>0.0</Displacement>
-            </Return>
-        </ReturnConfiguration>
-    </ReturnConfigurations>
+    <ReturnConfiguration>
+        <Return key="CommodityCurve">>
+            <Type>Relative</Type>
+            <Displacement>0.0</Displacement>
+        </Return>
+        <Return key="CommodityCurve/WTI">
+            <Type>Relative</Type>
+            <Displacement>0.7</Displacement>
+        </Return>
+        <Return key="DiscountCurve">
+            <Type>Absolute</Type>
+            <Displacement>0.0</Displacement>
+        </Return>
+    </ReturnConfiguration>
     )";
 
     ReturnConfiguration config;
@@ -144,16 +138,19 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationXmlRoundtrip) {
     using ore::analytics::ReturnConfiguration;
     using ore::analytics::RiskFactorKey;
 
-    std::map<RiskFactorKey::KeyType, ReturnConfiguration::RiskFactorConfig> configs;
+    // 2. Configs with displacement
+    
+    std::map<std::pair<RiskFactorKey::KeyType, string>, ReturnConfiguration::Return> configs;
 
+    // Absolute
     ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
-    configs[RiskFactorKey::KeyType::DiscountCurve] = std::make_pair(absRet, ReturnConfiguration::OverrideConfigs{});
+    configs[std::make_pair(RiskFactorKey::KeyType::DiscountCurve, string(""))] = absRet;
 
+    // 3. Configs with a specialized config for crude oil with displacement
     ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
     ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
-    ReturnConfiguration::OverrideConfigs relSpecialized;
-    relSpecialized["WTI"] = relRetSpecial;
-    configs[RiskFactorKey::KeyType::CommodityCurve] = std::make_pair(relRetDefault, relSpecialized);
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string(""))] = relRetDefault;
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string("WTI"))] = relRetSpecial;
 
     ReturnConfiguration config1(configs);
 
@@ -164,7 +161,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationXmlRoundtrip) {
 
     ore::data::XMLDocument doc2;
     doc2.fromXMLString(xmlString);
-    XMLNode* root = doc2.getFirstNode("ReturnConfigurations");
+    XMLNode* root = doc2.getFirstNode("ReturnConfiguration");
     ReturnConfiguration config2;
     config2.fromXML(root);
 
