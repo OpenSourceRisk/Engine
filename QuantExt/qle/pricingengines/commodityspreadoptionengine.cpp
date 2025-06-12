@@ -135,9 +135,8 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / df;
     cfResults.back().payDate = paymentDate;
-    //cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
-    cfResults.back().discountFactor = 1.00;
-    cfResults.back().legNumber = 1.00;
+    cfResults.back().discountFactor = 0.00;
+    cfResults.back().legNumber = 0.00;
     cfResults.back().type = "ExpectedFlow";
 
     // Calendar spread adjustment if observation period is before the exercise date
