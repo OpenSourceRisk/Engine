@@ -21,26 +21,28 @@
 %include ored_portfolio.i
 %include ored_referencedatamanager.i
 %include ored_xmlutils.i
+%include qle_common.i
 %include std_set.i
 
 %{
 using ore::data::Portfolio;
 using ore::data::TradeGenerator;
-using ore::data::LegData;
+using ore::data::LegData;void test(QuantLib::ext::optional<bool> test_);
 using ore::data::XMLUtils;
 using ore::data::XMLSerializable;
 %}
+
+
 
 %shared_ptr(TradeGenerator)
 class TradeGenerator : public Portfolio {
   public:
 
-    TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "");
+    TradeGenerator(std::string counterpartyId = "", std::string nettingSetId = "", std::string startDate = "");
     TradeGenerator(ext::shared_ptr<CurveConfigurations> curveConfig, ext::shared_ptr < BasicReferenceDataManager> refData,
-                   std::string counterpartyId = "", std::string nettingSetId = "");
-
+                   std::string counterpartyId = "", std::string nettingSetId = "", std::string startDate = "");
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, QuantLib::Real rate, bool firstLegPays,
-                   std::string start = std::string(), std::string tradeId = "", std::map<std::string, std::string> mapPairs = {});
+                   std::string start = std::string(), std::string tradeId = std::string());
     void buildSwap(std::string indexId, QuantLib::Real notional, std::string maturity, std::string recIndexId, QuantLib::Real spread, bool firstLegPays,
                    std::string start = std::string(), std::string tradeId = std::string(), std::map<std::string, std::string> mapPairs = {});
     void buildCapFloor(std::string indexName, QuantLib::Real capFloorRate, QuantLib::Real notional, std::string maturity, bool isLong, bool isCap,
@@ -66,7 +68,6 @@ class TradeGenerator : public Portfolio {
                             std::string floatType, bool firstLegPays, std::string tradeId = "");
     void buildCommodityOption(std::string commodityId, QuantLib::Real quantity, std::string maturity, QuantLib::Real strike, std::string priceType,
                               bool isLong, bool isCall);
-    Date today_;
     void buildCommodityForward(std::string commodityId, QuantLib::Real quantity, std::string maturity, QuantLib::Real strike,
                                bool isLong, std::string tradeId = "");
     void fromXML(XMLNode* node) override;
@@ -77,6 +78,9 @@ private:
                      std::map<std::string, std::string> mapPairs = {});
     LegData buildIborLeg(QuantLib::ext::shared_ptr < Convention> conv, QuantLib::Real notional, std::string maturity, bool isPayer,
                      std::map<std::string, std::string> mapPairs = {});
+    Date startDate;
     };
+
+
 
 #endif
