@@ -502,6 +502,21 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
     DLOG("Yield curve building done for specs: " << boost::join(curveSpecNames, ","));
 }
 
+#define PWYC(INTVAR, INTMETH, INTINSTANCE)                                                                             \
+    {                                                                                                                  \
+        typedef PiecewiseYieldCurve<INTVAR, INTMETH, QuantExt::IterativeBootstrap> my_curve_1;                         \
+        typedef PiecewiseYieldCurve<INTVAR, INTMETH, QuantLib::GlobalBootstrap> my_curve_2;                            \
+        if (globalBootstrap) {                                                                                         \
+            yieldts = QuantLib::ext::make_shared<my_curve_2>(asofDate_, instruments, zeroDayCounter_[index],           \
+                                                             INTINSTANCE, my_curve_2::bootstrap_type(accuracy));       \
+        } else {                                                                                                       \
+            yieldts = QuantLib::ext::make_shared<my_curve_1>(                                                          \
+                asofDate_, instruments, zeroDayCounter_[index], INTINSTANCE,                                           \
+                my_curve_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,     \
+                                           dontThrowSteps));                                                           \
+        }                                                                                                              \
+    }
+
 std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>>
 YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
                                 const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments,
@@ -518,421 +533,221 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationVariable_[index]) {
+
     case InterpolationVariable::Zero:
         switch (interpolationMethod_[index]) {
-        case InterpolationMethod::Linear: {
-            typedef PiecewiseYieldCurve<ZeroYield, Linear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], Linear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogLinear: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], LogLinear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::NaturalCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::FinancialCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::ConvexMonotone: {
-            typedef PiecewiseYieldCurve<ZeroYield, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], ConvexMonotone(),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Hermite: {
-            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Parabolic),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::CubicSpline: {
-            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Quadratic: {
-            typedef PiecewiseYieldCurve<ZeroYield, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::Quadratic(1, 0, 1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogQuadratic: {
-            typedef PiecewiseYieldCurve<ZeroYield, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogNaturalCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], LogCubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogFinancialCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogCubicSpline: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogCubicSpline: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], DefaultLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], MonotonicLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::KrugerLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ZeroYield, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], KrugerLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
-            typedef PiecewiseYieldCurve<ZeroYield, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges, CubicInterpolation::Spline,
-                                    false, CubicInterpolation::SecondDerivative, 0.0,
-                                    CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
+        case InterpolationMethod::Linear:
+            PWYC(ZeroYield, Linear, Linear())
+            break;
+        case InterpolationMethod::LogLinear:
+            PWYC(ZeroYield, LogLinear, LogLinear())
+            break;
+        case InterpolationMethod::NaturalCubic:
+            PWYC(ZeroYield, Cubic, Cubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::FinancialCubic:
+            PWYC(ZeroYield, Cubic,
+                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::ConvexMonotone:
+            PWYC(ZeroYield, ConvexMonotone, ConvexMonotone())
+            break;
+        case InterpolationMethod::Hermite:
+            PWYC(ZeroYield, Cubic, Cubic(CubicInterpolation::Parabolic))
+            break;
+        case InterpolationMethod::CubicSpline:
+            PWYC(ZeroYield, Cubic,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::Quadratic:
+            PWYC(ZeroYield, QuantExt::Quadratic, QuantExt::Quadratic(1, 0, 1, 0, 1))
+            break;
+        case InterpolationMethod::LogQuadratic:
+            PWYC(ZeroYield, QuantExt::LogQuadratic, QuantExt::LogQuadratic(1, 0, -1, 0, 1))
+            break;
+        case InterpolationMethod::LogNaturalCubic:
+            PWYC(ZeroYield, LogCubic, LogCubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::LogFinancialCubic:
+            PWYC(ZeroYield, LogCubic,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::LogCubicSpline:
+            PWYC(ZeroYield, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::MonotonicLogCubicSpline:
+            PWYC(ZeroYield, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::DefaultLogMixedLinearCubic:
+            PWYC(ZeroYield, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::MonotonicLogMixedLinearCubic:
+            PWYC(ZeroYield, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::KrugerLogMixedLinearCubic:
+            PWYC(ZeroYield, KrugerLogMixedLinearCubic, KrugerLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::LogMixedLinearCubicNaturalSpline:
+            PWYC(ZeroYield, LogMixedLinearCubic,
+                 LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0))
+            break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");
         }
         break;
+
     case InterpolationVariable::Discount:
         switch (interpolationMethod_[index]) {
-        case InterpolationMethod::Linear: {
-            typedef PiecewiseYieldCurve<Discount, Linear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], Linear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogLinear: {
-            typedef PiecewiseYieldCurve<Discount, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], LogLinear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::NaturalCubic: {
-            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::FinancialCubic: {
-            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::ConvexMonotone: {
-            typedef PiecewiseYieldCurve<Discount, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], ConvexMonotone(),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Hermite: {
-            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Parabolic),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::CubicSpline: {
-            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Quadratic: {
-            typedef PiecewiseYieldCurve<Discount, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::Quadratic(1, 0, 1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogQuadratic: {
-            typedef PiecewiseYieldCurve<Discount, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogNaturalCubic: {
-            typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], LogCubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogFinancialCubic: {
-            typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                QuantLib::LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                                   CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogCubicSpline: {
-            typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogCubicSpline: {
-            typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], DefaultLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<Discount, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], MonotonicLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::KrugerLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<Discount, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], KrugerLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
-            typedef PiecewiseYieldCurve<Discount, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges, CubicInterpolation::Spline,
-                                    false, CubicInterpolation::SecondDerivative, 0.0,
-                                    CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
+        case InterpolationMethod::Linear:
+            PWYC(Discount, Linear, Linear())
+            break;
+        case InterpolationMethod::LogLinear:
+            PWYC(Discount, LogLinear, LogLinear())
+            break;
+        case InterpolationMethod::NaturalCubic:
+            PWYC(Discount, Cubic, Cubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::FinancialCubic:
+            PWYC(Discount, Cubic,
+                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::ConvexMonotone:
+            PWYC(Discount, ConvexMonotone, ConvexMonotone())
+            break;
+        case InterpolationMethod::Hermite:
+            PWYC(Discount, Cubic, Cubic(CubicInterpolation::Parabolic))
+            break;
+        case InterpolationMethod::CubicSpline:
+            PWYC(Discount, Cubic,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::Quadratic:
+            PWYC(Discount, QuantExt::Quadratic, QuantExt::Quadratic(1, 0, 1, 0, 1))
+            break;
+        case InterpolationMethod::LogQuadratic:
+            PWYC(Discount, QuantExt::LogQuadratic, QuantExt::LogQuadratic(1, 0, -1, 0, 1))
+            break;
+        case InterpolationMethod::LogNaturalCubic:
+            PWYC(Discount, LogCubic, LogCubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::LogFinancialCubic:
+            PWYC(Discount, LogCubic,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::LogCubicSpline:
+            PWYC(Discount, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::MonotonicLogCubicSpline:
+            PWYC(Discount, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::DefaultLogMixedLinearCubic:
+            PWYC(Discount, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::MonotonicLogMixedLinearCubic:
+            PWYC(Discount, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::KrugerLogMixedLinearCubic:
+            PWYC(Discount, KrugerLogMixedLinearCubic, KrugerLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::LogMixedLinearCubicNaturalSpline:
+            PWYC(Discount, LogMixedLinearCubic,
+                 LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0))
+            break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");
         }
         break;
+
+
     case InterpolationVariable::Forward:
         switch (interpolationMethod_[index]) {
-        case InterpolationMethod::Linear: {
-            typedef PiecewiseYieldCurve<ForwardRate, Linear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], Linear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogLinear: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_[index], LogLinear(),
-                                                           my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow,
-                                                                                    maxAttempts, maxFactor, minFactor,
-                                                                                    dontThrowSteps));
-        } break;
-        case InterpolationMethod::NaturalCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::FinancialCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::ConvexMonotone: {
-            typedef PiecewiseYieldCurve<ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], ConvexMonotone(),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Hermite: {
-            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], Cubic(CubicInterpolation::Parabolic),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::CubicSpline: {
-            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::Quadratic: {
-            typedef PiecewiseYieldCurve<ForwardRate, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::Quadratic(1, 0, 1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogQuadratic: {
-            typedef PiecewiseYieldCurve<ForwardRate, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogNaturalCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], LogCubic(CubicInterpolation::Kruger, true),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogFinancialCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::FirstDerivative),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogCubicSpline: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogCubicSpline: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
-                         CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::DefaultLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], DefaultLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::MonotonicLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap>
-                my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], MonotonicLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::KrugerLogMixedLinearCubic: {
-            typedef PiecewiseYieldCurve<ForwardRate, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index], KrugerLogMixedLinearCubic(mixedInterpolationSize),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
-        case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
-            typedef PiecewiseYieldCurve<ForwardRate, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-            yieldts = QuantLib::ext::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_[index],
-                LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges, CubicInterpolation::Spline,
-                                    false, CubicInterpolation::SecondDerivative, 0.0,
-                                    CubicInterpolation::SecondDerivative, 0.0),
-                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
-                                         dontThrowSteps));
-        } break;
+        case InterpolationMethod::Linear:
+            PWYC(ForwardRate, Linear, Linear())
+            break;
+        case InterpolationMethod::LogLinear:
+            PWYC(ForwardRate, LogLinear, LogLinear())
+            break;
+        case InterpolationMethod::NaturalCubic:
+            PWYC(ForwardRate, Cubic, Cubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::FinancialCubic:
+            PWYC(ForwardRate, Cubic,
+                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::ConvexMonotone:
+            PWYC(ForwardRate, ConvexMonotone, ConvexMonotone())
+            break;
+        case InterpolationMethod::Hermite:
+            PWYC(ForwardRate, Cubic, Cubic(CubicInterpolation::Parabolic))
+            break;
+        case InterpolationMethod::CubicSpline:
+            PWYC(ForwardRate, Cubic,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::Quadratic:
+            PWYC(ForwardRate, QuantExt::Quadratic, QuantExt::Quadratic(1, 0, 1, 0, 1))
+            break;
+        case InterpolationMethod::LogQuadratic:
+            PWYC(ForwardRate, QuantExt::LogQuadratic, QuantExt::LogQuadratic(1, 0, -1, 0, 1))
+            break;
+        case InterpolationMethod::LogNaturalCubic:
+            PWYC(ForwardRate, LogCubic, LogCubic(CubicInterpolation::Kruger, true))
+            break;
+        case InterpolationMethod::LogFinancialCubic:
+            PWYC(ForwardRate, LogCubic,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::FirstDerivative))
+            break;
+        case InterpolationMethod::LogCubicSpline:
+            PWYC(ForwardRate, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::MonotonicLogCubicSpline:
+            PWYC(ForwardRate, LogCubic,
+                 LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::DefaultLogMixedLinearCubic:
+            PWYC(ForwardRate, DefaultLogMixedLinearCubic, DefaultLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::MonotonicLogMixedLinearCubic:
+            PWYC(ForwardRate, MonotonicLogMixedLinearCubic, MonotonicLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::KrugerLogMixedLinearCubic:
+            PWYC(ForwardRate, KrugerLogMixedLinearCubic, KrugerLogMixedLinearCubic(mixedInterpolationSize))
+            break;
+        case InterpolationMethod::LogMixedLinearCubicNaturalSpline:
+            PWYC(ForwardRate, LogMixedLinearCubic,
+                 LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges,
+                                     CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                                     CubicInterpolation::SecondDerivative, 0.0))
+            break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");
         }
         break;
+
     default:
         QL_FAIL("Interpolation variable not recognised.");
     }
