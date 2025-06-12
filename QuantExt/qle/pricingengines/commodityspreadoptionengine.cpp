@@ -135,7 +135,6 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / df;
     cfResults.back().payDate = paymentDate;
-    cfResults.back().discountFactor = 0.00;
     cfResults.back().legNumber = 0.00;
     cfResults.back().type = "ExpectedFlow";
 
