@@ -36,10 +36,12 @@
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
+#include <ql/termstructures/globalbootstrap.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
 namespace data {
+
 using namespace QuantLib;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
@@ -176,8 +178,14 @@ private:
     bool buildCalibrationInfo_;
     const Market* market_;
 
-    void buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                             const std::vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>>
+    buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
+                        const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments, bool globalBootstrap);
+
+    QuantLib::ext::shared_ptr<YieldTermStructure>
+    flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,
+                          const std::size_t mixedInterpolationSize,
+                          const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
