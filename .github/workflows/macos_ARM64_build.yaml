@@ -13,6 +13,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    #    token: ${{ secrets.ORG_ACTIONS_ACCESS }}  
+    #- name: get QuantLib
+    #  run: |
+    #    git submodule update --init --recursive
     - name: Install Boost
       run: |
         curl -O -L https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
@@ -27,7 +31,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        sudo cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64 -DORE_USE_ZLIB=OFF -DORE_BUILD_SWIG=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
+        sudo cmake .. -DCMAKE_OSX_ARCHITECTURES=arm64 -DORE_USE_ZLIB=ON -DORE_BUILD_SWIG=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=ON -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_SESSIONS=ON -DCMAKE_BUILD_TYPE=Release ..
         sudo cmake --build . -j4
         sudo cmake --install .
     - name: Wrap ORE-SWIG for Python Wheels
