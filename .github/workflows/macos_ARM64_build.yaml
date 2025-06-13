@@ -26,7 +26,7 @@ jobs:
         sudo ./b2 architecture=arm address-model=64 -s NO_LZMA=1 -s NO_ZSTD=1 abi=aapcs install
     - name: Install Swig
       run: |
-        sudo brew install swig
+        brew install swig
     - name: cmake configure and build
       run: |
         mkdir build
