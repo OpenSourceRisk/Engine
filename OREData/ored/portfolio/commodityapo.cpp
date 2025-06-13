@@ -103,6 +103,8 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
     // can then use a standard commodity option pricer below.
     Leg leg = buildLeg(engineFactory, configuration);
 
+    legMandatoryCashflows_.push_back(true);
+
     // Based on allAveraging_ flag, set up a standard or averaging commodity option
     if (allAveraging_) {
         buildStandardOption(engineFactory, leg, exDate);
