@@ -136,7 +136,7 @@ private:
     std::vector<Currency> currency_;
     std::vector<DayCounter> zeroDayCounter_;
     std::vector<bool> extrapolation_;
-    std::vector<std::pair<QuantLib::ext::shared_ptr<YieldCurve>, std::string>> discountCurve_;
+    std::vector<Handle<YieldTermStructure>> discountCurve_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveConfig>> curveConfig_;
     std::vector<vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>> curveSegments_;
     std::vector<InterpolationVariable> interpolationVariable_;
@@ -166,8 +166,8 @@ private:
     void buildBondYieldShiftedCurve(const std::size_t index);
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
-    std::pair<std::string, QuantLib::ext::shared_ptr<YieldCurve>>
-    getYieldCurve(const std::size_t index, const std::string& ccy, const std::string& id) const;
+    QuantLib::Handle<YieldTermStructure> getYieldCurve(const std::size_t index, const std::string& ccy,
+                                                       const std::string& id) const;
 
     map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
@@ -177,6 +177,8 @@ private:
     const bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
+
+    map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
     std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>>
     buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
