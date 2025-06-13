@@ -28,6 +28,21 @@ jobs:
         cmake ..
         export 
         export Eigen3_DIR=$CURRENT_DIR/eigen-3.4.0
+    - name: Build Zlib
+      run: |
+        pwd
+        curl -O -L https://www.zlib.net/zlib-1.3.1.tar.gz
+        tar xzvf zlib-1.3.1.tar.gz
+        cd zlib-1.3.1
+        ./configure
+        make
+        export ZLIB_ROOT=$CURRENT_DIR/zlib-1.3.1
+#   - name: Build ORE
+#     run : pwd; cd ORE; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DORE_USE_ZLIB=ON -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -G "Ninja" ..
+#    - name: cmake build
+#      run: pwd; cd ORE; cd build; cmake --build . -j $(nproc)
+#    - name: Wrap ORE-SWIG
+#      run: pwd; cd OREAnalytics-SWIG/Python; python setup.py wrap
     - name: Copy Configuration
       run: |
          pwd
