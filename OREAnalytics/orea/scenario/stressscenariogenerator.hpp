@@ -29,6 +29,7 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 namespace ore {
 namespace analytics {
@@ -99,7 +100,7 @@ private:
     template<class StressTestShifts> 
     map<string, QuantLib::ext::shared_ptr<StressTestShifts>>
     populateShiftData(const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& stressTestShifts,
-                      const string& caller,
+                      const vector<Wildcard>& wildcardKeys,
                       RiskFactorKey::KeyType keyType) const;
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
