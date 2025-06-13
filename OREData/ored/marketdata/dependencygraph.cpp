@@ -243,7 +243,7 @@ std::ostream& operator<<(std::ostream& o, const DependencyGraph::ReducedNode& n)
     for (std::size_t i = 0; i < n.nodes.size(); ++i) {
         o << *std::next(n.nodes.begin(), i);
         if (i < n.nodes.size() - 1)
-            o << "#";
+            o << ";";
     }
     return o << "]";
 }
