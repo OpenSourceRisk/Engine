@@ -185,7 +185,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
     {
-
         // leg based cashflow reporting
         auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
         Size addResultsLegs = 0;
@@ -193,317 +192,328 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             addResultsLegs = maxLegNoIter->first + 1;
         const vector<Leg>& legs = trade->legs();
         for (size_t i = 0; i < legs.size(); i++) 
-        if(legBasedReport || trade->legMandatoryCashflows()[i])        
-        {
-            const QuantLib::Leg& leg = legs[i];
-            bool payer = trade->legPayers()[i];
-            string ccy = trade->legCurrencies()[i];
-            Handle<YieldTermStructure> discountCurve;
-            if (market)
-                discountCurve = market->discountCurve(ccy, configuration);
-            for (size_t j = 0; j < leg.size(); j++) {
-                QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-                Date payDate = ptrFlow->date();
-                if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
-                    Real amount = ptrFlow->amount();
-                    string flowType = "";
-                    if (payer)
-                        amount *= -1.0;
-                    std::string ccy = trade->legCurrencies()[i];
+         {
+            bool mandatory = false;
+            try
+            {
+                mandatory = trade->legMandatoryCashflows()[i];
+            }
+            catch(...)
+            {
+            }            
 
-                    QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                        QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
-                        QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantExt::TypedCashFlow> ptrTypedCf =
-                        QuantLib::ext::dynamic_pointer_cast<QuantExt::TypedCashFlow>(ptrFlow);
-
-                    Real coupon;
-                    Real accrual;
-                    Real notional;
-                    Date accrualStartDate, accrualEndDate;
-                    Real accruedAmount;
-
-                    if (ptrCoupon) {
-                        coupon = ptrCoupon->rate();
-                        accrual = ptrCoupon->accrualPeriod();
-                        notional = ptrCoupon->nominal();
-                        accrualStartDate = ptrCoupon->accrualStartDate();
-                        accrualEndDate = ptrCoupon->accrualEndDate();
-                        accruedAmount = ptrCoupon->accruedAmount(asof);
+            if(legBasedReport || mandatory)        
+            {
+                const QuantLib::Leg& leg = legs[i];
+                bool payer = trade->legPayers()[i];
+                string ccy = trade->legCurrencies()[i];
+                Handle<YieldTermStructure> discountCurve;
+                if (market)
+                    discountCurve = market->discountCurve(ccy, configuration);
+                for (size_t j = 0; j < leg.size(); j++) {
+                    QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
+                    Date payDate = ptrFlow->date();
+                    if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
+                        Real amount = ptrFlow->amount();
+                        string flowType = "";
                         if (payer)
-                            accruedAmount *= -1.0;
-                        flowType = "Interest";
-                    } else if (ptrCommCf) {
-                        coupon = Null<Real>();
-                        accrual = Null<Real>();
-                        notional = ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
-                        accrualStartDate = accrualEndDate = Null<Date>();
-                        accruedAmount = Null<Real>();
-                        flowType = "Notional (units)";
-                    } else if (ptrTypedCf) {
-                        coupon = Null<Real>();
-                        accrual = Null<Real>();
-                        notional = Null<Real>();
-                        accrualStartDate = accrualEndDate = Null<Date>();
-                        accruedAmount = Null<Real>();
-                        flowType = ore::data::to_string(ptrTypedCf->type());
-                    } else {
-                        coupon = Null<Real>();
-                        accrual = Null<Real>();
-                        notional = Null<Real>();
-                        accrualStartDate = accrualEndDate = Null<Date>();
-                        accruedAmount = Null<Real>();
-                        flowType = "Notional";
-                    }
+                            amount *= -1.0;
+                        std::string ccy = trade->legCurrencies()[i];
 
-                    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                        ptrFlow = unpackIndexedCoupon(cpn);
-                    }
+                        QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                            QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
+                            QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantExt::TypedCashFlow> ptrTypedCf =
+                            QuantLib::ext::dynamic_pointer_cast<QuantExt::TypedCashFlow>(ptrFlow);
 
-                    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                        QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                        QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                        QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                        QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
-                    QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
-                        QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
+                        Real coupon;
+                        Real accrual;
+                        Real notional;
+                        Date accrualStartDate, accrualEndDate;
+                        Real accruedAmount;
 
-                    Date fixingDate;
-                    Real fixingValue = Null<Real>();
-                    if (ptrFloat) {
-                        fixingDate = ptrFloat->fixingDate();
-                        if (fixingDate > asof)
-                            flowType = "InterestProjected";
-
-                        try {
-                            fixingValue = ptrFloat->index()->fixing(fixingDate);
-                        } catch (...) {
+                        if (ptrCoupon) {
+                            coupon = ptrCoupon->rate();
+                            accrual = ptrCoupon->accrualPeriod();
+                            notional = ptrCoupon->nominal();
+                            accrualStartDate = ptrCoupon->accrualStartDate();
+                            accrualEndDate = ptrCoupon->accrualEndDate();
+                            accruedAmount = ptrCoupon->accruedAmount(asof);
+                            if (payer)
+                                accruedAmount *= -1.0;
+                            flowType = "Interest";
+                        } else if (ptrCommCf) {
+                            coupon = Null<Real>();
+                            accrual = Null<Real>();
+                            notional = ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
+                            flowType = "Notional (units)";
+                        } else if (ptrTypedCf) {
+                            coupon = Null<Real>();
+                            accrual = Null<Real>();
+                            notional = Null<Real>();
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
+                            flowType = ore::data::to_string(ptrTypedCf->type());
+                        } else {
+                            coupon = Null<Real>();
+                            accrual = Null<Real>();
+                            notional = Null<Real>();
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
+                            flowType = "Notional";
                         }
 
-                        if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
-                            fixingValue = (c->rate() - c->spread()) / c->gearing();
+                        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
+                            ptrFlow = unpackIndexedCoupon(cpn);
                         }
 
-                        if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
-                            fixingValue =
-                                (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
-                        }
+                        QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
+                            QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
+                            QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
+                            QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
+                            QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
+                        QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
+                            QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
 
-                        if (auto sc =
-                                QuantLib::ext::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
-                            if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
-                                    sc->underlying())) {
+                        Date fixingDate;
+                        Real fixingValue = Null<Real>();
+                        if (ptrFloat) {
+                            fixingDate = ptrFloat->fixingDate();
+                            if (fixingDate > asof)
+                                flowType = "InterestProjected";
+
+                            try {
+                                fixingValue = ptrFloat->index()->fixing(fixingDate);
+                            } catch (...) {
+                            }
+
+                            if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
+                                fixingValue = (c->rate() - c->spread()) / c->gearing();
+                            }
+
+                            if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
                                 fixingValue =
                                     (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
                             }
+
+                            if (auto sc =
+                                    QuantLib::ext::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(ptrFloat)) {
+                                if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
+                                        sc->underlying())) {
+                                    fixingValue =
+                                        (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
+                                }
+                            }
+
+                            // for (capped-floored) BMA / ON / subperiod coupons the fixing value is the
+                            // compounded / averaged rate, not a single index fixing
+
+                            if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
+                                fixingValue = (on->rate() - on->spread()) / on->gearing();
+                            } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
+                                        ptrFloat)) {
+                                fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
+                            } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFloat)) {
+                                fixingValue = (c->rate() - c->spread()) / c->gearing();
+                            } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
+                                        QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
+                                fixingValue =
+                                    (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
+                            } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
+                                        QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
+                                fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
+                                            c->underlying()->gearing();
+                            } else if (auto c =
+                                        QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(
+                                            ptrFloat)) {
+                                fixingValue =
+                                    (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
+                            } else if (auto sp =
+                                        QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
+                                fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
+                            }
+                        } else if (ptrInfl) {
+                            fixingDate = ptrInfl->fixingDate();
+                            fixingValue = ptrInfl->indexFixing();
+                            flowType = "Inflation";
+                        } else if (ptrIndCf) {
+                            fixingDate = ptrIndCf->fixingDate();
+                            fixingValue = ptrIndCf->indexFixing();
+                            flowType = "Index";
+                        } else if (ptrFxlCf) {
+                            fixingDate = ptrFxlCf->fxFixingDate();
+                            fixingValue = ptrFxlCf->fxRate();
+                        } else if (ptrEqCp) {
+                            fixingDate = ptrEqCp->fixingEndDate();
+                            fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
+                        } else if (ptrCommCf) {
+                            fixingDate = ptrCommCf->lastPricingDate();
+                            fixingValue = ptrCommCf->fixing();
+                        } else {
+                            fixingDate = Null<Date>();
+                            fixingValue = Null<Real>();
                         }
 
-                        // for (capped-floored) BMA / ON / subperiod coupons the fixing value is the
-                        // compounded / averaged rate, not a single index fixing
+                        Real effectiveAmount = Null<Real>();
+                        Real discountFactor = Null<Real>();
+                        Real presentValue = Null<Real>();
+                        Real presentValueBase = Null<Real>();
+                        Real fxRateLocalBase = Null<Real>();
+                        Real floorStrike = Null<Real>();
+                        Real capStrike = Null<Real>();
+                        Real floorVolatility = Null<Real>();
+                        Real capVolatility = Null<Real>();
+                        Real effectiveFloorVolatility = Null<Real>();
+                        Real effectiveCapVolatility = Null<Real>();
 
-                        if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat)) {
-                            fixingValue = (on->rate() - on->spread()) / on->gearing();
-                        } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
-                                       ptrFloat)) {
-                            fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFloat)) {
-                            fixingValue = (c->rate() - c->spread()) / c->gearing();
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
-                                       QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
-                            fixingValue =
-                                (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
-                        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
-                                       QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
-                            fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
-                                          c->underlying()->gearing();
-                        } else if (auto c =
-                                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(
-                                           ptrFloat)) {
-                            fixingValue =
-                                (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
-                        } else if (auto sp =
-                                       QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(ptrFloat)) {
-                            fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
-                        }
-                    } else if (ptrInfl) {
-                        fixingDate = ptrInfl->fixingDate();
-                        fixingValue = ptrInfl->indexFixing();
-                        flowType = "Inflation";
-                    } else if (ptrIndCf) {
-                        fixingDate = ptrIndCf->fixingDate();
-                        fixingValue = ptrIndCf->indexFixing();
-                        flowType = "Index";
-                    } else if (ptrFxlCf) {
-                        fixingDate = ptrFxlCf->fxFixingDate();
-                        fixingValue = ptrFxlCf->fxRate();
-                    } else if (ptrEqCp) {
-                        fixingDate = ptrEqCp->fixingEndDate();
-                        fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
-                    } else if (ptrCommCf) {
-                        fixingDate = ptrCommCf->lastPricingDate();
-                        fixingValue = ptrCommCf->fixing();
-                    } else {
-                        fixingDate = Null<Date>();
-                        fixingValue = Null<Real>();
-                    }
+                        if (amount != Null<Real>())
+                            effectiveAmount = amount * multiplier;
 
-                    Real effectiveAmount = Null<Real>();
-                    Real discountFactor = Null<Real>();
-                    Real presentValue = Null<Real>();
-                    Real presentValueBase = Null<Real>();
-                    Real fxRateLocalBase = Null<Real>();
-                    Real floorStrike = Null<Real>();
-                    Real capStrike = Null<Real>();
-                    Real floorVolatility = Null<Real>();
-                    Real capVolatility = Null<Real>();
-                    Real effectiveFloorVolatility = Null<Real>();
-                    Real effectiveCapVolatility = Null<Real>();
+                        if (market) {
+                            discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
+                            if (effectiveAmount != Null<Real>())
+                                presentValue = discountFactor * effectiveAmount;
+                            try {
+                                fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
+                                presentValueBase = presentValue * fxRateLocalBase;
+                            } catch (...) {
+                            }
 
-                    if (amount != Null<Real>())
-                        effectiveAmount = amount * multiplier;
+                            // scan for known capped / floored coupons and extract cap / floor strike and fixing
+                            // date
 
-                    if (market) {
-                        discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
-                        if (effectiveAmount != Null<Real>())
-                            presentValue = discountFactor * effectiveAmount;
-                        try {
-                            fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
-                            presentValueBase = presentValue * fxRateLocalBase;
-                        } catch (...) {
-                        }
-
-                        // scan for known capped / floored coupons and extract cap / floor strike and fixing
-                        // date
-
-                        // unpack stripped cap/floor coupon
-                        QuantLib::ext::shared_ptr<CashFlow> c = ptrFlow;
-                        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
-                            c = tmp->underlying();
-                        }
-                        Date volFixingDate;
-                        std::string qlIndexName; // index used to retrieve vol
-                        bool usesCapVol = false, usesSwaptionVol = false;
-                        Period swaptionTenor;
-                        if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
-                            floorStrike = tmp->effectiveFloor();
-                            capStrike = tmp->effectiveCap();
-                            volFixingDate = tmp->fixingDate();
-                            qlIndexName = tmp->index()->name();
-                            if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
-                                swaptionTenor = cms->swapIndex()->tenor();
-                                qlIndexName = cms->swapIndex()->iborIndex()->name();
-                                usesSwaptionVol = true;
-                            } else if (auto cms =
-                                           QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
-                                swaptionTenor = cms->swapIndex()->tenor();
-                                qlIndexName = cms->swapIndex()->iborIndex()->name();
-                                usesSwaptionVol = true;
-                            } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
-                                qlIndexName = ibor->index()->name();
+                            // unpack stripped cap/floor coupon
+                            QuantLib::ext::shared_ptr<CashFlow> c = ptrFlow;
+                            if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
+                                c = tmp->underlying();
+                            }
+                            Date volFixingDate;
+                            std::string qlIndexName; // index used to retrieve vol
+                            bool usesCapVol = false, usesSwaptionVol = false;
+                            Period swaptionTenor;
+                            if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                floorStrike = tmp->effectiveFloor();
+                                capStrike = tmp->effectiveCap();
+                                volFixingDate = tmp->fixingDate();
+                                qlIndexName = tmp->index()->name();
+                                if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                    swaptionTenor = cms->swapIndex()->tenor();
+                                    qlIndexName = cms->swapIndex()->iborIndex()->name();
+                                    usesSwaptionVol = true;
+                                } else if (auto cms =
+                                            QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
+                                    swaptionTenor = cms->swapIndex()->tenor();
+                                    qlIndexName = cms->swapIndex()->iborIndex()->name();
+                                    usesSwaptionVol = true;
+                                } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                    qlIndexName = ibor->index()->name();
+                                    usesCapVol = true;
+                                }
+                            } else if (auto tmp =
+                                        QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                                floorStrike = tmp->effectiveFloor();
+                                capStrike = tmp->effectiveCap();
+                                volFixingDate = tmp->underlying()->fixingDates().front();
+                                qlIndexName = tmp->index()->name();
                                 usesCapVol = true;
+                                if (floorStrike != Null<Real>())
+                                    effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                if (capStrike != Null<Real>())
+                                    effectiveCapVolatility = tmp->effectiveCapletVolatility();
+                            } else if (auto tmp =
+                                        QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                                floorStrike = tmp->effectiveFloor();
+                                capStrike = tmp->effectiveCap();
+                                volFixingDate = tmp->underlying()->fixingDates().front();
+                                qlIndexName = tmp->index()->name();
+                                usesCapVol = true;
+                                if (floorStrike != Null<Real>())
+                                    effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                if (capStrike != Null<Real>())
+                                    effectiveCapVolatility = tmp->effectiveCapletVolatility();
+                            } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
+                                floorStrike = tmp->effectiveFloor();
+                                capStrike = tmp->effectiveCap();
+                                volFixingDate = tmp->underlying()->fixingDates().front();
+                                qlIndexName = tmp->index()->name();
+                                usesCapVol = true;
+                                if (floorStrike != Null<Real>())
+                                    effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
+                                if (capStrike != Null<Real>())
+                                    effectiveCapVolatility = tmp->effectiveCapletVolatility();
                             }
-                        } else if (auto tmp =
-                                       QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
-                            floorStrike = tmp->effectiveFloor();
-                            capStrike = tmp->effectiveCap();
-                            volFixingDate = tmp->underlying()->fixingDates().front();
-                            qlIndexName = tmp->index()->name();
-                            usesCapVol = true;
-                            if (floorStrike != Null<Real>())
-                                effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                            if (capStrike != Null<Real>())
-                                effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                        } else if (auto tmp =
-                                       QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
-                            floorStrike = tmp->effectiveFloor();
-                            capStrike = tmp->effectiveCap();
-                            volFixingDate = tmp->underlying()->fixingDates().front();
-                            qlIndexName = tmp->index()->name();
-                            usesCapVol = true;
-                            if (floorStrike != Null<Real>())
-                                effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                            if (capStrike != Null<Real>())
-                                effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                        } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
-                            floorStrike = tmp->effectiveFloor();
-                            capStrike = tmp->effectiveCap();
-                            volFixingDate = tmp->underlying()->fixingDates().front();
-                            qlIndexName = tmp->index()->name();
-                            usesCapVol = true;
-                            if (floorStrike != Null<Real>())
-                                effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                            if (capStrike != Null<Real>())
-                                effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                        }
 
-                        // get market volaility for cap / floor
+                            // get market volaility for cap / floor
 
-                        if (volFixingDate != Date() && fixingDate > market->asofDate()) {
-                            volFixingDate = std::max(volFixingDate, market->asofDate() + 1);
-                            if (floorStrike != Null<Real>()) {
-                                if (usesSwaptionVol) {
-                                    floorVolatility =
-                                        market
-                                            ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                          configuration)
-                                            ->volatility(volFixingDate, swaptionTenor, floorStrike);
-                                } else if (usesCapVol && floorVolatility == Null<Real>()) {
-                                    floorVolatility =
-                                        market
-                                            ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                          configuration)
-                                            ->volatility(volFixingDate, floorStrike);
+                            if (volFixingDate != Date() && fixingDate > market->asofDate()) {
+                                volFixingDate = std::max(volFixingDate, market->asofDate() + 1);
+                                if (floorStrike != Null<Real>()) {
+                                    if (usesSwaptionVol) {
+                                        floorVolatility =
+                                            market
+                                                ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                            configuration)
+                                                ->volatility(volFixingDate, swaptionTenor, floorStrike);
+                                    } else if (usesCapVol && floorVolatility == Null<Real>()) {
+                                        floorVolatility =
+                                            market
+                                                ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                            configuration)
+                                                ->volatility(volFixingDate, floorStrike);
+                                    }
                                 }
-                            }
-                            if (capStrike != Null<Real>()) {
-                                if (usesSwaptionVol) {
-                                    capVolatility =
-                                        market
-                                            ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                          configuration)
-                                            ->volatility(volFixingDate, swaptionTenor, capStrike);
-                                } else if (usesCapVol && capVolatility == Null<Real>()) {
-                                    capVolatility =
-                                        market
-                                            ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                          configuration)
-                                            ->volatility(volFixingDate, capStrike);
+                                if (capStrike != Null<Real>()) {
+                                    if (usesSwaptionVol) {
+                                        capVolatility =
+                                            market
+                                                ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                            configuration)
+                                                ->volatility(volFixingDate, swaptionTenor, capStrike);
+                                    } else if (usesCapVol && capVolatility == Null<Real>()) {
+                                        capVolatility =
+                                            market
+                                                ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                            configuration)
+                                                ->volatility(volFixingDate, capStrike);
+                                    }
                                 }
                             }
                         }
+
+                        result.push_back({});
+                        result.back().cashflowNo = j + 1;
+                        result.back().legNo = i + addResultsLegs;
+                        result.back().payDate = payDate;
+                        result.back().flowType = flowType;
+                        result.back().amount = effectiveAmount;
+                        result.back().currency = ccy;
+                        result.back().coupon = coupon;
+                        result.back().accrual = accrual;
+                        result.back().accrualStartDate = accrualStartDate;
+                        result.back().accrualEndDate = accrualEndDate;
+                        result.back().accruedAmount = accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier);
+                        result.back().fixingDate = fixingDate;
+                        result.back().fixingValue = fixingValue;
+                        result.back().notional = notional * (notional == Null<Real>() ? 1.0 : multiplier);
+                        result.back().discountFactor = discountFactor;
+                        result.back().presentValue = presentValue;
+                        result.back().fxRateLocalBase = fxRateLocalBase;
+                        result.back().presentValueBase = presentValueBase;
+                        result.back().baseCurrency = baseCurrency;
+                        result.back().floorStrike = floorStrike;
+                        result.back().capStrike = capStrike;
+                        result.back().floorVolatility = floorVolatility;
+                        result.back().capVolatility = capVolatility;
+                        result.back().effectiveFloorVolatility = effectiveFloorVolatility;
+                        result.back().effectiveCapVolatility = effectiveCapVolatility;
+                        //result.back().expectedFlow = cf.expectedFlow; //TODO find way
                     }
-
-                    result.push_back({});
-                    result.back().cashflowNo = j + 1;
-                    result.back().legNo = i + addResultsLegs;
-                    result.back().payDate = payDate;
-                    result.back().flowType = flowType;
-                    result.back().amount = effectiveAmount;
-                    result.back().currency = ccy;
-                    result.back().coupon = coupon;
-                    result.back().accrual = accrual;
-                    result.back().accrualStartDate = accrualStartDate;
-                    result.back().accrualEndDate = accrualEndDate;
-                    result.back().accruedAmount = accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier);
-                    result.back().fixingDate = fixingDate;
-                    result.back().fixingValue = fixingValue;
-                    result.back().notional = notional * (notional == Null<Real>() ? 1.0 : multiplier);
-                    result.back().discountFactor = discountFactor;
-                    result.back().presentValue = presentValue;
-                    result.back().fxRateLocalBase = fxRateLocalBase;
-                    result.back().presentValueBase = presentValueBase;
-                    result.back().baseCurrency = baseCurrency;
-                    result.back().floorStrike = floorStrike;
-                    result.back().capStrike = capStrike;
-                    result.back().floorVolatility = floorVolatility;
-                    result.back().capVolatility = capVolatility;
-                    result.back().effectiveFloorVolatility = effectiveFloorVolatility;
-                    result.back().effectiveCapVolatility = effectiveCapVolatility;
-                    //result.back().expectedFlow = cf.expectedFlow; //TODO find way
                 }
             }
         }
