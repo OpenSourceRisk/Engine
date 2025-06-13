@@ -94,7 +94,9 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
 
-	// update latest premium pay date
+        legMandatoryCashflows_.push_back(true); //TODO premiums always
+
+	    // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
 
         DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");
@@ -116,6 +118,8 @@ void Trade::validate() const {
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
                    "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
+        QL_REQUIRE(legs_.size() == legMandatoryCashflows_.size(),
+                   "Inconsistent number of mandatory cashflow indicators for legs in trade " << id_ << ".");
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }
@@ -143,6 +147,7 @@ void Trade::reset() {
     npvCurrency_.clear();
     notional_ = Null<Real>();
     notionalCurrency_.clear();
+    legMandatoryCashflows_.clear();
     maturity_ = Date();
     maturityType_.clear();
     issuer_.clear();

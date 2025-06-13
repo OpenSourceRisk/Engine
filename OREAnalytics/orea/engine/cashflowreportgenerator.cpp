@@ -182,16 +182,19 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             }
         }
     }
-    if (trade->legs().size() >= 1 && cashFlowResults == addResults.end()) {
+
+    bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
+    {
 
         // leg based cashflow reporting
         auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
         Size addResultsLegs = 0;
         if (maxLegNoIter != cashflowNumber.end())
             addResultsLegs = maxLegNoIter->first + 1;
-
         const vector<Leg>& legs = trade->legs();
-        for (size_t i = 0; i < legs.size(); i++) {
+        for (size_t i = 0; i < legs.size(); i++) 
+        if(legBasedReport || trade->legMandatoryCashflows()[i])        
+        {
             const QuantLib::Leg& leg = legs[i];
             bool payer = trade->legPayers()[i];
             string ccy = trade->legCurrencies()[i];
