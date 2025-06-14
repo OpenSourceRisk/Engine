@@ -1899,16 +1899,14 @@
   </xs:complexType>
 
   <xs:complexType name="fxreset">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="currencyCode" name="ForeignCurrency" minOccurs="1" maxOccurs="1"/>
-      <xs:choice>
-        <xs:element type="xs:string" name="StartDate" maxOccurs="1"/>
-        <xs:element type="xs:double" name="ForeignAmount" maxOccurs="1"/>
-      </xs:choice>
+      <xs:element type="xs:string" name="StartDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="ForeignAmount" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FixingCalendar" minOccurs="0" maxOccurs="1"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="underlying">
