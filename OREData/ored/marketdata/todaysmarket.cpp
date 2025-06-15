@@ -322,7 +322,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
                 // ibor fallback handling
-                auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle(ycspec->name()));
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
                     QuantLib::ext::shared_ptr<IborIndex> rfrIndex;
@@ -487,7 +487,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                     QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "
                                                                      << cfg->discountCurve()
                                                                      << ", not found in loaded yield curves");
-                    discountCurve = it->second->handle();
+                    discountCurve = it->second->handle(it->first);
                 }
 
                 // for proxy curves we need the source and target indices
