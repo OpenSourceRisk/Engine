@@ -374,10 +374,10 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             buildBootstrappedCurve();
         }
 
-        h_.linkTo(p_);
         if (extrapolation_) {
-            h_->enableExtrapolation();
+            p_->enableExtrapolation();
         }
+        h_.linkTo(p_);
 
         // populate shared calibration info
 
