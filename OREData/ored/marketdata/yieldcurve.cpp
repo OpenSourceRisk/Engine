@@ -533,8 +533,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
 std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
 YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                                const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments,
-                                bool globalBootstrap) {
+                                const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments) {
 
     // Get configuration values for bootstrap
     Real accuracy = curveConfig_[index]->bootstrapConfig().accuracy();
@@ -544,8 +543,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
     Real maxFactor = curveConfig_[index]->bootstrapConfig().maxFactor();
     Real minFactor = curveConfig_[index]->bootstrapConfig().minFactor();
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
+    bool globalBootstrap = curveConfig_[index]->bootstrapConfig().global();
 
-    const MultiCurveBootstrapContributor* globalBootstrapInstance;
+    const MultiCurveBootstrapContributor* globalBootstrapInstance = nullptr;
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
 
     switch (interpolationVariable_[index]) {
@@ -1354,7 +1354,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         std::sort(instruments.begin(), instruments.end(), QuantLib::detail::BootstrapHelperSorter());
 
-        auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments, /*true*/ indices.size() > 1);
+        auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments);
 
         yieldTermStructures.push_back(yieldts);
         multiCurveBootstrapContributors.push_back(contr);
@@ -1372,6 +1372,9 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
     if (yieldTermStructures.size() > 1) {
         auto multiCurveBootstrapper = QuantLib::ext::make_shared<MultiCurveBootstrap>(maxAccuracy);
         for (auto const& c : multiCurveBootstrapContributors) {
+            QL_REQUIRE(
+                c,
+                "All curves in a cycle must use global bootstrap, please adjust the BootstrapConfig of these curves.");
             multiCurveBootstrapper->add(c);
         }
     }
