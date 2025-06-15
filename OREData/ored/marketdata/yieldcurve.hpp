@@ -137,6 +137,7 @@ private:
     std::vector<DayCounter> zeroDayCounter_;
     std::vector<bool> extrapolation_;
     std::vector<Handle<YieldTermStructure>> discountCurve_;
+    std::vector<bool> discountCurveGiven_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveConfig>> curveConfig_;
     std::vector<vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>> curveSegments_;
     std::vector<InterpolationVariable> interpolationVariable_;
@@ -180,7 +181,7 @@ private:
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
-    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>>
+    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
     buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
                         const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments, bool globalBootstrap);
 

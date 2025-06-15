@@ -349,8 +349,10 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                                                       "of the curve, "
                                                    << cs->name() << ", was not found.");
                 }
+                discountCurveGiven_.push_back(true);
             } else {
                 discountCurve_.push_back(Handle<YieldTermStructure>());
+                discountCurveGiven_.push_back(false);
             }
 
             curveSegments_.push_back(curveConfig_.back()->curveSegments());
@@ -516,10 +518,11 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         typedef PiecewiseYieldCurve<INTVAR, INTMETH, QuantExt::IterativeBootstrap> my_curve_1;                         \
         typedef PiecewiseYieldCurve<INTVAR, INTMETH, QuantLib::GlobalBootstrap> my_curve_2;                            \
         if (globalBootstrap) {                                                                                         \
-            auto tmp = QuantLib::ext::make_shared<my_curve_2::bootstrap_type>(accuracy);                               \
-            yieldts = QuantLib::ext::make_shared<my_curve_2>(asofDate_, instruments, zeroDayCounter_[index],           \
-                                                             INTINSTANCE, *tmp);                                       \
-            globalBootstrapInstance = tmp;                                                                             \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(asofDate_, instruments, zeroDayCounter_[index],          \
+                                                              INTINSTANCE, my_curve_2::bootstrap_type(accuracy));      \
+            globalBootstrapInstance = &tmp->bootstrap();                                                               \
+            yieldts = tmp;                                                                                             \
+            yieldts->enableExtrapolation();                                                                            \
         } else {                                                                                                       \
             yieldts = QuantLib::ext::make_shared<my_curve_1>(                                                          \
                 asofDate_, instruments, zeroDayCounter_[index], INTINSTANCE,                                           \
@@ -528,7 +531,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         }                                                                                                              \
     }
 
-std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>>
+std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
 YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
                                 const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments,
                                 bool globalBootstrap) {
@@ -542,7 +545,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
     Real minFactor = curveConfig_[index]->bootstrapConfig().minFactor();
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
 
-    QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor> globalBootstrapInstance;
+    const MultiCurveBootstrapContributor* globalBootstrapInstance;
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
 
     switch (interpolationVariable_[index]) {
@@ -689,7 +692,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
         }
         break;
 
-
     case InterpolationVariable::Forward:
         switch (interpolationMethod_[index]) {
         case InterpolationMethod::Linear:
@@ -781,8 +783,6 @@ QuantLib::ext::shared_ptr<YieldTermStructure>
 YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,
                                   const std::size_t mixedInterpolationSize,
                                   const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments) {
-
-    std::cout << "flattenpiecewisecurve(" << index << ")" << std::endl;
 
     if (preserveQuoteLinkage_) {
         return yieldts;
@@ -1198,7 +1198,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
 void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> yieldTermStructures;
-    std::vector<QuantLib::ext::shared_ptr<MultiCurveBootstrapContributor>> multiCurveBootstrapContributors;
+    std::vector<const QuantLib::MultiCurveBootstrapContributor*> multiCurveBootstrapContributors;
     std::vector<std::vector<QuantLib::ext::shared_ptr<RateHelper>>> instrumentSets;
     std::vector<Size> mixedInterpolationSizes;
 
@@ -1354,7 +1354,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         std::sort(instruments.begin(), instruments.end(), QuantLib::detail::BootstrapHelperSorter());
 
-        auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments, indices.size() > 1);
+        auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments, /*true*/ indices.size() > 1);
 
         yieldTermStructures.push_back(yieldts);
         multiCurveBootstrapContributors.push_back(contr);
@@ -1370,9 +1370,9 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
     // if we have more than one curve to build, set up the multicurve bootstrapper
 
     if (yieldTermStructures.size() > 1) {
-        MultiCurveBootstrap multiCurveBootstrapper(maxAccuracy);
+        auto multiCurveBootstrapper = QuantLib::ext::make_shared<MultiCurveBootstrap>(maxAccuracy);
         for (auto const& c : multiCurveBootstrapContributors) {
-            multiCurveBootstrapper.add(c.get());
+            multiCurveBootstrapper->add(c);
         }
     }
 
@@ -2203,6 +2203,8 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
     QuantLib::ext::shared_ptr<TenorBasisYieldCurveSegment> basisSwapSegment =
         QuantLib::ext::dynamic_pointer_cast<TenorBasisYieldCurveSegment>(segment);
 
+    bool payIndexGiven = false, receiveIndexGiven = false;
+
     // If short index projection curve ID is not this curve.
     string receiveCurveID = basisSwapSegment->receiveProjectionCurveID();
     QuantLib::ext::shared_ptr<IborIndex> receiveIndex = basisSwapConvention->receiveIndex();
@@ -2219,6 +2221,7 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                                                         << curveSpec_[index]->name() << ", was not found.");
         }
         receiveIndex = receiveIndex->clone(shortCurve);
+        receiveIndexGiven = true;
     }
 
     // If long index projection curve ID is not this curve.
@@ -2237,6 +2240,7 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                                                        << curveSpec_[index]->name() << ", was not found.");
         }
         payIndex = payIndex->clone(longCurve);
+        payIndexGiven = true;
     }
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
@@ -2256,10 +2260,12 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
             Period basisSwapTenor = basisSwapQuote->maturity();
             QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper;
             bool telescopicValueDates = true;
+
             basisSwapHelper.reset(new TenorBasisSwapHelper(
-                basisSwapQuote->quote(), basisSwapTenor, payIndex, receiveIndex, discountCurve_[index],
-                basisSwapConvention->spreadOnRec(), basisSwapConvention->includeSpread(),
-                basisSwapConvention->payFrequency(), basisSwapConvention->receiveFrequency(), telescopicValueDates,
+                basisSwapQuote->quote(), basisSwapTenor, payIndex, receiveIndex, discountCurve_[index], payIndexGiven,
+                receiveIndexGiven, discountCurveGiven_[index], basisSwapConvention->spreadOnRec(),
+                basisSwapConvention->includeSpread(), basisSwapConvention->payFrequency(),
+                basisSwapConvention->receiveFrequency(), telescopicValueDates,
                 basisSwapConvention->subPeriodsCouponType()));
 
             instruments.push_back(basisSwapHelper);
