@@ -40,13 +40,11 @@ public:
                       std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
                       std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool requireTradePnl = false)
         : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                           std::move(fullRevalArgs), false, false){
+                           std::move(fullRevalArgs), nullptr, false){
         sensiBased_ = true;
         correlation_ = true;
         correlationMethod_ = correlationMethod;
     }
-    const QuantLib::Matrix& getCorrelation() const { return m_; }
-    void setCorrelation(const QuantLib::Matrix& m) { m_ = m; }
 
 protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
@@ -60,9 +58,6 @@ protected:
     virtual void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
-
-private:
-    QuantLib::Matrix m_;
 };
 
 } // namespace analytics

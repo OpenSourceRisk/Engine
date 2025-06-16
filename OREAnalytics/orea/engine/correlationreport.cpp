@@ -35,7 +35,11 @@ std::vector<Real> extractLowerTriangle(const QuantLib::Matrix& corrMatrix) {
 
 void CorrelationReport::writeHeader(const ext::shared_ptr<Report>& report) {
 
-    report->addColumn("RiskFactor1", string()).addColumn("RiskFactor2", string()).addColumn("Correlation", Real(), 6);
+    report->addColumn("RiskFactor1", string())
+        .addColumn("Index1", string())
+        .addColumn("RiskFactor2", string())
+        .addColumn("Index2", string())
+        .addColumn("Correlation", Real(), 6);
 }
 
 void CorrelationReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
@@ -58,8 +62,11 @@ void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Rep
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
     for (int i = 0; i < corrFormatted.size(); i++) {
-        report->next().add(correlationPairs_[i].first).add(correlationPairs_[i].second)
-                .add(corrFormatted[i]);
+        report->next().add(std::get<0>(correlationPairs_[i]))
+            .add(std::get<1>(correlationPairs_[i]))
+            .add(std::get<2>(correlationPairs_[i]))
+            .add(std::get<3>(correlationPairs_[i]))
+            .add(corrFormatted[i]);
     }
 
 }

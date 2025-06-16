@@ -414,7 +414,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         covarianceMatrix_ = covCalculator->covariance();
                         // Concerns Correlation analytic
                         if (correlation_) {
-                            //auto rg = ext::dynamic_pointer_cast<CorrelationReport>();
+                            DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
                             if (correlationMethod_ == "Pearson") {
                                 CorrelationMatrixBuilder corrMatrix;
                                 correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
@@ -424,10 +424,11 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             } else {
                                 QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }
+                            //Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
                             for (Size col = 0; col < deltaKeys.size(); col++) {
                                 for (Size row = col + 1; row < deltaKeys.size(); row++) {
-                                    correlationPairs_.emplace_back(deltaKeys[row].name + "_index" + std::to_string(deltaKeys[row].index),
-                                                                   deltaKeys[col].name + "_index" +  std::to_string(deltaKeys[col].index));
+                                    correlationPairs_.emplace_back(deltaKeys[row].name,std::to_string(deltaKeys[row].index),
+                                                                   deltaKeys[col].name,std::to_string(deltaKeys[col].index));
                                 }
                             }
                         }

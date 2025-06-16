@@ -289,7 +289,7 @@ protected:
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, QuantLib::Real> gammas_;
     QuantLib::Matrix covarianceMatrix_;
     QuantLib::Matrix correlationMatrix_;
-    std::vector<std::pair<std::string, std::string>> correlationPairs_;
+    std::vector<std::tuple<std::string, std::string, std::string, std::string>> correlationPairs_;
     bool writePnl_ = false;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
     QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage> salvage_ =
