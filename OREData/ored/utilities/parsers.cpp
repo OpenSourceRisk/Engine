@@ -1443,10 +1443,16 @@ QuantLib::Pillar::Choice parsePillarChoice(const std::string& s) {
 QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s) {
     if (s == "Simple")
         return McMultiLegBaseEngine::RegressorModel::Simple;
+    else if (s == "Lagged")
+        return McMultiLegBaseEngine::RegressorModel::Lagged;
+    else if (s == "LaggedIR")
+        return McMultiLegBaseEngine::RegressorModel::LaggedIR;
     else if (s == "LaggedFX")
         return McMultiLegBaseEngine::RegressorModel::LaggedFX;
+    else if (s == "LaggedEQ")
+        return McMultiLegBaseEngine::RegressorModel::LaggedEQ;
     else {
-        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, LaggedFX");
+        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ");
     }
 }
 

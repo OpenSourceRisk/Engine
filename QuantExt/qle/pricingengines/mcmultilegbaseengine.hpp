@@ -70,7 +70,8 @@ struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
 
 class McMultiLegBaseEngine {
 public:
-    enum RegressorModel { Simple, LaggedFX };
+    enum RegressorModel { Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ };
+    enum VarGroupMode { Global, Trivial };
 
 //protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
@@ -94,7 +95,9 @@ public:
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
-        const Period& cfOnCpnAddSimTimesCutoff = Period());
+        const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
+        const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
+        const VarGroupMode regressionVarGroupMode = VarGroupMode::Global);
 
     //! Destructor
     virtual ~McMultiLegBaseEngine() {}
@@ -133,6 +136,9 @@ public:
     bool reevaluateExerciseInStickyRun_;
     Size cfOnCpnMaxSimTimes_;
     Period cfOnCpnAddSimTimesCutoff_;
+    Size regressionMaxSimTimesIr_;
+    Size regressionMaxSimTimesFx_;
+    Size regressionMaxSimTimesEq_;
     VarGroupMode regressionVarGroupMode_;
 
     // set from global settings
@@ -176,7 +182,11 @@ public:
         RegressionModel() = default;
         RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
                         const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
-                        const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>());
+                        const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>(),
+                        const Size regressionMaxSimTimesIr = 0,
+                        const Size regressionMaxSimTimesFx = 0,
+                        const Size regressionMaxSimTimesEq = 0,
+                        const VarGroupMode regressionVarGroupMode = VarGroupMode::Global);
         // pathTimes must contain the observation time and the relevant cashflow simulation times
         void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
                    const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
@@ -201,6 +211,7 @@ public:
         Size basisOrder_ = 0;
         LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
         Size basisSystemSizeBound_ = Null<Size>();
+        std::set<std::set<Size>> varGroups_ = {};
 
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);

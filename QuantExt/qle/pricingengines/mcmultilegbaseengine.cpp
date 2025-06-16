@@ -60,7 +60,8 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel,
     const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
     const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes,
-    const Period& cfOnCpnAddSimTimesCutoff)
+    const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx,
+    const Size regressionMaxSimTimesEq, const VarGroupMode regressionVarGroupMode)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
@@ -71,7 +72,11 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
       recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
       reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun),
       cfOnCpnMaxSimTimes_(cfOnCpnMaxSimTimes),
-      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff) {
+      cfOnCpnAddSimTimesCutoff_(cfOnCpnAddSimTimesCutoff),
+      regressionMaxSimTimesIr_(regressionMaxSimTimesIr),
+      regressionMaxSimTimesFx_(regressionMaxSimTimesFx),
+      regressionMaxSimTimesEq_(regressionMaxSimTimesEq),
+      regressionVarGroupMode_(regressionVarGroupMode) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -84,6 +89,12 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
                "McMultiLegBaseEngine: cfOnCpnMaxSimTimes must be non-negative");
     QL_REQUIRE(cfOnCpnAddSimTimesCutoff.length() >= 0,
                "McMultiLegBaseEngine: length of cfOnCpnAddSimTimesCutoff must be non-negative");
+    QL_REQUIRE(regressionMaxSimTimesIr >= 0,
+               "McMultiLegBaseEngine: regressionMaxSimTimesIr must be non-negative");
+    QL_REQUIRE(regressionMaxSimTimesFx >= 0,
+               "McMultiLegBaseEngine: regressionMaxSimTimesFx must be non-negative");
+    QL_REQUIRE(regressionMaxSimTimesEq >= 0,
+               "McMultiLegBaseEngine: regressionMaxSimTimesEq must be non-negative");
 }
 
 Real McMultiLegBaseEngine::time(const Date& d) const {
@@ -1365,14 +1376,16 @@ void McMultiLegBaseEngine::calculateModels(
 
             regModelUndExInto[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
+                regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                regressionMaxSimTimesEq_, regressionVarGroupMode_);
             regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
                                              simulationTimes);
 
             if (pathValueRebate.initialised()) {
                 regModelRebate[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                    regressorModel_, regressionVarianceCutoff_);
+                    regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                    regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelRebate[counter].train(polynomOrder_, polynomType_, pathValueRebate, pathValuesRef,
                                               simulationTimes);
             }
@@ -1396,7 +1409,8 @@ void McMultiLegBaseEngine::calculateModels(
 
             regModelContinuationValue[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
+                regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                regressionMaxSimTimesEq_, regressionVarGroupMode_);
             regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                      simulationTimes,
                                                      exerciseValue > RandomVariable(calibrationSamples_, 0.0));
@@ -1411,7 +1425,8 @@ void McMultiLegBaseEngine::calculateModels(
 
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
+                regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                regressionMaxSimTimesEq_, regressionVarGroupMode_);
             regModelUndDirty[counter].train(
                 polynomOrder_, polynomType_,
                 useOverwritePathValueUndDirty()
@@ -1423,7 +1438,8 @@ void McMultiLegBaseEngine::calculateModels(
         if (exercise_ != nullptr) {
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
+                regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                regressionMaxSimTimesEq_, regressionVarGroupMode_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
@@ -1968,7 +1984,11 @@ McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTim
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
                                                        const CrossAssetModel& model,
                                                        const McMultiLegBaseEngine::RegressorModel regressorModel,
-                                                       const Real regressionVarianceCutoff)
+                                                       const Real regressionVarianceCutoff,
+                                                       const Size regressionMaxSimTimesIr,
+                                                       const Size regressionMaxSimTimesFx,
+                                                       const Size regressionMaxSimTimesEq,
+                                                       const VarGroupMode regressionVarGroupMode)
     : observationTime_(observationTime), regressionVarianceCutoff_(regressionVarianceCutoff) {
 
     // we always include the full model state as of the observation time
@@ -1977,16 +1997,41 @@ McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTim
         regressorTimesModelIndices_.insert(std::make_pair(observationTime, m));
     }
 
-    // for LaggedFX we add past fx states
+    std::set<Size> modelIrIndices;
+    std::set<Size> modelFxIndices;
+    std::set<Size> modelEqIndices;
 
-    if (regressorModel == McMultiLegBaseEngine::RegressorModel::LaggedFX) {
+    // for Lagged and LaggedIR we add past ir states
 
-        std::set<Size> modelFxIndices;
-        for (Size i = 1; i < model.components(CrossAssetModel::AssetType::IR); ++i) {
+    if (regressorModel == McMultiLegBaseEngine::RegressorModel::Lagged ||
+        regressorModel == McMultiLegBaseEngine::RegressorModel::LaggedIR) {
+        for (Size i = 0; i < model.components(CrossAssetModel::AssetType::IR); ++i)
+            modelIrIndices.insert(model.pIdx(CrossAssetModel::AssetType::IR, i));
+    }
+
+    // for Lagged and LaggedFX we add past fx states
+
+    if (regressorModel == McMultiLegBaseEngine::RegressorModel::Lagged ||
+        regressorModel == McMultiLegBaseEngine::RegressorModel::LaggedFX) {
+        for (Size i = 1; i < model.components(CrossAssetModel::AssetType::IR); ++i)
             for (Size j = 0; j < model.stateVariables(CrossAssetModel::AssetType::FX, i - 1); ++j)
                 modelFxIndices.insert(model.pIdx(CrossAssetModel::AssetType::FX, i - 1, j));
-        }
+    }
 
+    // for Lagged and LaggedEQ we add past eq states
+
+    if (regressorModel == McMultiLegBaseEngine::RegressorModel::Lagged ||
+        regressorModel == McMultiLegBaseEngine::RegressorModel::LaggedEQ) {
+        for (Size i = 0; i < model.components(CrossAssetModel::AssetType::EQ); ++i)
+            modelEqIndices.insert(model.pIdx(CrossAssetModel::AssetType::EQ, i));
+    }
+
+    auto fillRegressorTimesModelIndices = [this, &cashflowInfo, &cashflowRelevant] (
+        const std::set<Size>& modelIndices, Size maxSimTimes) {
+        if (modelIndices.empty()) {
+            return;
+        }
+        std::map<Size, std::vector<Time>> relevantTime;
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
             if (!cashflowRelevant(i))
                 continue;
@@ -1997,12 +2042,40 @@ McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTim
                 if (QuantLib::close_enough(t, 0.0))
                     continue;
                 for (auto& m : cashflowInfo[i].modelIndices[j]) {
-                    // add FX factors
-                    if (modelFxIndices.find(m) != modelFxIndices.end())
-                        regressorTimesModelIndices_.insert(std::make_pair(t, m));
+                    if (modelIndices.find(m) != modelIndices.end()) {
+                        if (relevantTime.find(m) == relevantTime.end()) {
+                            relevantTime[m] = {t};
+                        } else {
+                            relevantTime[m].push_back(t);
+                        }
+                    }
                 }
             }
         }
+        for (const auto& [m, time] : relevantTime) {
+            Size maxSimTimesLocal = maxSimTimes == 0 ? time.size() : maxSimTimes;
+            Real step = std::max(time.size() / static_cast<Real>(maxSimTimesLocal), 1.0);
+            for (Size j = 0; j < maxSimTimesLocal - 1; ++j) {
+                Size idx = static_cast<Size>(j * step);
+                if (idx >= time.size())
+                    break;
+                regressorTimesModelIndices_.insert(std::make_pair(time[idx], m));
+            }
+        }
+    };
+
+    fillRegressorTimesModelIndices(modelIrIndices, regressionMaxSimTimesIr);
+    fillRegressorTimesModelIndices(modelFxIndices, regressionMaxSimTimesFx);
+    fillRegressorTimesModelIndices(modelEqIndices, regressionMaxSimTimesEq);
+
+    if (regressionVarGroupMode == VarGroupMode::Global) {
+        varGroups_ = {};
+    } else if (regressionVarGroupMode == VarGroupMode::Trivial) {
+        for (Size i = 0; i < regressorTimesModelIndices_.size(); ++i) {
+            varGroups_.insert({i});
+        }
+    } else {
+        QL_FAIL("McMultiLegBaseEngine::RegressionModel::RegressionModel(): unknown regressionVarGroupMode");
     }
 }
 
@@ -2050,7 +2123,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         basisType_ = polynomType;
         basisSystemSizeBound_ = Null<Size>();
 
-        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, {}, Null<Size>());
+        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, varGroups_, Null<Size>());
 
         // compute the regression coefficients
 
@@ -2175,6 +2248,7 @@ template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(A
     ar& regressorTimesModelIndices_;
     ar& coordinateTransform_;
     ar& regressionCoeffs_;
+    ar& varGroups_;
 
     // serialise the function by serialising the paramters needed
     ar& basisDim_;
