@@ -583,3 +583,35 @@ equivalent to a perfect collateralisation of the netting set (i.e.\ VM = netting
 For clearing counterparties (see \lstinline!ClearingCounterparty! in the counterparty information (see User Guide),
 the initial margin amount will be set to zero in the collateral balance, if provided.
 }\fi % \ifdefined\MethodologyOnly
+
+\subsubsection*{Outputs and Reports}\label{sec:saccr_report}
+
+The SA-CCR capital analytic will produce the following outputs:
+
+\subsubsection*{Outputs and Reports}\label{sec:saccr_report}
+
+The SA-CCR capital analytic produces several output files:
+
+\begin{itemize}
+  \item \textbf{saccr.csv}: Main SA-CCR results, broken down by netting set, asset class, and hedging set. Each row shows the calculated capital and its components at a specific aggregation level.
+    \begin{itemize}
+      \item \textbf{NettingSet}: Identifier of the netting set. ``All'' means portfolio-level totals.
+      \item \textbf{AgreementType}, \textbf{CallType}, \textbf{InitialMarginType}, \textbf{LegalEntityId}: Collateral agreement and counterparty details.
+      \item \textbf{AssetClass}: Asset class (e.g., Commodity, FX, IR, Equity, All).
+      \item \textbf{HedgingSet}: Hedging set within the asset class (e.g., Metal, All).
+      \item \textbf{AddOn}: Add-on amount for the aggregation level.
+      \item \textbf{NPV}: Net present value of the trades in the aggregation.
+      \item \textbf{IndependentAmountHeld}, \textbf{InitialMargin}, \textbf{VariationMargin}: Collateral amounts.
+      \item \textbf{ThresholdAmount}, \textbf{MinimumTransferAmount}: CSA terms.
+      \item \textbf{RC}: Replacement cost.
+      \item \textbf{Multiplier}: Multiplier applied to the add-on.
+      \item \textbf{PFE}: Potential future exposure, $PFE = Multiplier \times AddOn$
+      \item \textbf{EAD}: Exposure at default, $\alpha (RC + PFE)$
+      \item \textbf{RW}: Risk weight.
+      \item \textbf{CC}: Capital charge.
+    \end{itemize}
+    Rows with ``All'' in most columns show portfolio totals. Rows with specific netting sets, asset classes, or hedging sets show breakdowns at those levels. Empty fields indicate values not applicable at that level.
+  \item \textbf{saccr\_detail.csv}: Detailed breakdown of the SA-CCR calculation at the trade level. This file allows you to trace the contribution of each trade to the overall capital charge.
+  \item \textbf{capital\_crif.csv}: All data required to compute SA-CCR in the ISDA Regulatory Capital Model (CRIF) format.
+\end{itemize}
+
