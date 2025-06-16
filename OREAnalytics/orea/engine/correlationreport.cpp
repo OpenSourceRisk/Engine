@@ -22,15 +22,25 @@
 namespace ore {
 namespace analytics {
 
+std::vector<Real> extractLowerTriangle(const QuantLib::Matrix& corrMatrix) {
+    Size n = corrMatrix.rows();
+    std::vector<Real> result;
+    for (Size col = 0; col < n; col++) {
+        for (Size row = col+1; row<n;row++){
+            result.push_back(corrMatrix[row][col]);
+        }
+    }
+    return result;
+}
+
 void CorrelationReport::writeHeader(const ext::shared_ptr<Report>& report) {
-    report->addColumn("Portfolio", string()).addColumn("RiskClass", string()).addColumn("RiskType", string());
-    /*for (const auto p : p())
-        report->addColumn("Quantile_" + std::to_string(p), double(), 6);*/
+
+    report->addColumn("RiskFactor1", string()).addColumn("RiskFactor2", string()).addColumn("Correlation", string());
 }
 
 void CorrelationReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     int s = reports->reports().size();
-    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for CORRELATION report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
     writeHeader(report);
@@ -42,25 +52,19 @@ void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Rep
                              const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                              const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
-    //int s = reports->reports().size();
-    //QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
-    //QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
+    vector<Real> corrFormatted = extractLowerTriangle(correlationMatrix_);
+    int s = reports->reports().size();
+    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for CORRELATION report");
+    QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
+    //report->next();
+    report->next().add("0").add("0").add(std::to_string(0.55));
 
-    //auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
-    //auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
+    for (int i = 0; i < corrFormatted.size(); i++) {
+        report->next().add(correlationPairs_[i].first).add(correlationPairs_[i].second)
+                .add(corrFormatted[i]);
+    }
+    
 
-    //std::vector<Real> vars = calcVarsForQuantiles();
-
-    //if (!close_enough(QuantExt::detail::absMax(vars), 0.0)) {
-    //    report->next();
-    //    report->add(tg->portfolioId());
-    //    report->add(to_string(rg->riskClass()));
-    //    report->add(to_string(rg->riskType()));
-    //    for (auto const& v : vars)
-    //        report->add(v);
-    //}
-
-    /*writeAdditionalReports(reports, riskGroup, tradeGroup);*/
 }
 
 } // namespace analytics

@@ -40,7 +40,7 @@ public:
                       std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
                       std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool requireTradePnl = false)
         : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                           std::move(fullRevalArgs), false, false) {
+                           std::move(fullRevalArgs), false, false){
         sensiBased_ = true;
         correlation_ = true;
         correlationMethod_ = correlationMethod;
@@ -51,6 +51,8 @@ public:
 protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report);
+    /*void handleCorrelationResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+                                  const QuantLib::Matrix& corrM, const vector<RiskFactorKey>& riskKeys);*/
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                       const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                       const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;

@@ -414,16 +414,23 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         covarianceMatrix_ = covCalculator->covariance();
                         // Concerns Correlation analytic
                         if (correlation_) {
+                            //auto rg = ext::dynamic_pointer_cast<CorrelationReport>();
                             if (correlationMethod_ == "Pearson") {
                                 CorrelationMatrixBuilder corrMatrix;
                                 correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
                             } else if (correlationMethod_ == "KendallRank") {
-                                CorrelationMatrixBuilder corrMatrix;
-                                correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
+                                std::cout << "Kendall";
+                                //QuantExt::KendallRankCorrelation kendallRank();
                             } else {
                                 QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }
-                            
+                            Size n = deltaKeys.size();
+                            for (Size col = 0; col < n; col++) {
+                                for (Size row = col + 1; row < n; row++) {
+                                    correlationPairs_.emplace_back(deltaKeys[row].name + "_index" + std::to_string(deltaKeys[row].index),
+                                                                   deltaKeys[col].name + "_index" +  std::to_string(deltaKeys[col].index));
+                                }
+                            }
                         }
                     }
                     handleSensiResults(reports, riskGroup, tradeGroup);
