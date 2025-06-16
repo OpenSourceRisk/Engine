@@ -667,7 +667,8 @@ Example:
   \label{tab:cdsspread_quote}
 \end{table}
 
-There are two possible quote types to allow for the presence of two CDS spread types in the market data. In particular, there is typically a conventional CDS spread and a par CDS spread quoted in the market. The quote type distinction here would allow the conventional spreads to be stored with quote type set to \lstinline!CONV_CREDIT_SPREAD! and the par spreads to be stored with quote type set to \lstinline!CREDIT_SPREAD!. As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
+Currently, only par CDS spreads (quote type \lstinline!CREDIT_SPREAD!) are supported. Conventional CDS spreads (quote type \lstinline!CONV_CREDIT_SPREAD!) are not supported at this time. 
+As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y/100!
