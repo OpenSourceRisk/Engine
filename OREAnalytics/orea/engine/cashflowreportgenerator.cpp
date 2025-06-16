@@ -56,7 +56,11 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                                                                 const bool includePastCashflows) {
 
     string specificDiscount = trade->envelope().additionalField("discount_curve", false);
-    Handle<YieldTermStructure> specificDiscountCurve = indexOrYieldCurve(market, specificDiscount, configuration); //TODO Error handling
+
+    Handle<YieldTermStructure> specificDiscountCurve;
+
+    if(!specificDiscount.empty())
+        specificDiscountCurve = indexOrYieldCurve(market, specificDiscount, configuration); 
     
     Date asof = Settings::instance().evaluationDate();
 
