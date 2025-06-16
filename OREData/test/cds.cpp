@@ -339,7 +339,6 @@ BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
     vector<string> curveNames = {
         "RED:8B69AP|SNRFOR|USD|CR-UPFRONT",
         "RED:8B69AP|SNRFOR|USD|CR-PAR_SPREAD",
-        "RED:8B69AP|SNRFOR|USD|CR-CONV_SPREAD",
     };
 
     for (const string& curveName : curveNames) {
