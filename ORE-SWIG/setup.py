@@ -208,12 +208,13 @@ class my_build_ext(build_ext):
 
         elif compiler == 'unix':
             ql_compile_args = \
-                os.popen('../oreanalytics-config --cflags').read()[:-1].split()
+                os.popen('./oreanalytics-config --cflags').read()[:-1].split()
             ql_link_args = \
-                os.popen('../oreanalytics-config --libs').read()[:-1].split()
+                os.popen('./oreanalytics-config --libs').read()[:-1].split()
 
             self.define += [ (arg[2:],None) for arg in ql_compile_args
                              if arg.startswith('-D') ]
+            self.define += [("NDEBUG", None)]
             self.include_dirs += [ arg[2:] for arg in ql_compile_args
                                    if arg.startswith('-I') ]
             self.library_dirs += [ arg[2:] for arg in ql_link_args
@@ -287,7 +288,7 @@ classifiers = [
 ]
 
 setup(name             = "open-source-risk-engine",
-      version          = "1.8.13.0",
+      version          = "1.8.13.1",
       description      = "Python bindings for the OREAnalytics library",
       long_description = """
 OREAnalytics (http://opensourcerisk.org/) is a C++ library for financial quantitative

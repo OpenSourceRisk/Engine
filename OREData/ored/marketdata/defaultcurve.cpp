@@ -109,6 +109,8 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
             auto q = QuantLib::ext::dynamic_pointer_cast<CdsQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CdsQuote");
             if (wc.matches(q->name())) {
+                QL_REQUIRE(mdqt != MDQT::CONV_CREDIT_SPREAD, 
+                   "Conventional credit spread are currently not supported for default curves");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
             }
@@ -173,6 +175,8 @@ set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const
             if (type == DCCT::SpreadCDS || type == DCCT::Price) {
                 auto q = QuantLib::ext::dynamic_pointer_cast<CdsQuote>(md);
                 QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a CdsQuote");
+                QL_REQUIRE(q->quoteType() != MarketDatum::QuoteType::CONV_CREDIT_SPREAD,
+                           "Conventional credit spread are currently not supported for default curves");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
             } else {

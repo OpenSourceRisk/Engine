@@ -30,8 +30,8 @@ ZeroToParScenarioGenerator::ZeroToParScenarioGenerator(
     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hsg,
     const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
     const ParSensitivityInstrumentBuilder::Instruments& parInstruments)
-    : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->adjFactors(),
-                                  hsg->returnConfiguration(), hsg->labelPrefix(), hsg->generateDifferenceScenarios()) {
+    : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->returnConfiguration(),
+                                  hsg->adjFactors(), hsg->labelPrefix(), hsg->generateDifferenceScenarios()) {
 
     baseScenario_ = hsg->baseScenario();
     shiftConverter_ = QuantLib::ext::make_shared<ZeroToParShiftConverter>(parInstruments, simMarket);

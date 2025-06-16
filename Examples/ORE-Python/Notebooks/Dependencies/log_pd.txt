@@ -1,0 +1,103 @@
+NOTICE   [2025-Jun-06 12:19:12.246841]        (OREAnalytics\orea\app\oreapp.cpp:427) : initFromInputs done, requested analytics:PORTFOLIO_DETAILS
+NOTICE   [2025-Jun-06 12:19:12.261462]        (OREAnalytics\orea\app\oreapp.cpp:516) : ORE analytics starting
+WARNING  [2025-Jun-06 12:19:12.269035]        (OREAnalytics\orea\app\oreapp.cpp:518) : Starting OREApp::run(): 172216320|134914048 (peakMemoryUsage (bytes) | memoryUsage (bytes))
+DEBUG    [2025-Jun-06 12:19:12.275662]       (OREData\ored\marketdata\market.cpp:62) : Building PseudoCurrencyMarketParameters from PricingEngine GlobalParameters
+NOTICE   [2025-Jun-06 12:19:12.284453]       (OREData\ored\marketdata\market.cpp:87) : No Default Correlation present
+DEBUG    [2025-Jun-06 12:19:12.289070]      (OREData\ored\marketdata\market.cpp:101) : PseudoCurrencyMarketParameters { TreatAsFX:False, BaseCurrency:USD}
+NOTICE   [2025-Jun-06 12:19:12.297274]  (...lytics\orea\app\analyticsmanager.cpp:51) : register analytic with label 'PORTFOLIO_DETAILS' and sub-analytics 
+NOTICE   [2025-Jun-06 12:19:12.297274]        (OREAnalytics\orea\app\oreapp.cpp:536) : Available analytics: 
+NOTICE   [2025-Jun-06 12:19:12.311543]        (OREAnalytics\orea\app\oreapp.cpp:539) : Requested analytics: PORTFOLIO_DETAILS
+NOTICE   [2025-Jun-06 12:19:12.318272]  (...ytics\orea\app\analyticsmanager.cpp:143) : run analytic with label 'PORTFOLIO_DETAILS'
+WARNING  [2025-Jun-06 12:19:12.324515]       (OREAnalytics\orea\app\analytic.cpp:96) : Starting PORTFOLIO_DETAILS Analytic::runAnalytic(): 172216320|135086080 (peakMemoryUsage (bytes) | memoryUsage (bytes))
+NOTICE   [2025-Jun-06 12:19:12.331999]  (...ta\ored\portfolio\enginefactory.cpp:187) : Building EngineFactory
+NOTICE   [2025-Jun-06 12:19:12.337056]    (OREData\ored\portfolio\portfolio.cpp:131) : Building Portfolio of size 3 for context = 'portfolio-analyzer'
+DEBUG    [2025-Jun-06 12:19:12.345000]    (OREData\ored\portfolio\fxforward.cpp:146) : Build FxForward with maturity date 2030-06-06 and pay date 2030-06-10
+DEBUG    [2025-Jun-06 12:19:12.345847]          (OREData\ored\portfolio\swap.cpp:46) : Swap::build() called for trade 2_USD-FedFunds_USD-LIBOR-3M_SWAP
+DEBUG    [2025-Jun-06 12:19:12.382932]         (OREData\ored\portfolio\swap.cpp:172) : Notional is 1000 USD
+DEBUG    [2025-Jun-06 12:19:12.382932]         (OREData\ored\portfolio\swap.cpp:176) : npv currency is USD
+DEBUG    [2025-Jun-06 12:19:12.395506]  (...cs\orea\engine\dependencymarket.cpp:199) : Parsing 'USD' to check that we have a valid currency
+DEBUG    [2025-Jun-06 12:19:12.434015]         (OREData\ored\portfolio\swap.cpp:189) : Swap::build(): currency[0] = USD
+DEBUG    [2025-Jun-06 12:19:12.435102]  (...cs\orea\engine\dependencymarket.cpp:199) : Parsing 'USD' to check that we have a valid currency
+DEBUG    [2025-Jun-06 12:19:12.447453]  (...cs\orea\engine\dependencymarket.cpp:230) : Adding rfr fallback index 'USD-SOFR' for ibor index 'USD-LIBOR-3M'
+DEBUG    [2025-Jun-06 12:19:12.447453]         (OREData\ored\portfolio\swap.cpp:189) : Swap::build(): currency[1] = USD
+DEBUG    [2025-Jun-06 12:19:12.464198]         (OREData\ored\portfolio\swap.cpp:226) : Set instrument wrapper
+WARNING  [2025-Jun-06 12:19:12.470120]  (...ata\ored\portfolio\equityforward.cpp:67) : No Strike Currency provided for trade 3_RIC:.STOXX50_EQ_FORWARD, assuming payment currency EUR
+NOTICE   [2025-Jun-06 12:19:12.476841]    (OREData\ored\portfolio\portfolio.cpp:159) : Built Portfolio. Initial size = 3, size now 3, built 0 failed trades, context is portfolio-analyzer
+NOTICE   [2025-Jun-06 12:19:12.483042]    (OREData\ored\portfolio\portfolio.cpp:160) : Build stats:
+NOTICE   [2025-Jun-06 12:19:12.484885]    (OREData\ored\portfolio\portfolio.cpp:164) : EquityForward                     1           6.45 ms (avg = 6.45)
+NOTICE   [2025-Jun-06 12:19:12.494615]    (OREData\ored\portfolio\portfolio.cpp:164) : FxForward                         1           10.2 ms (avg = 10.2)
+NOTICE   [2025-Jun-06 12:19:12.495436]    (OREData\ored\portfolio\portfolio.cpp:164) : Swap                              1            116 ms (avg = 116)
+DEBUG    [2025-Jun-06 12:19:12.510646]  (...ytics\orea\app\portfolioanalyser.cpp:58) : PortfolioAnalyser: portfolio built
+DEBUG    [2025-Jun-06 12:19:12.517318]  (...tics\orea\app\portfolioanalyser.cpp:104) : PortfolioAnalyser: Setting market Objects
+DEBUG    [2025-Jun-06 12:19:12.523738]  (...tics\orea\app\portfolioanalyser.cpp:111) : Start adding dependent curves
+DEBUG    [2025-Jun-06 12:19:12.530427]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for DiscountCurve EUR in configuration default
+DEBUG    [2025-Jun-06 12:19:12.532593]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for DiscountCurve USD in configuration default
+DEBUG    [2025-Jun-06 12:19:12.544595]  (...ata\ored\utilities\dependencies.cpp:468) : Get the swap index discount curve for currency 'USD'
+DEBUG    [2025-Jun-06 12:19:12.545263]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for IndexCurve USD-FedFunds in configuration default
+DEBUG    [2025-Jun-06 12:19:12.545263]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for IndexCurve USD-LIBOR-3M in configuration default
+DEBUG    [2025-Jun-06 12:19:12.563362]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for IndexCurve USD-SOFR in configuration default
+DEBUG    [2025-Jun-06 12:19:12.570540]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for FXSpot EURUSD in configuration default
+DEBUG    [2025-Jun-06 12:19:12.576631]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for FXSpot USDEUR in configuration default
+DEBUG    [2025-Jun-06 12:19:12.582975]  (...ata\ored\utilities\dependencies.cpp:336) : Get dependencies for EquityCurves RIC:.STOXX50 in configuration default
+DEBUG    [2025-Jun-06 12:19:12.587599]  (...tics\orea\app\portfolioanalyser.cpp:113) : Finished adding dependent curves
+WARNING  [2025-Jun-06 12:19:12.595505]      (OREAnalytics\orea\app\analytic.cpp:101) : Finishing PORTFOLIO_DETAILS Analytic::runAnalytic(): 172216320|135450624 (peakMemoryUsage (bytes) | memoryUsage (bytes))
+NOTICE   [2025-Jun-06 12:19:12.595505]  (...ytics\orea\app\analyticsmanager.cpp:152) : run analytic with label 'PORTFOLIO_DETAILS' finished.
+NOTICE   [2025-Jun-06 12:19:12.595505]  (...nalytics\orea\app\reportwriter.cpp:1137) : Writing Pricing stats report
+NOTICE   [2025-Jun-06 12:19:12.617331]  (...nalytics\orea\app\reportwriter.cpp:1153) : Pricing stats report written
+NOTICE   [2025-Jun-06 12:19:12.623421]  (...nalytics\orea\app\reportwriter.cpp:1158) : Writing runtimes report
+NOTICE   [2025-Jun-06 12:19:12.630666]  (...nalytics\orea\app\reportwriter.cpp:1182) : Finished writing runtimes report
+WARNING  [2025-Jun-06 12:19:12.635719]        (OREAnalytics\orea\app\oreapp.cpp:551) : Finishing OREApp::run(): 172216320|135528448 (peakMemoryUsage (bytes) | memoryUsage (bytes))
+NOTICE   [2025-Jun-06 12:19:12.635719]        (OREAnalytics\orea\app\oreapp.cpp:565) : ORE analytics done
+DEBUG    [2025-Jun-06 12:19:15.785752]  (...ata\ored\utilities\dependencies.cpp:468) : Get the swap index discount curve for currency 'USD'
+DEBUG    [2025-Jun-06 12:19:15.797550]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type DiscountCurve: default EUR Yield/EUR/EUR-IN-USD
+DEBUG    [2025-Jun-06 12:19:15.810560]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type DiscountCurve: default USD Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:15.822697]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type IndexCurve: default EUR-EONIA Yield/EUR/EUR-EONIA
+DEBUG    [2025-Jun-06 12:19:15.833698]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type IndexCurve: default EUR-ESTER Yield/EUR/EUR-ESTER
+DEBUG    [2025-Jun-06 12:19:15.848327]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type IndexCurve: default USD-FedFunds Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:15.883039]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type IndexCurve: default USD-LIBOR-3M Yield/USD/USD-LIBOR-3M
+DEBUG    [2025-Jun-06 12:19:15.902167]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type IndexCurve: default USD-SOFR Yield/USD/USD-SOFR
+DEBUG    [2025-Jun-06 12:19:15.914754]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type FXSpot: default EURUSD FX/EUR/USD
+DEBUG    [2025-Jun-06 12:19:15.927726]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type FXSpot: default USDEUR FX/USD/EUR
+DEBUG    [2025-Jun-06 12:19:15.941481]  (...rketdata\todaysmarketparameters.cpp:330) : TodaysMarketParameters, add market objects of type EquityCurves: default RIC:.STOXX50 Equity/EUR/RIC:.STOXX50
+NOTICE   [2025-Jun-06 12:19:15.966626]  (...ytics\orea\app\marketdataloader.cpp:165) : Asking portfolio for its required fixings
+NOTICE   [2025-Jun-06 12:19:15.982662]  (...ytics\orea\app\marketdataloader.cpp:172) : The portfolio depends on fixings from 2 indices
+NOTICE   [2025-Jun-06 12:19:15.994009]  (...ytics\orea\app\marketdataloader.cpp:177) : Add fixings possibly required for bootstrapping TodaysMarket
+NOTICE   [2025-Jun-06 12:19:15.998140]  (OREData\ored\portfolio\fixingdates.cpp:825) : Start adding market fixing dates for configuration 'default'
+DEBUG    [2025-Jun-06 12:19:16.013877]  (OREData\ored\portfolio\fixingdates.cpp:835) : Start adding market fixing dates for interest rate indices.
+DEBUG    [2025-Jun-06 12:19:16.026145]  (OREData\ored\utilities\indexparser.cpp:247) : tryParseIborIndex(EUR-IN-USD) failed: parseIborIndex "EUR-IN-USD" not recognized
+DEBUG    [2025-Jun-06 12:19:16.037203]  (OREData\ored\portfolio\fixingdates.cpp:909) : Finished adding market fixing dates for interest rate indices.
+NOTICE   [2025-Jun-06 12:19:16.046200]  (...ata\ored\portfolio\fixingdates.cpp:1022) : Finished adding market fixing dates for configuration 'default'
+NOTICE   [2025-Jun-06 12:19:16.048354]  (...ytics\orea\app\marketdataloader.cpp:181) : Add fixing possibly required for equity index delta risk decomposition
+NOTICE   [2025-Jun-06 12:19:16.062469]  (...ytics\orea\app\marketdataloader.cpp:187) : Adjust inflation fixing dates to the end of the month before the request
+NOTICE   [2025-Jun-06 12:19:16.064538]      (OREData\ored\marketdata\fixings.cpp:68) : Added 0 of 0 fixings in 0.000010 seconds
+WARNING  [2025-Jun-06 12:19:16.081712]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-04" }, { "name": "fixingId", "value": "USD-FedFunds" } ] }
+WARNING  [2025-Jun-06 12:19:16.091707]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-05" }, { "name": "fixingId", "value": "USD-FedFunds" } ] }
+WARNING  [2025-Jun-06 12:19:16.098321]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-06" }, { "name": "fixingId", "value": "USD-FedFunds" } ] }
+WARNING  [2025-Jun-06 12:19:16.098321]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-04" }, { "name": "fixingId", "value": "USD-SOFR" } ] }
+WARNING  [2025-Jun-06 12:19:16.114461]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-05" }, { "name": "fixingId", "value": "USD-SOFR" } ] }
+WARNING  [2025-Jun-06 12:19:16.122111]          (OREData\ored\utilities\log.cpp:213) : StructuredMessage { "category": "Warning", "group": "Fixing", "message": "Could not find required fixing ID.", "sub_fields": [ { "name": "exceptionType", "value": "Missing fixing" }, { "name": "fixingDate", "value": "2025-06-06" }, { "name": "fixingId", "value": "USD-SOFR" } ] }
+NOTICE   [2025-Jun-06 12:19:16.131589]  (...ytics\orea\app\marketdataloader.cpp:257) : Adding the loaded fixings to the IndexManager
+NOTICE   [2025-Jun-06 12:19:16.138673]  (...ytics\orea\app\marketdataloader.cpp:258) : Fixings size = 5
+NOTICE   [2025-Jun-06 12:19:16.150495]  (...ytics\orea\app\marketdataloader.cpp:261) : Generating market datum set
+DEBUG    [2025-Jun-06 12:19:16.161596]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-IN-USD
+DEBUG    [2025-Jun-06 12:19:16.176559]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:16.183613]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-EONIA
+DEBUG    [2025-Jun-06 12:19:16.193299]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-ESTER
+DEBUG    [2025-Jun-06 12:19:16.201436]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:16.213950]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-LIBOR-3M
+DEBUG    [2025-Jun-06 12:19:16.224860]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-SOFR
+DEBUG    [2025-Jun-06 12:19:16.233848]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec FX/EUR/USD
+DEBUG    [2025-Jun-06 12:19:16.241247]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec FX/USD/EUR
+DEBUG    [2025-Jun-06 12:19:16.248760]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Equity/EUR/RIC:.STOXX50
+DEBUG    [2025-Jun-06 12:19:16.255881]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-IN-USD
+DEBUG    [2025-Jun-06 12:19:16.267863]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:16.276275]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-EONIA
+DEBUG    [2025-Jun-06 12:19:16.284412]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/EUR/EUR-ESTER
+DEBUG    [2025-Jun-06 12:19:16.293282]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-FedFunds
+DEBUG    [2025-Jun-06 12:19:16.300423]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-LIBOR-3M
+DEBUG    [2025-Jun-06 12:19:16.307091]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Yield/USD/USD-SOFR
+DEBUG    [2025-Jun-06 12:19:16.313385]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec FX/EUR/USD
+DEBUG    [2025-Jun-06 12:19:16.320957]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec FX/USD/EUR
+DEBUG    [2025-Jun-06 12:19:16.327957]  (...rketdata\todaysmarketparameters.cpp:270) : Add spec Equity/EUR/RIC:.STOXX50
+NOTICE   [2025-Jun-06 12:19:16.336719]  (...ytics\orea\app\marketdataloader.cpp:279) : CurveConfigs require 137 quotes
+NOTICE   [2025-Jun-06 12:19:16.348967]  (...ytics\orea\app\marketdataloader.cpp:287) : Got market data

@@ -26,8 +26,7 @@ jobs:
         sudo ./b2 architecture=arm address-model=64 -s NO_LZMA=1 -s NO_ZSTD=1 abi=aapcs install
     - name: Install Swig
       run: |
-        sudo brew install swig
-        swig -version
+        brew install swig
     - name: cmake configure and build
       run: |
         mkdir build
@@ -40,8 +39,9 @@ jobs:
         pwd
         cd ORE-SWIG
         sudo python -m pip install setuptools
-        cp ORE-SWIG/wheels/oreanalytics-config.macos ORE-SWIG/oreanalytics-config
-        cd ORE-SWIG/OREAnalytics-SWIG
+        cp Wheels/oreanalytics-config.macos oreanalytics-config
+        chmod +x oreanalytics-config
+        cd OREAnalytics-SWIG
         ls -al
         cd SWIG
         ls -al
