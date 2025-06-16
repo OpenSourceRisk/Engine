@@ -2360,8 +2360,8 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                 basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
                 basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
                 basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
-                basisSwapConvention->shortFixedDayCounter(), shortIndex, shortIndexGiven,
-                basisSwapConvention->longMinusShort(), discountCurve_[index], discountCurveGiven_[index]));
+                basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
+                shortIndexGiven, discountCurve_[index], discountCurveGiven_[index]));
 
             instruments.push_back(basisSwapHelper);
         }
@@ -2756,11 +2756,6 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
         flatDiscountCurveGiven = true;
         spreadDiscountCurveGiven = discountCurveGiven_[index];
     }
-
-    std::cout << "flatDiscountCurveGiven: " << flatDiscountCurveGiven << std::endl;
-    std::cout << "spreadDiscountCurveGiven: " << spreadDiscountCurveGiven << std::endl;
-    std::cout << "flat discount handle " << flatDiscountCurve.empty() << std::endl;
-    std::cout << "spread discount handle " << spreadDiscountCurve.empty() << std::endl;
 
     Period flatTenor = basisSwapConvention->flatTenor();
     Period spreadTenor = basisSwapConvention->spreadTenor();

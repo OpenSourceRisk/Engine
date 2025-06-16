@@ -47,7 +47,7 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
                "Tenor of longIndex should be at least tenor of shortIndex.");
 
     QL_REQUIRE(!(longIndexGiven_ && shortIndexGiven_ && discountCurveGiven_),
-               "Have all curves nothing to solve for.");
+               "BasisTwoSwaphelper: Have all curves nothing to solve for.");
 
     if (longIndexGiven_ && !shortIndexGiven_) {
         shortIndex_ = shortIndex_->clone(termStructureHandle_);
