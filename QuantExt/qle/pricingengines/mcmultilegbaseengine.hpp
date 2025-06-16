@@ -93,7 +93,8 @@ public:
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
-        const bool reevaluateExerciseInStickyRun = false);
+        const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
+        const Period& cfOnCpnAddSimTimesCutoff = Period());
 
     //! Destructor
     virtual ~McMultiLegBaseEngine() {}
@@ -130,6 +131,9 @@ public:
     Real regressionVarianceCutoff_;
     bool recalibrateOnStickyCloseOutDates_;
     bool reevaluateExerciseInStickyRun_;
+    Size cfOnCpnMaxSimTimes_;
+    Period cfOnCpnAddSimTimesCutoff_;
+    VarGroupMode regressionVarGroupMode_;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
