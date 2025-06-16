@@ -67,7 +67,7 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         strike_.setValue(0.0);
     }
 
-    legMandatoryCashflows_.push_back(true); // TODO Maybe unnecessarry
+    legMandatoryCashflows_.push_back(false);
 
     // This is called in VanillaOptionTrade::build(), but we want to call it first here,
     // in case the build fails before it reaches VanillaOptionTrade::build()
