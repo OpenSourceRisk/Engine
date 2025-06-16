@@ -26,25 +26,24 @@
 namespace QuantExt {
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
-                             const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                             const Calendar& fixedCalendar, Natural paymentLag, bool endOfMonth,
-                             Frequency paymentFrequency, BusinessDayConvention fixedConvention,
+                             const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const bool onIndexGiven,
+                             const DayCounter& fixedDayCounter, const Calendar& fixedCalendar, Natural paymentLag,
+                             bool endOfMonth, Frequency paymentFrequency, BusinessDayConvention fixedConvention,
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
-                             const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates,
-                             Pillar::Choice pillar, Date customPillarDate)
+                             const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
+                             bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
-      overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar),
-      paymentLag_(paymentLag), endOfMonth_(endOfMonth), paymentFrequency_(paymentFrequency),
-      fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
-      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+      overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven), fixedDayCounter_(fixedDayCounter),
+      fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), endOfMonth_(endOfMonth),
+      paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
+      rule_(rule), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
 
     pillarDate_ = customPillarDate;
 
-    bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    QL_REQUIRE(!(onIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
-    if (!onIndexHasCurve) {
+    if (!onIndexGiven_) {
         QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
         overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
@@ -115,7 +114,7 @@ void OISRateHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);
@@ -140,11 +139,12 @@ void OISRateHelper::accept(AcyclicVisitor& v) {
 
 DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                                        const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex,
-                                       const DayCounter& fixedDayCounter, const Calendar& fixedCalendar,
-                                       Natural paymentLag, Frequency paymentFrequency,
+                                       const bool onIndexGiven, const DayCounter& fixedDayCounter,
+                                       const Calendar& fixedCalendar, Natural paymentLag, Frequency paymentFrequency,
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
-                                       bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate)
+                                       const bool discountCurveGiven, bool telescopicValueDates, Pillar::Choice pillar,
+                                       Date customPillarDate)
     : RateHelper(fixedRate), overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter),
       fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), paymentFrequency_(paymentFrequency),
       fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
@@ -152,11 +152,9 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
 
     pillarDate_ = customPillarDate;
 
-    bool onIndexHasCurve = !overnightIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    QL_REQUIRE(!(onIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
-    if (!onIndexHasCurve) {
+    if (!onIndexGiven_) {
         QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(overnightIndex_->clone(termStructureHandle_));
         overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
@@ -221,7 +219,7 @@ void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);

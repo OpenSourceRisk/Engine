@@ -28,35 +28,34 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
                                        // Long tenor swap
                                        Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
                                        const DayCounter& longFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex,
+                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
                                        // Short tenor swap
                                        Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
                                        const DayCounter& shortFixedDayCount,
                                        const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
+                                       bool shortIndexGiven,
                                        // Discount curve
-                                       const Handle<YieldTermStructure>& discountingCurve)
+                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
       longFixedFrequency_(longFixedFrequency), longFixedConvention_(longFixedConvention),
-      longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), shortFixedFrequency_(shortFixedFrequency),
-      shortFixedConvention_(shortFixedConvention), shortFixedDayCount_(shortFixedDayCount), shortIndex_(shortIndex),
-      longMinusShort_(longMinusShort), discountHandle_(discountingCurve) {
+      longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), longIndexGiven_(longIndexGiven),
+      shortFixedFrequency_(shortFixedFrequency), shortFixedConvention_(shortFixedConvention),
+      shortFixedDayCount_(shortFixedDayCount), shortIndex_(shortIndex), longMinusShort_(longMinusShort),
+      shortIndexGiven_(shortIndexGiven), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven) {
 
     QL_REQUIRE(longIndex_->tenor() >= shortIndex_->tenor(),
                "Tenor of longIndex should be at least tenor of shortIndex.");
 
-    bool longIndexHasCurve = !longIndex_->forwardingTermStructure().empty();
-    bool shortIndexHasCurve = !shortIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(longIndexHasCurve && shortIndexHasCurve && haveDiscountCurve),
+    QL_REQUIRE(!(longIndexGiven_ && shortIndexGiven_ && discountCurveGiven_),
                "Have all curves nothing to solve for.");
 
-    if (longIndexHasCurve && !shortIndexHasCurve) {
+    if (longIndexGiven_ && !shortIndexGiven_) {
         shortIndex_ = shortIndex_->clone(termStructureHandle_);
         shortIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && shortIndexHasCurve) {
+    } else if (!longIndexGiven_ && shortIndexGiven_) {
         longIndex_ = longIndex_->clone(termStructureHandle_);
         longIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && !shortIndexHasCurve) {
+    } else if (!longIndexGiven_ && !shortIndexGiven_) {
         QL_FAIL("Need at least one of the indices to have a valid curve.");
     }
 
@@ -120,7 +119,7 @@ void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);

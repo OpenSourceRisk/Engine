@@ -1991,6 +1991,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
     // If projection curve ID is not the this curve.
     string projectionCurveID = oisSegment->projectionCurveID();
     QuantLib::ext::shared_ptr<OvernightIndex> onIndex = oisConvention->index();
+    bool onIndexGiven = false;
     if (projectionCurveID != curveConfig_[index]->curveID() && !projectionCurveID.empty()) {
         projectionCurveID = yieldCurveKey(currency_[index], projectionCurveID, asofDate_);
         QuantLib::Handle<YieldTermStructure> projectionCurve;
@@ -2004,6 +2005,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                              << curveSpec_[index]->name() << ", was not found.");
         }
         onIndex = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve));
+        onIndexGiven = true;
     }
 
     // BRL CDI overnight needs a specialised rate helper so we use this below to switch
@@ -2027,23 +2029,24 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                 QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                            "OIS segment for BRL-CDI does not support pillar choice " << segment->pillarChoice());
                 oisHelper = QuantLib::ext::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex,
-                                                                         discountCurve_[index], true);
+                                                                         onIndexGiven, discountCurve_[index],
+                                                                         discountCurveGiven_[index], true);
             } else {
 
                 if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
                     oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
-                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex,
+                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, onIndexGiven,
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                        oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index], true,
-                        oisSegment->pillarChoice());
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
+                        discountCurveGiven_[index], true, oisSegment->pillarChoice());
                 else {
                     oisHelper = QuantLib::ext::make_shared<QuantExt::DatedOISRateHelper>(
-                        oisQuote->startDate(), oisQuote->maturityDate(), oisQuote->quote(), onIndex,
+                        oisQuote->startDate(), oisQuote->maturityDate(), oisQuote->quote(), onIndex, onIndexGiven,
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                        oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index], true,
-                        oisSegment->pillarChoice());
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
+                        discountCurveGiven_[index], true, oisSegment->pillarChoice());
                 }
             }
             instruments.push_back(oisHelper);
@@ -2128,6 +2131,7 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
     // If projection curve ID is not the this curve.
     string projectionCurveID = averageOisSegment->projectionCurveID();
     QuantLib::ext::shared_ptr<OvernightIndex> onIndex = averageOisConvention->index();
+    bool onIndexGiven = false;
     if (projectionCurveID != curveConfig_[index]->curveID() && !projectionCurveID.empty()) {
         projectionCurveID = yieldCurveKey(currency_[index], projectionCurveID, asofDate_);
         QuantLib::Handle<YieldTermStructure> projectionCurve;
@@ -2141,6 +2145,7 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                                              << curveSpec_[index]->name() << ", was not found.");
         }
         onIndex = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve));
+        onIndexGiven = true;
     }
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
@@ -2179,8 +2184,9 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                     swapQuote->quote(), averageOisConvention->spotLag() * Days, AverageOisTenor,
                     averageOisConvention->fixedTenor(), averageOisConvention->fixedDayCounter(),
                     averageOisConvention->fixedCalendar(), averageOisConvention->fixedConvention(),
-                    averageOisConvention->fixedPaymentConvention(), onIndex, averageOisConvention->onTenor(),
-                    basisQuote->quote(), averageOisConvention->rateCutoff(), discountCurve_[index], true));
+                    averageOisConvention->fixedPaymentConvention(), onIndex, onIndexGiven,
+                    averageOisConvention->onTenor(), basisQuote->quote(), averageOisConvention->rateCutoff(),
+                    discountCurve_[index], discountCurveGiven_[index], true));
 
                 instruments.push_back(averageOisHelper);
             }
@@ -2297,6 +2303,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
     // If short index projection curve ID is not this curve.
     string shortCurveID = basisSwapSegment->receiveProjectionCurveID();
     QuantLib::ext::shared_ptr<IborIndex> shortIndex = basisSwapConvention->shortIndex();
+    bool shortIndexGiven = false;
     if (shortCurveID != curveConfig_[index]->curveID() && !shortCurveID.empty()) {
         shortCurveID = yieldCurveKey(currency_[index], shortCurveID, asofDate_);
         QuantLib::Handle<YieldTermStructure> shortCurve;
@@ -2310,11 +2317,13 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                                                         << curveSpec_[index]->name() << ", was not found.");
         }
         shortIndex = shortIndex->clone(shortCurve);
+        shortIndexGiven = true;
     }
 
     // If long index projection curve ID is not this curve.
     string longCurveID = basisSwapSegment->payProjectionCurveID();
     QuantLib::ext::shared_ptr<IborIndex> longIndex = basisSwapConvention->longIndex();
+    bool longIndexGiven = false;
     if (longCurveID != curveConfig_[index]->curveID() && !longCurveID.empty()) {
         longCurveID = yieldCurveKey(currency_[index], longCurveID, asofDate_);
         QuantLib::Handle<YieldTermStructure> longCurve;
@@ -2328,6 +2337,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                                              << curveSpec_[index]->name() << ", was not found.");
         }
         longIndex = longIndex->clone(longCurve);
+        longIndexGiven = true;
     }
 
     QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
@@ -2348,10 +2358,10 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
             QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper(new BasisTwoSwapHelper(
                 basisSwapQuote->quote(), basisSwapTenor, basisSwapConvention->calendar(),
                 basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
-                basisSwapConvention->longFixedDayCounter(), longIndex, basisSwapConvention->shortFixedFrequency(),
-                basisSwapConvention->shortFixedConvention(), basisSwapConvention->shortFixedDayCounter(), shortIndex,
-                basisSwapConvention->longMinusShort(),
-                discountCurve_[index]));
+                basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
+                basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
+                basisSwapConvention->shortFixedDayCounter(), shortIndex, shortIndexGiven,
+                basisSwapConvention->longMinusShort(), discountCurve_[index], discountCurveGiven_[index]));
 
             instruments.push_back(basisSwapHelper);
         }
@@ -2728,17 +2738,29 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
     RelinkableHandle<YieldTermStructure> spreadDiscountCurve;
     QuantLib::ext::shared_ptr<IborIndex> flatIndex;
     QuantLib::ext::shared_ptr<IborIndex> spreadIndex;
+    bool flatDiscountCurveGiven, spreadDiscountCurveGiven;
     if (onFlatSide) {
-        flatDiscountCurve.linkTo(*discountCurve_[index]);
+        if (!discountCurve_[index].empty())
+            flatDiscountCurve.linkTo(*discountCurve_[index]);
         spreadDiscountCurve.linkTo(*foreignDiscountCurve);
         flatIndex = domesticIndex;
         spreadIndex = foreignIndex;
+        flatDiscountCurveGiven = discountCurveGiven_[index];
+        spreadDiscountCurveGiven = true;
     } else {
         flatDiscountCurve.linkTo(*foreignDiscountCurve);
-        spreadDiscountCurve.linkTo(*discountCurve_[index]);
+        if (!discountCurve_[index].empty())
+            spreadDiscountCurve.linkTo(*discountCurve_[index]);
         flatIndex = foreignIndex;
         spreadIndex = domesticIndex;
+        flatDiscountCurveGiven = true;
+        spreadDiscountCurveGiven = discountCurveGiven_[index];
     }
+
+    std::cout << "flatDiscountCurveGiven: " << flatDiscountCurveGiven << std::endl;
+    std::cout << "spreadDiscountCurveGiven: " << spreadDiscountCurveGiven << std::endl;
+    std::cout << "flat discount handle " << flatDiscountCurve.empty() << std::endl;
+    std::cout << "spread discount handle " << spreadDiscountCurve.empty() << std::endl;
 
     Period flatTenor = basisSwapConvention->flatTenor();
     Period spreadTenor = basisSwapConvention->spreadTenor();
@@ -2764,7 +2786,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                 instruments.push_back(QuantLib::ext::make_shared<CrossCcyBasisSwapHelper>(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
-                    flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
+                    flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, true, true, flatDiscountCurveGiven,
+                    spreadDiscountCurveGiven, basisSwapConvention->eom(),
                     flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor, 0.0, 1.0, 1.0,
                     Calendar(), Calendar(), std::vector<Natural>(), std::vector<Calendar>(),
                     basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
@@ -2796,7 +2819,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                 instruments.push_back(QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwapHelper>(
                     basisSwapQuote->quote(), finalFxSpotQuote, basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
-                    foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
+                    foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, true, true,
+                    resetsOnFlatLeg ? spreadDiscountCurveGiven : flatDiscountCurveGiven,
+                    resetsOnFlatLeg ? flatDiscountCurveGiven : spreadDiscountCurveGiven, Handle<YieldTermStructure>(),
                     Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor,
                     domesticTenor, basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
                     basisSwapConvention->includeSpread(), basisSwapConvention->lookback(),
@@ -2808,6 +2833,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
         }
     }
 }
+
 void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                                           const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                           vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments) {
