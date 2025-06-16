@@ -37,13 +37,15 @@ class AnalyticCashSettledEuropeanEngine : public CashSettledEuropeanOption::engi
 public:
     /*! The risk-free rate in the given process \p bsp is used for both forecasting and discounting.
      */
-    AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp);
+    AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
+                                      const bool flipResults = false);
 
     /*! As usual, the risk-free rate from the given process \p bsp is used for forecasting the forward price. The
         \p discountCurve is used for discounting.
     */
     AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
-                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
+                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                      const bool flipResults = false);
 
     //! \name PricingEngine interface
     //@{
@@ -57,6 +59,7 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> bsp_;
     //! Curve for discounting cashflows
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+    bool flipResults_;
 };
 
 } // namespace QuantExt
