@@ -430,9 +430,6 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                                                    deltaKeys[col].name + "_index" +  std::to_string(deltaKeys[col].index));
                                 }
                             }
-                            if (riskGroup->to_string() == "[All, All]") {
-                                writeReports(reports, riskGroup, tradeGroup);
-                            }
                         }
                     }
                     handleSensiResults(reports, riskGroup, tradeGroup);
@@ -441,8 +438,13 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             // Do the full revaluation step
             if (runFullReval(riskGroup))                                
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
-
-            writeReports(reports, riskGroup, tradeGroup);
+            if (correlation_) {
+                if (riskGroup->to_string() == "[All, All]") {
+                    writeReports(reports, riskGroup, tradeGroup);
+                }
+            } else {
+                writeReports(reports, riskGroup, tradeGroup);
+            } 
         }
         if (sensiBased_)
             // Reset the sensitivity aggregator before changing the risk filter
