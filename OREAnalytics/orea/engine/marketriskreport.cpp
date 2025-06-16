@@ -424,12 +424,14 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             } else {
                                 QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }
-                            Size n = deltaKeys.size();
-                            for (Size col = 0; col < n; col++) {
-                                for (Size row = col + 1; row < n; row++) {
+                            for (Size col = 0; col < deltaKeys.size(); col++) {
+                                for (Size row = col + 1; row < deltaKeys.size(); row++) {
                                     correlationPairs_.emplace_back(deltaKeys[row].name + "_index" + std::to_string(deltaKeys[row].index),
                                                                    deltaKeys[col].name + "_index" +  std::to_string(deltaKeys[col].index));
                                 }
+                            }
+                            if (riskGroup->to_string() == "[All, All]") {
+                                writeReports(reports, riskGroup, tradeGroup);
                             }
                         }
                     }
