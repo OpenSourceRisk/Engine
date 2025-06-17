@@ -322,7 +322,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             c_->discountCurve_.clear();
         }
         YieldCurve* c_;
-    };
+    } cleanUp(this);
 
     // copy the required yield curves container to our handle container and add empty handles for the curves to be built
 
