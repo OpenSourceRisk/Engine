@@ -325,7 +325,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             } else if (node.obj == MarketObject::IndexCurve) {
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
-                auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle(ycspec->name()));
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
                     auto h = iborIndices_.find(std::make_pair(configuration, fallbackData.rfrIndex));
