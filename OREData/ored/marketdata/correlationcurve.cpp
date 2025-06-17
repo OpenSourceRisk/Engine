@@ -111,7 +111,7 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(
     Handle<YieldTermStructure> yts;
     auto it2 = yieldCurves.find(dc);
     if (it2 != yieldCurves.end()) {
-        yts = it2->second->handle();
+        yts = it2->second->handle(dc);
     } else {
         QL_FAIL("The discount curve not found, " << dc);
     }

@@ -36,12 +36,14 @@ using namespace QuantLib;
  */
 class TenorBasisSwapHelper : public RelativeDateRateHelper {
 public:
-    TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const QuantLib::ext::shared_ptr<IborIndex> payIndex,
-                         const QuantLib::ext::shared_ptr<IborIndex> receiveIndex,
-                         const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                         bool spreadOnRec = true, bool includeSpread = false, const Period& payFrequency = Period(),
+    TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
+                         const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
+                         const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex,
+                         const Handle<YieldTermStructure>& discountingCurve, const bool payIndexGiven,
+                         const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec = true,
+                         const bool includeSpread = false, const Period& payFrequency = Period(),
                          const Period& recFrequency = Period(), const bool telescopicValueDates = false,
-                         QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
+                         const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
 
     //! \name RateHelper interface
     //@{
@@ -63,6 +65,9 @@ protected:
     Period swapTenor_;
     QuantLib::ext::shared_ptr<IborIndex> payIndex_;
     QuantLib::ext::shared_ptr<IborIndex> receiveIndex_;
+    bool payIndexGiven_;
+    bool receiveIndexGiven_;
+    bool discountingGiven_;
     bool spreadOnRec_;
     bool includeSpread_;
     Period payFrequency_;

@@ -89,7 +89,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         QL_REQUIRE(itr != requiredYieldCurves.end(),
                    "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = itr->second;
-        forecastYieldTermStructure = yieldCurve->handle();
+        forecastYieldTermStructure = yieldCurve->handle(ycspec.name());
 
         // Set the interpolation variables
         dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());

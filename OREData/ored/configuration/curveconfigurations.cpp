@@ -455,6 +455,7 @@ CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const st
 }
 
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(CurveSpec::CurveType::Yield, curveID); }
+
 QuantLib::ext::shared_ptr<YieldCurveConfig> CurveConfigurations::yieldCurveConfig(const string& curveID) const {
     QuantLib::ext::shared_ptr<CurveConfig> cc = get(CurveSpec::CurveType::Yield, curveID);
     return QuantLib::ext::dynamic_pointer_cast<YieldCurveConfig>(cc);
