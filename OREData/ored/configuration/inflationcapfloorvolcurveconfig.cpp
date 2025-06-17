@@ -77,11 +77,9 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure), observationLag_(observationLag), quoteIndex_(quoteIndex),
-      conventions_(conventions), useLastAvailableFixingDate_(useLastAvailableFixingDate) {
-    populateRequiredCurveIds();
-}
+      conventions_(conventions), useLastAvailableFixingDate_(useLastAvailableFixingDate) {}
 
-void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+void InflationCapFloorVolatilityCurveConfig::populateRequiredIds() const {
     if (!yieldTermStructure().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldTermStructure())->curveConfigID());
     if (!indexCurve().empty())
@@ -208,7 +206,6 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     conventions_ = XMLUtils::getChildValue(node, "Conventions", false, "");
     useLastAvailableFixingDate_ =
         XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
-    populateRequiredCurveIds();
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);

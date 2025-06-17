@@ -64,12 +64,10 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         for (auto const& m : mapping) {
             Vertex v = boost::add_vertex(g);
             QuantLib::ext::shared_ptr<CurveSpec> spec;
-            // swap index curves pass the id
             if (o == MarketObject::SwapIndexCurve)
                 spec = QuantLib::ext::make_shared<SwapIndexCurveSpec>(m.first);
             else
                 spec = parseCurveSpec(m.second);
-            // add the vertex to the dependency graph
             g[v] = {index[v], o, m.first, m.second, spec, false};
             TLOG("add vertex # " << index[v] << ": " << g[v]);
         }
@@ -80,48 +78,89 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     VertexIterator v, vend, w, wend;
     EdgeIterator e, eend;
 
-    // add the dependencies based on the required curve ids stored in the curve configs; notice that no dependencies
-    // to FXSpots are stored in the configs, these are not needed because a complete FXTriangulation object is created
-    // upfront that is passed to all curve builders which require it.
+    /* Add the dependencies based on
+
+       - the required curve ids (part of the spec on the RHS of the todays market assignments)
+       - and the required names (LHS of the todays market assignments)
+
+       The latter names are e.g. used to specify discount curves from the current or the inccy market configuration,
+       or index names on which a node depdends.
+
+       Note: No dependencies to FXSpots are stored in the configs, these are not needed because a complete FXTriangulation
+             object is created upfront that is passed to all curve builders which require it. However, discounted FX Spots
+             required discount curves in both currencies. Such curves are required via "required names" by the nodes that
+             eventually make use of them, e.g. commodity vol curves which construct fx indicies from the FXTriangulation. */
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
         std::map<CurveSpec::CurveType, std::set<string>> requiredIds;
-        if (g[*v].curveSpec)
-            requiredIds =
-                curveConfigs_->requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID());
+        std::map<MarketObject, std::set<string>> requiredNames;
 
-        // Special case for SwapIndex - we need to add the discount dependency here
-        if (g[*v].obj == MarketObject::SwapIndexCurve)
-            requiredIds[CurveSpec::CurveType::Yield].insert(g[*v].mapping);
+        requiredIds = curveConfigs_->requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID());
+        requiredNames =
+            curveConfigs_->requiredNames(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID(), configuration);
 
-        if (requiredIds.size() > 0) {
-            for (auto const& r : requiredIds) {
-                for (auto const& cId : r.second) {
-                    // avoid self reference
-                    if (r.first == g[*v].curveSpec->baseType() &&
-                        (cId == g[*v].curveSpec->curveConfigID() || cId == g[*v].name))
-                        continue;
-                    if (r.first == CurveSpec::CurveType::FX)
-                        continue; // FXSpots are dealt with in advance
-                    bool found = false;
-                    for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
-                        if (*w != *v && g[*w].curveSpec && r.first == g[*w].curveSpec->baseType() &&
-                            (cId == g[*w].curveSpec->curveConfigID() || g[*w].name == cId)) {
-                            // we also handle the special case for discount curves, the dependency is of form
-                            // (CurveSpec::CurveType::Yield, ccy)
+        /* Special case for SwapIndex - we need to add the discount dependency here, this can be an discounting index or
+           also a yield curve or discount curve, hence add to all those mappings */
+        if (g[*v].obj == MarketObject::SwapIndexCurve) {
+            requiredNames[MarketObject::DiscountCurve].insert(g[*v].mapping);
+            requiredNames[MarketObject::IndexCurve].insert(g[*v].mapping);
+            requiredNames[MarketObject::YieldCurve].insert(g[*v].mapping);
+        }
+
+        for (auto const& r : requiredIds) {
+            for (auto const& cId : r.second) {
+                // avoid self reference
+                if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
+                    continue;
+                if (r.first == CurveSpec::CurveType::FX)
+                    continue; // FXSpots are dealt with in advance
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && r.first == g[*w].curveSpec->baseType() && cId == g[*w].curveSpec->curveConfigID()) {
+                        g.add_edge(*v, *w);
+                        TLOG("add edge for required curve id from vertex #" << index[*v] << " " << g[*v] << " to #"
+                                                                            << index[*w] << " " << g[*w]);
+                        // it is enough to insert one dependency
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (auto const& r : requiredNames) {
+            for (auto const& n : r.second) {
+                // avoid self reference
+                if (r.first == g[*v].obj && n == g[*v].name)
+                    continue;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && r.first == g[*w].obj && n == g[*w].name) {
+                        g.add_edge(*v, *w);
+                        TLOG("add edge for required curve name from vertex #" << index[*v] << " " << g[*v] << " to #"
+                                                                              << index[*w] << " " << g[*w]);
+                        // it is enough to insert one dependency
+                        break;
+                    }
+                }
+            }
+        }
+
+        /* Ibor fallback handling: an ibor index to replace depends on the fallback rfr index -
+           This dependency type can not be handled via required curve ids or names. */
+
+        if (g[*v].obj == MarketObject::IndexCurve) {
+            if (iborFallbackConfig_.isIndexReplaced(g[*v].name, asof_)) {
+                bool foundRfrIndex = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v) {
+                        if (g[*w].obj == MarketObject::IndexCurve &&
+                            g[*w].name == iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex) {
                             g.add_edge(*v, *w);
-                            TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
-                                                          << g[*w]);
-                            found = true;
-                            // it is enough to insert one dependency
-                            break;
+                            foundRfrIndex = true;
+                            TLOG("add edge (ibor-fallback) from vertex #" << index[*v] << " " << g[*v] << " to #"
+                                                                          << index[*w] << " " << g[*w]);
                         }
                     }
-                    if (!found)
-                        buildErrors[g[*v].mapping] = "did not find required curve id " + cId + " of type " +
-                                                     ore::data::to_string(r.first) + " (required from " +
-                                                     ore::data::to_string(g[*v]) +
-                                                     ") in dependency graph for configuration " + configuration;
+                    if (foundRfrIndex)
+                        break;
                 }
             }
         }

@@ -259,10 +259,14 @@ void TodaysMarket::initialise(const Date& asof) {
 
 void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& reducedNode) const {
 
+    DLOG("buildNode(" << configuration << "," << reducedNode);
+
     // if the node is already built, there is nothing to do
 
-    if (std::all_of(reducedNode.nodes.begin(), reducedNode.nodes.end(), [](const Node& n) { return n.built; }))
+    if (std::all_of(reducedNode.nodes.begin(), reducedNode.nodes.end(), [](const Node& n) { return n.built; })) {
+        DLOG("already built.");
         return;
+    }
 
     // we can only handle sub-node sets which have the same curve spec
 
@@ -321,27 +325,19 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             } else if (node.obj == MarketObject::IndexCurve) {
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
-                // ibor fallback handling
-                auto tmpIndex = parseIborIndex(node.name, itr->second->handle(ycspec->name()));
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
-                    QuantLib::ext::shared_ptr<IborIndex> rfrIndex;
-                    bool foundRfr = false;
-                    for (const auto& y : requiredYieldCurves_) {
-                        auto cs = parseCurveSpec(y.first);
-                        if (cs) {
-                            if (fallbackData.rfrIndex == cs->curveConfigID()) {
-                                rfrIndex = parseIborIndex(fallbackData.rfrIndex, y.second->handle(cs->name()));
-                                foundRfr = true;
-                                break;
-                            }
-                        }
+                    auto h = iborIndices_.find(std::make_pair(configuration, fallbackData.rfrIndex));
+                    if (h == iborIndices_.end()) {
+                        h = iborIndices_.find(std::make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
                     }
-                    QL_REQUIRE(foundRfr,
+                    QL_REQUIRE(h != iborIndices_.end(),
                                "Failed to build ibor fallback index '"
                                    << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
                                    << "' in configuration '" << configuration
-                                   << "' or default - is the rfr index configuration in todays market parameters?");
+                                   << "' or default - is the rfr index in todays market parameters?");
+                    QuantLib::ext::shared_ptr<IborIndex> rfrIndex = *h->second;
                     auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex);
                     QL_REQUIRE(oi,
                                "Found rfr index '"

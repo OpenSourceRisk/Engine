@@ -56,10 +56,9 @@ InflationCurveConfig::InflationCurveConfig(
       interpolationVariable_(interpolationVariable) {
     quotes_ = swapQuotes;
     quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
-    populateRequiredCurveIds();
 }
 
-void InflationCurveConfig::populateRequiredCurveIds() {
+void InflationCurveConfig::populateRequiredIds() const {
     if (!nominalTermStructure().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(nominalTermStructure())->curveConfigID());
 }
@@ -128,7 +127,6 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         std::string overrideFctStr = XMLUtils::getChildValue(seasonalityNode, "OverrideFactors", false);
         overrideSeasonalityFactors_ = parseListOfValues<Real>(overrideFctStr, &parseReal);
     }
-    populateRequiredCurveIds();
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
