@@ -425,7 +425,7 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(con
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::avgPricePrecision(QuantLib::Natural precision){
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withAvgPricePrecision(QuantLib::Natural precision){
     avgPricePrecision_ = precision;
     return *this;
 }

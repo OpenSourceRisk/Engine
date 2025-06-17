@@ -203,7 +203,7 @@ public:
     CommodityIndexedAverageLeg&
     withOffPeakPowerData(const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData);
     CommodityIndexedAverageLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
-    CommodityIndexedAverageLeg& avgPricePrecision(QuantLib::Natural precision =  QuantLib::Null<QuantLib::Natural>());
+    CommodityIndexedAverageLeg& withAvgPricePrecision(QuantLib::Natural precision =  QuantLib::Null<QuantLib::Natural>());
     operator Leg() const;
 
 private:
