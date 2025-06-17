@@ -416,12 +416,13 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         // Concerns Correlation analytic
                         if (correlation_) {
                             DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
+                            CorrelationMatrixBuilder corrMatrix;
                             if (correlationMethod_ == "Pearson") {
-                                CorrelationMatrixBuilder corrMatrix;
                                 correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
                             } else if (correlationMethod_ == "KendallRank") {
-                                std::cout << "Kendall";
-                                //QuantExt::KendallRankCorrelation kendallRank();
+                                QuantLib::Matrix testKend(5,5,1.0);
+                                QuantLib::Matrix kendallTauxMatrix = corrMatrix.KendallTauMatrix(testKend);
+                                correlationMatrix_ = corrMatrix.KendallEllipticalCorrelation(kendallTauxMatrix);
                             } else {
                                 QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }

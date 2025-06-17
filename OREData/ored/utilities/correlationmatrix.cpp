@@ -320,19 +320,24 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
 double CorrelationMatrixBuilder::KendallTau(const vector<double>& x, const vector<double>& y) {
     //Kendall rank/Tau
     int n = x.size();
-    int concordant = 0;
-    int discordant = 0;
-
+    int concordant = 0; int discordant = 0;
+    int tiesX = 0; int tiesY = 0;
     for (int i = 0; i < n; i++) {
         for (int j = i; j < n; j++) {
             if ((x[i] > x[j] && y[i] > y[j]) || (x[i] < x[j] && y[i] < y[j])) {
                 concordant++;
             } else if ((x[i] > x[j] && y[i] < y[j]) || (x[i] < x[j] && y[i] > y[j])) {
                 discordant++;
+            } else if (x[i] == x[j] && y[i] == y[j]) {
+                continue;
+            } else if (x[i] == x[j]) {
+                tiesX++;
+            } else if (y[i] == y[j]) {
+                tiesY++;
             }
         }
     }
-    return static_cast<double>(concordant - discordant) / (n * (n - 1) / 2);
+    return static_cast<double>(concordant - discordant) / std::sqrt((concordant+discordant+tiesX)*(concordant+discordant+tiesY));
 }
 
 QuantLib::Matrix CorrelationMatrixBuilder::KendallTauMatrix(const QuantLib::Matrix& data) {
