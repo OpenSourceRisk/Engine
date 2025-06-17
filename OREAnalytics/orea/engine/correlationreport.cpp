@@ -48,8 +48,6 @@ void CorrelationReport::createReports(const ext::shared_ptr<MarketRiskReport::Re
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
     writeHeader(report);
-
-    //createVarCalculator();
 }
 
 void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports,

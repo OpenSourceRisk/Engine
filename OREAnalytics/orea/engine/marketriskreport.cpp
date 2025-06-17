@@ -427,8 +427,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             //Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
                             for (Size col = 0; col < deltaKeys.size(); col++) {
                                 for (Size row = col + 1; row < deltaKeys.size(); row++) {
-                                    correlationPairs_.emplace_back(deltaKeys[row].name,std::to_string(deltaKeys[row].index),
-                                                                   deltaKeys[col].name,std::to_string(deltaKeys[col].index));
+                                    correlationPairs_.emplace_back(deltaKeys[row].name, std::to_string(deltaKeys[row].index),
+                                                                   deltaKeys[col].name, std::to_string(deltaKeys[col].index));
                                 }
                             }
                         }
@@ -440,6 +440,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             if (runFullReval(riskGroup))                                
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
             if (correlation_) {
+                //Output the first Correlation Computation
                 if (riskGroup->to_string() == "[All, All]") {
                     writeReports(reports, riskGroup, tradeGroup);
                 }
