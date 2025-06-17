@@ -115,7 +115,8 @@ public:
         bool excludePeriodStart = true, QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
         QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "");
+        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "",
+        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -182,6 +183,7 @@ private:
     bool unrealisedQuantity_;
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
+    QuantLib::Natural avgPricePrecision_;
 };
 
 } // namespace data

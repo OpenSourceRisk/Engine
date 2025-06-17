@@ -60,7 +60,7 @@ public:
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
-        const ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural priceRounding = QuantLib::Null<QuantLib::Natural>());
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -76,7 +76,7 @@ public:
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
-        const ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural priceRounding = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -159,7 +159,7 @@ private:
     QuantLib::Real periodQuantity_;
     boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     mutable QuantLib::Real averagePrice_;
-
+    QuantLib::Natural avgPriceRounding_;
     // Populated only when offPeakPowerData_ is provided.
     std::map<QuantLib::Date, QuantLib::Real> weights_;
 
