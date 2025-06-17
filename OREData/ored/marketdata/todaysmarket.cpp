@@ -964,7 +964,8 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (foundCycle) {
         order.clear();
-        buildErrors[ore::data::to_string(g[reducedVertex])] = "found cycle while attempting to build this node";
+        buildErrors[ore::data::to_string(g[reducedVertex])] = "found cycle while attempting to build this node - rerun "
+                                                              "with lazyMarketBuilding=false to get more details.";
     }
 
     // build the nodes
