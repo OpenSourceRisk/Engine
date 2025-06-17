@@ -145,10 +145,11 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
                                        const bool discountCurveGiven, bool telescopicValueDates, Pillar::Choice pillar,
                                        Date customPillarDate)
-    : RateHelper(fixedRate), overnightIndex_(overnightIndex), fixedDayCounter_(fixedDayCounter),
-      fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), paymentFrequency_(paymentFrequency),
-      fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment), rule_(rule),
-      discountHandle_(discountingCurve), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+    : RateHelper(fixedRate), overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven),
+      fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar), paymentLag_(paymentLag),
+      paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
+      rule_(rule), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
 
     pillarDate_ = customPillarDate;
 
