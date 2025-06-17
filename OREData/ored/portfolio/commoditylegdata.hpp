@@ -147,6 +147,7 @@ public:
     bool unrealisedQuantity() const { return unrealisedQuantity_; }
     QuantLib::Natural lastNDays() const { return lastNDays_; }
     std::string const& fxIndex() const { return fxIndex_; }
+    QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
     //@}
 
     //! \name Serialisation
