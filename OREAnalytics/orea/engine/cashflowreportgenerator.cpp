@@ -184,6 +184,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
     }
 
     bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
+    if(true)
     {
         // leg based cashflow reporting
         auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
@@ -201,7 +202,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             catch(...)
             {
             }            
-
             if(legBasedReport || mandatory)        
             {
                 const QuantLib::Leg& leg = legs[i];
@@ -512,7 +512,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                         result.back().capVolatility = capVolatility;
                         result.back().effectiveFloorVolatility = effectiveFloorVolatility;
                         result.back().effectiveCapVolatility = effectiveCapVolatility;
-                        //result.back().expectedFlow = cf.expectedFlow; //TODO find way
                     }
                 }
             }

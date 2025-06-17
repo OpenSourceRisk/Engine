@@ -56,7 +56,6 @@ struct TradeCashflowReportData {
     double capVolatility;
     double effectiveFloorVolatility;
     double effectiveCapVolatility;
-    double expectedFlow;
 };
 
 std::vector<TradeCashflowReportData> generateCashflowReportData(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,

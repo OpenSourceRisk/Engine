@@ -179,7 +179,7 @@ protected:
             spotCalendar = calendar;
         }
 
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, true); // discountCurve, spotDays, spotCalendar);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays, spotCalendar);
     }
 };
 
