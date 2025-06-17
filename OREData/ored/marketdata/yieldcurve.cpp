@@ -312,6 +312,18 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
       iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
       buildCalibrationInfo_(buildCalibrationInfo), market_(market) {
 
+    /* after the curve build is done we have to destroy temp piecewise curves to avoid performance problems in xva simulations -
+       this is also why we flatten the piecewise curves (see flattenPiecewiseCurve()) */
+
+    struct CleanUp {
+        CleanUp(YieldCurve* c) : c_(c) {}
+        ~CleanUp() {
+            c_->requiredYieldCurveHandles_.clear();
+            c_->discountCurve_.clear();
+        }
+        YieldCurve* c_;
+    };
+
     // copy the required yield curves container to our handle container and add empty handles for the curves to be built
 
     for (auto const& [k, v] : requiredYieldCurves_) {
