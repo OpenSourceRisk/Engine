@@ -317,5 +317,53 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
     return mCorrelation;
 }
 
+double CorrelationMatrixBuilder::KendallTau(const vector<double>& x, const vector<double>& y) {
+    //Kendall rank/Tau
+    int n = x.size();
+    int concordant = 0;
+    int discordant = 0;
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            if ((x[i] > x[j] && y[i] > y[j]) || (x[i] < x[j] && y[i] < y[j])) {
+                concordant++;
+            } else if ((x[i] > x[j] && y[i] < y[j]) || (x[i] < x[j] && y[i] > y[j])) {
+                discordant++;
+            }
+        }
+    }
+    return static_cast<double>(concordant - discordant) / (n * (n - 1) / 2);
+}
+
+QuantLib::Matrix CorrelationMatrixBuilder::KendallTauMatrix(const QuantLib::Matrix& data) {
+
+    QuantLib::Matrix tauMatrix(data.rows(), data.rows(), 0.0);
+    for (int i = 0; i < data.rows(); i++) {
+        for (int j = 0; j < data.rows(); j++) {
+            vector<double> colI, colJ;
+            for (int k = 0; k < data.rows(); k++) {
+                colI.push_back(data[k][i]);
+                colJ.push_back(data[k][j]);
+            }
+            tauMatrix[i][j] = CorrelationMatrixBuilder::KendallTau(colI, colJ);
+        }
+    }
+    return tauMatrix;
+}
+
+QuantLib::Matrix CorrelationMatrixBuilder::KendallEllipticalCorrelation(const QuantLib::Matrix& tauMatrix) {
+    /*
+    https: // www.sciencedirect.com/science/article/pii/S0047259X01920172/
+    tau =  (2/Pi)*arcsin(rho)
+    */ 
+
+    QuantLib::Matrix KendallCorr(tauMatrix.rows(), tauMatrix.rows(), 0.0);
+    for (int i = 0; i < tauMatrix.rows(); i++) {
+        for (int j = 0; j < tauMatrix.rows(); j++) {
+            KendallCorr[i][j] = std::sin((tauMatrix[i][j]*M_PI/2.0));
+        }
+    }
+    return KendallCorr;
+}
 } // namespace data
 } // namespace ore
