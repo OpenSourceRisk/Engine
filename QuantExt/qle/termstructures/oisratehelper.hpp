@@ -36,14 +36,15 @@ using namespace QuantLib;
 class OISRateHelper : public RelativeDateRateHelper {
 public:
     OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
-                  const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                  const Calendar& fixedCalendar, Natural paymentLag = 0, bool endOfMonth = false,
-                  Frequency paymentFrequency = Annual, BusinessDayConvention fixedConvention = Following,
+                  const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const bool onIndexGiven,
+                  const DayCounter& fixedDayCounter, const Calendar& fixedCalendar, Natural paymentLag = 0,
+                  bool endOfMonth = false, Frequency paymentFrequency = Annual,
+                  BusinessDayConvention fixedConvention = Following,
                   BusinessDayConvention paymentAdjustment = Following,
                   DateGeneration::Rule rule = DateGeneration::Backward,
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                  bool telescopicValueDates = false, Pillar::Choice pillar = Pillar::LastRelevantDate,
-                  Date customPillarDate = Date());
+                  bool discountCurveGiven = false, bool telescopicValueDates = false,
+                  Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -63,6 +64,7 @@ protected:
     Natural settlementDays_;
     Period swapTenor_;
     QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
+    bool onIndexGiven_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
     Natural paymentLag_;
@@ -75,6 +77,7 @@ protected:
     QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
     Pillar::Choice pillarChoice_;
@@ -86,14 +89,14 @@ protected:
 class DatedOISRateHelper : public RateHelper {
 public:
     DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
-                       const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                       const Calendar& fixedCalendar, Natural paymentLag = 0, Frequency paymentFrequency = Annual,
-                       BusinessDayConvention fixedConvention = Following,
+                       const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex, const bool onIndexGiven,
+                       const DayCounter& fixedDayCounter, const Calendar& fixedCalendar, Natural paymentLag = 0,
+                       Frequency paymentFrequency = Annual, BusinessDayConvention fixedConvention = Following,
                        BusinessDayConvention paymentAdjustment = Following,
                        DateGeneration::Rule rule = DateGeneration::Backward,
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                       bool telescopicValueDates = false, Pillar::Choice pillar = Pillar::LastRelevantDate,
-                       Date customPillarDate = Date());
+                       const bool discountCurveGiven = false, bool telescopicValueDates = false,
+                       Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date());
 
     //! \name RateHelper interface
     //@{
@@ -106,6 +109,7 @@ public:
     //@}
 protected:
     QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
+    bool onIndexGiven_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
     Natural paymentLag_;
@@ -117,6 +121,7 @@ protected:
     QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
     Pillar::Choice pillarChoice_;
