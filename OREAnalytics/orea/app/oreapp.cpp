@@ -1235,11 +1235,6 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setVarMethod(tmp);
 
-        //ToTest Correlation
-        tmp = params_->get("parametricVar", "correlation_method", false);
-        if (tmp != "")
-            setCorrelationMethod(tmp);
-
         tmp = params_->get("parametricVar", "mcSamples", false);
         if (tmp != "")
             setMcVarSamples(parseInteger(tmp));

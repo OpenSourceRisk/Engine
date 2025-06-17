@@ -66,7 +66,6 @@ void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Rep
             .add(std::get<3>(correlationPairs_[i]))
             .add(corrFormatted[i]);
     }
-
 }
 
 } // namespace analytics

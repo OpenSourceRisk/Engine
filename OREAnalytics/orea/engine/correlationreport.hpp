@@ -49,8 +49,6 @@ public:
 protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
     void writeHeader(const QuantLib::ext::shared_ptr<Report>& report);
-    /*void handleCorrelationResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
-                                  const QuantLib::Matrix& corrM, const vector<RiskFactorKey>& riskKeys);*/
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                       const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                       const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;

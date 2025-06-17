@@ -411,6 +411,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
                                                                 covCalculator, tradeIds_, includeGammaMargin_,
                                                                 includeDeltaMargin_, runDetailTrd);
+
                         covarianceMatrix_ = covCalculator->covariance();
                         // Concerns Correlation analytic
                         if (correlation_) {
@@ -439,6 +440,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             // Do the full revaluation step
             if (runFullReval(riskGroup))                                
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
+
             if (correlation_) {
                 //Output the first Correlation Computation
                 if (riskGroup->to_string() == "[All, All]") {
