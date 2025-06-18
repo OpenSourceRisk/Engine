@@ -156,9 +156,7 @@ public:
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations();
 
     QuantLib::Matrix pearsonCorrelation(const QuantLib::Matrix& mCovariance);
-    double KendallTau(const std::vector<double>& x, const std::vector<double>& y);
-    QuantLib::Matrix KendallTauMatrix(const QuantLib::Matrix& data);
-    QuantLib::Matrix KendallEllipticalCorrelation(const QuantLib::Matrix& tauMatrix);
+    QuantLib::Matrix KendallCorrelation(const QuantLib::Matrix& data);
 
 private:
     /*! Create the process information for each of the factors. Legacy method where each process is assumed to be 

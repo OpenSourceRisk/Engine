@@ -420,9 +420,8 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             if (correlationMethod_ == "Pearson") {
                                 correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
                             } else if (correlationMethod_ == "KendallRank") {
-                                QuantLib::Matrix testKend(5,5,1.0);
-                                QuantLib::Matrix kendallTauxMatrix = corrMatrix.KendallTauMatrix(testKend);
-                                correlationMatrix_ = corrMatrix.KendallEllipticalCorrelation(kendallTauxMatrix);
+                                QuantLib::Matrix testKend(5,5,0.0);
+                                correlationMatrix_ = corrMatrix.KendallCorrelation(testKend);
                             } else {
                                 QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }
