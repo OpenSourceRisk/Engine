@@ -1043,6 +1043,7 @@
         <xs:element type="xs:positiveInteger" name="LastNDays" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="Tag" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+        <xs:element type="xs:nonNegativeInteger" name="AvgPricePrecision" minOccurs="0"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
