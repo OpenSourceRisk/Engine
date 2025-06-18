@@ -206,7 +206,8 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
         }
 
         // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
-        expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
+        expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days,
+                                                      convention_.businessDayConvention());
     }
 
     // If we want the option contract expiry, do the extra work here.
