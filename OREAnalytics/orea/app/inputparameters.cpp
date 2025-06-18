@@ -412,6 +412,36 @@ void InputParameters::setXvaStressSensitivityScenarioDataFromFile(const std::str
     xvaStressSensitivityScenarioData_->fromFile(fileName);
 }
 
+void InputParameters::setSensitivityStressSimMarketParams(const std::string& xml) {
+    sensitivityStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    sensitivityStressSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressSimMarketParamsFromFile(const std::string& fileName) {
+    sensitivityStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    sensitivityStressSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setSensitivityStressScenarioData(const std::string& xml) {
+    sensitivityStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    sensitivityStressScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressScenarioDataFromFile(const std::string& fileName) {
+    sensitivityStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    sensitivityStressScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setSensitivityStressSensitivityScenarioData(const std::string& xml) {
+    sensitivityStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    sensitivityStressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    sensitivityStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    sensitivityStressSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setXvaSensiSimMarketParams(const std::string& xml) {
     xvaSensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     xvaSensiSimMarketParams_->fromXMLString(xml);
@@ -459,8 +489,12 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     cvaSensitivities_.clear();
 
     std::ifstream iss(fileName);
-    std::string line;
+    if (!iss.is_open()) {
+        ALOG("Error opening cva sensitivity file " << fileName);
+	return;
+    }
 
+    std::string line;
     while (std::getline(iss, line)) {
         vector<string> tokens;
         boost::trim(line);
@@ -497,6 +531,10 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     SaCvaSensitivityLoader cvaLoader;
     cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
     saCvaNetSensitivities_ = cvaLoader.netRecords();
+
+    if (saCvaNetSensitivities().size() == 0) {
+        ALOG("Loaded " << saCvaNetSensitivities().size() << " sacva net sensitivities");
+    }
 }
 
 // XVA Explain
@@ -798,6 +836,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     stressTestCashflowFileName_ = params->get("stress", "scenarioCashflowOutputFile", false);
     stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
+    sensitivityStressTestFileName_ = params->get("sensitivityStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
     if (varFileName_.empty())
         varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
@@ -834,6 +873,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["stress_cashflows"] = stressTestCashflowFileName_;
     fileNameMap_["stress_ZeroStressData"] = stressZeroScenarioDataFileName_;
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
+    fileNameMap_["sensitivity_stress"] = sensitivityStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;

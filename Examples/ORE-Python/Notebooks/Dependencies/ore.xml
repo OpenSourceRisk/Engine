@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
+    <Parameter name="inputPath">.</Parameter>
+    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">inccy</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">inccy</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="portfolioDetails">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="riskFactorFileName">riskFactors.csv</Parameter>
+      <Parameter name="marketObjectFileName">marketObjects.csv</Parameter>
+      </Analytic>
+  </Analytics>
+</ORE>

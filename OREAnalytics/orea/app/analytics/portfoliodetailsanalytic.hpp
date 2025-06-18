@@ -45,11 +45,9 @@ protected:
 
 class PortfolioDetailsAnalytic : public Analytic {
 public:
-    PortfolioDetailsAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<PortfolioDetailsAnalyticImpl>(inputs), {}, inputs) {}
+    PortfolioDetailsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                             const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PortfolioDetailsAnalyticImpl>(inputs), {}, inputs, analyticsManager) {}
 
     bool requiresMarketData() const override { return false; }
 };

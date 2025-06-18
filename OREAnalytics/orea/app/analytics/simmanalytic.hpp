@@ -23,6 +23,8 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/simm/crif.hpp>
+#include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 
 namespace ore {
 namespace analytics {
@@ -41,15 +43,25 @@ public:
 
 class SimmAnalytic : public Analytic {
 public:
+    static constexpr const char* crifLookupKey = "CRIF";
+  
     SimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                 const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr,
+                 const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
                  const QuantLib::ext::shared_ptr<Crif>& crif = nullptr, const bool hasNettingSetDetails = false,
                  const bool determineWinningRegulations = true)
-        : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, false, false, false, false),
+        : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, analyticsManager, false, false, false,
+                   false),
           crif_(crif), hasNettingSetDetails_(hasNettingSetDetails),
           determineWinningRegulations_(determineWinningRegulations) {
         setWriteIntermediateReports(inputs->writeSimmIntermediateReports());
+	// Build a Crif analytic if we need it, i.e. no CRIF has been passed
+        if ((!crif || !crif_->hasCrifRecords()) && !inputs->crif()) {
+            auto crifAnalytic = AnalyticFactory::instance().build(crifLookupKey, inputs_, analyticsManager, true).second;
+	    crifAnalytic->configurations().todaysMarketParams = inputs->todaysMarketParams();
+	    crifAnalytic->configurations().simMarketParams = inputs->sensiSimMarketParams();
+	    crifAnalytic->configurations().sensiScenarioData = inputs->sensiScenarioData();
+	    impl()->addDependentAnalytic(crifLookupKey, crifAnalytic);
+        }
     }
 
     const QuantLib::ext::shared_ptr<Crif>& crif() const { return crif_; }

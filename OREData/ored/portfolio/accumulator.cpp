@@ -437,6 +437,8 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
                    "expected barrier style American or European, got " << b.style());
         QL_REQUIRE(b.style() != "European" || scriptToUse == AccumulatorScript::Accumulator01,
                    "European barrier style not allowed if PricingDates are given (Accumulator02 script variant)");
+        QL_REQUIRE(!b.overrideTriggered(), "OverrideTriggered not allowed.");
+
         if (b.type() == "UpAndOut" && !b.levels().empty()) {
             knockOutType = "4";
             knockOutLevel = boost::lexical_cast<std::string>(b.levels().front().value());
@@ -588,16 +590,15 @@ void Accumulator::fromXML(XMLNode* node) {
         rangeBounds_.push_back(RangeBound());
         rangeBounds_.back().fromXML(n);
     }
-    auto barriersNode = XMLUtils::getChildNode(dataNode, "Barriers");
-    QL_REQUIRE(barriersNode, "No Barriers node");
-    auto barriers = XMLUtils::getChildrenNodes(barriersNode, "BarrierData");
-    for (auto const& n : barriers) {
-        barriers_.push_back(BarrierData());
-        barriers_.back().fromXML(n);
+    if (auto barriersNode = XMLUtils::getChildNode(dataNode, "Barriers")) {
+        auto barriers = XMLUtils::getChildrenNodes(barriersNode, "BarrierData");
+        for (auto const& n : barriers) {
+            barriers_.push_back(BarrierData());
+            barriers_.back().fromXML(n);
+        }
     }
     knockOutSettlementAtPeriodEnd_ =
         XMLUtils::getChildValueAsBool(dataNode, "KnockOutSettlementAtPeriodEnd", false, false);
-
     knockOutFixingAtKOSettlement_ = 
         XMLUtils::getChildValueAsBool(dataNode, "KnockOutFixingAtKOSettlement", false, false);
 

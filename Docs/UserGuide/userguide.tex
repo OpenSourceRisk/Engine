@@ -7,7 +7,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{24 May 2024}
+\date{2 May 2025}
 \maketitle
 
 \newpage
@@ -32,8 +32,8 @@ Date & Author & Comment \\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
 24 May 2024 & Acadia & updates for release 12\\
-September 2024 & Acadia & updates for release 13\\
 January 2025 & Acadia & separate user guide, methods, products\\
+May 2025 & LSEG & reorganise examples, updates for release 13 \\
 \hline
 \end{supertabular}
 \end{center}
@@ -44,10 +44,10 @@ January 2025 & Acadia & separate user guide, methods, products\\
 \newpage
 
 \input{userguide_intro}
-\input{userguide_releasenotes}
+%\input{userguide_releasenotes}
 \input{userguide_process}
 \input{userguide_buildore}
-\input{userguide_launchers}
+%\input{userguide_launchers}
 \input{examples/examples}
 
 \clearpage
@@ -67,145 +67,19 @@ January 2025 & Acadia & separate user guide, methods, products\\
 \include{parameterisation/conventions}
 %referenced from conventions
 \include{tradecomponents/scheduledata}
+\include{parameterisation/historicalreturnconfiguration}
 \include{parameterisation/collateralbalances}
 \include{parameterisation/counterpartyinformation}
-
-%========================================================
-%\section{Trade Data}
-%========================================================
-%\input{tradedata/intro}
-%\input{tradedata/envelope}
-%\input{tradedata/nettingsetdetails}
-%\input{tradedata/tradespecifics}
-
-%\input{tradedata/swap}
-%\input{tradedata/zerocouponswap}
-%\input{tradedata/capfloor}
-%\input{tradedata/forwardrateagreement}
-%\input{tradedata/swaption}
-%\input{tradedata/callableswap}
-%\input{tradedata/cashposition}
-%\input{tradedata/fxforward}
-%\input{tradedata/fxswap}
-%\input{tradedata/fxoption}
-%\input{tradedata/fx_asianoption}
-%\input{tradedata/fx_barrieroption}
-%\input{tradedata/fx_digitalbarrieroption}
-%\input{tradedata/fx_digitaloption}
-%\input{tradedata/fx_doublebarrieroption}
-%\input{tradedata/fx_doubletouchoption}
-%\input{tradedata/fx_europeanbarrieroption}
-%\input{tradedata/fx_kikobarrieroption}
-%\input{tradedata/fx_touchoption}
-%\input{tradedata/fxvarianceswap}
-%\input{tradedata/equityoption}
-%\input{tradedata/equityfuturesoption}
-%\input{tradedata/equityforward}
-%\input{tradedata/equityswap}
-%\input{tradedata/eq_asianoption}
-%\input{tradedata/eq_barrieroption}
-%\input{tradedata/eq_digitaloption}
-%\input{tradedata/eq_doublebarrieroption}
-%\input{tradedata/eq_doubletouchoption}
-%\input{tradedata/eq_europeanbarrieroption}
-%\input{tradedata/eq_touchoption}
-%\input{tradedata/equityvarianceswap}
-%\input{tradedata/equitycliquetoption}
-%\input{tradedata/equityposition}
-%\input{tradedata/equityoptionposition}
-
-%\input{tradedata/cpiswap}
-%\input{tradedata/yyswap}
-
-%\input{tradedata/bond}
-%\input{tradedata/bondposition}
-%\input{tradedata/forwardbond}
-%\input{tradedata/bondForward_refdata}
-%\input{tradedata/bondrepo}
-%\input{tradedata/bondoption}
-%\input{tradedata/bondoption_refdata}
-%\input{tradedata/bondTotalReturnSwap}
-%\input{tradedata/convertiblebond}
-%\input{tradedata/ascot}
-%\input{tradedata/cbodata.tex}
-
-%\input{tradedata/compositetrade}
-
-%\input{tradedata/creditdefaultswap}
-%\input{tradedata/indexcds}
-%\input{tradedata/indexcdsoption}
-%\input{tradedata/syntheticcdo}
-%\input{tradedata/creditlinkedswap}
-
-%\input{tradedata/commodityforward}
-%\input{tradedata/commodityswap}
-%\input{tradedata/commodityswaption}
-%\input{tradedata/commodityoption}
-%\input{tradedata/commodityapo}
-%\input{tradedata/commodityoptionstrip}
-%\input{tradedata/commodityvarianceswap}
-%\input{tradedata/commodityposition}
-
-%\input{tradedata/totalReturnSwap}
-
-%\input{tradedata/eq_outperformance.tex}
-%\input{tradedata/doubledigitaloption}
-%\input{tradedata/europeanoptioncontingentonabarrier}
-%\input{tradedata/autocallable_01}
-%\input{tradedata/performanceoption_01}
-%\input{tradedata/window_barrieroption}
-%\input{tradedata/generic_barrieroption}
-%\input{tradedata/bestentryoption}
-%\input{tradedata/basketoption}
-%\input{tradedata/worstofbasketswap}
-%\input{tradedata/rainbow_option}
-%\input{tradedata/var_and_vol_derivatives}
-%\input{tradedata/accumulator}
-%\input{tradedata/tarf}
-%\input{tradedata/knockoutswap}
-
-%\input{tradedata/flexiswap}
-%\input{tradedata/balanceguaranteedswap}
-
-%\include{tradecomponents}
-%\input{tradecomponents/tradecomponentsintro}
-%\input{tradecomponents/optiondata}
-%\input{tradecomponents/premiums}
-%\input{tradecomponents/legdatanotionals}
-%\input{tradecomponents/scheduledata}
-%\input{tradecomponents/fixedlegdatarates}
-%\input{tradecomponents/floatinglegdata}
-%\input{tradecomponents/legdataamortisation}
-%\input{tradecomponents/indexings}
-%\input{tradecomponents/cashflowleg}
-%\input{tradecomponents/cmsleg}
-%\input{tradecomponents/cmbleg}
-%\input{tradecomponents/digitalcmsleg}
-%\input{tradecomponents/durationadjustedcmsleg}
-%\input{tradecomponents/cmsspreadleg}
-%\input{tradecomponents/digitalcmsspreadleg}
-%\input{tradecomponents/equityleg}
-%\input{tradecomponents/cpileg}
-%\input{tradecomponents/yyleg}
-%\input{tradecomponents/zerocouponleg}
-%\input{tradecomponents/commodityfixedleg}
-%\input{tradecomponents/commodityfloatingleg}
-%\input{tradecomponents/equitymarginleg}
-%\input{tradecomponents/cdsreferenceinformation}
-%\input{tradecomponents/basketdata}
-%\input{tradecomponents/underlying}
-%\input{tradecomponents/strikedata}
-%\input{tradecomponents/barrierdata}
-%\input{tradecomponents/rangebound}
-%\input{tradecomponents/bondbasketdata.tex}
-%\input{tradecomponents/cbotranches.tex}
-%\input{tradecomponents/formulabasedlegdata}
 
 \include{allowablevalues}
 \include{nettingdata} % move to products?
 \include{marketdata}
 \include{fixingdata}
 \include{dividenddata}
+
+%\begin{appendix}
+%\input{examples/legacyexamples}
+%\end{appendix}
 
 \begin{thebibliography}{*}
 
@@ -221,9 +95,9 @@ January 2025 & Acadia & separate user guide, methods, products\\
 
 \bibitem{acadia} \url{http://www.acadia.inc}
 
+\bibitem{lseg} \url{http://www.lseg.com}
+  
 \bibitem{quantlib-install} \url{http://quantlib.org/install/vc10.shtml}
-
-%\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
 
 \bibitem{git-download} \url{https://git-scm.com/downloads}
 
@@ -236,8 +110,6 @@ January 2025 & Acadia & separate user guide, methods, products\\
 \bibitem{Anaconda} \url{https://docs.continuum.io/anaconda}
 
 \bibitem{LO} \url{http://www.libreoffice.org}
-
-%\bibitem{xlwings} \url{http://www.xlwings.org}
 
 \bibitem{corrSalv} R. Rebonato and P. Jaeckel, The most general methodology to create a valid correlation matrix for
   risk management and option pricing purposes, The Journal of Risk, 2(2), Winter 1999/2000,

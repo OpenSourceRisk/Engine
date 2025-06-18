@@ -69,7 +69,7 @@ Here, the Notional is taken to be the Notional specified in the leg or - if the 
 
 Allowable values: 0 $<$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
 
-\item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
+\item ValuationSchedule [Optional]: Schedule of dates for equity valuation. If used, fixing dates for equity valuation will come from the \lstinline!ValuationSchedule! instead of the \lstinline!ScheduleData!.
 
 Allowable values: A node of the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). Note that the number of dates (and periods) in the \lstinline!ValuationSchedule! must be the same as in the \lstinline!ScheduleData!.  If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
 
@@ -100,16 +100,12 @@ Allowable values: Any non-negative integer. Defaults to \emph{0} if left blank o
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-03-01</StartDate>
-            <EndDate>2018-03-01</EndDate>
+            <StartDate>2026-03-01</StartDate>
+            <EndDate>2028-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
             <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
           </Rules>
         </ScheduleData>
         <EquityLegData>
@@ -128,15 +124,15 @@ Allowable values: Any non-negative integer. Defaults to \emph{0} if left blank o
               <Calendar>USD</Calendar>
               <Convention>ModifiedFollowing</Convention>
               <Dates>
-                <Date>2016-03-01</Date>
-                <Date>2016-06-01</Date>
-                <Date>2016-09-01</Date>
-                <Date>2016-12-01</Date>
-                <Date>2017-03-01</Date>
-                <Date>2017-06-01</Date>
-                <Date>2017-09-01</Date>
-                <Date>2017-12-01</Date>
-                <Date>2018-03-01</Date>
+                <Date>2026-03-01</Date>
+                <Date>2026-06-01</Date>
+                <Date>2026-09-01</Date>
+                <Date>2026-12-01</Date>
+                <Date>2027-03-01</Date>
+                <Date>2027-06-01</Date>
+                <Date>2027-09-01</Date>
+                <Date>2027-12-01</Date>
+                <Date>2028-03-01</Date>
               </Dates>
             </Dates>
            </ValuationSchedule>

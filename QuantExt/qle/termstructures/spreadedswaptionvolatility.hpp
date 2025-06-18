@@ -36,12 +36,10 @@ using namespace QuantLib;
 
 class SpreadedSwaptionVolatility : public SwaptionVolatilityDiscrete {
 public:
-    /* - The base vol is required to provide smile sections with atm levels, if there is more than one strike spread
-         given. Alternatively, baseSwapIndexBase and baseShortSwapIndexBase can be provided to compute these ATM levels.
-       - If stickyAbsMoney is true, the simulatedSwapIndexBase and simulatedShortSwapIndexBase must be provided and
-         represent an ATM level reacting to changes in rate levels. The ATM levels implied by base vol,
-         baseSwapIndexBase, baseShortSwapIndexBase must not react to changes in the rate levels on the other hand.
-    */
+    /* If the swap index bases are not provided, it is assumed that the base svts is atm-only and volSpreads has size 1.
+       All volatility queries are routed to base with strike = Null<Real>() in this case.  If the swap index bases are
+       provided, the simulated swap index bases represent the current ATM level reacting to changes in rate level. The
+       base swap index bases and the base vol on the other had must not react to rate level changes. */
     SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
                                const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
@@ -81,7 +79,8 @@ private:
     Real shiftImpl(const Date& optionDate, const Period& swapTenor) const override;
     Real shiftImpl(Time optionTime, Time swapLength) const override;
     void performCalculations() const override;
-    Real getAtmLevel(const Real optionTime, const Real swapLength, const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
+    Real getAtmLevel(const Real optionTime, const Real swapLength,
+                     const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
                      const QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase) const;
 
     Handle<SwaptionVolatilityStructure> base_;

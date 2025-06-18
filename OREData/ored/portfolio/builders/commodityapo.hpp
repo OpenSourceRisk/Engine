@@ -27,6 +27,7 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/pricingengines/commodityapoengine.hpp>
 
@@ -41,7 +42,7 @@ namespace data {
 \ingroup builders
 */
 class CommodityApoBaseEngineBuilder
-    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
+    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&,
                                          const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&> {
 public:
     CommodityApoBaseEngineBuilder(const std::string& model, const std::string& engine,
@@ -49,9 +50,9 @@ public:
         : CachingEngineBuilder(model, engine, tradeTypes) {}
 
 protected:
-    std::string keyImpl(const Currency& ccy, const string& name, const string& id,
+    std::string keyImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                         const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&) override {
-        return id;
+        return id + "/" + name + "/" + ccy.code() + "/" + discountCurveName;
     }
 };
 
@@ -67,12 +68,14 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    engineImpl(const Currency& ccy, const string& name, const string& id,
+    engineImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
         Real beta = 0;
         auto param = engineParameters_.find("beta");
@@ -109,12 +112,14 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    engineImpl(const Currency& ccy, const string& name, const string& id,
+    engineImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
         Size samples = 10000;
         auto param = engineParameters_.find("samples");

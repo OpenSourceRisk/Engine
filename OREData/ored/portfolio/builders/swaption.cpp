@@ -169,7 +169,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
 
         effMaturities.resize(effExpiries.size(), maturities.back());
                      
-        // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously
+        // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously // TODO
         effStrikes.resize(effExpiries.size(), Null<Real>());
         if (strikes[0] != Null<Real>() && strikes[1] != Null<Real>()) {
             Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
@@ -231,9 +231,15 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
 
     // Build and calibrate model
     DLOG("Build LGM model");
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
-        referenceCalibrationGrid, generateAdditionalResults, id);
+        referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+        allowChangingFallbacks);
 
     // In some cases, we do not want to calibrate the model
     QuantLib::ext::shared_ptr<QuantExt::LGM> model;

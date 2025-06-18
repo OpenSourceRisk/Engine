@@ -34,12 +34,13 @@ namespace data {
 
 using namespace QuantLib;
 
-ModelCGImpl::ModelCGImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
-                         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                         const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : ModelCG(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
+ModelCGImpl::ModelCGImpl(
+    const ModelCG::Type type, const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    : ModelCG(size), type_(type), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
       simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
@@ -99,6 +100,8 @@ ModelCGImpl::ModelCGImpl(const DayCounter& dayCounter, const Size size, const st
     }
 
 } // ModelCGImpl ctor
+
+Real ModelCGImpl::actualTimeFromReference(const Date& d) const { return dayCounter_.yearFraction(referenceDate(), d); }
 
 std::size_t ModelCGImpl::dt(const Date& d1, const Date& d2) const {
     return cg_const(*g_, dayCounter_.yearFraction(d1, d2));
@@ -457,41 +460,6 @@ std::size_t ModelCGImpl::cgVersion() const {
 const std::vector<std::vector<std::size_t>>& ModelCGImpl::randomVariates() const {
     calculate();
     return randomVariates_;
-}
-
-std::vector<std::pair<std::size_t, double>> ModelCGImpl::modelParameters() const {
-    calculate();
-    std::vector<std::pair<std::size_t, double>> res;
-    for (auto const& f : modelParameters_) {
-        res.push_back(std::make_pair(f.first, f.second()));
-    }
-    return res;
-}
-
-std::vector<std::pair<std::size_t, std::function<double(void)>>>& ModelCGImpl::modelParameterFunctors() const {
-    return modelParameters_;
-}
-
-std::size_t ModelCGImpl::addModelParameter(const std::string& id, std::function<double(void)> f) const {
-    return ::ore::data::addModelParameter(*g_, modelParameters_, id, f);
-}
-
-void ModelCGImpl::dumpModelParameters() const {
-    std::map<std::size_t, std::string> varLabels;
-    for (auto const& [k, v] : g_->variables())
-        varLabels[v] = k;
-    for (auto const& [k, v] : modelParameters_)
-        std::cout << std::setw(50) << std::left << varLabels.at(k) << v() << std::endl;
-}
-
-std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
-                              const std::string& id, std::function<double(void)> f) {
-    std::size_t n;
-    if (n = g.variable(id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
-        n = cg_var(g, id, ComputationGraph::VarDoesntExist::Create);
-        m.push_back(std::make_pair(n, f));
-    }
-    return n;
 }
 
 Date getSloppyDate(const Date& d, const bool sloppyDates, const std::set<Date>& dates) {

@@ -308,7 +308,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
                    "AmcCgBaseEngine::createCashflowInfo(): av coupon has lookback with units != Days ("
                        << av->lookback() << "), this is not allowed.");
         std::size_t fixing =
-            modelCg_->fwdCompAvg(false, indexName, av->valueDates().front(), av->valueDates().front(),
+            modelCg_->fwdCompAvg(true, indexName, av->valueDates().front(), av->valueDates().front(),
                                  av->valueDates().back(), av->spread(), av->gearing(), av->lookback().length(),
                                  av->rateCutoff(), av->fixingDays(), false, Null<Real>(), Null<Real>(), false, false);
         info.flowNode = modelCg_->pay(
@@ -707,12 +707,15 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 // if cash settled, determine the amount on exercise and until when it is to be included in exposure
 
                 if (optionSettlement_ == Settlement::Type::Cash) {
-                    auto reg = createRegressionModel(
-                        pathValueUndExInto[counter], d, cashflowInfo,
-                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
-                    cashSettlements[cashSettlementDates_[exerciseCounter - 1]] = cg_mult(g, reg, isExercisedNow);
+                    // 1) use conditional expectation as of exercise date
+                    // auto reg = createRegressionModel(
+                    //     pathValueUndExInto[counter], d, cashflowInfo,
+                    //     [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+                    // cashSettlements[cashSettlementDates_[exerciseCounter - 1]] = cg_mult(g, reg, isExercisedNow);
+                    // 2) use path values
+                    cashSettlements[cashSettlementDates_[exerciseCounter - 1]] =
+                        cg_mult(g, pathValueUndExInto[counter], isExercisedNow);
                 }
-
             }
 
             if (isSimDate) {
@@ -789,6 +792,7 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
 void AmcCgBaseEngine::calculate() const {}
 
 std::set<std::string> AmcCgBaseEngine::relevantCurrencies() const { return relevantCurrencies_; }
+bool AmcCgBaseEngine::hasVega() const { return exercise_ != nullptr; }
 
 } // namespace data
 } // namespace ore

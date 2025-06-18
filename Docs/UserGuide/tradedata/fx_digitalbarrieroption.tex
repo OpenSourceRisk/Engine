@@ -39,8 +39,7 @@ The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX
             <OptionData>
                 <LongShort>Long</LongShort>
                 <OptionType>Call</OptionType>
-                <Style>European</Style>
-                <Settlement>Cash</Settlement>                
+                <Style>European</Style>              
                 <ExerciseDates>
                  <ExerciseDate>2021-12-14</ExerciseDate>
                 </ExerciseDates> 
@@ -80,11 +79,11 @@ The relevant fields in the \lstinline!OptionData! node for an FxDigitalBarrierOp
 
 \item  \lstinline!Style! The FX Digital Barrier Option type allows for \emph{European} option exercise style only.
 
-\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
+%\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
 
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item \lstinline!Premiums! [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
 
@@ -108,8 +107,14 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
 
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
+\item \lstinline!FXIndexDailyLows! [Optional]: Refers to an FX Index that tracks the daily low quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_LOW} to the FXIndex source (e.g. \emph{FX-SOURCE\_LOW-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
+
 Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
 
+\item \lstinline!FXIndexDailyHighs! [Optional]: Refers to an FX Index that tracks the daily high quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_HIGH} to the FXIndex source (e.g. \emph{FX-SOURCE\_HIGH-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
+
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
 \item Strike: The FX strike price, expressed as the amount in DomesticCurrency per one unit of ForeignCurrency. 
 
 Allowable values:  Any positive real number.

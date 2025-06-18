@@ -43,9 +43,9 @@
 #endif
 
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.12.1"
+#define OPEN_SOURCE_RISK_VERSION "1.8.13.1"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1081200
+#define OPEN_SOURCE_RISK_VERSION_NUM 1081301
 
 #endif

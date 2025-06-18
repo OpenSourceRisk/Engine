@@ -68,6 +68,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 cashflows/trscashflow.cpp
+cashflows/typedcashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -167,12 +168,15 @@ math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
 math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
+methods/cclgmfxoptionvegaparconverter.cpp
 methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
+methods/irdeltaparconverter.cpp
+methods/lgmswaptionvegaparconverter.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
 methods/projectedbufferedmultipathgenerator.cpp
@@ -191,6 +195,7 @@ models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
 models/crossassetmodelimpliedfxvoltermstructure.cpp
+models/crossassetmodelimpliedswaptionvoltermstructure.cpp
 models/defaultableequityjumpdiffusionmodel.cpp
 models/dkimpliedyoyinflationtermstructure.cpp
 models/dkimpliedzeroinflationtermstructure.cpp
@@ -320,6 +325,7 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -371,6 +377,7 @@ termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
+termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
 termstructures/oiccbasisswaphelper.cpp
@@ -387,6 +394,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/scenario.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -414,8 +422,11 @@ termstructures/yoyoptionletsurfacestripper.cpp
 termstructures/yoypricesurfacefromvols.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
+utilities/barrier.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
+utilities/creditcurves.cpp
+utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -496,6 +507,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 cashflows/trscashflow.hpp
+cashflows/typedcashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -651,6 +663,7 @@ math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/discretedistribution.hpp
+math/distributioncount.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
@@ -672,12 +685,15 @@ math/stabilisedglls.hpp
 math/stoplightbounds.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
+methods/cclgmfxoptionvegaparconverter.hpp
 methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
+methods/irdeltaparconverter.hpp
+methods/lgmswaptionvegaparconverter.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
 methods/pathgeneratorfactory.hpp
@@ -707,6 +723,7 @@ models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
 models/crossassetmodelimpliedeqvoltermstructure.hpp
 models/crossassetmodelimpliedfxvoltermstructure.hpp
+models/crossassetmodelimpliedswaptionvoltermstructure.hpp
 models/crstateparametrization.hpp
 models/defaultableequityjumpdiffusionmodel.hpp
 models/defaultlossmodel.hpp
@@ -756,6 +773,7 @@ models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/marketobserver.hpp
+models/mcdefaultlossmodel.hpp
 models/modelbuilder.hpp
 models/modelimpliedpricetermstructure.hpp
 models/modelimpliedyieldtermstructure.hpp
@@ -862,6 +880,7 @@ processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
@@ -934,8 +953,12 @@ termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
+termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
+termstructures/inflation/inflationtraits.hpp
+termstructures/inflation/interpolatedcpiinflationcurve.hpp
+termstructures/inflation/piecewisecpiinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
@@ -970,6 +993,7 @@ termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
+termstructures/scenario.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -1010,11 +1034,15 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/barrier.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
+utilities/creditcurves.hpp
+utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp
@@ -1040,6 +1068,10 @@ if (ORE_ENABLE_CUDA)
   target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
   target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
   target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
+endif()
+
+if (ORE_PYTHON_INTEGRATION)
+  target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)

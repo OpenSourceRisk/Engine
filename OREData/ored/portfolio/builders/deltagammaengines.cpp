@@ -45,12 +45,12 @@ EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const stri
     switch (svts->volatilityType()) {
     case ShiftedLognormal:
         LOG("Build BlackSwaptionEngineDeltaGamma for currency " << ccyCode);
-        return boost::make_shared<QuantExt::BlackSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
+        return ext::make_shared<QuantExt::BlackSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
                                                                            bucketTimesVegaOpt, bucketTimesVegaUnd,
                                                                            computeDeltaVega, computeGamma);
     case Normal:
         LOG("Build BachelierSwaptionEngineDeltaGamma for currency " << ccyCode);
-        return boost::make_shared<QuantExt::BachelierSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
+        return ext::make_shared<QuantExt::BachelierSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
                                                                                bucketTimesVegaOpt, bucketTimesVegaUnd,
                                                                                computeDeltaVega, computeGamma);
     default:

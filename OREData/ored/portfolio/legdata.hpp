@@ -90,7 +90,8 @@ public:
     LegAdditionalData(const LegType& legType, const string& legNodeName, bool isSimmPlainVanillaIrLeg)
         : legType_(legType), legNodeName_(legNodeName), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
     LegAdditionalData(const LegType& legType, bool isSimmPlainVanillaIrLeg)
-        : legType_(legType), legNodeName_(to_string(legType) + "LegData"), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
+        : legType_(legType), legNodeName_(to_string(legType) + "LegData"),
+          isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
     // Delete this constructor to avoid conversions from const strings to bool, if there are two strings we want to use
     // the first constructor (string, string, bool)
     LegAdditionalData(const string&, const char*) = delete;
@@ -99,6 +100,7 @@ public:
     const std::set<std::string>& indices() const { return indices_; }
     //! check if a x-ccy swap with the leg qualifies for the isda simm exemption treatment
     const bool isSimmPlainVanillaIrLeg() const { return isSimmPlainVanillaIrLeg_; };
+
 protected:
     /*! Store the set of ORE index names that appear on this leg.
         Should be populated by derived classes.
@@ -179,8 +181,8 @@ public:
     //! Constructor
     ZeroCouponFixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>(),
                            const string& compounding = "Compounded", const bool subtractNotional = true)
-        : LegAdditionalData(LegType::ZeroCouponFixed, false), rates_(rates), rateDates_(rateDates), compounding_(compounding),
-          subtractNotional_(subtractNotional) {}
+        : LegAdditionalData(LegType::ZeroCouponFixed, false), rates_(rates), rateDates_(rateDates),
+          compounding_(compounding), subtractNotional_(subtractNotional) {}
 
     //! \name Inspectors
     //@{
@@ -222,13 +224,13 @@ public:
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
                     const std::map<QuantLib::Date, double>& historicalFixings = {})
-        : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
-          lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
-          hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
-          caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
-          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates),
-          historicalFixings_(historicalFixings) {
+        : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
+          fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
+          isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
+          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
+          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings) {
         indices_.insert(index_);
     }
 
@@ -389,10 +391,10 @@ public:
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), bool nakedOption = false,
                bool addInflationNotional = false, bool irregularYoY = false)
-        : LegAdditionalData(LegType::YY, false), index_(index), observationLag_(observationLag), fixingDays_(fixingDays),
-          gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
-          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption),
-          addInflationNotional_(addInflationNotional), irregularYoY_(irregularYoY) {
+        : LegAdditionalData(LegType::YY, false), index_(index), observationLag_(observationLag),
+          fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads),
+          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          nakedOption_(nakedOption), addInflationNotional_(addInflationNotional), irregularYoY_(irregularYoY) {
         indices_.insert(index_);
     }
 
@@ -444,16 +446,18 @@ private:
 class CMSLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMSLegData() : LegAdditionalData(LegType::CMS, false), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
+    CMSLegData()
+        : LegAdditionalData(LegType::CMS, false), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
     CMSLegData(const string& swapIndex, Size fixingDays, bool isInArrears, const vector<double>& spreads,
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
                const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
-        : LegAdditionalData(LegType::CMS, false), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears),
-          spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
+        : LegAdditionalData(LegType::CMS, false), swapIndex_(swapIndex), fixingDays_(fixingDays),
+          isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
+          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
+          nakedOption_(nakedOption) {
         indices_.insert(swapIndex_);
     }
 
@@ -511,16 +515,14 @@ public:
     //! Default constructor
     DigitalCMSLegData() : LegAdditionalData(LegType::DigitalCMS, false) {}
     //! Constructor
-    DigitalCMSLegData(const QuantLib::ext::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
-                      bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
-                      const vector<string> callStrikeDates = vector<string>(),
-                      const vector<double> callPayoffs = vector<double>(),
-                      const vector<string> callPayoffDates = vector<string>(),
-                      Position::Type putPosition = Position::Long, bool isPutATMIncluded = false,
-                      const vector<double> putStrikes = vector<double>(),
-                      const vector<string> putStrikeDates = vector<string>(),
-                      const vector<double> putPayoffs = vector<double>(),
-                      const vector<string> putPayoffDates = vector<string>())
+    DigitalCMSLegData(
+        const QuantLib::ext::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+        const vector<string> putPayoffDates = vector<string>())
         : LegAdditionalData(LegType::DigitalCMS, false), underlying_(underlying), callPosition_(callPosition),
           isCallATMIncluded_(isCallATMIncluded), callStrikes_(callStrikes), callStrikeDates_(callStrikeDates),
           callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), putPosition_(putPosition),
@@ -579,7 +581,8 @@ class CMSSpreadLegData : public LegAdditionalData {
 public:
     //! Default constructor
     CMSSpreadLegData()
-        : LegAdditionalData(LegType::CMSSpread, false), fixingDays_(Null<Size>()), isInArrears_(false), nakedOption_(false) {}
+        : LegAdditionalData(LegType::CMSSpread, false), fixingDays_(Null<Size>()), isInArrears_(false),
+          nakedOption_(false) {}
     //! Constructor
     CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, Size fixingDays, bool isInArrears,
                      const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
@@ -588,10 +591,10 @@ public:
                      const vector<string>& floorDates = vector<string>(),
                      const vector<double>& gearings = vector<double>(),
                      const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
-        : LegAdditionalData(LegType::CMSSpread, false), swapIndex1_(swapIndex1), swapIndex2_(swapIndex2), fixingDays_(fixingDays),
-          isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
-          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {
+        : LegAdditionalData(LegType::CMSSpread, false), swapIndex1_(swapIndex1), swapIndex2_(swapIndex2),
+          fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
+          capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
+          gearingDates_(gearingDates), nakedOption_(nakedOption) {
         indices_.insert(swapIndex1_);
         indices_.insert(swapIndex2_);
     }
@@ -717,17 +720,20 @@ private:
 class CMBLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMBLegData() : LegAdditionalData(LegType::CMB, false), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
+    CMBLegData()
+        : LegAdditionalData(LegType::CMB, false), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
-    CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears, const vector<double>& spreads,
-               const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
-               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
-               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
-        : LegAdditionalData(LegType::CMB, false), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk), fixingDays_(fixingDays), isInArrears_(isInArrears),
-          spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
-        //indices_.insert(swapIndex_);
+    CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears,
+               const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
+               const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
+               const vector<double>& floors = vector<double>(), const vector<string>& floorDates = vector<string>(),
+               const vector<double>& gearings = vector<double>(), const vector<string>& gearingDates = vector<string>(),
+               bool nakedOption = false)
+        : LegAdditionalData(LegType::CMB, false), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk),
+          fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
+          capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
+          gearingDates_(gearingDates), nakedOption_(nakedOption) {
+        // indices_.insert(swapIndex_);
     }
 
     //! \name Inspectors
@@ -786,9 +792,10 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData(LegType::Equity, false), initialPrice_(Null<Real>()), quantity_(Null<Real>()) {}
     //! Constructor
-    EquityLegData(EquityReturnType returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
-                  bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
-                  string eqCurrency = "", string fxIndex = "", Real quantity = Null<Real>(), string initialPriceCurrency = "")
+    EquityLegData(EquityReturnType returnType, Real dividendFactor, EquityUnderlying equityUnderlying,
+                  Real initialPrice, bool notionalReset, Natural fixingDays = 0,
+                  const ScheduleData& valuationSchedule = ScheduleData(), string eqCurrency = "", string fxIndex = "",
+                  Real quantity = Null<Real>(), string initialPriceCurrency = "")
         : LegAdditionalData(LegType::Equity, false), returnType_(returnType), dividendFactor_(dividendFactor),
           equityUnderlying_(equityUnderlying), initialPrice_(initialPrice), notionalReset_(notionalReset),
           fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
@@ -883,7 +890,7 @@ public:
             const std::vector<string>& notionalDates = std::vector<string>(), const string& paymentConvention = "F",
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
-            const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
+            const string& foreignCurrency = "", const double foreignAmount = 0, const string& resetStartDate = "", const string& fxIndex = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const string& paymentLag = "", const string& notionalPaymentLag = "",
             const std::string& paymentCalendar = "",
@@ -912,6 +919,7 @@ public:
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
+    const string& resetStartDate() const { return resetStartDate_; }
     const string& fxIndex() const { return fxIndex_; }
     const string& paymentLag() const { return paymentLag_; }
     const string& notionalPaymentLag() const { return notionalPaymentLag_; }
@@ -944,12 +952,12 @@ public:
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     bool& strictNotionalDates() { return strictNotionalDates_; }
     void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
+    void setForeignAmount(double foreignAmount) { foreignAmount_ = foreignAmount; }
     //@}
 
     virtual QuantLib::ext::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
 
 protected:
-
     /*! Store the set of ORE index names that appear on this leg.
 
         Take the set appearing in LegAdditionalData::indices() and add on any appearing here. Currently, the only
@@ -969,10 +977,11 @@ private:
     string paymentConvention_;
     bool notionalInitialExchange_ = false;
     bool notionalFinalExchange_ = false;
-    bool notionalAmortizingExchange_ =false;
+    bool notionalAmortizingExchange_ = false;
     bool isNotResetXCCY_ = true;
     string foreignCurrency_;
     double foreignAmount_ = 0.0;
+    string resetStartDate_;
     string fxIndex_;
     std::vector<AmortizationData> amortizationData_;
     string paymentLag_, notionalPaymentLag_;
@@ -991,49 +1000,55 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
                 const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-                const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+               std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-               const bool attachPricer = true);
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
+               std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
                     const QuantLib::Natural notionalPaymentLag, const BusinessDayConvention paymentConvention,
                     const Calendar paymentCalendar, const bool excludeIndexing = true);
 Leg makeCPILeg(const LegData& data, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-               const bool attachPricer = true);
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
+               std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-               const bool attachPricer = true);
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
+               std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
-Leg makeCMBLeg(const LegData& data, 
-               const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+               std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
+Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+               const bool attachPricer = true, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-                      const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                      const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                      std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-                     const QuantLib::Date& openEndDateReplacement = Null<Date>());
-Leg makeDigitalCMSSpreadLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
+                     const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                     std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
+Leg makeDigitalCMSSpreadLeg(const LegData& data,
+                            const QuantLib::ext::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                            const bool attachPricer = true);
+                            const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
+                            std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 
-std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld, const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
+std::string getCmbLegCreditRiskCurrency(const CMBLegData& ld,
+                                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
 
 std::pair<std::string, SimmCreditQualifierMapping>
 getCmbLegCreditQualifierMapping(const CMBLegData& ld, const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData,
@@ -1109,7 +1124,7 @@ vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& da
     // adjust the dates using the schedule calendar and roll convention
     if (!schedule.calendar().empty()) {
         for (auto& d : parsedDates)
-            if(d != Date())
+            if (d != Date())
                 d = schedule.calendar().adjust(d, schedule.businessDayConvention());
     }
 

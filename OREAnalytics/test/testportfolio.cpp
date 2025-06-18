@@ -372,11 +372,11 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
         string fxIndex = "FX-ECB-" + recCcy + "-" + payCcy;
         recFloatingLeg = LegData(recFloatingLegData, false, recCcy, recSchedule, recDC, recNotionals, vector<string>(),
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange,
-                                 isRecLegFXResettable, payCcy, payNotional, fxIndex, amortizationData);
+                                 isRecLegFXResettable, payCcy, payNotional, "", fxIndex, amortizationData);
     } else {
         recFloatingLeg = LegData(recFloatingLegData, false, recCcy, recSchedule, recDC, recNotionals, vector<string>(),
-                                 conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange,
-				 true, "", 0, "", amortizationData);
+                                 conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange, true,
+                                 "", 0, "", "", amortizationData);
     }
     // pay float leg
     auto payFloatingLegData = QuantLib::ext::make_shared<FloatingLegData>(payIndex, spotDays, false, recSpreads);
@@ -385,7 +385,7 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
         string fxIndex = "FX-ECB-" + payCcy + "-" + recCcy;
         payFloatingLeg = LegData(payFloatingLegData, true, payCcy, paySchedule, payDC, payNotionals, vector<string>(),
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange,
-                                 !isPayLegFXResettable, recCcy, recNotional, fxIndex);
+                                 !isPayLegFXResettable, recCcy, recNotional, "", fxIndex);
     } else {
         payFloatingLeg = LegData(payFloatingLegData, true, payCcy, paySchedule, payDC, payNotionals, vector<string>(),
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange);

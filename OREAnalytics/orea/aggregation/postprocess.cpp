@@ -72,8 +72,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                          const std::vector<Real>& creditMigrationDistributionGrid,
                          const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
                          bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
-                         const bool firstMporCollateralAdjustment,
-                         bool continueOnError)
+                         const bool firstMporCollateralAdjustment, bool continueOnError, bool useDoublePrecisionCubes)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
       market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
       analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
@@ -88,7 +87,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      firstMporCollateralAdjustment_(firstMporCollateralAdjustment), continueOnError_(continueOnError) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment), continueOnError_(continueOnError),
+      useDoublePrecisionCubes_(useDoublePrecisionCubes) {
 
     LOG("PostProcess: started.");
 
@@ -139,13 +139,10 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
      *    and scenario. This prepares the netting set exposure
      *    calculation below
      */
-    exposureCalculator_ =
-        QuantLib::ext::make_shared<ExposureCalculator>(
-            portfolio, cube_, cubeInterpretation_,
-            market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
-            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
-            analytics_["exposureProfilesUseCloseOutValues"], continueOnError_
-        );
+    exposureCalculator_ = QuantLib::ext::make_shared<ExposureCalculator>(
+        portfolio, cube_, cubeInterpretation_, scenarioData_, market_, analytics_["exerciseNextBreak"], baseCurrency_,
+        configuration_, quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
+        analytics_["exposureProfilesUseCloseOutValues"], continueOnError_, useDoublePrecisionCubes_);
     exposureCalculator_->build();
 
     /******************************************************************
@@ -170,7 +167,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
         analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_,
-	analytics_["exposureProfilesUseCloseOutValues"]);
+        analytics_["exposureProfilesUseCloseOutValues"], useDoublePrecisionCubes_);
     nettedExposureCalculator_->build();
 
     /********************************************************
@@ -200,7 +197,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], 
             flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     }
-    cvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        cvaCalculator_->build();
 
     /***************************
      * Simple allocation methods
@@ -261,12 +259,13 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
             flipViewLendingCurvePostfix);
     }
-    allocatedCvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        allocatedCvaCalculator_->build();
 
     /********************************************************
      * Cache average EPE and ENE
      */
-    for (const auto& [tradeId,_]: tradeIds()) {
+    for (const auto& tradeId: portfolio_->ids()) {
         tradeEPE_[tradeId] = exposureCalculator_->epe(tradeId);
         tradeENE_[tradeId] = exposureCalculator_->ene(tradeId);
         allocatedTradeEPE_[tradeId] = exposureCalculator_->allocatedEpe(tradeId);
@@ -790,6 +789,15 @@ Real PostProcess::nettingSetCOLVA(const string& nettingSetId) {
 
 Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     return nettedExposureCalculator_->collateralFloor(nettingSetId);
+}
+
+void PostProcess::exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize,
+                                        const Real coveredStdDevs) {
+    return dimCalculator_->exportDimDistribution(dimDistributionReport, gridSize, coveredStdDevs);
+}
+
+void PostProcess::exportDimCube(ore::data::Report& dimCubeReport) {
+    return dimCalculator_->exportDimCube(dimCubeReport);
 }
 
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {

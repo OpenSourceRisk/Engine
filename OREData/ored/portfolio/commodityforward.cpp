@@ -113,6 +113,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
         // Clone the index with the relevant expiry date.
         index = index->clone(expiryDate);
+        if (maturity_ > expiryDate)
+            maturity_ = expiryDate;
     }
 
     Date paymentDate = paymentDate_;
@@ -148,7 +150,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     if (!fxIndex_.empty()) {
         payCcy = parseCurrency(payCcy_);
         requiredFixings_.addFixingDate(fixingDate_, fxIndex_, paymentDate);
-        fxIndex = buildFxIndex(fxIndex_, currency.code(), payCcy.code(), engineFactory->market(),
+        fxIndex = buildFxIndex(fxIndex_, payCcy.code(), currency.code(),engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
         npvCurrency_ = payCcy_;
     }
@@ -167,7 +169,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QuantLib::ext::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         QuantLib::ext::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
     commodityForward->setPricingEngine(
-        commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
+        commodityForwardEngineBuilder->engine(currency,
+        envelope().additionalField("discount_curve", false, std::string()))); // the engine accounts for NDF if settlement data are present
     setSensitivityTemplate(*commodityForwardEngineBuilder);
     addProductModelEngine(*commodityForwardEngineBuilder);
 

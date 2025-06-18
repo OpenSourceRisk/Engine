@@ -374,17 +374,31 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        auto tmp = getUnderlyingNPV(i);
+        return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
     try {
         auto tmp = arguments_.underlyingIndex_[i]->fixing(adjustedDate);
         return tmp;
     } catch (const std::exception&) {
-        if (adjustedDate == today)
-            return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        if (adjustedDate == today) {
+            auto tmp = getUnderlyingNPV(i);
+            return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
+        }
         else
             throw;
+    }
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    if (auto b = QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]);
+        b != nullptr &&
+        QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) == nullptr) {
+        Date today = Settings::instance().evaluationDate();
+        return b->fixing(today, true) * arguments_.underlyingMultiplier_[i];
+    } else {
+        return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
 
@@ -431,7 +445,7 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if (endDate == Null<Date>()) {
-                    s1 = arguments_.underlying_[i]->instrument()->NPV();
+                    s1 = getUnderlyingNPV(i);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];

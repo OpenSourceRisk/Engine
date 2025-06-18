@@ -104,6 +104,35 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
         << nettingSetEneIndex << ") exceeds depth of nettingSetExposureCube("
         << nettingSetExposureCube_->depth() << ")");
     
+    for (const auto& [tid, trade] : portfolio_->trades()) {
+        tradeCva_[tid] = Null<Real>();
+        tradeDva_[tid] = Null<Real>();
+        tradeFca_[tid] = Null<Real>();
+        tradeFca_exOwnSp_[tid] = Null<Real>();
+        tradeFca_exAllSp_[tid] = Null<Real>();
+        tradeFba_[tid] = Null<Real>();
+        tradeFba_exOwnSp_[tid] = Null<Real>();
+        tradeFba_exAllSp_[tid] = Null<Real>();
+        tradeMva_[tid] = Null<Real>();
+
+        string nid = trade->envelope().nettingSetId();
+        nettingSetSumCva_[nid] = Null<Real>();
+        nettingSetSumDva_[nid] = Null<Real>();
+    }
+
+    // Netting Set XVA
+    for (const auto& pair : nettingSetCpty_) {
+        string nid = pair.first;
+        nettingSetCva_[nid] = Null<Real>();
+        nettingSetDva_[nid] = Null<Real>();
+        nettingSetFca_[nid] = Null<Real>();
+        nettingSetFca_exOwnSp_[nid] = Null<Real>();
+        nettingSetFca_exAllSp_[nid] = Null<Real>();
+        nettingSetFba_[nid] = Null<Real>();
+        nettingSetFba_exOwnSp_[nid] = Null<Real>();
+        nettingSetFba_exAllSp_[nid] = Null<Real>();
+        nettingSetMva_[nid] = Null<Real>();
+    }
 }
 
 const map<string, Real>& ValueAdjustmentCalculator::tradeCva() {
@@ -351,7 +380,7 @@ void ValueAdjustmentCalculator::build() {
                     tradeFba_exAllSp_[tid] += fbaIncrement_exAllSP;
                 }
             }
-            if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end()) {
+            if (nettingSetSumCva_.find(nid) == nettingSetSumCva_.end() || nettingSetSumCva_[nid] == Null<Real>()) {
                 nettingSetSumCva_[nid] = 0.0;
                 nettingSetSumDva_[nid] = 0.0;
             }

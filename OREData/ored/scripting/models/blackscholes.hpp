@@ -17,65 +17,165 @@
 */
 
 /*! \file ored/scripting/models/blackscholes.hpp
-    \brief black scholes model for n underlyings (fx, equity or commodity)
+    \brief black scholes / local vol model class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
 
 #pragma once
 
-#include <ored/scripting/models/blackscholesbase.hpp>
+#include <ored/model/utilities.hpp>
+#include <ored/scripting/models/modelimpl.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/methods/multipathvariategenerator.hpp>
+#include <qle/models/blackscholesmodelwrapper.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
+
+#include <ql/indexes/interestrateindex.hpp>
+#include <ql/math/comparison.hpp>
+#include <ql/math/matrixutilities/choleskydecomposition.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmmesher.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
+#include <ql/processes/blackscholesprocess.hpp>
+#include <ql/timegrid.hpp>
 
 namespace ore {
 namespace data {
 
-class BlackScholes : public BlackScholesBase {
+/* This class is the basis for the BlackScholes and LocalVol model implementations */
+class BlackScholes : public ModelImpl {
 public:
-    /* ctor for multiple underlyings, see BlackScholesBase, plus:
+    /* For the constructor arguments see ModelImpl, plus:
+       - eq, com processes are given with arbitrary riskFreeRate() and dividendYield(), these two curves only define
+         the forward curve drift for each asset
+       - the base ccy is the first ccy in the currency vector, the fx spots are given as for-base, the ccy curves define
+         the fx forwards
+       - fx processes must be given w.r.t. the base ccy and consistent with the given fx spots and curves, but we do not
+         require fx processes for all currencies (but they are required, if an fx index is evaluated in eval())
+       - correlations are for index pair names and must be constant; if not given for a pair, we assume zero correlation
+       - regressionOrder is the regression order used to compute conditional expectations in npv()
        - processes: hold spot, rate and div ts and vol for each given index
        - we assume that the given correlations are constant and read the value only at t = 0
+       - calibration = "ATM", "Deal", "LocalVol"
        - calibration strikes are given as a map indexName => strike, if an index is missing in this map, the calibration
-         strike will be atmf */
+         strike will be atmf
+    */
     BlackScholes(
-        const Size paths, const std::vector<std::string>& currencies,
+        const Type type, const Size size, const std::vector<std::string>& currencies,
         const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-        const Handle<BlackScholesModelWrapper>& model,
+        const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcParams, const std::set<Date>& simulationDates,
+        const std::set<Date>& simulationDates,
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const std::string& calibration = "ATM",
-        const std::map<std::string, std::vector<Real>>& calibrationStrikes = {});
+        const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
+        const Params& params = {});
 
-    // ctor for one underlying
-    BlackScholes(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
+    // ctor for single underlying
+    BlackScholes(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
                  const std::string& index, const std::string& indexCurrency,
-                 const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
-                 const std::set<Date>& simulationDates,
+                 const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                 const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {});
+                 const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
+                 const Params& params = {});
 
-private:
+    // Model interface implementation
+    const Date& referenceDate() const override;
+    RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const RandomVariable& addRegressor2) const override;
+    RandomVariable fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
+                              const Date& end, const Real spread, const Real gearing, const Integer lookback,
+                              const Natural rateCutoff, const Natural fixingDays, const bool includeSpread,
+                              const Real cap, const Real floor, const bool nakedOption,
+                              const bool localCapFloor) const override;
+    void releaseMemory() override;
+    void resetNPVMem() override;
+    void toggleTrainingPaths() const override;
+    Size trainingSamples() const override;
+    Size size() const override;
+
+    // override for FD
+    Real extractT0Result(const RandomVariable& result) const override;
+
+    // override to handle cases where we use a quanto-adjusted pde for FD
+    const std::string& baseCcy() const override;
+    RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
+                       const std::string& currency) const override;
+
+protected:
     // ModelImpl interface implementation
+    void performCalculations() const override;
+    RandomVariable getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
+    RandomVariable getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
+    RandomVariable getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
+    RandomVariable getDiscount(const Size idx, const Date& s, const Date& t) const override;
+    RandomVariable getNumeraire(const Date& s) const override;
+    Real getFxSpot(const Size idx) const override;
     RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                         const RandomVariable& barrier, const bool above) const override;
-    // BlackScholesBase interface implementation
-    void performCalculations() const override;
 
-    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                            const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-    // covariance per effective simulation date
-    mutable std::vector<Matrix> covariance_;
+    // helper functions
+    Matrix getCorrelation() const;
+    std::vector<Real> getCalibrationStrikes() const;
+    void setAdditionalResults() const;
 
-    // the calibration to use, ATM or Deal
-    const std::string calibration_;
+    // BS / LV and type specific code
+    void performCalculationsMcBs() const;
+    void performCalculationsMcLv() const;
+    void performCalculationsFd() const;
+    void initUnderlyingPathsMc() const;
+    void setReferenceDateValuesMc() const;
+    void generatePathsBs() const;
+    void generatePathsLv() const;
+    void populatePathValuesBs(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                              const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                              const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
+    void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                              const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                              const Matrix& correlation, const Matrix& sqrtCorr,
+                              const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                              const std::vector<Real>& t, const std::vector<Real>& dt,
+                              const std::vector<Real>& sqrtdt) const;
 
-    // map indexName => calibration strike (for missing indices we'll assume atmf)
-    const std::map<std::string, std::vector<Real>> calibrationStrikes_;
+    // input parameters
+    std::vector<Handle<YieldTermStructure>> curves_;
+    std::vector<Handle<Quote>> fxSpots_;
+    std::set<std::string> payCcys_;
+    Handle<BlackScholesModelWrapper> model_;
+    std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
+    std::vector<Date> simulationDates_;
+    std::string calibration_;
+    std::map<std::string, std::vector<Real>> calibrationStrikes_;
+
+    // quanto adjustment parameters (used for model type FD only)
+    bool applyQuantoAdjustment_ = false;
+    Size quantoSourceCcyIndex_, quantoTargetCcyIndex_;
+    Real quantoCorrelationMultiplier_;
+
+    // these all except underlyingPaths_ are initialised when the interface functions above are called
+    mutable Date referenceDate_;                      // the model reference date
+    mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
+    mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the simulation
+    mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
+    mutable Matrix correlation_;                      // the correlation matrix (constant in time)
+
+    // used for MC only:
+    mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
+    mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
+    mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
+    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
+    mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
+
+    // used for FD only:
+    mutable QuantLib::ext::shared_ptr<FdmMesher> mesher_;              // the mesher for the FD solver
+    mutable QuantLib::ext::shared_ptr<FdmLinearOpComposite> operator_; // the operator
+    mutable QuantLib::ext::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
+    mutable RandomVariable underlyingValues_;                          // the discretised underlying
 };
 
 } // namespace data

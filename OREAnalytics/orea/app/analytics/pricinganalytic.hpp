@@ -43,9 +43,22 @@ public:
     const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
     const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
 
+    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+        offsetScenario_ = offsetScenario;
+    }
+
+    void setOffsetSimMarketParams(
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
+        offsetSimMarketParams_ = offsetSimMarketParams;
+    }
+
 private:
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+
+protected:
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
 static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
@@ -53,9 +66,9 @@ static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW
 class PricingAnalytic : public Analytic {
 public:
     PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs) {}
+                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs,
+                   analyticsManager) {}
 };
  
 } // namespace analytics

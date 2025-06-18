@@ -74,7 +74,7 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     varReport_->calculate(reports);
     CONSOLE("OK");
     
-    analytic()->reports()[label_]["var"] = varReport;
+    analytic()->addReport(label_, "var", varReport);
 
     LOG("VaR completed");
     MEM_LOG;
@@ -111,9 +111,12 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors,
-            benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
-            analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
+        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+        auto scenarios = buildHistoricalScenarioGenerator(
+            inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+            analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+            defaultReturnConfig, inputs_->mporOverlappingPeriods());
 
         if (inputs_->outputHistoricalScenarios())
             ReportWriter().writeHistoricalScenarios(
@@ -155,12 +158,14 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
     if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
         adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
-        
-    auto scenarios =
-        buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
-        inputs_->mporDays(), analytic()->configurations().simMarketParams,
-        analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
-    
+
+    auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+    auto scenarios = buildHistoricalScenarioGenerator(
+        inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+        analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+        defaultReturnConfig, inputs_->mporOverlappingPeriods());
+
     if (inputs_->outputHistoricalScenarios())
         ore::analytics::ReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),
@@ -179,7 +184,8 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
 
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 
-        inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown());
+        inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown(), inputs_->includeExpectedShortfall(),
+        inputs_->tradePnl());
 
 }
 
@@ -191,7 +197,7 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
 
         reports->add(histPnLReport);
 
-        analytic()->reports()[label_]["historical_PnL"] = histPnLReport;
+        analytic()->addReport(label_, "historical_PnL", histPnLReport);
 }
 
 } // namespace analytics

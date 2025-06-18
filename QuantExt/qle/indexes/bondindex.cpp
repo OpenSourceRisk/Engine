@@ -43,7 +43,9 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
       bondIssueDateFallback_(bondIssueDateFallback), quotedDirtyPrices_(quotedDirtyPrices) {
 
     registerWith(Settings::instance().evaluationDate());
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
+    QL_DEPRECATED_ENABLE_WARNING
     registerWith(bond_);
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
@@ -119,7 +121,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     price += bidAskAdjustment_ * bond_->notional(fixingDate);
 
     if (!dirty_) {
-        price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
+        price -= bond_->accruedAmount(bond_->settlementDate(fixingDate)) / 100.0 * bond_->notional(fixingDate);
     }
 
     if (relative_) {
@@ -145,13 +147,13 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     if ((quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean || !quotedDirtyPrices_) && dirty_ == true) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         if (fixingDate >= issueDate_)
-            price += bond_->accruedAmount(fd) / 100.0;
+            price += bond_->accruedAmount(bond_->settlementDate(fd)) / 100.0;
 
     // If the quoted prices are dirty and return is clean, then remove accruedAmount
     } else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty && dirty_ == false) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for clean prices");
         if (fixingDate >= issueDate_)
-            price -= bond_->accruedAmount(fd) / 100.0;
+            price -= bond_->accruedAmount(bond_->settlementDate(fd)) / 100.0;
     }
     // else...
     // Do not adjust price if (quotedDirtyPrices_==clean/false && dirty_==clean/false) or

@@ -29,6 +29,7 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 namespace ore {
 namespace analytics {
@@ -82,11 +83,13 @@ private:
     void generateScenarios();
     void addFxShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addCommodityCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addFxVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addEquityVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
+    void addCommodityVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
@@ -94,6 +97,11 @@ private:
     void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& data,
                                       QuantLib::ext::shared_ptr<Scenario>& scenario);
+    template<class StressTestShifts> 
+    map<string, QuantLib::ext::shared_ptr<StressTestShifts>>
+    populateShiftData(const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& stressTestShifts,
+                      const vector<Wildcard>& wildcardKeys,
+                      RiskFactorKey::KeyType keyType) const;
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;

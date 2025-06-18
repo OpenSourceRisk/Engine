@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
@@ -40,13 +41,14 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-FxTouchOption::FxTouchOption(Envelope& env, OptionData option, BarrierData barrier, string foreignCurrency,
-                             string domesticCurrency, string payoffCurrency, double payoffAmount, string startDate,
-                             string calendar, string fxIndex)
-    : ore::data::Trade("FxTouchOption", env),
-      FxSingleAssetDerivative("", env, foreignCurrency, domesticCurrency), option_(option),
-      barrier_(barrier), startDate_(startDate), calendar_(calendar), fxIndex_(fxIndex), payoffAmount_(payoffAmount),
-      payoffCurrency_(payoffCurrency) {
+FxTouchOption::FxTouchOption(Envelope& env, OptionData option, BarrierData barrier, const string& foreignCurrency,
+                             const string& domesticCurrency, const string& payoffCurrency, double payoffAmount,
+                             const string& startDate, const string& calendar, const string& fxIndex,
+                             const string& fxIndexDailyLows, const string& fxIndexDailyHighs)
+    : ore::data::Trade("FxTouchOption", env), FxSingleAssetDerivative("", env, foreignCurrency, domesticCurrency),
+      option_(option), barrier_(barrier), startDate_(startDate), calendar_(calendar), fxIndex_(fxIndex),
+      payoffAmount_(payoffAmount), payoffCurrency_(payoffCurrency), fxIndexDailyLowsStr_(fxIndexDailyLows),
+      fxIndexDailyHighsStr_(fxIndexDailyHighs) {
     Barrier::Type barrierType = parseBarrierType(barrier_.type());
     switch (barrierType) {
     case Barrier::DownIn:
@@ -89,7 +91,8 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Currency domCcy = parseCurrency(domesticCurrency_);
     Real level = barrier_.levels()[0].value();
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    
+    std::optional<bool> overrideTriggered = barrier_.overrideTriggered();
+
     Natural payLag = 0;
     BusinessDayConvention payConvention = Unadjusted;
     Calendar payCalendar = NullCalendar();
@@ -162,15 +165,30 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // from this point on it's important not to use domesticCurrency_, foreignCurrency_, barrier_.level(), etc
     // rather the local variables (fgnCcy, domCcy, level, etc) should be used as they may have been flipped.
 
-    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
-    if (!fxIndex_.empty())
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex, fxIndexLows, fxIndexHighs;
+    std::string indexNameDailyLows, indexNameDailyHighs;
+    if (!fxIndex_.empty()) {
         fxIndex = buildFxIndex(fxIndex_, domCcy.code(), fgnCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
+        indexNameDailyLows =
+            !fxIndexDailyLowsStr_.empty() ? fxIndexDailyLowsStr_ : fxIndexNameForDailyLows(fxIndex);
+        if (!indexNameDailyLows.empty()) {
+            fxIndexLows = buildFxIndex(indexNameDailyLows, domCcy.code(), fgnCcy.code(), engineFactory->market(),
+                                       engineFactory->configuration(MarketContext::pricing));
+        }
+
+        indexNameDailyHighs =
+            !fxIndexDailyHighsStr_.empty() ? fxIndexDailyHighsStr_ : fxIndexNameForDailyHighs(fxIndex);
+        if (!indexNameDailyHighs.empty()) {
+            fxIndexHighs = buildFxIndex(indexNameDailyHighs, domCcy.code(), fgnCcy.code(), engineFactory->market(),
+                                        engineFactory->configuration(MarketContext::pricing));
+        }
+    }
     Calendar cal = ore::data::parseCalendar(calendar_);
 
     auto buildBarrierOptionWrapperInstr = [this, type, level, engineFactory, domCcy, fgnCcy, flipResults, positionType,
-                                           market, barrierType, rebate, fxIndex, cal,
-                                           start](const Date& expiryDate, const Date& payDate) {
+                                           market, barrierType, overrideTriggered, rebate, fxIndex, cal,
+                                           start, fxIndexLows, fxIndexHighs](const Date& expiryDate, const Date& payDate) {
         QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
         Leg leg;
 
@@ -213,9 +231,10 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
         auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
-            cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-        
+            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start,
+            fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+            overrideTriggered, fxIndexLows, fxIndexHighs);
+
         maturity_ = std::max(lastPremiumDate, payDate);
         maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date" : "Pay Date";
 
@@ -228,8 +247,13 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // portfolio-analyzer gets all the fixings needed for the instrument at the first evaluation.
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
-        for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days))
+        for (Date d = start; d <= expiryDate; d = fixingCal.advance(d, 1 * Days)){
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
+            if(!indexNameDailyLows.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyLows, payDate, false, false);
+            if(!indexNameDailyHighs.empty())
+                requiredFixings_.addFixingDate(d, indexNameDailyHighs, payDate, false, false);
+        }
     }
 
     // Check if the barrier has been triggered already. If payoff-at-hit, and barrier was touched in the past, then
@@ -251,19 +275,6 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     instrument_ = barrierOptionWrapper;
 
     // maturity_ is set in buildBarrierOptionWrapperInstr()
-}
-
-bool FxTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
 }
 
 void FxTouchOption::fromXML(XMLNode* node) {
@@ -293,6 +304,8 @@ void FxTouchOption::fromXML(XMLNode* node) {
     calendar_ = XMLUtils::getChildValue(fxNode, "Calendar", false);
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
     payoffAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "PayoffAmount", true);
+    fxIndexDailyLowsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyLows", false);
+    fxIndexDailyHighsStr_ = XMLUtils::getChildValue(fxNode, "FXIndexDailyHighs", false);
 }
 
 XMLNode* FxTouchOption::toXML(XMLDocument& doc) const {
@@ -309,6 +322,10 @@ XMLNode* FxTouchOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, fxNode, "StartDate", startDate_);
     if (fxIndex_ != "")
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+    if (!fxIndexDailyLowsStr_.empty())
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyLows", fxIndexDailyLowsStr_);
+    if (!fxIndexDailyHighsStr_.empty())
+        XMLUtils::addChild(doc, fxNode, "FXIndexDailyHighs", fxIndexDailyHighsStr_);
     if (calendar_ != "")
         XMLUtils::addChild(doc, fxNode, "Calendar", calendar_);
 
