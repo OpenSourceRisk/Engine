@@ -1783,6 +1783,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
         .addColumn("ScenarioValue1", double(), 8)
         .addColumn("ScenarioValue2", double(), 8)
         .addColumn("ShiftType", string())
+        .addColumn("Displacement", double(), 8)
         .addColumn("Return", double(), 8)
         .addColumn("ScenarioValue", double(), 8);
 
@@ -1800,6 +1801,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
                 .add(d.scenarioValue1)
                 .add(d.scenarioValue2)
                 .add(ore::data::to_string(d.returnType))
+                .add(d.displacement)
                 .add(d.returnValue)
                 .add(d.scenarioValue);
         }
