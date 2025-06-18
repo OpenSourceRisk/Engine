@@ -524,13 +524,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         maturitiesEngine = std::vector<Date>(exerciseBuilder_->noticeDates().size(), underlying_->maturity());
         strikesEngine = strikes;
     } else {
-        auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
-        Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_);
         string qualifier = index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name());
-        Handle<SwapIndex> swindex = market->swapIndex(market->swapIndexBase(qualifier, Market::defaultConfiguration),
-                                                      Market::defaultConfiguration);
         std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> underlyingMatched =
-            buildRepresentativeSwaps(swapEngine, swindex, discountCurve, exerciseBuilder_->noticeDates());
+            buildRepresentativeSwaps(engineFactory, qualifier);
         for (const auto& swap : underlyingMatched) {
             maturitiesEngine.push_back(swap->maturityDate());
             strikesEngine.push_back(swap->fixedRate());
@@ -554,19 +550,26 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 }
 
 std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
-Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine,
-                                   const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve,
-                                   const std::vector<Date>& exerciseDates) {
-    QuantExt::RepresentativeSwaptionMatcher matcher(underlying_->legs(), underlying_->legPayers(),
-                                                    swapIndex.currentLink(), true, discountCurve, 0.0);
+Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                   const std::string& qualifier) {
+    DLOG("build representative swaps.")
+    auto market = QuantLib::ext::dynamic_pointer_cast<Market>(engineFactory->market());
+    auto configuration = engineFactory->configuration(MarketContext::irCalibration);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(npvCurrency_, configuration);
+    Handle<SwapIndex> swapIndex = market->swapIndex(market->swapIndexBase(qualifier, configuration), configuration);
+    QuantExt::RepresentativeSwaptionMatcher matcher(underlying_->legs(), underlying_->legPayers(), *swapIndex, true,
+                                                    discountCurve, 0.0);
     std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> swaps;
-    for (Size i = 0; i < exerciseDates.size(); ++i) {
-        Date ed = exerciseDates[i];
+    for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
+        Date ed = exerciseBuilder_->noticeDates()[i];
         swaps.push_back(
             matcher
                 .representativeSwaption(
                     ed, QuantExt::RepresentativeSwaptionMatcher::InclusionCriterion::AccrualStartGeqExercise)
                 ->underlying());
+        DLOG("representative swap for exercise date " << ed << ": fixed rate = " << swaps.back()->fixedRate()
+                                                      << ", maturity = " << swaps.back()->maturityDate()
+                                                      << ", notional = " << swaps.back()->nominal());
     }
     return swaps;
 }

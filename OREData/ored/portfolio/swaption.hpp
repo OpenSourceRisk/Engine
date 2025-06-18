@@ -70,11 +70,13 @@ private:
     vector<LegData> legData_;
 
     //! build underlying swaps for exposure simulation
-    std::vector<QuantLib::ext::shared_ptr<Instrument>> buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&,
-                                                                    const std::vector<Date>&);
+    std::vector<QuantLib::ext::shared_ptr<Instrument>>
+    buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&, const std::vector<Date>&);
 
-    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine>& swapEngine, 
-        const Handle<SwapIndex>& swapIndex, const Handle<YieldTermStructure>& discountCurve, const std::vector<Date>& exerciseDates);
+    //! build underlying swaps for calibation under delta-gamma-adjusted method
+    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>>
+    buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                             const std::string& qualifier);
 
     QuantLib::ext::shared_ptr<ore::data::Swap> underlying_;
     QuantLib::ext::shared_ptr<ExerciseBuilder> exerciseBuilder_;
