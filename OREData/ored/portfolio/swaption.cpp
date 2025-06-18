@@ -559,7 +559,7 @@ Swaption::buildRepresentativeSwaps(const QuantLib::ext::shared_ptr<PricingEngine
                                    const std::vector<Date>& exerciseDates) {
     QuantExt::RepresentativeSwaptionMatcher matcher(underlying_->legs(), underlying_->legPayers(),
                                                     swapIndex.currentLink(), true, discountCurve, 0.0);
-    QuantLib::ext::shared_ptr < FixedVsFloatingSwap >> swaps;
+    std::vector<QuantLib::ext::shared_ptr<FixedVsFloatingSwap>> swaps;
     for (Size i = 0; i < exerciseDates.size(); ++i) {
         Date ed = exerciseDates[i];
         swaps.push_back(
