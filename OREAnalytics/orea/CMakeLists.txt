@@ -13,10 +13,12 @@ aggregation/dimhelper.cpp
 aggregation/dimregressioncalculator.cpp
 aggregation/dynamiccreditxvacalculator.cpp
 aggregation/dynamicdeltavarcalculator.cpp
+aggregation/dynamicsimmcalculator.cpp
 aggregation/exposureallocator.cpp
 aggregation/exposurecalculator.cpp
 aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
+aggregation/simmhelper.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
@@ -110,6 +112,7 @@ engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
 engine/sensitivitystoragemanager.cpp
+engine/simmsensitivitystoragemanager.cpp
 engine/simpledynamicsimm.cpp
 engine/smrc.cpp
 engine/standardapproachcvacalculator.cpp
@@ -215,10 +218,12 @@ aggregation/dimhelper.hpp
 aggregation/dimregressioncalculator.hpp
 aggregation/dynamiccreditxvacalculator.hpp
 aggregation/dynamicdeltavarcalculator.hpp
+aggregation/dynamicsimmcalculator.hpp
 aggregation/exposureallocator.hpp
 aggregation/exposurecalculator.hpp
 aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
+aggregation/simmhelper.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
@@ -322,6 +327,7 @@ engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystoragemanager.hpp
+engine/simmsensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
 engine/simpledynamicsimm.hpp
 engine/smrc.hpp
