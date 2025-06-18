@@ -53,7 +53,6 @@ indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
 legdata.cpp
-lgmbuilder.cpp
 localvol.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp
