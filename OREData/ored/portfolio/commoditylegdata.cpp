@@ -177,7 +177,7 @@ CommodityFloatingLegData::CommodityFloatingLegData()
       pricingLag_(0), isAveraged_(false), isInArrears_(true), futureMonthOffset_(0),
       deliveryRollDays_(0), includePeriodEnd_(true), excludePeriodStart_(true),
       hoursPerDay_(Null<Natural>()), useBusinessDays_(true), dailyExpiryOffset_(0),
-      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(""), avgPricePrecision_(std::numeric_limits<QuantLib::Natural>::max()) {}
+      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(""), avgPricePrecision_(QuantLib::Null<QuantLib::Natural>()) {}
 
 CommodityFloatingLegData::CommodityFloatingLegData(
     const string& name, CommodityPriceType priceType, const vector<Real>& quantities,
