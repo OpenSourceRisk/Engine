@@ -365,6 +365,8 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
     results_.additionalResults["swapLength"] = swapLength;
 
     Real variance = vol_->blackVariance(exerciseDate, swapLength, strike);
+    Real vol = vol_->volatility(exerciseDate, swapLength, strike);
+    Real atmVol = vol_->volatility(exerciseDate, swapLength, Null<Real>());
     Real stdDev = std::sqrt(variance);
     Real displacement = vol_->volatilityType() == ShiftedLognormal ? vol_->shift(exerciseDate, swapLength) : 0.0;
     results_.additionalResults["stdDev"] = stdDev;
@@ -421,6 +423,9 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
         if (i1 < n1 && i2 < n2)
             vega[i1 + 1][i2 + 1] = (1.0 - w1) * (1.0 - w2) * singleVega;
         results_.additionalResults["vega"] = vega;
+        results_.additionalResults["singleVega"] = singleVega;
+        results_.additionalResults["vol"] = vol;
+        results_.additionalResults["atmVol"] = atmVol;
         // delta
         Real mu = swapFloatLeg.NPV();
         Real black = results_.value / annuity;
