@@ -471,7 +471,7 @@ std::string simmStandardCurrency(const std::string& ccy) {
     }
 }
 
-void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<Market> market) {
+void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!isSimmNonStandardCurrency(ccy))
         return;
     std::string target = simmStandardCurrency(ccy);

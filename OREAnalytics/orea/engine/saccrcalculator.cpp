@@ -44,7 +44,6 @@
 #include <ql/currency.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/tuple.hpp>
 #include <ql/utilities/dataparsers.hpp>
 
 #include <boost/regex.hpp>

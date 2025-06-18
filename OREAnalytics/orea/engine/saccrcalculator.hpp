@@ -12,8 +12,7 @@
 #include <map>
 #include <utility> // pair
 #include <vector>
-
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <ql/time/period.hpp>
 
@@ -65,9 +64,9 @@ public:
 
     typedef std::pair<NettingSetDetails, SaccrTradeData::AssetClass> AssetClassKey;
     //                                                                          hedgingSet
-    typedef QuantLib::ext::tuple<NettingSetDetails, SaccrTradeData::AssetClass, std::string> HedgingSetKey;
+    typedef std::tuple<NettingSetDetails, SaccrTradeData::AssetClass, std::string> HedgingSetKey;
     //                                                                          hedgingSet,  hedgingSubset
-    typedef QuantLib::ext::tuple<NettingSetDetails, SaccrTradeData::AssetClass, std::string, std::string>
+    typedef std::tuple<NettingSetDetails, SaccrTradeData::AssetClass, std::string, std::string>
         HedgingSubsetKey;
 
     SaccrCalculator(const QuantLib::ext::shared_ptr<Crif>& capitalCrif,
