@@ -27,6 +27,21 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+namespace {
+    template<class StressTestShifts>
+    std::vector<Wildcard> wildcardList(
+        const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& shifts) {
+        std::vector<Wildcard> wcs;
+        for (auto const& shift : shifts) {
+            Wildcard wc(shift.first);
+            if (wc.hasWildcard()) {
+                wcs.push_back(wc);
+            }
+        }
+        return wcs;
+    }
+}
+
 StressScenarioGenerator::StressScenarioGenerator(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                                                  const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
                                                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
@@ -81,9 +96,42 @@ void StressScenarioGenerator::generateScenarios() {
     DLOG("stress scenario generator: all scenarios generated.");
 }
 
+template<class StressTestShifts>
+map<string, QuantLib::ext::shared_ptr<StressTestShifts>>
+StressScenarioGenerator::populateShiftData(
+    const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& stressTestShifts,
+    const vector<Wildcard>& wildcardKeys,
+    RiskFactorKey::KeyType keyType) const {
+    if (wildcardKeys.empty()) {
+        return stressTestShifts;
+    }
+    auto data = stressTestShifts;
+    const auto& keys = baseScenarioAbsolute_->keys();
+    for(const auto& key : keys) {
+        if (key.keytype == keyType && data.find(key.name) == data.end()) {
+            for (const auto& wildcardKey : wildcardKeys) {
+                if (wildcardKey.matches(key.name)) {
+                    data[key.name] = stressTestShifts.at(wildcardKey.pattern());
+                    break;
+                }
+            }
+        }
+    }
+    for (const auto& key : wildcardKeys) {
+        data.erase(key.pattern());
+    }
+    return data;
+}
+
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
                                           QuantLib::ext::shared_ptr<Scenario>& scenario) {
-    for (auto d : std.fxShifts) {
+    auto& data = std.fxShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::FXSpot);
+    }
+
+    for (auto d : data) {
         string ccypair = d.first; // foreign + domestic;
 
         // Is this too strict?
@@ -122,12 +170,18 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
 void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
                                               QuantLib::ext::shared_ptr<Scenario>& scenario) {
-    for (auto d : std.equityShifts) {
+    auto& data = std.equityShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::EquitySpot);
+    }
+
+    for(const auto& d : data) {
         string equity = d.first;
         StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
-        // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
+        // QL_REQUIRE(type == ShiftType::Relative, "EQ scenario type must be relative");
         Real size = data.shiftSize;
 
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
@@ -143,6 +197,11 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
 void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::StressTestData& std,
     QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.commodityCurveShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::CommodityCurve);
+    }
 
     for (auto d : std.commodityCurveShifts) {
         string commodity = d.first;
@@ -199,8 +258,13 @@ void StressScenarioGenerator::addCommodityCurveShifts(StressTestScenarioData::St
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
                                                      QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.discountCurveShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::DiscountCurve);
+    }
 
-    for (auto d : std.discountCurveShifts) {
+    for (auto d : data) {
         string ccy = d.first;
         TLOG("Apply stress scenario to discount curve " << ccy);
 
@@ -259,8 +323,13 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& std,
                                                            QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.survivalProbabilityShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::SurvivalProbability);
+    }
 
-    for (auto d : std.survivalProbabilityShifts) {
+    for(const auto& d : data) {
         string name = d.first;
         TLOG("Apply stress scenario to " << name);
 
@@ -319,8 +388,13 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
 void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::StressTestData& std,
                                                   QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.indexCurveShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::IndexCurve);
+    }
 
-    for (auto d : std.indexCurveShifts) {
+    for (auto d : data) {
         string indexName = d.first;
         TLOG("Apply stress scenario to index curve " << indexName);
 
@@ -380,8 +454,13 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::StressTestData& std,
                                                   QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.yieldCurveShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::YieldCurve);
+    }
 
-    for (auto d : std.yieldCurveShifts) {
+    for (auto d : data) {
         string name = d.first;
         TLOG("Apply stress scenario to yield curve " << name);
 
@@ -445,8 +524,13 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
                                              QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.fxVolShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::FXVolatility);
+    }
     
-    for (auto d : std.fxVolShifts) {
+    for (auto d : data) {
         string ccypair = d.first;
         if(simMarketData_->fxVolIsSurface(ccypair)){
             StructuredConfigurationErrorMessage("Simulation Market", "Fx Volatility",
@@ -565,8 +649,13 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressTestData& std,
                                                  QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.equityVolShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::EquityVolatility);
+    }
 
-    for (auto d : std.equityVolShifts) {
+    for(const auto& d : data) {
         string equity = d.first;
         TLOG("Apply stress scenario to equity vol structure " << equity);
         Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
@@ -627,8 +716,13 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 void StressScenarioGenerator::addCommodityVolShifts(StressTestScenarioData::StressTestData& std,
     QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.commodityVolShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::CommodityVolatility);
+    }
 
-    for (auto d : std.commodityVolShifts) {
+    for (auto d : data) {
         string commodity = d.first;
         TLOG("Apply stress scenario to commodity vol structure " << commodity);
         vector<Period> expiries = simMarketData_->commodityVolExpiries(commodity);
@@ -699,8 +793,13 @@ void StressScenarioGenerator::addCommodityVolShifts(StressTestScenarioData::Stre
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,
                                                    QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.swaptionVolShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::SwaptionVolatility);
+    }
 
-    for (auto d : std.swaptionVolShifts) {
+    for (auto d : data) {
         std::string key = d.first;
         TLOG("Apply stress scenario to swaption vol structure '" << key << "'");
 
@@ -792,8 +891,13 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::StressTestData& std,
                                                    QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
+    auto& data = std.capVolShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::OptionletVolatility);
+    }
 
-    for (auto d : std.capVolShifts) {
+    for (auto d : data) {
         std::string key = d.first;
         TLOG("Apply stress scenario to cap/floor vol structure " << key);
 
@@ -879,7 +983,13 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 
 void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
                                                       QuantLib::ext::shared_ptr<Scenario>& scenario) {
-    for (auto d : std.securitySpreadShifts) {
+    auto& data = std.securitySpreadShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::SecuritySpread);
+    }
+
+    for(const auto& d : data) {
         string bond = d.first;
         TLOG("Apply stress scenario to security spread " << bond);
         StressTestScenarioData::SpotShiftData data = *d.second;
@@ -899,7 +1009,13 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
 
 void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::StressTestData& std,
                                                     QuantLib::ext::shared_ptr<Scenario>& scenario) {
-    for (auto d : std.recoveryRateShifts) {
+    auto& data = std.recoveryRateShifts;
+    auto wildcards = wildcardList(data);
+    if (wildcards.size() > 0) {
+        data = populateShiftData(data, wildcards, RiskFactorKey::KeyType::RecoveryRate);
+    }
+
+    for(const auto& d : data) {
         string isin = d.first;
         TLOG("Apply stress scenario to recovery rate " << isin);
         StressTestScenarioData::SpotShiftData data = *d.second;
