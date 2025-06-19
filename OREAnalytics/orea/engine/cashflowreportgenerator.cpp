@@ -68,7 +68,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
-    auto upper = addResults.lower_bound("cashFlowResults_a"); //TODO why "a" and not upper?
+    auto upper = addResults.lower_bound("cashFlowResults_a");
 
     std::map<Size, Size> cashflowNumber;
 
@@ -178,7 +178,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                 result.back().capVolatility = capVolatility;
                 result.back().effectiveFloorVolatility = effectiveFloorVolatility;
                 result.back().effectiveCapVolatility = effectiveCapVolatility;
-                //result.back().expectedFlow = cf.expectedFlow; //TODO find way
             }
         }
     }
