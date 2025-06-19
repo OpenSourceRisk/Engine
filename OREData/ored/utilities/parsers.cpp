@@ -1456,6 +1456,16 @@ QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::st
     }
 }
 
+QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s) {
+    if (s == "Global")
+        return McMultiLegBaseEngine::VarGroupMode::Global;
+    else if (s == "Trivial")
+        return McMultiLegBaseEngine::VarGroupMode::Trivial;
+    else {
+        QL_FAIL("VarGroupMode '" << s << "' not recognized, expected Global, Trivial");
+    }
+}
+
 MporCashFlowMode parseMporCashFlowMode(const string& s){
     static map<string, MporCashFlowMode> m = {{"Unspecified", MporCashFlowMode::Unspecified},
                                               {"NonePay", MporCashFlowMode::NonePay},

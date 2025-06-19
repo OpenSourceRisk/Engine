@@ -597,6 +597,12 @@ QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
 */
 QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s);
 
+//! Convert text to QuantExt::McMultiLegBaseEngine::VarGroupMode
+/*!
+\ingroup utilities
+*/
+QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s);
+
 enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
 
 //! Convert text to MporCashFlowMode
