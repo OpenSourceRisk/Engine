@@ -318,9 +318,15 @@ void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Mat
             QuantLib::ext::shared_ptr<OptionWrapper> wrapper = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
             if (wrapper) { // option wrapper (i.e. we have a swaption)
                 if (wrapper->isExercised()) {
-                    qlInstr = wrapper->activeUnderlyingInstrument();
-                    tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
-                    hasThetaVega = false;
+                    if (wrapper->isPhysicalDelivery()) {
+                        qlInstr = wrapper->activeUnderlyingInstrument();
+                        tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    } else {
+                        qlInstr = wrapper->qlInstrument();
+                        tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    }
                 } else {
                     qlInstr = wrapper->qlInstrument();
                     tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
@@ -353,24 +359,30 @@ void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Mat
         }
         // Theta and Vega
         if (hasThetaVega) {
-
+	  
 	    theta = qlInstr->result<Real>("theta") * tradeMultiplier * fx;
 
 	    Real singleVega = qlInstr->result<Real>("singleVega") * tradeMultiplier * fx;
 	    Real atmVol = qlInstr->result<Real>("atmVol");
 	    Real singleVegaRisk = singleVega * atmVol;
 	    Date exerciseDate = qlInstr->result<Date>("exerciseDate");
-	    Date maturityDate = trade->maturity();
+	    // Date maturityDate = trade->maturity();
 	    // rebucket
-	    map<pair<Size,Size>,Real> sv = swaptionVega(singleVegaRisk, exerciseDate, maturityDate, asof, dc);
+	    //map<pair<Size,Size>,Real> sv = swaptionVega(singleVegaRisk, exerciseDate, maturityDate, asof, dc);
+	    map<Size,Real> sv = fxVega(singleVegaRisk, exerciseDate, asof, dc);
+	    
 	    // and add the contributions to the respective matrix entries
             Size idx = getCcyIndex(currencies.front());
             QL_REQUIRE(vega.size() > idx, "currency " << currencies.front() << " not found in vega matrtices");
             for (auto it : sv) {
-                LOG("map swaption single vega " << singleVega << " " << currencies.front() << " for trade "
-                                                << trade->id() << " to vega matrix " << idx << ", row " << it.first.first
-                                                << ", col " << it.first.second << ": " << it.second);
-                vega[idx][it.first.first][it.first.second] += it.second;
+                // LOG("map swaption single vega " << singleVega << " " << currencies.front() << " for trade "
+                //                                 << trade->id() << " to vega matrix " << idx << ", row " << it.first.first
+                //                                 << ", col " << it.first.second << ": " << it.second);
+                // vega[idx][it.first.first][it.first.second] += it.second;
+                LOG("map swaption single vega " << singleVegaRisk << " " << currencies.front() << " for trade "
+                                                << trade->id() << " to vega array for ccy " << idx << ", row " << it.first
+                                                << ": " << it.second);
+                vega[idx][it.first][0] += it.second;
             }
         }
     } else {

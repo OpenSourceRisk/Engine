@@ -245,9 +245,15 @@ CamSensitivityStorageManager::processSwapSwaption(QuantLib::ext::shared_ptr<ore:
             QuantLib::ext::shared_ptr<OptionWrapper> wrapper = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
             if (wrapper) { // option wrapper (i.e. we have a swaption)
                 if (wrapper->isExercised()) {
-                    qlInstr = wrapper->activeUnderlyingInstrument();
-                    tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
-                    hasThetaVega = false;
+                    if (wrapper->isPhysicalDelivery()) {
+                        qlInstr = wrapper->activeUnderlyingInstrument();
+                        tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    } else {
+                        qlInstr = wrapper->qlInstrument();
+                        tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    }
                 } else {
                     qlInstr = wrapper->qlInstrument();
                     tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
