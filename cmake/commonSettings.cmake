@@ -1,7 +1,5 @@
 include(CheckCXXCompilerFlag)
-if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-    include(CheckLinkerFlag)
-endif()
+include(CheckLinkerFlag)
 
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
@@ -129,6 +127,10 @@ else()
         set(BUILD_SHARED_LIBS ON)
     endif()
 
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
+    endif()
+
     # Issue with Boost CMake finder introduced in version 1.70
     set(Boost_NO_BOOST_CMAKE         ON)
 
@@ -142,9 +144,7 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-        add_linker_flag("-pthread" usePThreadLinkerFlag)
-    endif()
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
 
     if(QL_USE_PCH)
       # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
