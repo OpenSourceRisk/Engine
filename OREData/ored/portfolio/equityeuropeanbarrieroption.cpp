@@ -109,8 +109,8 @@ void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFa
         QuantLib::ext::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
 
     digital->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
-    vanillaK->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
-    vanillaB->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
+    vanillaK->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
+    vanillaB->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
     rebateInstrument->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
     setSensitivityTemplate(*eqDigitalOptBuilder);
     addProductModelEngine(*eqDigitalOptBuilder);

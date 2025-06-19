@@ -51,6 +51,7 @@ public:
     virtual ~MultiPathGeneratorBase() {}
     virtual const Sample<MultiPath>& next() const = 0;
     virtual void reset() = 0;
+    virtual const TimeGrid& timeGrid() const = 0;
 };
 
 //! Instantiation of MultiPathGenerator with standard PseudoRandom traits
@@ -62,6 +63,7 @@ public:
                                       bool antitheticSampling = false);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
     const QuantLib::ext::shared_ptr<StochasticProcess> process_;
@@ -94,6 +96,7 @@ public:
                             SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
     const QuantLib::ext::shared_ptr<StochasticProcess> process_;
@@ -120,6 +123,7 @@ public:
                                       BigNatural scrambleSeed = 43);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
     const QuantLib::ext::shared_ptr<StochasticProcess> process_;
@@ -143,6 +147,7 @@ public:
                                               BigNatural seed = 0,
                                               SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 protected:
     const QuantLib::ext::shared_ptr<StochasticProcess> process_;
@@ -180,6 +185,21 @@ public:
 
 protected:
     BigNatural scrambleSeed_;
+};
+
+//! Instantiation of MultiPathGenerator which generate t0 paths only
+/*! \ingroup methods
+ */
+class MultiPathGeneratorT0Only : public MultiPathGeneratorBase {
+public:
+    explicit MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>&);
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
+    const TimeGrid& timeGrid() const override;
+
+private:
+    const QuantLib::ext::shared_ptr<StochasticProcess> process_;
+    mutable Sample<MultiPath> next_;
 };
 
 //! Make function for path generators

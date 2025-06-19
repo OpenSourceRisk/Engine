@@ -44,15 +44,6 @@ CommoditySpreadOption::CommoditySpreadOption(const QuantLib::ext::shared_ptr<Com
     QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(shortAssetFlow_) ||
                    QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_),
                "Expect commodity floating cashflows");
-    if (auto avgFlow = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(longAssetFlow_)) {
-        QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
-                   "exercise Date hast to be after last observation date");
-    }
-    if (auto avgFlow = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_)) {
-        QL_REQUIRE(exercise_->lastDate() >= avgFlow->indices().rbegin()->first,
-                   "exercise Date hast to be after last observation date");
-    }
-
     if (longAssetFxIndex_)
         registerWith(longAssetFxIndex_);
     if (shortAssetFxIndex_)
@@ -103,7 +94,5 @@ void CommoditySpreadOption::arguments::validate() const {
     QL_REQUIRE(exercise, "exercise not set");
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
-
-
 
 } // namespace QuantExt

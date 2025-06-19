@@ -29,6 +29,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
+#include <qle/math/distributioncount.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
@@ -170,7 +171,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
     for (auto [tradeId, trade]: portfolio->trades()) {
 
         if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
+            DLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
             continue;
         }
 
@@ -786,9 +787,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -835,9 +836,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(it != tradeNettingSetMap.end() ? it->second : "");
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -857,9 +858,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(sr.tradeId);
             report.add("");
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -1736,29 +1737,6 @@ void ReportWriter::writeScenarioStatistics(const QuantLib::ext::shared_ptr<Scena
     report.end();
 }
 
-namespace {
-template <class I>
-void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts) {
-    Real xmin = *std::min_element(begin, end);
-    Real xmax = *std::max_element(begin, end);
-    std::vector<Real> v(begin, end);
-    std::sort(v.begin(), v.end());
-    Real h = (xmax - xmin) / static_cast<Real>(steps);
-    Size idx0 = 0;
-    counts.resize(steps);
-    bounds.resize(steps);
-    for (Size i = 0; i < steps; ++i) {
-        Real v1 = xmin + static_cast<Real>(i + 1) * h;
-        // Need the `i == steps - 1` here because noticed in backtest regression tests that xmax is not getting
-        // included in the count in the last bucket due to numerical accuracy. This ensures that it does.
-        Size idx1 = i == steps - 1 ? v.size() : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
-        counts[i] = idx1 - idx0;
-        bounds[i] = v1;
-        idx0 = idx1;
-    }
-} // distributionCount
-} // namespace
-
 void ReportWriter::writeScenarioDistributions(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
                                               const std::vector<RiskFactorKey>& keys, const Size numPaths,
                                               const std::vector<Date>& dates, const Size distSteps,
@@ -1805,6 +1783,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
         .addColumn("ScenarioValue1", double(), 8)
         .addColumn("ScenarioValue2", double(), 8)
         .addColumn("ShiftType", string())
+        .addColumn("Displacement", double(), 8)
         .addColumn("Return", double(), 8)
         .addColumn("ScenarioValue", double(), 8);
 
@@ -1822,6 +1801,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
                 .add(d.scenarioValue1)
                 .add(d.scenarioValue2)
                 .add(ore::data::to_string(d.returnType))
+                .add(d.displacement)
                 .add(d.returnValue)
                 .add(d.scenarioValue);
         }

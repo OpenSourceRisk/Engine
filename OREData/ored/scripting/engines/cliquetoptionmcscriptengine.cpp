@@ -86,10 +86,11 @@ void CliquetOptionMcScriptEngine::calculate() const {
                                                                 std::set<Date>(), 0);
     // the black scholes model wrapper won't notify the model of changes in curves and vols, so we register manually
     builder->model()->registerWith(p_);
-    Model::McParams mcParams;
-    mcParams.regressionOrder = regressionOrder_;
-    auto model = QuantLib::ext::make_shared<BlackScholes>(samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_,
-                                                  builder->model(), mcParams, arguments_.valuationDates);
+    Model::Params params;
+    params.regressionOrder = regressionOrder_;
+    auto model = QuantLib::ext::make_shared<BlackScholes>(
+        Model::Type::MC, samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_, builder->model(),
+        arguments_.valuationDates, IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
 
     // populate context
 

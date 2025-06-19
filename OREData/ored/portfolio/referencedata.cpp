@@ -222,6 +222,7 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     QL_REQUIRE(cird, "Expected a CreditIndexReferenceData node.");
 
     indexFamily_ = XMLUtils::getChildValue(cird, "IndexFamily", false);
+    indexSubFamily_ = XMLUtils::getChildValue(cird, "IndexSubFamily", false);
 
     constituents_.clear();
 
@@ -239,6 +240,7 @@ XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
 
     XMLUtils::addChild(doc, cird, "IndexFamily", indexFamily_);
+    XMLUtils::addChild(doc, cird, "IndexSubFamily", indexSubFamily_);
 
     for (auto c : constituents_) {
         auto cNode = c.toXML(doc);
@@ -527,7 +529,6 @@ vector<QuantLib::ext::shared_ptr<Trade>> PortfolioBasketReferenceDatum::getTrade
 XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
         XMLNode* node = ReferenceDatum::toXML(doc);
         XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
-        XMLUtils::appendNode(node, rdNode);
         XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
         for (auto& u : getTrades()) {
             XMLUtils::appendNode(cNode, u->toXML(doc));

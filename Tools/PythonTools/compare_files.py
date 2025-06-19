@@ -498,7 +498,7 @@ def validate_json_diff(json_1, json_2, json_diff: dict, config: dict, path: str)
 
         for key, diff in json_diff.items():
             # Insertions (key="$insert") and deletions (key="$delete") should count as a test failure
-            if "$" in key:
+            if isinstance(key, str) and "$" in key:
                 continue
 
             if isinstance(diff, dict):

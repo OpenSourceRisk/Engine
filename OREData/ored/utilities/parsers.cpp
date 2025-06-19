@@ -1601,5 +1601,17 @@ QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& 
     }
 }
 
+std::string splitByLastDelimiter(const std::string& source, const std::string& delimiter) {
+    if (source.find_last_of(delimiter) != std::string::npos )
+        return source.substr(source.find_last_of(delimiter) + 1);
+    else 
+        return std::string();
+}
+
+std::string removeAfterLastDelimiter(const std::string& source, const std::string& delimiter) {
+    auto const pos = source.find_last_of(delimiter);
+    return source.substr(0, pos);
+}
+
 } // namespace data
 } // namespace ore

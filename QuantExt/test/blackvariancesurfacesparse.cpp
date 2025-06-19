@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceFlatExtrapolation) {
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
     auto surface = QuantLib::ext::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc, true,
-                                                                            true, true);
+                                                                            true, QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
 
     Real s1 = 2000; // on first strike
     Real s2 = 2500; // between 2 strikes

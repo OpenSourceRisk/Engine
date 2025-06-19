@@ -658,7 +658,7 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
 
-    BondIndexBuilder bondIndexBuilder(t->bondData(), true, false, NullCalendar(), true, engineFactory);
+    BondIndexBuilder bondIndexBuilder(t->bondData().securityId(), true, false, NullCalendar(), true, engineFactory);
     underlyingIndex = bondIndexBuilder.bondIndex();
 
     underlyingIndex = bondIndexBuilder.bondIndex();
@@ -712,15 +712,15 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     static long id = 0;
     ConvertibleBondData data(BondData(securityId, 1.0));
     data.populateFromBondReferenceData(referenceData);
-    ConvertibleBond bond(Envelope(), data);
-    bond.id() = "ConvertibleBondBuilder_" + securityId + "_" + std::to_string(id++);
-    bond.build(engineFactory);
+    auto bond = QuantLib::ext::make_shared<ConvertibleBond>(Envelope(), data);
+    bond->id() = "ConvertibleBondBuilder_" + securityId + "_" + std::to_string(id++);
+    bond->build(engineFactory);
 
-    QL_REQUIRE(bond.instrument(), "ConvertibleBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(bond->instrument(), "ConvertibleBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
-        bond.instrument() && bond.instrument()->qlInstrument(),
+        bond->instrument() && bond->instrument()->qlInstrument(),
         "ConvertibleBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
         "(either the instrument wrapper or the ql instrument is null)");
 
@@ -730,6 +730,8 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
 
     BondBuilder::Result res;
     res.bond = qlBond;
+    res.trade = bond;
+    res.bondData = data.bondData();
     res.hasCreditRisk = data.bondData().hasCreditRisk() && !data.bondData().creditCurveId().empty();
     res.currency = data.bondData().currency();
     res.creditCurveId = data.bondData().creditCurveId();
@@ -742,10 +744,10 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     auto b =
         std::find_if(builders.begin(), builders.end(),
                      [&bond](const std::pair<const std::string&, const QuantLib::ext::shared_ptr<ModelBuilder>>& p) {
-                         return bond.id() == p.first;
+                         return bond->id() == p.first;
                      });
     QL_REQUIRE(b != builders.end(), "ConvertibleBondBuilder: could not get model builder for bond '"
-                                        << bond.id() << "' from engine factory - this is an internal error.");
+                                        << bond->id() << "' from engine factory - this is an internal error.");
     res.modelBuilder = b->second;
 
     return res;

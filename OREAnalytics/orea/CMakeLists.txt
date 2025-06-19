@@ -7,6 +7,7 @@ aggregation/creditmigrationhelper.cpp
 aggregation/creditsimulationparameters.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
+aggregation/dimdirectcalculator.cpp
 aggregation/dimflatcalculator.cpp
 aggregation/dimhelper.cpp
 aggregation/dimregressioncalculator.cpp
@@ -22,6 +23,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
+app/analytics/crifanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/parscenarioanalytic.cpp
@@ -34,6 +36,7 @@ app/analytics/saccranalytic.cpp
 app/analytics/sacvaanalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
+app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
@@ -60,8 +63,11 @@ cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/inmemorycubeopt.cpp
+cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
@@ -104,6 +110,7 @@ engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
 engine/sensitivitystoragemanager.cpp
+engine/simpledynamicsimm.cpp
 engine/smrc.cpp
 engine/standardapproachcvacalculator.cpp
 engine/stresstest.cpp
@@ -123,6 +130,7 @@ scenario/cvascenarioloader.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
 scenario/historicalscenariogenerator.cpp
+scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariofilereader.cpp
@@ -145,10 +153,14 @@ scenario/stressscenariogenerator.cpp
 scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
+simm/crifgenerator.cpp
 simm/crifloader.cpp
+simm/crifmarket.cpp
 simm/crifrecord.cpp
+simm/crifrecordgenerator.cpp
 simm/imschedulecalculator.cpp
 simm/imscheduleresults.cpp
+simm/portfoliomodifier.cpp
 simm/simmbasicnamemapper.cpp
 simm/simmbucketmapperbase.cpp
 simm/simmcalculator.cpp
@@ -166,6 +178,7 @@ simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
+simm/simmconcentrationisdav2_7_2412.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -181,7 +194,9 @@ simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
+simm/simmconfigurationisdav2_7_2412.cpp
 simm/simmresults.cpp
+simm/simmtradedata.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
@@ -195,6 +210,7 @@ aggregation/creditmigrationhelper.hpp
 aggregation/creditsimulationparameters.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
+aggregation/dimdirectcalculator.hpp
 aggregation/dimflatcalculator.hpp
 aggregation/dimhelper.hpp
 aggregation/dimregressioncalculator.hpp
@@ -210,6 +226,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
+app/analytics/crifanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/parscenarioanalytic.hpp
@@ -222,6 +239,7 @@ app/analytics/saccranalytic.hpp
 app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
+app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp
@@ -268,7 +286,6 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
-engine/cvacalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
@@ -307,6 +324,7 @@ engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
+engine/simpledynamicsimm.hpp
 engine/smrc.hpp
 engine/standardapproachcvacalculator.hpp
 engine/stresstest.hpp
@@ -327,6 +345,7 @@ scenario/cvascenarioloader.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
 scenario/historicalscenariogenerator.hpp
+scenario/historicalscenarioreturn.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
@@ -353,10 +372,14 @@ scenario/stressscenariogenerator.hpp
 scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
+simm/crifgenerator.hpp
 simm/crifloader.hpp
+simm/crifmarket.hpp
 simm/crifrecord.hpp
+simm/crifrecordgenerator.hpp
 simm/imschedulecalculator.hpp
 simm/imscheduleresults.hpp
+simm/portfoliomodifier.hpp
 simm/simmbasicnamemapper.hpp
 simm/simmbucketmapper.hpp
 simm/simmbucketmapperbase.hpp
@@ -375,6 +398,7 @@ simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
+simm/simmconcentrationisdav2_7_2412.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -390,8 +414,10 @@ simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
+simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
+simm/simmtradedata.hpp
 simm/utilities.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp

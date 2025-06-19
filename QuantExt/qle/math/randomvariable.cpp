@@ -126,10 +126,9 @@ Filter& Filter::operator=(const Filter& r) {
             data_ = nullptr;
         }
     } else {
-        deterministic_ = false;
         if (r.n_ != 0) {
             resumeDataStats();
-            if (n_ != r.n_) {
+            if (n_ != r.n_ || deterministic_) {
                 if (data_)
                     delete[] data_;
                 data_ = new bool[r.n_];
@@ -143,6 +142,7 @@ Filter& Filter::operator=(const Filter& r) {
                 data_ = nullptr;
             }
         }
+        deterministic_ = false;
     }
     n_ = r.n_;
     constantData_ = r.constantData_;
@@ -341,16 +341,15 @@ RandomVariable::RandomVariable(RandomVariable&& r) {
 
 RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
     if (r.deterministic_) {
-        deterministic_ = true;
         if (data_) {
             delete[] data_;
             data_ = nullptr;
         }
+        deterministic_ = true;
     } else {
-        deterministic_ = false;
         if (r.n_ != 0) {
             resumeDataStats();
-            if (n_ != r.n_) {
+            if (n_ != r.n_ || deterministic_) {
                 if (data_)
                     delete[] data_;
                 data_ = new double[r.n_];
@@ -364,6 +363,7 @@ RandomVariable& RandomVariable::operator=(const RandomVariable& r) {
                 data_ = nullptr;
             }
         }
+        deterministic_ = false;
     }
     n_ = r.n_;
     constantData_ = r.constantData_;
@@ -1368,7 +1368,7 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
         // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
-        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(x / delta) )
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(-x / delta) )
         tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 

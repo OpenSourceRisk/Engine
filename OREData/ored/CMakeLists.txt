@@ -103,6 +103,7 @@ model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
 portfolio/accumulator.cpp
+portfolio/additionalfieldgetter.cpp
 portfolio/ascot.cpp
 portfolio/asianoption.cpp
 portfolio/autocallable_01.cpp
@@ -304,6 +305,7 @@ portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
+portfolio/tradegenerator.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
 portfolio/tranche.cpp
@@ -341,15 +343,11 @@ scripting/engines/scriptedinstrumentpricingengine.cpp
 scripting/engines/scriptedinstrumentpricingenginecg.cpp
 scripting/grammar.cpp
 scripting/models/blackscholes.cpp
-scripting/models/blackscholesbase.cpp
 scripting/models/blackscholescg.cpp
-scripting/models/blackscholescgbase.cpp
-scripting/models/fdblackscholesbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/lgmcg.cpp
-scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
@@ -371,6 +369,7 @@ utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
+utilities/dependencies.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
 utilities/formulaparser.cpp
@@ -504,6 +503,7 @@ model/structuredmodelerror.hpp
 model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
+portfolio/additionalfieldgetter.hpp
 portfolio/ascot.hpp
 portfolio/asianoption.hpp
 portfolio/autocallable_01.hpp
@@ -715,6 +715,7 @@ portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
+portfolio/tradegenerator.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
 portfolio/tranche.hpp
@@ -756,16 +757,12 @@ scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
 scripting/models/blackscholes.hpp
-scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
-scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
-scripting/models/fdblackscholesbase.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
 scripting/models/lgmcg.hpp
-scripting/models/localvol.hpp
 scripting/models/model.hpp
 scripting/models/modelcg.hpp
 scripting/models/modelcgimpl.hpp
@@ -784,11 +781,13 @@ utilities/calendaradjustmentconfig.hpp
 utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
+utilities/credit.hpp
 utilities/csvfilereader.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
+utilities/dependencies.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
 utilities/formulaparser.hpp

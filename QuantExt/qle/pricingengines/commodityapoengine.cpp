@@ -45,9 +45,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike) {
+    QuantLib::Real strike, const QuantLib::Date& exerciseDate) {
     Date today = Settings::instance().evaluationDate();
     MomentMatchingResults res;
+    auto optionExerciseDate = exerciseDate == Date() ? flow->lastPricingDate() : exerciseDate;
 
     res.tn = 0.0;
     res.accruals = 0.0;
@@ -59,13 +60,14 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     double atmUnderlyingCcy = 0;
 
     for (const auto& [pricingDate, index] : flow->indices()) {
-        Date fixingDate = index->fixingCalendar().adjust(pricingDate, Preceding);
+        Date fixingDate = std::min(optionExerciseDate, pricingDate);
+        fixingDate = index->fixingCalendar().adjust(fixingDate, Preceding);
         Real fxRate = (flow->fxIndex()) ? flow->fxIndex()->fixing(fixingDate) : 1.0;
         res.indexNames.push_back(index->name());
         res.pricingDates.push_back(fixingDate);
         res.indexExpiries.push_back(index->expiryDate());
         res.fixings.push_back(index->fixing(fixingDate) * fxRate);
-        if (pricingDate <= today) {
+        if (fixingDate <= today) {
             res.accruals += res.fixings.back();
         } else {
             atmUnderlyingCcy = index->fixing(fixingDate);
@@ -80,8 +82,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                     futureVols[expiry] = vol->blackVol(expiry, K);
                 }
             } else {
-                spotVariances.push_back(
-                    vol->blackVariance(res.times.back(), K));
+                spotVariances.push_back(vol->blackVariance(res.times.back(), K));
                 res.spotVols.push_back(std::sqrt(spotVariances.back() / res.times.back()));
             }
             EA += res.forwards.back();

@@ -239,6 +239,7 @@ public:
 
     // Commodity volatility data getters
     bool commodityVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityVolatility); }
+    bool simulateCommodityVolATMOnly() const { return commodityVolSimulateATMOnly_; }
     const std::string& commodityVolDecayMode() const { return commodityVolDecayMode_; }
     std::vector<std::string> commodityVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::CommodityVolatility);
@@ -407,6 +408,7 @@ public:
 
     // Commodity volatility data setters
     void setCommodityVolSimulate(bool simulate);
+    void setSimulateCommodityVolATMOnly(bool simulateATMOnly) { commodityVolSimulateATMOnly_ = simulateATMOnly; }
     std::string& commodityVolDecayMode() { return commodityVolDecayMode_; }
     void setCommodityVolNames(vector<string> names);
     std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) {
@@ -530,6 +532,7 @@ private:
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
 
     // Commodity volatility data
+    bool commodityVolSimulateATMOnly_ = false;
     std::string commodityVolDecayMode_;
     std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;

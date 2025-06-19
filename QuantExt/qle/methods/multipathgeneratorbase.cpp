@@ -186,10 +186,34 @@ void MultiPathGeneratorBurley2020SobolBrownianBridge::reset() {
                                                                 directionIntegers_, scrambleSeed_);
 }
 
+MultiPathGeneratorT0Only::MultiPathGeneratorT0Only(const QuantLib::ext::shared_ptr<StochasticProcess>& process)
+    : process_(process), next_(MultiPath(process->size(), TimeGrid(Time(1e-6), 1)), 1.0) {
+    MultiPathGeneratorT0Only::reset();
+}
+
+const TimeGrid& MultiPathGeneratorT0Only::timeGrid() const {
+    static TimeGrid g({0.0});
+    return g;
+}
+
+void MultiPathGeneratorT0Only::reset() {}
+
+const Sample<MultiPath>& MultiPathGeneratorT0Only::next() const {
+    Array asset = process_->initialValues();
+    MultiPath& path = next_.value;
+    for (Size j = 0; j < asset.size(); ++j) {
+        path[j].front() = asset[j];
+    }
+    return next_;
+}
+
 QuantLib::ext::shared_ptr<MultiPathGeneratorBase>
 makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                        const TimeGrid& timeGrid, const BigNatural seed, const SobolBrownianGenerator::Ordering ordering,
                        const SobolRsg::DirectionIntegers directionIntegers) {
+    if (timeGrid.size() == 1) {
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorT0Only>(process);
+    }
     switch (s) {
     case MersenneTwister:
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);

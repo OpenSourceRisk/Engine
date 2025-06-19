@@ -105,22 +105,18 @@ public:
     Real detachmentRatio() const { return detachmentRatio_; }
     //! Original basket notional ignoring any losses.
     Real basketNotional() const {
-        calculate();
         return basketNotional_;
     }
     //! Original tranche notional ignoring any realized losses.
     Real trancheNotional() const {
-        calculate();
         return trancheNotional_;
     }
     //! Attachment amount = attachmentRatio() * basketNotional()
     Real attachmentAmount() const {
-        calculate();
         return attachmentAmount_;
     }
     //! Detachment amount = detachmentRatio() * basketNotional()
     Real detachmentAmount() const {
-        calculate();
         return detachmentAmount_;
     }
     //! default claim, same for all positions and counterparties
@@ -283,13 +279,13 @@ private:
 
     Real attachmentRatio_;
     Real detachmentRatio_;
-    mutable Real basketNotional_;
+    Real basketNotional_;
     //! basket tranched inception attachment amount:
-    mutable Real attachmentAmount_;
+    Real attachmentAmount_;
     //! basket tranched inception detachment amount:
-    mutable Real detachmentAmount_;
+    Real detachmentAmount_;
     //! basket tranched notional amount:
-    mutable Real trancheNotional_;
+    Real trancheNotional_;
     /* Caches. Most of the times one wants statistics on the distribution of
     futures losses at arbitrary dates but some problems (e.g. derivatives
     pricing) work with todays (evalDate) magnitudes which do not require a

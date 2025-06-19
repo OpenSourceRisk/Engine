@@ -40,7 +40,9 @@ public:
                                const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
                                const std::vector<QuantLib::Volatility>& volatilities,
                                const QuantLib::DayCounter& dayCounter, bool lowerStrikeConstExtrap = true,
-                               bool upperStrikeConstExtrap = true, bool timeFlatExtrapolation = false);
+                               bool upperStrikeConstExtrap = true, 
+                               QuantLib::BlackVolTimeExtrapolation timeExtrapolation
+                                = QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
 
     enum class TimeInterpolationMethod { Linear, Flat };
     //! \name TermStructure interface
@@ -63,7 +65,7 @@ public:
 protected:
     virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const override;
 
-    bool timeFlatExtrapolation_;
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
 };
 
 // inline definitions

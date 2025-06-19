@@ -16,19 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/simm/crifrecord.hpp>
-#include <orea/simm/crifloader.hpp>
-#include <orea/simm/simmcalculator.hpp>
-#include <orea/simm/utilities.hpp>
-#include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/simm/crifloader.hpp>
+#include <orea/simm/crifrecord.hpp>
+#include <orea/simm/simmcalculator.hpp>
+#include <orea/simm/simmconfigurationbase.hpp>
+#include <orea/simm/utilities.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 #include <numeric>
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/quote.hpp>
 
@@ -47,10 +47,10 @@ using std::tuple;
 using std::vector;
 
 using ore::data::checkCurrency;
-using ore::data::NettingSetDetails;
 using ore::data::Market;
-using ore::data::to_string;
+using ore::data::NettingSetDetails;
 using ore::data::parseBool;
+using ore::data::to_string;
 using QuantLib::close_enough;
 using QuantLib::Null;
 using QuantLib::Real;
@@ -67,7 +67,8 @@ typedef CrifRecord::Regulation Regulation;
 typedef SimmConfiguration::SimmSide SimmSide;
 
 struct RegulationCompare {
-    bool operator()(const pair<Size, set<Regulation>>& reg1, const pair<Size, set<Regulation>>& reg2) {
+    bool operator()(const pair<QuantLib::Size, set<Regulation>>& reg1,
+                    const pair<QuantLib::Size, set<Regulation>>& reg2) {
         return reg1.first < reg2.first;
     }
 };
@@ -90,9 +91,9 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
     timer_.start("Total");
 
     QL_REQUIRE(checkCurrency(calculationCcyCall_), "SIMM Calculator: The Call side calculation currency ("
-                                                   << calculationCcyCall_ << ") must be a valid ISO currency code");
+                                                       << calculationCcyCall_ << ") must be a valid ISO currency code");
     QL_REQUIRE(checkCurrency(calculationCcyPost_), "SIMM Calculator: The Post side calculation currency ("
-                                                   << calculationCcyPost_ << ") must be a valid ISO currency code");
+                                                       << calculationCcyPost_ << ") must be a valid ISO currency code");
     QL_REQUIRE(checkCurrency(resultCcy_),
                "SIMM Calculator: The result currency (" << resultCcy_ << ") must be a valid ISO currency code");
 
@@ -109,7 +110,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
                 ore::data::StructuredTradeWarningMessage(it->getTradeId(), it->getTradeType(), "SIMM calculator",
                                                          "Skipping over Schedule CRIF record")
                     .log();
-            } 
+            }
             continue;
         }
 
@@ -131,10 +132,10 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
         // Make sure we have CRIF amount denominated in the result ccy
         if (it->requiresAmountUsd() && resultCcy_ == "USD" && it->hasAmountUsd()) {
             it->setAmountResultCurrency(it->amountUsd());
-        } else if(it->requiresAmountUsd()) {
+        } else if (it->requiresAmountUsd()) {
             // ProductClassMultiplier and AddOnNotionalFactor  don't have a currency and dont need to be converted,
             // we use the amount
-            const Real fxSpot = fxRate(it->getCurrency() + resultCcy_);
+            const QuantLib::Real fxSpot = fxRate(it->getCurrency() + resultCcy_);
             it->setAmountResultCurrency(fxSpot * it->amount());
         }
         it->setResultCurrency(resultCcy_);
@@ -145,7 +146,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
     if (!quiet_) {
         LOG("SimmCalculator: Splitting up original CRIF records into their respective collect/post regulations");
     }
-    
+
     splitCrifByRegulationsAndPortfolios(enforceIMRegulations, crif);
 
     cleanDuplicateRegulations();
@@ -158,9 +159,9 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
     for (auto& [side, nettingsSetCrifMap] : regSensitivities_) {
         for (auto& [nettingDetails, regulationCrifMap] : nettingsSetCrifMap) {
 
-            // If netting set has Regulation::Unspecified plus other regulations, the Regulation::Unspecified sensis are to be excluded.
-            // If netting set only has Regulation::Unspecified, then no regulations were ever specified, so all trades are
-            // included.
+            // If netting set has Regulation::Unspecified plus other regulations, the Regulation::Unspecified sensis are
+            // to be excluded. If netting set only has Regulation::Unspecified, then no regulations were ever specified,
+            // so all trades are included.
             if (regulationCrifMap.count(set<Regulation>({Regulation::Unspecified})) > 0 && regulationCrifMap.size() > 1)
                 regulationCrifMap.erase(set<Regulation>({Regulation::Unspecified}));
 
@@ -207,11 +208,12 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
             for (const auto& kv : sv.second) {
 
                 // Collect margin amounts and determine the highest margin amount
-                Real winningMargin = std::numeric_limits<Real>::min();
-                map<set<Regulation>, Real> nettingSetMargins;
-                vector<Real> margins;
+                QuantLib::Real winningMargin = std::numeric_limits<QuantLib::Real>::min();
+                map<set<Regulation>, QuantLib::Real> nettingSetMargins;
+                vector<QuantLib::Real> margins;
                 for (const auto& regSimmResults : kv.second) {
-                    const Real& im = regSimmResults.second.get(ProductClass::All, RiskClass::All, MarginType::All, "All");
+                    const QuantLib::Real& im =
+                        regSimmResults.second.get(ProductClass::All, RiskClass::All, MarginType::All, "All");
                     nettingSetMargins[regSimmResults.first] = im;
                     if (im > winningMargin)
                         winningMargin = im;
@@ -238,7 +240,8 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
 const void SimmCalculator::calculateRegulationSimm(const Crif& crif, const NettingSetDetails& nettingSetDetails,
                                                    const set<Regulation>& regulations, const SimmSide& side) {
 
-    const string regTimerKey = "calculate " + ore::data::to_string(side) + " SIMM (" + regulationsToString(regulations) + ")";
+    const string regTimerKey =
+        "calculate " + ore::data::to_string(side) + " SIMM (" + regulationsToString(regulations) + ")";
     timer_.start(regTimerKey);
 
     if (!quiet_) {
@@ -246,7 +249,7 @@ const void SimmCalculator::calculateRegulationSimm(const Crif& crif, const Netti
                                                 << regulations);
     }
     // Loop over portfolios and product classes
-   for(const auto  productClass : crif.ProductClassesByNettingSetDetails(nettingSetDetails)){
+    for (const auto productClass : crif.ProductClassesByNettingSetDetails(nettingSetDetails)) {
         if (!quiet_) {
             LOG("SimmCalculator: Calculating SIMM for product class " << productClass);
         }
@@ -367,7 +370,7 @@ const void SimmCalculator::calculateRegulationSimm(const Crif& crif, const Netti
 }
 
 const Regulation& SimmCalculator::winningRegulations(const SimmSide& side,
-                                                                 const NettingSetDetails& nettingSetDetails) const {
+                                                     const NettingSetDetails& nettingSetDetails) const {
     const auto& subWinningRegs = winningRegulations(side);
     QL_REQUIRE(subWinningRegs.find(nettingSetDetails) != subWinningRegs.end(),
                "SimmCalculator::winningRegulations(): Could not find netting set in the list of "
@@ -395,7 +398,7 @@ const SimmResults& SimmCalculator::simmResults(const SimmSide& side, const Netti
 }
 
 const map<set<Regulation>, SimmResults>& SimmCalculator::simmResults(const SimmSide& side,
-                                                            const NettingSetDetails& nettingSetDetails) const {
+                                                                     const NettingSetDetails& nettingSetDetails) const {
     const auto& subResults = simmResults(side);
     QL_REQUIRE(subResults.find(nettingSetDetails) != subResults.end(),
                "SimmCalculator::simmResults(): Could not find netting set in the SIMM "
@@ -403,7 +406,8 @@ const map<set<Regulation>, SimmResults>& SimmCalculator::simmResults(const SimmS
     return subResults.at(nettingSetDetails);
 }
 
-const map<NettingSetDetails, map<set<Regulation>, SimmResults>>& SimmCalculator::simmResults(const SimmSide& side) const {
+const map<NettingSetDetails, map<set<Regulation>, SimmResults>>&
+SimmCalculator::simmResults(const SimmSide& side) const {
     QL_REQUIRE(simmResults_.find(side) != simmResults_.end(),
                "SimmCalculator::simmResults(): Could not find " << side << " IM in the SIMM results");
     return simmResults_.at(side);
@@ -413,8 +417,8 @@ const map<SimmSide, map<NettingSetDetails, map<set<Regulation>, SimmResults>>>& 
     return simmResults_;
 }
 
-const pair<Regulation, SimmResults>& SimmCalculator::finalSimmResults(const SimmSide& side,
-                                                                  const NettingSetDetails& nettingSetDetails) const {
+const pair<Regulation, SimmResults>&
+SimmCalculator::finalSimmResults(const SimmSide& side, const NettingSetDetails& nettingSetDetails) const {
     const auto& subResults = finalSimmResults(side);
     QL_REQUIRE(subResults.find(nettingSetDetails) != subResults.end(),
                "SimmCalculator::finalSimmResults(): Could not find netting set in the final SIMM "
@@ -422,7 +426,8 @@ const pair<Regulation, SimmResults>& SimmCalculator::finalSimmResults(const Simm
     return subResults.at(nettingSetDetails);
 }
 
-const map<NettingSetDetails, pair<Regulation, SimmResults>>& SimmCalculator::finalSimmResults(const SimmSide& side) const {
+const map<NettingSetDetails, pair<Regulation, SimmResults>>&
+SimmCalculator::finalSimmResults(const SimmSide& side) const {
     QL_REQUIRE(finalSimmResults_.find(side) != finalSimmResults_.end(),
                "SimmCalculator::finalSimmResults(): Could not find " << side << " IM in the final SIMM results");
     return finalSimmResults_.at(side);
@@ -432,15 +437,15 @@ const map<SimmSide, map<NettingSetDetails, pair<Regulation, SimmResults>>>& Simm
     return finalSimmResults_;
 }
 
-pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDetails& nettingSetDetails,
-                                                            const ProductClass& pc, const Crif& crif,
-                                                            const SimmSide& side) const {
+pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDetails& nettingSetDetails,
+                                                                      const ProductClass& pc, const Crif& crif,
+                                                                      const SimmSide& side) const {
     timer_.start("irDeltaMargin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
 
     // "Bucket" here referse to exposures under the CRIF qualifiers
-    map<string, Real> bucketMargins;
+    map<string, QuantLib::Real> bucketMargins;
 
     // Get alls IR qualifiers
     set<string> qualifiers =
@@ -454,18 +459,17 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
     }
 
     // Hold the concentration risk for each qualifier i.e. $CR_b$ from SIMM docs
-    map<string, Real> concentrationRisk;
+    map<string, QuantLib::Real> concentrationRisk;
     // The delta margin for each currency i.e. $K_b$ from SIMM docs
-    map<string, Real> deltaMargin;
+    map<string, QuantLib::Real> deltaMargin;
     // The sum of the weighted sensitivities for each currency i.e. $\sum_{i,k} WS_{k,i}$ from SIMM docs
-    map<string, Real> sumWeightedSensis;
+    map<string, QuantLib::Real> sumWeightedSensis;
 
     // Loop over the qualifiers i.e. currencies
     // Loop over the qualifiers i.e. currencies
     for (const auto& qualifier : qualifiers) {
         // Pair of iterators to start and end of IRCurve sensitivities with current qualifier
-        auto pIrQualifier =
-            crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRCurve, qualifier);
+        auto pIrQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRCurve, qualifier);
 
         // Iterator to Xccy basis element with current qualifier (expect zero or one element)
         auto XccyCount = crif.countMatching(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
@@ -492,7 +496,7 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
             concentrationRisk[qualifier] += itInflation->amountResultCurrency();
         }
         // Divide by the concentration risk threshold
-        Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRCurve, qualifier);
+        QuantLib::Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRCurve, qualifier);
         if (resultCcy_ != "USD")
             concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
@@ -502,9 +506,9 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         // Calculate the delta margin piece for this qualifier i.e. $K_b$ from SIMM docs
         for (auto itOuter = pIrQualifier.first; itOuter != pIrQualifier.second; ++itOuter) {
             // Risk weight i.e. $RW_k$ from SIMM docs
-            Real rwOuter = simmConfiguration_->weight(RiskType::IRCurve, qualifier, itOuter->getLabel1());
+            QuantLib::Real rwOuter = simmConfiguration_->weight(RiskType::IRCurve, qualifier, itOuter->getLabel1());
             // Weighted sensitivity i.e. $WS_{k,i}$ from SIMM docs
-            Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
+            QuantLib::Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsOuter;
             // Add diagonal element to delta margin
@@ -512,23 +516,26 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
             // Add the cross elements to the delta margin
             for (auto itInner = pIrQualifier.first; itInner != itOuter; ++itInner) {
                 // Label2 level correlation i.e. $\phi_{i,j}$ from SIMM docs
-                Real subCurveCorr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", itOuter->getLabel2(),
-                                                                    RiskType::IRCurve, qualifier, "", itInner->getLabel2());
+                QuantLib::Real subCurveCorr =
+                    simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", itOuter->getLabel2(),
+                                                    RiskType::IRCurve, qualifier, "", itInner->getLabel2());
                 // Label1 level correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real tenorCorr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, itOuter->getLabel1(), "",
-                                                                 RiskType::IRCurve, qualifier, itInner->getLabel1(), "");
+                QuantLib::Real tenorCorr =
+                    simmConfiguration_->correlation(RiskType::IRCurve, qualifier, itOuter->getLabel1(), "",
+                                                    RiskType::IRCurve, qualifier, itInner->getLabel1(), "");
                 // Add cross element to delta margin
-                Real rwInner = simmConfiguration_->weight(RiskType::IRCurve, qualifier, itInner->getLabel1());
-                Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rwInner = simmConfiguration_->weight(RiskType::IRCurve, qualifier, itInner->getLabel1());
+                QuantLib::Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
                 deltaMargin[qualifier] += 2 * subCurveCorr * tenorCorr * wsOuter * wsInner;
             }
         }
 
         // Add the Inflation component, if any
-        Real wsInflation = 0.0;
+        QuantLib::Real wsInflation = 0.0;
         if (itInflation != itInflationEnd) {
             // Risk weight
-            Real rwInflation = simmConfiguration_->weight(RiskType::Inflation, qualifier, itInflation->getLabel1());
+            QuantLib::Real rwInflation =
+                simmConfiguration_->weight(RiskType::Inflation, qualifier, itInflation->getLabel1());
             // Weighted sensitivity
             wsInflation = rwInflation * itInflation->amountResultCurrency() * concentrationRisk[qualifier];
             // Update weighted sensitivity sum
@@ -537,12 +544,12 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
             deltaMargin[qualifier] += wsInflation * wsInflation;
             // Add the cross elements (Inflation with IRCurve tenors) to the delta margin
             // Correlation (know that Label1 and Label2 do not matter)
-            Real corr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", "", RiskType::Inflation,
-                                                        qualifier, "", "");
+            QuantLib::Real corr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", "",
+                                                                  RiskType::Inflation, qualifier, "", "");
             for (auto it = pIrQualifier.first; it != pIrQualifier.second; ++it) {
                 // Add cross element to delta margin
-                Real rw = simmConfiguration_->weight(RiskType::IRCurve, qualifier, it->getLabel1());
-                Real ws = rw * it->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rw = simmConfiguration_->weight(RiskType::IRCurve, qualifier, it->getLabel1());
+                QuantLib::Real ws = rw * it->amountResultCurrency() * concentrationRisk[qualifier];
                 deltaMargin[qualifier] += 2 * corr * ws * wsInflation;
             }
         }
@@ -550,29 +557,29 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         // Add the XccyBasis component, if any
         if (itXccy != itXccyEnd) {
             // Risk weight
-            Real rwXccy = simmConfiguration_->weight(RiskType::XCcyBasis, qualifier, itXccy->getLabel1());
+            QuantLib::Real rwXccy = simmConfiguration_->weight(RiskType::XCcyBasis, qualifier, itXccy->getLabel1());
             // Weighted sensitivity (no concentration risk here)
-            Real wsXccy = rwXccy * itXccy->amountResultCurrency();
+            QuantLib::Real wsXccy = rwXccy * itXccy->amountResultCurrency();
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsXccy;
             // Add diagonal element to delta margin
             deltaMargin[qualifier] += wsXccy * wsXccy;
             // Add the cross elements (XccyBasis with IRCurve tenors) to the delta margin
             // Correlation (know that Label1 and Label2 do not matter)
-            Real corr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", "", RiskType::XCcyBasis,
-                                                        qualifier, "", "");
+            QuantLib::Real corr = simmConfiguration_->correlation(RiskType::IRCurve, qualifier, "", "",
+                                                                  RiskType::XCcyBasis, qualifier, "", "");
             for (auto it = pIrQualifier.first; it != pIrQualifier.second; ++it) {
                 // Add cross element to delta margin
-                Real rw = simmConfiguration_->weight(RiskType::IRCurve, qualifier, it->getLabel1(), calcCcy);
-                Real ws = rw * it->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rw = simmConfiguration_->weight(RiskType::IRCurve, qualifier, it->getLabel1(), calcCcy);
+                QuantLib::Real ws = rw * it->amountResultCurrency() * concentrationRisk[qualifier];
                 deltaMargin[qualifier] += 2 * corr * ws * wsXccy;
             }
 
             // Inflation vs. XccyBasis cross component if any
             if (itInflation != itInflationEnd) {
                 // Correlation (know that Label1 and Label2 do not matter)
-                Real corr = simmConfiguration_->correlation(RiskType::Inflation, qualifier, "", "", RiskType::XCcyBasis,
-                                                            qualifier, "", "");
+                QuantLib::Real corr = simmConfiguration_->correlation(RiskType::Inflation, qualifier, "", "",
+                                                                      RiskType::XCcyBasis, qualifier, "", "");
                 deltaMargin[qualifier] += 2 * corr * wsInflation * wsXccy;
             }
         }
@@ -582,18 +589,20 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
     }
 
     // Now calculate final IR delta margin by aggregating across currencies
-    Real margin = 0.0;
+    QuantLib::Real margin = 0.0;
     for (auto itOuter = qualifiers.begin(); itOuter != qualifiers.end(); ++itOuter) {
         // Diagonal term
         margin += deltaMargin.at(*itOuter) * deltaMargin.at(*itOuter);
         // Cross terms
-        Real sOuter = std::max(std::min(sumWeightedSensis.at(*itOuter), deltaMargin.at(*itOuter)), -deltaMargin.at(*itOuter));
+        QuantLib::Real sOuter =
+            std::max(std::min(sumWeightedSensis.at(*itOuter), deltaMargin.at(*itOuter)), -deltaMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner = std::max(std::min(sumWeightedSensis.at(*itInner), deltaMargin.at(*itInner)), -deltaMargin.at(*itInner));
-            Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
-                     std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
-            Real corr = simmConfiguration_->correlation(RiskType::IRCurve, *itOuter, "", "", RiskType::IRCurve,
-                                                        *itInner, "", "");
+            QuantLib::Real sInner =
+                std::max(std::min(sumWeightedSensis.at(*itInner), deltaMargin.at(*itInner)), -deltaMargin.at(*itInner));
+            QuantLib::Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
+                               std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
+            QuantLib::Real corr = simmConfiguration_->correlation(RiskType::IRCurve, *itOuter, "", "",
+                                                                  RiskType::IRCurve, *itInner, "", "");
             margin += 2.0 * sOuter * sInner * corr * g;
         }
     }
@@ -608,16 +617,16 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
     return make_pair(bucketMargins, true);
 }
 
-pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetails& nettingSetDetails,
-                                                           const ProductClass& pc, const Crif& crif,
-                                                           const SimmSide& side) const {
+pair<map<string, QuantLib::Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetails& nettingSetDetails,
+                                                                     const ProductClass& pc, const Crif& crif,
+                                                                     const SimmSide& side) const {
 
     timer_.start("irVegaMargin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
 
     // "Bucket" here refers to exposures under the CRIF qualifiers
-    map<string, Real> bucketMargins;
+    map<string, QuantLib::Real> bucketMargins;
 
     // Find the set of qualifiers, i.e. currencies, in the Simm sensitivities
     set<string> qualifiers = getQualifiers(crif, nettingSetDetails, pc, {RiskType::IRVol, RiskType::InflationVol});
@@ -630,11 +639,11 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
     }
 
     // Hold the concentration risk for each qualifier i.e. $VCR_b$ from SIMM docs
-    map<string, Real> concentrationRisk;
+    map<string, QuantLib::Real> concentrationRisk;
     // The vega margin for each currency i.e. $K_b$ from SIMM docs
-    map<string, Real> vegaMargin;
+    map<string, QuantLib::Real> vegaMargin;
     // The sum of the weighted sensitivities for each currency i.e. $\sum_{k=1}^K VR_{k}$ from SIMM docs
-    map<string, Real> sumWeightedSensis;
+    map<string, QuantLib::Real> sumWeightedSensis;
 
     // Loop over the qualifiers i.e. currencies
     for (const auto& qualifier : qualifiers) {
@@ -652,7 +661,7 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
             concentrationRisk[qualifier] += it->amountResultCurrency();
         }
         // Divide by the concentration risk threshold
-        Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRVol, qualifier);
+        QuantLib::Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRVol, qualifier);
         if (resultCcy_ != "USD")
             concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
@@ -664,9 +673,9 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         // Start with IRVol vs. IRVol components
         for (auto itOuter = pIrQualifier.first; itOuter != pIrQualifier.second; ++itOuter) {
             // Risk weight i.e. $RW_k$ from SIMM docs
-            Real rwOuter = simmConfiguration_->weight(RiskType::IRVol, qualifier, itOuter->getLabel1());
+            QuantLib::Real rwOuter = simmConfiguration_->weight(RiskType::IRVol, qualifier, itOuter->getLabel1());
             // Weighted sensitivity i.e. $WS_{k,i}$ from SIMM docs
-            Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
+            QuantLib::Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsOuter;
             // Add diagonal element to vega margin
@@ -674,11 +683,12 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
             // Add the cross elements to the vega margin
             for (auto itInner = pIrQualifier.first; itInner != itOuter; ++itInner) {
                 // Label1 level correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real corr = simmConfiguration_->correlation(RiskType::IRVol, qualifier, itOuter->getLabel1(), "",
-                                                            RiskType::IRVol, qualifier, itInner->getLabel1(), "");
+                QuantLib::Real corr =
+                    simmConfiguration_->correlation(RiskType::IRVol, qualifier, itOuter->getLabel1(), "",
+                                                    RiskType::IRVol, qualifier, itInner->getLabel1(), "");
                 // Add cross element to vega margin
-                Real rwInner = simmConfiguration_->weight(RiskType::IRVol, qualifier, itInner->getLabel1());
-                Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rwInner = simmConfiguration_->weight(RiskType::IRVol, qualifier, itInner->getLabel1());
+                QuantLib::Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
                 vegaMargin[qualifier] += 2 * corr * wsOuter * wsInner;
             }
         }
@@ -688,9 +698,10 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         // currently, we could just sum over the InflationVol numbers within qualifier and use this.
         for (auto itOuter = pInfQualifier.first; itOuter != pInfQualifier.second; ++itOuter) {
             // Risk weight i.e. $RW_k$ from SIMM docs
-            Real rwOuter = simmConfiguration_->weight(RiskType::InflationVol, qualifier, itOuter->getLabel1());
+            QuantLib::Real rwOuter =
+                simmConfiguration_->weight(RiskType::InflationVol, qualifier, itOuter->getLabel1());
             // Weighted sensitivity i.e. $WS_{k,i}$ from SIMM docs
-            Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
+            QuantLib::Real wsOuter = rwOuter * itOuter->amountResultCurrency() * concentrationRisk[qualifier];
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsOuter;
             // Add diagonal element to vega margin
@@ -699,21 +710,24 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
             // Firstly, against all IRVol components
             for (auto itInner = pIrQualifier.first; itInner != pIrQualifier.second; ++itInner) {
                 // Correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real corr = simmConfiguration_->correlation(RiskType::InflationVol, qualifier, itOuter->getLabel1(), "",
-                                                            RiskType::IRVol, qualifier, itInner->getLabel1(), "");
+                QuantLib::Real corr =
+                    simmConfiguration_->correlation(RiskType::InflationVol, qualifier, itOuter->getLabel1(), "",
+                                                    RiskType::IRVol, qualifier, itInner->getLabel1(), "");
                 // Add cross element to vega margin
-                Real rwInner = simmConfiguration_->weight(RiskType::IRVol, qualifier, itInner->getLabel1());
-                Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rwInner = simmConfiguration_->weight(RiskType::IRVol, qualifier, itInner->getLabel1());
+                QuantLib::Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
                 vegaMargin[qualifier] += 2 * corr * wsOuter * wsInner;
             }
             // Secondly, against all previous InflationVol components
             for (auto itInner = pInfQualifier.first; itInner != itOuter; ++itInner) {
                 // Correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real corr = simmConfiguration_->correlation(RiskType::InflationVol, qualifier, itOuter->getLabel1(), "",
-                                                            RiskType::InflationVol, qualifier, itInner->getLabel1(), "");
+                QuantLib::Real corr =
+                    simmConfiguration_->correlation(RiskType::InflationVol, qualifier, itOuter->getLabel1(), "",
+                                                    RiskType::InflationVol, qualifier, itInner->getLabel1(), "");
                 // Add cross element to vega margin
-                Real rwInner = simmConfiguration_->weight(RiskType::InflationVol, qualifier, itInner->getLabel1());
-                Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
+                QuantLib::Real rwInner =
+                    simmConfiguration_->weight(RiskType::InflationVol, qualifier, itInner->getLabel1());
+                QuantLib::Real wsInner = rwInner * itInner->amountResultCurrency() * concentrationRisk[qualifier];
                 vegaMargin[qualifier] += 2 * corr * wsOuter * wsInner;
             }
         }
@@ -723,20 +737,20 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
     }
 
     // Now calculate final vega margin by aggregating across currencies
-    Real margin = 0.0;
+    QuantLib::Real margin = 0.0;
     for (auto itOuter = qualifiers.begin(); itOuter != qualifiers.end(); ++itOuter) {
         // Diagonal term
         margin += vegaMargin.at(*itOuter) * vegaMargin.at(*itOuter);
         // Cross terms
-        Real sOuter =
+        QuantLib::Real sOuter =
             std::max(std::min(sumWeightedSensis.at(*itOuter), vegaMargin.at(*itOuter)), -vegaMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner =
+            QuantLib::Real sInner =
                 std::max(std::min(sumWeightedSensis.at(*itInner), vegaMargin.at(*itInner)), -vegaMargin.at(*itInner));
-            Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
-                     std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
-            Real corr = simmConfiguration_->correlation(RiskType::IRVol, *itOuter, "", "", RiskType::IRVol, *itInner,
-                                                        "", "", calcCcy);
+            QuantLib::Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
+                               std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
+            QuantLib::Real corr = simmConfiguration_->correlation(RiskType::IRVol, *itOuter, "", "", RiskType::IRVol,
+                                                                  *itInner, "", "", calcCcy);
             margin += 2.0 * sOuter * sInner * corr * g;
         }
     }
@@ -751,16 +765,16 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
     return make_pair(bucketMargins, true);
 }
 
-pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSetDetails& nettingSetDetails,
-                                                                const ProductClass& pc,
-                                                                const SimmSide& side, const Crif& crif) const {
+pair<map<string, QuantLib::Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSetDetails& nettingSetDetails,
+                                                                          const ProductClass& pc, const SimmSide& side,
+                                                                          const Crif& crif) const {
     timer_.start("irCurvatureMargin()");
 
     // "Bucket" here refers to exposures under the CRIF qualifiers
-    map<string, Real> bucketMargins;
+    map<string, QuantLib::Real> bucketMargins;
 
     // Multiplier for sensitivities, -1 if SIMM side is Post
-    Real multiplier = side == SimmSide::Call ? 1.0 : -1.0;
+    QuantLib::Real multiplier = side == SimmSide::Call ? 1.0 : -1.0;
 
     // Find the set of qualifiers, i.e. currencies, in the Simm sensitivities
     set<string> qualifiers = getQualifiers(crif, nettingSetDetails, pc, {RiskType::IRVol, RiskType::InflationVol});
@@ -773,13 +787,13 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
     }
 
     // The curvature margin for each currency i.e. $K_b$ from SIMM docs
-    map<string, Real> curvatureMargin;
+    map<string, QuantLib::Real> curvatureMargin;
     // The sum of the weighted sensitivities for each currency i.e. $\sum_{k}^K CVR_{b,k}$ from SIMM docs
-    map<string, Real> sumWeightedSensis;
+    map<string, QuantLib::Real> sumWeightedSensis;
     // The sum of all weighted sensitivities across currencies and risk factors
-    Real sumWs = 0.0;
+    QuantLib::Real sumWs = 0.0;
     // The sum of the absolute value of weighted sensitivities across currencies and risk factors
-    Real sumAbsWs = 0.0;
+    QuantLib::Real sumAbsWs = 0.0;
 
     // Loop over the qualifiers i.e. currencies
     for (const auto& qualifier : qualifiers) {
@@ -787,16 +801,15 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
         auto pIrQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRVol, qualifier);
 
         // Pair of iterators to start and end of InflationVol sensitivities with current qualifier
-        auto pInfQualifier =
-            crif.filterByQualifier(nettingSetDetails, pc, RiskType::InflationVol, qualifier);
+        auto pInfQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::InflationVol, qualifier);
 
         // Calculate the margin piece for this qualifier i.e. $K_b$ from SIMM docs
         // Start with IRVol vs. IRVol components
         for (auto itOuter = pIrQualifier.first; itOuter != pIrQualifier.second; ++itOuter) {
             // Curvature weight i.e. $SF(t_{kj})$ from SIMM docs
-            Real sfOuter = simmConfiguration_->curvatureWeight(RiskType::IRVol, itOuter->getLabel1());
+            QuantLib::Real sfOuter = simmConfiguration_->curvatureWeight(RiskType::IRVol, itOuter->getLabel1());
             // Curvature sensitivity i.e. $CVR_{ik}$ from SIMM docs
-            Real wsOuter = sfOuter * (itOuter->amountResultCurrency() * multiplier);
+            QuantLib::Real wsOuter = sfOuter * (itOuter->amountResultCurrency() * multiplier);
             // Update weighted sensitivity sums
             sumWeightedSensis[qualifier] += wsOuter;
             sumWs += wsOuter;
@@ -806,11 +819,12 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
             // Add the cross elements to the curvature margin
             for (auto itInner = pIrQualifier.first; itInner != itOuter; ++itInner) {
                 // Label1 level correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real corr = simmConfiguration_->correlation(RiskType::IRVol, qualifier, itOuter->getLabel1(), "",
-                                                            RiskType::IRVol, qualifier, itInner->getLabel1(), "");
+                QuantLib::Real corr =
+                    simmConfiguration_->correlation(RiskType::IRVol, qualifier, itOuter->getLabel1(), "",
+                                                    RiskType::IRVol, qualifier, itInner->getLabel1(), "");
                 // Add cross element to curvature margin
-                Real sfInner = simmConfiguration_->curvatureWeight(RiskType::IRVol, itInner->getLabel1());
-                Real wsInner = sfInner * (itInner->amountResultCurrency() * multiplier);
+                QuantLib::Real sfInner = simmConfiguration_->curvatureWeight(RiskType::IRVol, itInner->getLabel1());
+                QuantLib::Real wsInner = sfInner * (itInner->amountResultCurrency() * multiplier);
                 curvatureMargin[qualifier] += 2 * corr * corr * wsOuter * wsInner;
             }
         }
@@ -820,10 +834,10 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
         SimmVersion thresholdVersion = SimmVersion::V1_0;
         if (simmConfiguration_->isSimmConfigCalibration() || parseSimmVersion(simmVersion) > thresholdVersion) {
             // Weighted sensitivity i.e. $WS_{k,i}$ from SIMM docs
-            Real infWs = 0.0;
+            QuantLib::Real infWs = 0.0;
             for (auto infIt = pInfQualifier.first; infIt != pInfQualifier.second; ++infIt) {
                 // Curvature weight i.e. $SF(t_{kj})$ from SIMM docs
-                Real infSf = simmConfiguration_->curvatureWeight(RiskType::InflationVol, infIt->getLabel1());
+                QuantLib::Real infSf = simmConfiguration_->curvatureWeight(RiskType::InflationVol, infIt->getLabel1());
                 infWs += infSf * (infIt->amountResultCurrency() * multiplier);
             }
             // Update weighted sensitivity sums
@@ -838,11 +852,11 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
             // There are no cross elements against InflationVol since we only have one element.
             for (auto irIt = pIrQualifier.first; irIt != pIrQualifier.second; ++irIt) {
                 // Correlation i.e. $\rho_{k,l}$ from SIMM docs
-                Real corr = simmConfiguration_->correlation(RiskType::InflationVol, qualifier, "", "", RiskType::IRVol,
-                                                            qualifier, irIt->getLabel1(), "");
+                QuantLib::Real corr = simmConfiguration_->correlation(
+                    RiskType::InflationVol, qualifier, "", "", RiskType::IRVol, qualifier, irIt->getLabel1(), "");
                 // Add cross element to curvature margin
-                Real irSf = simmConfiguration_->curvatureWeight(RiskType::IRVol, irIt->getLabel1());
-                Real irWs = irSf * (irIt->amountResultCurrency() * multiplier);
+                QuantLib::Real irSf = simmConfiguration_->curvatureWeight(RiskType::IRVol, irIt->getLabel1());
+                QuantLib::Real irWs = irSf * (irIt->amountResultCurrency() * multiplier);
                 curvatureMargin[qualifier] += 2 * corr * corr * infWs * irWs;
             }
         }
@@ -859,19 +873,19 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
     }
 
     // Now calculate final curvature margin by aggregating across currencies
-    Real theta = std::min(sumWs / sumAbsWs, 0.0);
+    QuantLib::Real theta = std::min(sumWs / sumAbsWs, 0.0);
 
-    Real margin = 0.0;
+    QuantLib::Real margin = 0.0;
     for (auto itOuter = qualifiers.begin(); itOuter != qualifiers.end(); ++itOuter) {
         // Diagonal term
         margin += curvatureMargin.at(*itOuter) * curvatureMargin.at(*itOuter);
         // Cross terms
-        Real sOuter = std::max(std::min(sumWeightedSensis.at(*itOuter), curvatureMargin.at(*itOuter)),
-                               -curvatureMargin.at(*itOuter));
+        QuantLib::Real sOuter = std::max(std::min(sumWeightedSensis.at(*itOuter), curvatureMargin.at(*itOuter)),
+                                         -curvatureMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner = std::max(std::min(sumWeightedSensis.at(*itInner), curvatureMargin.at(*itInner)),
-                                   -curvatureMargin.at(*itInner));
-            Real corr =
+            QuantLib::Real sInner = std::max(std::min(sumWeightedSensis.at(*itInner), curvatureMargin.at(*itInner)),
+                                             -curvatureMargin.at(*itInner));
+            QuantLib::Real corr =
                 simmConfiguration_->correlation(RiskType::IRVol, *itOuter, "", "", RiskType::IRVol, *itInner, "", "");
             margin += 2.0 * sOuter * sInner * corr * corr;
         }
@@ -881,8 +895,8 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
     for (const auto& m : curvatureMargin)
         bucketMargins[m.first] = m.second;
 
-    Real scaling = simmConfiguration_->curvatureMarginScaling();
-    Real totalCurvatureMargin = scaling * std::max(margin, 0.0);
+    QuantLib::Real scaling = simmConfiguration_->curvatureMarginScaling();
+    QuantLib::Real totalCurvatureMargin = scaling * std::max(margin, 0.0);
     // TODO: Review, should we return the pre-scaled value instead?
     bucketMargins["All"] = totalCurvatureMargin;
 
@@ -891,23 +905,24 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
     return make_pair(bucketMargins, true);
 }
 
-pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& nettingSetDetails, const ProductClass& pc,
-                                                     const RiskType& rt, const Crif& crif, const SimmSide& side) const {
+pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetDetails& nettingSetDetails,
+                                                               const ProductClass& pc, const RiskType& rt,
+                                                               const Crif& crif, const SimmSide& side) const {
     timer_.start("margin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
-    
+
     // "Bucket" here refers to exposures under the CRIF qualifiers for FX (and IR) risk class, and CRIF buckets for
     // every other risk class.
     // For FX Delta margin, this refers to WS_k in Section B. "Structure of the methodology", 8.(b).
     // For FX Vega margin, this refers to VR_k in Section B., 10.(d).
     // For other risk type, the bucket margin is K_b in the corresponding subsections.
-    map<string, Real> bucketMargins;
+    map<string, QuantLib::Real> bucketMargins;
 
     bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
 
     // precomputed
-    map<std::pair<std::string,std::string>, vector<CrifRecord>> crifByQualifierAndBucket;
+    map<std::pair<std::string, std::string>, vector<CrifRecord>> crifByQualifierAndBucket;
     map<std::string, vector<CrifRecord>> crifByBucket;
 
     // Find the set of buckets and associated qualifiers for the netting set details, product class and risk type
@@ -916,7 +931,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
     for (auto sit = pIt.first; sit != pIt.second; sit++) {
         CrifRecord it = sit->toCrifRecord();
         buckets[it.bucket].insert(it.qualifier);
-        crifByQualifierAndBucket[std::make_pair(it.qualifier,it.bucket)].push_back(it);
+        crifByQualifierAndBucket[std::make_pair(it.qualifier, it.bucket)].push_back(it);
         crifByBucket[it.bucket].push_back(it);
     }
 
@@ -928,11 +943,11 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
     }
 
     // The margin for each bucket i.e. $K_b$ from SIMM docs
-    map<string, Real> bucketMargin;
+    map<string, QuantLib::Real> bucketMargin;
     // The sum of the weighted sensitivities for each bucket i.e. $\sum_{k=1}^{K} WS_{k}$ from SIMM docs
-    map<string, Real> sumWeightedSensis;
+    map<string, QuantLib::Real> sumWeightedSensis;
     // The historical volatility ratio for the risk type - will be 1.0 if not applicable
-    Real hvr = simmConfiguration_->historicalVolatilityRatio(rt);
+    QuantLib::Real hvr = simmConfiguration_->historicalVolatilityRatio(rt);
 
     // Loop over the buckets
     for (const auto& kv : buckets) {
@@ -942,7 +957,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
         sumWeightedSensis[bucket] = 0.0;
 
         // Get the concentration risk for each qualifier in current bucket i.e. $CR_k$ from SIMM docs
-        map<string, Real> concentrationRisk;
+        map<string, QuantLib::Real> concentrationRisk;
 
         for (const auto& qualifier : kv.second) {
 
@@ -957,23 +972,22 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             }
 
             // Pair of iterators to start and end of sensitivities with current qualifier
-            auto pQualifier = crifByQualifierAndBucket[std::make_pair(qualifier,bucket)];
+            auto pQualifier = crifByQualifierAndBucket[std::make_pair(qualifier, bucket)];
 
             // One pass to get the concentration risk for this qualifier
             for (auto it = pQualifier.begin(); it != pQualifier.end(); ++it) {
                 // Get the sigma value if applicable - returns 1.0 if not applicable
-                Real sigma = simmConfiguration_->sigma(rt, it->qualifier, it->label1, calcCcy);
+                QuantLib::Real sigma = simmConfiguration_->sigma(rt, it->qualifier, it->label1, calcCcy);
                 concentrationRisk[qualifier] += it->amountResultCcy * sigma * hvr;
             }
             // Divide by the concentration risk threshold
-            Real concThreshold = simmConfiguration_->concentrationThreshold(rt, qualifier);
+            QuantLib::Real concThreshold = simmConfiguration_->concentrationThreshold(rt, qualifier);
             if (resultCcy_ != "USD")
                 concThreshold *= fxRate("USD" + resultCcy_);
             concentrationRisk[qualifier] /= concThreshold;
             // Final concentration risk amount
             concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
         }
-
 
         // Calculate the margin component for the current bucket
         // Pair of iterators to start and end of sensitivities within current bucket
@@ -989,14 +1003,14 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
                 continue;
             }
             // Risk weight i.e. $RW_k$ from SIMM docs
-            Real rwOuter = simmConfiguration_->weight(rt, itOuter->qualifier, itOuter->label1, calcCcy);
+            QuantLib::Real rwOuter = simmConfiguration_->weight(rt, itOuter->qualifier, itOuter->label1, calcCcy);
             // Get the sigma value if applicable - returns 1.0 if not applicable
-            Real sigmaOuter = simmConfiguration_->sigma(rt, itOuter->qualifier, itOuter->label1, calcCcy);
+            QuantLib::Real sigmaOuter = simmConfiguration_->sigma(rt, itOuter->qualifier, itOuter->label1, calcCcy);
             // Weighted sensitivity i.e. $WS_{k}$ from SIMM docs
-            Real wsOuter =
+            QuantLib::Real wsOuter =
                 rwOuter * (itOuter->amountResultCcy * sigmaOuter * hvr) * concentrationRisk[itOuter->qualifier];
             // Get concentration risk for outer qualifier
-            Real outerConcentrationRisk = concentrationRisk.at(itOuter->qualifier);
+            QuantLib::Real outerConcentrationRisk = concentrationRisk.at(itOuter->qualifier);
             // Update weighted sensitivity sum
             sumWeightedSensis[bucket] += wsOuter;
             // Add diagonal element to bucket margin
@@ -1013,20 +1027,21 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
                     continue;
                 }
                 // Correlation, $\rho_{k,l}$ in the SIMM docs
-                Real corr =
+                QuantLib::Real corr =
                     simmConfiguration_->correlation(rt, itOuter->qualifier, itOuter->label1, itOuter->label2, rt,
                                                     itInner->qualifier, itInner->label1, itInner->label2, calcCcy);
                 // $f_{k,l}$ from the SIMM docs
-                Real f = std::min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
-                         std::max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
+                QuantLib::Real f = std::min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
+                                   std::max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
                 // Add cross element to delta margin
-                Real sigmaInner = simmConfiguration_->sigma(rt, itInner->qualifier, itInner->label1, calcCcy);
-                Real rwInner = simmConfiguration_->weight(rt, itInner->qualifier, itInner->label1, calcCcy);
-                Real wsInner =
+                QuantLib::Real sigmaInner = simmConfiguration_->sigma(rt, itInner->qualifier, itInner->label1, calcCcy);
+                QuantLib::Real rwInner = simmConfiguration_->weight(rt, itInner->qualifier, itInner->label1, calcCcy);
+                QuantLib::Real wsInner =
                     rwInner * (itInner->amountResultCcy * sigmaInner * hvr) * concentrationRisk[itInner->qualifier];
                 bucketMargin[bucket] += 2 * corr * f * wsOuter * wsInner;
             }
-            // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not used for Risk_FX
+            // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not
+            // used for Risk_FX
             if (riskClassIsFX)
                 bucketMargins[itOuter->qualifier] += wsOuter;
         }
@@ -1037,31 +1052,34 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
 
     // If there is a "Residual" bucket entry store it separately
     // This is $K_{residual}$ from SIMM docs
-    Real residualMargin = 0.0;
+    QuantLib::Real residualMargin = 0.0;
     if (bucketMargin.count("Residual") > 0) {
         residualMargin = bucketMargin.at("Residual");
         bucketMargin.erase("Residual");
     }
 
     // Now calculate final margin by aggregating across non-residual buckets
-    Real margin = 0.0;
+    QuantLib::Real margin = 0.0;
     for (auto itOuter = bucketMargin.begin(); itOuter != bucketMargin.end(); ++itOuter) {
         string outerBucket = itOuter->first;
         // Diagonal term, $K_b^2$ from SIMM docs
         margin += itOuter->second * itOuter->second;
         // Cross terms
         // $S_b$ from SIMM docs
-        Real sOuter = std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
+        QuantLib::Real sOuter =
+            std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
         for (auto itInner = bucketMargin.begin(); itInner != itOuter; ++itInner) {
             string innerBucket = itInner->first;
             // $S_c$ from SIMM docs
-            Real sInner = std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
+            QuantLib::Real sInner =
+                std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
             // $\gamma_{b,c}$ from SIMM docs
             // Interface to SimmConfiguration is on qualifiers => take any qualifier from each
             // of the respective (different) buckets to get the inter-bucket correlation
             string innerQualifier = *buckets.at(innerBucket).begin();
             string outerQualifier = *buckets.at(outerBucket).begin();
-            Real corr = simmConfiguration_->correlation(rt, outerQualifier, "", "", rt, innerQualifier, "", "", calcCcy);
+            QuantLib::Real corr =
+                simmConfiguration_->correlation(rt, outerQualifier, "", "", rt, innerQualifier, "", "", calcCcy);
             margin += 2.0 * sOuter * sInner * corr;
         }
     }
@@ -1085,10 +1103,10 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
     return make_pair(bucketMargins, true);
 }
 
-pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails,
-                                                              const ProductClass& pc, const RiskType& rt,
-                                                              const SimmSide& side, const Crif& crif,
-                                                              bool rfLabels) const {
+pair<map<string, QuantLib::Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails,
+                                                                        const ProductClass& pc, const RiskType& rt,
+                                                                        const SimmSide& side, const Crif& crif,
+                                                                        bool rfLabels) const {
 
     timer_.start("curvatureMargin()");
 
@@ -1098,12 +1116,12 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
     // every other risk class
     // For FX Curvature marrgin, this refers to CVR_{b,k} in Section B. "Structure of the methodology", 11.(c).
     // For other risk types, the bucket margin is K_b in the corresponding subsection.
-    map<string, Real> bucketMargins;
+    map<string, QuantLib::Real> bucketMargins;
 
     bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
 
     // Multiplier for sensitivities, -1 if SIMM side is Post
-    Real multiplier = side == SimmSide::Call ? 1.0 : -1.0;
+    QuantLib::Real multiplier = side == SimmSide::Call ? 1.0 : -1.0;
 
     // Find the set of buckets and associated qualifiers for the netting set details, product class and risk type
     map<string, set<string>> buckets;
@@ -1121,12 +1139,12 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
     }
 
     // The curvature margin for each bucket i.e. $K_b$ from SIMM docs
-    map<string, Real> curvatureMargin;
+    map<string, QuantLib::Real> curvatureMargin;
     // The sum of the weighted (and absolute weighted) sensitivities for each bucket
     // i.e. $\sum_{k}^K CVR_{b,k}$ from SIMM docs
-    map<string, Real> sumWeightedSensis;
-    map<string, map<string, Real>> sumAbsTemp;
-    map<string, Real> sumAbsWeightedSensis;
+    map<string, QuantLib::Real> sumWeightedSensis;
+    map<string, map<string, QuantLib::Real>> sumAbsTemp;
+    map<string, QuantLib::Real> sumAbsWeightedSensis;
 
     // Loop over the buckets
     for (const auto& kv : buckets) {
@@ -1138,13 +1156,14 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
         auto pBucket = crif.filterByBucket(nettingSetDetails, pc, rt, bucket);
         for (auto itOuter = pBucket.first; itOuter != pBucket.second; ++itOuter) {
             // Curvature weight i.e. $SF(t_{kj})$ from SIMM docs
-            Real sfOuter = simmConfiguration_->curvatureWeight(rt, itOuter->getLabel1());
+            QuantLib::Real sfOuter = simmConfiguration_->curvatureWeight(rt, itOuter->getLabel1());
             // Get the sigma value if applicable - returns 1.0 if not applicable
-            Real sigmaOuter = simmConfiguration_->sigma(rt, itOuter->getQualifier(), itOuter->getLabel1(), calcCcy);
+            QuantLib::Real sigmaOuter =
+                simmConfiguration_->sigma(rt, itOuter->getQualifier(), itOuter->getLabel1(), calcCcy);
             // Weighted curvature i.e. $CVR_{ik}$ from SIMM docs
             // WARNING: The order of multiplication here is important because unit tests fail if for
             //          example you use sfOuter * (itOuter->amountResultCurrency() * multiplier) * sigmaOuter;
-            Real wsOuter = sfOuter * ((itOuter->amountResultCurrency() * multiplier) * sigmaOuter);
+            QuantLib::Real wsOuter = sfOuter * ((itOuter->amountResultCurrency() * multiplier) * sigmaOuter);
             // for ISDA SIMM 2.2 or higher, this $CVR_{ik}$ for EQ bucket 12 is zero
             const string simmVersion = simmConfiguration_->version();
             SimmVersion thresholdVersion = SimmVersion::V2_2;
@@ -1160,13 +1179,14 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
             // Add the cross elements to the curvature margin
             for (auto itInner = pBucket.first; itInner != itOuter; ++itInner) {
                 // Correlation, $\rho_{k,l}$ in the SIMM docs
-                Real corr =
-                    simmConfiguration_->correlation(rt, itOuter->getQualifier(), itOuter->getLabel1(), itOuter->getLabel2(), rt,
-                                                    itInner->getQualifier(), itInner->getLabel1(), itInner->getLabel2(), calcCcy);
+                QuantLib::Real corr = simmConfiguration_->correlation(
+                    rt, itOuter->getQualifier(), itOuter->getLabel1(), itOuter->getLabel2(), rt,
+                    itInner->getQualifier(), itInner->getLabel1(), itInner->getLabel2(), calcCcy);
                 // Add cross element to delta margin
-                Real sfInner = simmConfiguration_->curvatureWeight(rt, itInner->getLabel1());
-                Real sigmaInner = simmConfiguration_->sigma(rt, itInner->getQualifier(), itInner->getLabel1(), calcCcy);
-                Real wsInner = sfInner * ((itInner->amountResultCurrency() * multiplier) * sigmaInner);
+                QuantLib::Real sfInner = simmConfiguration_->curvatureWeight(rt, itInner->getLabel1());
+                QuantLib::Real sigmaInner =
+                    simmConfiguration_->sigma(rt, itInner->getQualifier(), itInner->getLabel1(), calcCcy);
+                QuantLib::Real wsInner = sfInner * ((itInner->amountResultCurrency() * multiplier) * sigmaInner);
                 curvatureMargin[bucket] += 2 * corr * corr * wsOuter * wsInner;
             }
             // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not
@@ -1176,7 +1196,7 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
         }
 
         // Finally have the value of $K_b$
-        Real bucketCurvatureMargin = std::sqrt(std::max(curvatureMargin[bucket], 0.0));
+        QuantLib::Real bucketCurvatureMargin = std::sqrt(std::max(curvatureMargin[bucket], 0.0));
         curvatureMargin[bucket] = bucketCurvatureMargin;
 
         // Bucket level absolute sensitivity
@@ -1187,9 +1207,9 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
 
     // If there is a "Residual" bucket entry store it separately
     // This is $K_{residual}$ from SIMM docs
-    Real residualMargin = 0.0;
-    Real residualSum = 0.0;
-    Real residualAbsSum = 0.0;
+    QuantLib::Real residualMargin = 0.0;
+    QuantLib::Real residualSum = 0.0;
+    QuantLib::Real residualAbsSum = 0.0;
     if (curvatureMargin.count("Residual") > 0) {
         residualMargin = curvatureMargin.at("Residual");
         residualSum = sumWeightedSensis.at("Residual");
@@ -1201,32 +1221,34 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
     }
 
     // Now calculate final margin
-    Real margin = 0.0;
+    QuantLib::Real margin = 0.0;
 
     // First, aggregating across non-residual buckets
-    auto acc = [](const Real p, const pair<const string, Real>& kv) { return p + kv.second; };
-    Real sumSensis = accumulate(sumWeightedSensis.begin(), sumWeightedSensis.end(), 0.0, acc);
-    Real sumAbsSensis = accumulate(sumAbsWeightedSensis.begin(), sumAbsWeightedSensis.end(), 0.0, acc);
+    auto acc = [](const QuantLib::Real p, const pair<const string, QuantLib::Real>& kv) { return p + kv.second; };
+    QuantLib::Real sumSensis = accumulate(sumWeightedSensis.begin(), sumWeightedSensis.end(), 0.0, acc);
+    QuantLib::Real sumAbsSensis = accumulate(sumAbsWeightedSensis.begin(), sumAbsWeightedSensis.end(), 0.0, acc);
 
     if (!close_enough(sumAbsSensis, 0.0)) {
-        Real theta = std::min(sumSensis / sumAbsSensis, 0.0);
+        QuantLib::Real theta = std::min(sumSensis / sumAbsSensis, 0.0);
         for (auto itOuter = curvatureMargin.begin(); itOuter != curvatureMargin.end(); ++itOuter) {
             string outerBucket = itOuter->first;
             // Diagonal term
             margin += itOuter->second * itOuter->second;
             // Cross terms
             // $S_b$ from SIMM docs
-            Real sOuter = std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
+            QuantLib::Real sOuter =
+                std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
             for (auto itInner = curvatureMargin.begin(); itInner != itOuter; ++itInner) {
                 string innerBucket = itInner->first;
                 // $S_c$ from SIMM docs
-                Real sInner = std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
+                QuantLib::Real sInner =
+                    std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
                 // $\gamma_{b,c}$ from SIMM docs
                 // Interface to SimmConfiguration is on qualifiers => take any qualifier from each
                 // of the respective (different) buckets to get the inter-bucket correlation
                 string innerQualifier = *buckets.at(innerBucket).begin();
                 string outerQualifier = *buckets.at(outerBucket).begin();
-                Real corr =
+                QuantLib::Real corr =
                     simmConfiguration_->correlation(rt, outerQualifier, "", "", rt, innerQualifier, "", "", calcCcy);
                 margin += 2.0 * sOuter * sInner * corr * corr;
             }
@@ -1236,7 +1258,7 @@ pair<map<string, Real>, bool> SimmCalculator::curvatureMargin(const NettingSetDe
 
     // Second, the residual bucket if necessary, and add "Residual" bucket back in to be added to the SIMM results
     if (!close_enough(residualAbsSum, 0.0)) {
-        Real theta = std::min(residualSum / residualAbsSum, 0.0);
+        QuantLib::Real theta = std::min(residualSum / residualAbsSum, 0.0);
         curvatureMargin["Residual"] = std::max(residualSum + lambda(theta) * residualMargin, 0.0);
         margin += curvatureMargin["Residual"];
     }
@@ -1273,27 +1295,28 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
     auto rt = RiskType::ProductClassMultiplier;
     auto pIt = simmParameters.filterBy(nettingSetDetails, pc, rt);
 
-    for(auto sit = pIt.first; sit != pIt.second; sit++) {
+    for (auto sit = pIt.first; sit != pIt.second; sit++) {
         CrifRecord it = sit->toCrifRecord();
         // Qualifier should be a product class string
         auto qpc = parseProductClass(it.qualifier);
         if (results.has(qpc, RiskClass::All, MarginType::All, "All")) {
-            Real im = results.get(qpc, RiskClass::All, MarginType::All, "All");
-            Real factor = it.amount;
+            QuantLib::Real im = results.get(qpc, RiskClass::All, MarginType::All, "All");
+            QuantLib::Real factor = it.amount;
             QL_REQUIRE(factor >= 0.0, "SIMM Calculator: Amount for risk type "
-                << rt << " must be greater than or equal to 0 but we got " << factor);
-            Real pcmMargin = (factor - 1.0) * im;
+                                          << rt << " must be greater than or equal to 0 but we got " << factor);
+            QuantLib::Real pcmMargin = (factor - 1.0) * im;
             add(nettingSetDetails, regulations, qpc, RiskClass::All, MarginType::AdditionalIM, "All", pcmMargin, side,
                 overwrite);
 
             // Add to aggregation at margin type level
-            add(nettingSetDetails, regulations, qpc, RiskClass::All, MarginType::All, "All", pcmMargin, side, overwrite);
-            // Add to aggregation at product class level
-            add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::AdditionalIM, "All", pcmMargin,
-                side, overwrite);
-            // Add to aggregation at portfolio level
-            add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::All, "All", pcmMargin, side,
+            add(nettingSetDetails, regulations, qpc, RiskClass::All, MarginType::All, "All", pcmMargin, side,
                 overwrite);
+            // Add to aggregation at product class level
+            add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::AdditionalIM, "All",
+                pcmMargin, side, overwrite);
+            // Add to aggregation at portfolio level
+            add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::All, "All", pcmMargin,
+                side, overwrite);
             CrifRecord spRecord = it;
             if (side == SimmSide::Call)
                 spRecord.collectRegulations = regulations;
@@ -1309,20 +1332,19 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
     pIt = simmParameters.filterBy(nettingSetDetails, pc, RiskType::AddOnFixedAmount);
     for (auto sit = pIt.first; sit != pIt.second; sit++) {
         CrifRecord it = sit->toCrifRecord();
-        Real fixedMargin = it.amountResultCcy;
+        QuantLib::Real fixedMargin = it.amountResultCcy;
         add(nettingSetDetails, regulations, ProductClass::AddOnFixedAmount, RiskClass::All, MarginType::AdditionalIM,
             "All", fixedMargin, side, overwrite);
 
         // Add to aggregation at margin type level
         add(nettingSetDetails, regulations, ProductClass::AddOnFixedAmount, RiskClass::All, MarginType::All, "All",
-            fixedMargin,
-            side, overwrite);
+            fixedMargin, side, overwrite);
         // Add to aggregation at product class level
         add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::AdditionalIM, "All",
             fixedMargin, side, overwrite);
         // Add to aggregation at portfolio level
-        add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::All, "All", fixedMargin, side,
-            overwrite);
+        add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::All, "All", fixedMargin,
+            side, overwrite);
         CrifRecord spRecord = it;
         if (side == SimmSide::Call)
             spRecord.collectRegulations = regulations;
@@ -1344,29 +1366,26 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         auto pQualifierIt = simmParameters.filterByQualifier(nettingSetDetails, pc, RiskType::Notional, it.qualifier);
         const auto count = std::distance(pQualifierIt.first, pQualifierIt.second);
         QL_REQUIRE(count < 2, "Expected either 0 or 1 elements for risk type "
-                                                << RiskType::Notional << " and qualifier " << it.qualifier
-                                                << " but got " << count);
+                                  << RiskType::Notional << " and qualifier " << it.qualifier << " but got " << count);
 
         // If we have found a corresponding notional, update the additional margin
         if (count == 1) {
-            Real notional = pQualifierIt.first->amountResultCurrency();
-            Real factor = it.amount;
-            Real notionalFactorMargin = notional * factor / 100.0;
+            QuantLib::Real notional = pQualifierIt.first->amountResultCurrency();
+            QuantLib::Real factor = it.amount;
+            QuantLib::Real notionalFactorMargin = notional * factor / 100.0;
 
             add(nettingSetDetails, regulations, ProductClass::AddOnNotionalFactor, RiskClass::All,
                 MarginType::AdditionalIM, "All", notionalFactorMargin, side, overwrite);
 
             // Add to aggregation at margin type level
             add(nettingSetDetails, regulations, ProductClass::AddOnNotionalFactor, RiskClass::All, MarginType::All,
-                "All",
-                notionalFactorMargin, side, overwrite);
+                "All", notionalFactorMargin, side, overwrite);
             // Add to aggregation at product class level
             add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::AdditionalIM, "All",
                 notionalFactorMargin, side, overwrite);
             // Add to aggregation at portfolio level
             add(nettingSetDetails, regulations, ProductClass::All, RiskClass::All, MarginType::All, "All",
-                notionalFactorMargin,
-                side, overwrite);
+                notionalFactorMargin, side, overwrite);
             CrifRecord spRecord = it;
             if (side == SimmSide::Call)
                 spRecord.collectRegulations = regulations;
@@ -1402,7 +1421,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
         for (const auto& rc : rcs) {
             // Margin for a risk class is just sum over margin for each margin type
             // within that risk class
-            Real riskClassMargin = 0.0;
+            QuantLib::Real riskClassMargin = 0.0;
             bool hasRiskClass = false;
             for (const auto& mt : mts) {
                 if (results.has(pc, rc, mt, "All")) {
@@ -1421,7 +1440,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
 
     // Fill in the margin within each product class by aggregating across risk classes
     for (const auto& pc : pcs) {
-        Real productClassMargin = 0.0;
+        QuantLib::Real productClassMargin = 0.0;
         bool hasProductClass = false;
 
         // IM within product class across risk classes requires correlation
@@ -1434,7 +1453,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
             if (!hasProductClass)
                 hasProductClass = true;
 
-            Real imo = results.get(pc, *ito, MarginType::All, "All");
+            QuantLib::Real imo = results.get(pc, *ito, MarginType::All, "All");
             // Diagonal term
             productClassMargin += imo * imo;
 
@@ -1442,9 +1461,9 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
             for (auto iti = rcs.begin(); iti != ito; ++iti) {
                 if (!results.has(pc, *iti, MarginType::All, "All"))
                     continue;
-                Real imi = results.get(pc, *iti, MarginType::All, "All");
+                QuantLib::Real imi = results.get(pc, *iti, MarginType::All, "All");
                 // Get the correlation between risk classes
-                Real corr = simmConfiguration_->correlationRiskClasses(*ito, *iti);
+                QuantLib::Real corr = simmConfiguration_->correlationRiskClasses(*ito, *iti);
                 productClassMargin += 2.0 * corr * imo * imi;
             }
         }
@@ -1458,7 +1477,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
 
     // Overall initial margin for the portfolio is the sum of the initial margin in
     // each of the product classes. Could have done it in the last loop but cleaner here.
-    Real im = 0.0;
+    QuantLib::Real im = 0.0;
     for (const auto& pc : pcs) {
         if (results.has(pc, RiskClass::All, MarginType::All, "All")) {
             im += results.get(pc, RiskClass::All, MarginType::All, "All");
@@ -1471,7 +1490,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
     // Across risk class, for each product class and margin type
     for (const auto& pc : pcs) {
         for (const auto& mt : mts) {
-            Real margin = 0.0;
+            QuantLib::Real margin = 0.0;
             bool hasPcMt = false;
 
             // IM within product class and margin type across risk classes
@@ -1484,7 +1503,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
                 if (!hasPcMt)
                     hasPcMt = true;
 
-                Real imo = results.get(pc, *ito, mt, "All");
+                QuantLib::Real imo = results.get(pc, *ito, mt, "All");
                 // Diagonal term
                 margin += imo * imo;
 
@@ -1492,9 +1511,9 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
                 for (auto iti = rcs.begin(); iti != ito; ++iti) {
                     if (!results.has(pc, *iti, mt, "All"))
                         continue;
-                    Real imi = results.get(pc, *iti, mt, "All");
+                    QuantLib::Real imi = results.get(pc, *iti, mt, "All");
                     // Get the correlation between risk classes
-                    Real corr = simmConfiguration_->correlationRiskClasses(*ito, *iti);
+                    QuantLib::Real corr = simmConfiguration_->correlationRiskClasses(*ito, *iti);
                     margin += 2.0 * corr * imo * imi;
                 }
             }
@@ -1510,7 +1529,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
     // Across product class, for each risk class and margin type
     for (const auto& rc : rcs) {
         for (const auto& mt : mts) {
-            Real margin = 0.0;
+            QuantLib::Real margin = 0.0;
             bool hasRcMt = false;
 
             // Can just sum across product class
@@ -1536,7 +1555,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
     // Have already computed MarginType::All results above so just need
     // to sum over product class for each risk class here
     for (const auto& rc : rcs) {
-        Real margin = 0.0;
+        QuantLib::Real margin = 0.0;
         bool hasRc = false;
 
         for (const auto& pc : pcs) {
@@ -1560,7 +1579,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
     // Have already computed RiskClass::All results above so just need
     // to sum over product class for each margin type here
     for (const auto& mt : mts) {
-        Real margin = 0.0;
+        QuantLib::Real margin = 0.0;
         bool hasMt = false;
 
         for (const auto& pc : pcs) {
@@ -1596,7 +1615,7 @@ void SimmCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDeta
     for (const auto& sv : winningRegs) {
         const SimmSide& side = sv.first;
         finalTradeIds_.insert(std::make_pair(side, std::set<string>()));
-        
+
         for (const auto& nv : sv.second) {
             const NettingSetDetails& nsd = nv.first;
             const Regulation& winningReg = nv.second;
@@ -1632,13 +1651,11 @@ void SimmCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDeta
     timer_.stop("populateFinalResults()");
 }
 
-void SimmCalculator::populateFinalResults() {
-    populateFinalResults(winningRegulations_);
-}
+void SimmCalculator::populateFinalResults() { populateFinalResults(winningRegulations_); }
 
-void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const set<Regulation>& regulations, const ProductClass& pc,
-                         const RiskClass& rc, const MarginType& mt, const string& b, Real margin, SimmSide side,
-                         const bool overwrite) {
+void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const set<Regulation>& regulations,
+                         const ProductClass& pc, const RiskClass& rc, const MarginType& mt, const string& b,
+                         QuantLib::Real margin, SimmSide side, const bool overwrite) {
     if (!quiet_) {
         DLOG("Calculated " << side << " margin for [netting set details, product class, risk class, margin type] = ["
                            << "[" << NettingSetDetails(nettingSetDetails) << "]"
@@ -1646,18 +1663,20 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const set<R
     }
 
     const string& calculationCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
-    simmResults_[side][nettingSetDetails][regulations].add(pc, rc, mt, b, margin, resultCcy_, calculationCcy, overwrite);
+    simmResults_[side][nettingSetDetails][regulations].add(pc, rc, mt, b, margin, resultCcy_, calculationCcy,
+                                                           overwrite);
 }
 
-void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const set<Regulation>& regulations, const ProductClass& pc,
-                         const RiskClass& rc, const MarginType& mt, const map<string, Real>& margins, SimmSide side,
-                         const bool overwrite) {
+void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const set<Regulation>& regulations,
+                         const ProductClass& pc, const RiskClass& rc, const MarginType& mt,
+                         const map<string, QuantLib::Real>& margins, SimmSide side, const bool overwrite) {
 
     for (const auto& kv : margins)
         add(nettingSetDetails, regulations, pc, rc, mt, kv.first, kv.second, side, overwrite);
 }
 
-void SimmCalculator::splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations, const QuantLib::ext::shared_ptr<Crif>& crif) {
+void SimmCalculator::splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations,
+                                                         const QuantLib::ext::shared_ptr<Crif>& crif) {
 
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Before splitting CRIF records in SIMM calculator");
     timer_.start("Splitting CRIF by regs");
@@ -1752,10 +1771,9 @@ void SimmCalculator::splitCrifByRegulationsAndPortfolios(const bool enforceIMReg
                     "Mismatch in internal records for SEC. There should be no SEC CRIF records, but one was found.");
 
             /* hasSecGlobal hasCftc  hasSec hasSecCftc  Logic
-                    Y          Y       Y        Y       Move {CFTC} to {SEC} -> Move {CFTC,SEC} into {CFTC} and {SEC}, delete {CFTC,SEC}
-                    Y          Y       Y        N       Move {CFTC} to {SEC}
-                    Y          Y       N        Y       Move {CFTC} to {CFTC,SEC}, delete {CFTC}
-                    Y          Y       N        N       Relabel {CFTC} to {CFTC,SEC}
+                    Y          Y       Y        Y       Move {CFTC} to {SEC} -> Move {CFTC,SEC} into {CFTC} and {SEC},
+               delete {CFTC,SEC} Y          Y       Y        N       Move {CFTC} to {SEC} Y          Y       N        Y
+               Move {CFTC} to {CFTC,SEC}, delete {CFTC} Y          Y       N        N       Relabel {CFTC} to {CFTC,SEC}
                     Y          N       Y        Y       Move {CFTC,SEC} to {SEC}, relabel {CFTC,SEC} to {CFTC}
             */
 
@@ -1789,7 +1807,6 @@ void SimmCalculator::splitCrifByRegulationsAndPortfolios(const bool enforceIMReg
                         regulationsCrifMap.erase({Regulation::SEC, Regulation::CFTC});
                     }
                 }
-                
             }
         }
     }
@@ -1804,14 +1821,16 @@ void SimmCalculator::cleanDuplicateRegulations() {
     // Now we clear up duplicate instances of some regs,
     // Example: If we have {ESA,USPR} and {ESA}, then move {ESA,USPR} records to {ESA}, and relabel {ESA,USPR}->{USPR}.
     // 1. Count occurrences of each regulation
-    // 2. Iteratively split up the set with the highest number of (duplicate) regulations until there are no more duplicates
+    // 2. Iteratively split up the set with the highest number of (duplicate) regulations until there are no more
+    // duplicates
     timer_.start("Clean up duplicate regs");
 
-    std::function<vector<set<Regulation>>(const set<Regulation>&, Size)> generateCombinations =
-        [&](const set<Regulation>& regulations, Size combinationSize) {
-            std::function<void(const vector<Regulation>&, Size, Size, vector<Regulation>&, vector<set<Regulation>>&)>
-                generateCurrentCombination = [&](const vector<Regulation>& regulations, Size combinationSize,
-                                                 Size startIdx, vector<Regulation>& currentCombination,
+    std::function<vector<set<Regulation>>(const set<Regulation>&, QuantLib::Size)> generateCombinations =
+        [&](const set<Regulation>& regulations, QuantLib::Size combinationSize) {
+            std::function<void(const vector<Regulation>&, QuantLib::Size, QuantLib::Size, vector<Regulation>&,
+                               vector<set<Regulation>>&)>
+                generateCurrentCombination = [&](const vector<Regulation>& regulations, QuantLib::Size combinationSize,
+                                                 QuantLib::Size startIdx, vector<Regulation>& currentCombination,
                                                  vector<set<Regulation>>& regulationCombinations) {
                     if (currentCombination.size() == combinationSize) {
                         set<Regulation> currCombination(currentCombination.begin(), currentCombination.end());
@@ -1819,7 +1838,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                         return;
                     }
 
-                    for (Size i = startIdx; i < regulations.size(); i++) {
+                    for (QuantLib::Size i = startIdx; i < regulations.size(); i++) {
                         currentCombination.push_back(regulations[i]);
                         generateCurrentCombination(regulations, combinationSize, i + 1, currentCombination,
                                                    regulationCombinations);
@@ -1840,8 +1859,9 @@ void SimmCalculator::cleanDuplicateRegulations() {
         for (auto& regulationsCrifMap : nettingSetRegulationCrifMap) {
 
             auto createQueue = [&regulationsCrifMap]() {
-                map<Regulation, Size> regCounts;
-                std::priority_queue<pair<Size, set<Regulation>>, vector<pair<Size, set<Regulation>>>, RegulationCompare>
+                map<Regulation, QuantLib::Size> regCounts;
+                std::priority_queue<pair<QuantLib::Size, set<Regulation>>,
+                                    vector<pair<QuantLib::Size, set<Regulation>>>, RegulationCompare>
                     queue;
 
                 // Count occurrences of each value in all containers - we want only one for each, i.e. no duplicates
@@ -1856,8 +1876,8 @@ void SimmCalculator::cleanDuplicateRegulations() {
 
                 // For each set of regulations, count no. of duplicated regs, and order them based on that
                 for (const auto& [regs, crif] : regulationsCrifMap.second) {
-                    Size duplicateCount = std::count_if(regs.begin(), regs.end(),
-                                                        [&](const Regulation& reg) { return regCounts[reg] > 1; });
+                    QuantLib::Size duplicateCount = std::count_if(
+                        regs.begin(), regs.end(), [&](const Regulation& reg) { return regCounts[reg] > 1; });
                     if (duplicateCount > 0 && regs.size() > 1)
                         queue.push({duplicateCount, regs});
                 }
@@ -1865,7 +1885,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                 return queue;
             };
 
-            Size currIter = 0;
+            QuantLib::Size currIter = 0;
             auto queue = createQueue();
             while (!queue.empty()) {
                 // Limit to avoid infinite loop
@@ -1875,7 +1895,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                 const auto& [numDuplicates, regs] = queue.top();
 
                 // Look for largest set of duplicates already existing that we can move duplicates into
-                for (Size iterSize = numDuplicates; iterSize > 0; iterSize--) {
+                for (QuantLib::Size iterSize = numDuplicates; iterSize > 0; iterSize--) {
                     if (iterSize == regs.size())
                         continue;
 
@@ -1904,6 +1924,22 @@ void SimmCalculator::cleanDuplicateRegulations() {
                             regulationsCrifMap.second.erase(regs);
 
                             break;
+                        } else {
+                            if (currIter > 250) {
+                                duplicateFound = true;
+                                set<Regulation> newRegs;
+                                for (const auto& reg : regs) {
+                                    if (comb.find(reg) == comb.end())
+                                        newRegs.insert(reg);
+                                }
+                                if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
+                                    regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
+                                } else {
+                                    regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
+                                }
+                                regulationsCrifMap.second.erase(regs);
+                                break; 
+                            }                          
                         }
                     }
                     if (duplicateFound)
@@ -1918,18 +1954,17 @@ void SimmCalculator::cleanDuplicateRegulations() {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "After cleaning up duplicate regulations in SIMM calculator");
 }
 
-Real SimmCalculator::lambda(Real theta) const {
+QuantLib::Real SimmCalculator::lambda(QuantLib::Real theta) const {
     // Use boost inverse normal here as opposed to QL. Using QL inverse normal
     // will cause the ISDA SIMM unit tests to fail
-    static Real q = boost::math::quantile(boost::math::normal(), 0.995);
+    static QuantLib::Real q = boost::math::quantile(boost::math::normal(), 0.995);
 
     return (q * q - 1.0) * (1.0 + theta) - theta;
 }
 
 std::set<std::string> SimmCalculator::getQualifiers(const Crif& crif,
                                                     const ore::data::NettingSetDetails& nettingSetDetails,
-                                                    const ProductClass& pc,
-                                                    const vector<RiskType>& riskTypes) const {
+                                                    const ProductClass& pc, const vector<RiskType>& riskTypes) const {
     std::set<std::string> qualifiers;
     for (auto& rt : riskTypes) {
         auto qualis = crif.qualifiersBy(nettingSetDetails, pc, rt);
@@ -1938,7 +1973,7 @@ std::set<std::string> SimmCalculator::getQualifiers(const Crif& crif,
     return qualifiers;
 }
 
-Real SimmCalculator::fxRate(const string& ccyPair) const {
+QuantLib::Real SimmCalculator::fxRate(const string& ccyPair) const {
     QL_REQUIRE(market_, "SimmCalculator::fxRate(): Market is required but is null.");
     return market_->fxRate(ccyPair)->value();
 }

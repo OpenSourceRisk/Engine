@@ -174,38 +174,102 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         rebateType = Option::Call;
     }
 
+    // This is for when/if a PayoffCurrency is added to the instrument,
+    // which would require flipping the underlying currency pair
+    const bool flipResults = false;
+
+    // set pricing engines
+    QuantLib::ext::shared_ptr<EngineBuilder> builder;
+    QuantLib::ext::shared_ptr<EngineBuilder> digitalBuilder;
+    QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> fxOptBuilder;
+    QuantLib::Settlement::Type settlementType = parseSettlementType(option_.settlement());
     if (paymentDate > expiryDate) {
 
-        // Has the option been marked as exercised
-        const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
-        if (oed) {
-            QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
-                                                      << io::iso_date(oed->date())
-                                                      << ") should equal the option's expiry date ("
-                                                      << io::iso_date(expiryDate) << ").");
-            exercised = true;
-            exercisePrice = oed->price();
-        }
+        if (settlementType == Settlement::Cash) {
 
-        QuantLib::ext::shared_ptr<FxIndex> fxIndex;
-        if (option_.isAutomaticExercise()) {
-            QL_REQUIRE(!fxIndex_.empty(), "FX european barrier option trade with delay payment "
-                                              << id() << ": the FXIndex node needs to be populated.");
-            fxIndex = buildFxIndex(fxIndex_, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
-                                   engineFactory->configuration(MarketContext::pricing));
-            requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
-        }
+            // Has the option been marked as exercised
+            const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+            if (oed) {
+                QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
+                                                          << io::iso_date(oed->date())
+                                                          << ") should equal the option's expiry date ("
+                                                          << io::iso_date(expiryDate) << ").");
+                exercised = true;
+                exercisePrice = oed->price();
+            }
+            QuantLib::ext::shared_ptr<FxIndex> fxIndex;
+            if (option_.isAutomaticExercise()) {
+                QL_REQUIRE(!fxIndex_.empty(), "FX european barrier option trade with delay payment "
+                                                  << id() << ": the FXIndex node needs to be populated.");
+                fxIndex = buildFxIndex(fxIndex_, soldCcy.code(), boughtCcy.code(), engineFactory->market(),
+                                       engineFactory->configuration(MarketContext::pricing));
+                requiredFixings_.addFixingDate(expiryDate, fxIndex_, paymentDate);
+            }
 
-        vanillaK = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
-            type, strike, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
-        vanillaB = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
-            type, level, expiryDate, paymentDate, option_.isAutomaticExercise(), fxIndex, exercised, exercisePrice);
-        digital = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, level, fabs(level - strike), expiryDate,
-                                                                paymentDate, option_.isAutomaticExercise(), fxIndex,
-                                                                exercised, exercisePrice);
-        rebateInstrument = QuantLib::ext::make_shared<CashSettledEuropeanOption>(rebateType, level, rebate, expiryDate,
-                                                                paymentDate, option_.isAutomaticExercise(), fxIndex,
-                                                                exercised, exercisePrice);
+            vanillaK = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, strike, expiryDate, paymentDate,
+                                                                            option_.isAutomaticExercise(), fxIndex,
+                                                                            exercised, exercisePrice);
+            vanillaB = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, level, expiryDate, paymentDate, 
+                                                                            option_.isAutomaticExercise(), fxIndex, 
+                                                                            exercised, exercisePrice);
+
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
+            digital = QuantLib::ext::make_shared<VanillaForwardOption>(payoffDigital, exercise, paymentDate, paymentDate);
+            rebateInstrument =QuantLib::ext::make_shared<VanillaForwardOption>(rebatePayoff, exercise, paymentDate, paymentDate);
+
+            builder = engineFactory->builder("FxOptionEuropeanCS");
+            QL_REQUIRE(builder, "No builder found for FxOptionEuropeanCS");
+            fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
+            digitalBuilder = engineFactory->builder("FxOptionForward");
+            QL_REQUIRE(digitalBuilder, "No builder found for FxOptionForward");
+            auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(digitalBuilder);
+            vanillaK->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            vanillaB->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            setSensitivityTemplate(*fxOptBuilder);
+            addProductModelEngine(*fxOptBuilder);
+            digital->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            setSensitivityTemplate(*fxDigitalOptBuilder);
+            addProductModelEngine(*fxDigitalOptBuilder);
+            
+        } else {
+            // Payoff - European Option with strike K
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike));
+            // Payoff - European Option with strike B
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaB(new PlainVanillaPayoff(type, level));
+            // Payoff - Digital Option with barrier B payoff abs(B - K)
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
+
+            vanillaK = QuantLib::ext::make_shared<VanillaForwardOption>(payoffVanillaK, exercise, paymentDate, paymentDate);
+            vanillaB = QuantLib::ext::make_shared<VanillaForwardOption>(payoffVanillaB, exercise, paymentDate, paymentDate);
+            digital = QuantLib::ext::make_shared<VanillaForwardOption>(payoffDigital, exercise, paymentDate, paymentDate);
+            rebateInstrument = QuantLib::ext::make_shared<VanillaForwardOption>(rebatePayoff, exercise, paymentDate, paymentDate);
+
+            builder = engineFactory->builder("FxOptionForward");
+            QL_REQUIRE(builder, "No builder found for FxOptionForward");
+            fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+            digitalBuilder = engineFactory->builder("FxOptionForward");
+            QL_REQUIRE(digitalBuilder, "No builder found for FxOptionForward");
+            auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(digitalBuilder);
+            vanillaK->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            vanillaB->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            setSensitivityTemplate(*fxOptBuilder);
+            addProductModelEngine(*fxOptBuilder);
+            digital->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            setSensitivityTemplate(*fxDigitalOptBuilder);
+            addProductModelEngine(*fxDigitalOptBuilder);
+        }
     } else {
         // Payoff - European Option with strike K
         QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike));
@@ -219,63 +283,47 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         vanillaB = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaB, exercise);
         digital = QuantLib::ext::make_shared<VanillaOption>(payoffDigital, exercise);
         rebateInstrument = QuantLib::ext::make_shared<VanillaOption>(rebatePayoff, exercise);
-    }
-    
-    // This is for when/if a PayoffCurrency is added to the instrument,
-    // which would require flipping the underlying currency pair
-    const bool flipResults = false;
 
-    // set pricing engines
-    QuantLib::ext::shared_ptr<EngineBuilder> builder;
-    QuantLib::ext::shared_ptr<EngineBuilder> digitalBuilder;
-    QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> fxOptBuilder;
-
-    if (paymentDate > expiryDate) {
-        builder = engineFactory->builder("FxOptionEuropeanCS");
-        QL_REQUIRE(builder, "No builder found for FxOptionEuropeanCS");
-        fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanCSOptionEngineBuilder>(builder);
-
-        digitalBuilder = engineFactory->builder("FxDigitalOptionEuropeanCS");
-        QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOptionEuropeanCS");
-        auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxDigitalCSOptionEngineBuilder>(digitalBuilder);
-        digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
-        rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
-        setSensitivityTemplate(*fxDigitalOptBuilder);
-        addProductModelEngine(*fxDigitalOptBuilder);
-    } else {
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
         fxOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
-        
         digitalBuilder = engineFactory->builder("FxDigitalOption");
         QL_REQUIRE(digitalBuilder, "No builder found for FxDigitalOption");
         auto fxDigitalOptBuilder = QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(digitalBuilder);
+        vanillaK->setPricingEngine(fxOptBuilder->engine(
+            boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+        vanillaB->setPricingEngine(fxOptBuilder->engine(
+            boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+        setSensitivityTemplate(*fxOptBuilder);
+        addProductModelEngine(*fxOptBuilder);
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
         rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
         setSensitivityTemplate(*fxDigitalOptBuilder);
         addProductModelEngine(*fxDigitalOptBuilder);
     }
 
-    vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-    vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
-    setSensitivityTemplate(*fxOptBuilder);
-    addProductModelEngine(*fxOptBuilder);
-
     QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);
+    additionalData_["1_type"] = string("Rebate");
     if (type == Option::Call) {
         if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
             if (level > strike) {
                 qlInstrument->add(vanillaB);
                 qlInstrument->add(digital);
+                additionalData_["2_type"] = string("Call(B)");
+                additionalData_["3_type"] = string("DigiCall(B, B-K)");
             } else {
                 qlInstrument->add(vanillaK);
+                additionalData_["2_type"] = string("Call(K)");
             }
         } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
             if (level > strike) {
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
                 qlInstrument->add(digital, -1);
+                additionalData_["2_type"] = string("Call(K)");
+                additionalData_["3_type"] = string("Call(B)");
+                additionalData_["4_type"] = string("DigiCall(B, B-K)");
             } else {
                 // empty
             }
@@ -290,13 +338,19 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
                 qlInstrument->add(digital, -1);
+                additionalData_["2_type"] = string("Put(K)");
+                additionalData_["3_type"] = string("Put(B)");
+                additionalData_["4_type"] = string("DigiPut(B, K-B)");
             }
         } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
             if (level > strike) {
                 qlInstrument->add(vanillaK);
+                additionalData_["2_type"] = string("Put(K)");
             } else {
                 qlInstrument->add(vanillaB);
                 qlInstrument->add(digital);
+                additionalData_["2_type"] = string("Put(B)");
+                additionalData_["3_type"] = string("DigiPut(B, K-B)");
             }
         } else {
             QL_FAIL("Unknown Barrier Type: " << barrierType);

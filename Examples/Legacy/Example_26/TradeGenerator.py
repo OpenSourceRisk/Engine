@@ -20,7 +20,7 @@ FXFWDConventions = {}
 oisConventions = {}
 xccyBasisConventions = {}
 basisConventions = {}
-marketDataInputFile = "../Input/market_" + startDateStr + ".txt"
+marketDataInputFile = "../../Input/market_" + startDateStr + ".txt"
 oisTrades = ET.Element("Portfolio")
 EURxoisTrades = ET.Element("Portfolio")
 USDxoisTrades = ET.Element("Portfolio")
@@ -47,8 +47,8 @@ oisFile = "Input/ois_portfolio.xml"
 EURxoisFile = r"Input/EUR_xois_portfolio.xml"
 USDxoisFile = r"Input/USD_xois_portfolio.xml"
 
-conventions_file = "../Input/conventions.xml"
-curve_config_file = "../Input/curveconfig.xml"
+conventions_file = "../../Input/conventions.xml"
+curve_config_file = "../../Input/curveconfig.xml"
 
 def debugPrint(line):
 	if debug:

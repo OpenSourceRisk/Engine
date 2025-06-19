@@ -27,15 +27,20 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/simmarket.hpp>
+
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
+
+#include <qle/utilities/scenarioinformation.hpp>
 
 #include <map>
 
 namespace ore {
 namespace analytics {
+
 using namespace QuantLib;
+
 using std::map;
 using std::string;
 using std::vector;
@@ -205,6 +210,7 @@ protected:
 
     mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<QuantExt::ScenarioInformationSetter> scenarioInformationSetter_;
 };
 } // namespace analytics
 } // namespace ore

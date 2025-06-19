@@ -19,6 +19,7 @@
 #include <orea/app/portfolioanalyser.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
@@ -32,8 +33,8 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const IborFallbackConfig& iborFallbackConfig,
-                                     bool recordSecuritySpecificCreditCurves)
-    : portfolio_(p) {
+                                     bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
+    : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), baseCcyDiscountCurve_(baseCcyDiscountCurve) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
 
@@ -54,12 +55,13 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
 
     // Build Portfolio
     p->build(factory, "portfolio-analyzer");
+    DLOG("PortfolioAnalyser: portfolio built");
     maturity_ = p->maturity();
 
     // Build bonds having a security entry to get additional deps to the curves needed by the bond
     for (auto const& securityId : market_->marketObjectNames(ore::data::MarketObject::Security)) {
         try {
-	    ore::data::BondFactory::instance().build(factory, referenceData, securityId);
+	        ore::data::BondFactory::instance().build(factory, referenceData, securityId);
         } catch (const std::exception& e) {
             WLOG("PortfolioAnalyser: error during build of bond '"
                  << securityId << "', we might miss out dependencies (" << e.what() << ").");
@@ -96,8 +98,32 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
             market_->fxRate("USD" + baseCcy, Market::defaultConfiguration);
             baseUsdAdded = true;
         }
-
     }
+
+    
+    DLOG("PortfolioAnalyser: Setting market Objects");
+    // add any curve dependencies from the marketobjects obtained
+    marketObjects_ = market_->marketObjects();
+    addDependencies();
+}
+
+void PortfolioAnalyser::addDependencies() {
+    DLOG("Start adding dependent curves");
+    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs_, baseCcy_, baseCcyDiscountCurve_);
+    DLOG("Finished adding dependent curves");
+}
+
+std::map<ore::data::MarketObject, std::set<std::string>>
+PortfolioAnalyser::marketObjects(const boost::optional<std::string> config) const {
+    if (config)
+        return marketObjects_[*config];
+    std::map<ore::data::MarketObject, std::set<std::string>> result;
+    for (auto const& m : marketObjects_) {
+        for (auto const& e : m.second) {
+            result[e.first].insert(e.second.begin(), e.second.end());
+        }
+    }
+    return result;
 }
 
 void PortfolioAnalyser::riskFactorReport(Report& report) const {
@@ -123,17 +149,24 @@ void PortfolioAnalyser::marketObjectReport(Report& report) const {
     report.addColumn("MarketObjectType", string())
         .addColumn("MarketObjectName", string());
 
+    map<MarketObject, string> nameMap;
+    for (const auto& [k,v] : marketObjects_) {
+        for (const auto& [mo, names] : v) {
+            for (const string& name : names) {
+                if (nameMap.find(mo) == nameMap.end()) {
+					nameMap[mo] = name;
+                }
+                else {
+					nameMap[mo] += "|" + name;
+				}
+			}
+		}
+    }
+
     // Build report
-    for (const auto& type : market_->marketObjectTypes()) {
-        string strType = to_string(type);
-        string names;
-        for (const string& name : market_->marketObjectNames(type)) {
-            if (names.empty())
-                names += name;
-            else
-                names += "|" + name;
-        }            
-        report.next().add(strType).add(names);
+    for (const auto& [k, v] : nameMap) {
+        string strType = to_string(k);        
+        report.next().add(strType).add(v);
     }
 }
 

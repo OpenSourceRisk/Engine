@@ -138,8 +138,8 @@ McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& p
         RandomVariable forwardBondValue = pathValueUndDirty * numeraire_bonddiscount / incomeCompounding;
 
         // vanilla forward bond calculation at fwdMaturity : differentiate between long/short
-        boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-            boost::dynamic_pointer_cast<ForwardBondTypePayoff>(arguments_.payoff);
+        ext::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
+            ext::dynamic_pointer_cast<ForwardBondTypePayoff>(arguments_.payoff);
         QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
         RandomVariable strikePayment = RandomVariable(samples, fwdBndPayOff->strike() / arguments_.bondNotional);

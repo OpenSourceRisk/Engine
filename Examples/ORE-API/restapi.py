@@ -44,7 +44,6 @@ def get_file(filename):
     params.fromFile(filename)
 
     print("Creating OREApp...")
-    os.chdir(fdir + r"\..")
     ore_app = OREApp(params, True)
 
     print("Running ORE process...")

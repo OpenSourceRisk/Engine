@@ -284,7 +284,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
                    "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
                        << sr.tradeId);
 
-        Date today = QuantLib::Settings::instance().evaluationDate();
+        QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
 
         auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + indexName)->second;
 

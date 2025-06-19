@@ -45,7 +45,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>

@@ -1,0 +1,489 @@
+\documentclass[10pt]{article}
+
+
+%\usepackage{course}
+\usepackage{pst-all,amssymb,amsmath,amsthm,cite,url,float}
+\usepackage[pdfpagelayout=OneColumn]{hyperref}
+\usepackage[linewidth=0.8pt]{mdframed}
+\usepackage{pdfpages}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{multicol}
+
+\setlength{\parskip}         {1ex plus 4pt minus 2pt}
+\setlength{\parindent}      {0em}
+\setlength{\topmargin}{-.5in}
+\setlength{\textheight}{9.0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\headheight}{.25in}
+\setlength{\headsep}{.25in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+
+\definecolor{yellow}{rgb}{0.98, 0.91, 0.71}
+
+
+\title{ORE-SWIG}
+\date{}
+\begin{document}
+\maketitle
+\section*{Getting Started}
+    Download and install required software. For development purposes, use GitLab repos for QuantLib and ORE.
+\begin{enumerate}
+    \item Microsoft Visual Studio (including necessary program files)
+    \item Python (3.6 and higher)
+    \item Boost (preferably 1.72.0)
+    \item SWIG (3.0 and higher for MacOS/Linux, 4.3 and higher for Windows)
+    \item QuantLib
+    \item ORE
+\end{enumerate}
+
+Set the following environment variables:
+\begin{enumerate}
+    \item BOOST AND BOOST\_LIB
+    \item ORE\_DIR
+    \item SWIG\_DIR and SWIG\_EXECUTABLE 
+    \item Python Scripts in PATH
+\end{enumerate}
+
+To build and run ORE-SWIG, there are two methods as outlined in the README: (1) CMAKE, (2) setup.py scripts. You can build individual levels (ex. only QuantExt-SWIG) by running the following in the respective directory
+\begin{lstlisting}
+        python setup.py wrap 
+        python setup.py build 
+        python seutp.py test 
+        python setup.py install 
+\end{lstlisting}
+
+If using the python setup.py method, please ensure that the config files for each directory has the proper prefix path (i.e. the path to ORE on your machine).
+
+All tests should pass.* \\
+After proper installation, you can look through the test scripts to see the general layout, but it is as simple as using any python module. It is imperative to install so that Python recognises it and is able to use it outside of that specific environment.\\
+\textit{*OREAnalytics on Windows runs into an error on build process.}
+
+\section*{Troubleshooting}
+\begin{enumerate}
+    \item error LNK1112: Module machine type x86 conflicts with target machine type x64.\\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that Python is not 3.10 (3.6 and higher)\\
+    
+    \item error LNK2001: unresolved external symbol. \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that the ORE build has all the proper linked files in its props file.\\
+    
+    \item error LNK1181: Input File "QuantExt-x64-mt.lib" cannot be opened. \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$}  Ensure that ORE has been built in the correct Debug or Release version and the correct \\\-\hspace{1cm} machine type (x64 vs x86).\\
+    \\
+    
+    \textbf{The following fixes should come after ensuring that the classes in the interface file are up to date with the ORE classes (i.e. correct number of arguments, correct types being passed, etc.)} \\
+    
+    \item error no proxy class is created - an incomplete swigpy object of type boost::shared\_ptr\\
+        \centerline{ \textit{or} } \\
+    if there is an error with any of the variables and after checking the type it only declares it a SwigPyObject - NOT SwigPyObject as proxy class for X \\
+        \centerline{ \textit{or} } \\
+    'SwigPyObject' has no attribute Y. when the attribute is actually defined in the interface. \\
+        \centerline{ \textit{or} } \\
+    error overloaded function, wrong type or number of arguments \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that all boost::shared\_ptrs are written as ext::shared\_ptr in the interface files. \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} For the latter issue, you can also go into the \_wrap file and print out the value of \_v at the \\ \-\hspace{1cm}respective method's if statement to identify exactly which argument is throwing the error.
+    
+    \item error: cannot find X class \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} add the highlighted text to generate a text file with all the classes created during swig build.
+    \begin{lstlisting}[escapeinside ={\%,}, escapechar={!}]
+            os.system('swig !\colorbox{yellow}{ -debug-classes -Wall -I./ -I../dependencies/}!
+            -python -py3 -c++' + '-I%s ' % swig_dir + 
+            '-outdir QuantLib -o QuantLib/quantlib_wrap.cpp ' +
+            'quantlib.i !\colorbox{yellow}{ $>$  generatedClasses.txt}!')
+    \end{lstlisting}
+    
+    \textbf{Docker/Unix Build Errors}
+    \item \textbf{(fixed in recent oreplus)} error cannot convert \\ 'const boost::shared\_ptr$<$QuantExt::YoYInflaionCapFloorEngine$>$' to '\\ const boost::shared\_ptr$<$QuantLib::YoYInflationCapFloorEngine\&$>$ in \\ kinterpolatedyoyoptionletvolatilitysurface.hpp.\\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} add \colorbox{yellow}{QuantLib::}YoYInflationCapFloorEngine to line 58, 73, 103.\\
+
+    \item \textbf{(fixed in recent oreplus)} error: invalid initialization of reference of type 'const \\ QuantExt::RandomVariable\&' from expression of type '\_gnu\_cxx::\_\_alloc\_traits$<$std::allcoator$<$double$>$, double$>$::value\_type' \{aka 'double'\} \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} specify that the 'close\_enough' function is from ql/math/conversions.hpp \\ \-\hspace{1cm} not qle/math/randomvariable.hpp \\
+
+    \item error: oreanalytics-config: not found. \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} run dos2unix oreanalytics to modify newline characters so they are Unix compatible. \\ \-\hspace{1cm}In setup.py ensure that the config file is called as '. ./X-config' 
+
+    \item error: cannot find qle/version.hpp \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that all libraries and directories are included during compilation. \\ \-\hspace{1cm} Located in each directory's config files for Unix through setup.py build method.
+    
+    \item error: Failed to allocate 4194304*16 bytes. \\
+    \-\hspace{1cm}\rotatebox[origin=c]{180}{$\Lsh$} Ensure that you are using Swig 4.3.0 on Windows. \\ \-\hspace{1cm} If you opt to build Swig from source, ensure that you are building the x64 executable.
+
+
+\end{enumerate}
+
+\pagebreak
+
+\section*{SWIG and Needed Tasks}
+Briefly, SWIG wraps C++ code and makes them accessible to higher level scripting languages (ex. Python). In order to do so, the general task is to write SWIG interface (.i) files that introduce the code (from .hpp file) you want to access. Be sure, when copying over to change all boost::shared\_ptrs to ext::shared\_ptrs.\\
+
+\subsection*{To Do:}
+I. Currently, new interface files have been created but OREData and OREAnalytics require new python test scripts to confirm. \\
+
+II. OREAnalytics encounters the following error when building on Windows:
+\begin{lstlisting}[basicstyle=\small]
+OREData-x64-mt.lib(osutils.obj) : error LNK2001: unresolved external symbol
+__imp_GetUserNameA
+build\lib.win-amd64-3.6\OREAnalytics\_OREAnalytics.cp36-win_amd64.pyd:
+fatal error LNK1120: 1 unresolved externals
+error: command 'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\
+VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX86\\x64\\link.exe'
+failed with exit status 1120
+\end{lstlisting}
+The current hacky fix for that would be to comment out the function in OREData/utilities/osutils.* in ore. Howevwer the function is used in restore.
+
+
+
+\pagebreak
+\section*{Classes in SWIG}
+\subsection*{QuantExt Interfaces}
+\begin{multicols}{2}
+    \begin{enumerate}
+        \item \textbf{qle\_averageois.i}
+                \subitem AverageOIS
+                \subitem AverageONIndexedCouponPricer
+        \item \textbf{qle\_averageoisratehelper.i}
+                \subitem AverageOISRateHelper
+        \item \textbf{qle\_cashflows.i}
+                \subitem FXLinkedCashFlow
+                \subitem FloatingRateFXLinkedNotionalCoupon
+        \item \textbf{qle\_ccyswap.i}
+                \subitem CrossCcySwap
+                \subitem CrossCcySwapEngine
+        \item \textbf{qle\_creditdefaultswap.i}
+                \subitem QLECreditDefaultSwap
+                \subitem QLEMidPointCdsEngine
+                \subitem QLECdsOption
+                \subitem QLEBlackCdsOptionEngine
+        \item \textbf{qle\_crossccyfixfloatswap.i}
+                \subitem CrossCcyFixFloatSwap
+        \item \textbf{qle\_equiyforward.i}
+                \subitem EquityForward
+                \subitem DiscountingEquityForwardEngine
+        \item \textbf{qle\_indexes.i}
+                \subitem BEHICP
+                \subitem BondIndex
+                \subitem BondFuturesIndex
+                \subitem ConstantMaturityBondIndex
+                \subitem EquityIndex
+                \subitem FXIndex
+                \subitem BMAIndexWrapper
+                \subitem BMAIndex
+                \subitem CommodityIndex
+                \subitem CommoditySpotIndex
+                \subitem CommodityFuturesIndex
+                \subitem qle export xibor instance
+                \subitem qle export overnight instance
+        \item \textbf{qle\_instruments.i}
+                \subitem CrossCccyBasisSwap
+                \subitem CrossCcyBasisSwapMtMRestSwap
+                \subitem CommunityForward
+                \subitem DiscountingCommodityForwardEngine
+                \subitem FxForward
+                \subitem DiscountingFxForward
+                \subitem Payment
+                \subitem PaymentDiscountingEngine
+                \subitem Deposit
+                \subitem DepositEngine
+                \subitem DiscountingSwapEngineMultiCurve
+        \item \textbf{qle\_ratehelpers.i}
+                \subitem CrossCcyBsisSwapHelper
+                \subitem CrossCcyBasisMtMResetSwapHelper
+                \subitem TenorBasisSwapHelper
+                \subitem SubPeriodsSwapHelper
+                \subitem SubPeriodsCoupon1
+                \subitem OICCBSHelper
+                \subitem BasisTwoSwapHelper
+                \subitem ImmFraRateHelper
+                \subitem CrossCcyFixFloatSwapHelper
+        \item \textbf{qle\_oiccbasisswap.i}
+                \subitem OvernightIndexedCrossCcyBasisSwap
+                \subitem OvernightIndexedCrossCcyBasisSwapEngine
+        \item \textbf{qle\_tenorbasisswap.i}
+                \subitem TenorBasisSwap
+                \subitem SubPeriodsCoupon1
+                \subitem SubPeriodsCouponPricer1
+                \subitem SubPeriodsSwap
+        \item \textbf{qle\_termstructures.i}
+                \subitem PriceTermStructure
+                \subitem InterpolatedPriceCurve
+                \subitem FxBlackVannaVolgaVolatilitySurface
+                \subitem BlackVarianceMoneynessSpot
+                \subitem SwaptionVolCube2
+                \subitem SwaptionVolCubeWithATM
+                \subitem SwaptionVolatilityCube
+                \subitem SwaptionVolatilityConstantSpread
+                \subitem SwapConventions
+                \subitem SwaptionVolatilityConverter
+                \subitem BlackVolatilityConverter    
+        \item \textbf{qle\_calendars.i}
+                \subitem Austria
+                \subitem Belgium
+                \subitem CME
+                \subitem Colombia
+                \subitem Cyprus
+                \subitem France
+                \subitem Greece
+                \subitem ICE
+                \subitem Ireland
+                \subitem Israel
+                \subitem IslamicWeekendsOnly
+                \subitem Luxembourg
+                \subitem Malaysia
+                \subitem Netherlands
+                \subitem Peru
+                \subitem Philippines
+                \subitem RussiaModified
+                \subitem Spain
+                \subitem Switzerland
+                \subitem Wmr
+        \item \textbf{qle\_currencies.i}
+                \subitem TNDCurrency
+                \subitem EGPCurrency
+                \subitem NGNCurrency
+                \subitem MADCurrency
+                \subitem KZTCurrency
+                \subitem QARCurrency
+                \subitem BHDCurrency
+                \subitem OMRCurrency
+                \subitem AEDCurrency
+                \subitem PHPCurrency
+                \subitem CNHCurrency
+                \subitem MXVCurrency
+                \subitem CLFCurrency
+                \subitem XAUCurrency
+                \subitem XAGCurrency
+                \subitem XPTCurrency
+                \subitem XPDCurrency
+        \item \textbf{qle\_coupons.i}
+                \subitem AverageONIndexedCoupon
+                \subitem CappedFlooredAverageONIndexed \\ \-\hspace{0.70cm}Coupon
+                \subitem CapFlooredAverageONIndexed \\ \-\hspace{0.70cm}CouponPricer
+                \subitem AverageONLeg
+    \end{enumerate}
+\end{multicols}
+
+\pagebreak
+
+\subsection*{OREData Interfaces}
+\begin{multicols}{2}
+    \begin{enumerate}
+            \item \textbf{ored\_conventions.i}
+                \subitem Conventions
+                \subitem ZeroRateConvention
+                \subitem DepositConvention
+                \subitem FutureConvention
+                \subitem FraConvention
+                \subitem OisConvention
+                \subitem SwapIndexConvention
+                \subitem IRSwapConvention
+                \subitem`AverageOisConvention
+                \subitem TenorBasisSwapConvention
+                \subitem TenorBasisTwoSwapConvention
+                \subitem BMABasisSwapConvention
+                \subitem FXConvention
+                \subitem CrossCcyBasisSwapConvention
+                \subitem CrossCcyFixFloatSwapConvention
+                \subitem CdsConvention
+                \subitem InflationSwapConvention
+                \subitem SecuritySpreadConvention
+            \item \textbf{ored\_loader.i}
+                \subitem Loader
+                \subitem CSVLoader
+                \subitem InMemoryLoader
+                \subitem struct: Fixing
+            \item \textbf{ored\_markets.i}
+                \subitem MarketImpl
+                \subitem YoYOptionletVolatilitySurfaceHandle
+                \subitem CPICapFloorTermPriceSurfaceHandle
+                \subitem YoYCapFloorTermPriceSurfaceHandle
+                \subitem TodaysMarket
+            \item \textbf{ored\_markets.i}
+                \subitem MarektDatum
+                \subitem MoneyMarketQuote
+                \subitem ImmFraQuote
+                \subitem SwapQuote
+                \subitem ZeroQuote
+                \subitem DiscountQuote
+                \subitem MMFutureQuote
+                \subitem BasisSwapQuote
+                \subitem BMASwapQuote
+                \subitem CrossCcyBasisSwapQuote
+                \subitem CrossCcyFixFloatSwapQuote
+                \subitem CdsQuote
+                \subitem HazardRateQuote
+                \subitem RecoveryRateQuote
+                \subitem SwaptionQuote
+                \subitem SwaptionShiftQuote
+                \subitem CapFloorQuote
+                \subitem CapFloorShiftQuote
+                \subitem FXSpotQuote
+                \subitem FXForwardQuote
+                \subitem FXOptionQuote
+                \subitem ZcInflationFloorQuote
+                \subitem YoYInflationFloorQuote
+                \subitem YyInflationCapFloorQuote
+                \subitem SeasonalityQuote
+                \subitem EquitySpotQuote
+                \subitem EquitySpotQuote
+                \subitem EquityForwardQuote
+                \subitem EquityDividentYieldQuote
+                \subitem EquityOptionQuote
+                \subitem SecuritySpreadQuote
+                \subitem BaseCorrelationQuote
+                \subitem IndexCDSOptionQuote
+                \subitem CommoditySpotQuote
+                \subitem CommodityForwardQuote
+                \subitem CommodityOptionQuote
+                \subitem CorrelationQuote
+                \subitem CPRQuote
+                \subitem BondPriceQuote
+                \subitem BondOptionShiftQuote
+                \subitem BondOptionQuote
+                \subitem OIFUtureQuote
+            \item \textbf{ored\_parsers.i}
+                \subitem parseIborIndex
+                \subitem parseSwapIndex
+                \subitem oarseZeroInflationIndex
+                \subitem parseFXIndex
+                \subitem parseCalendar
+                \subitem parsePeriod
+                \subitem parseBussinessDayConvention
+                \subitem parseDayCounter
+                \subitem parseCurrency
+                \subitem parseDateGenerationRule
+                \subitem parseFrequency
+                \subitem parseCompounding
+                \subitem parsePositionType
+                \subitem parseSettlementType
+                \subitem parseExerciseType
+                \subitem parseOptionType
+                \subitem parseDate
+             \item \textbf{ored\_portfolio.i}
+                \subitem LogBuilder
+                \subitem EnginerBuilder
+                \subitem EngineFactory
+                \subitem Envelope
+                \subitem TradeFactory
+                \subitem InstrumentWrapper
+                \subitem Trade
+                \subitem Portfolio
+                \columnbreak
+            \item \textbf{ored\_curvespec.i}
+                \subitem CurveSpec
+                \subitem DefaultCurveSpec
+                \subitem CDSVolatilityCurveSpec
+                \subitem BaseCorrelationCurveSpec
+                \subitem SwaptionVolatilityCurveSpec
+                \subitem YieldVolatilityCurveSpec
+                \subitem CapFloorVolatilityCurveSpec
+                \subitem FXSpotSpec
+                \subitem FXVolatilityCurveSpec
+                \subitem InflationCurveSpec
+                \subitem InflationCapFloorVolatilityCurveSpec
+                \subitem EquityCurveSpec
+                \subitem EquityVolatilityCurveSpec
+                \subitem SecuritySpec
+                \subitem CommodityCurveSpec
+                \subitem CommodityVolatilityCurveSpec
+                \subitem CorrelationCurveSpec
+            \item \textbf{ored\_volcurves.i}
+                \subitem GenerticYieldVolCurve
+                \subitem SwaptionVolCurve
+                
+                
+    \end{enumerate}
+\end{multicols}
+
+\pagebreak
+
+\subsection*{OREAnalytics Interfaces}
+
+    \begin{enumerate}
+            \item \textbf{orea\_app.i}
+                \subitem Paramters
+                \subitem OREApp
+    \end{enumerate}
+
+
+\pagebreak
+\section*{General Warning Encountered throughout SWIG Builds}
+\subsection{General SWIG}
+\begin{verbatim}
+    SWIG(1) : Warning 125: Use of the include path to find the input file is deprecated 
+    and will not work with ccache. Please include the path when specifying the input file.
+\end{verbatim}
+\subsection{QuantLib}
+\begin{verbatim}
+    ..\SWIG\exercise.i(40) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\timeseries.i(76) : Warning 321: 'open' conflicts with a built-in name in python
+    ..\SWIG\stochasticprocess.i(74) : Warning 321: 'apply' conflicts with a built-in
+                                                    name in python
+    ..\SWIG\swap.i(81) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\swap.i(252) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\swap.i(378) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\swap.i(549) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\inflation.i(718) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\inflation.i(1048) : Warning 321: 'slice' conflicts with a built-in 
+                                              name in python
+    ..\SWIG\bonds.i(53) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\bonds.i(445) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\capfloor.i(55) : Warning 321: 'type' conflicts with a built-in name in python
+    ..\SWIG\exchangerates.i(39) : Warning 321: 'type' conflicts with a built-in 
+                                                name in python
+    ..\SWIG\fdm.i(322) : Warning 321: 'apply' conflicts with a built-in name in python
+    ..\SWIG\fdm.i(914) : Warning 321: 'apply' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(44) : Warning 321: 'min' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(45) : Warning 321: 'max' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(71) : Warning 321: 'min' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(72) : Warning 321: 'max' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(115) : Warning 321: 'min' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(116) : Warning 321: 'max' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(115) : Warning 321: 'min' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(116) : Warning 321: 'max' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(115) : Warning 321: 'min' conflicts with a built-in name in python
+    ..\SWIG\statistics.i(116) : Warning 321: 'max' conflicts with a built-in name in python
+    ..\SWIG\swaption.i(56) : Warning 321: 'type' conflicts with a built-in name in python
+
+    ..\SWIG\swap.i(53) : Warning 509: Overloaded method Swap::Swap(std::vector< Leg,
+        std::allocator< Leg > > const &,std::vector< bool,std::allocator< bool > > const &)
+        effectively ignored,
+    ..\SWIG\swap.i(51) : Warning 509: as it is shadowed by Swap::Swap(std::vector< 
+        ext::shared_ptr< CashFlow >, std::allocator< ext::shared_ptr< CashFlow > > > 
+        const &, std::vector< ext::shared_ptr< CashFlow >, std::allocator< 
+        ext::shared_ptr< CashFlow > > > const &).
+\end{verbatim}
+
+\subsection{QuantExt}
+\begin{verbatim}
+    ..\SWIG\qle_termstructures.i(101) : Warning 302: Identifier 'SwaptionVolatilityCube' 
+                                        redefined (ignored),
+    ..\..\QuantLib-SWIG\SWIG\volatilities.i(628) : Warning 302: previous definition of 
+                                                   'SwaptionVolatilityCube'.
+    ..\SWIG\qle_termstructures.i(236) : Warning 325: Nested struct not currently supported 
+                                        (RefData ignored)
+    ..\SWIG\qle_averageois.i(81) : Warning 314: 'None' is a python keyword, renaming to '_None'
+    ..\SWIG\qle_termstructures.i(219) : Warning 401: Nothing known about base class 'Observer'. 
+                                        Ignored.
+    ..\SWIG\qle_termstructures.i(251) : Warning 401: Nothing known about base class 
+                                        'QuantLib::VolatilityTermStructure'. Ignored.
+
+\end{verbatim}
+
+\subsection{OREData}
+\begin{verbatim}
+    ..\SWIG\ored_market.i(178) : Warning 302: Identifier 'YoYOptionletVolatilitySurfaceHandle' 
+                                redefined (ignored) (Renamed from 
+                                'Handle< QuantExt::YoYOptionletVolatilitySurface >'),
+    ..\..\QuantLib-SWIG\SWIG\volatilities.i(176) : Warning 302: previous definition of 
+                                                'YoYOptionletVolatilitySurfaceHandle' 
+                                                (Renamed from 
+                                                'Handle< YoYOptionletVolatilitySurface >').
+\end{verbatim}      
+
+
+
+\end{document}

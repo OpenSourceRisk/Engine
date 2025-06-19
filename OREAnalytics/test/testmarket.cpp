@@ -108,9 +108,10 @@ parRateCurveHelpers(const string& ccy, const vector<string>& parInst, const vect
             QuantLib::ext::shared_ptr<OisConvention> oisConv = QuantLib::ext::dynamic_pointer_cast<OisConvention>(conv);
             BOOST_ASSERT(oisConv);
             rateHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
-                oisConv->spotLag(), tenor, parRateQuote, oisConv->index(), oisConv->fixedDayCounter(),
+                oisConv->spotLag(), tenor, parRateQuote, oisConv->index(), false, oisConv->fixedDayCounter(),
                 oisConv->fixedCalendar(), oisConv->paymentLag(), oisConv->eom(), oisConv->fixedFrequency(),
-                oisConv->fixedConvention(), oisConv->fixedPaymentConvention(), oisConv->rule(), exDiscount, true);
+                oisConv->fixedConvention(), oisConv->fixedPaymentConvention(), oisConv->rule(), exDiscount,
+                !exDiscount.empty(), true);
         } else if (parInst[i] == "FXF") {
             QuantLib::ext::shared_ptr<Convention> conv = conventions->get(ccy + "-FX-CONVENTIONS");
             QuantLib::ext::shared_ptr<FXConvention> fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conv);
@@ -147,8 +148,8 @@ parRateCurveHelpers(const string& ccy, const vector<string>& parInst, const vect
             bool flatIsDomestic = true; // assumes fxSpot is in form 1*BaseCcy = X*Ccy
             rateHelper = QuantLib::ext::make_shared<CrossCcyBasisSwapHelper>(
                 parRateQuote, fxSpot, basisConv->settlementDays(), basisConv->settlementCalendar(), tenor,
-                basisConv->rollConvention(), flatIndex, spreadIndex, fgnDiscount, exDiscount, basisConv->eom(),
-                flatIsDomestic);
+                basisConv->rollConvention(), flatIndex, spreadIndex, fgnDiscount, exDiscount, true, true, true, false,
+                basisConv->eom(), flatIsDomestic);
         } else {
             BOOST_ERROR("Unrecognised par rate instrument in curve construction - " << i);
         }
@@ -351,12 +352,6 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     capFloorCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateCvs(0.0045, Normal);
     capFloorCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateCvs(0.0040, Normal);
 
-    // build default curves
-    defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] = flatRateDcs(0.1);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] = flatRateDcs(0.2);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer0")] = flatRateDcs(0.0);
-    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] = flatRateDcs(0.0);
-
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
@@ -364,6 +359,20 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)); 
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
+
+    // build default curves
+    defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] =
+        flatRateDcs(0.1, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "dc")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] =
+        flatRateDcs(0.2, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer0")] =
+        flatRateDcs(0.0, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer0")]);
+    defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
+        flatRateDcs(0.0, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")],
+                    recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")]);
 
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve0")] = flatRateYts(0.05);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve1")] = flatRateYts(0.05);
@@ -515,10 +524,12 @@ TestMarket::flatRateSvs(Volatility forward, VolatilityType type, Real shift) {
     return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
 }
 
-Handle<QuantExt::CreditCurve> TestMarket::flatRateDcs(Volatility forward) {
+Handle<QuantExt::CreditCurve> TestMarket::flatRateDcs(Volatility forward, const Handle<YieldTermStructure>& yts,
+                                                      const Handle<Quote>& recoveryRate) {
     QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dcs(
             new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
-    return Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
+    return Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+        Handle<DefaultProbabilityTermStructure>(dcs), yts, recoveryRate));
 }
 
 Handle<OptionletVolatilityStructure> TestMarket::flatRateCvs(Volatility vol, VolatilityType type, Real shift) {
@@ -595,16 +606,20 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     vector<QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>>> instruments;
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
+        QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
             quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts));
+        QL_DEPRECATED_ENABLE_WARNING
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
     // we know historical is WAY off market-implied, so use market implied flat.
     Rate baseZeroRate = rates[0] / 100.0;
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(2, Months), ii->frequency(), ii);
+    QL_DEPRECATED_DISABLE_WARNING
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(new PiecewiseYoYInflationCurve<Linear>(
         asof_, baseDate, baseZeroRate, Period(2, Months), ii->frequency(), ii->interpolated(), ActualActual(ActualActual::ISDA), instruments));
+    QL_DEPRECATED_ENABLE_WARNING
     pYoYts->recalculate();
     yoyTS = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
@@ -944,9 +959,11 @@ void TestMarketParCurves::createDefaultCurve(const string& name, const string& c
     Handle<YieldTermStructure> baseDiscount = this->discountCurve(ccy, Market::defaultConfiguration);
     defaultRateHelpersMap_[name] =
         parRateCurveHelpers(name, parTenor, defaultRateHelperValuesMap_[name], baseDiscount, this);
+    Handle<Quote> recoveryRate = this->recoveryRate(name, Market::defaultConfiguration);
 
-    defaultCurves_[make_pair(Market::defaultConfiguration, name)] = Handle<QuantExt::CreditCurve>(
-        QuantLib::ext::make_shared<QuantExt::CreditCurve>(parRateCurve(asof_, defaultRateHelpersMap_[name])));
+    defaultCurves_[make_pair(Market::defaultConfiguration, name)] =
+        Handle<QuantExt::CreditCurve>(QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+            parRateCurve(asof_, defaultRateHelpersMap_[name]), baseDiscount, recoveryRate));
 }
 
 void TestMarketParCurves::createCdsVolCurve(const string& name, const vector<Period>& parTenor,
@@ -1144,9 +1161,10 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
 
     Real baseRate = parQuotes[0]->value();
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
-
+    QL_DEPRECATED_DISABLE_WARNING
     yoyCurve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
         asof_, baseDate, baseRate, conv->observationLag(), yi->frequency(), conv->interpolated(), conv->dayCounter(), instruments));
+    QL_DEPRECATED_ENABLE_WARNING
     yoyCurve->enableExtrapolation();
     Handle<YoYInflationTermStructure> its(yoyCurve);
     QuantLib::ext::shared_ptr<YoYInflationIndex> i(yi->clone(its));
