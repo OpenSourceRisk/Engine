@@ -129,6 +129,10 @@ else()
         set(BUILD_SHARED_LIBS ON)
     endif()
 
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
+    endif()
+
     # Issue with Boost CMake finder introduced in version 1.70
     set(Boost_NO_BOOST_CMAKE         ON)
 
