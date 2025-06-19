@@ -318,15 +318,16 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
     return mCorrelation;
 }
 
-QuantLib::Matrix CorrelationMatrixBuilder::KendallCorrelation(const QuantLib::Matrix& data) {
-
-    QuantLib::Matrix mCorrelation(data.rows(), data.rows(), 0.0);
-    for (int i = 0; i < data.rows(); i++) {
-        for (int j = 0; j < data.rows(); j++) {
+QuantLib::Matrix CorrelationMatrixBuilder::kendallCorrelation(const QuantLib::Matrix& mData) {
+    QL_REQUIRE(mData.columns() == mData.rows(), "Matrix must be a squared Matrix");
+    Size n = mData.rows();
+    QuantLib::Matrix mCorrelation(n, n);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
             vector<double> colI, colJ;
-            for (int k = 0; k < data.rows(); k++) {
-                colI.push_back(data[k][i]);
-                colJ.push_back(data[k][j]);
+            for (int k = 0; k < n; k++) {
+                colI.push_back(mData[k][i]);
+                colJ.push_back(mData[k][j]);
             }
             mCorrelation[i][j] = QuantExt::kendallRankCorrelation(colI.begin(), colI.end(), colJ.begin());
         }

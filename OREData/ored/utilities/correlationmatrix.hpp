@@ -156,7 +156,7 @@ public:
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations();
 
     QuantLib::Matrix pearsonCorrelation(const QuantLib::Matrix& mCovariance);
-    QuantLib::Matrix KendallCorrelation(const QuantLib::Matrix& data);
+    QuantLib::Matrix kendallCorrelation(const QuantLib::Matrix& data);
 
 private:
     /*! Create the process information for each of the factors. Legacy method where each process is assumed to be 
