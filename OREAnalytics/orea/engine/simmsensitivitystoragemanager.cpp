@@ -59,8 +59,8 @@ SimmSensitivityStorageManager::SimmSensitivityStorageManager(const std::vector<s
     nc_ = nCurveTenors_ * currencies_.size();
     // FX Deltas: fxspot sensis
     nx_ = currencies_.size() - 1;
-    // IR Vegas: Swaption vega matrix for all currencies, ignoring strike 
-    nco_ = nSwaptionExpiries_ * nSwaptionTerms_ * currencies_.size();
+    // IR Vegas: Swaption vega risk vector for all currencies
+    nco_ = nSwaptionExpiries_ * currencies_.size();
     // FX Vegas: FX Option vega vector, ignoring strike
     nxo_ = nFxExpiries_ * nx_;
 
@@ -110,7 +110,7 @@ void SimmSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<o
 	Real theta = 0;
 
 	// We have Swaption Vega matrices for each currency
-        vector<Matrix> swaptionVega(currencies_.size(), Matrix(nSwaptionExpiries_, nSwaptionTerms_, 0.0));
+        vector<Array> swaptionVega(currencies_.size(), Array(nSwaptionExpiries_, 0.0));
 
 	// we have fxVega vectors for each currency pair
 	vector<Array> fxVega(nx_, Array(nFxExpiries_, 0.0));
@@ -142,14 +142,11 @@ void SimmSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<o
 
 	Size irVegaCount = 0;
         for (Size k = 0; k < currencies_.size(); ++k) {
-            for (Size i = 0; i < swaptionVega[k].rows(); ++i) {
-                for (Size j = 0; j < swaptionVega[k].columns(); ++j) {
-                    QL_REQUIRE(std::isfinite(swaptionVega[k](i, j)),
-                               "swaptionVega not finite: " << swaptionVega[k](i, j));
-                    cubeData.push_back(swaptionVega[k](i, j));
-		    irVegaCount++;
-                }
-            }
+            for (auto const& d : swaptionVega[k]) {
+                QL_REQUIRE(std::isfinite(d), "swaption vega risk not finite: " << d);
+                cubeData.push_back(d);
+		irVegaCount++;
+	    }
         }
 
 	DLOG("SimmSensitivityStorageManager::addSensitivities: irVega " << irVegaCount << " " << nco_);
@@ -217,7 +214,7 @@ boost::any SimmSensitivityStorageManager::getSensitivities(const QuantLib::ext::
 
     Array delta(nc_ + nx_, 0.0);
     Real theta;
-    vector<Matrix> swaptionVega(currencies_.size(), Matrix(nSwaptionExpiries_, nSwaptionTerms_, 0.0));
+    vector<Array> swaptionVega(currencies_.size(), Array(nSwaptionExpiries_, 0.0));
     vector<Array> fxVega(nx_, Array(nFxExpiries_, 0.0));
     
     // get data from cube
@@ -254,11 +251,9 @@ boost::any SimmSensitivityStorageManager::getSensitivities(const QuantLib::ext::
 
     idx = nc_ + nx_ + 1;
     for (Size k = 0; k < currencies_.size(); ++k) {
-        for (Size i = 0; i < swaptionVega[k].rows(); ++i) {
-            for (Size j = 0; j < swaptionVega[k].columns(); ++j) {
-                swaptionVega[k](i, j) = cubeData[idx];
-		++idx;
-            }
+        for (Size i = 0; i < swaptionVega[k].size(); ++i) {
+            swaptionVega[k][i] = cubeData[idx];
+            ++idx;
         }
     }
 
@@ -284,7 +279,7 @@ Size SimmSensitivityStorageManager::getCcyIndex(const std::string& ccy) const {
     return std::distance(currencies_.begin(), c);
 }
 
-void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Matrix>& vega, QuantLib::Real& theta,
+void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Array>& vega, QuantLib::Real& theta,
 							const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
 							const QuantLib::ext::shared_ptr<Market>& market) const {
 
@@ -367,22 +362,15 @@ void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Mat
 	    Real singleVegaRisk = singleVega * atmVol;
 	    Date exerciseDate = qlInstr->result<Date>("exerciseDate");
 	    // Date maturityDate = trade->maturity();
-	    // rebucket
-	    //map<pair<Size,Size>,Real> sv = swaptionVega(singleVegaRisk, exerciseDate, maturityDate, asof, dc);
-	    map<Size,Real> sv = fxVega(singleVegaRisk, exerciseDate, asof, dc);
-	    
-	    // and add the contributions to the respective matrix entries
+	    map<Size,Real> sv = bucketMapping(singleVegaRisk, exerciseDate, swaptionExpiryTimes_, asof, dc);	    
+	    // Add the contributions
             Size idx = getCcyIndex(currencies.front());
             QL_REQUIRE(vega.size() > idx, "currency " << currencies.front() << " not found in vega matrtices");
             for (auto it : sv) {
-                // LOG("map swaption single vega " << singleVega << " " << currencies.front() << " for trade "
-                //                                 << trade->id() << " to vega matrix " << idx << ", row " << it.first.first
-                //                                 << ", col " << it.first.second << ": " << it.second);
-                // vega[idx][it.first.first][it.first.second] += it.second;
                 LOG("map swaption single vega " << singleVegaRisk << " " << currencies.front() << " for trade "
                                                 << trade->id() << " to vega array for ccy " << idx << ", row " << it.first
                                                 << ": " << it.second);
-                vega[idx][it.first][0] += it.second;
+                vega[idx][it.first] += it.second;
             }
         }
     } else {
@@ -493,8 +481,8 @@ void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>&
         QL_FAIL("case not covered");
     }
     // rebucket
-    map<Size, Real> vegaContributions = fxVega(v, exerciseDate, asof, dc);
-    // and add the contributions to the respective vector entries
+    map<Size,Real> vegaContributions = bucketMapping(v, exerciseDate, fxExpiryTimes_, asof, dc);	    
+    // and add the contributions
     for (auto it : vegaContributions) {
         LOG("map fx single vega " << singleVega << " to vega vector " << idx << ", " << it.first << ": " << it.second);
         vega[idx][it.first] += it.second;
@@ -552,33 +540,36 @@ void SimmSensitivityStorageManager::processFxForward(Array& delta, QuantLib::Rea
 }
 
 std::map<QuantLib::Size, QuantLib::Real>
-SimmSensitivityStorageManager::fxVega(Real vega, const Date& expiry, const Date& referenceDate, const DayCounter& dc) const {
-    Real t = dc.yearFraction(referenceDate, expiry);
-    int n = fxExpiryTimes_.size();
-    int b = (int)(std::upper_bound(fxExpiryTimes_.begin(), fxExpiryTimes_.end(), t) - fxExpiryTimes_.begin());
+SimmSensitivityStorageManager::bucketMapping(QuantLib::Real value, const QuantLib::Date& date, const std::vector<Real>& timeGrid, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const {
+    Real t = dc.yearFraction(referenceDate, date);
+    int n = timeGrid.size();
+    int b = (int)(std::upper_bound(timeGrid.begin(), timeGrid.end(), t) - timeGrid.begin());
 
     std::map<QuantLib::Size, QuantLib::Real> res;
 
     if (b == 0) {
-        res[0] = vega;
+        res[0] = value;
     }
     else if (b == n) {
-        res[n - 1] = vega;
+        res[n - 1] = value;
     }
     else {
-        Real tmp = (fxExpiryTimes_[b] - t) / (fxExpiryTimes_[b] - fxExpiryTimes_[b - 1]);
-	res[b - 1] = vega * tmp;
-        res[b] = vega * (1.0 - tmp);
+        Real tmp = (timeGrid[b] - t) / (timeGrid[b] - timeGrid[b - 1]);
+	res[b - 1] = value * tmp;
+        res[b] = value * (1.0 - tmp);
     }
 
+    // check
     Real tmp = 0.0;
     for (auto it : res)
         tmp += it.second;
-    QL_REQUIRE(close_enough(tmp, vega), "vega mapping not close enough");
+    QL_REQUIRE(close_enough(tmp, value), "mapping to time grid not close enough");
 
     return res;
+
 }
 
+/*
 std::map<std::pair<QuantLib::Size, QuantLib::Size>, QuantLib::Real>
 SimmSensitivityStorageManager::swaptionVega(Real vega, const Date& expiry, const Date& maturity,
                                             const Date& referenceDate, const DayCounter& dc) const {
@@ -644,7 +635,7 @@ SimmSensitivityStorageManager::swaptionVega(Real vega, const Date& expiry, const
 
     return res;
 }
-
+*/
 
   
 } // namespace analytics

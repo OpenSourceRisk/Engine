@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <Portfolio>
 
+  <!--
   <Trade id="Swap_Euribor">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -27,7 +28,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -56,7 +57,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -70,7 +71,8 @@
 	</LegData>
     </SwapData>
   </Trade>
-
+  -->
+  
   <!--
   <Trade id="Swap_EUR">
     <TradeType>Swap</TradeType>
@@ -214,6 +216,7 @@
   </Trade>
   -->
 
+  <!--
   <Trade id="Swap_SOFR_3M">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -240,7 +243,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -269,7 +272,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>US</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -283,7 +286,8 @@
 	</LegData>
     </SwapData>
   </Trade>
-
+  -->
+  
   <!--
   <Trade id="FXFWD_EURUSD">
     <TradeType>FxForward</TradeType>
@@ -398,7 +402,7 @@
     </SwapData>
   </Trade>
   -->
-  <!--
+
   <Trade id="EuropeanSwaptionCash">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -478,7 +482,6 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  -->
 
   <!--
   <Trade id="Swap_SONIA_3M">

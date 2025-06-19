@@ -85,7 +85,7 @@ public:
 private:
     QuantLib::Size getCcyIndex(const std::string& ccy) const;
 
-    void processSwapSwaption(QuantLib::Array& delta, std::vector<QuantLib::Matrix>& vega, QuantLib::Real& theta,
+    void processSwapSwaption(QuantLib::Array& delta, std::vector<QuantLib::Array>& vega, QuantLib::Real& theta,
                              const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
                              const QuantLib::ext::shared_ptr<ore::data::Market>& market) const;
 
@@ -97,14 +97,12 @@ private:
                           const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
                           const QuantLib::ext::shared_ptr<ore::data::Market>& market) const;
 
-    // map single swaption vega to the vega matrix
-    std::map<std::pair<QuantLib::Size, QuantLib::Size>, QuantLib::Real>
-    swaptionVega(QuantLib::Real vega, const QuantLib::Date& expiry, const QuantLib::Date& maturity, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
+    // std::map<std::pair<QuantLib::Size, QuantLib::Size>, QuantLib::Real>
+    // swaptionVega(QuantLib::Real vega, const QuantLib::Date& expiry, const QuantLib::Date& maturity, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
 
-    // map single fx vega to the vega grid
     std::map<QuantLib::Size, QuantLib::Real>
-    fxVega(QuantLib::Real vega, const QuantLib::Date& expiry, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
-
+    bucketMapping(QuantLib::Real value, const QuantLib::Date& date, const std::vector<Real>& timeGrid, const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc) const;
+  
     std::vector<std::string> currencies_;
     QuantLib::Size nCurveTenors_;
     QuantLib::Size nSwaptionExpiries_;

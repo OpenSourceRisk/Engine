@@ -2,11 +2,13 @@
 <Simulation>
 
   <Parameters>
-      <Discretization>Exact</Discretization>
-      <Grid>121,1M</Grid>
+      <Discretization>Euler</Discretization>
+      <TimeStepsPerYear>24</TimeStepsPerYear>
+      <!--<Grid>121,1M</Grid>-->
+      <Grid>270,2W</Grid>
       <!--<Grid>1M,1Y,4Y,8Y</Grid>-->
-      <Calendar>EUR,USD</Calendar>
-      <!--<Calendar>NullCalendar</Calendar>-->
+      <!--<Calendar>EUR,USD</Calendar>-->
+      <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>

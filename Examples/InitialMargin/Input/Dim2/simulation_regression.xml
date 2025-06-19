@@ -3,9 +3,8 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
-      <!--<Grid>121,1M</Grid>-->
-      <Grid>270,2W</Grid>
-      <!--<Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>-->
+      <Grid>60,1M</Grid>
+      <!--<Grid>1D,1M,1Y,2Y,3Y,4Y,5Y</Grid>-->
       <TimeStepsPerYear>24</TimeStepsPerYear>
       <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
@@ -15,6 +14,9 @@
       <Samples>10000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+      <CloseOutLag>2W</CloseOutLag>
+      <MporMode>StickyDate</MporMode>
+      <DayCounter>A365F</DayCounter>
   </Parameters>
 
   <CrossAssetModel>
@@ -30,13 +32,6 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
-	  <!--
-          <Calibrate>N</Calibrate>
-          <VolatilityType>Hagan</VolatilityType>
-          <ParamType>Constant</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.00002</InitialValue>
-	  -->
           <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Piecewise</ParamType>
@@ -50,7 +45,7 @@
           <ParamType>Constant</ParamType>
           <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
@@ -72,12 +67,6 @@
           <ParamType>Piecewise</ParamType>
           <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
           <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-	  <!--
-          <Calibrate>N</Calibrate>
-          <ParamType>Constant</ParamType>
-	  <TimeGrid/>
-          <InitialValue>0.00001</InitialValue>
-	  -->
 	</Sigma>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<CollateralBalances>
+
+  <CollateralBalance>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <Currency>EUR</Currency>
+    <!-- Swap -->
+    <!--<InitialMargin>278782</InitialMargin>-->
+    <!-- FX Option -->
+    <!--<InitialMargin>71197</InitialMargin>-->
+    <!-- Swaption -->
+    <InitialMargin>216688</InitialMargin>
+    <VariationMargin>0</VariationMargin>
+  </CollateralBalance>
+    
+</CollateralBalances>

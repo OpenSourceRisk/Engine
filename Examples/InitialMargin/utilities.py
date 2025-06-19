@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import os
 import pandas as pd
 import numpy as np
@@ -87,8 +88,11 @@ def scenarioToMarket(simulationXml, scenarioFile, filterSample, outputDir):
     swaption_expiries = tmp.replace(' ', '').split(',')
     tmp = root.find("Market/SwaptionVolatilities/Terms").text
     swaption_terms = tmp.replace(' ', '').split(',')
+    #tmp = root.find("Market/SwaptionVolatilities/StrikeSpreads").text
+    #swaption_spreads = tmp.replace(' ', '').split(',')
     print("swaption_expiries", swaption_expiries)
     print("swaption_terms", swaption_terms)
+    #print("swaption_spreads", swaption_spreads)
 
     ###############################################################################
     # Load the scenariodump.csv into a dataframe and map to an ORE market data file
@@ -271,25 +275,27 @@ def rawCubeFilter(rawCubeFileName, filterSample):
 
     return cubeData
 
-def netCubeFilter(cubeFileName, nettingSetId, filterSample):
+def netCubeFilter(cubeFileName, nettingSetId, filterSample, asof):
 
     print("read net cube file:", cubeFileName)
     data = pd.read_csv(cubeFileName)
 
-    columns = ["Id", "Date", "NPV"]
+    columns = ["Id", "Date", "Time", "NPV"]
     rowlist = []
 
     for index, row in data.iterrows():
 
         nid = row["#Id"]
         date = row["Date"]
+        time = getTimeDifference(asof, date)
         sample = row["Sample"]
         depth = row["Depth"]
         value = float(row["Value"])
 
         if depth == 0 and sample == filterSample and nid == nettingSetId:
-            rowlist.append([nid, date, '{:.6f}'.format(value)])
+            rowlist.append([nid, date, '{:.6f}'.format(time), '{:.6f}'.format(value)])
 
+        #print (index, row)
     cubeData = pd.DataFrame(rowlist, columns=columns)
 
     return cubeData
@@ -348,3 +354,20 @@ def expectedSimmEvolution(simmCubeFile, outputFile):
     #print(df)
 
     df.to_csv(outputFile, sep=',')
+
+def simmEvolution(sample, simmCubeFile, outputFile, depth):
+    print("read simm cube file:", simmCubeFile)
+    data = pd.read_csv(simmCubeFile)
+
+    #samples = data["Sample"].unique()
+    #print ("number of samples:", len(samples))
+    #print ("unique samples:", samples)
+
+    df = data[data["Sample"] == sample]
+    df2 = df[df["Depth"] == depth]
+    df3 = df2.drop("Sample", axis=1)
+    df4 = df3[df3["Time"] < 10.1]
+    df4 = df4.set_index(["AsOfDate","Time","Currency","SimmSide"])
+
+    df4.to_csv(outputFile, sep=',')
+
