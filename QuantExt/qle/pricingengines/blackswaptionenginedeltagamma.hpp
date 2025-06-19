@@ -426,6 +426,7 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
         results_.additionalResults["singleVega"] = singleVega;
         results_.additionalResults["vol"] = vol;
         results_.additionalResults["atmVol"] = atmVol;
+        results_.additionalResults["exerciseDate"] = exerciseDate;
         // delta
         Real mu = swapFloatLeg.NPV();
         Real black = results_.value / annuity;
