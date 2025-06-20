@@ -28,13 +28,14 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p, const QuantLib::ext::shared_ptr<EngineData>& ed,
-                                     const string& baseCcy,
+PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p,
+                                     const QuantLib::ext::shared_ptr<EngineData>& ed, const string& baseCcy,
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const IborFallbackConfig& iborFallbackConfig,
                                      bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
-    : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), baseCcyDiscountCurve_(baseCcyDiscountCurve) {
+    : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
+      baseCcyDiscountCurve_(baseCcyDiscountCurve) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
 
@@ -109,7 +110,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
 
 void PortfolioAnalyser::addDependencies() {
     DLOG("Start adding dependent curves");
-    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs_, baseCcy_, baseCcyDiscountCurve_);
+    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs_, baseCcy_, baseCcyDiscountCurve_, iborFallbackConfig_);
     DLOG("Finished adding dependent curves");
 }
 
