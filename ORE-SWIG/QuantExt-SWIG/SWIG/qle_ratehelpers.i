@@ -50,6 +50,10 @@ class CrossCcyBasisMtMResetSwapHelper : public RateHelper {
                                     const ext::shared_ptr<IborIndex>& domesticCcyIndex,
                                     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
                                     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+                                    const bool foreignIndexGiven,
+                                    const bool domesticIndexGiven,
+                                    const bool foreignDiscountCurveGiven,
+                                    const bool domesticDiscountCurveGiven,
                                     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve
                                         = Handle<YieldTermStructure>(),
                                     const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve
@@ -74,6 +78,9 @@ class CrossCcyBasisSwapHelper : public RateHelper {
                             const ext::shared_ptr<IborIndex>& spreadIndex,
                             const Handle<YieldTermStructure>& flatDiscountCurve,
                             const Handle<YieldTermStructure>& spreadDiscountCurve,
+                            const bool flatIndexGiven, const bool spreadIndexGiven,
+                            const bool flatDiscountCurveGiven,
+                            const bool spreadDiscountCurveGiven,
                             bool eom = false,
                             bool flatIsDomestic = true);
     ext::shared_ptr<CrossCcyBasisSwap> swap();
@@ -82,18 +89,14 @@ class CrossCcyBasisSwapHelper : public RateHelper {
 %shared_ptr(TenorBasisSwapHelper)
 class TenorBasisSwapHelper : public RateHelper {
   public:
-    TenorBasisSwapHelper(QuantLib::Handle<QuantLib::Quote> spread,
-                            const QuantLib::Period& swapTenor,
-                            const ext::shared_ptr<IborIndex> payIndex,
-                            const ext::shared_ptr<IborIndex> receiveIndex,
-                            const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve
-                                = QuantLib::Handle<QuantLib::YieldTermStructure>(),
-                            bool spreadOnRec = true,
-                            bool includeSpread = false,
-                            const QuantLib::Period& payFrequency = QuantLib::Period(),
-                            const QuantLib::Period& recFrequency = QuantLib::Period(),
-                            const bool telescopicValueDates = false,
-                            QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
+    TenorBasisSwapHelper(QuantLib::Handle<QuantLib::Quote> spread, const QuantLib::Period& swapTenor,
+                         const ext::shared_ptr<IborIndex>& payIndex,
+                         const ext::shared_ptr<IborIndex>& receiveIndex,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve, const bool payIndexGiven,
+                         const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec = true,
+                         const bool includeSpread = false, const QuantLib::Period& payFrequency = QuantLib::Period(),
+                         const QuantLib::Period& recFrequency = QuantLib::Period(), const bool telescopicValueDates = false,
+                         const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
     ext::shared_ptr<TenorBasisSwap> swap();
 };
 
@@ -125,13 +128,15 @@ class BasisTwoSwapHelper : public RateHelper {
                        QuantLib::BusinessDayConvention longFixedConvention,
                        const QuantLib::DayCounter& longFixedDayCount,
                        const ext::shared_ptr<IborIndex>& longIndex,
+                       bool longIndexGiven,
                        QuantLib::Frequency shortFixedFrequency,
                        QuantLib::BusinessDayConvention shortFixedConvention,
                        const QuantLib::DayCounter& shortFixedDayCount,
                        const ext::shared_ptr<IborIndex>& shortIndex,
-                       bool longMinusShort = true,
-                       const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve 
-                             = QuantLib::Handle<QuantLib::YieldTermStructure>());
+                       bool longMinusShort, bool shortIndexGiven,
+                       const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve
+                             = QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                       bool discountCurveGiven = false);
     ext::shared_ptr<VanillaSwap> longSwap();
     ext::shared_ptr<VanillaSwap> shortSwap();
 };
