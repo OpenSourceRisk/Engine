@@ -81,6 +81,7 @@ in listing \ref{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine
 The parameters have the following meaning:
 
 \begin{itemize}
+\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
@@ -90,7 +91,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="Bond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+    </ModelParameters>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
@@ -3865,6 +3868,7 @@ in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardB
 The parameters have the following meaning:
 
 \begin{itemize}
+\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
@@ -3874,7 +3878,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+    </ModelParameters>
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
