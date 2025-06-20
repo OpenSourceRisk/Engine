@@ -321,7 +321,7 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
 QuantLib::Matrix CorrelationMatrixBuilder::kendallCorrelation(const QuantLib::Matrix& mData) {
     QL_REQUIRE(mData.columns() == mData.rows(), "Matrix must be a squared Matrix");
     Size n = mData.rows();
-    QuantLib::Matrix mCorrelation(n, n);
+    Matrix mCorrelation(n, n);
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             vector<double> colI, colJ;

@@ -416,24 +416,26 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                         // Concerns Correlation analytic
                         if (correlation_) {
                             DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
-                            CorrelationMatrixBuilder corrMatrix;
-                            if (correlationMethod_ == "Pearson") {
-                                correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
-                            } else if (correlationMethod_ == "KendallRank") {
-                                QuantLib::Matrix mSensi(deltaKeys.size(), deltaKeys.size());
-                                auto cSensi = scube->second;
-                                std::set<std::string> ids = cSensi->ids();
-                                Size index = 0;
-                                for (auto it = ids.begin(); it != ids.end(); it++, index++) {
-                                    auto d = cSensi->dates();
-                                    for (int j = 0; j < ids.size(); j++) {
-                                        QuantLib::Real cubeValue = cSensi->get(*it, d[0], j);
-                                        mSensi[index][j] = cubeValue;
+                            if (riskGroup->to_string() == "[All, All]") {
+                                CorrelationMatrixBuilder corrMatrix;
+                                if (correlationMethod_ == "Pearson") {
+                                    correlationMatrix_ = corrMatrix.pearsonCorrelation(covarianceMatrix_);
+                                } else if (correlationMethod_ == "KendallRank") {
+                                    QuantLib::Matrix mSensi(deltaKeys.size(), deltaKeys.size());
+                                    auto cSensi = scube->second;
+                                    std::set<std::string> ids = cSensi->ids();
+                                    Size index = 0;
+                                    for (auto it = ids.begin(); it != ids.end(); it++, index++) {
+                                        std::vector<QuantLib::Date> d = cSensi->dates();
+                                        for (int j = 0; j < ids.size(); j++) {
+                                            QuantLib::Real cubeValue = cSensi->get(*it, d[0], j);
+                                            mSensi[index][j] = cubeValue;
+                                        }
                                     }
+                                    correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);
+                                } else {
+                                    QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                                 }
-                                correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);
-                            } else {
-                                QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
                             }
                             //Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
                             for (Size col = 0; col < deltaKeys.size(); col++) {
