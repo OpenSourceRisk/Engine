@@ -63,6 +63,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "ForwardBond: bond type " << bondType << " is not supported.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
