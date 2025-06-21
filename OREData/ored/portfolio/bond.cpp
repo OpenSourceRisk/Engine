@@ -19,7 +19,6 @@
 */
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string_regex.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
@@ -430,18 +429,17 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
 std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& securityId) {
 
     // forward bonds shall have a security id of type isin_FWDEXP_expiry
-    vector<string> tokens;
-    boost::algorithm::split_regex(tokens, securityId, boost::regex( "_FWDEXP_" ));
 
-    Date expiry = Date();
+    Date expiry;
     string strippedId;
-    if (tokens.size() == 2) {
-            DLOG("BondBuilder::checkForwardBond : Forward Bond identified " << securityId);
-            expiry = parseDate(tokens[1]);
-            strippedId = tokens[0];
+
+    auto pos = securityId.find("_FWDEXP_");
+    if (pos != std::string::npos) {
+        strippedId = securityId.substr(0, pos);
+        expiry = parseDate(securityId.substr(pos + 8));
+        DLOG("BondBuilder::checkForwardBond : Forward Bond identified, strippedId = " << strippedId << ", expiry "
+                                                                                      << expiry);
     }
-
-
 
     return std::make_pair(expiry, strippedId);
 }
