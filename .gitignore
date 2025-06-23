@@ -70,6 +70,8 @@ Docs/UserGuide/userguide.pdf
 ##########################
 Examples/Example_?/Output/
 Examples/Example_[0-9][0-9]/Output/
+Examples/Legacy
+Examples/Academy
 # these are generated
 Examples/Example_26/Input/EUR_xois_portfolio.xml
 Examples/Example_26/Input/USD_xois_portfolio.xml
