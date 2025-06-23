@@ -1076,7 +1076,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
     vector<std::regex> regexes;
     regexes.reserve(regexStrs.size());
-    for (auto regexStr : regexStrs) {
+    for (const auto& regexStr : regexStrs) {
         regexes.push_back(regex(regexStr));
     }
 
@@ -1090,7 +1090,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
         // This could be slow
         for (const auto& regex : regexes) {
-            if (regex_match(mdName, regex)) {
+            if (std::regex_match(mdName, regex)) {
                 addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
