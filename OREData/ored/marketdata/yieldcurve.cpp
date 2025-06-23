@@ -1218,6 +1218,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
     for (auto const index : indices) {
 
+        DLOG("Building " << curveSpec_[index]->name());
+
         QL_REQUIRE(!curveSegments_[index].empty(), "no curve segments defined.");
 
         /* Loop over segments and add helpers for each segment. */

@@ -325,8 +325,9 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 
 void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
-    const string& baseCcyDiscountCurve) {
+    const string& baseCcyDiscountCurve, const IborFallbackConfig& iborFallbackConfig) {
 
+    Date asof = QuantLib::Settings::instance().evaluationDate();
     for (const auto& [config, mp] : *objects) {
         std::map<CurveSpec::CurveType, std::set<string>> dependencies;
 
@@ -407,6 +408,14 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                                 dependencies[ct1].insert(id);
                         }
                     }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                dependencies[ct2].insert(id);
+                        }
+                    }
                 }
             }
         }
@@ -426,6 +435,21 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                             if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
                                 newDependencies[ct1].insert(id);
                         }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                newDependencies[ct2].insert(id);
+                        }
+                    }
+                    // handle ibor fallback dependency
+                    if (mo == MarketObject::IndexCurve && iborFallbackConfig.isIndexReplaced(name, asof)) {
+                        auto ct3 = marketObjectToCurveType(mo);
+                        auto id = iborFallbackConfig.fallbackData(name).rfrIndex;
+                        if (!checkMarketObject(objects, ct3, id, curveConfigs, config))
+                            newDependencies[ct3].insert(id);
                     }
                     // for SwapIndexes we are still missing the discount curve dependency
                     if (mo == MarketObject::SwapIndexCurve)
