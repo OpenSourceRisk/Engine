@@ -193,7 +193,8 @@ simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
-simulation/simmarket.cpp)
+simulation/simmarket.cpp
+counterparty/exposures.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -413,7 +414,8 @@ simm/simmtradedata.hpp
 simm/utilities.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
-version.hpp)
+version.hpp
+counterparty/exposures.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
 add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
