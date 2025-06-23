@@ -146,7 +146,7 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
-    std::vector<bool> legMandatoryCashflows()  { return legMandatoryCashflows_; }
+    const std::vector<bool>& legMandatoryCashflows() const { return legMandatoryCashflows_; }
 
     const string& npvCurrency() const { return npvCurrency_; }
 
