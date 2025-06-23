@@ -49,6 +49,9 @@ void BondRepo::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // build security leg (as a bond)
 
     securityLegData_ = originalSecurityLegData_;
+    auto bondType = getBondReferenceDatumType(securityLegData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "BondRepo: bond type " << bondType << " is not supported.");
     securityLegData_.populateFromBondReferenceData(engineFactory->referenceData());
     securityLeg_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), securityLegData_);
     securityLeg_->id() = id() + "_SecurityLeg";
