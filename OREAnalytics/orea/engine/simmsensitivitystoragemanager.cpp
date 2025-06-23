@@ -66,8 +66,9 @@ SimmSensitivityStorageManager::SimmSensitivityStorageManager(const std::vector<s
 
     // Storage vector size for deltas, vegas and theta
     N_ = nc_ + nx_ + nco_ + nxo_ + 1;
-    
-    LOG("SimmSensitivityStorageManager created with depth " << N_);
+
+    LOG("SimmSensitivityStorageManager created with depth " << N_ << " nc=" << nc_ << " nx=" << nx_ << " nco=" << nco_
+                                                            << " nxo=" << nxo_);
 }
 
 Size SimmSensitivityStorageManager::getRequiredSize() const {
@@ -420,7 +421,7 @@ void SimmSensitivityStorageManager::processSwapSwaption(Array& delta, vector<Arr
 void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>& vega, QuantLib::Real& theta,
 						    const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
 						    const QuantLib::ext::shared_ptr<Market>& market) const {
-
+    DLOG("SimmSensitivityStorageManager::processFxOption called");
     Date asof = Settings::instance().evaluationDate();
     DayCounter dc = Actual365Fixed(); // FIXME
 
@@ -468,15 +469,15 @@ void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>&
     }
 
     // FIXME: Vega
-    
+    DLOG("SimmSensitivityStorageManager::processFxOption, process Vega ");
     Real singleVega = qlInstr->result<Real>("singleVega");
     Date exerciseDate = qlInstr->result<Date>("exerciseDate");
     Size idx = 0;
-    Real v = singleVega * tradeMultiplier;
+    Real v = singleVega;
     if (domCcyIndex == 0)
-        idx = forCcyIndex;
+        idx = forCcyIndex - 1;
     else if (forCcyIndex == 0)
-        idx = domCcyIndex;
+        idx = domCcyIndex - 1;
     else {
         QL_FAIL("case not covered");
     }
@@ -484,8 +485,11 @@ void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>&
     map<Size,Real> vegaContributions = bucketMapping(v, exerciseDate, fxExpiryTimes_, asof, dc);	    
     // and add the contributions
     for (auto it : vegaContributions) {
-        LOG("map fx single vega " << singleVega << " to vega vector " << idx << ", " << it.first << ": " << it.second);
-        vega[idx][it.first] += it.second;
+        // LOG("map fx single vega " << singleVega << " to vega vector " << idx << ", " << it.first << ": " << it.second);
+	// LOG("map fx single vega, vega size " << vega.size());
+	// LOG("map fx single vega, vega size " << vega.size());
+	// LOG("map fx single vega, vega[" << idx << "]  size " << vega[idx].size());	
+        vega[idx][it.first] += it.second * tradeMultiplier;
     }
 }
 

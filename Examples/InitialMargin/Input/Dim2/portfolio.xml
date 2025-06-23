@@ -305,7 +305,7 @@
     </FxForwardData>
   </Trade>
   -->
-  <!--
+
   <Trade id="FX_CALL_OPTION_EURUSD">
     <TradeType>FxOption</TradeType>
     <Envelope>
@@ -321,7 +321,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2035-02-10</ExerciseDate>
+          <ExerciseDate>2030-03-10</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
@@ -330,7 +330,7 @@
       <SoldAmount>1030750</SoldAmount>
     </FxOptionData>
   </Trade>
-  -->
+
   <!--
   <Trade id="ForwardSwap">
     <TradeType>Swap</TradeType>
@@ -403,6 +403,7 @@
   </Trade>
   -->
 
+  <!--
   <Trade id="EuropeanSwaptionCash">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -482,7 +483,8 @@
       </LegData>
     </SwaptionData>
   </Trade>
-
+  -->
+  
   <!--
   <Trade id="Swap_SONIA_3M">
     <TradeType>Swap</TradeType>

@@ -25,9 +25,9 @@ print("+-----------------------------------------------------+")
 
 dimCubeFile = "Output/Dim2/AmcCg/dim_cube.csv"
 dimCubeFile2 = "Output/Dim2/SimmAnalytic/dim_cube.csv"
-#simmCubeFile = "Output/DimValidation/simm_cube.csv"
+simmCubeFile = "Output/DimValidation/simm_cube.csv"
 
-def pathwiseComparison(s, oreex, color1, color2, depth):
+def pathwiseComparison(s, oreex, color1, color2, color3, depth):
     dimEvolutionFile = "Dim2/AmcCg/dim_evolution_" + str(s) + "_" + str(depth) + ".csv"
     utilities.simmEvolution(s - 1, dimCubeFile, "Output/" + dimEvolutionFile, depth)
     print("evolution file", dimEvolutionFile, "written")
@@ -36,17 +36,18 @@ def pathwiseComparison(s, oreex, color1, color2, depth):
     utilities.simmEvolution(s - 1, dimCubeFile2, "Output/" + dimEvolutionFile2, depth)
     print("evolution file", dimEvolutionFile, "written")
 
-#    simmEvolutionFile = "DimValidation/simm_evolution_" + str(s) + "_" + str(depth) + ".csv"
-#    utilities.simmEvolution(s, simmCubeFile, "Output/" + simmEvolutionFile, depth)
-#    print("evolution file", simmEvolutionFile, "written")
+    simmEvolutionFile = "DimValidation/simm_evolution_" + str(s) + "_" + str(depth) + ".csv"
+    utilities.simmEvolution(s, simmCubeFile, "Output/" + simmEvolutionFile, depth)
+    print("evolution file", simmEvolutionFile, "written")
 
-#    oreex.plot(simmEvolutionFile, 1, 5, color1, "SIMM Sample " + str(s))
+    oreex.plot(simmEvolutionFile, 1, 5, color3, "SIMM Sample " + str(s))
     oreex.plot(dimEvolutionFile, 1, 5, color2, "DIM AMC/AD Sample " + str(s))
     oreex.plot(dimEvolutionFile2, 1, 5, color1, "DIM Classic Sample " + str(s))
 
 oreex.setup_plot("simm_evolution_pathwise_0")
-pathwiseComparison(2, oreex, 'r', 'g', 0)    
-pathwiseComparison(7, oreex, 'b', 'm', 0)    
+#pathwiseComparison(2, oreex, 'r', 'g', 0)    
+pathwiseComparison(8, oreex, 'r', 'b', 'black', 0)    
+#pathwiseComparison(7, oreex, 'b', 'm', 0)    
 #pathwiseComparison(4, oreex, 'r', 'g', 0)    
 #pathwiseComparison(5, oreex, 'r', 'g', 0)    
 #pathwiseComparison(6, oreex, 'b', 'm', 0)    

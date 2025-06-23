@@ -4,8 +4,9 @@
   <Parameters>
       <Discretization>Euler</Discretization>
       <TimeStepsPerYear>24</TimeStepsPerYear>
+      <Grid>135,2W</Grid>
       <!--<Grid>121,1M</Grid>-->
-      <Grid>270,2W</Grid>
+      <!--<Grid>270,2W</Grid>-->
       <!--<Grid>1M,1Y,4Y,8Y</Grid>-->
       <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
