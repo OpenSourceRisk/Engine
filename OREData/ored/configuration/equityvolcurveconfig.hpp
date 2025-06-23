@@ -95,7 +95,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     string ccy_;
     std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;

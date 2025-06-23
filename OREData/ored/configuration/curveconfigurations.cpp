@@ -418,39 +418,48 @@ CurveConfigurations::findInflationVolCurveConfig(const string& id, InflationCapF
 
 std::map<CurveSpec::CurveType, std::set<string>>
 CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
-    QuantLib::ext::shared_ptr<CurveConfig> cc;
     std::map<CurveSpec::CurveType, std::set<string>> ids;
     if (!curveId.empty()) {
-        // special case for FX and SwapIndex - we don't have a curve config
-        if (type == CurveSpec::CurveType::FX) {
-            auto ccyPairs = parseCurrencyPair(curveId, "");
-            ids[CurveSpec::CurveType::Yield].insert(ccyPairs.first.code());
-            ids[CurveSpec::CurveType::Yield].insert(ccyPairs.second.code());
-        } else if (type == CurveSpec::CurveType::SwapIndex) {
-            QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-            auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(curveId));
-            QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << curveId);
-            std::string indexName;
-            if (auto con = QuantLib::ext::dynamic_pointer_cast<data::IRSwapConvention>(
-                    conventions->get(swapCon->conventions())))
-                indexName = con->indexName();
-            else if (auto conOisComp = QuantLib::ext::dynamic_pointer_cast<data::OisConvention>(
-                         conventions->get(swapCon->conventions())))
-                indexName = conOisComp->indexName();
-            else if (auto conOisAvg = QuantLib::ext::dynamic_pointer_cast<data::AverageOisConvention>(
-                         conventions->get(swapCon->conventions())))
-                indexName = conOisAvg->indexName();
-            if (!isGenericIborIndex(indexName))
-                ids[CurveSpec::CurveType::Yield].insert(indexName); 
-        } else {
-            try {
-                cc = get(type, curveId);
-                if (cc)
-                    ids = cc->requiredCurveIds();
-            } catch (...) {
-            }
+        try {
+            if (auto cc = get(type, curveId))
+                ids = cc->requiredCurveIds();
+        } catch (...) {
         }
-    }    
+    }
+    return ids;
+}
+
+std::map<MarketObject, std::set<string>> CurveConfigurations::requiredNames(const CurveSpec::CurveType& type,
+                                                                            const std::string& curveId,
+                                                                            const std::string& configuration) const {
+    std::map<MarketObject, std::set<string>> ids;
+    if (type == CurveSpec::CurveType::FX) {
+        auto ccyPairs = parseCurrencyPair(curveId, "");
+        ids[MarketObject::DiscountCurve].insert(ccyPairs.first.code());
+        ids[MarketObject::DiscountCurve].insert(ccyPairs.second.code());
+    } else if (type == CurveSpec::CurveType::SwapIndex) {
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(curveId));
+        QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << curveId);
+        std::string indexName;
+        if (auto con =
+                QuantLib::ext::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions())))
+            indexName = con->indexName();
+        else if (auto conOisComp =
+                     QuantLib::ext::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions())))
+            indexName = conOisComp->indexName();
+        else if (auto conOisAvg = QuantLib::ext::dynamic_pointer_cast<data::AverageOisConvention>(
+                     conventions->get(swapCon->conventions())))
+            indexName = conOisAvg->indexName();
+        if (!isGenericIborIndex(indexName))
+            ids[MarketObject::IndexCurve].insert(indexName);
+    } else if (!curveId.empty()) {
+        try {
+            if (auto cc = get(type, curveId))
+                ids = cc->requiredNames(configuration);
+        } catch (...) {
+        }
+    }
     return ids;
 }
 

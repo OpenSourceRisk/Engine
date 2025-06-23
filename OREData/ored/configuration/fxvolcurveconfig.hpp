@@ -138,7 +138,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     Dimension dimension_;
     vector<string> expiries_;

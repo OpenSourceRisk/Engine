@@ -169,7 +169,7 @@ public:
      //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
     string ccyFromSwapIndexBase(const std::string& swapIndexBase);
     //
     const string underlyingLabel_, rootNodeLabel_, marketDatumInstrumentLabel_, qualifierLabel_;
