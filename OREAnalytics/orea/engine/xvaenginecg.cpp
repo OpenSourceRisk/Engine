@@ -918,12 +918,19 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
                    "XvaEngineCG::populateDynamicIMOutputCube(): netting set "
                        << ns << " not found in output cube, this is an internal error.");
 
-        dynamicIMOutputCube_->setT0(im[0].at(0), 0);
+        // dynamicIMOutputCube_->setT0(im[0].at(0), 0);
+        dynamicIMOutputCube_->setT0(im[0].at(0), nidx->second, 0);
+	dynamicIMOutputCube_->setT0(dynamicDeltaIM_[ns][0].at(0), nidx->second, 1);
+	dynamicIMOutputCube_->setT0(dynamicVegaIM_[ns][0].at(0), nidx->second, 2);
+	dynamicIMOutputCube_->setT0(dynamicCurvatureIM_[ns][0].at(0), nidx->second, 3);
 
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size k = 0; k < im[i + 1].size(); ++k) {
                 // convention in the output cube is im deflated by numeraire
                 dynamicIMOutputCube_->set(im[i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 0);
+                dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 1);
+                dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 2);
+                dynamicIMOutputCube_->set(dynamicCurvatureIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 3);
             }
         }
     }
@@ -961,6 +968,10 @@ void XvaEngineCG::calculateDynamicIM() {
 
     for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicDeltaIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicVegaIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicCurvatureIM_[n] =
+            std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
     }
 
     // sensi bucketing configuration
@@ -1365,8 +1376,17 @@ void XvaEngineCG::calculateDynamicIM() {
             // end debug
             dynamicIM_[n][i] =
                 imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+            dynamicDeltaIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
+                                                       conditionalFxVega, true, false, false);
+            dynamicVegaIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
+                                                      conditionalFxVega, false, true, false);
+            dynamicCurvatureIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
+                                                           conditionalFxVega, false, false, true);
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
+		dynamicDeltaIM_[n][j] = dynamicDeltaIM_[n][i];
+                dynamicVegaIM_[n][j] = dynamicVegaIM_[n][i];
+                dynamicCurvatureIM_[n][j] = dynamicCurvatureIM_[n][i];
             }
         }
 

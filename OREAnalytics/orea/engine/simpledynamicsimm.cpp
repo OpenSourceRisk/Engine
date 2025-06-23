@@ -147,7 +147,10 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
 QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
                                                   const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                                   const std::vector<QuantExt::RandomVariable>& fxDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega) {
+                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
+						  bool delta, bool vega, bool curvature) {
+
+    QL_REQUIRE(delta || vega || curvature, "at least one margin component required");
 
     // DeltaMargin_IR
 
@@ -255,12 +258,18 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
     // SIMM_IR
 
-    RandomVariable imIr = deltaMarginIr + vegaMarginIr + curvatureMarginIr;
+    // RandomVariable imIr = deltaMarginIr + vegaMarginIr + curvatureMarginIr;
+    RandomVariable imIr(n_, 0.0);
+    if (delta)
+        imIr += deltaMarginIr;
+    if (vega)
+        imIr += vegaMarginIr;
+    if (curvature)
+        imIr += curvatureMarginIr;
 
     // DeltaMargin_FX
 
     RandomVariable deltaMarginFx(n_, 0.0);
-
     {
         std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_, 0.0));
 
@@ -351,7 +360,14 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
     // SIMM_FX
 
-    RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
+    // RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
+    RandomVariable imFx(n_, 0.0);
+    if (delta)
+        imFx += deltaMarginFx;
+    if (vega)
+        imFx += vegaMarginFx;
+    if (curvature)
+        imFx += curvatureMarginFx;
 
     // SIMM_RatesFX
 

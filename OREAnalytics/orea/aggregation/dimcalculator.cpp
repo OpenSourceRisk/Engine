@@ -60,6 +60,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     QL_REQUIRE(cubeInterpretation_, "cube interpretation is null");
     QL_REQUIRE(scenarioData_, "aggregation scenario data is null");
 
+    DLOG("IM Cube Depth " << dimCubeDepth);
+    
     cubeIsRegular_ = !cubeInterpretation_->withCloseOutLag();
     datesLoopSize_ = cubeIsRegular_ ? cube_->dates().size() - 1 : cube_->dates().size();
 

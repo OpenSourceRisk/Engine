@@ -626,9 +626,10 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
         if (inputs_->xvaCgDynamicIM()) {
-            // cube storing dynamic IM per netting set
+            // cube storing dynamic IM per netting set (total margin, delta, vega, curvature), i.e. depth 4
+            Size imCubeDepth = 4;
             nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
-                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, 1, 0.0f);
+                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, imCubeDepth, 0.0f);
         }
 
         XvaEngineCG engine(
@@ -811,9 +812,10 @@ void XvaAnalyticImpl::runPostProcessor() {
             QuantLib::ext::shared_ptr<SimmHelper> simmHelper = QuantLib::ext::make_shared<SimmHelper>(
                 analytic()->configurations().crossAssetModelData->currencies(),
 		nettingSetCube_, scenarioData_, sensitivityStorageManager_, analytic()->market());
+            Size imCubeDepth = 4; // allow for total, delta, vega and curvature margin at depths 0-3
             dimCalculator_ = QuantLib::ext::make_shared<DynamicSimmCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, simmHelper, dimQuantile,
-                dimHorizonCalendarDays, currentIM);
+                dimHorizonCalendarDays, currentIM, imCubeDepth);
         } else if (inputs_->dimModel() == "DynamicIM") {
             QL_REQUIRE(nettingSetCube_ && inputs_->xvaCgDynamicIM() &&
                            inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
