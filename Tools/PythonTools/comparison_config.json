@@ -299,6 +299,7 @@
           {
             "names": [
               "AddOn",
+              "NPV",
               "IndependentAmountHeld",
               "InitialMargin",
               "VariationMargin",
