@@ -659,6 +659,18 @@ std::vector<string> parseListOfValues(string s, const char escape, const char de
     return vec;
 }
 
+std::vector<int> parseListOfValuesAsInt(string s, const char escape, const char delim, const char quote) {
+    boost::trim(s);
+    std::vector<int> vec;
+    boost::escaped_list_separator<char> sep(escape, delim, quote);
+    boost::tokenizer<boost::escaped_list_separator<char>> tokens(s, sep);
+    for (auto r : tokens) {
+        boost::trim(r);
+        vec.push_back(std::stoi(r));
+    }
+    return vec;
+}
+
 AmortizationType parseAmortizationType(const std::string& s) {
     static map<string, AmortizationType> type = {
         {"None", AmortizationType::None},
