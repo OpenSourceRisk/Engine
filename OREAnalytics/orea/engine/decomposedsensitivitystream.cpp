@@ -46,24 +46,25 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
 }
 
 DecomposedSensitivityStream::DecomposedSensitivityStream(
-        const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
-        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr) : ss_(ss), baseCurrency_(baseCurrency),
-      refDataManager_(refDataManager),
-      curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
+    const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket)
+    : ss_(ss), baseCurrency_(baseCurrency), refDataManager_(refDataManager), curveConfigs_(curveConfigs),
+      ssd_(scenarioData), todaysMarket_(todaysMarket) {
     reset();
-    
+
     std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights;
 
-    for(const auto& trade : portfolio->trades()){
-        bool decompose = false;    
-        std::map<string, double> sensitivityDecompositionWeights
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        bool decompose = false;
+        std::map<string, double> sensitivityDecompositionWeights;
+        
         decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decompose);
         if (decompose) {
-            defaultRiskDecompositionWeights_[trade->id()] = sensitivityDecompositionWeights;
+            defaultRiskDecompositionWeights_[tradeId] = sensitivityDecompositionWeights;
         }
     }
     decompose_ = !defaultRiskDecompositionWeights_.empty();

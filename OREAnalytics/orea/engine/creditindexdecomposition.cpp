@@ -17,9 +17,11 @@
 */
 
 #include <orea/engine/creditindexdecomposition.hpp>
+#include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswapoption.hpp>
-#include <ored/portfolio/syntheticcdo.hpp>
+namespace ore {
+namespace analytics {
 
 void decomposeCreditIndex(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
                           const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -27,23 +29,22 @@ void decomposeCreditIndex(const QuantLib::ext::shared_ptr<ore::data::Trade>& tra
 
     auto indexCDS = QuantLib::ext::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwap>(trade);
     auto indexCDSwapOption = QuantLib::ext::dynamic_pointer_cast<ore::data::IndexCreditDefaultSwapOption>(trade);
-    auto cdo = QuantLib::ext::shared_ptr<ore::data::SyntheticCDO> cdo =
-                        QuantLib::ext::dynamic_pointer_cast<ore::data::SyntheticCDO>(trade);
-    
-    if(indexCDS == nullptr && indexCDSwapOption == nullptr && cdo == nullptr) {
+    auto cdo = QuantLib::ext::dynamic_pointer_cast<ore::data::SyntheticCDO>(trade);
+
+    if (indexCDS == nullptr && indexCDSwapOption == nullptr && cdo == nullptr) {
         decompose = false;
         sensitivityDecompositionWeights.clear();
         return;
     }
 
-    if(cdo){
+    if (cdo) {
         decompose = cdo->useSensitivitySimplification();
         sensitivityDecompositionWeights = cdo->basketConstituents();
         return;
     }
 
-
     try {
+        ore::data::CreditPortfolioSensitivityDecomposition sensitivityDecomposition;
         map<string, QuantLib::Real> constituents;
         if (indexCDS) {
             sensitivityDecomposition = indexCDS->sensitivityDecomposition();
@@ -58,8 +59,9 @@ void decomposeCreditIndex(const QuantLib::ext::shared_ptr<ore::data::Trade>& tra
         sensitivityDecompositionWeights.clear();
 
         if (sensitivityDecomposition == ore::data::CreditPortfolioSensitivityDecomposition::NotionalWeighted) {
-            QuantLib::Real totalNotional = std::accumulate(constituents.begin(), constituents.end(), 0,
-                                                 [](QuantLib::Real v, map<string, QuantLib::Real>::value_type& p) { return v + p.second; });
+            QuantLib::Real totalNotional = std::accumulate(
+                constituents.begin(), constituents.end(), 0,
+                [](QuantLib::Real v, map<string, QuantLib::Real>::value_type& p) { return v + p.second; });
             for (auto& c : constituents) {
                 if (sensitivityDecompositionWeights.find(c.first) == sensitivityDecompositionWeights.end())
                     sensitivityDecompositionWeights.emplace(c.first, c.second / totalNotional);
@@ -114,3 +116,6 @@ void decomposeCreditIndex(const QuantLib::ext::shared_ptr<ore::data::Trade>& tra
         sensitivityDecompositionWeights.clear();
     }
 }
+
+} // namespace analytics
+} // namespace ore
