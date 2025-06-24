@@ -2,6 +2,7 @@
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
 configuration/bootstrapconfig.cpp
+configuration/baseltrafficlightconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
@@ -391,6 +392,7 @@ utilities/xmlutils.cpp)
 
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
+configuration/baseltrafficlightconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
