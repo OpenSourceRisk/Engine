@@ -98,6 +98,7 @@ public:
 
     void setCurrency(const string& currency) { currency_ = currency; }
     void setCalendar(const string& calendar) { calendar_ = calendar; }
+    void setType(const Type& type) { type_ = type; }
     //@}
 
 private:

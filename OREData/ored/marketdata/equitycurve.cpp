@@ -289,6 +289,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (quotes_.size() == 0) {
                 DLOG("No Equity Forward quotes provided for " << config->curveID()
                                                               << ", continuing without dividend curve.");
+                config->setType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
@@ -296,6 +297,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (oqt.size() == 0) {
                 DLOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
+                config->setType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
                 DLOG("Building Equity Dividend Yield curve from Option Volatilities");
@@ -369,6 +371,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 } else {
                     DLOG("No overlapping call and put quotes for equity " << spec.curveConfigID()
                                                                           << " building NoDividends curve");
+                    config->setType(EquityCurveConfig::Type::NoDividends);
                     buildCurveType = EquityCurveConfig::Type::NoDividends;
                 }
             }
