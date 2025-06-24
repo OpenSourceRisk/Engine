@@ -197,10 +197,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             auto it = std::find(trade->legMandatoryCashflows().begin(), trade->legMandatoryCashflows().end(), i);
 
             if (it != trade->legMandatoryCashflows().end()) 
-            {
                 mandatory = true;
-                std:: cout<< "AAAAA -----" << std::endl;
-            }
 
             if(legBasedReport || mandatory)
             {
