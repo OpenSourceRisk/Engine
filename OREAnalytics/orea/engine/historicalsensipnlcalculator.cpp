@@ -114,13 +114,24 @@ void CovarianceCalculator::updateAccumulators(const ext::shared_ptr<NPVCube>& sh
 void CovarianceCalculator::populateCovariance(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys) {
     LOG("Populate the covariance matrix with the calculated covariances");
     covariance_ = Matrix(keys.size(), keys.size());
+    correlation_ = Matrix(keys.size(), keys.size());
     Size i = 0;
     for (auto ito = keys.begin(); ito != keys.end(); ito++) {
         covariance_[i][i] = boost::accumulators::covariance(accCov_.at(make_pair(ito->second, ito->second)));
+        correlation_[i][i] = 1.0;
+        Real var_i = boost::accumulators::variance(accCov_.at(std::make_pair(ito->second, ito->second)));
         Size j = 0;
         for (auto iti = keys.begin(); iti != ito; iti++) {
+            Size key_j = iti->second;
             covariance_[i][j] = covariance_[j][i] =
                 boost::accumulators::covariance(accCov_.at(make_pair(iti->second, ito->second)));
+            const auto& acc_jj = accCov_.at(std::make_pair(key_j, key_j));
+            Real var_j = boost::accumulators::variance(acc_jj);
+            Real corr_ij = 0.0;
+            if (var_i > 0.0 && var_j > 0.0) {
+                corr_ij = covariance_[i][j] / (std::sqrt(var_i) * std::sqrt(var_j));
+            }
+            correlation_[i][j] = correlation_[j][i] = corr_ij;
             j++;
         }
         i++;

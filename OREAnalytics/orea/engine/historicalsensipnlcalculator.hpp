@@ -90,15 +90,18 @@ public:
     void updateAccumulators(const QuantLib::ext::shared_ptr<NPVCube>& shiftCube, QuantLib::Date startDate, QuantLib::Date endDate, QuantLib::Size index);
     void populateCovariance(const std::set<std::pair<RiskFactorKey, QuantLib::Size>>& keys);
     const Matrix& covariance() const { return covariance_; }
+    const Matrix& correlation() const { return correlation_; }
 
 private:
     typedef boost::accumulators::accumulator_set<
         QuantLib::Real,
-        boost::accumulators::stats<boost::accumulators::tag::covariance<QuantLib::Real, boost::accumulators::tag::covariate1>>>
-        accumulator;
+        boost::accumulators::stats<
+            boost::accumulators::tag::covariance<QuantLib::Real, boost::accumulators::tag::covariate1>,
+            boost::accumulators::tag::variance>>accumulator;
     std::map<std::pair<QuantLib::Size, QuantLib::Size>, accumulator> accCov_;
     ore::data::TimePeriod covariancePeriod_;
     QuantLib::Matrix covariance_;
+    QuantLib::Matrix correlation_;
 };
 
 class HistoricalSensiPnlCalculator {
