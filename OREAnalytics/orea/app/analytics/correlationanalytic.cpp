@@ -113,10 +113,12 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
+        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
         auto scenarios = buildHistoricalScenarioGenerator(
             inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-            inputs_->mporOverlappingPeriods());
+            defaultReturnConfig, inputs_->mporOverlappingPeriods());
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
