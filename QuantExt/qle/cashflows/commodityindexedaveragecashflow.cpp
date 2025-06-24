@@ -433,7 +433,8 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withAvgPricePrecision(Qu
 CommodityIndexedAverageLeg::operator Leg() const {
 
     // Number of commodity indexed average cashflows
-    Size numberCashflows = schedule_.size() - 1;
+    bool singleDateSchedule = schedule_.size() == 1;
+    Size numberCashflows = singleDateSchedule ? 1 : schedule_.size() - 1;
 
     // Initial consistency checks
     QL_REQUIRE(!quantities_.empty(), "No quantities given");
