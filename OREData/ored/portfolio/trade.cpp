@@ -93,8 +93,8 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
-
-        legMandatoryCashflows_.push_back(true); //TODO premiums always
+        
+        legMandatoryCashflows_.push_back(legs_.size()-1); 
 
 	    // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
@@ -117,9 +117,7 @@ void Trade::validate() const {
     QL_REQUIRE(envelope_.initialized(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
-                   "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
-        QL_REQUIRE(legs_.size() == legMandatoryCashflows_.size(),
-                   "Inconsistent number of mandatory cashflow indicators for legs in trade " << id_ << ".");
+                   "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");        
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }

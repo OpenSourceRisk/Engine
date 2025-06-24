@@ -182,26 +182,27 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
         }
     }
 
-    bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
-    if(true)
     {
         // leg based cashflow reporting
+        bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
+        
         auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
         Size addResultsLegs = 0;
         if (maxLegNoIter != cashflowNumber.end())
             addResultsLegs = maxLegNoIter->first + 1;
         const vector<Leg>& legs = trade->legs();
         for (size_t i = 0; i < legs.size(); i++) 
-         {
+        {
             bool mandatory = false;
-            try
+            auto it = std::find(trade->legMandatoryCashflows().begin(), trade->legMandatoryCashflows().end(), i);
+
+            if (it != trade->legMandatoryCashflows().end()) 
             {
-                mandatory = trade->legMandatoryCashflows()[i];
+                mandatory = true;
+                std:: cout<< "AAAAA -----" << std::endl;
             }
-            catch(...)
-            {
-            }            
-            if(legBasedReport || mandatory)        
+
+            if(legBasedReport || mandatory)
             {
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trade->legPayers()[i];

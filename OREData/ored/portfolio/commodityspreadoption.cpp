@@ -167,7 +167,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     for (Size i = 0; i < legData_.size(); ++i) {
         legPayers_.push_back(legData_[i].isPayer()); 
-        legMandatoryCashflows_.push_back(false);
 
         // build legs
         auto commLegData =
