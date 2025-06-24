@@ -101,7 +101,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     vector<string> fwdQuotes_;
     string forecastingCurve_;

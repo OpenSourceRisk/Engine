@@ -93,6 +93,7 @@ public:
     }
 
 private:
+    void populateRequiredIds() const override {}
     void setQuotes() {
         quotes_.clear();
         if (!spreadQuote_.empty())

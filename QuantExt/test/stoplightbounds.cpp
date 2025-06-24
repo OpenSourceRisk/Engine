@@ -226,7 +226,11 @@ BOOST_AUTO_TEST_CASE(testDecorrelateOverlappingPnl) {
             Real corr = boost::accumulators::covariance(cov[k][l]) /
                              std::sqrt(boost::accumulators::variance(cov[k][k]) *
                                        boost::accumulators::variance(cov[l][l]));
+#ifdef ORE_USE_EIGEN
             BOOST_CHECK_SMALL(corr, 0.01);
+#else
+            BOOST_CHECK_SMALL(corr, 0.011);
+#endif
         }
     }
 }

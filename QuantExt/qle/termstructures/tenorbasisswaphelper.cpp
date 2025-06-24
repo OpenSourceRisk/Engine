@@ -25,102 +25,103 @@
 namespace QuantExt {
 
 TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
-                                           const QuantLib::ext::shared_ptr<IborIndex> payIndex,
-                                           const QuantLib::ext::shared_ptr<IborIndex> receiveIndex,
-                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnRec,
-                                           bool includeSpread, const Period& payFrequency, const Period& recFrequency,
-                                           const bool telescopicValueDates, QuantExt::SubPeriodsCoupon1::Type type)
+                                           const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
+                                           const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex,
+                                           const Handle<YieldTermStructure>& discountingCurve, const bool payIndexGiven,
+                                           const bool receiveIndexGiven, const bool discountingGiven,
+                                           const bool spreadOnRec, const bool includeSpread, const Period& payFrequency,
+                                           const Period& recFrequency, const bool telescopicValueDates,
+                                           const QuantExt::SubPeriodsCoupon1::Type type)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
+      payIndexGiven_(payIndexGiven), receiveIndexGiven_(receiveIndexGiven), discountingGiven_(discountingGiven),
       spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
       recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
       discountHandle_(discountingCurve) {
 
-       /* depending on the given curves we proceed as outlined in the following table
+    /* depending on the given curves we proceed as outlined in the following table
 
-       x = curve is given
-       . = curve is missing
+    x = curve is given
+    . = curve is missing
 
-       Case | PAY | REC  | Discount | Action
-       =========================================
-         0  |  .  |   .  |    .     | throw exception
-         1  |  .  |   .  |    x     | throw exception
-         2  |  .  |   x  |    .     | imply PAY = Discount
-         3  |  .  |   x  |    x     | imply PAY
-         4  |  x  |   .  |    .     | imply REC = Discount
-         5  |  x  |   .  |    x     | imply REC
-         6  |  x  |   x  |    .     | imply Discount
-         7  |  x  |   x  |    x     | throw exception
+    Case | PAY | REC  | Discount | Action
+    =========================================
+      0  |  .  |   .  |    .     | throw exception
+      1  |  .  |   .  |    x     | throw exception
+      2  |  .  |   x  |    .     | imply PAY = Discount
+      3  |  .  |   x  |    x     | imply PAY
+      4  |  x  |   .  |    .     | imply REC = Discount
+      5  |  x  |   .  |    x     | imply REC
+      6  |  x  |   x  |    .     | imply Discount
+      7  |  x  |   x  |    x     | throw exception
 
-        Overnight(ON) vs. IBOR CASE:
-        Case 2 from above:
-            if REC (given) is ON, REC = Discount = OIS, imply PAY only
-            else : PAY (missing) is ON, imply PAY = Discount = OIS (as before)
+     Overnight(ON) vs. IBOR CASE:
+     Case 2 from above:
+         if REC (given) is ON, REC = Discount = OIS, imply PAY only
+         else : PAY (missing) is ON, imply PAY = Discount = OIS (as before)
 
-        Case 4 from above:
-            if PAY (given) is ON, PAY = Discount = OIS , imply REC only
-            else : REC (missing) is ON, then imply REC = Discount = OIS (as before)
+     Case 4 from above:
+         if PAY (given) is ON, PAY = Discount = OIS , imply REC only
+         else : REC (missing) is ON, then imply REC = Discount = OIS (as before)
 
-        */
+     */
 
-       automaticDiscountRelinkableHandle_ = false;
+    automaticDiscountRelinkableHandle_ = false;
 
-       bool payGiven = !payIndex_->forwardingTermStructure().empty();
-       bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
-       bool discountGiven = !discountHandle_.empty();
+    QuantLib::ext::shared_ptr<OvernightIndex> payIndexON =
+        QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(payIndex_);
+    QuantLib::ext::shared_ptr<OvernightIndex> recIndexON =
+        QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
 
-       QuantLib::ext::shared_ptr<OvernightIndex> payIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(payIndex_);
-       QuantLib::ext::shared_ptr<OvernightIndex> recIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
+    if (discountingGiven)
+        discountRelinkableHandle_.linkTo(*discountHandle_);
 
-       if(discountGiven)
-           discountRelinkableHandle_.linkTo(*discountHandle_);
+    if (!payIndexGiven && !receiveIndexGiven && !discountingGiven) {
+        // case 0
+        QL_FAIL("no curve given");
+    } else if (!payIndexGiven && !receiveIndexGiven && discountingGiven) {
+        // case 1
+        QL_FAIL("no index curve given");
+    } else if (!payIndexGiven && receiveIndexGiven && !discountingGiven) {
+        // case 2
+        payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+        payIndex_->unregisterWith(termStructureHandle_);
+        if (!payIndexON && recIndexON) {
+            discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
+        } else {
+            automaticDiscountRelinkableHandle_ = true;
+        }
+    } else if (!payIndexGiven && receiveIndexGiven && discountingGiven) {
+        // case 3
+        payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+        payIndex_->unregisterWith(termStructureHandle_);
+    } else if (payIndexGiven && !receiveIndexGiven && !discountingGiven) {
+        // case 4
+        receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+        receiveIndex_->unregisterWith(termStructureHandle_);
+        if (payIndexON && !recIndexON) {
+            discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
+        } else {
+            automaticDiscountRelinkableHandle_ = true;
+        }
+    } else if (payIndexGiven && !receiveIndexGiven && discountingGiven) {
+        // case 5
+        receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+        receiveIndex_->unregisterWith(termStructureHandle_);
+    } else if (payIndexGiven && receiveIndexGiven && !discountingGiven) {
+        // case 6
+        automaticDiscountRelinkableHandle_ = true;
+    } else if (payIndexGiven && receiveIndexGiven && discountingGiven) {
+        // case 7
+        QL_FAIL("Both Index and the Discount curves are all given");
+    }
 
-       if (!payGiven && !recGiven && !discountGiven) {
-           // case 0
-           QL_FAIL("no curve given");
-       } else if (!payGiven && !recGiven && discountGiven) {
-           // case 1
-           QL_FAIL("no index curve given");
-       } else if (!payGiven && recGiven && !discountGiven) {
-           // case 2
-           payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
-           payIndex_->unregisterWith(termStructureHandle_);
-           if (!payIndexON && recIndexON) {
-               discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
-           } else {
-               automaticDiscountRelinkableHandle_ = true;
-           }
-       } else if (!payGiven && recGiven && discountGiven) {
-           // case 3
-           payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
-           payIndex_->unregisterWith(termStructureHandle_);
-       } else if (payGiven && !recGiven && !discountGiven) {
-           // case 4
-           receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
-           receiveIndex_->unregisterWith(termStructureHandle_);
-           if (payIndexON && !recIndexON) {
-               discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
-           } else {
-               automaticDiscountRelinkableHandle_ = true;
-           }
-       } else if (payGiven && !recGiven && discountGiven) {
-           // case 5
-           receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
-           receiveIndex_->unregisterWith(termStructureHandle_);
-       } else if (payGiven && recGiven && !discountGiven) {
-           // case 6
-           automaticDiscountRelinkableHandle_ = true;
-       } else if (payGiven && recGiven && discountGiven) {
-           // case 7
-           QL_FAIL("Both Index and the Discount curves are all given");
-       }
+    payFrequency_ = payFrequency == Period() ? payIndex_->tenor() : payFrequency;
+    recFrequency_ = recFrequency == Period() ? receiveIndex_->tenor() : recFrequency;
 
-       payFrequency_ = payFrequency == Period() ? payIndex_->tenor() : payFrequency;
-       recFrequency_ = recFrequency == Period() ? receiveIndex_->tenor() : recFrequency;
-
-       registerWith(payIndex_);
-       registerWith(receiveIndex_);
-       registerWith(discountHandle_);
-       initializeDates();
+    registerWith(payIndex_);
+    registerWith(receiveIndex_);
+    registerWith(discountHandle_);
+    initializeDates();
 }
 
 void TenorBasisSwapHelper::initializeDates() {
@@ -146,9 +147,10 @@ void TenorBasisSwapHelper::initializeDates() {
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
 
-    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(
-        termStructureHandle_ == receiveIndex_->forwardingTermStructure() ? swap_->recLeg().back()
-                                                                       : swap_->payLeg().back());
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(payIndexGiven_ ? swap_->recLeg().back()
+                                                                               : swap_->payLeg().back());
+
     if (IborCoupon::Settings::instance().usingAtParCoupons()) {
         /* Subperiods coupons do not have a par approximation either... */
         if (QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {

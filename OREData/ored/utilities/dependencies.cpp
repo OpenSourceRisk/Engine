@@ -325,8 +325,9 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 
 void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
-    const string& baseCcyDiscountCurve) {
+    const string& baseCcyDiscountCurve, const IborFallbackConfig& iborFallbackConfig) {
 
+    Date asof = QuantLib::Settings::instance().evaluationDate();
     for (const auto& [config, mp] : *objects) {
         std::map<CurveSpec::CurveType, std::set<string>> dependencies;
 
@@ -407,6 +408,14 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                                 dependencies[ct1].insert(id);
                         }
                     }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                dependencies[ct2].insert(id);
+                        }
+                    }
                 }
             }
         }
@@ -426,6 +435,21 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                             if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
                                 newDependencies[ct1].insert(id);
                         }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                newDependencies[ct2].insert(id);
+                        }
+                    }
+                    // handle ibor fallback dependency
+                    if (mo == MarketObject::IndexCurve && iborFallbackConfig.isIndexReplaced(name, asof)) {
+                        auto ct3 = marketObjectToCurveType(mo);
+                        auto id = iborFallbackConfig.fallbackData(name).rfrIndex;
+                        if (!checkMarketObject(objects, ct3, id, curveConfigs, config))
+                            newDependencies[ct3].insert(id);
                     }
                     // for SwapIndexes we are still missing the discount curve dependency
                     if (mo == MarketObject::SwapIndexCurve)
@@ -575,10 +599,10 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
 
         set<string> baseCcys = getCollateralisedDiscountCcy(ccy, curveConfigs);
 
-        string commonDiscount = "";
+        string commonDiscount;
         // Look for a common discount curve curve to use as a cross
         auto it = baseCcys.begin();
-        while (it != baseCcys.end() && commonDiscount == "") {
+        while (it != baseCcys.end() && commonDiscount.empty()) {
             auto pos = baseDiscountCcys.find(*it);
             if (pos != baseDiscountCcys.end()) {
                 commonDiscount = *pos;
@@ -591,11 +615,11 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
         } else {
             vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments;
             segments.push_back(QuantLib::ext::make_shared<DiscountRatioYieldCurveSegment>(
-                "Discount Ratio", baseCurve, baseCcy, ccy + "-IN-" + commonDiscount, ccy,
-                baseCcy + "-IN-" + commonDiscount, baseCcy));
+                "Discount Ratio", baseCurve, base, ccy + "-IN-" + commonDiscount, ccy,
+                base + "-IN-" + commonDiscount, base));
 
             QuantLib::ext::shared_ptr<YieldCurveConfig> ycc = QuantLib::ext::make_shared<YieldCurveConfig>(
-                id, ccy + " collateralised in " + baseCcy, ccy, "", segments);
+                id, ccy + " collateralised in " + base, ccy, "", segments);
 
             curveConfigs->add(CurveSpec::CurveType::Yield, id, ycc);
         }

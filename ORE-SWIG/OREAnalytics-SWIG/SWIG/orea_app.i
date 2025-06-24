@@ -41,6 +41,7 @@ using ore::analytics::MarketDataLoader;
 using ore::analytics::MarketDataInMemoryLoader;
 using ore::analytics::MarketCalibrationReport;
 using ore::analytics::DummyMarketDataLoader;
+using ore::analytics::PortfolioAnalyser;
 using ore::data::Portfolio;
 using ore::data::MarketImpl;
 using ore::data::PlainInMemoryReport;
@@ -48,6 +49,12 @@ using ore::data::TodaysMarketParameters;
 using ore::data::ReferenceDatum;
 using ore::data::ReferenceDataManager;
 using ore::data::BasicReferenceDataManager;
+using ore::data::CurveConfigurations;
+using ore::data::EngineData;
+using ore::data::IborFallbackConfig;
+using ore::data::Report;
+using ore::data::AssetClass;
+using ore::data::MarketObject;
 
 %}
 
@@ -58,6 +65,8 @@ namespace std {
     %template() pair<Date, string>;
     %template(DateStringPairVector) vector<pair<Date, string>>;
     %template(SizeVector) vector<QuantLib::Size>;
+    %template(MarketObjectMap) map<enum MarketObject, set<string>>;
+    %template(AllMarketObjectMap) map<string, map<enum MarketObject, set<string>>>;
 }
 
 // ORE Analytics
@@ -89,6 +98,7 @@ public:
     const bool scenarioOutputStatistics();
     const bool scenarioOutputDistributions();
     const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
+    const ext::shared_ptr<EngineData>& pricingEngine() const;
 
     // and Setters
     void setAsOfDate(const std::string& s); 
@@ -107,7 +117,7 @@ public:
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
-    void setCurveConfigsFromFile(const std::string& fileName);
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
@@ -402,6 +412,35 @@ public:
 
     std::vector<std::pair<std::string, std::string>> marketDataQuotes();
     std::vector<std::pair<std::pair<std::string, std::string>, bool>> marketFixings();
+};
+
+
+%shared_ptr(PortfolioAnalyser)
+class PortfolioAnalyser {
+public:
+    PortfolioAnalyser(const ext::shared_ptr<Portfolio>& p,
+                      const ext::shared_ptr<EngineData>& ed, const std::string& baseCcy,
+                      const ext::shared_ptr<CurveConfigurations>& curveConfigs = nullptr,
+                      const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
+
+    bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const;
+    bool hasMarketObjectType(const MarketObject& marketObject) const;
+    std::map<ore::analytics::RiskFactorKey::KeyType, std::set<std::string>> riskFactors() const;
+    std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
+    std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
+    std::map<MarketObject, std::set<std::string>>
+    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    std::map<std::string, std::map<MarketObject, std::set<std::string>>> allMarketObjects() const;
+    std::set<std::string> swapindices() const;
+    void riskFactorReport(Report& reportOut) const;
+    void marketObjectReport(Report& reportOut) const;
+    std::set<std::string> counterparties();
+    Date maturity();
+    const ext::shared_ptr<Portfolio>& portfolio() const;
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const;
+    void addDependencies();
 };
 
 #endif

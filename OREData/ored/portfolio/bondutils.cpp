@@ -19,6 +19,7 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/convertiblebondreferencedata.hpp>
 
 namespace ore {
 namespace data {
@@ -137,6 +138,20 @@ Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Ca
          << QuantLib::io::iso_date(result) << " (today = " << QuantLib::io::iso_date(today)
          << ", OpenEndDateReplacement from pricing engine config = " << replacementPeriodStr << ")");
     return result;
+}
+
+std::string getBondReferenceDatumType(const std::string& id,
+                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData) {
+    if (refData == nullptr)
+        return std::string();
+
+    if (refData->hasData(BondReferenceDatum::TYPE, id)) {
+        return BondReferenceDatum::TYPE;
+    } else if (refData->hasData(ConvertibleBondReferenceDatum::TYPE, id)) {
+        return ConvertibleBondReferenceDatum::TYPE;
+    }
+
+    return std::string();
 }
 
 } // namespace data

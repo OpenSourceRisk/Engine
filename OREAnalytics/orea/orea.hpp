@@ -148,6 +148,7 @@
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariofactory.hpp>

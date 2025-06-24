@@ -58,6 +58,9 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "BondOption: bond type " << bondType << " is not supported.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Calendar calendar = parseCalendar(bondData_.calendar());

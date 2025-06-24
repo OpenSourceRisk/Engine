@@ -1,7 +1,5 @@
 include(CheckCXXCompilerFlag)
-if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-    include(CheckLinkerFlag)
-endif()
+include(CheckLinkerFlag)
 
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
@@ -142,8 +140,11 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
+
+    # use flat namespace to fix symbol lookup issues and align with linux more closely
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
     endif()
 
     if(QL_USE_PCH)
