@@ -586,10 +586,6 @@ the initial margin amount will be set to zero in the collateral balance, if prov
 
 \subsubsection*{Outputs and Reports}\label{sec:saccr_report}
 
-The SA-CCR capital analytic will produce the following outputs:
-
-\subsubsection*{Outputs and Reports}\label{sec:saccr_report}
-
 The SA-CCR capital analytic produces several output files:
 
 \begin{itemize}
@@ -612,34 +608,34 @@ The SA-CCR capital analytic produces several output files:
     \end{itemize}
     Rows with ``All'' in most columns show portfolio totals. Rows with specific netting sets, asset classes, or hedging sets show breakdowns at those levels. Empty fields indicate values not applicable at that level.
   \item \textbf{saccr\_detail.csv} file provides a detailed, trade-level breakdown of the SA-CCR calculation. Each row corresponds to a single trade and shows all relevant parameters used in the exposure and add-on calculations. This report allows you to trace how each trade contributes to the overall capital charge.
-The columns are as follows:
-\begin{itemize}
-    \item \textbf{TradeId}: Unique identifier of the trade.
-    \item \textbf{TradeType}: Type of the trade (e.g., CommoditySwap, FxForward, Swaption).
-    \item \textbf{NettingSet}: Netting set identifier for the trade.
-    \item \textbf{AgreementType}, \textbf{CallType}, \textbf{InitialMarginType}, \textbf{LegalEntityId}: Collateral agreement and counterparty details (may be empty if not applicable).
-    \item \textbf{NPV}: Net present value of the trade.
-    \item \textbf{AssetClass}: Asset class assigned to the trade (e.g., IR, FX, Commodity, Equity).
-    \item \textbf{HedgingSet}: Hedging set within the asset class (e.g., currency pair for FX).
-    \item \textbf{HedgingSubset}: Further subdivision within the hedging set (e.g., specific commodity group or maturity bucket).
-    \item \textbf{Bucket}: Bucket or group used for add-on aggregation (e.g., maturity bucket for IR).
-    \item \textbf{Qualifier}: Qualifier for the hedging set/subset (e.g., index name, underlying entity).
-    \item \textbf{Currency}: Currency of the trade.
-    \item \textbf{delta}: Supervisory delta
-    \item \textbf{d}: Adjusted notional for the trade, as defined by SA-CCR rules. For IR and Credit derivatives 
-    it is the notional adjusted by the supervisory duration. For FX derivatives it is the notional value of the foreign currency. For Equity and Commodities its the current price times the quantity.
-    \item \textbf{MF}: Maturity factor for the trade.
-    \item \textbf{M}: Maturity of the trade (in years).
-    \item \textbf{S}: Start date of the underlying period (in years, if applicable).
-    \item \textbf{E}: End date of the underlying period (in years, if applicable).
-    \item \textbf{T}: Latest option exercise date (in years, if applicable).
-    \item \textbf{SD}: Supervisory duration (for IR and Credit).
-    \item \textbf{CurrentPrice}: Current price of the underlying (if applicable).
-    \item \textbf{NumNominalFlows}: Not used at the moment
-    \item \textbf{Price}: Price used in calculating the supervisory delta for options (if applicable).
-    \item \textbf{Strike}: Option strike price (if applicable).
-    \item \textbf{Volatility}: Supervisory option volatility used for the trade (if applicable).
-\end{itemize}
+    The columns are as follows:
+    \begin{itemize}
+        \item \textbf{TradeId}: Unique identifier of the trade.
+        \item \textbf{TradeType}: Type of the trade (e.g., CommoditySwap, FxForward, Swaption).
+        \item \textbf{NettingSet}: Netting set identifier for the trade.
+        \item \textbf{AgreementType}, \textbf{CallType}, \textbf{InitialMarginType}, \textbf{LegalEntityId}: Collateral agreement and counterparty details (may be empty if not applicable).
+        \item \textbf{NPV}: Net present value of the trade.
+        \item \textbf{AssetClass}: Asset class assigned to the trade (e.g., IR, FX, Commodity, Equity).
+        \item \textbf{HedgingSet}: Hedging set within the asset class (e.g., currency pair for FX).
+        \item \textbf{HedgingSubset}: Further subdivision within the hedging set (e.g., specific commodity group or maturity bucket).
+        \item \textbf{Bucket}: Bucket or group used for add-on aggregation (e.g., maturity bucket for IR).
+        \item \textbf{Qualifier}: Qualifier for the hedging set/subset (e.g., index name, underlying entity).
+        \item \textbf{Currency}: Currency of the trade.
+        \item \textbf{delta}: Supervisory delta
+        \item \textbf{d}: Adjusted notional for the trade, as defined by SA-CCR rules. For IR and Credit derivatives 
+        it is the notional adjusted by the supervisory duration. For FX derivatives it is the notional value of the foreign currency. For Equity and Commodities its the current price times the quantity.
+        \item \textbf{MF}: Maturity factor for the trade.
+        \item \textbf{M}: Maturity of the trade (in years).
+        \item \textbf{S}: Start date of the underlying period (in years, if applicable).
+        \item \textbf{E}: End date of the underlying period (in years, if applicable).
+        \item \textbf{T}: Latest option exercise date (in years, if applicable).
+        \item \textbf{SD}: Supervisory duration (for IR and Credit).
+        \item \textbf{CurrentPrice}: Current price of the underlying (if applicable).
+        \item \textbf{NumNominalFlows}: Not used at the moment
+        \item \textbf{Price}: Price used in calculating the supervisory delta for options (if applicable).
+        \item \textbf{Strike}: Option strike price (if applicable).
+        \item \textbf{Volatility}: Supervisory option volatility used for the trade (if applicable).
+    \end{itemize}
    If there is a basis swap with two floating legs, there will be two entries in the report, one for each leg / main risk factor.
   \item \textbf{capital\_crif.csv}: All data required to compute SA-CCR in the ISDA Regulatory Capital Model (CRIF) format.
 \end{itemize}
