@@ -19,6 +19,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/creditindexdecomposition.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -42,6 +43,30 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
       curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
     reset();
     decompose_ = !defaultRiskDecompositionWeights_.empty() || !eqComDecompositionTradeIds_.empty();
+}
+
+DecomposedSensitivityStream::DecomposedSensitivityStream(
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr) : ss_(ss), baseCurrency_(baseCurrency),
+      refDataManager_(refDataManager),
+      curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
+    reset();
+    
+    std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights;
+
+    for(const auto& trade : portfolio->trades()){
+        bool decompose = false;    
+        std::map<string, double> sensitivityDecompositionWeights
+        decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decompose);
+        if (decompose) {
+            defaultRiskDecompositionWeights_[trade->id()] = sensitivityDecompositionWeights;
+        }
+    }
+    decompose_ = !defaultRiskDecompositionWeights_.empty();
 }
 
 //! Returns the next SensitivityRecord in the stream after filtering

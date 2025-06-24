@@ -48,6 +48,18 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
         const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
         const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
+
+    /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
+    */
+    DecomposedSensitivityStream(
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
+    
+    
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
     //! Resets the stream so that SensitivityRecord objects can be streamed again
