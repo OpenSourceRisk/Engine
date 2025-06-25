@@ -328,8 +328,9 @@ CommodityIndexedLeg& CommodityIndexedLeg::excludeStartDate(const bool excludeSta
 
 CommodityIndexedLeg::operator Leg() const {
 
-    // Number of commodity indexed cashflows
-    Size numberCashflows = schedule_.size() - 1;
+    // Number of commodity indexed cashflows, allow for the special case that we have only one date in the schedule, which is the pricing date
+    bool oneDateSchedule = schedule_.size() == 1;
+    Size numberCashflows = oneDateSchedule ? 1 : schedule_.size() - 1;
 
     // Initial consistency checks
     QL_REQUIRE(!quantities_.empty(), "No quantities given");
@@ -363,7 +364,7 @@ CommodityIndexedLeg::operator Leg() const {
     for (Size i = 0; i < numberCashflows; ++i) {
 
         Date start = schedule_.date(i);
-        Date end = schedule_.date(i + 1);
+        Date end = oneDateSchedule ? start : schedule_.date(i + 1);
         Real quantity = detail::get(quantities_, i, 1.0);
         Real spread = detail::get(spreads_, i, 0.0);
         Real gearing = detail::get(gearings_, i, 1.0);
