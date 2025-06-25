@@ -56,7 +56,7 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
     using CQF = CommodityQuantityFrequency;
     
     // We allow a special case where the schedule has only one date, which is the pricing date. 
-    if(schedule.size() == 1 and leg.size() == 1){
+    if(schedule.size() == 1 && leg.size() == 1){
         auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[0]);
         Date pricingDate = ccf->pricingDate();
         if (cqf == CQF::PerHourAndCalendarDay || cqf == CQF::PerHour){
