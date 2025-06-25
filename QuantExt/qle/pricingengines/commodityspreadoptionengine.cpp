@@ -138,6 +138,18 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     cfResults.back().legNumber = 0.00;
     cfResults.back().type = "ExpectedFlow";
 
+    cfResults.emplace_back();
+    cfResults.back().amount = arguments_.longAssetFlow->quantity();
+    cfResults.back().payDate = paymentDate;
+    cfResults.back().legNumber = 0.00;
+    cfResults.back().type = "Notional";
+
+    cfResults.emplace_back();
+    cfResults.back().amount = arguments_.shortAssetFlow->quantity();
+    cfResults.back().payDate = paymentDate;
+    cfResults.back().legNumber = 0.00;
+    cfResults.back().type = "Notional";
+
     // Calendar spread adjustment if observation period is before the exercise date
     mp["eff_strike"] = effectiveStrike;
     mp["F1"] = F1;
