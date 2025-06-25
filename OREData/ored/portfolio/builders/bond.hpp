@@ -150,7 +150,7 @@ protected:
             } else {
                 boost::split(tokens, rule, boost::is_any_of(","));
                 QL_REQUIRE(tokens.size() == 2, "invalid rule: " << rule);
-                stateCreditCurveId = regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
+                stateCreditCurveId = std::regex_replace(creditCurveId, std::regex(tokens[0]), tokens[1]);
                 DLOG("Apply " << rule_s.str() << " => " << tokens[0] << " in " << creditCurveId << " yields state #"
                               << i << " creditCurve id " << stateCreditCurveId);
             }

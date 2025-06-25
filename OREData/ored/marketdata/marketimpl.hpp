@@ -123,7 +123,7 @@ public:
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
 
     //! Inflation Cap Floor Volatility Surfaces
-    virtual Handle<CPIVolatilitySurface>
+    virtual Handle<QuantLib::CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const override;
 
@@ -223,7 +223,7 @@ protected:
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
-    mutable map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
+    mutable map<pair<string, string>, Handle<QuantLib::CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
     mutable map<pair<string, string>, Handle<Quote>> equitySpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     mutable map<pair<string, string>, Handle<Quote>> securitySpreads_;

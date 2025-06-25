@@ -31,14 +31,6 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
                      const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups,
                      const bool usePythonIntegration) {
 
-    QL_REQUIRE(regressionVarianceCutoff == Null<Real>() || regressorGroups.empty(),
-               "getRandomVariableOps(): regressionVarianceCutoff can not be combined with regressorGroups");
-
-    // note: a possible way to combine regressionVarianceCutoff and regressorGroups would be to perform the pca
-    // transform on each regressor group separately and then build new groups from the resuting variables before
-    // performing the regression analysis (TODO think about this a bit more before implementation and removal of the
-    // above restriction)
-
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -73,11 +65,25 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
     // ConditionalExpectation = 6
     ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups,
                    usePythonIntegration](const std::vector<const RandomVariable*>& args, const Size node) {
+
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
                 regressor.push_back(*r);
         }
+
+        if (regressor.empty())
+            return expectation(*args[0]);
+
+        auto g = regressorGroups.find(node);
+        bool trivialRegressorGroups =
+            g == regressorGroups.end() || (g->second.size() == 1 && g->second.begin()->size() == regressor.size());
+
+        QL_REQUIRE(trivialRegressorGroups || regressionVarianceCutoff == Null<Real>(),
+                   "RandomVariableOps::conditionalExpectation(): non-trivial regressor group do not work with "
+                   "regressionVarianceCutoff ("
+                       << regressionVarianceCutoff << ")");
+
         std::vector<RandomVariable> transformedRegressor;
         Matrix coordinateTransform;
         if (regressionVarianceCutoff != Null<Real>()) {
@@ -85,21 +91,19 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
             transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
             regressor = vec2vecptr(transformedRegressor);
         }
-        if (regressor.empty())
-            return expectation(*args[0]);
-        else {
-            auto g = regressorGroups.find(node);
-            auto tmp =
-                multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
-                                     g == regressorGroups.end() ? std::set<std::set<size_t>>{} : g->second, size);
-            Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
-            if (usePythonIntegration && filter.deterministic() && filter[0]) {
-                // FIXME does not support regressor groups, non-trivial filters at the moment
-                return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
-            } else {
-                return conditionalExpectation(*args[0], regressor, tmp,
-                                              !close_enough(*args[1], RandomVariable(size, 0.0)));
-            }
+
+        Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
+
+        if (usePythonIntegration && filter.deterministic() && filter[0]) {
+
+            // FIXME does not support regressor groups, non-trivial filters at the moment
+
+            return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+
+        } else {
+            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
+                                            trivialRegressorGroups ? std::set<std::set<size_t>>{} : g->second, size);
+            return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
         }
     });
 

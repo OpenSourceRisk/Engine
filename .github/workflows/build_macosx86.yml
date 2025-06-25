@@ -24,6 +24,7 @@ jobs:
     - name: Install Swig
       run: |
         brew install swig
+        swig -version
     - name: Build ORE CMake
       run: |
         mkdir build

@@ -229,11 +229,16 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
-            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
-            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuilder = tradeType_ + "Forward";
+            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX) {
+                if (exerciseType == QuantLib::Exercise::Type::European) {
+                    tradeTypeBuilder = tradeType_ + "Forward";
+                } else if (exerciseType == QuantLib::Exercise::Type::American) {
+                    vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                    tradeTypeBuilder = tradeType_ + "American";
+                }
+            }
         }
 
         // If the tradeTypeBuilder has not been modified yet..
@@ -258,9 +263,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
         if (forwardDate_ != Date()) {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate_, false));
         } else {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, envelope().additionalField("discount_curve", false, std::string()), expiryDate_, true));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
         addProductModelEngine(*vanillaOptionBuilder);

@@ -108,9 +108,10 @@ parRateCurveHelpers(const string& ccy, const vector<string>& parInst, const vect
             QuantLib::ext::shared_ptr<OisConvention> oisConv = QuantLib::ext::dynamic_pointer_cast<OisConvention>(conv);
             BOOST_ASSERT(oisConv);
             rateHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
-                oisConv->spotLag(), tenor, parRateQuote, oisConv->index(), oisConv->fixedDayCounter(),
+                oisConv->spotLag(), tenor, parRateQuote, oisConv->index(), false, oisConv->fixedDayCounter(),
                 oisConv->fixedCalendar(), oisConv->paymentLag(), oisConv->eom(), oisConv->fixedFrequency(),
-                oisConv->fixedConvention(), oisConv->fixedPaymentConvention(), oisConv->rule(), exDiscount, true);
+                oisConv->fixedConvention(), oisConv->fixedPaymentConvention(), oisConv->rule(), exDiscount,
+                !exDiscount.empty(), true);
         } else if (parInst[i] == "FXF") {
             QuantLib::ext::shared_ptr<Convention> conv = conventions->get(ccy + "-FX-CONVENTIONS");
             QuantLib::ext::shared_ptr<FXConvention> fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conv);
@@ -147,8 +148,8 @@ parRateCurveHelpers(const string& ccy, const vector<string>& parInst, const vect
             bool flatIsDomestic = true; // assumes fxSpot is in form 1*BaseCcy = X*Ccy
             rateHelper = QuantLib::ext::make_shared<CrossCcyBasisSwapHelper>(
                 parRateQuote, fxSpot, basisConv->settlementDays(), basisConv->settlementCalendar(), tenor,
-                basisConv->rollConvention(), flatIndex, spreadIndex, fgnDiscount, exDiscount, basisConv->eom(),
-                flatIsDomestic);
+                basisConv->rollConvention(), flatIndex, spreadIndex, fgnDiscount, exDiscount, true, true, true, false,
+                basisConv->eom(), flatIsDomestic);
         } else {
             BOOST_ERROR("Unrecognised par rate instrument in curve construction - " << i);
         }

@@ -63,7 +63,8 @@ public:
        - new and inverse currency pairs are implied from the existing ones in eval() for non-historical fixings
        - historical fixings are retrieved in eval() only; there they override today's spot if given
      */
-    ModelCGImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
+    ModelCGImpl(const ModelCG::Type type, const DayCounter& dayCounter, const Size size,
+                const std::vector<std::string>& currencies,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
@@ -86,6 +87,7 @@ public:
 
     // provide default implementation for MC type models (taking a simple expectation)
     Real extractT0Result(const RandomVariable& value) const override;
+    ModelCG::Type type() const override { return type_; }
 
     // CG / AD part of the interface
     std::size_t cgVersion() const override;
@@ -108,11 +110,12 @@ protected:
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                              const std::size_t barrier, const bool above) const = 0;
 
-    const DayCounter dayCounter_;
-    const std::vector<std::string> currencies_;
-    const std::vector<std::string> indexCurrencies_;
-    const std::set<Date> simulationDates_;
-    const IborFallbackConfig iborFallbackConfig_;
+    ModelCG::Type type_;
+    DayCounter dayCounter_;
+    std::vector<std::string> currencies_;
+    std::vector<std::string> indexCurrencies_;
+    std::set<Date> simulationDates_;
+    IborFallbackConfig iborFallbackConfig_;
 
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices_;
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices_;
@@ -130,9 +133,9 @@ private:
 
     // helper method to handle inflation fixings and their interpolation
     std::size_t getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
-                                        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex, const Size indexNo,
-                                        const Date& limDate, const Date& obsdate, const Date& fwddate,
-                                        const Date& baseDate) const;
+                                        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
+                                        const Size indexNo, const Date& limDate, const Date& obsdate,
+                                        const Date& fwddate, const Date& baseDate) const;
 };
 
 // map date to a coarser grid if sloppyDates = true, otherwise just return d

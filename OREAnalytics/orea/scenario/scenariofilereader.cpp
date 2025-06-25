@@ -44,7 +44,7 @@ ScenarioFileReader::ScenarioFileReader(const string& fileName,
     // Populate the risk factor keys vector
     keys_.reserve(file_.fields().size() - 3);
     for (Size k = 3; k < file_.fields().size(); ++k) {
-        keys_.push_back(parseRiskFactorKey(file_.fields()[k]));
+        keys_.push_back(QuantExt::parseRiskFactorKey(file_.fields()[k]));
     }
 }
 

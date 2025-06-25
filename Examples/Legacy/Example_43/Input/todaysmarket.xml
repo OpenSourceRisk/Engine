@@ -2,40 +2,25 @@
 <TodaysMarket>
   <Configuration id="default">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
-    <YieldCurvesId>xois_eur</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
-    <YieldCurvesId>ois</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
-    <YieldCurvesId>inccy_swap</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <!-- yield curve definition (in ccy swap discounting) -->
   <YieldCurves id="default">
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
-  </YieldCurves>
-  <!-- yield curve definition (in ccy ois discounting) -->
-  <YieldCurves id="ois">
-    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
-    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
-  </YieldCurves>
-  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
-  <YieldCurves id="xois_eur">
-    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
-    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
-  </YieldCurves>
-  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
-  <YieldCurves id="inccy_swap">
-    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
-    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
-    <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
   </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">

@@ -30,8 +30,10 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/timegrid.hpp>
 
 #include <boost/any.hpp>
+
 #include <optional>
 
 namespace QuantExt {
@@ -137,7 +139,7 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
 
     // model type
-    virtual Type type() const = 0;
+    virtual ModelCG::Type type() const = 0;
 
     // number of paths
     virtual QuantLib::Size size() const { return n_; }
@@ -247,9 +249,11 @@ public:
     // add a model parameer if not yet present, return node in any case
     std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
 
-    // linear interpolation helper method, d must not lie outside knownDates
+    // linear interpolation helper method, d must not lie outside knownDates resp. knownTimes
     std::tuple<QuantLib::Date, QuantLib::Date, std::size_t, std::size_t>
     getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& knownDates) const;
+    std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>
+    getInterpolationWeights(const double t, const QuantLib::TimeGrid& knownTimes) const;
 
 protected:
     // map with additional results provided by this model instance

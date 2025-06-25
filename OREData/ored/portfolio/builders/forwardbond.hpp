@@ -53,7 +53,7 @@ protected:
                            const string& incomeCurveId, const bool dirty) override {
 
         // id is _not_ part of the key
-        std::string returnString = ccy.code() + "_" + creditCurveId + "_"  + securityId +
+        std::string returnString = ccy.code() + "_" + discountCurveName + "_" + creditCurveId + "_"  + securityId +
                                    "_" + referenceCurveId + "_" + incomeCurveId;
 
         return returnString;

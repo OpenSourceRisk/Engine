@@ -161,14 +161,14 @@ QuantLib::ext::shared_ptr<OptionPriceSurface> optPriceSurface(const CallPutData&
 namespace ore {
 namespace data {
 
-CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                                     const CurveConfigurations& curveConfigs,
-                                     const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                     const Market* fxIndices, const bool buildCalibrationInfo) {
+CommodityVolCurve::CommodityVolCurve(
+    const Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
+    const CurveConfigurations& curveConfigs, const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+    const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves,
+    const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves, const Market* fxIndices,
+    const std::string& configuration, const bool buildCalibrationInfo) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -200,7 +200,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 // Do different things depending on the type of volatility configured
                 if (auto eqvc = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, commodityCurves, commodityVolCurves, fxVolCurves,
-                                    correlationCurves, fxIndices);
+                                    correlationCurves, fxIndices, configuration);
                 } else if (auto qvc = QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
 
                     if (auto cvc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
@@ -1497,7 +1497,8 @@ void CommodityVolCurve::buildVolatility(
     const ProxyVolatilityConfig& pvc, const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& comCurves,
     const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& volCurves,
     const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
-    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices) {
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices,
+    const std::string& configuration) {
 
     DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1560,7 +1561,7 @@ void CommodityVolCurve::buildVolatility(
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->fxIndex(proxyVolConfig.currency() + config.currency()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.currency() + config.currency(), configuration).currentLink();
         FXSpotSpec spotSpec(proxyVolConfig.currency(), config.currency());
         
         CorrelationCurveSpec corrSpec(pvc.correlationCurve());
@@ -1754,7 +1755,7 @@ void CommodityVolCurve::populateCurves(const CommodityVolatilityConfig& config,
         if (!ytsId.empty()) {
             auto itYts = yieldCurves.find(ytsId);
             if (itYts != yieldCurves.end()) {
-                yts_ = itYts->second->handle();
+                yts_ = itYts->second->handle(ytsId);
             } else if (!dontThrow) {
                 QL_FAIL("CommodityVolCurve: can't find yield curve with id " << ytsId);
             }

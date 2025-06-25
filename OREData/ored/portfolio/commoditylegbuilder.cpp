@@ -619,7 +619,8 @@ Leg CommodityFloatingLegBuilder::buildLeg(
                   .withDailyExpiryOffset(dailyExpOffset)
                   .unrealisedQuantity(floatingLegData->unrealisedQuantity())
                   .withOffPeakPowerData(offPeakPowerData)
-                  .withFxIndex(fxIndex);
+                  .withFxIndex(fxIndex)
+                  .withAvgPricePrecision(floatingLegData->avgPricePrecision());
     } else {
         CommodityIndexedCashFlow::PaymentTiming paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {

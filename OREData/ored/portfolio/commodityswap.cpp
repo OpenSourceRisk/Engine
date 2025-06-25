@@ -166,7 +166,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
-    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_),
+        envelope().additionalField("discount_curve", false, std::string()));
     swap->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
     addProductModelEngine(*engineBuilder);
@@ -248,19 +249,16 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     std::vector<Real> priceVec;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
-                    double averagePrice = 0;
                     for (const auto& kv : indexedAvgFlow->indices()) {
                         indexVec.push_back(kv.second->name());
                         indexExpiryVec.push_back(kv.second->expiryDate());
                         pricingDateVec.push_back(kv.first);
                         priceVec.push_back(kv.second->fixing(kv.first));
-                        averagePrice += priceVec.back();
                     }
-                    averagePrice /= indexedAvgFlow->indices().size();
                     additionalData_["index[" + label + "]"] = indexVec;
                     additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
                     additionalData_["price[" + label + "]"] = priceVec;
-                    additionalData_["averagePrice[" + label + "]"] = averagePrice;
+                    additionalData_["averagePrice[" + label + "]"] = indexedAvgFlow->fixing();
                     additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedAvgFlow->date());
                 }
@@ -378,7 +376,7 @@ void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
     legCurrencies_.push_back(legDatum.currency());
 
     // Update maturity
-    maturity_ = max(CashFlows::maturityDate(leg), maturity_);
+    maturity_ = std::max(CashFlows::maturityDate(leg), maturity_);
     if (maturity_ == CashFlows::maturityDate(leg))
         maturityType_ = "Leg Maturity Date";
 

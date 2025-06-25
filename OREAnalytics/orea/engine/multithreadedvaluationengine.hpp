@@ -37,7 +37,7 @@ namespace analytics {
 class MultiThreadedValuationEngine : public ore::data::ProgressReporter {
 public:
     /* if no cube factories are given, we create default ones as follows
-       - cubeFactory          : creates DoublePrecisionInMemoryCube
+       - cubeFactory          : creates InMemoryCubeOp<double>
        - nettingSetCubeFactory: creates nullptr
        - cptyCubeFactory:       creates nullptr */
     MultiThreadedValuationEngine(

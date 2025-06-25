@@ -135,17 +135,22 @@ private:
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
+    using ReducedNode = DependencyGraph::ReducedNode;
+    using ReducedGraph = boost::directed_graph<ReducedNode>;
+    using ReducedIndexMap = boost::property_map<ReducedGraph, boost::vertex_index_t>::type;
+    using ReducedVertex = boost::graph_traits<ReducedGraph>::vertex_descriptor;
+    using ReducedVertexIterator = boost::graph_traits<ReducedGraph>::vertex_iterator;
 
     // the dependency graphs for each configuration
-    mutable std::map<std::string, Graph> dependencies_;
+    mutable std::map<std::string, ReducedGraph> dependencies_;
 
     // build a single market object
-    void buildNode(const std::string& configuration, Node& node) const;
+    void buildNode(const std::string& configuration, ReducedNode& reducedNode) const;
 
     // calibration results
     QuantLib::ext::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
 
-    // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
+    // cached market objects, the key of the maps is the curve spec name
     mutable map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
@@ -157,16 +162,14 @@ private:
     mutable map<string, QuantLib::ext::shared_ptr<InflationCurve>> requiredInflationCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<EquityCurve>> requiredEquityCurves_;
-    mutable map<string, QuantLib::ext::shared_ptr<EquityVolCurve>> requiredEquityVolCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<Security>> requiredSecurities_;
     mutable map<string, QuantLib::ext::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
-    mutable map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves_;
     mutable map<string, QuantLib::ext::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
-    // for swap indices we map the configuration name to a map (swap index name => index)
+    // cached market objects, with configuration added to the key (outer map)
+    mutable map<string, map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>> requiredCommodityVolCurves_;
+    mutable map<string, map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>> requiredEquityVolCurves_;
     mutable map<string, map<string, QuantLib::ext::shared_ptr<SwapIndex>>> requiredSwapIndices_;
 };
-
-std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
 
 } // namespace data
 } // namespace ore

@@ -32,7 +32,11 @@ class AverageOISRateHelpersTest(unittest.TestCase):
         self.rateCutoff=1
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.termStructureOIS=RelinkableYieldTermStructureHandle(self.flat_forward)
-        self.averageOisRateHelper=AverageOISRateHelper(self.fixedRate,self.spotLagTenor,self.swapTenor,self.fixedTenor,self.fixedDayCounter,self.fixedCalendar,self.fixedConvention,self.fixedPaymentAdjustment,self.overnightIndex,self.onTenor,self.onSpread,self.rateCutoff,self.termStructureOIS)
+        self.onIndexGiven=True
+        self.averageOisRateHelper=AverageOISRateHelper(self.fixedRate,self.spotLagTenor,self.swapTenor,self.fixedTenor,
+                                                       self.fixedDayCounter,self.fixedCalendar,self.fixedConvention,
+                                                       self.fixedPaymentAdjustment,self.overnightIndex, self.onIndexGiven, 
+                                                       self.onTenor, self.onSpread,self.rateCutoff,self.termStructureOIS)
 
         
     def testSimpleInspectors(self):
@@ -59,9 +63,18 @@ class CrossCcyBasisSwapHelperTest(unittest.TestCase):
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.flatDiscountCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
         self.spreadDiscountCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
+        self.flatIndexGiven=True
+        self.spreadIndexGiven=True
+        self.flatDiscountCurveGiven=True
+        self.spreadDiscountCurveGiven=False
         self.eom=False
         self.flatIsDomestic=True
-        self.ratehelper = CrossCcyBasisSwapHelper(self.spreadQuote, self.spotFX, self.settlementDays, self.settlementCalendar, self.swapTenor, self.rollConvention, self.flatIbor, self.spreadIbor, self.flatDiscountCurve, self.spreadDiscountCurve, self.eom, self.flatIsDomestic)
+        self.ratehelper = CrossCcyBasisSwapHelper(self.spreadQuote, self.spotFX, self.settlementDays,
+                                                  self.settlementCalendar, self.swapTenor, self.rollConvention, 
+                                                  self.flatIbor, self.spreadIbor, self.flatDiscountCurve, 
+                                                  self.spreadDiscountCurve, self.flatIndexGiven, self.spreadIndexGiven,
+                                                  self.flatDiscountCurveGiven, self.spreadDiscountCurveGiven, 
+                                                  self.eom, self.flatIsDomestic)
 
     def testSimpleInspectors(self):
         """ Test Cross Curency Basis Swap Helper simple inspector. """
@@ -86,11 +99,20 @@ class TenorBasisSwapHelperTest(unittest.TestCase):
         self.fixedDayCounter=Actual360()
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.discountingCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
+        self.payIndexGiven=True
+        self.receiveIndexGiven=True
+        self.discountingCurveGiven=False
         self.spreadOnShort = True
         self.includeSpread = False
         self.telescopicValueDates = False
         self.type = SubPeriodsCoupon1.Compounding
-        self.tenorbasisswaphelper=self.tenorbasisswaphelper=TenorBasisSwapHelper(self.spread,self.swapTenor,self.longIbor,self.shortIbor,self.discountingCurve,self.spreadOnShort,self.includeSpread,self.longPayTenor,self.shortPayTenor,self.telescopicValueDates,self.type)
+        self.tenorbasisswaphelper=self.tenorbasisswaphelper=TenorBasisSwapHelper(self.spread,self.swapTenor,self.longIbor,
+                                                                                 self.shortIbor,self.discountingCurve,
+                                                                                 self.payIndexGiven, self.receiveIndexGiven,
+                                                                                 self.discountingCurveGiven,
+                                                                                 self.spreadOnShort,self.includeSpread,
+                                                                                 self.longPayTenor,self.shortPayTenor,
+                                                                                 self.telescopicValueDates,self.type)
         
 
     def testSimpleInspectors(self):
@@ -133,6 +155,7 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
         self.longFixedConvention=Following
         self.longFixedDayCount=Actual360()
         self.longFloat=Eonia()
+        self.longIndexGiven=True
         self.shortFixedFrequency=Annual
         self.shortFixedConvention=Following
         self.shortFixedDayCount=Actual360()
@@ -140,8 +163,16 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
         self.ffcurve=RelinkableYieldTermStructureHandle(self.flat_forward)
         self.shortFloat=FedFunds(self.ffcurve)
         self.longMinusShort=True
+        self.shortIndexGiven=True
         self.discountingCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
-        self.basistwoswaphelper=BasisTwoSwapHelper(self.spread,self.swapTenor,self.calendar,self.longFixedFrequency,self.longFixedConvention,self.longFixedDayCount,self.longFloat,self.shortFixedFrequency,self.shortFixedConvention,self.shortFixedDayCount,self.shortFloat,self.longMinusShort,self.discountingCurve)
+        self.discountCurveGiven=False
+        self.basistwoswaphelper=BasisTwoSwapHelper(self.spread,self.swapTenor,self.calendar,
+                                                   self.longFixedFrequency,self.longFixedConvention,
+                                                   self.longFixedDayCount,self.longFloat,
+                                                   self.longIndexGiven, self.shortFixedFrequency,
+                                                   self.shortFixedConvention,self.shortFixedDayCount,
+                                                   self.shortFloat,self.longMinusShort,self.shortIndexGiven,
+                                                   self.discountingCurve, self.discountCurveGiven)
 
 
     def testSimpleInspectors(self):

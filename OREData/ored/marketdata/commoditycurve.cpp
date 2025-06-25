@@ -339,13 +339,15 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(
                                                     << config->curveID());
 
     // Look up the two yield curves in the yieldCurves map
-    auto baseYtsIt = yieldCurves.find(YieldCurveSpec(baseConfig->currency(), config->baseYieldCurveId()).name());
+    auto baseYtsKey = YieldCurveSpec(baseConfig->currency(), config->baseYieldCurveId()).name();
+    auto baseYtsIt = yieldCurves.find(baseYtsKey);
     QL_REQUIRE(baseYtsIt != yieldCurves.end(),
                "Could not find base yield curve with id "
                    << config->baseYieldCurveId() << " and currency " << baseConfig->currency()
                    << " required in the building of commodity curve with id " << config->curveID());
 
-    auto ytsIt = yieldCurves.find(YieldCurveSpec(config->currency(), config->yieldCurveId()).name());
+    auto ytsKey = YieldCurveSpec(config->currency(), config->yieldCurveId()).name();
+    auto ytsIt = yieldCurves.find(ytsKey);
     QL_REQUIRE(ytsIt != yieldCurves.end(), "Could not find yield curve with id "
                                                << config->yieldCurveId() << " and currency " << config->currency()
                                                << " required in the building of commodity curve with id "
@@ -357,7 +359,7 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(
     // Populate the commodityPriceCurve_ member
     commodityPriceCurve_ = QuantLib::ext::make_shared<CrossCurrencyPriceTermStructure>(
         asof, QuantLib::Handle<PriceTermStructure>(commIt->second->commodityPriceCurve()), fxSpot,
-        baseYtsIt->second->handle(), ytsIt->second->handle(), parseCurrency(config->currency()));
+        baseYtsIt->second->handle(baseYtsKey), ytsIt->second->handle(ytsKey), parseCurrency(config->currency()));
 }
 
 void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurveConfig& config,
