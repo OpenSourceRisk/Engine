@@ -78,7 +78,7 @@ This will create a folder 'ore' in your current directory that contains the code
 
 Note that one can also run 
 
-{\footnotesize \tt\% git clone --recurse-submodules https://github.com/opensourcerisk/engine.git ore}
+{\footnotesize \tt\% git clone -{}-recurse-submodules https://github.com/opensourcerisk/engine.git ore}
 
 in step 2, which also performs the steps in 3.
 
@@ -160,13 +160,13 @@ Alternatively, compile all Boost libraries directly from the source code:
 \item Build the libraries from the source code
 \begin{itemize}
 \item 32-bit: \\
-  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.3 \bs \\
-    address-model=32 --with-test --with-system --with-filesystem  \bs \\
-    --with-serialization --with-regex --with-date\_time stage}
+  {\footnotesize\tt .{\bs}b2 -{}-stagedir=.{\bs}lib{\bs}Win32{\bs}lib -{}-build-type=complete toolset=msvc-14.3 \bs \\
+    address-model=32 -{}-with-test -{}-with-system -{}-with-filesystem  \bs \\
+    -{}-with-serialization -{}-with-regex -{}-with-date\_time stage}
 \item 64-bit: \\
-  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.3 \bs \\
-    address-model=64 --with-test --with-system --with-filesystem \bs \\
-    --with-serialization --with-regex --with-date\_time stage}
+  {\footnotesize\tt .{\bs}b2 -{}-stagedir=.{\bs}lib{\bs}x64{\bs}lib -{}-build-type=complete toolset=msvc-14.3 \bs \\
+    address-model=64 -{}-with-test -{}-with-system -{}-with-filesystem \bs \\
+    -{}-with-serialization -{}-with-regex -{}-with-date\_time stage}
 \end{itemize}
 \end{enumerate}
 
@@ -226,7 +226,7 @@ It can be installed on Windows with the open source c++ library manager VCPKG.
 To get VCPG, see \url{https://vcpkg.io/en/getting-started.html}. And to install ZLIB with VCPKG:
 
 \medskip
-{\tt vcpkg install --triplet x64-windows zlib} \\
+{\tt vcpkg install -{}-triplet x64-windows zlib} \\
 
 \medskip
 To make VCPKG visible to CMake, create an environment variable {\tt VCPKG\_ROOT} pointing to the root of the vcpkg directory
@@ -250,7 +250,7 @@ ORE requires the Eigen libraries (\url{https://gitlab.com/libeigen/eigen}) for s
 On Windows, one can conveniently install using VCPKG with:
 
 \medskip
-{\tt vcpkg install --triplet x64-windows eigen3}
+{\tt vcpkg install -{}-triplet x64-windows eigen3}
 
 \subsubsection*{Swig and Python}
 
@@ -392,7 +392,7 @@ Replace the generator "Visual Studio 17 2022" with the actual installed version.
 The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$\rangle${\bs}build} subdirectory.
 \end{itemize}
 
-\item build the cmake project with the command {\tt cmake --build build -v --config Release},
+\item build the cmake project with the command {\tt cmake -{}-build build -v -{}-config Release},
 
 \item or open the MSVC solution file {\tt build{\bs}ORE.sln} and build the entire solution with Visual Studio (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
@@ -491,7 +491,7 @@ The solution and project files will be generated in the {\tt $\langle$ORE\_ROOT$
 %\begin{itemize}
 %\item {\tt conda install -c conda-forge ipywidgets}
 %\item {\tt pip install jupyter\_dashboards}
-%\item {\tt jupyter dashboards quick-setup --sys-prefix}
+%\item {\tt jupyter dashboards quick-setup -{}-sys-prefix}
 %\item {\tt conda install -c conda-forge bqplot}
 %\item {\tt conda install -c conda-forge pythreejs}
 %\end{itemize}

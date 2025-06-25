@@ -36,10 +36,10 @@ using ore::data::CurveConfigurations;
 using ore::data::MarketObject;
 
 %}
-void addMarketObjectDependencies(
-    std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
-    const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
-    const std::string& baseCcyDiscountCurve);
+void addMarketObjectDependencies(std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
+                                 const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
+                                 const std::string& baseCcyDiscountCurve,
+                                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
 std::string marketObjectToCurveSpec(const MarketObject& mo, const std::string& name, const std::string& baseCcy,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);

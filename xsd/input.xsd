@@ -16,6 +16,7 @@
   <xs:include schemaLocation="calendaradjustment.xsd"/>
   <xs:include schemaLocation="currencyconfig.xsd"/>
   <xs:include schemaLocation="iborfallbackconfig.xsd"/>
+  <xs:include schemaLocation="baselTrafficLightconfig.xsd"/>
   <xs:include schemaLocation="scriptlibrary.xsd"/>
   <xs:include schemaLocation="simmcalibration.xsd"/>
   <xs:include schemaLocation="counterparty.xsd"/>
