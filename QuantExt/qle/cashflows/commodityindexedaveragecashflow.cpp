@@ -465,7 +465,7 @@ CommodityIndexedAverageLeg::operator Leg() const {
     for (Size i = 0; i < numberCashflows; ++i) {
 
         Date start = schedule_.date(i);
-        Date end = schedule_.date(i + 1);
+        Date end = singleDateSchedule ? start : schedule_.date(i + 1);
         bool excludeStart = i == 0 ? false : excludeStartDate_;
         bool includeEnd = i == numberCashflows - 1 ? true : includeEndDate_;
         Real quantity = detail::get(quantities_, i, 1.0);
