@@ -137,6 +137,7 @@ protected:
     char quoteChar_;
     char escapeChar_;
     std::string nullString_;
+    int countCPTrades_ = 0;
 };
 
 class CsvFileCrifLoader : public StringStreamCrifLoader {
