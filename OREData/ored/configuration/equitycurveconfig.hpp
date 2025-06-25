@@ -98,7 +98,7 @@ public:
 
     void setCurrency(const string& currency) { currency_ = currency; }
     void setCalendar(const string& calendar) { calendar_ = calendar; }
-    void setType(const Type& type) { type_ = type; }
+    void setOutputType(const Type& type) { outputType_ = type; }
     //@}
 
 private:
@@ -113,6 +113,7 @@ private:
     string dayCountID_;
     string divInterpVariable_;
     string divInterpMethod_;
+    Type outputType_ = Type::NoDividends;
     bool dividendExtrapolation_ = false;
     bool extrapolation_ = false;
     QuantLib::Exercise::Type exerciseStyle_ = QuantLib::Exercise::Type::European;
