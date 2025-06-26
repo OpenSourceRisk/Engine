@@ -264,7 +264,7 @@ void XvaEngineCG::buildCgPartB() {
 
     for (auto const& [id, trade] : portfolio_->trades()) {
 
-        std::size_t multiplier = cg_const(*g, trade->instrument()->multiplier() * trade->instrument()->multiplier2());
+        double multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
 
         auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
             trade->instrument()->qlInstrument()->pricingEngine());
@@ -291,13 +291,13 @@ void XvaEngineCG::buildCgPartB() {
             std::vector<TradeExposure> tmpValuation(valuationDates_.size() + 1);
             tmpValuation[0] = tradeExposure[0];
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
-                if (stickyCloseOutDates_.empty()) {
+                if (closeOutDates_.empty() || !stickyCloseOutDates_.empty()) {
                     tmpValuation[i + 1] = tradeExposure[i + 1];
                 } else {
                     std::size_t index =
                         std::distance(simulationDates_.begin(),
                                       std::find(simulationDates_.begin(), simulationDates_.end(), valuationDates_[i]));
-                    tmpValuation[i + 1] = tradeExposure[index];
+                    tmpValuation[i + 1] = tradeExposure[index + 1];
                 }
             }
             tradeExposureValuation_.push_back(tmpValuation);
@@ -307,18 +307,20 @@ void XvaEngineCG::buildCgPartB() {
 
             if (!stickyCloseOutDates_.empty()) {
                 engine->buildComputationGraph(true, false, &tradeExposure, &metaInfo);
+                for (auto& t : tradeExposure)
+                    scale(*g, t, multiplier);
             }
 
             std::vector<TradeExposure> tmpCloseOut(closeOutDates_.size() + 1);
             tmpCloseOut[0] = tradeExposure[0];
             for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {
-                if (stickyCloseOutDates_.empty()) {
-                    tmpCloseOut[i + 1] = tradeExposure[closeOutDates_.size() + 1 + i];
+                if (!stickyCloseOutDates_.empty()) {
+                    tmpCloseOut[i + 1] = tradeExposure[i + 1];
                 } else {
                     std::size_t index =
                         std::distance(simulationDates_.begin(),
                                       std::find(simulationDates_.begin(), simulationDates_.end(), closeOutDates_[i]));
-                    tmpCloseOut[i + 1] = tradeExposure[index];
+                    tmpCloseOut[i + 1] = tradeExposure[index + 1];
                 }
             }
             tradeExposureCloseOut_.push_back(tmpCloseOut);
@@ -339,8 +341,8 @@ XvaEngineCG::getRegressors(const std::size_t dateIndex, const Date& obsDate, con
     std::set<std::set<std::size_t>> pfRegressorGroups;
     std::set<std::size_t> pfRegressors;
     for (auto const j : tradeIds) {
-        std::set<std::size_t> tradeRegressors = isValuation ? tradeExposureValuation_[dateIndex][j].regressors
-                                                            : tradeExposureCloseOut_[dateIndex][j].regressors;
+        std::set<std::size_t> tradeRegressors = isValuation ? tradeExposureValuation_[j][dateIndex].regressors
+                                                            : tradeExposureCloseOut_[j][dateIndex].regressors;
         pfRegressorGroups.insert(tradeRegressors);
         pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
     }
@@ -442,8 +444,8 @@ std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, co
 
     if (exposure.targetConditionalExpectation == ComputationGraph::nan) {
         result = model_->npv(exposure.componentPathValues.front(), obsDate, cg_const(*g, 1.0), {}, {},
-                             isValuationDate ? tradeExposureValuation_[dateIndex][tradeIndex].regressors
-                                             : tradeExposureCloseOut_[dateIndex][tradeIndex].regressors);
+                             isValuationDate ? tradeExposureValuation_[tradeIndex][dateIndex].regressors
+                                             : tradeExposureCloseOut_[tradeIndex][dateIndex].regressors);
     } else {
         result = exposure.targetConditionalExpectation;
     }
@@ -497,12 +499,11 @@ void XvaEngineCG::buildCgDynamicIM() {
     for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
         dynamicImInfo_.push_back({});
         std::map<std::set<ModelCG::ModelParameter>, std::vector<std::size_t>> plainTradeExposures;
-        std::vector<std::size_t> allPlainTradeExposures;
         for (Size j = 0; j < portfolio_->trades().size(); ++j) {
             if (tradeExposureValuation_[j][i].targetConditionalExpectation == ComputationGraph::nan) {
                 dynamicImInfo_.back().plainTradeIds.insert(j);
-                plainTradeExposures[tradeExposureMetaInfo_[j].relevantModelParameters].push_back(j);
-                allPlainTradeExposures.push_back(tradeExposureValuation_[j][i].componentPathValues.front());
+                plainTradeExposures[tradeExposureMetaInfo_[j].relevantModelParameters].push_back(
+                    tradeExposureValuation_[j][i].componentPathValues.front());
             } else {
                 dynamicImInfo_.back().individualTradeIds.insert(j);
             }
@@ -510,10 +511,9 @@ void XvaEngineCG::buildCgDynamicIM() {
         for (auto const& [s, v] : plainTradeExposures) {
             dynamicImInfo_.back().plainTradeSumGrouped[s] = cg_add(*g, v);
         }
-        dynamicImInfo_.back().plainTradeSum = cg_add(*g, allPlainTradeExposures);
         std::tie(dynamicImInfo_.back().plainTradeRegressors, dynamicImInfo_.back().plainTradeRegressorGroups) =
             getRegressors(i, i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1),
-                          dynamicImInfo_.back().plainTradeIds, false);
+                          dynamicImInfo_.back().plainTradeIds, true);
     }
 
     timing_partc2_ = timer.elapsed().wall;
@@ -1235,9 +1235,6 @@ void XvaEngineCG::calculateDynamicIM() {
                                                           QuantLib::LsmBasisSystem::Monomial, regressionVarianceCutoff_,
                                                           regressorGroups, usePythonIntegration_, args);
         };
-
-        if (dynamicImInfo_[i].plainTradeRegressors.empty())
-            continue;
 
         // first entry is populated below with each regressand
         std::vector<const RandomVariable*> args(1);

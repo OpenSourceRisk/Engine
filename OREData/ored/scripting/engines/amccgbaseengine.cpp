@@ -444,28 +444,6 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
     QL_REQUIRE(tradeExposureMetaInfo,
                "AmcCgBaseEngine::buildComputationGraph(): tradeExposureMetaInfo is null, this is unexpected");
 
-    // populate trade exposure meta info
-
-    tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
-    tradeExposureMetaInfo->relevantCurrencies = relevantCurrencies_;
-
-    for (auto const& ccy : relevantCurrencies_) {
-        tradeExposureMetaInfo->relevantModelParameters.insert(
-            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
-        if (ccy != modelCg_->baseCcy()) {
-            tradeExposureMetaInfo->relevantModelParameters.insert(
-                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
-        }
-        if (tradeExposureMetaInfo->hasVega) {
-            tradeExposureMetaInfo->relevantModelParameters.insert(
-                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
-            if (ccy != modelCg_->baseCcy()) {
-                tradeExposureMetaInfo->relevantModelParameters.insert(
-                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
-            }
-        }
-    }
-
     // build graph
 
     QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
@@ -511,6 +489,28 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
     for (auto const& c : cashflowInfo) {
         relevantCurrencies_.insert(c.payCcy);
         relevantCurrencies_.insert(c.addCcys.begin(), c.addCcys.end());
+    }
+
+    // populate trade exposure meta info
+
+    tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
+    tradeExposureMetaInfo->relevantCurrencies = relevantCurrencies_;
+
+    for (auto const& ccy : relevantCurrencies_) {
+        tradeExposureMetaInfo->relevantModelParameters.insert(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+        if (ccy != modelCg_->baseCcy()) {
+            tradeExposureMetaInfo->relevantModelParameters.insert(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+        }
+        if (tradeExposureMetaInfo->hasVega) {
+            tradeExposureMetaInfo->relevantModelParameters.insert(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+            if (ccy != modelCg_->baseCcy()) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+            }
+        }
     }
 
     /* build set of relevant exercise dates and corresponding cash settlement times (if applicable) */
@@ -705,8 +705,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
         // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
         for (Size counter = 0; counter < simDates.size(); ++counter) {
-            (*tradeExposure)[counter + (stickyCloseOutDateRun ? simulationDates_.size() : 0) + 1].componentPathValues = {
-                pathValueUndDirty[counter]};
+            (*tradeExposure)[counter + 1].componentPathValues = {pathValueUndDirty[counter]};
+            (*tradeExposure)[counter + 1].regressors =
+                modelCg_->npvRegressors(*std::next(simDates.begin(), counter), relevantCurrencies_);
         }
 
     } else {
@@ -801,8 +802,6 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 if (rebatedExercise)
                     exercisedValue = cg_add(g, exercisedValue, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]));
 
-                std::size_t timeIndex = 1 + simCounter + (stickyCloseOutDateRun ? simulationDates_.size() : 0);
-
                 std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValue),
                                        cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue));
 
@@ -810,18 +809,17 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
                     // for european exercise we can rely on standard regression outside the engine
 
-                    (*tradeExposure)[timeIndex].componentPathValues = {r};
+                    (*tradeExposure)[simCounter + 1].componentPathValues = {r};
 
                 } else {
 
                     // for more than one exercise date, we need the decomposition
 
-                    (*tradeExposure)[timeIndex].componentPathValues = {exercisedValue, futureOptionValue};
+                    (*tradeExposure)[simCounter + 1].componentPathValues = {exercisedValue, futureOptionValue};
 
-                    (*tradeExposure)[timeIndex].targetConditionalExpectation = createRegressionModel(
+                    (*tradeExposure)[simCounter + 1].targetConditionalExpectation = createRegressionModel(
                         r, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                        cg_const(g, 1.0), &(*tradeExposure)[timeIndex]);
-
+                        cg_const(g, 1.0), &(*tradeExposure)[simCounter + 1]);
                 }
 
                 ++simCounter;

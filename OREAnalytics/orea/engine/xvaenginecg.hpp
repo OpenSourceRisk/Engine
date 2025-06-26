@@ -246,11 +246,11 @@ private:
     // per trade meta info (buildPartB())
     std::vector<TradeExposureMetaInfo> tradeExposureMetaInfo_;
 
-    // per time step portfolio exposure as conditional expectation (buildPartC())
+    // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
     std::vector<std::size_t> pfExposureValuation_;
     std::vector<std::size_t> pfExposureCloseOut_;
 
-    // if tradeLevelBreakdown is desired, per time step, trade the exposure, as conditional expectation (buildPartC())
+    // if trade breakdown, per time step, trade the exposure, as conditional expectation (buildPartC(), includes t=0)
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
 
@@ -260,9 +260,6 @@ private:
         std::set<std::size_t> plainTradeIds;
         // sum of path exposures for plain trades, grouped by relevant model parameters
         std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
-        // FIXME: is that used at all, or can we remove it?
-        // sum of path exposures for plain trades, ungrouped 
-        std::size_t plainTradeSum;
         // set of regressor nodes and var groups for plain trades
         std::set<std::size_t> plainTradeRegressors;
         std::set<std::set<std::size_t>> plainTradeRegressorGroups;
@@ -270,7 +267,7 @@ private:
         std::set<std::size_t> individualTradeIds;
     };
 
-    // dynamic im info per valuation date
+    // dynamic im info per valuation date,
     std::vector<DynamicImInfo> dynamicImInfo_;
 
     /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:
