@@ -83,6 +83,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
+    outputType_ = type_;
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
