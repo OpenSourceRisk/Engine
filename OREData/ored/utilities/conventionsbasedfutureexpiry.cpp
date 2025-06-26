@@ -267,6 +267,9 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
             }
             expiry = QuantExt::DateUtilities::lastWeekday(convention_.optionWeekday(), optionMonth, optionYear);
             expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
+        } else if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::CalendarDaysBefore) {
+            expiry = Date(1, contractMonth, contractYear) - convention_.optionCalendarDaysBefore() * Days;
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
         }
 
         expiry = avoidProhibited(expiry, true);
