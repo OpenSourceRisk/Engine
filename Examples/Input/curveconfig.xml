@@ -292,6 +292,19 @@
 			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
 		</DefaultCurve>
 		<DefaultCurve>
+			<CurveId>CPTY_D_SR_EUR</CurveId>
+			<CurveDescription>CPTY_D SR HR EUR</CurveDescription>
+			<Currency>EUR</Currency>
+			<Type>HazardRate</Type>
+			<DiscountCurve/>
+			<DayCounter>A360</DayCounter>
+			<RecoveryRate>RECOVERY_RATE/RATE/CPTY_D/SR/EUR</RecoveryRate>
+			<Quotes>
+				<Quote>HAZARD_RATE/RATE/CPTY_D/SR/EUR/1Y</Quote>
+			</Quotes>
+			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+		</DefaultCurve>
+		<DefaultCurve>
 			<CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
 			<CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
 			<Currency>EUR</Currency>

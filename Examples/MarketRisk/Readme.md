@@ -103,4 +103,9 @@ par-sensitivity-based P&L explainer.
 
 Run with: <code>python run_zerotoparshift.py</code>
 
+## Sensitivity Analysis with credit index decomposition
 
+Decompose credit index sensitivities into basket constituent sensitivities, decomposition method is controlled by 
+pricing engine setting.
+
+Run with: <code>python run_sensi_cr_decomp.py</code>

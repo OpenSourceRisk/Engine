@@ -155,7 +155,10 @@ DecomposedSensitivityStream::decomposeSurvivalProbability(const SensitivityRecor
     for (const auto& [constituent, weight] : defaultRiskDecompositionWeights_.at(record.tradeId)) {
         decompRecord.key_1 = RiskFactorKey(record.key_1.keytype, constituent, record.key_1.index);
         decompRecord.delta = record.delta * weight;
-        decompRecord.gamma = record.gamma * weight;
+        decompRecord.gamma = record.gamma;
+        if (decompRecord.gamma != QuantLib::Null<QuantLib::Real>()) {
+            decompRecord.gamma *= weight;
+        }
         results.push_back(decompRecord);
     }
     return results;

@@ -97,6 +97,8 @@
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CPTY_D">Default/EUR/CPTY_D_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CDXIG">Default/EUR/CPTY_D_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_1">Default/EUR/CPTY_1_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_2">Default/EUR/CPTY_2_SR_EUR</DefaultCurve>
     <DefaultCurve name="CPTY_3">Default/EUR/CPTY_3_SR_EUR</DefaultCurve>

@@ -356,6 +356,32 @@
 	</Conventions>
       </ParConversion>
     </CreditCurve>
+    <CreditCurve name="CPTY_C">
+      <Currency>USD</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="CDS">CDS-STANDARD-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </CreditCurve>
+    <CreditCurve name="CPTY_D">
+      <Currency>USD</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</ShiftTenors>
+      <ParConversion>
+	<Instruments>CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS,CDS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="CDS">CDS-STANDARD-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </CreditCurve>
   </CreditCurves>
 
   <EquitySpots>
