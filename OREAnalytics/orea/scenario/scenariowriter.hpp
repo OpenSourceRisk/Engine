@@ -25,6 +25,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/report/report.hpp>
 
 namespace ore {

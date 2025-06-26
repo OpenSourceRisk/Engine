@@ -819,7 +819,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-	DayCounter dc;
+        DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->swaptionVol(key)->dayCounter();
         } else {

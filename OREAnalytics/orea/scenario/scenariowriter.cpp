@@ -124,7 +124,7 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             if (headerKeys_.empty())
                 headerKeys_ = keys_;
             report_->addColumn("Date", string());
-            report_->addColumn("Scenario", Size());
+            report_->addColumn("Scenario", string());
             report_->addColumn("Numeraire", double(), 8);
             for (Size i = 0; i < headerKeys_.size(); i++)
                 report_->addColumn(to_string(headerKeys_[i]), double(), 8);
@@ -132,7 +132,7 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
 
         report_->next();
         report_->add(to_string(d));
-        report_->add(i_);
+        report_->add(s->label());
         report_->add(s->getNumeraire());
         for (auto k : headerKeys_) {
             if (s->has(k))
