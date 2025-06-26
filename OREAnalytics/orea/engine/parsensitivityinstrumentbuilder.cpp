@@ -599,11 +599,13 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 *QuantLib::ext::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(y.second);
             Size n_ten = data.shiftTenors.size();
             for (Size j = 0; j < n_ten; ++j) {
+                RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
+                if (!dryRun && !relevantRiskFactors.empty() &&
+                    relevantRiskFactors.find(key) == relevantRiskFactors.end())
+                    continue;
                 Period term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
-
-                RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
                 bool recognised = true;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
@@ -672,7 +674,9 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 for (Size k = 0; k < n_expiries; ++k) {
                     RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, indexName,
                                       k * n_strikes + j);
-
+                    if (!dryRun && !relevantRiskFactors.empty() &&
+                        relevantRiskFactors.find(key) == relevantRiskFactors.end())
+                        continue;
                     bool recognised = true;
                     string instType;
                     try {
