@@ -218,6 +218,9 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             }
         }
         legs_.push_back(leg);
+
+        legMandatoryCashflows_.push_back(legs_.size()-1);
+
         legCurrencies_.push_back(legData_[i].currency()); // all legs and cf are priced with the same ccy
     }
 
