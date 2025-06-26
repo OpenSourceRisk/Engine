@@ -982,6 +982,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "laxFxConversion", false);
         if (tmp != "")
             setSensiLaxFxConversion(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "decomposeIndexSensitivities", false);
+        if (tmp != "")
+            setSensiDecomposition(parseBool(tmp));
+
     }
 
     /************

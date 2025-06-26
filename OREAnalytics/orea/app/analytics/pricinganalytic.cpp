@@ -194,16 +194,19 @@ void PricingAnalyticImpl::runAnalytic(
 
             LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis_->simMarketData()->baseCcy();
-            auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
-/*
-            auto decomposedSensiStream = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
+
+            QuantLib::ext::shared_ptr<SensitivityStream> ss =
+                QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
+
+            if (inputs_->sensiDecomposition()) {
+                ss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
                     ss, baseCurrency, analytic()->portfolio(), inputs_->refDataManager(),
                     analytic()->configurations().curveConfig, analytic()->configurations().sensiScenarioData,
                     analytic()->market());
-  */              
+            }
 
-            ReportWriter(inputs_->reportNaString())
-                .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+            ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+
             analytic()->addReport(type, "sensitivity", report);
 
             LOG("Sensi analysis - write sensitivity scenario report in memory");
@@ -242,14 +245,14 @@ void PricingAnalyticImpl::runAnalytic(
                 auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
                                                                          typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
-                QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
+                QuantLib::ext::shared_ptr<SensitivityStream> pss =
                     QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
-                    /*
-                auto decomposedParSensiStream = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
-                    pss, baseCurrency, analytic()->portfolio(), inputs_->refDataManager(),
-                    analytic()->configurations().curveConfig, analytic()->configurations().sensiScenarioData,
-                    analytic()->market());
-                */
+                if (inputs_->sensiDecomposition()) {
+                    pss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
+                        pss, baseCurrency, analytic()->portfolio(), inputs_->refDataManager(),
+                        analytic()->configurations().curveConfig, analytic()->configurations().sensiScenarioData,
+                        analytic()->market());
+                }
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

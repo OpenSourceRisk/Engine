@@ -161,6 +161,7 @@ public:
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
     void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
+    void setSensiDecomposition(bool b) { sensiDecomposition_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -603,6 +604,7 @@ public:
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
     bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
+    bool sensiDecomposition() const { return sensiDecomposition_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -1031,6 +1033,7 @@ protected:
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
     bool sensiLaxFxConversion_ = false;
+    bool sensiDecomposition_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
