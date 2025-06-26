@@ -55,8 +55,8 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
 
     using CQF = CommodityQuantityFrequency;
     
-    // We allow a special case where the schedule has only one date, which is the pricing date. 
-    if(schedule.size() == 1 and leg.size() == 1){
+    // We allow a special case where the schedule has only one date, which is the pricing date.
+    if (schedule.size() == 1 && leg.size() == 1) {
         auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[0]);
         Date pricingDate = ccf->pricingDate();
         if (cqf == CQF::PerHourAndCalendarDay || cqf == CQF::PerHour){
@@ -346,9 +346,6 @@ Leg CommodityFixedLegBuilder::buildLeg(
     OneDayCounter dc;
     // Special case when the schedule has only one date, which is the pricing date.
     if (schedule.size() == 1 && prices.size() == 1 && quantities.size() == 1) {
-        // If we have a single period, we can just use a SimpleCashFlow
-        QL_REQUIRE(prices[0] > 0.0, "CommodityFixedLegBuilder: price must be positive for single period leg");
-        QL_REQUIRE(quantities[0] > 0.0, "CommodityFixedLegBuilder: quantity must be positive for single period leg");
         fixedRateLeg.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(schedule.date(0), quantities[0], prices[0],
                                                                            dc, schedule.date(0), schedule.date(0)));
     } else {
