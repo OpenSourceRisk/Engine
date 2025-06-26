@@ -22,20 +22,40 @@
 
 #pragma once
 
-#include <string>
+#include <qle/ad/computationgraph.hpp>
+
 #include <set>
+#include <string>
 
 namespace ore {
 namespace data {
 
+struct TradeExposure {
+    // before taking conditional expectation for exposure
+    std::vector<std::size_t> componentPathValues;
+    // after taking conditional expectation for exposure, or "nan" if not applicable
+    std::size_t targetConditionalExpectation = QuantExt::ComputationGraph::nan;
+    // the set of regressors appropriate for this trade and timestep to use
+    std::set<std::size_t> regressors;
+    // TODO add regressor groups, this might also apply on single trade level
+    // update XvaEngineCG::getRegressors(), to include these groups on trade level
+};
+
+void scale(QuantExt::ComputationGraph& g, TradeExposure& t, double multiplier);
+
+struct TradeExposureMetaInfo {
+    bool hasVega = false;
+    std::set<std::string> relevantCurrencies;
+    std::set<ModelCG::ModelParameter> relevantModelParameters;
+};
+
 class AmcCgPricingEngine {
 public:
     virtual ~AmcCgPricingEngine() {}
-    virtual std::string npvName() const = 0;
-    virtual std::set<std::string> relevantCurrencies() const = 0;
-    virtual bool hasVega() const = 0;
-    virtual void buildComputationGraph(const bool stickyCloseOutDateRun,
-                                       const bool reevaluateExerciseInStickyCloseOutDateRun) const = 0;
+    virtual void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                                       const bool reevaluateExerciseInStickyCloseOutDateRun = false,
+                                       std::vector<TradeExposure>* tradeExposure = nullptr,
+                                       TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const = 0;
 };
 
 } // namespace data
