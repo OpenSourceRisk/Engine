@@ -289,9 +289,6 @@ QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stri
         }
     }
 
-    if ((currentLine - 1) == countCPTrades_) {
-        QL_FAIL("CRIF is empty, there is only use_cp_trade=true trades within CRIF.");
-    }
     if (blankLines != (currentLine - 1)) {
         for (const auto& [tradeId, tradeType, exceptionType, exceptionMsg] : structuredErrors)
             ore::data::StructuredTradeErrorMessage(tradeId, tradeType, exceptionType, exceptionMsg).log();
@@ -407,7 +404,6 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         bool useCpTrade = loadOptionalBool(26, false);
         if (useCpTrade) {
             if (allowUseCounterpartyTrade_) {
-                countCPTrades_++;
                 ore::data::StructuredTradeWarningMessage(tradeId, tradeType, "JSON CRIF loading",
                                                          "Skipping over CRIF record with use_cp_trade=true")
                     .log();
