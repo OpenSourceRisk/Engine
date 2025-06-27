@@ -58,10 +58,8 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Real level = barrier_.levels()[0].value();
     Date start = ore::data::parseDate(startDate_);
     Real rebate = barrier_.rebate();
-    int barrierStrict = 0;
-    if (barrier_.strictComparison()) {
-        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
-    }
+    int barrierStrict = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
+
     QL_REQUIRE(rebate >= 0, "rebate must be non-negative");
 
     QL_REQUIRE(level > 0.0 && level != Null<Real>(), "Invalid level " << level);

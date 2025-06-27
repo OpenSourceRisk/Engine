@@ -222,11 +222,11 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
             fxRate=arguments_.fxIndex->fixing(kv.first);
         lastFixing = fxRate*kv.second->fixing(kv.first);
         if (arguments_.barrierStyle == Exercise::American)
-            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
+            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
     }
 
     if (arguments_.barrierStyle == Exercise::European)
-        barrierTriggered = this->barrierTriggered(lastFixing, false);
+        barrierTriggered = this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
 
     if(barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
         results_.value = 0.0;
@@ -236,14 +236,23 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
     return true;
 }
 
-bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice) const {
+bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice, const int strictBarrier) const {
     if (arguments_.barrierLevel == Null<Real>())
         return false;
     Real tmp = logPrice ? logBarrier_ : arguments_.barrierLevel;
-    if (arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::DownOut)
-        return price <= tmp;
-    else if (arguments_.barrierType == Barrier::UpIn || arguments_.barrierType == Barrier::UpOut)
-        return price >= tmp;
+    if (arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::DownOut) {
+        if (arguments_.strictBarrier == 1) {
+            return price < tmp;
+        } else {
+            return price <= tmp;
+        }
+    } else if (arguments_.barrierType == Barrier::UpIn || arguments_.barrierType == Barrier::UpOut) {
+        if (arguments_.strictBarrier == 1) {
+            return price > tmp;
+        } else {
+            return price >= tmp;
+        }  
+    }
     return false;
 }
 
@@ -401,7 +410,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
             // check barrier
             if (arguments_.barrierStyle == Exercise::American)
-                barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, false, arguments_.strictBarrier);
         }
         // Average price on this sample
         samplePayoff /= m;
@@ -411,7 +420,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
         // account for barrier
         if (arguments_.barrierStyle == Exercise::European)
-            barrierTriggered = this->barrierTriggered(price, false);
+            barrierTriggered = this->barrierTriggered(price, false, arguments_.strictBarrier);
 
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;
@@ -505,7 +514,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
         for (Size j = 0; j < dt.size(); ++j) {
             price = paths[futureIndex[j]][j];
             if (arguments_.barrierStyle == Exercise::American)
-                barrierTriggered = barrierTriggered || this->barrierTriggered(price, true);
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, true, arguments_.strictBarrier);
             samplePayoff += std::exp(price);
         }
 
@@ -517,7 +526,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
         // account for barrier
         if (arguments_.barrierStyle == Exercise::European)
-            barrierTriggered = this->barrierTriggered(price, true);
+            barrierTriggered = this->barrierTriggered(price, true, arguments_.strictBarrier);
 
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;

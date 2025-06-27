@@ -49,7 +49,7 @@ public:
                                 const Real barrierLevel = Null<Real>(),
                                 Barrier::Type barrierType = Barrier::Type::DownIn,
                                 Exercise::Type barrierStyle = Exercise::American,
-                                const QuantLib::ext::shared_ptr<FxIndex>& fxIndex= nullptr);
+                                const QuantLib::ext::shared_ptr<FxIndex>& fxIndex= nullptr, const int strictBarrier = 0);
 
     //! \name Instrument interface
     //@{
@@ -83,6 +83,7 @@ private:
     Real barrierLevel_;
     Barrier::Type barrierType_;
     Exercise::Type barrierStyle_;
+    int strictBarrier_;
 };
 
 //! %Arguments for commodity APO calculation
@@ -101,6 +102,7 @@ public:
     Real barrierLevel;
     Barrier::Type barrierType;
     Exercise::Type barrierStyle;
+    int strictBarrier;
     void validate() const override;
 };
 

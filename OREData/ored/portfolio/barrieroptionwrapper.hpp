@@ -152,7 +152,7 @@ protected:
     Real barrierLow_;
     Real barrierHigh_;
     bool strikeAtBarrier(Real strike) const override;
-    bool checkBarrier(Real spotLow, Real spotHigh) const;
+    bool checkBarrier(Real spotLow, Real spotHigh, int barrierStrict) const;
 
 };
 

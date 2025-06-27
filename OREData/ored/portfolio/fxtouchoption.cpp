@@ -92,10 +92,8 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Real level = barrier_.levels()[0].value();
     Date expiryDate = parseDate(option_.exerciseDates().front());
     std::optional<bool> overrideTriggered = barrier_.overrideTriggered();
-    int barrierStrict = 0;
-    if (barrier_.strictComparison()) {
-        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
-    }
+    int barrierStrict = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
+
     Natural payLag = 0;
     BusinessDayConvention payConvention = Unadjusted;
     Calendar payCalendar = NullCalendar();

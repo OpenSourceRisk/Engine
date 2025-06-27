@@ -177,8 +177,12 @@ bool DoubleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
     return close_enough(strike, barrierLow_) || close_enough(strike, barrierHigh_);
 }
 
-bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh) const {
-    return spotLow <= barrierLow_ || spotHigh >= barrierHigh_;
+bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh, int barrierStrict) const {
+    if (barrierStrict == 1) {
+        return spotLow < barrierLow_ || spotHigh > barrierHigh_;
+    } else {
+        return spotLow <= barrierLow_ || spotHigh >= barrierHigh_;
+    }
 }
 
 bool DoubleBarrierOptionWrapper::exercise() const {
@@ -224,7 +228,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     }else{
-                        trigger = checkBarrier(dailyLow, dailyHigh);
+                        trigger = checkBarrier(dailyLow, dailyHigh, barrierStrict_);
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -237,7 +241,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
         if (overrideTriggered_) {
             trigger = *overrideTriggered_;
         } else {
-            trigger = checkBarrier(spot_->value(), spot_->value());
+            trigger = checkBarrier(spot_->value(), spot_->value(), barrierStrict_);
             if (trigger)
                 exerciseDate_ = today;
         }

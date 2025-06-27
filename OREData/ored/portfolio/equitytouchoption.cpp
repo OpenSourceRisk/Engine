@@ -88,10 +88,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Real rebate = barrier_.rebate();
     Position::Type positionType = parsePositionType(option_.longShort());
     Date start = ore::data::parseDate(startDate_);
-    int barrierStrict = 0;
-    if (barrier_.strictComparison()) {
-        barrierStrict = boost::lexical_cast<int>(barrier_.strictComparison().value());
-    }
+    int barrierStrict = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
