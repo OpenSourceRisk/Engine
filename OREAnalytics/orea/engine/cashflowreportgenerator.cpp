@@ -1,19 +1,19 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd
- All rights reserved.
+Copyright (C) 2024 Quaternion Risk Management Ltd
+All rights reserved.
 
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
+This file is part of ORE, a free-software/open-source library
+for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
+ORE is free software: you can redistribute it and/or modify it
+under the terms of the Modified BSD License.  You should have received a
+copy of the license along with this program.
+The license is also available online at http://opensourcerisk.org
 
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+This program is distributed on the basis that it will form a useful
+contribution to risk analytics and model standardisation, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <orea/engine/cashflowreportgenerator.hpp>
@@ -50,41 +50,33 @@ using namespace ore::data;
 using namespace QuantLib;
 using namespace QuantExt;
 
-std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::shared_ptr<ore::data::Trade>& trade,
-                                                                const std::string& baseCurrency,
-                                                                QuantLib::ext::shared_ptr<ore::data::Market> market,
-                                                                const std::string& configuration,
-                                                                const bool includePastCashflows) {
+void appendResults( const ext::shared_ptr<ore::data::Trade>& trade,
+                    const std::map<std::string, boost::any>& addResults,
+                    const Real multiplier,
+                    const std::string& baseCurrency,
+                    QuantLib::ext::shared_ptr<ore::data::Market> market,
+                    const std::string& configuration,
+                    const bool includePastCashflows,
+                    std::vector<TradeCashflowReportData>& result) {
 
     Date asof = Settings::instance().evaluationDate();
 
-    std::vector<TradeCashflowReportData> result;
-
-    // if trade provides cashflows as additional results, we use that information instead of the legs
-
-    auto addResults = trade->instrument()->additionalResults();
-
-    auto cashFlowResults = addResults.find("cashFlowResults");
-
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
-    auto upper = addResults.lower_bound("cashFlowResults_a");
+    auto upper = addResults.lower_bound("cashFlowResults_a"); // Upper bound due to alphabetical order
 
     std::map<Size, Size> cashflowNumber;
-
-    const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
 
     if (lower != addResults.end()) {
 
         for (auto cashFlowResults = lower; cashFlowResults != upper; ++cashFlowResults) {
 
-            // additional result based cashflow reporting
-
             QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
-                       "internal error: cashflowResults type does not match CashFlowResults: '"
-                           << cashFlowResults->second.type().name() << "'");
+                    "internal error: cashflowResults type does not match CashFlowResults: '"
+                        << cashFlowResults->second.type().name() << "'");
             std::vector<CashFlowResults> cfResults =
                 boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
+
             for (auto const& cf : cfResults) {
                 string ccy = "";
                 if (!cf.currency.empty()) {
@@ -113,8 +105,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                     discountFactor = cf.discountFactor;
                 else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
                     discountFactor = cf.payDate < asof
-                                         ? 0.0
-                                         : market->discountCurve(cf.currency, configuration)->discount(cf.payDate);
+                                        ? 0.0
+                                        : market->discountCurve(cf.currency, configuration)->discount(cf.payDate);
                 }
                 if (cf.presentValue != Null<Real>()) {
                     presentValue = cf.presentValue * multiplier;
@@ -181,10 +173,37 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
             }
         }
     }
+}
 
-    {
+std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::shared_ptr<ore::data::Trade>& trade,
+                                                                const std::string& baseCurrency,
+                                                                QuantLib::ext::shared_ptr<ore::data::Market> market,
+                                                                const std::string& configuration,
+                                                                const bool includePastCashflows) {
+
+    Date asof = Settings::instance().evaluationDate();
+
+    std::vector<TradeCashflowReportData> result;
+
+    // if trade provides cashflows as additional results, we use that information instead of the legs
+    auto instruments = trade->instrument()->additionalInstruments();
+
+    appendResults(trade, trade->instrument()->additionalResults(), trade->instrument()-> multiplier() * trade->instrument()->multiplier2(), 
+        baseCurrency, market, configuration, includePastCashflows, result);
+
+    for (Size i = 0; i < instruments.size(); ++i)
+        appendResults(trade, instruments[i]->additionalResults(), 1.0, baseCurrency, market, configuration, includePastCashflows, result);
+
+    { // Leg based reporting
+
+        std::map<Size, Size> cashflowNumber;
+
+        const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
+        auto addResults = trade->instrument()->additionalResults();
+        auto cashFlowResults = addResults.find("cashFlowResults");
+
         // leg based cashflow reporting
-        bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end();
+        bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end(); // if(results.empty())
         
         auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
         Size addResultsLegs = 0;
@@ -193,11 +212,10 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
         const vector<Leg>& legs = trade->legs();
         for (size_t i = 0; i < legs.size(); i++) 
         {
-            bool mandatory = false;
-            auto it = std::find(trade->legMandatoryCashflows().begin(), trade->legMandatoryCashflows().end(), i);
-
-            if (it != trade->legMandatoryCashflows().end()) 
-                mandatory = true;
+            const auto* cashflows = &(trade->legMandatoryCashflows());
+            bool mandatory = true;
+            if (cashflows && std::find(cashflows->begin(), cashflows->end(), i) != cashflows->end()) 
+                 mandatory = true;
 
             if(legBasedReport || mandatory)
             {
