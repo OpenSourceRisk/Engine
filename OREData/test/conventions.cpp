@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     CommodityFutureConvention::BusinessDaysBefore optionExpiryBusinessDayBefore("3");
-    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
+    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore, "");
     BOOST_CHECK_NO_THROW(convention = QuantLib::ext::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
                              false, optionExpiryDateRule, prohibitedExpiries));
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     CommodityFutureConvention::BusinessDaysBefore optionExpiryBusinessDayBefore("3");
-    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
+    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore, "");
     BOOST_CHECK_NO_THROW(convention = QuantLib::ext::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
                              false, optionExpiryDateRule, prohibitedExpiries));

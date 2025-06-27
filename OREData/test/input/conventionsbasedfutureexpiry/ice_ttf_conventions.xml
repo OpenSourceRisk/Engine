@@ -14,5 +14,6 @@
     <IsAveraging>false</IsAveraging>
     <OptionCalendarDaysBefore>5</OptionCalendarDaysBefore>
     <OptionBusinessDayConvention>Preceding</OptionBusinessDayConvention>
+    <OptionMinBusinessDaysBefore>1</OptionMinBusinessDaysBefore>
   </CommodityFuture>
 </Conventions>

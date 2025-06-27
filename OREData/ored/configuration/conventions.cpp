@@ -1799,6 +1799,7 @@ CommodityFutureConvention::CommodityFutureConvention()
       optionWeekday_(Mon),
       optionExpiryDay_(Null<Natural>()), 
       optionCalendarDaysBefore_(Null<Natural>()),
+      optionMinBusinessDaysBefore_(0),
       balanceOfTheMonth_(false) {}
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
@@ -1827,7 +1828,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       indexName_(indexName), strOptionContractFrequency_(optionFrequency), optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1858,7 +1859,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_),
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_),
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1889,8 +1890,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       indexName_(indexName), strOptionContractFrequency_(optionFrequency),
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
-      strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_), 
-      balanceOfTheMonth_(false) {
+      strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -1922,7 +1923,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
       optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
       strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
       strOptionWeekday_(optionExpiryDateRule.weekday_), strOptionCalendarDaysBefore_(optionExpiryDateRule.calendarDaysBefore_),
-      balanceOfTheMonth_(false) {
+      strOptionMinBusinessDaysBefore_(optionExpiryDateRule.minBusinessDaysBefore_), balanceOfTheMonth_(false) {
     build();
 }
 
@@ -2068,6 +2069,10 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         previouslyFoundOptionExpiryRule = "OptionCalendarDaysBefore";
     }
 
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OptionMinBusinessDaysBefore")){
+        strOptionMinBusinessDaysBefore_ = XMLUtils::getNodeValue(n);
+    }
+
 
     if (!foundOptionExpiryRule && optionContractFrequency_ == Weekly) {
         optionAnchorType_ = OptionAnchorType::WeeklyDayOfTheWeek;
@@ -2209,6 +2214,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) const {
     } else if (optionAnchorType_ == OptionAnchorType::CalendarDaysBefore) {
         XMLUtils::addChild(doc, node, "OptionCalendarDaysBefore", strOptionCalendarDaysBefore_);
     }
+    
+    if (!strOptionMinBusinessDaysBefore_.empty()) {
+        XMLUtils::addChild(doc, node, "OptionMinBusinessDaysBefore", strOptionMinBusinessDaysBefore_);
+    }
 
     if (!prohibitedExpiries_.empty()) {
         XMLNode* prohibitedExpiriesNode = doc.allocNode("ProhibitedExpiries");
@@ -2342,6 +2351,8 @@ void CommodityFutureConvention::build() {
     }
 
     optionBdc_ = strOptionBdc_.empty() ? Preceding : parseBusinessDayConvention(strOptionBdc_);
+
+    optionMinBusinessDaysBefore_ = strOptionMinBusinessDaysBefore_.empty() ? 0 : lexical_cast<Natural>(strOptionMinBusinessDaysBefore_);
 
     // Check the continuation mappings
     checkContinuationMappings(futureContinuationMappings_, "future");
