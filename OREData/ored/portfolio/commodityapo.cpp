@@ -142,11 +142,9 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     pricingCalendar_ = XMLUtils::getChildValue(apoNode, "PricingCalendar", false, "NullCalendar");
 
     paymentDate_ = XMLUtils::getChildValue(apoNode, "PaymentDate", false);
-    if (paymentDate_.empty()) {
-        paymentCalendar_ = XMLUtils::getChildValue(apoNode, "PaymentCalendar", true);
-        paymentLag_ = XMLUtils::getChildValue(apoNode, "PaymentLag", true);
-        paymentConvention_ = XMLUtils::getChildValue(apoNode, "PaymentConvention", true);
-    }
+    paymentCalendar_ = XMLUtils::getChildValue(apoNode, "PaymentCalendar", paymentDate_.empty());
+    paymentLag_ = XMLUtils::getChildValue(apoNode, "PaymentLag", paymentDate_.empty());
+    paymentConvention_ = XMLUtils::getChildValue(apoNode, "PaymentConvention", paymentDate_.empty());
 
     gearing_ = 1.0;
     if (XMLNode* n = XMLUtils::getChildNode(apoNode, "Gearing")) {
