@@ -213,7 +213,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
         for (size_t i = 0; i < legs.size(); i++) 
         {
             const auto* cashflows = &(trade->legMandatoryCashflows());
-            bool mandatory = true;
+            bool mandatory = false;
+            
             if (cashflows && std::find(cashflows->begin(), cashflows->end(), i) != cashflows->end()) 
                  mandatory = true;
 
