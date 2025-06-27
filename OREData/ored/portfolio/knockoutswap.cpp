@@ -125,6 +125,9 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
     QL_REQUIRE(barrierData_.levels().size() == 1, "Expected exactly one barrier level");
     QL_REQUIRE(barrierData_.levels().front().value() != Null<Real>(), "No barrier level specified.");
 
+    std::string strictBarrier = barrierData_.strictComparison() ? barrierData_.strictComparison().value() : "0";
+    numbers_.emplace_back("Number", "BarrierStrictComparison", strictBarrier);
+
     numbers_.emplace_back("Number", "KnockOutLevel", std::to_string(barrierData_.levels().front().value()));
 
     events_.emplace_back("BarrierStartDate", barrierStartDate_);
@@ -174,11 +177,20 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
 
       "   IF d < SIZE(FloatFixingSchedule) THEN\n"
       "     fix = FloatIndex(FloatFixingSchedule[d]);\n"
-      "     IF FloatFixingSchedule[d] >= BarrierStartDate AND\n"
-      "        {{KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
-      "         {KnockOutType == 4 AND fix >= KnockOutLevel}} THEN\n"
-      "       aliveInd = 0;\n"
-      "     END;\n"
+      "     IF {BarrierStrictComparison == 1} THEN\n"
+      "        IF FloatFixingSchedule[d] >= BarrierStartDate AND\n"
+      "           {{KnockOutType == 3 AND fix < KnockOutLevel} OR\n"
+      "           {KnockOutType == 4 AND fix > KnockOutLevel}} THEN\n"
+      "           aliveInd = 0;\n"
+      "        END;\n"
+      "     END;"
+      "     IF {BarrierStrictComparison == 0} THEN\n"
+      "        IF FloatFixingSchedule[d] >= BarrierStartDate AND\n"
+      "           {{KnockOutType == 3 AND fix <= KnockOutLevel} OR\n"
+      "           {KnockOutType == 4 AND fix >= KnockOutLevel}} THEN\n"
+      "           aliveInd = 0;\n"
+      "        END;\n"
+      "     END;"
       "     Alive[d] = aliveInd;\n"
       "   END;\n"
 
