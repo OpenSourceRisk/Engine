@@ -111,7 +111,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     Barrier::Type knockOutType;
 
     Barrier::Type tmpBarrier = parseBarrierType(barriers_[0].type());
-    int barrierStrict = 0, barrierStrictIn = 0, barrierStrictOut = 0;
+    int strictBarrier = 0, strictBarrierIn = 0, strictBarrierOut = 0;
 
     switch (tmpBarrier) {
     case Barrier::Type::UpIn:
@@ -121,14 +121,14 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         knockInType = tmpBarrier;
         knockOutType = parseBarrierType(barriers_[1].type());
         if (barriers_[1].strictComparison()) {
-            barrierStrictOut = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+            strictBarrierOut = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
         }
         if (barriers_[0].strictComparison()) {
-            barrierStrictIn = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+            strictBarrierIn = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
         }
-        barrierStrictOut = barrierStrictIn == 1 ? 1 : barrierStrictOut;
-        barrierStrictIn = barrierStrictOut == 1 ? 1 : barrierStrictIn;
-        barrierStrict = barrierStrictIn;
+        strictBarrierOut = strictBarrierIn == 1 ? 1 : strictBarrierOut;
+        strictBarrierIn = strictBarrierOut == 1 ? 1 : strictBarrierIn;
+        strictBarrier = strictBarrierIn;
         break;
     case Barrier::Type::UpOut:
     case Barrier::Type::DownOut:
@@ -137,14 +137,14 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         knockOutType = tmpBarrier;
         knockInType = parseBarrierType(barriers_[1].type());
         if (barriers_[0].strictComparison()) {
-            barrierStrictOut = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
+            strictBarrierOut = boost::lexical_cast<int>(barriers_[0].strictComparison().value());
         }
         if (barriers_[1].strictComparison()) {
-            barrierStrictIn = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
+            strictBarrierIn = boost::lexical_cast<int>(barriers_[1].strictComparison().value());
         }
-        barrierStrictOut = barrierStrictIn == 1 ? 1 : barrierStrictOut;
-        barrierStrictIn = barrierStrictOut == 1 ? 1 : barrierStrictIn;
-        barrierStrict = barrierStrictIn;
+        strictBarrierOut = strictBarrierIn == 1 ? 1 : strictBarrierOut;
+        strictBarrierIn = strictBarrierOut == 1 ? 1 : strictBarrierIn;
+        strictBarrier = strictBarrierIn;
         break;
     default:
         QL_FAIL("unsupported barrier type provided");
@@ -200,9 +200,9 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 LOG("Checking FX fixing for index " << fxIndex_ << " on " << d << ", value " << fixing);
 
                 if (!knockedIn)
-                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel, barrierStrict);
+                    knockedIn = QuantExt::checkBarrier(fixing, knockInType, knockInLevel, strictBarrier);
                 if (!knockedOut)
-                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel, barrierStrict);
+                    knockedOut = QuantExt::checkBarrier(fixing, knockOutType, knockOutLevel, strictBarrier);
             }
             d = cal.advance(d, 1, Days);
         }
@@ -243,7 +243,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 	    barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate, 
             settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockOutLevel, 0, soldCcy,
             start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers,
-            std::nullopt, nullptr, nullptr, barrierStrict));
+            std::nullopt, nullptr, nullptr, strictBarrier));
 
     // if the trade is knocked in this is all we price
     if (knockedIn || knockedOut) {
@@ -283,7 +283,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 		    barrier2, positionType == Position::Long ? false : true, expiryDate, expiryDate,
                     settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockInLevel, 0,
                     soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
-                    std::nullopt, nullptr, nullptr, barrierStrict));
+                    std::nullopt, nullptr, nullptr, strictBarrier));
 
             iw.push_back(koInstrument2);
             fxRates.push_back(fx);
@@ -310,7 +310,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                     settleType == Settlement::Physical ? true : false, vanilla, DoubleBarrier::Type::KnockOut, spot,
                     std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy, start,
                     fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers,
-                    std::nullopt, nullptr, nullptr, barrierStrict));
+                    std::nullopt, nullptr, nullptr, strictBarrier));
 
             iw.push_back(dkoInstrument);
             fxRates.push_back(fx);

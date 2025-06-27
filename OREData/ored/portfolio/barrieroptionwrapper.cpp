@@ -107,7 +107,7 @@ bool SingleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
 }
 
 bool SingleBarrierOptionWrapper::checkBarrier(Real spot) const {
-        return ::QuantExt::checkBarrier(spot, barrierType_, barrier_, barrierStrict_);
+        return ::QuantExt::checkBarrier(spot, barrierType_, barrier_, strictBarrier_);
 }
 
 bool SingleBarrierOptionWrapper::exercise() const {
@@ -177,8 +177,8 @@ bool DoubleBarrierOptionWrapper::strikeAtBarrier(Real strike) const {
     return close_enough(strike, barrierLow_) || close_enough(strike, barrierHigh_);
 }
 
-bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh, int barrierStrict) const {
-    if (barrierStrict == 1) {
+bool DoubleBarrierOptionWrapper::checkBarrier(Real spotLow, Real spotHigh, int strictBarrier) const {
+    if (strictBarrier == 1) {
         return spotLow < barrierLow_ || spotHigh > barrierHigh_;
     } else {
         return spotLow <= barrierLow_ || spotHigh >= barrierHigh_;
@@ -228,7 +228,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     }else{
-                        trigger = checkBarrier(dailyLow, dailyHigh, barrierStrict_);
+                        trigger = checkBarrier(dailyLow, dailyHigh, strictBarrier_);
                     }
                     d = calendar_.advance(d, 1, Days);
                 }
@@ -241,7 +241,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
         if (overrideTriggered_) {
             trigger = *overrideTriggered_;
         } else {
-            trigger = checkBarrier(spot_->value(), spot_->value(), barrierStrict_);
+            trigger = checkBarrier(spot_->value(), spot_->value(), strictBarrier_);
             if (trigger)
                 exerciseDate_ = today;
         }
