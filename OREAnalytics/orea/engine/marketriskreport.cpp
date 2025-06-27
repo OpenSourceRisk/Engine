@@ -26,7 +26,8 @@
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
-#include <boost/regex.hpp>
+
+#include <regex>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -174,15 +175,18 @@ void MarketRiskReport::initialise() {
 }
 
 void MarketRiskReport::initialiseRiskGroups() {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
     riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
 
     // build portfolio filter, if given
     bool hasFilter = false;
-    boost::regex filter;
+    std::regex filter;
     if (portfolioFilter_ != "") {
         hasFilter = true;
-        filter = boost::regex(portfolioFilter_);
+        filter = std::regex(portfolioFilter_);
         LOG("Portfolio filter: " << portfolioFilter_);
     }
 
@@ -193,7 +197,7 @@ void MarketRiskReport::initialiseRiskGroups() {
 
     QL_REQUIRE(portfolio_, "No portfolio given");
     for (const auto& pId : portfolio_->portfolioIds()) {
-        if (breakdown_ && (!hasFilter || boost::regex_match(pId, filter))) {
+        if (breakdown_ && (!hasFilter || std::regex_match(pId, filter))) {
             auto tradeGroupP = QuantLib::ext::make_shared<TradeGroup>(pId);
             tradeGroups_->add(tradeGroupP);
         }
@@ -204,7 +208,7 @@ void MarketRiskReport::initialiseRiskGroups() {
             tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
         else {
             for (auto const& pId : trade->portfolioIds()) {
-                if (!hasFilter || boost::regex_match(pId, filter)) {
+                if (!hasFilter || std::regex_match(pId, filter)) {
                     tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
                     if (breakdown_)
                         tradeIdGroups_[pId].insert(make_pair(tradeId, pos));

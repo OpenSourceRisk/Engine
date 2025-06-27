@@ -43,6 +43,11 @@
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
       <Parameter name="MinObsDate">true</Parameter>
       <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+      <Parameter name="RegressorModel">Lagged</Parameter>
+      <Parameter name="CashFlowGeneration.OnCpnMaxSimTimes">32</Parameter>
+      <Parameter name="CashflowGeneration.OnCpnAddSimTimesCutoff">1Y</Parameter>
+      <Parameter name="Regression.MaxSimTimesIR">8</Parameter>
+      <Parameter name="Regression.VarGroupMode">Trivial</Parameter>
     </EngineParameters>
   </Product>
   <Product type="CrossCurrencySwap">

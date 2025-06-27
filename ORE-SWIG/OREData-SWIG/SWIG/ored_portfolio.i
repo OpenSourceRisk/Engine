@@ -130,7 +130,9 @@ class Portfolio : public XMLSerializable {
     const std::map<std::string, ext::shared_ptr<Trade>>& trades() const;
     bool remove(const std::string& tradeID);
     void fromFile(const std::string& fileName);
-    void fromXMLString(const std::string& xmlString);
+    void fromXMLString(const std::string& xmlString);    
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::string toXMLString();
     void build(const ext::shared_ptr<EngineFactory>& factory,
                const std::string& context = "unspecified",
