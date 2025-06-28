@@ -1085,8 +1085,6 @@ void XvaEngineCG::dynamicImAddToConvertedSensis(
 RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                                        const std::size_t tradeId, const std::size_t timeStep) {
 
-    std::cout << "combine at time step " << timeStep << std::endl;
-
     std::size_t nComponents = tradeExposureValuation_[tradeId][timeStep].componentPathValues.size();
 
     auto g = model_->computationGraph();
@@ -1119,13 +1117,9 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     std::vector<bool> keepNodes(g->size(), false);
     keepNodes[endNode] = true;
 
-    std::cout << "forward eval from " << tradeExposureValuation_[tradeId][timeStep].startNodeRecombine << " to "
-              << endNode << std::endl;
-
     forwardEvaluation(*g, tmp, ops_, RandomVariable::deleter, false, {}, keepNodes,
                       tradeExposureValuation_[tradeId][timeStep].startNodeRecombine, endNode + 1);
 
-    std::cout << "combine at time step " << timeStep << " done." << std::endl;
     return tmp[endNode];
 }
 
@@ -1333,19 +1327,19 @@ void XvaEngineCG::calculateDynamicIM() {
 
             std::vector<std::vector<std::vector<RandomVariable>>> pathIrDeltaC(
                 nComponents, std::vector<std::vector<RandomVariable>>(
-                                 irDeltaTerms.size(), std::vector<RandomVariable>(model_->currencies().size() - 1,
-                                                                                  RandomVariable(model_->size()))));
+                                 model_->currencies().size(),
+                                 std::vector<RandomVariable>(irDeltaTerms.size(), RandomVariable(model_->size()))));
             std::vector<std::vector<RandomVariable>> pathFxDeltaC(
                 nComponents,
                 std::vector<RandomVariable>(model_->currencies().size() - 1, RandomVariable(model_->size())));
             std::vector<std::vector<std::vector<RandomVariable>>> pathIrVegaC(
                 nComponents, std::vector<std::vector<RandomVariable>>(
-                                 irVegaTerms.size(), std::vector<RandomVariable>(model_->currencies().size() - 1,
-                                                                                 RandomVariable(model_->size()))));
+                                 model_->currencies().size(),
+                                 std::vector<RandomVariable>(irVegaTerms.size(), RandomVariable(model_->size()))));
             std::vector<std::vector<std::vector<RandomVariable>>> pathFxVegaC(
                 nComponents, std::vector<std::vector<RandomVariable>>(
-                                 fxVegaTerms.size(), std::vector<RandomVariable>(model_->currencies().size() - 1,
-                                                                                 RandomVariable(model_->size()))));
+                                 model_->currencies().size() - 1,
+                                 std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size()))));
 
             for (std::size_t comp = 0; comp < tradeExposureValuation_[tradeId][i].componentPathValues.size(); ++comp) {
 
@@ -1371,6 +1365,7 @@ void XvaEngineCG::calculateDynamicIM() {
             // individual trade: run part of the cg that combines the components
 
             std::vector<const RandomVariable*> compDer(nComponents);
+
             for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
                 for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
@@ -1384,23 +1379,22 @@ void XvaEngineCG::calculateDynamicIM() {
                 }
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
-                        compDer[comp] = &pathFxDeltaC[comp][ccy];
+                        compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
                     tmpFxDelta = dynamicImCombineComponents(compDer, tradeId, i);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
-                            compDer[comp] = &pathFxVegaC[comp][ccy][b];
+                            compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
                         tmpFxVega[b] = dynamicImCombineComponents(compDer, tradeId, i);
                     }
                 }
-            }
 
-            // individual trade: add the combined result to converted sensis
+                // individual trade: add the combined result to converted sensis
 
-            for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
-
-                dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
-                                              irVegaConverter, fxVegaConverter, conditionalIrDelta, conditionalFxDelta,
-                                              conditionalIrVega, conditionalFxVega);
+                for (std::size_t ccy = 0; ccy < model_->currencies().size(); ++ccy) {
+                    dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
+                                                  irVegaConverter, fxVegaConverter, conditionalIrDelta,
+                                                  conditionalFxDelta, conditionalIrVega, conditionalFxVega);
+                }
             }
 
         } // loop over individual trades
