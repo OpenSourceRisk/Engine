@@ -802,24 +802,41 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 if (rebatedExercise)
                     exercisedValue = cg_add(g, exercisedValue, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]));
 
-                std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValue),
-                                       cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue));
-
                 if (exerciseDates.size() == 1) {
 
                     // for european exercise we can rely on standard regression outside the engine
 
+                    std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValue),
+                                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue));
+
                     (*tradeExposure)[simCounter + 1].componentPathValues = {r};
+                    (*tradeExposure)[simCounter + 1].regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
 
                 } else {
 
-                    // for more than one exercise date, we need the decomposition
+                    // for more than one exercise date, we need a decomposition
 
                     (*tradeExposure)[simCounter + 1].componentPathValues = {exercisedValue, futureOptionValue};
 
-                    (*tradeExposure)[simCounter + 1].targetConditionalExpectation = createRegressionModel(
-                        r, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                        cg_const(g, 1.0), &(*tradeExposure)[simCounter + 1]);
+                    std::size_t exercisedValueCond = createRegressionModel(
+                        exercisedValue, d, cashflowInfo,
+                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+                    std::size_t futureOptionValueCond = createRegressionModel(
+                        futureOptionValue, d, cashflowInfo,
+                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0),
+                        &(*tradeExposure)[simCounter + 1]);
+
+                    std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
+                                                   cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
+
+                    (*tradeExposure)[simCounter + 1].targetConditionalExpectation = r;
+                    (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
+
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
+
                 }
 
                 ++simCounter;
@@ -836,7 +853,8 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
                                                    const std::size_t filter, TradeExposure* tradeExposure) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
     auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
-    tradeExposure->regressors = regressors;
+    if (tradeExposure)
+        tradeExposure->regressors = regressors;
     return modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors);
 }
 

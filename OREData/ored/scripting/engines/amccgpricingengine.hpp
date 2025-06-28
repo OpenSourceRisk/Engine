@@ -33,14 +33,36 @@ namespace ore {
 namespace data {
 
 struct TradeExposure {
-    // before taking conditional expectation for exposure
-    std::vector<std::size_t> componentPathValues;
-    // after taking conditional expectation for exposure, or "nan" if not applicable
-    std::size_t targetConditionalExpectation = QuantExt::ComputationGraph::nan;
-    // the set of regressors appropriate for this trade and timestep to use
-    std::set<std::size_t> regressors;
-    // TODO add regressor groups, this might also apply on single trade level
-    // update XvaEngineCG::getRegressors(), to include these groups on trade level
+    /* There are basically two types of trades
+
+       - plain trades
+       - individual trades
+
+       The former produce a single component path value and use a standard set of regressors. The regression is run in
+       the exposure engine, i.e. outside the trade pricing engine, over all plain trades. This regression uses the union
+       of all regressors of plain trades and the regressor set is grouped by the individual trade regressor sets.
+
+       The individual trades produce one or more component path values which are combined to the target conditional
+       expectation, which is already a conditional expectation, i.e. no regression is performed outside the trade
+       pricing engine. The computation graph from the component path values, technically the first node after that where
+       the combination of the components start, to the target conditional expectation is replayed within the exposure
+       engine for aad calculations and therefore all source nodes outside this range must be known, i.e. the set of
+       regressors plus additional required nodes (including constants).
+
+       The following fields are filled for the two trade types:
+
+                                        plain trades             individual trades
+       componentPathValues                   1 entry                     n entries
+       targetConditionalExpectation               no                           yes
+       startNodeRecombine                         no                           yes
+       regressors                                yes                           yes
+       additionalRequiredNodes                    no                           yes        */
+
+       std::vector<std::size_t> componentPathValues;
+       std::size_t targetConditionalExpectation = QuantExt::ComputationGraph::nan;
+       std::size_t startNodeRecombine = QuantExt::ComputationGraph::nan;
+       std::set<std::size_t> regressors;
+       std::set<std::size_t> additionalRequiredNodes;
 };
 
 void scale(QuantExt::ComputationGraph& g, TradeExposure& t, double multiplier);

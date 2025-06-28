@@ -158,9 +158,9 @@ private:
                                   const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
                                   const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
                                   std::vector<std::vector<RandomVariable>>& pathIrDelta,
-                                  std::vector<RandomVariable> pathFxDelta,
-                                  std::vector<std::vector<RandomVariable>> pathIrVega,
-                                  std::vector<std::vector<RandomVariable>> pathFxVega);
+                                  std::vector<RandomVariable>& pathFxDelta,
+                                  std::vector<std::vector<RandomVariable>>& pathIrVega,
+                                  std::vector<std::vector<RandomVariable>>& pathFxVega);
     void dynamicImAddToConvertedSensis(const std::size_t ccyIndex, const std::vector<RandomVariable>& tmpIrDelta,
                                        const std::vector<RandomVariable>& tmpIrVega,
                                        const std::vector<RandomVariable>& tmpFxVega, const RandomVariable& tmpFxDelta,
@@ -171,7 +171,7 @@ private:
                                        std::vector<RandomVariable>& conditionalFxDelta,
                                        std::vector<std::vector<RandomVariable>>& conditionalIrVega,
                                        std::vector<std::vector<RandomVariable>>& conditionalFxVega);
-    RandomVariable dynamicImCombineComponents(const std::vector<RandomVariable>& componentDerivatives,
+    RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                               const std::size_t tradeId, const std::size_t timeStep);
 
     // set via additional methods
