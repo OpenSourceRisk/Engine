@@ -207,11 +207,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
         // leg based cashflow reporting
         bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end(); // if(results.empty())
-        
-        auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
-        Size addResultsLegs = 0;
-        if (maxLegNoIter != cashflowNumber.end())
-            addResultsLegs = maxLegNoIter->first + 1;
+    
         const vector<Leg>& legs = trade->legs();
         for (size_t i = 0; i < legs.size(); i++) 
         {
@@ -507,7 +503,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
                         result.emplace_back();
                         result.back().cashflowNo = j + 1;
-                        result.back().legNo = i + addResultsLegs;
+                        result.back().legNo = i ;
                         result.back().payDate = payDate;
                         result.back().flowType = flowType;
                         result.back().amount = effectiveAmount;
