@@ -144,7 +144,7 @@ void appendResults( const ext::shared_ptr<ore::data::Trade>& trade,
                 //     continue;
                 // however, this changes a lot of results, so we output all cfs for the time being
 
-                result.push_back({});
+                result.emplace_back();
                 result.back().cashflowNo = ++cashflowNumber[cf.legNumber];
                 result.back().legNo = cf.legNumber;
                 result.back().payDate = cf.payDate;
@@ -185,7 +185,10 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     std::vector<TradeCashflowReportData> result;
 
+    // Cashflow based reporting starts here
+
     // if trade provides cashflows as additional results, we use that information instead of the legs
+    // note that there are legs marked as mandatory that are always reported leg-wise, see below
     auto instruments = trade->instrument()->additionalInstruments();
 
     appendResults(trade, trade->instrument()->additionalResults(), trade->instrument()-> multiplier() * trade->instrument()->multiplier2(), 
@@ -194,8 +197,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
     for (Size i = 0; i < instruments.size(); ++i)
         appendResults(trade, instruments[i]->additionalResults(), 1.0, baseCurrency, market, configuration, includePastCashflows, result);
 
-    { // Leg based reporting
-
+    // Leg based reporting starts here
+    {
         std::map<Size, Size> cashflowNumber;
 
         const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
@@ -502,7 +505,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                             }
                         }
 
-                        result.push_back({});
+                        result.emplace_back();
                         result.back().cashflowNo = j + 1;
                         result.back().legNo = i + addResultsLegs;
                         result.back().payDate = payDate;
