@@ -186,14 +186,16 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
     std::vector<TradeCashflowReportData> result;
 
     // Cashflow based reporting starts here
-
-    // if trade provides cashflows as additional results, we use that information instead of the legs
-    // note that there are legs marked as mandatory that are always reported leg-wise, see below
-    auto instruments = trade->instrument()->additionalInstruments();
-
+    // If trade provides cashflows as additional results, we use that information instead of the legs
+    // Note that there are legs marked as mandatory that are always reported leg-wise, see below.
+    // Expected flows are included in cashflow based reporting.
+                                                            
+    // Append cashflows to results for the instrument itself
     appendResults(trade, trade->instrument()->additionalResults(), trade->instrument()-> multiplier() * trade->instrument()->multiplier2(), 
         baseCurrency, market, configuration, includePastCashflows, result);
 
+    // Append cashflows to the additional instruments
+    auto instruments = trade->instrument()->additionalInstruments();
     for (Size i = 0; i < instruments.size(); ++i)
         appendResults(trade, instruments[i]->additionalResults(), 1.0, baseCurrency, market, configuration, includePastCashflows, result);
 
@@ -202,10 +204,11 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
     auto addResults = trade->instrument()->additionalResults();
-    auto cashFlowResults = addResults.find("cashFlowResults");
 
-    // leg based cashflow reporting
-    bool legBasedReport = trade->legs().size() >= 1 && cashFlowResults == addResults.end(); // if(results.empty())
+    // Leg based cashflow reporting
+    // If there are now cashflows, the leg based reporting is started by default
+    // As an exception, mandatory legs are always reported
+    bool legBasedReport = result.empty();
 
     const vector<Leg>& legs = trade->legs();
     for (size_t i = 0; i < legs.size(); i++) 
@@ -213,6 +216,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
         const auto* cashflows = &(trade->legMandatoryCashflows());
         bool mandatory = false;
         
+        // If there are cashflows and the current index is in the madatory list
         if (cashflows && std::find(cashflows->begin(), cashflows->end(), i) != cashflows->end()) 
                 mandatory = true;
 
