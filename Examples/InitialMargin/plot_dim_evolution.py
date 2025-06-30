@@ -40,38 +40,21 @@ def pathwiseComparison(s, oreex, color1, color2, color3, depth):
     utilities.simmEvolution(s, simmCubeFile, "Output/" + simmEvolutionFile, depth)
     print("evolution file", simmEvolutionFile, "written")
 
-    oreex.plot(simmEvolutionFile, 1, 5, color3, "SIMM Sample " + str(s))
-    oreex.plot(dimEvolutionFile, 1, 5, color2, "DIM AMC/AD Sample " + str(s))
-    oreex.plot(dimEvolutionFile2, 1, 5, color1, "DIM Classic Sample " + str(s))
+    oreex.plot(simmEvolutionFile, 1, 5, color3, "SIMM Sample " + str(s) + " Depth " + str(depth))
+#    oreex.plot(dimEvolutionFile, 1, 5, color2, "DIM AMC/AD Sample " + str(s))
+    oreex.plot(dimEvolutionFile2, 1, 5, color1, "DIM Classic Sample " + str(s) + " Depth " + str(depth))
 
 
-oreex.setup_plot("simm_evolution_pathwise_0")
-#pathwiseComparison(2, oreex, 'r', 'g', 0)    
-pathwiseComparison(8, oreex, 'r', 'b', 'black', 0)    
-#pathwiseComparison(7, oreex, 'b', 'm', 0)    
-#pathwiseComparison(4, oreex, 'r', 'g', 0)    
-#pathwiseComparison(5, oreex, 'r', 'g', 0)    
-#pathwiseComparison(6, oreex, 'b', 'm', 0)    
-oreex.decorate_plot(title="SIMM Evolution Pathwise, Depth 0", ylabel="SIMM", xlabel="Time",legend_loc="upper right")
-oreex.save_plot_to_file()
+sampleRange = [1, 2, 3, 4, 5, 6, 7, 8]
+depthRange = [0]
 
-oreex.setup_plot("simm_evolution_pathwise_1")
-pathwiseComparison(8, oreex, 'r', 'b', 'black', 1)    
-#pathwiseComparison(2, oreex, 'r', 'g', 1)    
-#pathwiseComparison(7, oreex, 'b', 'm', 1)    
-oreex.decorate_plot(title="SIMM Evolution Pathwise, Depth 1", ylabel="SIMM", xlabel="Time",legend_loc="lower left")
-oreex.save_plot_to_file()
+for s in sampleRange:
+    for d in depthRange:
+        print("sample", s, "depth", d)
+        oreex.setup_plot("simm_evolution_pathwise_" + str(s) + "_" + str(d))
+        pathwiseComparison(s, oreex, 'r', 'b', 'black', d)    
+        oreex.decorate_plot(title="SIMM Evolution Pathwise, Depth " + str(d),
+                            ylabel="SIMM", xlabel="Time", legend_loc="upper right")
+        oreex.save_plot_to_file()
 
-oreex.setup_plot("simm_evolution_pathwise_2")
-pathwiseComparison(8, oreex, 'r', 'b', 'black', 2)    
-#pathwiseComparison(2, oreex, 'r', 'g', 2)
-#pathwiseComparison(7, oreex, 'b', 'm', 2)    
-oreex.decorate_plot(title="SIMM Evolution Pathwise, Depth 2", ylabel="SIMM", xlabel="Time",legend_loc="lower left")
-oreex.save_plot_to_file()
-
-oreex.setup_plot("simm_evolution_pathwise_3")
-pathwiseComparison(8, oreex, 'r', 'b', 'black', 3)    
-#pathwiseComparison(2, oreex, 'r', 'g', 3)    
-#pathwiseComparison(7, oreex, 'b', 'm', 3)    
-oreex.decorate_plot(title="SIMM Evolution Pathwise, Depth 3", ylabel="SIMM", xlabel="Time",legend_loc="lower left")
-oreex.save_plot_to_file()
+print("done")

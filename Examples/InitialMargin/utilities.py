@@ -371,3 +371,15 @@ def simmEvolution(sample, simmCubeFile, outputFile, depth):
 
     df4.to_csv(outputFile, sep=',')
 
+def fxVegaEvolution(sample, simmCubeFile, outputFile, depth):
+    print("read simm cube file:", simmCubeFile)
+    data = pd.read_csv(simmCubeFile)
+
+    df = data[data["Sample"] == sample]
+    df2 = df[df["Depth"] == depth]
+    df3 = df2.drop("Sample", axis=1)
+    df4 = df3[df3["Time"] < 10.1]
+    df4 = df4.set_index(["AsOfDate","Time","Currency","SimmSide"])
+
+    df4.to_csv(outputFile, sep=',')
+    
