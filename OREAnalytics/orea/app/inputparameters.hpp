@@ -47,6 +47,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -101,6 +102,8 @@ public:
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
+    void setBaselTrafficLightConfig(const std::string& xml);
+    void setBaselTrafficLightFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setPricingEngine(const std::string& xml);
@@ -529,6 +532,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
+    const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
     CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& pricingEngine() const { return pricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const { return todaysMarketParams_; }
@@ -966,6 +970,7 @@ protected:
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLightConfig_;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;

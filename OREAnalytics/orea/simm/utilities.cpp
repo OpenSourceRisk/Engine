@@ -56,9 +56,9 @@
 #include <ql/utilities/null.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/regex.hpp>
 
 #include <fstream>
+#include <regex>
 
 using std::map;
 using std::set;
@@ -443,8 +443,6 @@ bool isIsin(const string& s) {
     if (s[11] < '0' || s[11] > '9')
         return false;
     return true;
-    // boost::regex isinPattern("^[A-Z]{2}[A-Z0-9]{9}[0-9]{1}");
-    // return boost::regex_match(s, isinPattern);
 }
   
 std::string simmStandardCurrency(const std::string& ccy) {

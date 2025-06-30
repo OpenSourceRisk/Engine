@@ -25,15 +25,16 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/directed_graph.hpp>
-#include <boost/graph/graph_traits.hpp>
+
 #include <ql/shared_ptr.hpp>
 
+#include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/directed_graph.hpp>
+#include <boost/graph/graph_traits.hpp>
 #include <boost/graph/tiernan_all_cycles.hpp>
 
 #include <map>
@@ -42,27 +43,6 @@ namespace ore {
 namespace data {
 
 namespace {
-
-//! Helper class to output cycles in the dependency graph
-template <class OutputStream> struct CyclePrinter {
-    CyclePrinter(OutputStream& os) : os_(os) {}
-    template <typename Path, typename Graph> void cycle(const Path& p, const Graph& g) {
-        typename Path::const_iterator i, end = p.end();
-        for (i = p.begin(); i != end; ++i) {
-            os_ << g[*i] << " ";
-        }
-        os_ << "*** ";
-    }
-    OutputStream& os_;
-};
-
-//! Helper functions returning a string describing all circles in a graph
-template <typename Graph> string getCycles(const Graph& g) {
-    std::ostringstream cycles;
-    CyclePrinter<std::ostringstream> cyclePrinter(cycles);
-    boost::tiernan_all_cycles(g, cyclePrinter);
-    return cycles.str();
-}
 
 //! Helper class to find the dependent nodes from a given start node and a topological order for them
 template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor {
@@ -89,30 +69,45 @@ public:
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
         //! Reference data config required for base correlations
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr)
-
-        : asof_(asof), params_(params), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig), 
-        referenceData_(referenceData){};
+        : asof_(asof), params_(params), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
+          referenceData_(referenceData) {};
 
     // data structure for a vertex in the graph
     struct Node {
-        MarketObject obj;                       // the market object to build
-        std::string name;                       // the LHS of the todays market mapping
-        std::string mapping;                    // the RHS of the todays market mapping
-        QuantLib::ext::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
-        bool built;                             // true if we have built this node
+        std::size_t index;                              // the index of the node
+        MarketObject obj;                               // the market object to build
+        std::string name;                               // the LHS of the todays market mapping
+        std::string mapping;                            // the RHS of the todays market mapping
+        QuantLib::ext::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, this is never null
+        bool built;                                     // true if we have built this node
+    };
+
+    struct ReducedNode {
+        std::set<Node> nodes;
     };
 
     // some typedefs for graph related data types
+
     using Graph = boost::directed_graph<Node>;
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
+    using Edge = boost::graph_traits<Graph>::edge_descriptor;
+    using EdgeIterator = boost::graph_traits<Graph>::edge_iterator;
 
-    // build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
-    // and an edge from x to y means that x must be built before y, since y depends on it. */
+    using ReducedGraph = boost::directed_graph<ReducedNode>;
+    using ReducedIndexMap = boost::property_map<ReducedGraph, boost::vertex_index_t>::type;
+    using ReducedVertex = boost::graph_traits<ReducedGraph>::vertex_descriptor;
+    using ReducedVertexIterator = boost::graph_traits<ReducedGraph>::vertex_iterator;
+    using ReducedEdge = boost::graph_traits<ReducedGraph>::edge_descriptor;
+    using ReducedEdgeIterator = boost::graph_traits<ReducedGraph>::edge_iterator;
+
+    /* build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
+       and an edge from x to y means that x must be built before y, since y depends on it. */
     void buildDependencyGraph(const std::string& configuration, std::map<std::string, std::string>& buildErrors);
 
-    std::map<std::string, Graph> dependencies() { return dependencies_; }
+    const std::map<std::string, Graph>& dependencies() const { return dependencies_; }
+    const std::map<std::string, ReducedGraph>& reducedDependencies() const { return reducedDependencies_; }
 
 private:
     friend std::ostream& operator<<(std::ostream& o, const Node& n);
@@ -120,12 +115,20 @@ private:
     // the dependency graphs for each configuration
     std::map<std::string, Graph> dependencies_;
 
+    // a reduced graph replacing cycles with single nodes
+    std::map<std::string, ReducedGraph> reducedDependencies_;
+
     const Date asof_;
     const QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
     const QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
     const IborFallbackConfig iborFallbackConfig_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
 };
+
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::ReducedNode& n);
+
+bool operator<(const DependencyGraph::Node& x, const DependencyGraph::Node& y);
 
 } // namespace data
 } // namespace ore

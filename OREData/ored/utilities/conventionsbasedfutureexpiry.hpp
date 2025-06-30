@@ -70,6 +70,10 @@ private:
 
     //! Account for prohibited expiries
     QuantLib::Date avoidProhibited(const QuantLib::Date& expiry, bool forOption) const;
+
+    //! Apply minimum business days before contract expiry for options
+    QuantLib::Date applyOptionMinBusinessDaysBefore(const QuantLib::Date& optionExpiry,
+                                              const QuantLib::Date& contractExpiry) const;
 };
 
 } // namespace data

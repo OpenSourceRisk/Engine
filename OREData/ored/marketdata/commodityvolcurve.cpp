@@ -1755,7 +1755,7 @@ void CommodityVolCurve::populateCurves(const CommodityVolatilityConfig& config,
         if (!ytsId.empty()) {
             auto itYts = yieldCurves.find(ytsId);
             if (itYts != yieldCurves.end()) {
-                yts_ = itYts->second->handle();
+                yts_ = itYts->second->handle(ytsId);
             } else if (!dontThrow) {
                 QL_FAIL("CommodityVolCurve: can't find yield curve with id " << ytsId);
             }

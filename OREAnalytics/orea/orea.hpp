@@ -87,7 +87,6 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/cptycalculator.hpp>
-#include <orea/engine/cvacalculator.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
 #include <orea/engine/cvasensitivityrecord.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
@@ -147,6 +146,7 @@
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariofactory.hpp>

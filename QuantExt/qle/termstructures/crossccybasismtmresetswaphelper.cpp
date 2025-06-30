@@ -31,7 +31,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
-    const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+    const Handle<YieldTermStructure>& domesticCcyDiscountCurve, const bool foreignIndexGiven,
+    const bool domesticIndexGiven, const bool foreignDiscountCurveGiven, const bool domesticDiscountCurveGiven,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
     const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy,
     boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor, Size foreignPaymentLag,
@@ -44,6 +45,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
       foreignCcyDiscountCurve_(foreignCcyDiscountCurve), domesticCcyDiscountCurve_(domesticCcyDiscountCurve),
+      foreignIndexGiven_(foreignIndexGiven), domesticIndexGiven_(domesticIndexGiven),
+      foreignDiscountCurveGiven_(foreignDiscountCurveGiven), domesticDiscountCurveGiven_(domesticDiscountCurveGiven),
       foreignCcyFxFwdRateCurve_(foreignCcyFxFwdRateCurve), domesticCcyFxFwdRateCurve_(domesticCcyFxFwdRateCurve),
       eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy),
       foreignTenor_(foreignTenor ? *foreignTenor : foreignCcyIndex_->tenor()),
@@ -61,19 +64,14 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     QL_REQUIRE(foreignCurrency_ != domesticCurrency_,
                "matching currencies not allowed on CrossCcyBasisMtMResetSwapHelper");
 
-    bool foreignIndexHasCurve = !foreignCcyIndex_->forwardingTermStructure().empty();
-    bool domesticIndexHasCurve = !domesticCcyIndex_->forwardingTermStructure().empty();
-    bool haveForeignDiscountCurve = !foreignCcyDiscountCurve_.empty();
-    bool haveDomesticDiscountCurve = !domesticCcyDiscountCurve_.empty();
-
     QL_REQUIRE(
-        !(foreignIndexHasCurve && domesticIndexHasCurve && haveForeignDiscountCurve && haveDomesticDiscountCurve),
+        !(foreignIndexGiven_ && domesticIndexGiven_ && foreignDiscountCurveGiven_ && domesticDiscountCurveGiven_),
         "CrossCcyBasisMtMResetSwapHelper - Have all curves, nothing to solve for.");
 
     /* Link the curve being bootstrapped to the index if the index has
     no projection curve */
-    if (foreignIndexHasCurve && haveForeignDiscountCurve) {
-        if (!domesticIndexHasCurve) {
+    if (foreignIndexGiven_ && foreignDiscountCurveGiven_) {
+        if (!domesticIndexGiven_) {
             domesticCcyIndex_ = domesticCcyIndex_->clone(termStructureHandle_);
             domesticCcyIndex_->unregisterWith(termStructureHandle_);
         }
@@ -82,8 +80,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
         // (we are bootstrapping on domestic leg in this instance, so foreign leg needs to be fully determined
         if (foreignCcyFxFwdRateCurve_.empty())
             foreignCcyFxFwdRateCurve_ = foreignCcyDiscountCurve_;
-    } else if (domesticIndexHasCurve && haveDomesticDiscountCurve) {
-        if (!foreignIndexHasCurve) {
+    } else if (domesticIndexGiven_ && domesticDiscountCurveGiven_) {
+        if (!foreignIndexGiven_) {
             foreignCcyIndex_ = foreignCcyIndex_->clone(termStructureHandle_);
             foreignCcyIndex_->unregisterWith(termStructureHandle_);
         }
@@ -206,12 +204,12 @@ void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     termStructureHandle_.linkTo(temp, observer);
 
-    if (foreignCcyDiscountCurve_.empty())
+    if (!foreignDiscountCurveGiven_)
         foreignDiscountRLH_.linkTo(temp, observer);
     else
         foreignDiscountRLH_.linkTo(*foreignCcyDiscountCurve_, observer);
 
-    if (domesticCcyDiscountCurve_.empty())
+    if (!domesticDiscountCurveGiven_)
         domesticDiscountRLH_.linkTo(temp, observer);
     else
         domesticDiscountRLH_.linkTo(*domesticCcyDiscountCurve_, observer);

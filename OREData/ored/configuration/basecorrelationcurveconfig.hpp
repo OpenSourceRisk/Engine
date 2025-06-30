@@ -120,9 +120,8 @@ public:
     bool& extrapolate() { return extrapolate_; }
     QuantLib::Period& indexTerm() { return indexTerm_; }
     //@}
-    
-    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
-    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
+
+    void populateRequiredIds() const override;
 
 private:
     vector<string> detachmentPoints_;

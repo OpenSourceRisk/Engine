@@ -206,8 +206,10 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
         }
 
         // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
-        expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
+        expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days,
+                                                      convention_.businessDayConvention());
     }
+    Date contractExpiry = expiry;
 
     // If we want the option contract expiry, do the extra work here.
     if (forOption && convention_.optionContractFrequency() == Weekly) {
@@ -217,6 +219,7 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
         expiry = convention_.expiryCalendar().adjust(d - d.weekday() + convention_.optionWeekday(),
                                                      convention_.businessDayConvention());
         expiry = avoidProhibited(expiry, true);
+        expiry = applyOptionMinBusinessDaysBefore(expiry, contractExpiry);
     } else if (forOption) {
         if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::DayOfMonth) {
             auto optionMonth = expiry.month();
@@ -266,9 +269,13 @@ Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Y
             }
             expiry = QuantExt::DateUtilities::lastWeekday(convention_.optionWeekday(), optionMonth, optionYear);
             expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
+        } else if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::CalendarDaysBefore) {
+            expiry = Date(1, contractMonth, contractYear) - convention_.optionCalendarDaysBefore() * Days;
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
         }
 
         expiry = avoidProhibited(expiry, true);
+        expiry = applyOptionMinBusinessDaysBefore(expiry, contractExpiry);
 
     } else {
         // If expiry date is one of the prohibited dates, move to preceding or following business day
@@ -338,6 +345,18 @@ Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry, bool forO
     }
 
     return result;
+}
+
+QuantLib::Date
+ConventionsBasedFutureExpiry::applyOptionMinBusinessDaysBefore(const QuantLib::Date& optionExpiry,
+                                                               const QuantLib::Date& contractExpiry) const {
+    if (convention_.optionMinBusinessDaysBefore() > 0) {
+        auto latestExpiry = convention_.expiryCalendar().advance(
+            contractExpiry, -static_cast<Integer>(convention_.optionMinBusinessDaysBefore()), Days,
+            convention_.optionBusinessDayConvention());
+        return std::min(optionExpiry, latestExpiry);
+    }
+    return optionExpiry;
 }
 
 } // namespace data

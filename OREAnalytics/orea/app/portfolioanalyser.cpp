@@ -28,13 +28,14 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p, const QuantLib::ext::shared_ptr<EngineData>& ed,
-                                     const string& baseCcy,
+PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p,
+                                     const QuantLib::ext::shared_ptr<EngineData>& ed, const string& baseCcy,
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const IborFallbackConfig& iborFallbackConfig,
                                      bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
-    : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), baseCcyDiscountCurve_(baseCcyDiscountCurve) {
+    : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
+      baseCcyDiscountCurve_(baseCcyDiscountCurve) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
 
@@ -109,7 +110,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
 
 void PortfolioAnalyser::addDependencies() {
     DLOG("Start adding dependent curves");
-    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs_, baseCcy_, baseCcyDiscountCurve_);
+    ore::data::addMarketObjectDependencies(&marketObjects_, curveConfigs_, baseCcy_, baseCcyDiscountCurve_, iborFallbackConfig_);
     DLOG("Finished adding dependent curves");
 }
 
@@ -149,17 +150,24 @@ void PortfolioAnalyser::marketObjectReport(Report& report) const {
     report.addColumn("MarketObjectType", string())
         .addColumn("MarketObjectName", string());
 
+    map<MarketObject, string> nameMap;
+    for (const auto& [k,v] : marketObjects_) {
+        for (const auto& [mo, names] : v) {
+            for (const string& name : names) {
+                if (nameMap.find(mo) == nameMap.end()) {
+					nameMap[mo] = name;
+                }
+                else {
+					nameMap[mo] += "|" + name;
+				}
+			}
+		}
+    }
+
     // Build report
-    for (const auto& type : market_->marketObjectTypes()) {
-        string strType = to_string(type);
-        string names;
-        for (const string& name : market_->marketObjectNames(type)) {
-            if (names.empty())
-                names += name;
-            else
-                names += "|" + name;
-        }            
-        report.next().add(strType).add(names);
+    for (const auto& [k, v] : nameMap) {
+        string strType = to_string(k);        
+        report.next().add(strType).add(v);
     }
 }
 

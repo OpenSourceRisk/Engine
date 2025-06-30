@@ -659,6 +659,18 @@ std::vector<string> parseListOfValues(string s, const char escape, const char de
     return vec;
 }
 
+std::vector<int> parseListOfValuesAsInt(string s, const char escape, const char delim, const char quote) {
+    boost::trim(s);
+    std::vector<int> vec;
+    boost::escaped_list_separator<char> sep(escape, delim, quote);
+    boost::tokenizer<boost::escaped_list_separator<char>> tokens(s, sep);
+    for (auto r : tokens) {
+        boost::trim(r);
+        vec.push_back(std::stoi(r));
+    }
+    return vec;
+}
+
 AmortizationType parseAmortizationType(const std::string& s) {
     static map<string, AmortizationType> type = {
         {"None", AmortizationType::None},
@@ -1431,10 +1443,26 @@ QuantLib::Pillar::Choice parsePillarChoice(const std::string& s) {
 QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s) {
     if (s == "Simple")
         return McMultiLegBaseEngine::RegressorModel::Simple;
+    else if (s == "Lagged")
+        return McMultiLegBaseEngine::RegressorModel::Lagged;
+    else if (s == "LaggedIR")
+        return McMultiLegBaseEngine::RegressorModel::LaggedIR;
     else if (s == "LaggedFX")
         return McMultiLegBaseEngine::RegressorModel::LaggedFX;
+    else if (s == "LaggedEQ")
+        return McMultiLegBaseEngine::RegressorModel::LaggedEQ;
     else {
-        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, LaggedFX");
+        QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ");
+    }
+}
+
+QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s) {
+    if (s == "Global")
+        return McMultiLegBaseEngine::VarGroupMode::Global;
+    else if (s == "Trivial")
+        return McMultiLegBaseEngine::VarGroupMode::Trivial;
+    else {
+        QL_FAIL("VarGroupMode '" << s << "' not recognized, expected Global, Trivial");
     }
 }
 

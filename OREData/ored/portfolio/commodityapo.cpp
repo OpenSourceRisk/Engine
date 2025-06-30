@@ -241,7 +241,7 @@ Leg CommodityAveragePriceOption::buildLeg(const QuantLib::ext::shared_ptr<Engine
     // Create the LegData. All defaults are as in the LegData ctor.
     vector<string> paymentDates = paymentDate_.empty() ? vector<string>() : vector<string>(1, paymentDate_);
     LegData legData(commLegData, true, currency_, scheduleData, "", vector<Real>(), vector<string>(),
-                    paymentConvention_, false, false, false, true, "", 0, "", vector<AmortizationData>(), 
+                    paymentConvention_, false, false, false, true, "", 0, "", "", vector<AmortizationData>(), 
                     paymentLag_, "", paymentCalendar_, paymentDates);
 
     // Get the leg builder, set the allAveraging_ flag and build the leg

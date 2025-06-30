@@ -1,8 +1,8 @@
 [submodule "QuantLib"]
 	path = QuantLib
-	url = https://github.com/OpenSourceRisk/QuantLib-Gitlab
+	url = git@gitlab.acadiasoft.net:qs/quantlib.git
 	branch = master
 	ignore = dirty
 [submodule "ORE-SWIG/QuantLib-SWIG"]
 	path = ORE-SWIG/QuantLib-SWIG
-	url = https://github.com/OpenSourceRisk/QuantLib-SWIG-Gitlab
+	url = git@gitlab.acadiasoft.net:qs/QuantLib-SWIG.git

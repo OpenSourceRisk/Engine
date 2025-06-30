@@ -168,7 +168,7 @@ private:
     ReportConfig reportConfig_;
 
     //! Populate required curve ids
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     //! Populate the quotes vector
     void populateQuotes();

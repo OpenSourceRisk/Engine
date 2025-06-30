@@ -59,7 +59,7 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
 
         auto it = yieldCurves.find(config->yieldTermStructure());
         if (it != yieldCurves.end()) {
-            discountCurve_ = it->second->handle();
+            discountCurve_ = it->second->handle(config->yieldTermStructure());
         } else {
             QL_FAIL("The yield term structure, " << config->yieldTermStructure()
                                                  << ", required in the building "

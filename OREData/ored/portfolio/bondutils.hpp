@@ -58,5 +58,14 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
 
 Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Calendar& calendar = NullCalendar());
 
+/* Returns the type of the bond reference data
+
+   - BondReferenceDatum::TYPE             ("Bond")
+   - ConvertibleBondReferenceDatum:TYPE   ("ConvertibleBond")
+
+   or an empty string if no reference data was found. */
+std::string getBondReferenceDatumType(const std::string& id,
+                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
+
 } // namespace data
 } // namespace ore

@@ -22,6 +22,12 @@ namespace ore {
 namespace data {
 
 set<string> CurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType) const {
+
+    if (!requiredIdsInitialized_) {
+        populateRequiredIds();
+        requiredIdsInitialized_ = true;
+    }
+
     static const set<string> empty;
     auto r = requiredCurveIds_.find(curveType);
     if (r == requiredCurveIds_.end())
@@ -30,13 +36,62 @@ set<string> CurveConfig::requiredCurveIds(const CurveSpec::CurveType& curveType)
         return r->second;
 }
 
-map<CurveSpec::CurveType, set<string>> CurveConfig::requiredCurveIds() const { return requiredCurveIds_; }
+set<string> CurveConfig::requiredNames(const MarketObject o, const std::string& configuration) const {
+
+    if (!requiredIdsInitialized_) {
+        populateRequiredIds();
+        requiredIdsInitialized_ = true;
+    }
+
+    static const set<string> empty;
+    auto r = requiredNames_.find(std::make_pair(o, configuration));
+    if (r != requiredNames_.end())
+        return r->second;
+    r = requiredNames_.find(std::make_pair(o, std::string()));
+    if (r != requiredNames_.end())
+        return r->second;
+    return empty;
+}
+
+map<CurveSpec::CurveType, set<string>> CurveConfig::requiredCurveIds() const {
+
+    if (!requiredIdsInitialized_) {
+        populateRequiredIds();
+        requiredIdsInitialized_ = true;
+    }
+
+    return requiredCurveIds_;
+}
+
+map<MarketObject, set<string>> CurveConfig::requiredNames(const std::string& configuration) const {
+
+    if (!requiredIdsInitialized_) {
+        populateRequiredIds();
+        requiredIdsInitialized_ = true;
+    }
+
+    map<MarketObject, set<string>> result;
+    for (auto const& [m, s] : requiredNames_) {
+        if (m.second.empty() || m.second == configuration)
+            result[m.first] = s;
+    }
+
+    return result;
+}
 
 void CurveConfig::setRequiredCurveIds(const CurveSpec::CurveType& curveType, const set<string>& ids) {
     requiredCurveIds_[curveType] = ids;
 }
 
 void CurveConfig::setRequiredCurveIds(const map<CurveSpec::CurveType, set<string>>& ids) { requiredCurveIds_ = ids; }
+
+void CurveConfig::setRequiredNames(const MarketObject o, const std::string& configuration, const set<string>& ids) {
+    requiredNames_[std::make_pair(o, configuration)] = ids;
+}
+
+void CurveConfig::setRequiredNames(const map<std::pair<MarketObject, std::string>, set<string>>& ids) {
+    requiredNames_ = ids;
+}
 
 } // namespace data
 } // namespace ore
