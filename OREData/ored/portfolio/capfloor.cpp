@@ -535,8 +535,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
-                                       -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                       -multiplier, parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)

@@ -325,8 +325,9 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
-                                       optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration);
+                                       optionData_.premiumData(), -bsInd, ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";

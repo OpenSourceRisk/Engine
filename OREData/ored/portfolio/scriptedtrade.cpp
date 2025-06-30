@@ -71,9 +71,10 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
-                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
-                                         builder->configuration(MarketContext::pricing));
+                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), discountCurve, 
+                                         engineFactory, builder->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, latestPremiumDate);
     if (maturity_ == latestPremiumDate)
         maturityType_ = "Latest Premium Date";

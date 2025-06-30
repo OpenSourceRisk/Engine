@@ -237,7 +237,7 @@ protected:
     // The returned date is the latest premium payment date added.
     Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
