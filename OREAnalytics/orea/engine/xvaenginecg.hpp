@@ -73,8 +73,8 @@ public:
                 const bool useExternalComputeDevice = false, const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
-                const bool continueOnCalibrationError = true, const bool continueOnError = true,
-                const std::string& context = "xva engine cg");
+                const bool continueOnCalibrationError = true, const bool allowModelFallbacks = true,
+                const bool continueOnError = true, const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario);
@@ -173,6 +173,7 @@ private:
     std::string externalComputeDevice_;
     bool usePythonIntegration_;
     bool continueOnCalibrationError_;
+    bool allowModelFallbacks_;
     bool continueOnError_;
     std::string context_;
 

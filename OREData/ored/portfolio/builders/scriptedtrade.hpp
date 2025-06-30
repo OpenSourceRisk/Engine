@@ -165,7 +165,7 @@ protected:
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
     Model::Params params_;
-    bool interactive_, zeroVolatility_, continueOnCalibrationError_;
+    bool interactive_, zeroVolatility_, continueOnCalibrationError_, allowModelFallbacks_;
     std::vector<Real> calibrationMoneyness_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;

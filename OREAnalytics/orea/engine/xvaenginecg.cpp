@@ -104,7 +104,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool continueOnCalibrationError,
-                         const bool continueOnError, const std::string& context)
+                         const bool allowModelFallbacks, const bool continueOnError, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -116,7 +116,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
-      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {}
+      continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
+      continueOnError_(continueOnError), context_(context) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
@@ -154,7 +155,7 @@ void XvaEngineCG::buildCam() {
     camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
-        std::string(), "xva engine cg - cam builder", false);
+        std::string(), "xva engine cg - cam builder", false, allowModelFallbacks_);
 
     // Set up gaussian cam cg model
 

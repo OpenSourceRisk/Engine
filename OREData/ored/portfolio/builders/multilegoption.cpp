@@ -239,6 +239,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
     bool calibrate = globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     auto rt = globalParameters_.find("RunType");
     bool allowChangingFallbacks =
@@ -253,7 +255,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
                                                         CrossAssetModel::Discretization::Exact,
                                                         SalvagingAlgorithm::Spectral),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks);
+        configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks, allowModelFallbacks);
 
     modelBuilders_.insert(std::make_pair(id, builder));
 

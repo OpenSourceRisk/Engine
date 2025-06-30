@@ -116,13 +116,14 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                        const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
                        const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
-                       const bool allowChangingFallbacksUnderScenarios)
+                       const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
-      setCalibrationInfo_(setCalibrationInfo), id_(id),
+      setCalibrationInfo_(setCalibrationInfo), id_(id), calibrationErrorType_(calibrationErrorType),
+      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
+      allowModelFallbacks_(allowModelFallbacks),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)), calibrationErrorType_(calibrationErrorType),
-      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios) {
+      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
@@ -289,10 +290,15 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
 }
 
 void LgmBuilder::processException(const std::string& s, const std::exception& e) {
-    StructuredModelErrorMessage("Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" +
-                                    s + "'. Using a fallback, results depending on this object will be invalid.",
-                                e.what(), id_)
-        .log();
+    std::string message =
+        "Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" + s + "'.";
+    if (allowModelFallbacks_) {
+        message += " Using a fallback, results depending on this object will be invalid.";
+        StructuredModelErrorMessage(message, e.what(), id_).log();
+    } else {
+        message += " Fallbacks are not allowed for this model builder (error: " + std::string(e.what()) + ", id: " + id_;
+        QL_FAIL(message);
+    }
 }
 
 Real LgmBuilder::error() const {

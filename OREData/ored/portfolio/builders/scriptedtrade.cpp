@@ -625,6 +625,9 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     continueOnCalibrationError_ = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                   parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
+    allowModelFallbacks_ =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
     // sensitivity template
 
     sensitivityTemplate_ = engineParameter("SensitivityTemplate", getModelEngineQualifiers(), false, std::string());
@@ -1742,7 +1745,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             bootstrapTolerance_, "LGM", discretization, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks_);
 
     // effective time steps per year: 1 for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1856,7 +1859,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
             CrossAssetModel::Discretization::Exact, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks_);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                        modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
