@@ -383,8 +383,8 @@ std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex
 
     // build the vector of nodes over which we sum the npvs
 
-    std::vector<std::size_t> tradeSumIndividual(portfolio_->trades().size());
-    std::vector<std::size_t> tradeSumPlain(portfolio_->trades().size());
+    std::vector<std::size_t> tradeSumIndividual;
+    std::vector<std::size_t> tradeSumPlain;
     std::set<std::size_t> plainTradeIds;
     for (Size j = 0; j < portfolio_->trades().size(); ++j) {
         TradeExposure& exposure =
