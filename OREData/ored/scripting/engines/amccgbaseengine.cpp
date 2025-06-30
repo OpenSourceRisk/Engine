@@ -826,16 +826,26 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                         [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0),
                         &(*tradeExposure)[simCounter + 1]);
 
+                    // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
+                    // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
+                    // floor at zero
+                    std::size_t rderiv =
+                        cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                               cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
+
+                    (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives = rderiv;
+                    (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
+                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
+
+                    // here we can take max(0, futureOptionValueCond)
                     std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
                                                    cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
 
                     (*tradeExposure)[simCounter + 1].targetConditionalExpectation = r;
-                    (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
 
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
 
                 }
 
