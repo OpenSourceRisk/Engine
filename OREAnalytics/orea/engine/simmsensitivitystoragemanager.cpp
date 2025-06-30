@@ -422,8 +422,6 @@ void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>&
 						    const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
 						    const QuantLib::ext::shared_ptr<Market>& market) const {
     DLOG("SimmSensitivityStorageManager::processFxOption called");
-    Date asof = Settings::instance().evaluationDate();
-    DayCounter dc = Actual365Fixed(); // FIXME
 
     // just for convenience
     const Size& n = nCurveTenors_;
@@ -470,27 +468,26 @@ void SimmSensitivityStorageManager::processFxOption(Array& delta, vector<Array>&
 
     // FIXME: Vega
     DLOG("SimmSensitivityStorageManager::processFxOption, process Vega ");
-    Real singleVega = qlInstr->result<Real>("singleVega");
-    Date exerciseDate = qlInstr->result<Date>("exerciseDate");
     Size idx = 0;
-    Real v = singleVega;
-    if (domCcyIndex == 0)
+    Real fx = 1.0;
+    if (domCcyIndex == 0) {
         idx = forCcyIndex - 1;
-    else if (forCcyIndex == 0)
+	fx = forFx;
+    }
+    else if (forCcyIndex == 0) {
         idx = domCcyIndex - 1;
+	fx = domFx;
+    }
     else {
-        QL_FAIL("case not covered");
+        QL_FAIL("We currently support only FX Options where bought or sold currency matches base");
     }
-    // rebucket
-    map<Size,Real> vegaContributions = bucketMapping(v, exerciseDate, fxExpiryTimes_, asof, dc);	    
-    // and add the contributions
-    for (auto it : vegaContributions) {
-        // LOG("map fx single vega " << singleVega << " to vega vector " << idx << ", " << it.first << ": " << it.second);
-	// LOG("map fx single vega, vega size " << vega.size());
-	// LOG("map fx single vega, vega size " << vega.size());
-	// LOG("map fx single vega, vega[" << idx << "]  size " << vega[idx].size());	
-        vega[idx][it.first] += it.second * tradeMultiplier;
+    std::vector<Real> resVega = qlInstr->result<std::vector<Real>>("vega");
+    LOG("resVega size: " << resVega.size() << " vs " << vega[idx].size());
+    QL_REQUIRE(resVega.size() == vega[idx].size(), "vector/array size mismatch in processFxOption");
+    for (Size i = 0; i < resVega.size(); ++i) {
+        vega[idx][i] += resVega[i] * tradeMultiplier * fx;
     }
+
 }
 
 void SimmSensitivityStorageManager::processFxForward(Array& delta, QuantLib::Real& theta,

@@ -44,7 +44,8 @@ public:
                                    const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                    const std::vector<QuantExt::RandomVariable>& fxDelta,
                                    const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
-				   bool delta = true, bool vega = true, bool curvature = true);
+				   bool delta = true, bool vega = true, bool curvature = true,
+				   bool IR = true, bool FX = true);
 
 private:
     // input params

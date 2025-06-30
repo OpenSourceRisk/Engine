@@ -812,7 +812,7 @@ void XvaAnalyticImpl::runPostProcessor() {
             QuantLib::ext::shared_ptr<SimmHelper> simmHelper = QuantLib::ext::make_shared<SimmHelper>(
                 analytic()->configurations().crossAssetModelData->currencies(),
 		nettingSetCube_, scenarioData_, sensitivityStorageManager_, analytic()->market());
-            Size imCubeDepth = 4; // allow for total, delta, vega and curvature margin at depths 0-3
+            Size imCubeDepth = 6; // allow for total, delta, vega and curvature margin at depths 0-3, fx delta and ir delta at depths 4-5
             dimCalculator_ = QuantLib::ext::make_shared<DynamicSimmCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, simmHelper, dimQuantile,
                 dimHorizonCalendarDays, currentIM, imCubeDepth);
