@@ -21,15 +21,5 @@
 namespace ore {
 namespace data {
 
-void scale(QuantExt::ComputationGraph& g, TradeExposure& t, double multiplier) {
-    for(auto& c: t.componentPathValues) {
-        c = cg_mult(g, c, cg_const(g, multiplier));
-    }
-    if(t.targetConditionalExpectation != QuantExt::ComputationGraph::nan) {
-        t.targetConditionalExpectation = cg_mult(g, t.targetConditionalExpectation, cg_const(g, multiplier));
-    }
-        
-}
-
 } // namespace data
 } // namespace ore
