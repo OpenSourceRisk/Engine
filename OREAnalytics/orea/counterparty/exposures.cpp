@@ -25,7 +25,7 @@ void Exposures::computeCE() {
               << ", Netting Set: " << nettingSetId
               << ", NPV: " << npv << std::endl;
 
-    currentExposure_[nettingSetId] += std::max(npv, 0.0);
+    ce_[nettingSetId] += std::max(npv, 0.0);
   }
 }
 
