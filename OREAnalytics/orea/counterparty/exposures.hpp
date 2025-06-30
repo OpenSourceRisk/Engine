@@ -17,9 +17,11 @@ public:
 
     void computeCE();
     void computeEPE();
-    void computePFE();
+    void computePFE(QuantLib::Real quantile);
 
-    const std::map<std::string, QuantLib::Real>& epe() const;
+    // const std::map<std::string, QuantLib::Real>& epe() const;
+    const std::map<std::string, std::vector<QuantLib::Real>>& pfe() const { return pfe_; }
+    const std::map<std::string, QuantLib::Real>& epe() const { return epe_; }
 
 private:
     boost::shared_ptr<ore::data::Portfolio> portfolio_;

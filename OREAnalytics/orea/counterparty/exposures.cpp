@@ -47,6 +47,7 @@ void Exposures::computeEPE() {
 
         std::vector<Real> eePerDate;
 
+        expectedExposure_[nettingSetId].resize(dates.size(), 0.0);
         for (Size d = 0; d < dates.size(); ++d) {
             Real sum = 0.0;
             for (Size s = 0; s < numSamples; ++s) {
