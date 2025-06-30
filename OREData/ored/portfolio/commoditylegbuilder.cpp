@@ -53,11 +53,30 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
                       const std::string& daylightSavingLocation, const string& commName, bool unrealisedQuantity,
                       const boost::optional<pair<Calendar, Real>>& offPeakPowerData) {
 
+    using CQF = CommodityQuantityFrequency;
+    
+    // We allow a special case where the schedule has only one date, which is the pricing date.
+    if (schedule.size() == 1 && leg.size() == 1) {
+        auto ccf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[0]);
+        Date pricingDate = ccf->pricingDate();
+        if (cqf == CQF::PerHourAndCalendarDay || cqf == CQF::PerHour){
+            if (offPeakPowerData) {
+                auto hours = offPeakPowerData->first.isHoliday(pricingDate) ? 24.0 : offPeakPowerData->second ;
+                ccf->setPeriodQuantity(hours * ccf->quantity());
+                return;
+            }
+            ccf->setPeriodQuantity(hoursPerDay * ccf->quantity());
+            return;
+        }
+        DLOG("Commodity leg has only one cashflow, derived from a single date, so no quantities to update.");
+        return;
+    }
+
     QL_REQUIRE(leg.size() == schedule.size() - 1, "The number of schedule periods (" << (schedule.size() - 1) <<
         ") was expected to equal the number of leg cashflows (" << leg.size() << ") when updating quantities" <<
         " for commodity " << commName << ".");
 
-    using CQF = CommodityQuantityFrequency;
+    
     if (cqf == CQF::PerCalculationPeriod) {
 
         if (unrealisedQuantity) {
@@ -323,16 +342,23 @@ Leg CommodityFixedLegBuilder::buildLeg(
     vector<Real> prices = buildScheduledVector(fixedLegData->prices(), fixedLegData->priceDates(), schedule);
     vector<Real> quantities = buildScheduledVector(fixedLegData->quantities(), fixedLegData->quantityDates(), schedule);
 
-    // Build fixed rate leg with 1/1 day counter, prices as rates and quantities as notionals so that we have price x
-    // notional in each period as the amount. We don't make any payment date adjustments yet as they come later.
+    Leg fixedRateLeg;
     OneDayCounter dc;
-    Leg fixedRateLeg = FixedRateLeg(schedule)
+    // Special case when the schedule has only one date, which is the pricing date.
+    if (schedule.size() == 1 && prices.size() == 1 && quantities.size() == 1) {
+        fixedRateLeg.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(schedule.date(0), quantities[0], prices[0],
+                                                                           dc, schedule.date(0), schedule.date(0)));
+    } else {
+        // Build fixed rate leg with 1/1 day counter, prices as rates and quantities as notionals so that we have price
+        // x notional in each period as the amount. We don't make any payment date adjustments yet as they come later.
+
+        fixedRateLeg = FixedRateLeg(schedule)
                            .withNotionals(quantities)
                            .withCouponRates(prices, dc)
                            .withPaymentAdjustment(Unadjusted)
                            .withPaymentLag(0)
                            .withPaymentCalendar(NullCalendar());
-
+    }
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
     if (!data.paymentDates().empty()) {
@@ -664,7 +690,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(
                          floatingLegData->excludePeriodStart(), floatingLegData->includePeriodEnd(), commFutureConv,
                          feCalc, hoursPerDay, floatingLegData->useBusinessDays(), daylightSavingLocation, commName,
                          floatingLegData->unrealisedQuantity(), offPeakPowerData);
-
+        DLOG("Quantities updates");
         // If lastNDays is set, amend each cashflow in the leg to an averaging cashflow over the lastNDays.
         auto lastNDays = floatingLegData->lastNDays();
         if (lastNDays != Null<Natural>() && lastNDays > 1) {

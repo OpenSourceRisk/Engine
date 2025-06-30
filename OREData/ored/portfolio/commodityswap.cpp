@@ -93,7 +93,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             floatingLegs[cfld->tag()] = legs_.back();
         }
     }
-
+    DLOG("CommoditySwap::build() built " << floatingLegs.size() << " floating legs for trade " << id());
     // Build any fixed legs skipped above.
     for (Size t = 0; t < legData_.size();  t++) {
         const auto& legDatum = legData_.at(t);
@@ -150,7 +150,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         buildLeg(engineFactory, effLegDatum, configuration);
         legsIdx[t] = legs_.size() - 1;
     }
-
+    DLOG("CommoditySwap::build() built " << legs_.size() << " legs for trade " << id());
     // Reposition the leg-based data to match the original order according to legData_
     vector<Leg> legsTmp;
     vector<bool> legPayersTmp;
