@@ -846,8 +846,11 @@ void OREAppInputParameters::loadParameters() {
             LOG("MarketContext::" << m.first << " = " << m.second);
     }
 
-    if (params_->has("setup", "csvCommentReportHeader"))
-        setCsvCommentCharacter(parseBool(params_->get("setup", "csvCommentReportHeader")));
+    if (params_->has("setup", "csvCommentReportHeader")) {
+        tmp = params_->get("setup", "csvCommentReportHeader");
+        QL_REQUIRE(tmp.size() == 1, "csvCommentReportHeader must be exactly one character");
+        setCsvCommentCharacter(tmp[0]);
+    }
 
     if (params_->has("setup", "csvSeparator")) {
         tmp = params_->get("setup", "csvSeparator");
