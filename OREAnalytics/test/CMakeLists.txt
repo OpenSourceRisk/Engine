@@ -3,6 +3,7 @@
 set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 amcbermudanswaption.cpp
 cube.cpp
+exposures.cpp
 historicalscenariogenerator.cpp
 nettedexpsoure.cpp
 observationmode.cpp
