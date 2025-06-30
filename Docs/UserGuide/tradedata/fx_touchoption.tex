@@ -92,6 +92,7 @@ Allowable values:  See section \ref{ss:premiums}
 
 \item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 Level specified in BarrierData should be quoted as the amount in DomesticCurrency (sold currency) per unit ForeignCurrency (bought currency). Note that the level stays quoted as DomesticCurrency per unit ForeignCurrency, regardless of barrier type.
+StrictComparison [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 
 \item \lstinline!ForeignCurrency!: The foreign (bought) currency of the FX touch option.  
 

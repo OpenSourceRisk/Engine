@@ -38,6 +38,7 @@ Allowable values:  See section \ref{ss:premiums}
     \item \lstinline!Type!: One of \emph{UpAndIn}, \emph{DownAndIn}, \emph{UpAndOut}, \emph{DownAndOut}
     \item \lstinline!Style!: One of \emph{European}, \emph{American}. A European barrier is observed on the last relevant pricing date of the APO while an American barrier is observed on all pricing dates of the APO.
     \item \lstinline!LevelData!: The barrier level. Only single-barrier options are allowed, i.e. exactly one level must be given.
+    \item \lstinline!StrictComparison! [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 \end{itemize}
 
 \item \lstinline!Name!: An identifier specifying the commodity being referenced. This is described in section \ref{ss:commodity_floating_leg_data}. 

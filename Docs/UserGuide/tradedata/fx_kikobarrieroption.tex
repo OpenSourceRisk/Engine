@@ -123,6 +123,14 @@ Allowable values:  See section \ref{ss:premiums}
 Level specified in BarrierData should be quoted as the amount in SoldCurrency per unit BoughtCurrency, with both currencies as defined in FxKIKOBarrierOptionData node.
 Changing the option from Call to Put or vice versa does not require switching the barrier level, i.e. the level stays quoted as SoldCurrency per unit BoughtCurrency, regardless of Put/Call. 
 The node StrictComparison forces the barrier to be strict if \emph{1}, default is \emph{0}.
+  \begin{itemize}
+    \item StrictComparison [Optional]: \emph{0}, \emph{1}. Defaults to \emph{0}. If \emph{1} in one of the two barriers, it will apply the StrictComparison. Determines how the barrier is checked as per: 
+    
+     \emph{0}: the barrier checks use $<=$, $>=$ to check Out-barriers.
+
+     \emph{1}: the barrier checks use strict comparison $<$ and $>$ for Out-barriers.
+
+  \end{itemize}
 
 \item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
 

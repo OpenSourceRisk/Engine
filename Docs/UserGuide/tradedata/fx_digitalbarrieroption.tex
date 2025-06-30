@@ -97,6 +97,8 @@ Level specified in BarrierData should be quoted as the amount in DomesticCurrenc
 
 Type specified in BarrierData can be one of: \emph{UpAndIn, DownAndIn, UpAndOut, DownAndOut}
 
+StrictComparison [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
+
 \item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future. If`StartDate' is provided then the fixings for dates between this date and the asof date are checked to see if the option was triggered. If no fixing is available then we skip that date. This is to allow for backwards compatibility.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
