@@ -238,7 +238,5 @@ private:
 void writeParConversionMatrix(const ore::analytics::ParSensitivityAnalysis::ParContainer& parSensitivities,
                               ore::data::Report& reportOut);
 
-
-
 } // namespace analytics
 } // namespace ore

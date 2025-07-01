@@ -399,7 +399,8 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
 
     parAnalysis->computeParInstrumentSensitivities(simMarket);
 
-    QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     parAnalysis->writeParRatesReport(*parScenarioRatesReport);
     analytic()->addReport(label(), "scenario_par_rates", parScenarioRatesReport);
 

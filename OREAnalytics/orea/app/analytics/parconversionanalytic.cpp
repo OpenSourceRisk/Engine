@@ -183,11 +183,10 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         }
 
         auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
-        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> report =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
-
-
 
         if (inputs_->parConversionOutputJacobi()) {
             QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
