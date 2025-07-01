@@ -5,6 +5,7 @@ amcbermudanswaption.cpp
 cube.cpp
 exposures.cpp
 historicalscenariogenerator.cpp
+lossgivendefault.cpp
 nettedexpsoure.cpp
 observationmode.cpp
 parsensitivityanalysis.cpp
