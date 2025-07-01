@@ -445,8 +445,9 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                             //Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
                             for (Size col = 0; col < deltaKeys.size(); col++) {
                                 for (Size row = col + 1; row < deltaKeys.size(); row++) {
-                                    correlationPairs_.emplace_back(deltaKeys[row].name, std::to_string(deltaKeys[row].index),
-                                                                   deltaKeys[col].name, std::to_string(deltaKeys[col].index));
+                                    RiskFactorKey a = deltaKeys[col];
+                                    RiskFactorKey b = deltaKeys[row];
+                                    correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
                                 }
                             }
                         }

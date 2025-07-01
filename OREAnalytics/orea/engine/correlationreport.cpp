@@ -36,9 +36,7 @@ std::vector<Real> extractLowerTriangle(const QuantLib::Matrix& corrMatrix) {
 void CorrelationReport::writeHeader(const ext::shared_ptr<Report>& report) {
 
     report->addColumn("RiskFactor1", string())
-        .addColumn("Index1", string())
         .addColumn("RiskFactor2", string())
-        .addColumn("Index2", string())
         .addColumn("Correlation", Real(), 6);
 }
 
@@ -59,12 +57,13 @@ void CorrelationReport::writeReports(const ext::shared_ptr<MarketRiskReport::Rep
     QL_REQUIRE(s >= 1 && s <= 2, "We should only report for CORRELATION report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
-    for (int i = 0; i < corrFormatted.size(); i++) {
-        report->next().add(std::get<0>(correlationPairs_[i]))
-            .add(std::get<1>(correlationPairs_[i]))
-            .add(std::get<2>(correlationPairs_[i]))
-            .add(std::get<3>(correlationPairs_[i]))
-            .add(corrFormatted[i]);
+    for (auto const& entry : correlationPairs_) {
+        const auto& key = entry.first;
+        const Real value = entry.second;
+        report->next()
+            .add(ore::data::to_string(key.first))
+            .add(ore::data::to_string(key.second))
+            .add(value);
     }
 }
 
