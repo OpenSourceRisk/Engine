@@ -931,12 +931,16 @@ void XvaEngineCG::generateXvaReports() {
     DLOG("XvaEngineCG: Write epe report.");
     epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
     epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
-
+    constexpr double tol = 4E-5;
     for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
-        epeReport_->next();
-        epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1))
-            .add(expectation(max(values_[pfExposureValuation_[i]], RandomVariable(model_->size(), 0.0))).at(0))
-            .add(expectation(max(-values_[pfExposureValuation_[i]], RandomVariable(model_->size(), 0.0))).at(0));
+        double epe = expectation(max(values_[pfExposureValuation_[i]], RandomVariable(model_->size(), 0.0))).at(0);
+        double ene = expectation(max(-values_[pfExposureValuation_[i]], RandomVariable(model_->size(), 0.0))).at(0);
+        if (std::abs(epe) > tol || std::abs(ene) > tol) {
+            epeReport_->next();
+            epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1))
+                .add(epe)
+                .add(ene);
+        }
     }
     epeReport_->end();
 }
@@ -1593,7 +1597,7 @@ void XvaEngineCG::generateSensiReports() {
         sensiResultCube_, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
         sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
     auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-    ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 0.0);
+    ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 1E-6);
 }
 
 void XvaEngineCG::cleanUpAfterCalcs() {
