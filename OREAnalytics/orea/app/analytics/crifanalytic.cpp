@@ -128,7 +128,7 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs->reportBufferSize());
         parAnalysis->writeParRatesReport(*parScenarioRatesReport);
-        sensiReports["scenario_par_rates"] = parScenarioRatesReport;
+        sensiReports["crif_scenario_par_rates"] = parScenarioRatesReport;
     }
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
@@ -273,8 +273,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         if (sensiReports.find("crif_par_conversion_matrix_inverse") != sensiReports.end())
             analytic()->addReport(LABEL, "crif_par_conversion_matrix_inverse",
                                   sensiReports.at("crif_par_conversion_matrix_inverse"));
-        if (sensiReports.find("scenario_par_rates") != sensiReports.end())
-            analytic()->addReport(LABEL, "crif_scenario_par_rates", sensiReports.at("scenario_par_rates"));
+        if (sensiReports.find("crif_scenario_par_rates") != sensiReports.end())
+            analytic()->addReport(LABEL, "crif_scenario_par_rates", sensiReports.at("crif_scenario_par_rates"));
 
         CONSOLE("OK");
     }
