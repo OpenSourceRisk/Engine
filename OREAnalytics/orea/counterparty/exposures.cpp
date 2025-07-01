@@ -17,9 +17,9 @@ void Exposures::computeCE() {
     const std::string nettingSetId = trade->envelope().nettingSetId();
 
     // Get NPV from cube at first date (0), first sample (0), depth (0)
-    const std::vector<QuantLib::Date>& dates = cube_->dates();
-    QuantLib::Date date = dates[0];
-    double npv = cube_->get(tradeId, date, 0, 0);
+    // const std::vector<QuantLib::Date>& dates = cube_->dates();
+    // QuantLib::Date date = dates[0];
+    double npv = cube_->getT0(tradeId, 0);
 
     std::cout << "Trade ID: " << tradeId
               << ", Netting Set: " << nettingSetId
@@ -83,22 +83,24 @@ void Exposures::computePFE(QuantLib::Real quantile) {
 
     pfe_.clear();
 
-    // Temporary store: NettingSet -> DateIndex -> vector of exposures
+    // Step 1: For each netting set and date, store one exposure per sample path
     std::map<std::string, std::vector<std::vector<Real>>> exposureSamples;
 
-    // Initialize
     for (const auto& tradePair : portfolio_->trades()) {
         const std::string& tradeId = tradePair.first;
         const std::string& nettingSetId = tradePair.second->envelope().nettingSetId();
 
-        if (exposureSamples[nettingSetId].empty())
-            exposureSamples[nettingSetId].resize(dates.size());
+        // Ensure structure is initialized
+        if (exposureSamples[nettingSetId].empty()) {
+            exposureSamples[nettingSetId].resize(dates.size(), std::vector<Real>(numSamples, 0.0));
+        }
 
+        // Loop over each date and sample path
         for (Size d = 0; d < dates.size(); ++d) {
             for (Size s = 0; s < numSamples; ++s) {
                 try {
                     Real npv = cube_->get(tradeId, dates[d], s, 0);
-                    exposureSamples[nettingSetId][d].push_back(std::max(npv, 0.0));
+                    exposureSamples[nettingSetId][d][s] += std::max(npv, 0.0);  // Aggregate across trades
                 } catch (...) {
                     ALOG("Missing cube value for " << tradeId << " on date index " << d << ", sample " << s);
                 }
@@ -106,29 +108,34 @@ void Exposures::computePFE(QuantLib::Real quantile) {
         }
     }
 
-    // Now compute the quantile for each netting set and date
+    // Step 2: For each netting set and date, compute the quantile of the exposures
     for (const auto& kv : exposureSamples) {
         const std::string& nettingSetId = kv.first;
-        const auto& exposuresByDate = kv.second;
+        const auto& samplesByDate = kv.second;
 
-        for (Size d = 0; d < exposuresByDate.size(); ++d) {
-            std::vector<Real> exposures = exposuresByDate[d];
+        std::vector<Real> pfeForDates;
+        for (const auto& exposures : samplesByDate) {
             if (exposures.empty()) {
-                pfe_[nettingSetId].push_back(0.0);  // fallback
+                pfeForDates.push_back(0.0);
                 continue;
             }
 
-            std::sort(exposures.begin(), exposures.end());
-            Size index = static_cast<Size>(std::floor(quantile * exposures.size()));
-            if (index >= exposures.size()) index = exposures.size() - 1;
+            std::vector<Real> sorted = exposures;
+            std::sort(sorted.begin(), sorted.end());
 
-            pfe_[nettingSetId].push_back(exposures[index]);
+            Size index = static_cast<Size>(std::floor(quantile * sorted.size()));
+            if (index >= sorted.size()) index = sorted.size() - 1;
+
+            pfeForDates.push_back(sorted[index]);
         }
+
+        pfe_[nettingSetId] = pfeForDates;
     }
 
-    // Optional logging
+    // Optional: Log last date PFE values
     for (const auto& kv : pfe_) {
-        ALOG("Netting Set: " << kv.first << ", PFE[" << quantile << "] at final date: " << kv.second.back());
+        const auto& vec = kv.second;
+        ALOG("Netting Set: " << kv.first << ", PFE[" << quantile << "] at final date: " << vec.back());
     }
 }
 
