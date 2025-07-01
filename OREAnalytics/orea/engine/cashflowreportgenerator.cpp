@@ -108,9 +108,9 @@ void populateReportDataFromAdditionalResults(
                     effectiveAmount = cf.amount * multiplier;
                 if (cf.discountFactor != Null<Real>())
                     discountFactor = cf.discountFactor;
-                else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
+                else if (!ccy.empty() && cf.payDate != Null<Date>() && market) {
                     auto discountCurve = specificDiscountCurve.empty()
-                                             ? market->discountCurve(cf.currency, configuration)
+                                             ? market->discountCurve(ccy, configuration)
                                              : specificDiscountCurve;
                     discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
                 }
@@ -123,7 +123,7 @@ void populateReportDataFromAdditionalResults(
                     fxRateLocalBase = cf.fxRateLocalBase;
                 } else if (market) {
                     try {
-                        fxRateLocalBase = market->fxRate(cf.currency + baseCurrency, configuration)->value();
+                        fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                     } catch (...) {
                     }
                 }
@@ -156,7 +156,7 @@ void populateReportDataFromAdditionalResults(
                 result.back().payDate = cf.payDate;
                 result.back().flowType = cf.type;
                 result.back().amount = effectiveAmount;
-                result.back().currency = cf.currency;
+                result.back().currency = ccy;
                 result.back().coupon = cf.rate;
                 result.back().accrual = cf.accrualPeriod;
                 result.back().accrualStartDate = cf.accrualStartDate;
