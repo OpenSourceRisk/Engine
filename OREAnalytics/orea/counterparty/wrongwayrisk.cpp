@@ -59,6 +59,11 @@ std::map<std::string, double> WrongWayRisk::computeCorrelationBasedWWR() {
         double meanX = std::accumulate(exposures.begin(), exposures.end(), 0.0) / n;
         double meanY = std::accumulate(creditFactors.begin(), creditFactors.end(), 0.0) / n;
 
+        std::cout << "NettingSet: " << nettingSetId << "\n";
+        std::cout << "Number of samples: " << n << "\n";
+        std::cout << "Mean Exposure: " << meanX << "\n";
+        std::cout << "Mean Credit Factor: " << meanY << "\n";
+
         double num = 0.0, denomX = 0.0, denomY = 0.0;
         for (Size i = 0; i < n; ++i) {
             double dx = exposures[i] - meanX;
@@ -66,12 +71,26 @@ std::map<std::string, double> WrongWayRisk::computeCorrelationBasedWWR() {
             num += dx * dy;
             denomX += dx * dx;
             denomY += dy * dy;
+            
+            // Print some sample pairs (first 10 for brevity)
+            if (i < 10) {
+                std::cout << "Sample " << i << ": Exposure=" << exposures[i]
+                          << ", CreditFactor=" << creditFactors[i]
+                          << ", dx=" << dx << ", dy=" << dy << "\n";
+            }
         }
 
         double corr = (denomX > 0 && denomY > 0) ? num / std::sqrt(denomX * denomY) : 0.0;
 
+        std::cout << "Covariance numerator: " << num << "\n";
+        std::cout << "Exposure variance denom: " << denomX << "\n";
+        std::cout << "Credit factor variance denom: " << denomY << "\n";
+        std::cout << "Correlation: " << corr << "\n\n";
+
         result[nettingSetId] = corr;
     }
+
+    correlation_ = result;
 
     return result;
 }
