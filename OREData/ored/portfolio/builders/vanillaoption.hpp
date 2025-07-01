@@ -178,8 +178,8 @@ protected:
             spotDays = fixingDays;
             spotCalendar = calendar;
         }
-
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays, spotCalendar);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays,
+                                                                            spotCalendar);
     }
 };
 

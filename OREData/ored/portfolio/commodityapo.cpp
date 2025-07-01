@@ -112,8 +112,7 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     // Add leg to legs_ so that fixings method can work.
     legs_.push_back(leg);
-
-    legMandatoryCashflows_.push_back(legs_.size()-1);
+    legMandatoryCashflows_.insert(legs_.size() - 1);
 
     legPayers_.push_back(false);
     legCurrencies_.push_back(currency_);

@@ -96,10 +96,10 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
-        
-        legMandatoryCashflows_.push_back(legs_.size()-1); 
 
-	    // update latest premium pay date
+        legMandatoryCashflows_.insert(legs_.size() - 1);
+
+        // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
 
         DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");

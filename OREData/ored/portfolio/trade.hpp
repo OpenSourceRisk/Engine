@@ -146,7 +146,7 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
-    const std::vector<size_t>& legMandatoryCashflows() const { return legMandatoryCashflows_; }
+    const std::set<size_t>& legMandatoryCashflows() const { return legMandatoryCashflows_; }
 
     const string& npvCurrency() const { return npvCurrency_; }
 
@@ -218,7 +218,7 @@ protected:
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
-    std::vector<size_t> legMandatoryCashflows_;
+    std::set<size_t> legMandatoryCashflows_;
 
     string npvCurrency_;
     QuantLib::Real notional_;
