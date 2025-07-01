@@ -37,9 +37,6 @@ public:
         : AmcCgBaseEngine(modelCg, simulationDates), domCcy_(domCcy), forCcy_(forCcy) {
         registerWith(modelCg);
     }
-
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const override;
 
 private:

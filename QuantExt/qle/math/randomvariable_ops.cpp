@@ -25,6 +25,53 @@
 
 namespace QuantExt {
 
+RandomVariable randomVariableOpConditionalExpectation(const Size size, const Size regressionOrder,
+                                                      QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                      QuantLib::Real regressionVarianceCutoff,
+                                                      const std::set<std::set<std::size_t>>& regressorGroups,
+                                                      const bool usePythonIntegration,
+                                                      const std::vector<const RandomVariable*>& args) {
+
+    std::vector<const RandomVariable*> regressor;
+    for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
+        if ((*r)->initialised() && !(*r)->deterministic())
+            regressor.push_back(*r);
+    }
+
+    if (regressor.empty())
+        return expectation(*args[0]);
+
+    bool trivialRegressorGroups =
+        regressorGroups.empty() || (regressorGroups.size() == 1 && regressorGroups.begin()->size() == regressor.size());
+
+    QL_REQUIRE(trivialRegressorGroups || regressionVarianceCutoff == Null<Real>(),
+               "RandomVariableOps::conditionalExpectation(): non-trivial regressor group do not work with "
+               "regressionVarianceCutoff ("
+                   << regressionVarianceCutoff << ")");
+
+    std::vector<RandomVariable> transformedRegressor;
+    Matrix coordinateTransform;
+    if (regressionVarianceCutoff != Null<Real>()) {
+        coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
+        transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+        regressor = vec2vecptr(transformedRegressor);
+    }
+
+    Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
+
+    if (usePythonIntegration && filter.deterministic() && filter[0]) {
+
+        // FIXME does not support regressor groups, non-trivial filters at the moment
+
+        return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+
+    } else {
+        auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
+                                        trivialRegressorGroups ? std::set<std::set<size_t>>{} : regressorGroups, size);
+        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
+    }
+}
+
 std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmBasisSystem::PolynomialType polynomType,
                      const double eps, QuantLib::Real regressionVarianceCutoff,
@@ -65,46 +112,10 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
     // ConditionalExpectation = 6
     ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups,
                    usePythonIntegration](const std::vector<const RandomVariable*>& args, const Size node) {
-
-        std::vector<const RandomVariable*> regressor;
-        for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
-            if ((*r)->initialised() && !(*r)->deterministic())
-                regressor.push_back(*r);
-        }
-
-        if (regressor.empty())
-            return expectation(*args[0]);
-
         auto g = regressorGroups.find(node);
-        bool trivialRegressorGroups =
-            g == regressorGroups.end() || (g->second.size() == 1 && g->second.begin()->size() == regressor.size());
-
-        QL_REQUIRE(trivialRegressorGroups || regressionVarianceCutoff == Null<Real>(),
-                   "RandomVariableOps::conditionalExpectation(): non-trivial regressor group do not work with "
-                   "regressionVarianceCutoff ("
-                       << regressionVarianceCutoff << ")");
-
-        std::vector<RandomVariable> transformedRegressor;
-        Matrix coordinateTransform;
-        if (regressionVarianceCutoff != Null<Real>()) {
-            coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
-            transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
-            regressor = vec2vecptr(transformedRegressor);
-        }
-
-        Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
-
-        if (usePythonIntegration && filter.deterministic() && filter[0]) {
-
-            // FIXME does not support regressor groups, non-trivial filters at the moment
-
-            return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
-
-        } else {
-            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
-                                            trivialRegressorGroups ? std::set<std::set<size_t>>{} : g->second, size);
-            return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
-        }
+        return randomVariableOpConditionalExpectation(
+            size, regressionOrder, polynomType, regressionVarianceCutoff,
+            g == regressorGroups.end() ? std::set<std::set<std::size_t>>{} : g->second, usePythonIntegration, args);
     });
 
     // IndicatorEq = 7
