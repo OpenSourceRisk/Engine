@@ -540,7 +540,7 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
     numbers_.emplace_back("Number", "KnockOutLevel", knockOutLevel);
     numbers_.emplace_back("Number", "KnockOutType", knockOutType);
 
-    numbers_.emplace_back("Number", "StrictComparison", strictBarrier);
+    numbers_.emplace_back("Number", "BarrierStrictComparison", strictBarrier);
 
     if (scriptToUse == AccumulatorScript::Accumulator01) {
         QL_REQUIRE((!americanKO && !dailyFixingAmount_) || !startDate_.empty(),

@@ -125,7 +125,12 @@ void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory
     QL_REQUIRE(barrierData_.levels().size() == 1, "Expected exactly one barrier level");
     QL_REQUIRE(barrierData_.levels().front().value() != Null<Real>(), "No barrier level specified.");
 
-    numbers_.emplace_back("Number", "BarrierStrictComparison", barrierData_.strictComparison().value());
+    std::string barrierStrictComparison = "0";
+    if (barrierData_.strictComparison()) {
+        barrierStrictComparison = barrierData_.strictComparison().value();
+    }
+
+    numbers_.emplace_back("Number", "BarrierStrictComparison", barrierStrictComparison);
     numbers_.emplace_back("Number", "KnockOutLevel", std::to_string(barrierData_.levels().front().value()));
 
     events_.emplace_back("BarrierStartDate", barrierStartDate_);
