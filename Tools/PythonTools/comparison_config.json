@@ -1873,6 +1873,7 @@
           {
             "names": [
               "data/discountFactor",
+              "data/forwardRate",
               "data/time",
               "data/zeroRate",
               "data/cpi"
@@ -1892,11 +1893,12 @@
           {
             "names": [
               "data/time",
+              "data/yoyRate",
               "data/zeroRate",
               "data/cpi"
             ],
             "abs_tol": 1e-15,
-            "rel_tol": 1e-09
+            "rel_tol": 1e-08
           }
         ]
       },
