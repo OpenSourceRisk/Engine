@@ -64,7 +64,7 @@
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
-      <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
+      <Parameter name="xvaCgTradeLevelBreakDown">true</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->
       <Parameter name="xvaCgUseRedBlocks">true</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
