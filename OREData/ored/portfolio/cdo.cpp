@@ -659,8 +659,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vector<Real> mults;
         Real upfrontAmount = upfrontFee_ * origTrancheNtl;
         string configuration = cdoEngineBuilder->configuration(MarketContext::pricing);
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         Date lastPremiumDate = addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
-                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory, configuration);
+                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, discountCurve, engineFactory, configuration);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";

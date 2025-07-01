@@ -139,8 +139,9 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         Real mult = bsInd;
         std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+                    discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
     } else {
@@ -157,8 +158,9 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         Real mult = bsInd;
         std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+                    discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
     }
