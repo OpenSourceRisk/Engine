@@ -58,8 +58,7 @@ void DirectDynamicInitialMarginCalculator::build() {
             for (Size k = 0; k < cube_->samples(); ++k) {
                 nettingSetDIM_[n][j][k] = imCube_->get(ns->second, j, k, 0);
                 nettingSetExpectedDIM_[n][j] += imCube_->get(ns->second, j, k, 0);
-                dimCube_->set(imCube_->get(ns->second, j, k, 0), ns->second, j, k);
-                for (Size d = 1; d < imCube_->depth(); ++d)
+                for (Size d = 0; d < imCube_->depth(); ++d)
                     dimCube_->set(imCube_->get(ns->second, j, k, d), ns->second, j, k, d);
             }
             nettingSetExpectedDIM_[n][j] /= static_cast<double>(cube_->samples());

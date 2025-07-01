@@ -41,7 +41,7 @@ SimmHelper::SimmHelper(const std::vector<std::string>& currencies, const QuantLi
     QL_REQUIRE(ssm_, "SimmHelper: SimmSensitivityStorageManager is null, not set or wrong type");
 
     irDeltaInstruments_.clear();
-    for (auto p : ssm_->irDeltaTerms()) {
+    for (const auto& p : ssm_->irDeltaTerms()) {
         if (p < 1 * Years)
             irDeltaInstruments_.push_back(IrDeltaParConverter::InstrumentType::Deposit);
         else
@@ -84,8 +84,6 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
     QL_REQUIRE(r.type() == typeid(std::tuple<Array, std::vector<Array>, std::vector<Array>, Real>),
                "SimmHelper::initialMargin(): unexpected result type '" << r.type().name() << "' from SimmSensitivityStorageManager");
 
-    LOG("SimmHelper got sensitivities");
-     
     Array delta;
     std::vector<Array> swaptionVegaRisk;
     std::vector<Array> fxVega;
@@ -124,15 +122,12 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
 	    idx++;
         }
     }
-    LOG("SimmHelper irDelta mapped");
-
+    
     // Map delta array of Reals to fxDeltaIM vector of RandomVariables
     // calculator
     auto fxDeltaIM = std::vector<QuantExt::RandomVariable>(currencies_.size() - 1, RandomVariable(1, 0.0));
-    std::string baseCcy = currencies_[0];
     for (Size i = 0; i < currencies_.size() - 1; ++i) {
         QL_REQUIRE(idx < delta.size(), "delta index " << idx << " out of range");
-        std::string ccy = currencies_[i + 1];
 	// The stored FX Delta is partial derivative w.r.t. ln(FX), let's call it delta_1,
 	// delta_1 = \frac{\partial V}{\partial \ln(FX)}
 	// We need
@@ -142,25 +137,9 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
 	// The SIMM calculator expects shift size 1% relative, i.e. FX/100 absolute, so we need to feed the scaled sensitivity
 	// delta_2 * FX/100 = delta_1 / 100
 	// into the SIMM calculator, hence no need to get the FX rate from the simulated market.
-	
-	// Real fx = 1.0;
-        // if (dateIndex == Null<Size>()) {
-        //     try {
-        //         fx = market_->fxSpot(ccy + baseCcy)->value();
-        //     } catch (std::exception& e) {
-        //         ALOG("Could not get fx rate from the t0 market for pair " << baseCcy + ccy << ": " << e.what());
-        //     }
-        // } else {
-        //     try {
-        //         fx = marketCube_->get(dateIndex, sampleIndex, AggregationScenarioDataType::FXSpot, ccy);
-        //     } catch (std::exception& e) {
-        //         ALOG("Could not get fx rate from the simulation market for pair " << baseCcy + ccy << ": " << e.what());
-        //     }
-        // }
         fxDeltaIM[i].set(0, delta[idx] * 0.01); 
         idx++;
     }
-    LOG("SimmHelper fxDelta mapped");
 
     // Compress vector of vega matrices of Reals into vector of vega arrays of RandomVariables aggregating
     // across underlying term and scaling to SIMM's Swaption VegaRisk.
@@ -171,26 +150,23 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
         for (Size j = 0; j < ssm_->irVegaTerms().size(); ++j)
             irVegaIM[i][j].set(0, swaptionVegaRisk[i][j]);
     }
-    LOG("SimmHelper swaptionVega mapped");
 
     // Map vector of vega arrays of Reals into vector of vega arrays of RandomVariables.
     auto fxVegaIM = std::vector<std::vector<QuantExt::RandomVariable>>(
         currencies_.size() - 1, std::vector<RandomVariable>(ssm_->fxVegaTerms().size(), RandomVariable(1, 0.0)));
     for (Size i = 0; i < currencies_.size() - 1; ++i) {
-      Real sum = 0;
-      for (Size j = 0; j < ssm_->fxVegaTerms().size(); ++j) {
-	    // The SIMM calculator expects shift size 0.01 absolute (!)
-	    fxVegaIM[i][j].set(0, fxVega[i][j] * 0.01);
-	    sum += fxVega[i][j] * 0.01;
+        Real sum = 0;
+        for (Size j = 0; j < ssm_->fxVegaTerms().size(); ++j) {
+            // The SIMM calculator expects shift size 0.01 absolute (!)
+            fxVegaIM[i][j].set(0, fxVega[i][j] * 0.01);
+            sum += fxVega[i][j] * 0.01;
         }
-        LOG("ccy " << i << " date " << dateIndex << " sample " << sampleIndex << " FxVega " << sum << " buckets "
-	    << to_string(fxVega[i]));
         if (dateIndex != Null<Size>() && i == 1) {
             Date d = cube_->dates()[dateIndex];
             Time t = timeFromReference(d);
-            LOG(nettingSetId << "," << sampleIndex << "," << io::iso_date(d) << "," << t << "," << sum
-                             << ",Ccy,FxVega,6"
-                             << " " << to_string(fxVega[i]));
+            DLOG(nettingSetId << "," << sampleIndex << "," << io::iso_date(d) << "," << t << "," << sum
+                              << ",Ccy,FxVega,6"
+                              << " " << to_string(fxVega[i]));
         }
     }
 
