@@ -408,8 +408,9 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     // Take care of fees
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
-                positionType == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
+                positionType == Position::Long ? -1.0 : 1.0, ccy, discountCurve, engineFactory,
                 engineBuilder->configuration(MarketContext::pricing));
 
     // Populate instrument wrapper
