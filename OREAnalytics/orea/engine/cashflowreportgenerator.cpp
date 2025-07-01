@@ -214,6 +214,16 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                                                 specificDiscountCurve, configuration, includePastCashflows);
     }
 
+    //
+
+    Size legNoOffset = 0;
+    if (auto l = std::max_element(
+            result.begin(), result.end(),
+            [](const TradeCashflowReportData& d1, const TradeCashflowReportData& d2) { return d1.legNo < d2.legNo; });
+        l != result.end()) {
+        legNoOffset = l->legNo;
+    }
+
     // add cashflows from trade legs, if no cashflows were added so far or if a leg is marked as mandatory for cashflows
 
     bool legBasedReport = result.empty();
@@ -508,9 +518,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
                 result.emplace_back();
 
-                Size legNo = i + 1;
-                while(cashflowNumber.find(legNo) != cashflowNumber.end())
-                    ++legNo;
+                Size legNo = i + legNoOffset;
 
                 result.back().cashflowNo = ++cashflowNumber[legNo];
                 result.back().legNo = legNo;
