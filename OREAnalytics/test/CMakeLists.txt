@@ -9,6 +9,7 @@ nettedexpsoure.cpp
 observationmode.cpp
 parsensitivityanalysis.cpp
 parsensitivityanalysismanual.cpp
+probdefault.cpp
 saccr.cpp
 sacva.cpp
 scenario.cpp
