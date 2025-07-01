@@ -31,7 +31,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
@@ -297,7 +297,8 @@ protected:
         } else {
             gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
-        return QuantLib::ext::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
+        return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
+                                                                                  scheme);
     }
 };
 
