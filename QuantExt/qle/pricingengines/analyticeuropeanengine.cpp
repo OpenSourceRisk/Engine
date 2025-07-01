@@ -20,8 +20,8 @@
 #include <ql/pricingengines/blackcalculator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
+
 #include <utility>
-#include <iostream>
 
 using std::vector;
 using std::string;
@@ -63,7 +63,7 @@ void AnalyticEuropeanEngine::calculate() const {
     }
 
     Real rfDiscount = Null<Real>();
-    
+
     if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
         rfDiscount = boost::any_cast<Real>(tmp->second);
 
@@ -71,7 +71,7 @@ void AnalyticEuropeanEngine::calculate() const {
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / rfDiscount;
     cfResults.back().payDate = arguments_.exercise->lastDate();
-    cfResults.back().legNumber = 0.00;
+    cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
     results_.additionalResults["cashFlowResults"] = cfResults;

@@ -499,7 +499,7 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     cfResults.emplace_back();
     cfResults.back().amount = optionValue;
     cfResults.back().payDate = exercise;
-    cfResults.back().legNumber = 0.00;
+    cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
     cfResults.back().accrualEndDate = exercise;
 

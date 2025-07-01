@@ -166,7 +166,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     // Build the commodity legs
 
     for (Size i = 0; i < legData_.size(); ++i) {
-        legPayers_.push_back(legData_[i].isPayer()); 
+        legPayers_.push_back(legData_[i].isPayer());
 
         // build legs
         auto commLegData =
@@ -218,7 +218,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             }
         }
         legs_.push_back(leg);
-
         legCurrencies_.push_back(legData_[i].currency()); // all legs and cf are priced with the same ccy
     }
 

@@ -120,7 +120,7 @@ void Trade::validate() const {
     QL_REQUIRE(envelope_.initialized(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
-                   "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");        
+                   "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }

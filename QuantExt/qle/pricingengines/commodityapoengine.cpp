@@ -304,15 +304,11 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
                                       matchedMoments.stdDev(), discount);
 
-    Real expectedflow = arguments_.quantity * arguments_.flow->gearing() *
-                         blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
-                                      matchedMoments.stdDev(), 1.00);
-
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
-    cfResults.back().amount = expectedflow;
+    cfResults.back().amount = results_.value / discount;
     cfResults.back().payDate = arguments_.flow->date();
-    cfResults.back().legNumber = 0.00;
+    cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
     // Add more additional results
@@ -439,9 +435,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
-    cfResults.back().amount = arguments_.quantity * arguments_.flow->gearing() * payoff;
+    cfResults.back().amount = results_.value / discount;
     cfResults.back().payDate = arguments_.flow->date();
-    cfResults.back().legNumber = 0.00;
+    cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
     results_.additionalResults["cashFlowResults"] = cfResults;
@@ -554,9 +550,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
-    cfResults.back().amount = arguments_.quantity * arguments_.flow->gearing() * payoff;
+    cfResults.back().amount = results_.value / discount;
     cfResults.back().payDate = arguments_.flow->date();
-    cfResults.back().legNumber = 0.00;
+    cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
     results_.additionalResults["cashFlowResults"] = cfResults;
