@@ -128,7 +128,7 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs->reportBufferSize());
         parAnalysis->writeParRatesReport(*parScenarioRatesReport);
-        sensiReports["scenario_parrates"] = parScenarioRatesReport;
+        sensiReports["scenario_par_rates"] = parScenarioRatesReport;
     }
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
