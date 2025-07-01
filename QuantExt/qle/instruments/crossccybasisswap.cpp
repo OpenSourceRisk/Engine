@@ -53,6 +53,7 @@ CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrenc
 }
 
 void CrossCcyBasisSwap::initialize() {
+
     // Pay leg
     if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(payIndex_)) {
         // ON leg

@@ -42,11 +42,11 @@ class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<QuantLib::Date>& simulationDates);
-    std::string npvName() const override { return "__AMCCG_NPV"; }
-    std::set<std::string> relevantCurrencies() const override;
-    bool hasVega() const override;
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
+
+    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun = false,
+                               std::vector<TradeExposure>* tradeExposure = nullptr,
+                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
     void calculate() const;
 
 protected:
@@ -96,7 +96,7 @@ private:
     std::size_t createRegressionModel(const std::size_t amount, const Date& d,
                                       const std::vector<CashflowInfo>& cashflowInfo,
                                       const std::function<bool(std::size_t)>& cashflowRelevant,
-                                      const std::size_t filter) const;
+                                      const std::size_t filter, TradeExposure* tradeExposure = nullptr) const;
 };
 
 } // namespace data

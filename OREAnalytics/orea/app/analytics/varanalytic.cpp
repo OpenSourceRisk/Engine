@@ -111,9 +111,12 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors,
-            benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
-            analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
+        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+        auto scenarios = buildHistoricalScenarioGenerator(
+            inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+            analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+            defaultReturnConfig, inputs_->mporOverlappingPeriods());
 
         if (inputs_->outputHistoricalScenarios())
             ReportWriter().writeHistoricalScenarios(
@@ -155,12 +158,14 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
     if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
         adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
-        
-    auto scenarios =
-        buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
-        inputs_->mporDays(), analytic()->configurations().simMarketParams,
-        analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
-    
+
+    auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+    auto scenarios = buildHistoricalScenarioGenerator(
+        inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+        analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+        defaultReturnConfig, inputs_->mporOverlappingPeriods());
+
     if (inputs_->outputHistoricalScenarios())
         ore::analytics::ReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),

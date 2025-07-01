@@ -31,12 +31,16 @@ McCamCurrencySwapEngine::McCamCurrencySwapEngine(
     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
     const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel,
     const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
-    const bool reevaluateExerciseInStickyRun)
+    const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff,
+    const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const VarGroupMode regressionVarGroupMode)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                            discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
                            regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
-                           reevaluateExerciseInStickyRun),
+                           reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
+                           regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
+                           regressionVarGroupMode),
       currencies_(currencies), npvCcy_(npvCcy) {
     registerWith(model_);
     for (auto const& h : discountCurves)

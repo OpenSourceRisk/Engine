@@ -89,7 +89,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         QL_REQUIRE(itr != requiredYieldCurves.end(),
                    "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = itr->second;
-        forecastYieldTermStructure = yieldCurve->handle();
+        forecastYieldTermStructure = yieldCurve->handle(ycspec.name());
 
         // Set the interpolation variables
         dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
@@ -259,6 +259,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
         // the curve type that we will build
         EquityCurveConfig::Type buildCurveType = curveType_;
+        config->setOutputType(curveType_);
 
         // for curveType ForwardPrice or OptionPremium populate the terms_ and quotes_ with forward prices
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
@@ -289,6 +290,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (quotes_.size() == 0) {
                 DLOG("No Equity Forward quotes provided for " << config->curveID()
                                                               << ", continuing without dividend curve.");
+                config->setOutputType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
@@ -296,6 +298,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (oqt.size() == 0) {
                 DLOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
+                config->setOutputType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
                 DLOG("Building Equity Dividend Yield curve from Option Volatilities");
@@ -369,6 +372,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 } else {
                     DLOG("No overlapping call and put quotes for equity " << spec.curveConfigID()
                                                                           << " building NoDividends curve");
+                    config->setOutputType(EquityCurveConfig::Type::NoDividends);
                     buildCurveType = EquityCurveConfig::Type::NoDividends;
                 }
             }

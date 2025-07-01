@@ -35,6 +35,13 @@ namespace QuantExt {
 
 using RandomVariableOp = std::function<RandomVariable(const std::vector<const RandomVariable*>&, const Size)>;
 
+RandomVariable randomVariableOpConditionalExpectation(const Size size, const Size regressionOrder,
+                                                      QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                      QuantLib::Real regressionVarianceCutoff,
+                                                      const std::set<std::set<std::size_t>>& regressorGroups,
+                                                      const bool usePythonIntegration,
+                                                      const std::vector<const RandomVariable*>& args);
+
 // eps determines the smoothing, 0 means no smoothing (default)
 std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder = 2,

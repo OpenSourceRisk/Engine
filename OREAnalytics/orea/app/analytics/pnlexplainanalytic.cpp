@@ -118,10 +118,10 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
         QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
             QuantLib::ext::make_shared<HistoricalScenarioLoader>(histScens, pnlDates);
-        
+
         auto zeroScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
-            scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(), adjFactors,
-            ReturnConfiguration(), "hs_");
+            scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(),
+            QuantLib::ext::make_shared<ReturnConfiguration>(), adjFactors, "hs_");
 
         zeroScenarios->baseScenario() = t0Scenario;
 
@@ -155,9 +155,10 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         } else
             scenarios = zeroScenarios;
     } else {
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, pnlDates,
-                                                          analytic()->configurations().simMarketParams,
-                                                          analytic()->configurations().todaysMarketParams);
+        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+        auto scenarios = buildHistoricalScenarioGenerator(
+            inputs_->scenarioReader(), adjFactors, pnlDates, analytic()->configurations().simMarketParams,
+            analytic()->configurations().todaysMarketParams, defaultReturnConfig);
         scenarios->baseScenario() = t0Scenario;
     }
 

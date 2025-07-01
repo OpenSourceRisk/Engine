@@ -3,12 +3,11 @@
  All rights reserved.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include "testmarket.hpp"
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/historicalscenariogenerator.hpp>
-
-#include "testmarket.hpp"
+#include <oret/toplevelfixture.hpp>
 
 using namespace std;
 using namespace ore;
@@ -19,6 +18,171 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(HistoricalReturnConfiguration)
+
+BOOST_AUTO_TEST_CASE(testHistoricalReturnConfiguration) {
+    using ore::analytics::ReturnConfiguration;
+    using ore::analytics::RiskFactorKey;
+
+    // Testdata
+    Real v1 = 2.0;
+    Real v2 = 1.0;
+    Date d1 = Date(1, Jan, 2020);
+    Date d2 = Date(2, Jan, 2020);
+
+    // 1. Default constructor should be log for discount curve
+    ReturnConfiguration defaultConfig;
+    defaultConfig.toFile("defaultReturnConfig.xml");
+    RiskFactorKey keyAbs(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    Real absReturn = defaultConfig.returnValue(keyAbs, v1, v2, d1, d2);
+    BOOST_CHECK_CLOSE(absReturn, std::log(v2 / v1), 1e-12);
+
+    // 2. Configs with displacement
+    std::map<std::pair<RiskFactorKey::KeyType, string>, ReturnConfiguration::Return> configs;
+
+    // Absolute
+    ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
+    configs[std::make_pair(RiskFactorKey::KeyType::DiscountCurve, string(""))] = absRet;
+
+    // Relative
+    ReturnConfiguration::Return relRet{ReturnConfiguration::ReturnType::Relative, 0.5};
+    configs[std::make_pair(RiskFactorKey::KeyType::IndexCurve, string(""))] = relRet;
+
+    // Log
+    ReturnConfiguration::Return logRet{ReturnConfiguration::ReturnType::Log, 0.1};
+    configs[std::make_pair(RiskFactorKey::KeyType::SurvivalProbability, string(""))] = logRet;
+
+    // 3. Configs with a specialized config for crude oil with displacement
+    ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
+    ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string(""))] = relRetDefault;
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string("WTI"))] = relRetSpecial;
+    
+    ReturnConfiguration config2(configs);
+
+    // Absolute
+    RiskFactorKey keyAbs2(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    Real absReturn2 = config2.returnValue(keyAbs2, v1, v2, d1, d2);
+    BOOST_CHECK_CLOSE(absReturn2, v2 - v1, 1e-12);
+
+    // Relative
+    RiskFactorKey keyRel(RiskFactorKey::KeyType::IndexCurve, "USD", 0);
+    Real relReturn = config2.returnValue(keyRel, v1, v2, d1, d2);
+    Real expectedRel = (v2 + 0.5) / (v1 + 0.5) - 1.0;
+    BOOST_CHECK_CLOSE(relReturn, expectedRel, 1e-12);
+
+    // Log
+    RiskFactorKey keyLog(RiskFactorKey::KeyType::SurvivalProbability, "dc", 0);
+    Real logReturn = config2.returnValue(keyLog, v1, v2, d1, d2);
+    Real expectedLog = std::log((v2 + 0.1) / (v1 + 0.1));
+    BOOST_CHECK_CLOSE(logReturn, expectedLog, 1e-12);
+
+    RiskFactorKey keyRelSpec(RiskFactorKey::KeyType::CommodityCurve, "Brent", 0);
+    Real relReturnSpec = config2.returnValue(keyRelSpec, v1, v2, d1, d2);
+    Real expectedRelSpec = (v2 + 0.0) / (v1 + 0.0) - 1.0;
+    BOOST_CHECK_CLOSE(relReturnSpec, expectedRelSpec, 1e-12);
+
+    RiskFactorKey keyRelDefault(RiskFactorKey::KeyType::CommodityCurve, "WTI", 0);
+    Real relReturnDefault = config2.returnValue(keyRelDefault, v1, v2, d1, d2);
+    Real expectedRelDefault = (v2 + 0.7) / (v1 + 0.7) - 1.0;
+    BOOST_CHECK_CLOSE(relReturnDefault, expectedRelDefault, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationFromXML) {
+    using ore::analytics::ReturnConfiguration;
+    using ore::analytics::RiskFactorKey;
+
+    std::string xml = R"(
+    <ReturnConfiguration>
+        <Return key="CommodityCurve">>
+            <Type>Relative</Type>
+            <Displacement>0.0</Displacement>
+        </Return>
+        <Return key="CommodityCurve/WTI">
+            <Type>Relative</Type>
+            <Displacement>0.7</Displacement>
+        </Return>
+        <Return key="DiscountCurve">
+            <Type>Absolute</Type>
+            <Displacement>0.0</Displacement>
+        </Return>
+    </ReturnConfiguration>
+    )";
+
+    ReturnConfiguration config;
+    config.fromXMLString(xml);
+
+    Real v1 = 2.0;
+    Real v2 = 1.0;
+    Date d1 = Date(1, Jan, 2020);
+    Date d2 = Date(2, Jan, 2020);
+
+    RiskFactorKey keyWTI(RiskFactorKey::KeyType::CommodityCurve, "WTI", 0);
+    Real relReturnWTI = config.returnValue(keyWTI, v1, v2, d1, d2);
+    Real expectedRelWTI = (v2 + 0.7) / (v1 + 0.7) - 1.0;
+    BOOST_CHECK_CLOSE(relReturnWTI, expectedRelWTI, 1e-12);
+
+    RiskFactorKey keyBrent(RiskFactorKey::KeyType::CommodityCurve, "Brent", 0);
+    Real relReturnBrent = config.returnValue(keyBrent, v1, v2, d1, d2);
+    Real expectedRelBrent = (v2 + 0.0) / (v1 + 0.0) - 1.0;
+    BOOST_CHECK_CLOSE(relReturnBrent, expectedRelBrent, 1e-12);
+
+    RiskFactorKey keyDisc(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    Real absReturn = config.returnValue(keyDisc, v1, v2, d1, d2);
+    Real expectedAbs = v2 - v1;
+    BOOST_CHECK_CLOSE(absReturn, expectedAbs, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testHistoricalReturnConfigurationXmlRoundtrip) {
+    using ore::analytics::ReturnConfiguration;
+    using ore::analytics::RiskFactorKey;
+
+    // 2. Configs with displacement
+    
+    std::map<std::pair<RiskFactorKey::KeyType, string>, ReturnConfiguration::Return> configs;
+
+    // Absolute
+    ReturnConfiguration::Return absRet{ReturnConfiguration::ReturnType::Absolute, 0.0};
+    configs[std::make_pair(RiskFactorKey::KeyType::DiscountCurve, string(""))] = absRet;
+
+    // 3. Configs with a specialized config for crude oil with displacement
+    ReturnConfiguration::Return relRetDefault{ReturnConfiguration::ReturnType::Relative, 0.0};
+    ReturnConfiguration::Return relRetSpecial{ReturnConfiguration::ReturnType::Relative, 0.7};
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string(""))] = relRetDefault;
+    configs[std::make_pair(RiskFactorKey::KeyType::CommodityCurve, string("WTI"))] = relRetSpecial;
+
+    ReturnConfiguration config1(configs);
+
+    ore::data::XMLDocument doc;
+    auto* xmlNode = config1.toXML(doc);
+    doc.appendNode(xmlNode);
+    std::string xmlString = doc.toString();
+
+    ore::data::XMLDocument doc2;
+    doc2.fromXMLString(xmlString);
+    XMLNode* root = doc2.getFirstNode("ReturnConfiguration");
+    ReturnConfiguration config2;
+    config2.fromXML(root);
+
+    Real v1 = 2.0;
+    Real v2 = 1.0;
+    Date d1 = Date(1, Jan, 2020);
+    Date d2 = Date(2, Jan, 2020);
+
+    RiskFactorKey keyDisc(RiskFactorKey::KeyType::DiscountCurve, "EUR", 0);
+    BOOST_CHECK_CLOSE(config1.returnValue(keyDisc, v1, v2, d1, d2), config2.returnValue(keyDisc, v1, v2, d1, d2),
+                      1e-12);
+
+    RiskFactorKey keyBrent(RiskFactorKey::KeyType::CommodityCurve, "Brent", 0);
+    BOOST_CHECK_CLOSE(config1.returnValue(keyBrent, v1, v2, d1, d2), config2.returnValue(keyBrent, v1, v2, d1, d2),
+                      1e-12);
+
+    RiskFactorKey keyWTI(RiskFactorKey::KeyType::CommodityCurve, "WTI", 0);
+    BOOST_CHECK_CLOSE(config1.returnValue(keyWTI, v1, v2, d1, d2), config2.returnValue(keyWTI, v1, v2, d1, d2), 1e-12);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(HistoricalScenarioGeneratorTest)
 
@@ -61,8 +225,10 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>();
     histScenariosLoader->scenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true), TARGET(), nullptr, 1);
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios =
+        QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
+            histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true),
+            QuantLib::ext::make_shared<ReturnConfiguration>(), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market

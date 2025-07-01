@@ -1195,6 +1195,7 @@ The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_con
   <MaxFactor>...</MaxFactor>
   <MinFactor>...</MinFactor>
   <DontThrowSteps>...</DontThrowSteps>
+  <Global>...<Global>
 </BootstrapConfig>
 \end{minted}
 \caption{\lstinline!BootstrapConfig! node outline}
@@ -1203,8 +1204,10 @@ The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_con
 
 The meaning of each of the elements is:
 \begin{itemize}
-\item \lstinline!Accuracy! [Optional]:
-The accuracy with which the implied quote must match the market quote for each instrument in the curve bootstrap. This node should hold a positive real number. If omitted, the default value is \num[scientific-notation=true]{1.0e-12}.
+\item \lstinline!Accuracy! [Optional]: The accuracy with which the implied quote must match the market quote for each
+  instrument in the curve bootstrap (iterative bootstrap) or the accuracy of the global optimizer (global
+  bootstrap). This node should hold a positive real number. If omitted, the default value is
+  \num[scientific-notation=true]{1.0e-12}.
 
 \item \lstinline!GlobalAccuracy! [Optional]:
 If the interpolation method in the bootstrap is global, e.g. cubic spline, the bootstrap routine needs to perform multiple iterative bootstraps of the curve to converge. After each such bootstrap of the full curve, the absolute value of the change between the current bootstrap and previous bootstrap for the curve value at each pillar is calculated. The global bootstrap is deemed to have converged if the maximum of these changes is less than the global accuracy or the accuracy from the \lstinline!Accuracy! node. This node should hold a positive real number. If omitted, the global accuracy is set equal to the accuracy from the \lstinline!Accuracy! node. This node is useful in some cases where a slightly less restrictive accuracy, than that given by the \lstinline!Accuracy! node, is needed for the global bootstrap.
@@ -1223,6 +1226,12 @@ This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning
 
 \item \lstinline!DontThrowSteps! [Optional]:
 This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
+
+\item \lstinline!Global! [Optional]: This nodes specifies whether the curve should use a global bootstrap over all
+  instruments of the curve (true) or iterative bootstrap (false, default value). If global boostrap is used, only the
+  Accuracy field of the BootstrapConfig is relevant and specifies the accuracy of the global optimizer. If a cycle is
+  present in the dependency graph of the curves, all members of the cycle must use global bootstrap, in this case a
+  global optimization is run over all instrument of all members of the cycle simultaneously.
 
 \end{itemize}
 

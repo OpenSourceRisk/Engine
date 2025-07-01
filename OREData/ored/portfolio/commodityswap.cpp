@@ -93,7 +93,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             floatingLegs[cfld->tag()] = legs_.back();
         }
     }
-
+    DLOG("CommoditySwap::build() built " << floatingLegs.size() << " floating legs for trade " << id());
     // Build any fixed legs skipped above.
     for (Size t = 0; t < legData_.size();  t++) {
         const auto& legDatum = legData_.at(t);
@@ -150,7 +150,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         buildLeg(engineFactory, effLegDatum, configuration);
         legsIdx[t] = legs_.size() - 1;
     }
-
+    DLOG("CommoditySwap::build() built " << legs_.size() << " legs for trade " << id());
     // Reposition the leg-based data to match the original order according to legData_
     vector<Leg> legsTmp;
     vector<bool> legPayersTmp;
@@ -249,19 +249,16 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     std::vector<Real> priceVec;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
-                    double averagePrice = 0;
                     for (const auto& kv : indexedAvgFlow->indices()) {
                         indexVec.push_back(kv.second->name());
                         indexExpiryVec.push_back(kv.second->expiryDate());
                         pricingDateVec.push_back(kv.first);
                         priceVec.push_back(kv.second->fixing(kv.first));
-                        averagePrice += priceVec.back();
                     }
-                    averagePrice /= indexedAvgFlow->indices().size();
                     additionalData_["index[" + label + "]"] = indexVec;
                     additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
                     additionalData_["price[" + label + "]"] = priceVec;
-                    additionalData_["averagePrice[" + label + "]"] = averagePrice;
+                    additionalData_["averagePrice[" + label + "]"] = indexedAvgFlow->fixing();
                     additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedAvgFlow->date());
                 }

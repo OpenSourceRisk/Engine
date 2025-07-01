@@ -784,6 +784,14 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Using default Ibor fallback config");
     }
 
+    if (params_->has("setup", "baselTrafficLightConfig") && params_->get("setup", "baselTrafficLightConfig") != "") {
+        filesystem::path tmp = inputPath / params_->get("setup", "baselTrafficLightConfig");
+        LOG("Loading Basel Traffic Light from file: " << tmp);
+        setBaselTrafficLightFromFile(tmp.generic_string());
+    } else {
+        WLOG("Using default Basel Traffic Light config");
+    }
+
     if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
         filesystem::path curveConfigFile = inputPath / params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file: ");

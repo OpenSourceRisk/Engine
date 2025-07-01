@@ -133,6 +133,7 @@ scenario/cvascenarioloader.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
 scenario/historicalscenariogenerator.cpp
+scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariofilereader.cpp
@@ -350,6 +351,7 @@ scenario/cvascenarioloader.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
 scenario/historicalscenariogenerator.hpp
+scenario/historicalscenarioreturn.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp

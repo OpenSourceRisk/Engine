@@ -17,7 +17,7 @@ if(ORE_USE_ZLIB)
     find_package(ZLIB REQUIRED)
 endif()
 
-SET(COMPONENT_LIST date_time filesystem iostreams regex serialization system timer thread)
+SET(COMPONENT_LIST date_time filesystem iostreams serialization system timer thread)
 if (ORE_BUILD_TESTS)
     LIST(APPEND COMPONENT_LIST unit_test_framework)
 endif()

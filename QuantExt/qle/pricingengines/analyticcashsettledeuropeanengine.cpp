@@ -36,17 +36,21 @@ using QuantLib::VanillaOption;
 using QuantLib::YieldTermStructure;
 using QuantLib::detail::simple_event;
 
+using std::vector;
+using std::string;
+
+
 namespace QuantExt {
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp)
-    : underlyingEngine_(bsp), bsp_(bsp) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults)
+    : underlyingEngine_(bsp), bsp_(bsp), flipResults_(flipResults) {
     registerWith(bsp_);
 }
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve)
-    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve, const bool flipResults)
+    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve), flipResults_(flipResults) {
     registerWith(bsp_);
     registerWith(discountCurve_);
 }
@@ -56,6 +60,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
     // Same logic as underlying engine for discount curve.
     QuantLib::ext::shared_ptr<YieldTermStructure> dts =
         discountCurve_.empty() ? bsp_->riskFreeRate().currentLink() : discountCurve_.currentLink();
+
 
     // Option expiry date.
     Date expiryDate = arguments_.exercise->lastDate();
@@ -165,6 +170,35 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         // Take the additional results from the underlying engine and add more.
         results_.additionalResults = underlyingResults->additionalResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
+    }
+
+    
+    if (flipResults_) {
+
+        // Invert strike, spot, forward
+
+        auto resToInvert = vector<string>({"spot", "forward", "strike"});
+        for (const string& res : resToInvert) {
+            auto it = results_.additionalResults.find(res);
+            if (it != results_.additionalResults.end()) {
+                string resPricing = res + "_pricing";
+                results_.additionalResults[resPricing] = it->second;
+                it->second = 1. / boost::any_cast<Real>(it->second);
+            }
+        }
+
+        // Swap riskFreeDiscount and dividendDiscount, discountFactor stays what it is
+
+        Real rfDiscount = Null<Real>();
+        Real divDiscount = Null<Real>();
+
+        if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+            rfDiscount = boost::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
+            divDiscount = boost::any_cast<Real>(tmp->second);
+
+        results_.additionalResults["riskFreeDiscount"] = divDiscount;
+        results_.additionalResults["dividendDiscount"] = rfDiscount;
     }
 
 }

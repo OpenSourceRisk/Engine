@@ -195,9 +195,10 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
     maturityType_ = "Expiry Date";
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                       positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
-                                       configuration);
+                                       positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, discountCurve,
+                                       engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
