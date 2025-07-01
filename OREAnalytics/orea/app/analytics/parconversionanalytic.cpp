@@ -94,6 +94,10 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
 
         parAnalysis->computeParInstrumentSensitivities(simMarket);
 
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        analytic()->addReport("PARCONVERSION", "parConversionScenarioParRates", parScenarioRatesReport);
+
         QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
             QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
@@ -182,6 +186,8 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
+
+
 
         if (inputs_->parConversionOutputJacobi()) {
             QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

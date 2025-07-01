@@ -124,6 +124,12 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     MEM_LOG;
 
     parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
+    if (writeReports) {
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        sensiReports["scenario_parrates"] = parScenarioRatesReport;
+    }
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
     auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);

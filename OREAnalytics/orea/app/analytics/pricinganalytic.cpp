@@ -230,7 +230,7 @@ void PricingAnalyticImpl::runAnalytic(
                 parAnalysis_->computeParInstrumentSensitivities(sensiAnalysis_->simMarket());
                 QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 parAnalysis_->writeParRatesReport(*parScenarioRatesReport);
-                analytic()->addReport(type, "par_scenario_rates", parScenarioRatesReport);
+                analytic()->addReport(type, "scenario_par_rates", parScenarioRatesReport);
 
                 QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
                     QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis_->parSensitivities(),
