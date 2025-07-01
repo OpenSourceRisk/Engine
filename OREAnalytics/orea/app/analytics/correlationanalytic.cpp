@@ -97,7 +97,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
     
     LOG("Build Correlation calculator");
-    if (inputs_->covarianceData().size() > 0) {
+    if (inputs_->correlationData().size() > 0) {
         TimePeriod period({inputs_->asof(), inputs_->mporDate()});
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());

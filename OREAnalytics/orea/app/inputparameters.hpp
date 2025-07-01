@@ -204,7 +204,6 @@ public:
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
-    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
     void setMcVarSamples(Size s) { mcVarSamples_ = s; }
     void setMcVarSeed(long l) { mcVarSeed_ = l; }
     void setCovarianceData(ore::data::CSVReader& reader);  
@@ -217,6 +216,12 @@ public:
     void setHistVarSimMarketParams(const std::string& xml);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
+
+    // Setters for Correlation
+    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
+    void setCorrelationData(ore::data::CSVReader& reader);
+    void setCorrelationDataFromFile(const std::string& fileName);
+    void setCorrelationDataFromBuffer(const std::string& xml);
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
@@ -663,6 +668,7 @@ public:
      * Getters for Correlation
      *************************/
     const std::string& correlationMethod() const { return correlationMethod_; }
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& correlationData() const { return correlationData_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -1073,8 +1079,6 @@ protected:
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
     std::string varMethod_ = "DeltaGammaNormal";
-    //Pearson, Kendall-Rank
-    std::string correlationMethod_ = "Pearson";
     Size mcVarSamples_ = 1000000;
     long mcVarSeed_ = 42;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
@@ -1084,6 +1088,13 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
+
+    /*****************
+     * CORRELATION analytics
+     *****************/
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData_;
+    // Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
 
     /*******************
      * EXPOSURE analytic

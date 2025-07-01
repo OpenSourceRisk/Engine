@@ -1664,6 +1664,14 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("correlation", "mporOverlappingPeriods", false);
         if (tmp != "")
             setMporOverlappingPeriods(parseBool(tmp));
+
+        tmp = params_->get("correlation", "covarianceInputFile", false);
+        QL_REQUIRE(tmp != "", "correlationInputFile not provided");
+        if (tmp != "") {
+            std::string covFile = (inputPath / tmp).generic_string();
+            LOG("Load Correlation Data from file " << covFile);
+            setCorrelationDataFromFile(covFile);
+        }
     }
 
     /************
