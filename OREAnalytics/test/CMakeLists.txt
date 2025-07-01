@@ -29,7 +29,8 @@ stresstest.cpp
 swapperformance.cpp
 testmarket.cpp
 testportfolio.cpp
-testsuite.cpp)
+testsuite.cpp
+wrongwayrisk.cpp)
 
 add_executable(orea-test-suite ${OREAnalytics-Test_SRC})
 target_link_libraries(orea-test-suite ${QL_LIB_NAME})
