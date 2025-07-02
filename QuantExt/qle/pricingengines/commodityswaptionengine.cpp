@@ -27,6 +27,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/commodityswaptionengine.hpp>
 
 using std::map;
@@ -493,6 +494,17 @@ void CommoditySwaptionMonteCarloEngine::calculateSpot(Size idxFixed, Size idxFlo
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = optionValue;
+    cfResults.back().payDate = exercise;
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+    cfResults.back().accrualEndDate = exercise;
+
+    results_.additionalResults["expectedFlow"] = swapValue;
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxFloat, Real strike) const {
@@ -577,6 +589,7 @@ void CommoditySwaptionMonteCarloEngine::calculateFuture(Size idxFixed, Size idxF
     // Populate the results remembering to multiply by P(0, t_e)
     results_.value = discountExercise * optionValue;
     results_.additionalResults["SwapNPV"] = discountExercise * swapValue;
+    results_.additionalResults["expectedFlow"] = swapValue;
     results_.additionalResults["FixedLegNPV"] = discountExercise * valueFixedLeg;
     results_.additionalResults["FloatingLegNPV"] = discountExercise * floatLegValue;
 }
