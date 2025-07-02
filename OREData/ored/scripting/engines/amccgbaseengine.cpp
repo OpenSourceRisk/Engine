@@ -802,52 +802,39 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 if (rebatedExercise)
                     exercisedValue = cg_add(g, exercisedValue, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]));
 
-                if (exerciseDates.size() == 1) {
+                // set results with decomposition
 
-                    // for european exercise we can rely on standard regression outside the engine
+                (*tradeExposure)[simCounter + 1].componentPathValues = {exercisedValue, futureOptionValue};
 
-                    std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValue),
-                                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue));
+                std::size_t exercisedValueCond = createRegressionModel(
+                    exercisedValue, d, cashflowInfo,
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+                std::size_t futureOptionValueCond = createRegressionModel(
+                    futureOptionValue, d, cashflowInfo,
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0),
+                    &(*tradeExposure)[simCounter + 1]);
 
-                    (*tradeExposure)[simCounter + 1].componentPathValues = {r};
-                    (*tradeExposure)[simCounter + 1].regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
+                // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
+                // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
+                // floor at zero
+                std::size_t rderiv =
+                    cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
 
-                } else {
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives = rderiv;
+                (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
+                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
+                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
+                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
 
-                    // for more than one exercise date, we need a decomposition
+                // here we can take max(0, futureOptionValueCond)
+                std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                                       cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
+                                               cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
 
-                    (*tradeExposure)[simCounter + 1].componentPathValues = {exercisedValue, futureOptionValue};
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectation = r;
 
-                    std::size_t exercisedValueCond = createRegressionModel(
-                        exercisedValue, d, cashflowInfo,
-                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
-                    std::size_t futureOptionValueCond = createRegressionModel(
-                        futureOptionValue, d, cashflowInfo,
-                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0),
-                        &(*tradeExposure)[simCounter + 1]);
-
-                    // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
-                    // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
-                    // floor at zero
-                    std::size_t rderiv =
-                        cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
-                               cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
-
-                    (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives = rderiv;
-                    (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
-                    (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
-
-                    // here we can take max(0, futureOptionValueCond)
-                    std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
-                                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
-                                                   cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
-
-                    (*tradeExposure)[simCounter + 1].targetConditionalExpectation = r;
-
-
-                }
+                // increase counters and continue
 
                 ++simCounter;
             }
