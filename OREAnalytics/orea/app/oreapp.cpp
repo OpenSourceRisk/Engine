@@ -711,6 +711,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setContinueOnError(parseBool(tmp));
 
+    tmp = params_->get("setup", "allowModelBuilderFallbacks", false);
+    if (tmp != "")
+        setAllowModelBuilderFallbacks(parseBool(tmp));
+
     tmp = params_->get("setup", "lazyMarketBuilding", false);
     if (tmp != "")
         setLazyMarketBuilding(parseBool(tmp));

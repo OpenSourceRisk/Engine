@@ -80,6 +80,7 @@ public:
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
     void setBaseCurrency(const std::string& s) { baseCurrency_ = s; }
     void setContinueOnError(bool b) { continueOnError_ = b; }
+    void setAllowModelBuilderFallbacks(bool b) { allowModelBuilderFallbacks_ = b; }
     void setLazyMarketBuilding(bool b) { lazyMarketBuilding_ = b; }
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
@@ -520,6 +521,7 @@ public:
     const std::string& baseCurrency() const { return baseCurrency_; }
     const std::string& resultCurrency() const { return resultCurrency_; }
     bool continueOnError() const { return continueOnError_; }
+    bool allowModelBuilderFallbacks() const { return allowModelBuilderFallbacks_; }
     bool lazyMarketBuilding() const { return lazyMarketBuilding_; }
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
@@ -958,6 +960,7 @@ protected:
     std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
+    bool allowModelBuilderFallbacks_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
