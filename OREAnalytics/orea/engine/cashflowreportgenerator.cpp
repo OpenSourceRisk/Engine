@@ -52,18 +52,14 @@ using namespace QuantExt;
 
 namespace {
 
-void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData>& result,
-                                             const std::map<std::string, boost::any>& addResults, const Real multiplier,
-                                             const std::string& baseCurrency,
-                                             const std::vector<std::string>& legCurrencies,
-                                             const std::string& npvCurrency,
-                                             QuantLib::ext::shared_ptr<ore::data::Market> market,
-                                             const Handle<YieldTermStructure>& specificDiscountCurve,
-                                             const std::string& configuration, const bool includePastCashflows) {
+void populateReportDataFromAdditionalResults(
+    std::vector<TradeCashflowReportData>& result, std::map<Size, Size>& cashflowNumber,
+    const std::map<std::string, boost::any>& addResults, const Real multiplier, const std::string& baseCurrency,
+    const std::vector<std::string>& legCurrencies, const std::string& npvCurrency,
+    QuantLib::ext::shared_ptr<ore::data::Market> market, const Handle<YieldTermStructure>& specificDiscountCurve,
+    const std::string& configuration, const bool includePastCashflows) {
 
     Date asof = Settings::instance().evaluationDate();
-
-    std::map<Size, Size> cashflowNumber;
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
@@ -193,13 +189,15 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     // add cashflows from (ql-) additional results in instrument and additional instruments
 
-    populateReportDataFromAdditionalResults(result, trade->instrument()->additionalResults(), multiplier, baseCurrency,
-                                            trade->legCurrencies(), trade->npvCurrency(), market, specificDiscountCurve,
-                                            configuration, includePastCashflows);
+    std::map<Size, Size> cashflowNumber;
+
+    populateReportDataFromAdditionalResults(result, cashflowNumber, trade->instrument()->additionalResults(),
+                                            multiplier, baseCurrency, trade->legCurrencies(), trade->npvCurrency(),
+                                            market, specificDiscountCurve, configuration, includePastCashflows);
 
     for (std::size_t i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
         populateReportDataFromAdditionalResults(
-            result, trade->instrument()->additionalInstruments()[i]->additionalResults(),
+            result, cashflowNumber, trade->instrument()->additionalInstruments()[i]->additionalResults(),
             trade->instrument()->additionalMultipliers()[i], baseCurrency, trade->legCurrencies(), trade->npvCurrency(),
             market, specificDiscountCurve, configuration, includePastCashflows);
     }
