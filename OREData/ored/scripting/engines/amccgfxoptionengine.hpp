@@ -37,10 +37,6 @@ public:
     AmcCgFxOptionEngineBase(const std::string& domCcy, const std::string& forCcy,
                             const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates)
         : AmcCgBaseEngine(modelCg, simulationDates), domCcy_(domCcy), forCcy_(forCcy) {}
-
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
-
     void setupLegs() const;
     void calculateFxOptionBase() const;
 

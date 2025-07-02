@@ -66,6 +66,8 @@ public:
     const std::vector<std::pair<std::size_t, std::size_t>>& redBlockRanges() const;
     const std::set<std::size_t>& redBlockDependencies() const;
 
+    
+
 private:
     std::vector<std::vector<std::size_t>> predecessors_;
     std::vector<std::size_t> opId_;
