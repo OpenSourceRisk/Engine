@@ -22,6 +22,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
@@ -167,6 +168,15 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
+   
+    vector<CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / df;
+    cfResults.back().payDate = paymentDate;
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    mp["cashFlowResults"] =  cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -175,6 +185,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
                                                                       const Date& exerciseDate,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const {
     PricingParameter res;
+
     if (auto cf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(flow)) {
         res.accruals = 0.0;
         // In case exercise is after future expiry (e.g. calendar spreads)
