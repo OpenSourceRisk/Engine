@@ -145,8 +145,9 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
-                multiplier > 0.0 ? -1.0 : 1.0, currency, engineFactory,
+                multiplier > 0.0 ? -1.0 : 1.0, currency, discountCurve, engineFactory,
                 bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
