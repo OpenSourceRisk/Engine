@@ -93,8 +93,6 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             string ccy;
             if (!cf.currency.empty()) {
                 ccy = cf.currency;
-            } else if (legCurrencies.size() > cf.legNumber) {
-                ccy = legCurrencies[cf.legNumber];
             } else {
                 ccy = npvCurrency;
             }
@@ -115,7 +113,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             }
             if (cf.fxRateLocalBase != Null<Real>()) {
                 fxRateLocalBase = cf.fxRateLocalBase;
-            } else if (market) {
+            } else if (!ccy.empty() && market) {
                 try {
                     fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                 } catch (...) {
