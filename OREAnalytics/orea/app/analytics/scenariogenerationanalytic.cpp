@@ -127,7 +127,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
             QuantLib::ext::make_shared<StressScenarioGenerator>(
                 stressTestScenarioData_, baseScenario, analytic()->configurations().simMarketParams, simMarket_,
                 scenarioFactory,
-                simMarket_->baseScenarioAbsolute());
+                simMarket_->baseScenarioAbsolute(), false);
         scenarioGenerator_ = stressScenarioGenerator;
         samples_ = stressScenarioGenerator->samples();
     } else if (type_ == ScenarioGenerationAnalyticImpl::Type::sensitivity) {

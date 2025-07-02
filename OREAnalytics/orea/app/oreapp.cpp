@@ -1027,6 +1027,12 @@ void OREAppInputParameters::loadParameters() {
             WLOG("ScenarioSimMarket parameters for stress testing not loaded");
         }
 
+        tmp = params_->get("stress", "scenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath_ / tmp).generic_string();
+            setScenarioReader(scenarioFile);
+        }
+
         tmp = params_->get("stress", "stressConfigFile", false);
         if (tmp != "") {
             string file = (inputPath_ / tmp).generic_string();

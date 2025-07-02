@@ -94,12 +94,26 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QuantLib::ext::shared_ptr<InMemoryReport> cfReport =
         inputs_->stressGenerateCashflows() ? QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize())
                                            : nullptr;
-
-    runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                  analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
-                  inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
-                  *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
-                  inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
+    
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    analytic()->addReport(label(), "stress_scenarios", scenarioReport);
+    
+    if (inputs_->scenarioReader()) {        
+        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                      analytic()->configurations().simMarketParams, inputs_->scenarioReader(), report, cfReport,
+                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                      inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      scenarioReport);
+    } else {
+        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                      analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
+                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                      nullptr, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      scenarioReport);
+    }
 
     analytic()->addReport(label(), "stress", report);
     if (cfReport) {

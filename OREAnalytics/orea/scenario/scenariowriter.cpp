@@ -111,7 +111,7 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             fprintf(fp_, "\n");
         }
 
-        fprintf(fp_, "%s%c%zu%c%.8f", to_string(d).c_str(), sep_, i_, sep_, s->getNumeraire());
+        fprintf(fp_, "%s%c%zu%c%.8f", to_string(d).c_str(), sep_, s->label(), sep_, s->getNumeraire());
         for (auto k : keys_)
             fprintf(fp_, "%c%.8f", sep_, s->get(k));
         fprintf(fp_, "\n");
@@ -125,9 +125,9 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
                 headerKeys_ = keys_;
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", string());
-            report_->addColumn("Numeraire", double(), 8);
+            report_->addColumn("Numeraire", double(), 12);
             for (Size i = 0; i < headerKeys_.size(); i++)
-                report_->addColumn(to_string(headerKeys_[i]), double(), 8);
+                report_->addColumn(to_string(headerKeys_[i]), double(), 12);
         }
 
         report_->next();

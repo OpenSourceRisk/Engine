@@ -99,9 +99,9 @@ private:
 };
 
 // A simple scenario generator that returns scenarios from a scenario loader
-class ScenarioLoaderGenerator : public ScenarioPathGenerator {
+class ScenarioLoaderPathGenerator : public ScenarioPathGenerator {
 public:
-    ScenarioLoaderGenerator(const QuantLib::ext::shared_ptr<SimpleScenarioLoader>& scenarioLoader, Date today,
+    ScenarioLoaderPathGenerator(const QuantLib::ext::shared_ptr<SimpleScenarioLoader>& scenarioLoader, Date today,
                             const vector<Date>& dates, TimeGrid timeGrid)
         : ScenarioPathGenerator(today, dates, timeGrid), scenarioLoader_(scenarioLoader), i_(0) {}
 
