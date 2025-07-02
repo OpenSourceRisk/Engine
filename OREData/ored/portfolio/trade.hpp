@@ -146,7 +146,9 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
-    const std::set<size_t>& legMandatoryCashflows() const { return legMandatoryCashflows_; }
+    // default if leg is not listed in map: IfNoEngineCashflows
+    enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
+    const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
 
     const string& npvCurrency() const { return npvCurrency_; }
 
@@ -218,7 +220,7 @@ protected:
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
-    std::set<size_t> legMandatoryCashflows_;
+    std::map<std::size_t, LegCashflowInclusion> legCashflowInclusion_;
 
     string npvCurrency_;
     QuantLib::Real notional_;
