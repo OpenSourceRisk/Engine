@@ -126,13 +126,25 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     }
 }
 
-QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
-                                                  const std::vector<QuantExt::RandomVariable>& fxDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
-						  bool delta, bool vega, bool curvature, bool IR, bool FX) {
+void copyRandomVariable(const RandomVariable& from, QuantLib::ext::shared_ptr<QuantExt::RandomVariable> to) {
+    if (to != nullptr) {
+        QL_REQUIRE(to->size() == from.size(), "RandomVariable size mismatch");
+        for (Size i = 0; i < from.size(); ++i)
+            to->set(i, from[i]);
+    }
+}
 
-    QL_REQUIRE(delta || vega || curvature, "at least one margin component required");
+QuantExt::RandomVariable
+SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
+                         const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
+                         const std::vector<QuantExt::RandomVariable>& fxDelta,
+                         const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginFX,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginFX,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginFX) {
 
     // DeltaMargin_IR
 
@@ -166,6 +178,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         deltaMarginIr = sqrt(deltaMarginIr);
     }
 
+    copyRandomVariable(deltaMarginIr, deltaMarginIR);
+
     // VegaMargin_IR
 
     RandomVariable vegaMarginIr(n_, 0.0);
@@ -197,6 +211,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         vegaMarginIr = sqrt(vegaMarginIr);
     }
+
+    copyRandomVariable(vegaMarginIr, vegaMarginIR);
 
     // CurvatureMargin_IR
 
@@ -238,16 +254,11 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
                             RandomVariable(n_, irCurvatureScaling_);
     }
 
+    copyRandomVariable(curvatureMarginIr, curvatureMarginIR);
+
     // SIMM_IR
 
-    // RandomVariable imIr = deltaMarginIr + vegaMarginIr + curvatureMarginIr;
-    RandomVariable imIr(n_, 0.0);
-    if (delta && IR)
-        imIr += deltaMarginIr;
-    if (vega && IR)
-        imIr += vegaMarginIr;
-    if (curvature && IR)
-        imIr += curvatureMarginIr;
+    RandomVariable imIr = deltaMarginIr + vegaMarginIr + curvatureMarginIr;
 
     // DeltaMargin_FX
 
@@ -268,6 +279,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         deltaMarginFx = sqrt(deltaMarginFx);
     }
+
+    copyRandomVariable(deltaMarginFx, deltaMarginFX);
 
     // VegaMargin_FX
 
@@ -300,6 +313,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         vegaMarginFx = sqrt(vegaMarginFx);
     }
+
+    copyRandomVariable(vegaMarginFx, vegaMarginFX);
 
     // CurvatureMargin_FX
 
@@ -340,16 +355,11 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         curvatureMarginFx = max(RandomVariable(n_, 0.0), S + lambda * sqrt(curvatureMarginFx));
     }
 
+    copyRandomVariable(curvatureMarginFx, curvatureMarginFX);
+
     // SIMM_FX
 
-    // RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
-    RandomVariable imFx(n_, 0.0);
-    if (delta && FX)
-        imFx += deltaMarginFx;
-    if (vega && FX)
-        imFx += vegaMarginFx;
-    if (curvature && FX)
-        imFx += curvatureMarginFx;
+    RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
 
     // SIMM_RatesFX
 

@@ -61,19 +61,23 @@ SimmHelper::SimmHelper(const std::vector<std::string>& currencies, const QuantLi
             *market_->swapIndex(market_->swapIndexBase(currencies_[ccyIndex])),
             [this](const Date& d) { return timeFromReference(d); });
     }
+
+    // buffers for retrieving SIMM components, dimension 1 as above
+    irDeltaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
+    fxDeltaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
+    irVegaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
+    fxVegaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
+    irCurvatureIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
+    fxCurvatureIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
 }
 
 Real SimmHelper::timeFromReference(const Date& d) const {
     return dc_.yearFraction(referenceDate_, d);
 }
 
-Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateIndex, const Size sampleIndex,
-                               bool deltaMargin, bool vegaMargin, bool curvatureMargin,
-			       bool IR, bool FX) {
+Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateIndex, const Size sampleIndex) {
 
-    DLOG("SimmHelper::initialMargin called for date " << dateIndex << ", sample " << sampleIndex
-                                                      << " for delta/vega/curvature components " << deltaMargin << "/"
-                                                      << vegaMargin << "/" << curvatureMargin);
+    DLOG("SimmHelper::initialMargin called for date " << dateIndex << ", sample " << sampleIndex);
 
     QL_REQUIRE((dateIndex == Null<Size>() && sampleIndex == Null<Size>()) ||
                    (dateIndex != Null<Size>() && sampleIndex != Null<Size>()),
@@ -106,16 +110,32 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
             tmpDelta[j] = delta[idx];
             idx++;
         }
-        Array parDelta = transpose(irDeltaConverter_[i].dzerodpar()) * tmpDelta;
-	// The same, component-wise
-        // Array parDelta(ssm_->irDeltaTerms().size(), 0.0);
-        // for (std::size_t b = 0; b < tmpDelta.size(); ++b) {
-        //     for (std::size_t z = 0; z < tmpDelta.size(); ++z) {
-        //         parDelta[b] += irDeltaConverter_[i].dzerodpar()(z, b) * tmpDelta[z];
-	//     }
-	// }
+        /*
+          Organisation of the Jacobi matrix irDeltaConverter_[i].dpardzero():
+          dp_1 / dz_1, dp_1 / dz_2, ... , dp_1 / dz_n
+          dp_2 / dz_1, dp_2 / dz_2, ... , dp_2 / dz_n
+          ...
+          dp_n / dz_1, dp_n / dz_2, ... , dp_n / dz_n
 
-	idx = idxBackup;
+          Organisation of its inverse irDeltaConverter_[i].dzerodpar():
+          dz_1 / dp_1, dz_1 / dp_2, ... , dz_1 / dp_n
+          dz_2 / dp_1, dz_2 / dp_2, ... , dz_2 / dp_n
+          ...
+          dz_n / dp_1, dz_n / dp_2, ... , dz_n / dp_n
+
+          Par sensitivity via chain rule:
+
+          dV / dp_i = sum_j dV / dz_j  dz_j / dp_i
+
+          i.e. we are summing over the row index j for each column index i in matrix dzerodpar (dz/dp).
+          In vector/matrix notation
+
+          dV/dp = transpose(dz/dp) * dV/dz
+        */
+
+        Array parDelta = transpose(irDeltaConverter_[i].dzerodpar()) * tmpDelta;
+
+        idx = idxBackup;
         for (Size j = 0; j < ssm_->irDeltaTerms().size(); ++j) {
             QL_REQUIRE(idx < delta.size(), "delta index " << idx << " out of range");
             irDeltaIM[i][j].set(0, parDelta[j] * 0.0001); // SIMM calculator expects shift size 1bp absolute
@@ -170,35 +190,24 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
         }
     }
 
-    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM);
+    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, irDeltaIM_, irVegaIM_,
+                                              irCurvatureIM_, fxDeltaIM_, fxVegaIM_, fxCurvatureIM_);
     totalMargin_ = res.at(0);
 
-    if (deltaMargin) {
-        RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, true, false, false);
-        deltaMargin_ = res.at(0);
-    }
+    if (irDeltaIM_ && fxDeltaIM_)
+        deltaMargin_ = irDeltaIM_->at(0) + fxDeltaIM_->at(0);
 
-    if (vegaMargin) {
-        RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, false, true, false);
-        vegaMargin_ = res.at(0);
-    }
+    if (irVegaIM_ && fxVegaIM_)
+        vegaMargin_ = irVegaIM_->at(0) + fxVegaIM_->at(0);
 
-    if (curvatureMargin) {
-        RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, false, false, true);
-        curvatureMargin_ = res.at(0);
-    }
+    if (irCurvatureIM_ && fxCurvatureIM_)
+        curvatureMargin_ = irCurvatureIM_->at(0) + fxCurvatureIM_->at(0);
 
-    if (deltaMargin && IR) {
-        RandomVariable res =
-            imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, true, false, false, true, false);
-        irDeltaMargin_ = res.at(0);
-    }
+    if (irDeltaIM_)
+        irDeltaMargin_ = irDeltaIM_->at(0);
 
-    if (deltaMargin && FX) {
-        RandomVariable res =
-            imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, true, false, false, false, true);
-        fxDeltaMargin_ = res.at(0);
-    }
+    if (fxDeltaIM_)
+        fxDeltaMargin_ = fxDeltaIM_->at(0);
 
     LOG("SimmHelper::initialMargin done for date " << dateIndex << ", sample " << sampleIndex);
 

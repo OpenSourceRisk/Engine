@@ -65,8 +65,7 @@ public:
         - a netting set id
         - a date and sample index, if both are null, SIMM computed for the T0 slice of the cube */
     Real initialMargin(const std::string& nettingSetId, const Size dateIndex = Null<Size>(),
-                       const Size sampleIndex = Null<Size>(), bool deltaMargin = true, bool vegaMargin = true,
-                       bool curvatureMargin = true, bool IR = true, bool FX = true);
+                       const Size sampleIndex = Null<Size>());
 
     Real deltaMargin() { return deltaMargin_; }
     Real vegaMargin() { return vegaMargin_; }
@@ -88,6 +87,10 @@ private:
     QuantLib::ext::shared_ptr<NPVCube> imCube_;
     QuantLib::ext::shared_ptr<SimpleDynamicSimm> imCalculator_;
     std::vector<IrDeltaParConverter> irDeltaConverter_;
+
+    QuantLib::ext::shared_ptr<QuantExt::RandomVariable> irDeltaIM_, irVegaIM_, irCurvatureIM_;
+    QuantLib::ext::shared_ptr<QuantExt::RandomVariable> fxDeltaIM_, fxVegaIM_, fxCurvatureIM_;
+
     Real totalMargin_;
     Real deltaMargin_;
     Real vegaMargin_;
