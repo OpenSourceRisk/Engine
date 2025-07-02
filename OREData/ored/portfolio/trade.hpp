@@ -146,6 +146,10 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
+    // default if leg is not listed in map: IfNoEngineCashflows
+    enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
+    const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
+
     const string& npvCurrency() const { return npvCurrency_; }
 
     //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
@@ -216,6 +220,8 @@ protected:
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
+    std::map<std::size_t, LegCashflowInclusion> legCashflowInclusion_;
+
     string npvCurrency_;
     QuantLib::Real notional_;
     string notionalCurrency_;
@@ -237,7 +243,7 @@ protected:
     // The returned date is the latest premium payment date added.
     Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
