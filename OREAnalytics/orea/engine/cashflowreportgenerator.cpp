@@ -214,11 +214,17 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     // add cashflows from trade legs, if no cashflows were added so far or if a leg is marked as mandatory for cashflows
 
-    bool legBasedReport = result.empty();
+    bool haveEngineCashflows = !result.empty();
 
     for (size_t i = 0; i < trade->legs().size(); i++) {
 
-        if (!legBasedReport && (trade->legMandatoryCashflows().find(i) == trade->legMandatoryCashflows().end()))
+        Trade::LegCashflowInclusion legCashflowInclusion = Trade::LegCashflowInclusion::IfNoEngineCashflows;
+        if (auto incl = trade->legCashflowInclusion().find(i); incl != trade->legCashflowInclusion().end()) {
+            legCashflowInclusion = incl->second;
+        }
+
+        if (legCashflowInclusion == Trade::LegCashflowInclusion::Never ||
+            (legCashflowInclusion == Trade::LegCashflowInclusion::IfNoEngineCashflows && haveEngineCashflows))
             continue;
 
         const QuantLib::Leg& leg = trade->legs()[i];

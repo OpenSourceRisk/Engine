@@ -112,10 +112,9 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     // Add leg to legs_ so that fixings method can work.
     legs_.push_back(leg);
-    legMandatoryCashflows_.insert(legs_.size() - 1);
-
     legPayers_.push_back(false);
     legCurrencies_.push_back(currency_);
+    legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Never;
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityAveragePriceOption::underlyingIndices(
