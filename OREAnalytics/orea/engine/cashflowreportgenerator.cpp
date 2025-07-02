@@ -53,18 +53,13 @@ using namespace QuantExt;
 namespace {
 
 void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData>& result,
-                                             const QuantLib::ext::shared_ptr<QuantLib::Instrument>& qlInstrument,
-                                             const Real multiplier, const std::string& baseCurrency,
+                                             const std::map<std::string, boost::any>& addResults, const Real multiplier,
+                                             const std::string& baseCurrency,
                                              const std::vector<std::string>& legCurrencies,
                                              const std::string& npvCurrency,
                                              QuantLib::ext::shared_ptr<ore::data::Market> market,
                                              const Handle<YieldTermStructure>& specificDiscountCurve,
                                              const std::string& configuration, const bool includePastCashflows) {
-
-    if (qlInstrument == nullptr)
-        return;
-
-    auto const& addResults = qlInstrument->additionalResults();
 
     Date asof = Settings::instance().evaluationDate();
 
@@ -74,113 +69,107 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
     auto lower = addResults.lower_bound("cashFlowResults");
     auto upper = addResults.lower_bound("cashFlowResults_a"); // Upper bound due to alphabetical order
 
-    if (lower != addResults.end()) {
+    for (auto cashFlowResults = lower; cashFlowResults != upper; ++cashFlowResults) {
 
-        for (auto cashFlowResults = lower; cashFlowResults != upper; ++cashFlowResults) {
+        QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
+                   "internal error: cashflowResults type does not match CashFlowResults: '"
+                       << cashFlowResults->second.type().name() << "'");
+        std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
 
-            QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
-                       "internal error: cashflowResults type does not match CashFlowResults: '"
-                           << cashFlowResults->second.type().name() << "'");
-            std::vector<CashFlowResults> cfResults =
-                boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
+        for (auto const& cf : cfResults) {
 
-            for (auto const& cf : cfResults) {
+            Real effectiveAmount = Null<Real>();
+            Real discountFactor = Null<Real>();
+            Real presentValue = Null<Real>();
+            Real presentValueBase = Null<Real>();
+            Real fxRateLocalBase = Null<Real>();
+            Real floorStrike = Null<Real>();
+            Real capStrike = Null<Real>();
+            Real floorVolatility = Null<Real>();
+            Real capVolatility = Null<Real>();
+            Real effectiveFloorVolatility = Null<Real>();
+            Real effectiveCapVolatility = Null<Real>();
 
-                Real effectiveAmount = Null<Real>();
-                Real discountFactor = Null<Real>();
-                Real presentValue = Null<Real>();
-                Real presentValueBase = Null<Real>();
-                Real fxRateLocalBase = Null<Real>();
-                Real floorStrike = Null<Real>();
-                Real capStrike = Null<Real>();
-                Real floorVolatility = Null<Real>();
-                Real capVolatility = Null<Real>();
-                Real effectiveFloorVolatility = Null<Real>();
-                Real effectiveCapVolatility = Null<Real>();
-
-                string ccy;
-                if (!cf.currency.empty()) {
-                    ccy = cf.currency;
-                } else if (legCurrencies.size() > cf.legNumber) {
-                    ccy = legCurrencies[cf.legNumber];
-                } else {
-                    ccy = npvCurrency;
-                }
-
-
-                if (cf.amount != Null<Real>())
-                    effectiveAmount = cf.amount * multiplier;
-                if (cf.discountFactor != Null<Real>())
-                    discountFactor = cf.discountFactor;
-                else if (!ccy.empty() && cf.payDate != Null<Date>() && market) {
-                    auto discountCurve = specificDiscountCurve.empty()
-                                             ? market->discountCurve(ccy, configuration)
-                                             : specificDiscountCurve;
-                    discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
-                }
-                if (cf.presentValue != Null<Real>()) {
-                    presentValue = cf.presentValue * multiplier;
-                } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
-                    presentValue = effectiveAmount * discountFactor;
-                }
-                if (cf.fxRateLocalBase != Null<Real>()) {
-                    fxRateLocalBase = cf.fxRateLocalBase;
-                } else if (market) {
-                    try {
-                        fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
-                    } catch (...) {
-                    }
-                }
-                if (cf.presentValueBase != Null<Real>()) {
-                    presentValueBase = cf.presentValueBase;
-                } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
-                    presentValueBase = presentValue * fxRateLocalBase;
-                }
-                if (cf.floorStrike != Null<Real>())
-                    floorStrike = cf.floorStrike;
-                if (cf.capStrike != Null<Real>())
-                    capStrike = cf.capStrike;
-                if (cf.floorVolatility != Null<Real>())
-                    floorVolatility = cf.floorVolatility;
-                if (cf.capVolatility != Null<Real>())
-                    capVolatility = cf.capVolatility;
-                if (cf.effectiveFloorVolatility != Null<Real>())
-                    floorVolatility = cf.effectiveFloorVolatility;
-                if (cf.effectiveCapVolatility != Null<Real>())
-                    capVolatility = cf.effectiveCapVolatility;
-
-                // to be consistent with the leg-based cf report we should do this:
-                // if (!includePastCashflows && cf.payDate <= asof)
-                //     continue;
-                // however, this changes a lot of results, so we output all cfs for the time being
-
-                result.emplace_back();
-                result.back().cashflowNo = ++cashflowNumber[cf.legNumber];
-                result.back().legNo = cf.legNumber;
-                result.back().payDate = cf.payDate;
-                result.back().flowType = cf.type;
-                result.back().amount = effectiveAmount;
-                result.back().currency = ccy;
-                result.back().coupon = cf.rate;
-                result.back().accrual = cf.accrualPeriod;
-                result.back().accrualStartDate = cf.accrualStartDate;
-                result.back().accrualEndDate = cf.accrualEndDate;
-                result.back().accruedAmount = cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier);
-                result.back().fixingDate = cf.fixingDate;
-                result.back().fixingValue = cf.fixingValue;
-                result.back().notional = cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier);
-                result.back().discountFactor = discountFactor;
-                result.back().presentValue = presentValue;
-                result.back().fxRateLocalBase = fxRateLocalBase;
-                result.back().presentValueBase = presentValueBase;
-                result.back().baseCurrency = baseCurrency;
-                result.back().floorStrike = floorStrike;
-                result.back().capStrike = capStrike;
-                result.back().floorVolatility = floorVolatility;
-                result.back().capVolatility = capVolatility;
-                result.back().effectiveFloorVolatility = effectiveFloorVolatility;
-                result.back().effectiveCapVolatility = effectiveCapVolatility;
+            string ccy;
+            if (!cf.currency.empty()) {
+                ccy = cf.currency;
+            } else if (legCurrencies.size() > cf.legNumber) {
+                ccy = legCurrencies[cf.legNumber];
+            } else {
+                ccy = npvCurrency;
             }
+
+            if (cf.amount != Null<Real>())
+                effectiveAmount = cf.amount * multiplier;
+            if (cf.discountFactor != Null<Real>())
+                discountFactor = cf.discountFactor;
+            else if (!ccy.empty() && cf.payDate != Null<Date>() && market) {
+                auto discountCurve =
+                    specificDiscountCurve.empty() ? market->discountCurve(ccy, configuration) : specificDiscountCurve;
+                discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
+            }
+            if (cf.presentValue != Null<Real>()) {
+                presentValue = cf.presentValue * multiplier;
+            } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
+                presentValue = effectiveAmount * discountFactor;
+            }
+            if (cf.fxRateLocalBase != Null<Real>()) {
+                fxRateLocalBase = cf.fxRateLocalBase;
+            } else if (market) {
+                try {
+                    fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
+                } catch (...) {
+                }
+            }
+            if (cf.presentValueBase != Null<Real>()) {
+                presentValueBase = cf.presentValueBase;
+            } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
+                presentValueBase = presentValue * fxRateLocalBase;
+            }
+            if (cf.floorStrike != Null<Real>())
+                floorStrike = cf.floorStrike;
+            if (cf.capStrike != Null<Real>())
+                capStrike = cf.capStrike;
+            if (cf.floorVolatility != Null<Real>())
+                floorVolatility = cf.floorVolatility;
+            if (cf.capVolatility != Null<Real>())
+                capVolatility = cf.capVolatility;
+            if (cf.effectiveFloorVolatility != Null<Real>())
+                floorVolatility = cf.effectiveFloorVolatility;
+            if (cf.effectiveCapVolatility != Null<Real>())
+                capVolatility = cf.effectiveCapVolatility;
+
+            // to be consistent with the leg-based cf report we should do this:
+            // if (!includePastCashflows && cf.payDate <= asof)
+            //     continue;
+            // however, this changes a lot of results, so we output all cfs for the time being
+
+            result.emplace_back();
+            result.back().cashflowNo = ++cashflowNumber[cf.legNumber];
+            result.back().legNo = cf.legNumber;
+            result.back().payDate = cf.payDate;
+            result.back().flowType = cf.type;
+            result.back().amount = effectiveAmount;
+            result.back().currency = ccy;
+            result.back().coupon = cf.rate;
+            result.back().accrual = cf.accrualPeriod;
+            result.back().accrualStartDate = cf.accrualStartDate;
+            result.back().accrualEndDate = cf.accrualEndDate;
+            result.back().accruedAmount = cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier);
+            result.back().fixingDate = cf.fixingDate;
+            result.back().fixingValue = cf.fixingValue;
+            result.back().notional = cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier);
+            result.back().discountFactor = discountFactor;
+            result.back().presentValue = presentValue;
+            result.back().fxRateLocalBase = fxRateLocalBase;
+            result.back().presentValueBase = presentValueBase;
+            result.back().baseCurrency = baseCurrency;
+            result.back().floorStrike = floorStrike;
+            result.back().capStrike = capStrike;
+            result.back().floorVolatility = floorVolatility;
+            result.back().capVolatility = capVolatility;
+            result.back().effectiveFloorVolatility = effectiveFloorVolatility;
+            result.back().effectiveCapVolatility = effectiveCapVolatility;
         }
     }
 }
@@ -206,15 +195,15 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     // add cashflows from (ql-) additional results in instrument and additional instruments
 
-    populateReportDataFromAdditionalResults(result, trade->instrument()->qlInstrument(), multiplier,
-                                            baseCurrency, trade->legCurrencies(), trade->npvCurrency(), market,
-                                            specificDiscountCurve, configuration, includePastCashflows);
+    populateReportDataFromAdditionalResults(result, trade->instrument()->additionalResults(), multiplier, baseCurrency,
+                                            trade->legCurrencies(), trade->npvCurrency(), market, specificDiscountCurve,
+                                            configuration, includePastCashflows);
 
     for (std::size_t i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
-        populateReportDataFromAdditionalResults(result, trade->instrument()->additionalInstruments()[i],
-                                                trade->instrument()->additionalMultipliers()[i], baseCurrency,
-                                                trade->legCurrencies(), trade->npvCurrency(), market,
-                                                specificDiscountCurve, configuration, includePastCashflows);
+        populateReportDataFromAdditionalResults(
+            result, trade->instrument()->additionalInstruments()[i]->additionalResults(),
+            trade->instrument()->additionalMultipliers()[i], baseCurrency, trade->legCurrencies(), trade->npvCurrency(),
+            market, specificDiscountCurve, configuration, includePastCashflows);
     }
 
     // determine offset for leg numbering to avoid conflicting leg numbers from add results and leg-based results
