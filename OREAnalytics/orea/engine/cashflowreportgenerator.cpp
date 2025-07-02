@@ -52,12 +52,14 @@ using namespace QuantExt;
 
 namespace {
 
-void populateReportDataFromAdditionalResults(
-    std::map<Size, Size>& cashflowNumber, std::vector<TradeCashflowReportData>& result,
-    const QuantLib::ext::shared_ptr<QuantLib::Instrument>& qlInstrument, const Real multiplier,
-    const std::string& baseCurrency, const std::vector<std::string>& legCurrencies, const std::string& npvCurrency,
-    QuantLib::ext::shared_ptr<ore::data::Market> market, const Handle<YieldTermStructure>& specificDiscountCurve,
-    const std::string& configuration, const bool includePastCashflows) {
+void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData>& result,
+                                             const QuantLib::ext::shared_ptr<QuantLib::Instrument>& qlInstrument,
+                                             const Real multiplier, const std::string& baseCurrency,
+                                             const std::vector<std::string>& legCurrencies,
+                                             const std::string& npvCurrency,
+                                             QuantLib::ext::shared_ptr<ore::data::Market> market,
+                                             const Handle<YieldTermStructure>& specificDiscountCurve,
+                                             const std::string& configuration, const bool includePastCashflows) {
 
     if (qlInstrument == nullptr)
         return;
@@ -65,6 +67,8 @@ void populateReportDataFromAdditionalResults(
     auto const& addResults = qlInstrument->additionalResults();
 
     Date asof = Settings::instance().evaluationDate();
+
+    std::map<Size, Size> cashflowNumber;
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
@@ -190,7 +194,6 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                                                                 const bool includePastCashflows) {
 
     std::vector<TradeCashflowReportData> result;
-    std::map<Size, Size> cashflowNumber;
 
     Date asof = Settings::instance().evaluationDate();
 
@@ -203,18 +206,18 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
     // add cashflows from (ql-) additional results in instrument and additional instruments
 
-    populateReportDataFromAdditionalResults(cashflowNumber, result, trade->instrument()->qlInstrument(), multiplier,
+    populateReportDataFromAdditionalResults(result, trade->instrument()->qlInstrument(), multiplier,
                                             baseCurrency, trade->legCurrencies(), trade->npvCurrency(), market,
                                             specificDiscountCurve, configuration, includePastCashflows);
 
     for (std::size_t i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
-        populateReportDataFromAdditionalResults(cashflowNumber, result, trade->instrument()->additionalInstruments()[i],
+        populateReportDataFromAdditionalResults(result, trade->instrument()->additionalInstruments()[i],
                                                 trade->instrument()->additionalMultipliers()[i], baseCurrency,
                                                 trade->legCurrencies(), trade->npvCurrency(), market,
                                                 specificDiscountCurve, configuration, includePastCashflows);
     }
 
-    //
+    // determine offset for leg numbering to avoid conflicting leg numbers from add results and leg-based results
 
     Size legNoOffset = 0;
     if (auto l = std::max_element(
@@ -518,10 +521,8 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
 
                 result.emplace_back();
 
-                Size legNo = i + legNoOffset;
-
-                result.back().cashflowNo = ++cashflowNumber[legNo];
-                result.back().legNo = legNo;
+                result.back().cashflowNo = j + 1;
+                result.back().legNo = i + legNoOffset;
                 result.back().payDate = payDate;
                 result.back().flowType = flowType;
                 result.back().amount = effectiveAmount;
