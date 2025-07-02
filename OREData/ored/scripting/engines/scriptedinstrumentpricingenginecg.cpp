@@ -102,11 +102,16 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     }
 }
 
-void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
-    const bool stickyCloseOutDateRun, const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                              const bool reevaluateExerciseInStickyCloseOutDateRun,
+                                                              std::vector<TradeExposure>* tradeExposure,
+                                                              TradeExposureMetaInfo* tradeExposureMetaInfo) const {
+
+    // TODO, populate the results of the new exposure interface ... !!!
 
     // TODO: rename _AMC_NPV_i indices (i -> valuationDates.size() + i)
     //       handle reevaluateExercise == false: (via sticky states)
+    // Until then we forbid sticky closeout runs
     QL_REQUIRE(
         !stickyCloseOutDateRun,
         "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): stickyCloseOutDateRun is not yet supported.");
@@ -170,6 +175,18 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
         // clear stored base model params
 
         haveBaseValues_ = false;
+
+        // populate exposure results
+
+        if (tradeExposure != nullptr) {
+
+            // TODO
+        }
+
+        if (tradeExposureMetaInfo != nullptr) {
+
+            // TODO
+        }
     }
 }
 

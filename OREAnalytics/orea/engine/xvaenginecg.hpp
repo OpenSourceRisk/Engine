@@ -34,6 +34,7 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/utilities/progressbar.hpp>
 
@@ -42,6 +43,9 @@
 #include <qle/ad/computationgraph.hpp>
 #include <qle/ad/external_randomvariable_ops.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/methods/cclgmfxoptionvegaparconverter.hpp>
+#include <qle/methods/irdeltaparconverter.hpp>
+#include <qle/methods/lgmswaptionvegaparconverter.hpp>
 
 #include <ql/types.hpp>
 
@@ -73,8 +77,8 @@ public:
                 const bool useExternalComputeDevice = false, const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
-                const bool continueOnCalibrationError = true, const bool continueOnError = true,
-                const std::string& context = "xva engine cg");
+                const bool continueOnCalibrationError = true, const bool allowModelFallbacks = true,
+                const bool continueOnError = true, const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario);
@@ -96,29 +100,42 @@ public:
     QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() const { return sensiReport_; }
 
 private:
+
+    // main process steps
+
     void buildT0Market();
     void buildSsm();
     void buildCam();
     void buildPortfolio();
+
     void buildCgPartB();
     void buildCgPartC();
+    void buildCgDynamicIM();
     void buildCgPP();
     void buildAsdNodes();
+
     void getExternalContext();
     void setupValueContainers();
+
     void doForwardEvaluation();
+
+    void calculateDynamicIM();
+    void calculateSensitivities();
+
     void populateAsd();
     void populateNpvOutputCube();
     void populateDynamicIMOutputCube();
+
     void generateXvaReports();
-    void calculateDynamicIM();
-    void calculateSensitivities();
     void generateSensiReports();
+
+    // helper functions
+
     void cleanUpAfterCalcs();
     void outputGraphStats();
     void outputTimings();
-
     void finalizeExternalCalculation();
+
     void populateRandomVariates(std::vector<RandomVariable>& values,
                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
     void populateConstants(std::vector<RandomVariable>& values,
@@ -128,13 +145,34 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeIds);
-    std::pair<std::size_t, std::size_t> createPortfolioExposureNode(const std::size_t dateIndex,
-                                                                    const bool isValuationDate);
+    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeIds,
+                  const bool regressors);
+
+    std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
-    std::size_t getAmcNpvIndexForValuationDate(const std::size_t i) const;
-    std::size_t getAmcNpvIndexForCloseOutDate(const std::size_t i) const;
+
+    void dynamicImAddToPathSensis(const std::set<ModelCG::ModelParameter>& parameterGroup, const Date& valDate,
+                                  const double t, const std::map<std::string, std::size_t>& currencyLookup,
+                                  const std::vector<IrDeltaParConverter>& irDeltaConverter,
+                                  const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
+                                  const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
+                                  std::vector<std::vector<RandomVariable>>& pathIrDelta,
+                                  std::vector<RandomVariable>& pathFxDelta,
+                                  std::vector<std::vector<RandomVariable>>& pathIrVega,
+                                  std::vector<std::vector<RandomVariable>>& pathFxVega);
+    void dynamicImAddToConvertedSensis(const std::size_t ccyIndex, const std::vector<RandomVariable>& tmpIrDelta,
+                                       const std::vector<RandomVariable>& tmpIrVega,
+                                       const std::vector<RandomVariable>& tmpFxVega, const RandomVariable& tmpFxDelta,
+                                       const std::vector<IrDeltaParConverter>& irDeltaConverter,
+                                       const std::vector<LgmSwaptionVegaParConverter>& irVegaConverter,
+                                       const std::vector<CcLgmFxOptionVegaParConverter>& fxVegaConverter,
+                                       std::vector<std::vector<RandomVariable>>& conditionalIrDelta,
+                                       std::vector<RandomVariable>& conditionalFxDelta,
+                                       std::vector<std::vector<RandomVariable>>& conditionalIrVega,
+                                       std::vector<std::vector<RandomVariable>>& conditionalFxVega);
+    RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
+                                              const std::size_t tradeId, const std::size_t timeStep);
 
     // set via additional methods
 
@@ -173,6 +211,7 @@ private:
     std::string externalComputeDevice_;
     bool usePythonIntegration_;
     bool continueOnCalibrationError_;
+    bool allowModelFallbacks_;
     bool continueOnError_;
     std::string context_;
 
@@ -201,25 +240,41 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
-    // trade level exposure, per valuation resp. close-out date, as path values (no conditional expectation)
-    std::vector<std::vector<std::size_t>> amcNpvNodes_;         // valuation date npv nodes
-    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_; // includes time zero npv
+    // per trade and time step trade exposures (buildPartB(), conditional expectation, includes t=0 as first component)
+    std::vector<std::vector<TradeExposure>> tradeExposureValuation_;
+    std::vector<std::vector<TradeExposure>> tradeExposureCloseOut_;
 
-    // trade level exposure, as conditional expectation
-    std::vector<std::vector<std::size_t>> tradeExposureNodes_;                    // includes time zero npv
-    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;            // includes time zero npv
-    std::vector<std::set<std::string>> tradeRelevantCurrencies_;                  // relevant ccys per trade
-    std::vector<bool> tradeHasVega_;                                              // vega flag per trade
+    // per trade meta info (buildPartB())
+    std::vector<TradeExposureMetaInfo> tradeExposureMetaInfo_;
 
-    // portfolio exposure, per valuation resp. close-out date, as path values and conditional expectation
-    std::vector<std::size_t> pfExposureNodesPathwise_, pfExposureNodes_;
-    std::vector<std::size_t> pfExposureCloseOutNodes_;
+    // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
+    std::vector<std::size_t> pfExposureValuation_;
+    std::vector<std::size_t> pfExposureCloseOut_;
 
-    // only for dynamicIM:
-    // - parameter groups filtering on sensis
-    // - for each parameter group the portfolio exposure, per valuation date, inflated and pathwise
-    std::set<std::set<ModelCG::ModelParameter>> dynamicIMModelParameterGroups_;
-    std::vector<std::vector<std::size_t>> pfExposureNodesForDynamicIMByParameterGroup_;
+    // if trade breakdown, per time step, trade the exposure, as conditional expectation (buildPartC(), includes t=0)
+    std::vector<std::vector<std::size_t>> tradeExposureNodes_;
+    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
+
+    /* for dynamic im calculation */
+    struct DynamicImInfo {
+        // plain trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
+        std::set<std::size_t> plainTradeIds;
+        // sum of path exposures for plain trades, grouped by relevant model parameters
+        std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
+        // set of regressor nodes and var groups for plain trades
+        std::set<std::size_t> plainTradeRegressors;
+        std::set<std::set<std::size_t>> plainTradeRegressorGroups;
+        // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
+        std::set<std::size_t> individualTradeIds;
+    };
+
+    // dynamic im info per valuation date,
+    std::vector<DynamicImInfo> dynamicImInfo_;
+
+    /* regressor groups, set for the npv()-nodes involved in the following members, to be used to set up ops_:
+       - pfExposureValuation
+       - pfExposureCloseOut   */
+    std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
 
     // dynamic im per netting set
     std::map<std::string, std::vector<RandomVariable>> dynamicIM_;
@@ -234,12 +289,7 @@ private:
     // the cva node from the cg-pp
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
 
-    /* regressor groups per portfolio exposure node, the groups are set on
-       - pfExposureNodesPathwise
-       - pfExposureNodes
-       - pfExposureCloseOutNodes */
-    std::map<std::size_t, std::set<std::set<std::size_t>>> pfRegressorPosGroups_;
-
+    // containers that are allocated globally and reused across the calcs
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> xvaDerivatives_;
     std::vector<RandomVariable> dynamicIMDerivatives_;
@@ -250,7 +300,7 @@ private:
     QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
-                                  timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
+                                  timing_partc_ = 0,timing_partc2_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
                                   timing_fwd_ = 0, timing_dynamicIM_ = 0, timing_bwd_ = 0, timing_sensi_ = 0,
                                   timing_asd_ = 0, timing_outcube_ = 0, timing_imcube_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;

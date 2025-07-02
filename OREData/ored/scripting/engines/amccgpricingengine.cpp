@@ -16,28 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief AMC CG swap engine
-    \ingroup engines
-*/
-
-#include <ored/scripting/engines/amccgswapengine.hpp>
-
-#include <ql/exercise.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 
 namespace ore {
 namespace data {
-
-void AmcCgSwapEngine::calculate() const {
-    leg_ = arguments_.legs;
-    currency_ = std::vector<std::string>(leg_.size(), ccy_);
-    payer_.resize(arguments_.payer.size());
-    for (Size i = 0; i < arguments_.payer.size(); ++i) {
-        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
-    }
-    exercise_ = nullptr;
-    AmcCgBaseEngine::calculate();
-}
 
 } // namespace data
 } // namespace ore

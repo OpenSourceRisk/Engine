@@ -120,9 +120,12 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     engineParam_ = engineParameter("Engine", getModelEngineQualifiers());
 
-    std::string purpose = "";
+    std::string purpose;
+
     if (buildingAmc_)
         purpose = "AMC";
+    else if (buildingAmcCg_)
+        purpose = "AMCCG";
     else if (engineParam_ == "FD")
         purpose = "FD";
 
@@ -159,7 +162,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 4b set up calibration strike information
 
-    if (!buildingAmc_)
+    if (!buildingAmc_ && !buildingAmcCg_)
         setupCalibrationStrikes(script, context);
 
     // 5 run static analyser
@@ -258,9 +261,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 20 build the model adapter
 
-    QL_REQUIRE(!buildingAmc_ || modelParam_ == "GaussianCam",
-               "model/engine = GaussianCam/MC required to build an amc model, got " << modelParam_ << "/"
-                                                                                    << engineParam_);
+    QL_REQUIRE(!(buildingAmc_ || buildingAmcCg_) || modelParam_ == "GaussianCam",
+               "model/engine = GaussianCam/MC required to build an amc or amccg model, got " << modelParam_ << "/"
+                                                                                             << engineParam_);
 
     if (staticAnalyser_->regressionDates().empty())
         params_.trainingSamples = Null<Size>();
@@ -385,6 +388,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     LOG("engine built for model " << modelParam_ << " / " << engineParam_ << ", modelSize = " << modelSize_
                                   << ", interactive = " << interactive_ << ", amcEnabled = " << buildingAmc_
+                                  << ", amccgEnabled = " << buildingAmcCg_
                                   << ", generateAdditionalResults = " << generateAdditionalResults);
     return engine;
 }
@@ -624,6 +628,9 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
 
     continueOnCalibrationError_ = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                   parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+
+    allowModelFallbacks_ =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     // sensitivity template
 
@@ -1742,7 +1749,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             bootstrapTolerance_, "LGM", discretization, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks_);
 
     // effective time steps per year: 1 for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1856,7 +1863,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
             CrossAssetModel::Discretization::Exact, params_.salvagingAlgorithm),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks_);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                        modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
