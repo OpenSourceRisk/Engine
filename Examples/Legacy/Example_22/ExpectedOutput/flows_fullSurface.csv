@@ -1,4 +1,4 @@
 #TradeId,Type,CashflowNo,LegNo,PayDate,FlowType,Amount,Currency,Coupon,Accrual,AccrualStartDate,AccrualEndDate,AccruedAmount,fixingDate,fixingValue,Notional,DiscountFactor,PresentValue,FXRate(Local-Base),PresentValue(Base),BaseCurrency,FloorStrike,CapStrike,FloorVolatility,CapVolatility,EffectiveFloorVolatility,EffectiveCapVolatility
-EQ_CALL_SP5,EquityOption,1,0,2018-02-05,ExpectedFlow,133905.7648,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8831293157,#N/A,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
-EQ_PUT_SP5,EquityOption,1,0,2018-02-05,ExpectedFlow,-177772.2605,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8831293157,#N/A,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
-FX_CALL_OPTION,FxOption,1,0,2026-03-01,ExpectedFlow,357016.4869,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8831293157,#N/A,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
+EQ_CALL_SP5,EquityOption,1,0,2018-02-05,ExpectedFlow,135724.9064,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.9738764651,132179.2921200495,0.8831293157,116731.4078053172,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
+EQ_PUT_SP5,EquityOption,1,0,2018-02-05,ExpectedFlow,-180187.3389,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.9738764651,-175480.2086840310,0.8831293157,-154971.7166214926,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
+FX_CALL_OPTION,FxOption,1,0,2026-03-01,ExpectedFlow,357016.4869,USD,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.8034382012,286840.6840250695,0.8831293157,253317.4170101918,EUR,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A
