@@ -216,7 +216,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
     }
 }
 
-void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
+void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
     if (inputs_->scenarioReader()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
         auto slg = QuantLib::ext::make_shared<ScenarioLoaderGenerator>(loader, inputs_->asof(), grid_->dates(),
@@ -224,7 +224,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
         scenarioGenerator_ = slg;
     } else {
         if (!model_)
-            buildCrossAssetModel(continueOnCalibrationError);
+            buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");
@@ -248,9 +248,9 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     }
 }
 
-void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
-    LOG("XVA: Build Simulation Model (continueOnCalibrationError = " << std::boolalpha << continueOnCalibrationError
-                                                                     << ")");
+void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
+    LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
     ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarketCalibration_ : analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
@@ -258,7 +258,8 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
                                         inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
                                         inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
                                         inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                        false, continueOnCalibrationError, "", "xva cam building");
+                                        false, continueOnCalibrationError, "", "xva cam building", false,
+                                        allowModelFallbacks);
 
     model_ = *modelBuilder.model();
 }
@@ -599,7 +600,7 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     LOG("XVA: buildAmcPortfolio completed");
 }
 
-void XvaAnalyticImpl::amcRun(bool doClassicRun) {
+void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError, bool allowModelFallbacks) {
 
     LOG("XVA: amcRun");
 
@@ -642,7 +643,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true);
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
+            "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -701,7 +703,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
                 inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
                 inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
-                simMarketParams);
+                simMarketParams, continueOnCalibrationError, allowModelFallbacks);
 
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
@@ -910,7 +912,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true);
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
+            "xva analytic");
 
         engine.run();
 
@@ -930,10 +933,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         buildScenarioSimMarket();
 
         LOG("XVA: Build Scenario Generator");
+        auto continueOnErr = false;
+        auto allowModelFallbacks = false;
         auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
-        auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
-        bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
-        buildScenarioGenerator(continueOnErr);
+        if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+            continueOnErr = parseBool(c->second);
+        if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+            allowModelFallbacks = parseBool(c->second);
+        buildScenarioGenerator(continueOnErr, allowModelFallbacks);
 
         LOG("XVA: Attach Scenario Generator to ScenarioSimMarket");
         simMarket_->scenarioGenerator() = scenarioGenerator_;
@@ -975,7 +982,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
          ********************************************************************************/
 
         if (doAmcRun)
-            amcRun(doClassicRun);
+            amcRun(doClassicRun, continueOnErr, allowModelFallbacks);
         else
             amcPortfolio_ = QuantLib::ext::make_shared<Portfolio>(inputs_->buildFailedTrades());
 

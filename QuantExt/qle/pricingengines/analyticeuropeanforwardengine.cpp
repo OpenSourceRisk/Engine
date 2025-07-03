@@ -34,9 +34,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
-#include <ql/pricingengines/blackcalculator.hpp>
+
 #include <ql/exercise.hpp>
+#include <ql/pricingengines/blackcalculator.hpp>
 
 using QuantLib::Date;
 using QuantLib::DiscountFactor;
@@ -149,6 +151,14 @@ namespace QuantExt {
         results_.additionalResults["volatility"] = std::sqrt(variance / tte);
         results_.additionalResults["timeToExpiry"] = tte;
         results_.additionalResults["discountFactor"] = df;
+
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount = results_.value / df;
+        cfResults.back().payDate = arguments_.exercise->lastDate();
+        cfResults.back().legNumber = 0;
+        cfResults.back().type = "ExpectedFlow";
+        results_.additionalResults["cashFlowResults"] = cfResults;
     }
 
 }

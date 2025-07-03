@@ -97,7 +97,9 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
 
-	// update latest premium pay date
+        legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Always;
+
+        // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
 
         DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");
@@ -146,6 +148,7 @@ void Trade::reset() {
     npvCurrency_.clear();
     notional_ = Null<Real>();
     notionalCurrency_.clear();
+    legCashflowInclusion_.clear();
     maturity_ = Date();
     maturityType_.clear();
     issuer_.clear();
