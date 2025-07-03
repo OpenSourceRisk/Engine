@@ -804,15 +804,19 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
                 // set results with decomposition
 
-                (*tradeExposure)[simCounter + 1].componentPathValues = {exercisedValue, futureOptionValue};
+                // create dummy nodes to facilitate a clean recombination run starting at the components
+
+                std::size_t comp1 = g.insert({exercisedValue}, RandomVariableOpCode::None);
+                std::size_t comp2 = g.insert({futureOptionValue}, RandomVariableOpCode::None);
+
+                (*tradeExposure)[simCounter + 1].componentPathValues = {comp1, comp2};
 
                 std::size_t exercisedValueCond = createRegressionModel(
-                    exercisedValue, d, cashflowInfo,
-                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+                    comp1, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                    cg_const(g, 1.0));
                 std::size_t futureOptionValueCond = createRegressionModel(
-                    futureOptionValue, d, cashflowInfo,
-                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0),
-                    &(*tradeExposure)[simCounter + 1]);
+                    comp2, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                    cg_const(g, 1.0), &(*tradeExposure)[simCounter + 1]);
 
                 // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
                 // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
