@@ -20,6 +20,7 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 
@@ -308,6 +309,13 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
                                       matchedMoments.stdDev(), discount);
 
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
     // Add more additional results
     // Could be part of a strip so we add the value also.
     mp["effective_strike"] = effectiveStrike;
@@ -319,6 +327,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
+    mp["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
@@ -428,6 +437,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
@@ -534,6 +552,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities, Matrix& outSqrtCorr,

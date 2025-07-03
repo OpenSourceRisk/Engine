@@ -83,7 +83,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios)
+    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios,
+    const bool allowModelFallbacks)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -92,25 +93,32 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), id_(id),
       allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
+      allowModelFallbacks_(allowModelFallbacks),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
+
     buildModel();
+
     // register with sub builders
     for (auto okv : subBuilders_) {
         for (auto ikv : okv.second) {
             registerWith(ikv.second);
         }
     }
+
     // register with market handle (will be notified when handle is relinked)
     marketHandleObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     marketHandleObserver_->addObservable(market_);
     registerWith(marketHandleObserver_);
+
     // register market observer with correlations
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
+
     // reset market observer's updated flag
     marketObserver_->hasUpdated(true);
+
     // register with market observer
     registerWith(marketObserver_);
 }
@@ -233,7 +241,7 @@ void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
-
+    
     QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
     DLOG("configurations: LgmCalibration "
@@ -310,7 +318,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
-                    allowChangingFallbacksUnderScenarios_);
+                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,28 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief AMC CG swap engine
-    \ingroup engines
+/*! \file qle/pricingengines/fdblackscholesvanillaengine.hpp
+    \brief Wrapper of QuantLib engine to allow cashflow results
 */
 
-#include <ored/scripting/engines/amccgswapengine.hpp>
+#pragma once
 
-#include <ql/exercise.hpp>
+#include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 
-namespace ore {
-namespace data {
+namespace QuantExt {
 
-void AmcCgSwapEngine::calculate() const {
-    leg_ = arguments_.legs;
-    currency_ = std::vector<std::string>(leg_.size(), ccy_);
-    payer_.resize(arguments_.payer.size());
-    for (Size i = 0; i < arguments_.payer.size(); ++i) {
-        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
-    }
-    exercise_ = nullptr;
-    AmcCgBaseEngine::calculate();
-}
+class FdBlackScholesVanillaEngine2 : public QuantLib::FdBlackScholesVanillaEngine {
+public:
+    using FdBlackScholesVanillaEngine::FdBlackScholesVanillaEngine;
+    void calculate() const override;
+};
 
-} // namespace data
-} // namespace ore
+} // namespace QuantExt
