@@ -219,7 +219,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             noticeDate = std::max(today + 1, noticeDate);
             sortedExerciseDates[0] = std::max(today + 1, sortedExerciseDates[0]);
         }
-        if (noticeDate >= today && (noticeDate <= lastAccrualStartDate || !removeNoticeDatesAfterLastAccrualStart)) {
+        if (noticeDate > today && (noticeDate <= lastAccrualStartDate || !removeNoticeDatesAfterLastAccrualStart)) {
             isExerciseDateAlive[i] = true;
             noticeDates_.push_back(noticeDate);
             exerciseDates_.push_back(sortedExerciseDates[i]);

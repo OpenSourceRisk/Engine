@@ -17,7 +17,6 @@
 */
 
 #include <ored/portfolio/optionwrapper.hpp>
-#include <ored/utilities/log.hpp>
 #include <ql/option.hpp>
 #include <ql/settings.hpp>
 
@@ -93,9 +92,6 @@ Real OptionWrapper::NPV() const {
 	    }
 	}
 
-	optionWrapperAdditionalData_["todaysDate"] = today;
-	optionWrapperAdditionalData_["isExerciseDate"] = isExerciseDate;
-
 	if (!isExerciseDate) {
 	    // Cache NPV along the path for later exercise with cash settlement,
 	    // i.e. as a proxy for the cash settlement amount if the instrument isn't priced on exercise date anymore
@@ -116,8 +112,6 @@ Real OptionWrapper::NPV() const {
 		}
 	    }
 	}
-	optionWrapperAdditionalData_["isExercised"] = exercised_;
-	optionWrapperAdditionalData_["isCashSettled"] = !isPhysicalDelivery_;
     }
     
     if (exercised_) {
@@ -142,22 +136,13 @@ Real OptionWrapper::NPV() const {
 const std::map<std::string, boost::any>& OptionWrapper::additionalResults() const {
     static std::map<std::string, boost::any> emptyMap;
     NPV();
-    std::map<std::string, boost::any> add = optionWrapperAdditionalData_;
     if (exercised_) {
-        if (activeUnderlyingInstrument_ != nullptr) {
-            // return activeUnderlyingInstrument_->additionalResults();
-            for (auto it : activeUnderlyingInstrument_->additionalResults())
-                optionWrapperAdditionalData_[it.first] = it.second;
-            return optionWrapperAdditionalData_;
-        } else {
-            // return emptyMap;
-            return optionWrapperAdditionalData_;
-        }
+        if (activeUnderlyingInstrument_ != nullptr)
+            return activeUnderlyingInstrument_->additionalResults();
+        else
+            return emptyMap;
     } else {
-        // return instrument_->additionalResults();
-        for (auto it : instrument_->additionalResults())
-            optionWrapperAdditionalData_[it.first] = it.second;
-        return optionWrapperAdditionalData_;
+        return instrument_->additionalResults();
     }
 }
 
