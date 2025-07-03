@@ -118,6 +118,7 @@ protected:
     mutable QuantLib::Date exerciseDate_;
     mutable QuantLib::Date settlementDate_;
     mutable Real cachedNpv_;
+    mutable std::map<std::string, boost::any> optionWrapperAdditionalData_;
 };
 
 //! European Option Wrapper

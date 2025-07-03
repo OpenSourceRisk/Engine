@@ -276,7 +276,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // 6 if we do not have an active exercise as of today, or no underlying legs we only build unconditional premiums
 
     if (exerciseBuilder_->exercise() == nullptr || exerciseBuilder_->exercise()->dates().empty() ||
-        exerciseBuilder_->exercise()->dates().back() <= today || legData_.empty()) {
+        exerciseBuilder_->exercise()->dates().back() < today || legData_.empty()) {
 
         legs_ = {{QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(0.0, today)}};
         legCurrencies_.push_back(npvCurrency_);
@@ -334,6 +334,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     else {
         maturity_ = exerciseBuilder_->noticeDates().back();
         maturityType_ = "Last Notice Date";
+        // cash settlement date if provided
+	for (auto d : exerciseBuilder_->settlementDates()) {
+	    if (d > maturity_) {
+                maturity_ = d;
+                maturityType_ = "Cash Settlement";
+            }
+        }
     }
 
     if (exerciseType_ != Exercise::European && settlementType_ == Settlement::Cash &&
@@ -671,6 +678,9 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
                 additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
         }
     }
+    additionalData_["maturity"] = maturity_;
+    additionalData_["maturityType"] = maturityType_;
+
     return additionalData_;
 }
 
