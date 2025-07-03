@@ -4,7 +4,7 @@ import sys
 import logging
 import unittest
 from pathlib import Path
-import nose
+import pytest
 import collections
 #collections.Callable = collections.abc.Callable
 
