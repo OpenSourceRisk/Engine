@@ -426,17 +426,18 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                     //Correlation Matrix computed by default from the covariance
                                     correlationMatrix_ = covCalculator->correlation();
                                 } else if (correlationMethod_ == "KendallRank") {
-                                    QuantLib::Matrix mSensi(deltaKeys.size(), deltaKeys.size());
                                     auto cSensi = scube->second;
                                     std::set<std::string> ids = cSensi->ids();
-                                    Size index = 0;
-                                    for (auto it = ids.begin(); it != ids.end(); it++, index++) {
-                                        std::vector<QuantLib::Date> d = cSensi->dates();
-                                        for (int j = 0; j < ids.size(); j++) {
+                                    std::vector<QuantLib::Date> d = cSensi->dates();
+                                    Size i = 0;
+                                    int nbScenario = sensiPnlCalculator_->getScenarioNumber();
+                                    QuantLib::Matrix mSensi(nbScenario, deltaKeys.size());
+                                    for (auto it = ids.begin(); it != ids.end(); it++, i++) {
+                                        for (int j = 0; j < nbScenario; j++) {
                                             QuantLib::Real cubeValue = cSensi->get(*it, d[0], j);
-                                            mSensi[j][index] = cubeValue;
+                                            mSensi[j][i] = cubeValue;
                                         }
-                                    }
+                                    }   
                                     correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);
                                 } else {
                                     QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");

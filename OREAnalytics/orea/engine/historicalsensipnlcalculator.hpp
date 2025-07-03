@@ -122,6 +122,8 @@ public:
         const bool includeGammaMargin = true, const bool includeDeltaMargin = true, 
         const bool tradeLevel = false);
 
+    int getScenarioNumber() const { return hisScenGen_->numScenarios(); }
+
 private:
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     //! Stream of sensitivity records used for the sensitivity based backtest

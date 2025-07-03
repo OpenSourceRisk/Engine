@@ -303,7 +303,7 @@ const map<CorrelationKey, Handle<Quote>>& CorrelationMatrixBuilder::correlations
 
 QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Matrix& mCovariance) {
     //Regular Pearson Correlation
-    QL_REQUIRE(mCovariance.columns()==mCovariance.rows(),"Matrix must be a squared Matrix");
+    QL_REQUIRE(mCovariance.columns()==mCovariance.rows(),"Covariance Matrix must be a squared Matrix");
     Size n = mCovariance.rows();
     Matrix mCorrelation(n, n);
     Array stdDevs(n);
@@ -319,17 +319,18 @@ QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Ma
 }
 
 QuantLib::Matrix CorrelationMatrixBuilder::kendallCorrelation(const QuantLib::Matrix& mData) {
-    QL_REQUIRE(mData.columns() == mData.rows(), "Matrix must be a squared Matrix");
-    Size n = mData.rows();
-    Matrix mCorrelation(n, n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    Size row = mData.rows();
+    Size col = mData.columns();
+    Matrix mCorrelation(row, col);
+    for (int i = 0; i < col; i++) {
+        mCorrelation[i][i] = 1.0;
+        for (int j = 1; j < col; j++) {
             vector<double> colI, colJ;
-            for (int k = 0; k < n; k++) {
+            for (int k = 0; k < row; k++) {
                 colI.push_back(mData[k][i]);
                 colJ.push_back(mData[k][j]);
             }
-            mCorrelation[i][j] = QuantExt::kendallRankCorrelation(colI.begin(), colI.end(), colJ.begin());
+            mCorrelation[i][j] = mCorrelation[j][i] = QuantExt::kendallRankCorrelation(colI.begin(), colI.end(), colJ.begin());
         }
     }
     return mCorrelation;
