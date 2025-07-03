@@ -43,8 +43,8 @@ public:
 
 protected:
     void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
+    void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;

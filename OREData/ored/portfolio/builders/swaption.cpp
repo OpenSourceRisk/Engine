@@ -63,7 +63,13 @@ QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 } // namespace
 
@@ -109,6 +115,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
 
@@ -239,7 +247,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks);
 
     // In some cases, we do not want to calibrate the model
     QuantLib::ext::shared_ptr<QuantExt::LGM> model;

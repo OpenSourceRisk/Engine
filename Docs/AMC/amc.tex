@@ -95,9 +95,9 @@
 
 \begin{document}
 
-\title{ORE+ AMC Module 1.8.4.0}
+\title{ORE AMC Module 1.8.13.1}
 \author{Quaternion Risk Management}
-\date{25 February 2019}
+\date{24 June 2025}
 \maketitle
 
 \newpage
@@ -109,13 +109,16 @@
 \begin{center}
 \begin{supertabular}{|l|l|l|p{7cm}|}
 \hline
-ORE+ Release & Date & Author & Comment \\
+ORE Release & Date & Author & Comment \\
 \hline
 na & 25 February 2019  & Peter Caspers & initial version\\
 na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
 na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
 na & 18 June 2024 & Henning Segger & add bond engine\\
 na & 19 September 2024 & Peter Caspers & add parameters RecalibrateOnStickyCloseOutDates, ReevaluateExerciseInStickyRun\\
+na & 23 June 2025 & Alex Chow & add parameters CashFlowGeneration.OnCpnMaxSimTimes,
+  CashflowGeneration.OnCpnAddSimTimesCutoff, Regression.MaxSimTimesIR, Regression.MaxSimTimesFX,
+  Regression.MaxSimTimesEQ, Regression.VarGroupMode\\
 \hline
 \end{supertabular}
 \end{center}
@@ -139,7 +142,7 @@ Risk Management Limited.
 \section{Summary}
 %==========================================
 
-This document describes the American Monte Carlo (AMC) module in ORE+.
+This document describes the American Monte Carlo (AMC) module in ORE.
 
 
 %==========================================
@@ -223,7 +226,7 @@ To use the AMC engine for an XVA simulation the following parameters can be adde
 
 The trades which have a trade type matching one of the types in the \verb+amcTradeTypes+ list, will be built against the
 pricing engine config provided and processed in the AMC engine. As a naming convention, pricing engines with engine type
-AMC provide the required functionality to be processed by the AMC engine, for technical details cf. \ref{sec:app_amc}.
+AMC provide the required functionality to be processed by the AMC engine, for technical details cf. \ref{overview}.
 
 All other trades are processed by the classic simulation engine in ORE. The resulting cubes from the classic and AMC
 simulation are joined and passed to the post processor in the usual way.
@@ -266,6 +269,11 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
     <Parameter name="RecalibrateOnStickyCloseOutDates">false</Parameter>
     <Parameter name="ReevaluateExerciseInStickyRun">false</Parameter>
+    <Parameter name="CashFlowGeneration.OnCpnMaxSimTimes">1</Parameter>
+    <Parameter name="CashflowGeneration.OnCpnAddSimTimesCutoff">0D</Parameter>
+    <Parameter name="Regression.MaxSimTimesIR">0</Parameter>
+    <Parameter name="Regression.MaxSimTimesFX">0</Parameter>
+    <Parameter name="Regression.MaxSimTimesEQ">0</Parameter>
   </EngineParameters>
 </Product>
 \end{minted}
@@ -296,14 +304,19 @@ engine types. The engine parameters are the same for all products:
 \item \verb+MinObsDate+: if true the conditional expectation of each cashflow is taken from the minimum possible
   observation date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting
   is \verb+true+
-\item \verb+RegressorModel+: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the
-  regressor is built as follows:
+\item \verb+RegressorModel+: \verb+Simple+, \verb+Lagged+, \verb+LaggedIR+, \verb+LaggedFX+, \verb+LaggedEQ+.
+  If not given, it defaults to \verb+Simple+. For an observation date the full model state observed on this date is
+  included in the regressor. In any case only past states are included to the extend that these past states were also
+  used in the cashflow generation phase. Depending on the choice the regressor is built as follows:
   \begin{itemize}
-    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
-      past states are included though.
-    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
-      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
-      cashflow the FX state observed on the FX reset date is included.
+    \item \verb+Simple+: No past states are included though.
+    \item \verb+Lagged+: In addition, past IR, FX and EQ states that are relevant for future cashflows are included.
+    \item \verb+LaggedIR+: In addition, past IR states that are relevant for future cashflows are included. For example,
+      for an Overnight Indexed cashflow the IR states observed on fixing dates are included.
+    \item \verb+LaggedFX+: In addition, past FX states that are relevant for future cashflows are included. For example,
+      for a FX resettable cashflow the FX state observed on the FX reset date is included.
+    \item \verb+LaggedEQ+: In addition, past EQ states that are relevant for future cashflows are included. For example,
+      for an EQ indexed cashflow the EQ state observed on the EQ fixing date is included.
   \end{itemize}
 \item \verb+RegressionVarianceCutoff+: Optional. If given, a coordinate transform and (possibly) a factor reduction is
   applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
@@ -316,6 +329,27 @@ engine types. The engine parameters are the same for all products:
 \item \verb+ReevaluateExerciseInStickyRun+: Optional, defaults to false. If true, the exercise decision is updated for
   the run on sticky close-out dates, otherwise the exercise indicator from the valuation date is reused on the close-out
   date.
+\item \verb+CashFlowGeneration.OnCpnMaxSimTimes+ [optional]: The maximum number of IR states used in calculation of
+  Overnight Indexed cashflow value in the training phase. If not given, it defaults to 1. If set to 0, there is no limit
+  to number of states per model.
+\item \verb+CashflowGeneration.OnCpnAddSimTimesCutoff+ [optional]: The cutoff time for IR states being included in
+  calculation of Overnight Indexed cashflow value in the training phase, expressed in Period relative to today.
+  If not given, it defaults to 0D.
+\item \verb+Regression.MaxSimTimesIR+ [optional]: The maximum number of regressors per IR model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when \verb+RegressorModel+ is \verb+Lagged+ or \verb+LaggedIR+.
+\item \verb+Regression.MaxSimTimesFX+ [optional]: The maximum number of regressors per FX model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when \verb+RegressorModel+ is \verb+Lagged+ or \verb+LaggedFX+.
+\item \verb+Regression.MaxSimTimesEQ+ [optional]: The maximum number of regressors per EQ model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when \verb+RegressorModel+ is \verb+Lagged+ or \verb+LaggedEQ+
+\item \verb+Regression.VarGroupMode+ [optional]: \verb+Global+, \verb+Trivial+. If not given, it defaults to \verb+Global+.
+  Depending on the choice the regressors are assigned to var groups as follows:
+    \begin{itemize}
+    \item \verb+Global+: All regressors are assigned to a sinlge var group
+    \item \verb+Trivial+: Every regressor is assigned to a group that consists of a single element
+  \end{itemize}
 \end{enumerate}
 
 \begin{table}[hbt]
@@ -326,12 +360,14 @@ engine types. The engine parameters are the same for all products:
     FxOption & CrossAssetModel & AMC \\
     BermudanSwaption & LGM & AMC \\
     MultiLegOption & CrossAssetModel & AMC \\
+    Bond & CrossAssetModel & AMC \\
+    ForwardBond & CrossAssetModel & AMC \\
   \end{tabular}
   \caption{AMC enabled products with engine and model types}
   \label{tbl:amcconfig}
 \end{table}
 
-A sample configuration file can be found in ExamplesPlus / ExamplePlus\_AMC / Input / pricingengine\_amc.xml. Currently it
+A sample configuration file can be found in Examples / AmericanMonteCarlo / Input / pricingengine\_amc.xml. Currently it
 contains the following product configurations:
 
 \begin{enumerate}
@@ -340,6 +376,8 @@ contains the following product configurations:
 \item \verb+FxOption+
 \item \verb+BermudanSwaption+
 \item \verb+MultiLegOption+
+\item \verb+Bond+
+\item \verb+ForwardBond+
 \end{enumerate}
 
 For technical reasons the following product configurations for coupon pricers are also present, sinced required by trade
@@ -355,7 +393,7 @@ configuration does not matter really:
 \section{Examples}
 %==========================================
 
-The folder \verb+ExamplesPlus/ExamplePlus_AMC+ contains an example using the AMC valuation engine to produce exposure
+The folder \verb+Examples/AmericanMonteCarlo+ contains an example using the AMC valuation engine to produce exposure
 profiles (EPE, ENE) for example trades:
 
 \begin{enumerate}
@@ -363,6 +401,10 @@ profiles (EPE, ENE) for example trades:
 \item Single Currency Swap
 \item Cross Currency Swap
 \item FX Option
+\item FX Swap
+\item Composite Trade
+\item Overnight Indexed Swap
+\item Average Overnight Indexed Swap
 \end{enumerate}
 
 In this section we compare these AMC exposure profiles with those produced by the classic valuation engine. If not
@@ -594,8 +636,8 @@ checked, that a non-zero seed for the random number generation is used.
 The portfolio that the AMC engine consumes is build against an engine factory set up by a pricing engine configuration
 given in the amc analytics type (see \ref{sec:application_config}). This configuration should select special AMC engine
 builders which (by a pure naming convention) have the engine type ``AMC''. These engine builders are retrieved from
-\verb+getAmcEngineBuilders()+ in \verb+oreappplus.cpp+ and are special in that unlike usual engine builders they take
-two parameters
+\verb+generateAmcEngineBuilders()+ in \verb+xvaanalytic.cpp+ and are special in that unlike usual engine builders they
+take three parameters
 
 \begin{enumerate}
 \item the cross asset model which serves as a risk factor evolution model in the AMC valuation engine
@@ -643,7 +685,7 @@ $b$ and $X_{c,b}(t)$ is the FX rate at time $t$ converting from $c$ to $b$.
 The technical criterion for a trade to be processed within the AMC valuation is engine is that a) it can be built
 against the AMC engine factory described above and b) it provides an additional result \verb+amcCalculator+. If a trade
 does not meet these criteria it is simulated using the classic valuation engine. The logic that does this is located in
-the overide of the method \verb+OREAppPlus::generateNPVCube()+.
+the override of the method \verb+XvaAnalyticImpl::runAnalytic()+.
 
 The AMC valuation engine can also populate an aggregation scenario data instance. This is done only if necessary,
 i.e. only if no classic simulation is performed anyway. The numeraire and fx spot values produced by the AMC valuation

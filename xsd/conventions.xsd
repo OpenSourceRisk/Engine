@@ -454,6 +454,8 @@
       <xs:element type="xs:integer" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="OptionContractFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionCalendarDaysBefore" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionMinBusinessDaysBefore" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayOfMonth" name="OptionExpiryDay" minOccurs="0" maxOccurs="1"/>
       <xs:element type="nthWeekdayType" name="OptionNthWeekday" minOccurs="0" maxOccurs="1"/>
       <xs:element type="weekdayType" name="OptionExpiryLastWeekdayOfMonth" minOccurs="0" maxOccurs="1"/>

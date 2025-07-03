@@ -101,10 +101,11 @@ void ScenarioGenerationAnalyticImpl::buildScenarioSimMarket() {
         *inputs_->iborFallbackConfig(), false);
 }
 
-void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
+void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError,
+                                                            const bool allowModelFallbacks) {
     if (type_ == ScenarioGenerationAnalyticImpl::Type::exposure) {
         if (!model_)
-            buildCrossAssetModel(continueOnCalibrationError);
+            buildCrossAssetModel(continueOnCalibrationError, const bool allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");
@@ -141,15 +142,18 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
         QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
 }
 
-void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
-    LOG("SCENARIO_GENERATION: Build Simulation Model (continueOnCalibrationError = "
-        << std::boolalpha << continueOnCalibrationError << ")");
+void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
+                                                          const bool allowModelFallbacks) {
+    LOG("XVA: Build Simulation Model (continueOnCalibrationError = "
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
+
 
     CrossAssetModelBuilder modelBuilder(analytic()->market(), analytic()->configurations().crossAssetModelData,
                                         inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
                                         inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
                                         inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                        false, continueOnCalibrationError, "", "xva cam building");
+                                        false, continueOnCalibrationError, "", "xva cam building", false,
+                                        allowModelFallbacks);
 
     model_ = *modelBuilder.model();
 }
@@ -176,10 +180,14 @@ void ScenarioGenerationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     buildScenarioSimMarket();
 
     LOG("SCENARIO_GENERATION: Build Scenario Generator");
+    auto continueOnErr = false;
+    auto allowModelFallbacks = false;
     auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
-    auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
-    bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
-    buildScenarioGenerator(continueOnErr);
+    if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+        continueOnErr = parseBool(c->second);
+    if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+        allowModelFallbacks = parseBool(c->second);
+    buildScenarioGenerator(continueOnErr, allowModelFallbacks);
 
     LOG("SCENARIO_GENERATION: Attach Scenario Generator to ScenarioSimMarket");
     simMarket_->scenarioGenerator() = scenarioGenerator_;

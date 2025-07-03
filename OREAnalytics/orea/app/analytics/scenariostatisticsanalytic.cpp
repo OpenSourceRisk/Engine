@@ -1,0 +1,172 @@
+/*
+ Copyright (C) 2022 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/reportwriter.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratortransform.hpp>
+
+#include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
+
+using namespace ore::data;
+using namespace boost::filesystem;
+
+namespace ore {
+namespace analytics {
+
+/******************************************************************************
+ * ScenarioStatistics Analytic: Scenario_Statistics
+ ******************************************************************************/
+
+void ScenarioStatisticsAnalyticImpl::setUpConfigurations() {
+    LOG("ScenarioStatisticsAnalytic::setUpConfigurations() called");
+    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+    analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
+    analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
+    analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+}
+
+void ScenarioStatisticsAnalyticImpl::buildScenarioSimMarket() {
+    
+    std::string configuration = inputs_->marketConfig("simulation");
+    simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            analytic()->market(),
+            analytic()->configurations().simMarketParams,
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
+            configuration,
+            *inputs_->curveConfigs().get(),
+            *analytic()->configurations().todaysMarketParams,
+            inputs_->continueOnError(), 
+            false, true, false,
+            *inputs_->iborFallbackConfig(),
+            false);
+}
+
+void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError,
+                                                            const bool allowModelFallbacks) {
+    if (!model_)
+        buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
+    ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
+    string config = inputs_->marketConfig("simulation");
+    scenarioGenerator_ =
+        sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(),
+                  config, QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), inputs_->amcPathDataOutput()); 
+    QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
+    samples_ = analytic()->configurations().scenarioGeneratorData->samples();
+    LOG("simulation grid size " << grid_->size());
+    LOG("simulation grid valuation dates " << grid_->valuationDates().size());
+    LOG("simulation grid close-out dates " << grid_->closeOutDates().size());
+    LOG("simulation grid front date " << io::iso_date(grid_->dates().front()));    
+    LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));    
+
+    auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    analytic()->addReport("SCENARIO_STATISTICS", "scenario", report);
+    scenarioGenerator_ =
+        QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
+}
+
+void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
+                                                          const bool allowModelFallbacks) {
+    LOG("SCENARIO_STATISTICS: Build Simulation Model (continueOnCalibrationError = "
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
+
+    CrossAssetModelBuilder modelBuilder(analytic()->market(), analytic()->configurations().crossAssetModelData,
+                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
+                                        false, continueOnCalibrationError, "", "xva cam building", false,
+                                        allowModelFallbacks);
+
+    model_ = *modelBuilder.model();
+}
+
+void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+                                  const std::set<std::string>& runTypes) {
+
+    LOG("Scenario analytic called with asof " << io::iso_date(inputs_->asof()));
+
+    Settings::instance().evaluationDate() = inputs_->asof();
+    //ObservationMode::instance().setMode(inputs_->exposureObservationModel());
+
+    LOG("SCENARIO_STATISTICS: Build Today's Market");
+    CONSOLEW("SCENARIO_STATISTICS: Build Market");
+    analytic()->buildMarket(loader);
+    CONSOLE("OK");
+
+    grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
+
+    LOG("SCENARIO_STATISTICS: Build simulation market");
+    buildScenarioSimMarket();
+
+    LOG("SCENARIO_STATISTICS: Build Scenario Generator");
+    auto continueOnErr = false;
+    auto allowModelFallbacks = false;
+    auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
+    if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+        continueOnErr = parseBool(c->second);
+    if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+        allowModelFallbacks = parseBool(c->second);
+    buildScenarioGenerator(continueOnErr, allowModelFallbacks);
+
+    LOG("SCENARIO_STATISTICS: Attach Scenario Generator to ScenarioSimMarket");
+    simMarket_->scenarioGenerator() = scenarioGenerator_;
+
+    MEM_LOG;
+
+    // Output scenario statistics and distribution reports
+    const vector<RiskFactorKey>& keys = simMarket_->baseScenario()->keys();
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator =
+    inputs_->scenarioOutputZeroRate()
+        ? QuantLib::ext::make_shared<ScenarioGeneratorTransform>(scenarioGenerator_, simMarket_,
+                                                            analytic()->configurations().simMarketParams)
+        : scenarioGenerator_;
+
+    if (inputs_->scenarioOutputStatistics()) {
+        auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        scenarioGenerator->reset();
+        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(),
+                                               *statsReport);
+        analytic()->addReport("SCENARIO_STATISTICS", "scenario_statistics", statsReport);
+    }
+
+    if (inputs_->scenarioOutputDistributions()) {
+        auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        scenarioGenerator->reset();
+        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
+                                                  inputs_->scenarioDistributionSteps(), *distributionReport);
+        analytic()->addReport("SCENARIO_STATISTICS", "scenario_distribution", distributionReport);
+    }
+
+    // if we just want to write out scenarios, loop over the samples/dates and the ScenarioWriter handles the output
+    if (!(inputs_->scenarioOutputDistributions() || inputs_->scenarioOutputStatistics())) {
+        const auto& dates = grid_->dates();
+        for (Size i = 0; i < samples_; ++i) {
+            for (Size d = 0; d < dates.size(); ++d)
+                scenarioGenerator->next(dates[d]);            
+        }
+    }
+}
+
+} // namespace analytics
+} // namespace ore
