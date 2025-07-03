@@ -194,8 +194,8 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     std::vector<RandomVariableGrad> grads;
 
     // None = 0
-    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable()}; });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0)}; });
 
     // Add = 1
     grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
