@@ -54,9 +54,11 @@ class CommodityIndex : public EqFxIndexBase {
 public:
     /*! spot quote is interpreted as of today */
     CommodityIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
-                   const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
+                   const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
+                   const QuantLib::Date& optionExpiryDate = QuantLib::Date());
     CommodityIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
-        bool keepDays, const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
+        bool keepDays, const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
+        const QuantLib::Date& optionExpiryDate = QuantLib::Date());
     //! \name Index interface
     //@{
     std::string name() const override { return name_; }
@@ -74,6 +76,7 @@ public:
     const Handle<QuantExt::PriceTermStructure>& priceCurve() const { return curve_; }
     bool isFuturesIndex() const { return isFuturesIndex_; }
     const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    const QuantLib::Date& optionExpiryDate() const { return optionExpiryDate_; }
     bool keepDays() const { return keepDays_; }
     //@}
     //! \name Fixing calculations
@@ -90,6 +93,7 @@ public:
         curve is used.
     */
     virtual QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+        const Date& optionExpiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const = 0;
 
 protected:
@@ -101,7 +105,7 @@ protected:
     bool isFuturesIndex_;
     // Belongs in CommodityFuturesIndex but have put everything else in base class.
     bool keepDays_;
-
+    Date optionExpiryDate_;
     // Shared initialisation
     void init();
 };
@@ -113,10 +117,12 @@ public:
                        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>())
         : CommodityIndex(underlyingName, Date(), fixingCalendar, priceCurve) {
         QL_REQUIRE(expiryDate_ == Date(), "empty expiry date expected in CommoditySpotIndex");
+        QL_REQUIRE(optionExpiryDate_ == Date(), "empty option expiry date expected in CommoditySpotIndex");
     }
 
     //! Implement the base clone. The \c expiryDate is ignored for a CommoditySpotIndex.
     QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+        const Date& optionExpiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 };
 
@@ -124,20 +130,23 @@ class CommodityFuturesIndex : public CommodityIndex {
 public:
     CommodityFuturesIndex(
         const std::string& underlyingName, const Date& expiryDate, const Calendar& fixingCalendar,
-        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>())
-        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, priceCurve) {
+        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
+        const Date& optionExpiryDate = Date())
+        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, priceCurve, optionExpiryDate) {
         QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
     }
 
     CommodityFuturesIndex(
         const std::string& underlyingName, const Date& expiryDate, const Calendar& fixingCalendar, bool keepDays,
-        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>())
-        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, keepDays, priceCurve) {
+        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
+        const Date& optionExpiryDate = Date())
+        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, keepDays, priceCurve, optionExpiryDate) {
         QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
     }
 
     //! Implement the base clone.
-    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(), 
+        const Date& optionExpiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
 };
 
