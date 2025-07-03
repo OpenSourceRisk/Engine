@@ -271,207 +271,224 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     bool runDetailTrd = runTradeDetail(reports);
     addPnlCalculators(reports);
 
-    // Loop over all the risk groups
     riskGroups_->reset();
-    Size currentRiskGroup = 0;
-    while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
-        LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
-                                                  << ") = " << riskGroup);
-
+    if (correlation_) {
+        MEM_LOG;
+        LOG("Start processing for Correlation Analytic: ");
+        ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next();
         ext::shared_ptr<ScenarioFilter> filter = createScenarioFilter(riskGroup);
+        sensiAgg->aggregate(*sensiArgs_->sensitivityStream_, filter);
+        ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next();
+        set<SensitivityRecord> srs = sensiAgg->sensitivities("All");
+        ext::shared_ptr<CovarianceCalculator> covCalculator;
+        covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
+        auto scube = sensiShiftCube.find("All");
+        scube = sensiShiftCube.insert({"All", QuantLib::ext::shared_ptr<NPVCube>()}).first;
+        sensiAgg->generateDeltaGamma("All", deltas_, gammas_);
+        vector<RiskFactorKey> deltaKeys;
+        for (const auto& [rfk, _] : deltas_) {
+            deltaKeys.push_back(rfk);
+        }
+        vector<RiskFactorKey> riskFactorKeys;
+        transform(deltas_.begin(), deltas_.end(), back_inserter(riskFactorKeys),
+                  [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
+        sensiPnlCalculator_->populateSensiShifts(scube->second, riskFactorKeys, sensiArgs_->shiftCalculator_);
+        sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_, covCalculator, tradeIds_,
+                                               includeGammaMargin_, includeDeltaMargin_, runDetailTrd);
 
-        // If this filter disables all risk factors, move to next risk group
-        if (disablesAll(filter))
-            continue;
+        covarianceMatrix_ = covCalculator->covariance();
 
-        updateFilter(riskGroup, filter);
-
-        if (sensiBased_)
-            sensiAgg->aggregate(*sensiArgs_->sensitivityStream_, filter);
-
-        // If doing a full revaluation backtest, generate the cube under this filter
-        if (fullReval_) {
-            if (generateCube(riskGroup)) {
-                histPnlGen_->generateCube(filter);
-                if (fullRevalArgs_->writeCube_) {
-                    CubeWriter writer(cubeFilePath(riskGroup));
-                    writer.write(histPnlGen_->cube(), {});
+        DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
+        CorrelationMatrixBuilder corrMatrix;
+        if (correlationMethod_ == "Pearson") {
+            // Correlation Matrix computed by default from the covariance
+            correlationMatrix_ = covCalculator->correlation();
+        } else if (correlationMethod_ == "KendallRank") {
+            auto cSensi = scube->second;
+            std::set<std::string> ids = cSensi->ids();
+            std::vector<QuantLib::Date> d = cSensi->dates();
+            Size i = 0;
+            int nbScenario = sensiPnlCalculator_->getScenarioNumber();
+            QuantLib::Matrix mSensi(nbScenario, deltaKeys.size());
+            for (auto it = ids.begin(); it != ids.end(); it++, i++) {
+                for (int j = 0; j < nbScenario; j++) {
+                    QuantLib::Real cubeValue = cSensi->get(*it, d[0], j);
+                    mSensi[j][i] = cubeValue;
                 }
+             }
+             correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);
+         } else {
+             QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
+         }
+        // Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
+         for (Size col = 0; col < deltaKeys.size(); col++) {
+             for (Size row = col + 1; row < deltaKeys.size(); row++) {
+                 RiskFactorKey a = deltaKeys[col];
+                 RiskFactorKey b = deltaKeys[row];
+                correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
             }
         }
-        
-        bool runSensiBased = sensiBased_;
+        writeReports(reports, riskGroup, tradeGroup);
+    } else {
+        // Loop over all the risk groups
+        Size currentRiskGroup = 0;
+        while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
+            LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
+                                                   << ") = " << riskGroup);
 
-        // loop over all the trade groups
-        tradeGroups_->reset();
-        while (ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next()) {
-            runSensiBased = sensiBased_;
-            reset(riskGroup);
+            ext::shared_ptr<ScenarioFilter> filter = createScenarioFilter(riskGroup);
 
-            // Only look at this trade group if there required
-            if (!runTradeRiskGroup(tradeGroup, riskGroup))
+            // If this filter disables all risk factors, move to next risk group
+            if (disablesAll(filter))
                 continue;
 
-            MEM_LOG;
-            LOG("Start processing for RiskGroup: " << riskGroup << ", TradeGroup: " << tradeGroup); 
-            
-            writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
-            tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
+            updateFilter(riskGroup, filter);
 
-            // populate the tradeIds
-            transform(tradeIdIdxPairs_.begin(), tradeIdIdxPairs_.end(), back_inserter(tradeIds_),
-                      [](const pair<string, Size>& elem) { return elem.first; });
+            if (sensiBased_)
+                sensiAgg->aggregate(*sensiArgs_->sensitivityStream_, filter);
 
-            set<SensitivityRecord> srs;
-
-            if (runSensiBased && sensiAgg) {
-                map<string, QuantLib::ext::shared_ptr<NPVCube>>::iterator scube;
-
-                auto tradeGpId = tradeGroupKey(tradeGroup);
-                srs = sensiAgg->sensitivities(tradeGpId);
-
-                // Populate the deltas and gammas for a parametric VAR benchmark calculation
-                sensiAgg->generateDeltaGamma(tradeGpId, deltas_, gammas_);
-                vector<RiskFactorKey> deltaKeys;
-                for (const auto& [rfk, _] : deltas_)
-                    deltaKeys.push_back(rfk);
-
-                string portfolio = portfolioId(tradeGroup);
-
-                // riskGroups_ and tradeGroups_ are ordered so we should always run
-                // [Product Class, Risk Class, Margin Type] = [All, All, All] first.
-                // This populates every possible scenario shift to a cube for quicker
-                // generation of Sensi PnLs.
-                scube = sensiShiftCube.find(portfolio);
-                if (sensiArgs_->shiftCalculator_) {
-                    if (scube == sensiShiftCube.end()) {
-                        DLOG("Populating Sensi Shifts for portfolio '" << portfolio << "'");
-
-                        // if we have no senis for this run we skip this, and set runSensiBased to false
-                        if (srs.size() == 0) {
-                            ALOG("No senitivities found for RiskGroup = "
-                                 << riskGroup << " and tradeGroup " << tradeGroup << "; Skipping Sensi based PnL.");
-                            runSensiBased = false;
-                        } else {
-                            scube = sensiShiftCube.insert({portfolio, QuantLib::ext::shared_ptr<NPVCube>()}).first;
-                            vector<RiskFactorKey> riskFactorKeys;
-                            transform(deltas_.begin(), deltas_.end(), back_inserter(riskFactorKeys),
-                                      [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
-                            sensiPnlCalculator_->populateSensiShifts(scube->second, riskFactorKeys,
-                                                                     sensiArgs_->shiftCalculator_);
-                        }
+            // If doing a full revaluation backtest, generate the cube under this filter
+            if (fullReval_) {
+                if (generateCube(riskGroup)) {
+                    histPnlGen_->generateCube(filter);
+                    if (fullRevalArgs_->writeCube_) {
+                        CubeWriter writer(cubeFilePath(riskGroup));
+                        writer.write(histPnlGen_->cube(), {});
                     }
-                }
-
-                if (runSensiBased) {
-                    ext::shared_ptr<CovarianceCalculator> covCalculator;
-                    // if a covariance matrix has been provided as an input we use that
-                    if (sensiArgs_->covarianceInput_.size() > 0) {
-                        std::vector<bool> sensiKeyHasNonZeroVariance(deltaKeys.size(), false);
-
-                        // build global covariance matrix
-                        covarianceMatrix_ = Matrix(deltaKeys.size(), deltaKeys.size(), 0.0);
-                        Size unusedCovariance = 0;
-                        for (const auto& c : sensiArgs_->covarianceInput_) {
-                            auto k1 = std::find(deltaKeys.begin(), deltaKeys.end(), c.first.first);
-                            auto k2 = std::find(deltaKeys.begin(), deltaKeys.end(), c.first.second);
-                            if (k1 != deltaKeys.end() && k2 != deltaKeys.end()) {
-                                covarianceMatrix_(k1 - deltaKeys.begin(), k2 - deltaKeys.begin()) = c.second;
-                                if (k1 == k2)
-                                    sensiKeyHasNonZeroVariance[k1 - deltaKeys.begin()] = true;
-                            } else
-                                ++unusedCovariance;
-                        }
-                        DLOG("Found " << sensiArgs_->covarianceInput_.size() << " covariance matrix entries, "
-                                        << unusedCovariance
-                                        << " do not match a portfolio sensitivity and will not be used.");
-                        for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
-                            if (!sensiKeyHasNonZeroVariance[i])
-                                WLOG("Zero variance assigned to sensitivity key " << deltaKeys[i]);
-                        }
-
-                        // make covariance matrix positive semi-definite
-                        DLOG("Covariance matrix has dimension " << deltaKeys.size() << " x " << deltaKeys.size());
-                        if (salvage_ && !covarianceMatrix_.empty()) {
-                            DLOG("Covariance matrix is not salvaged, check for positive semi-definiteness");
-                            SymmetricSchurDecomposition ssd(covarianceMatrix_);
-                            Real evMin = ssd.eigenvalues().back();
-                            QL_REQUIRE(
-                                evMin > 0.0 || close_enough(evMin, 0.0),
-                                "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
-                                "eigenvalue is "
-                                    << evMin);
-                            DLOG("Smallest eigenvalue is " << evMin);
-                            salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
-                        }
-                    } else
-                        covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
-
-                    includeDeltaMargin_ = includeDeltaMargin(riskGroup);
-                    includeGammaMargin_ = includeGammaMargin(riskGroup);
-                    //  bool haveDetailTrd = btArgs_->reports_.count(ReportType::DetailTrade) == 1;
-
-                    if (covCalculator || pnlCalculators_.size() > 0) {
-                        sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
-                                                                covCalculator, tradeIds_, includeGammaMargin_,
-                                                                includeDeltaMargin_, runDetailTrd);
-
-                        covarianceMatrix_ = covCalculator->covariance();
-                        // Concerns Correlation analytic
-                        if (correlation_) {
-                            DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
-                            if (riskGroup->to_string() == "[All, All]") {
-                                CorrelationMatrixBuilder corrMatrix;
-                                if (correlationMethod_ == "Pearson") {
-                                    //Correlation Matrix computed by default from the covariance
-                                    correlationMatrix_ = covCalculator->correlation();
-                                } else if (correlationMethod_ == "KendallRank") {
-                                    auto cSensi = scube->second;
-                                    std::set<std::string> ids = cSensi->ids();
-                                    std::vector<QuantLib::Date> d = cSensi->dates();
-                                    Size i = 0;
-                                    int nbScenario = sensiPnlCalculator_->getScenarioNumber();
-                                    QuantLib::Matrix mSensi(nbScenario, deltaKeys.size());
-                                    for (auto it = ids.begin(); it != ids.end(); it++, i++) {
-                                        for (int j = 0; j < nbScenario; j++) {
-                                            QuantLib::Real cubeValue = cSensi->get(*it, d[0], j);
-                                            mSensi[j][i] = cubeValue;
-                                        }
-                                    }   
-                                    correlationMatrix_ = corrMatrix.kendallCorrelation(mSensi);
-                                } else {
-                                    QL_FAIL("Accepted Correlations Methods: Pearson, KendallRank");
-                                }
-                            }
-                            //Creation of RiskFactor Pairs Matching the Correlation Matrix Lower Triangular Part
-                            for (Size col = 0; col < deltaKeys.size(); col++) {
-                                for (Size row = col + 1; row < deltaKeys.size(); row++) {
-                                    RiskFactorKey a = deltaKeys[col];
-                                    RiskFactorKey b = deltaKeys[row];
-                                    correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
-                                }
-                            }
-                        }
-                    }
-                    handleSensiResults(reports, riskGroup, tradeGroup);
                 }
             }
-            // Do the full revaluation step
-            if (runFullReval(riskGroup))                                
-                handleFullRevalResults(reports, riskGroup, tradeGroup);
 
-            if (correlation_) {
-                //Output the first Correlation Computation
-                if (riskGroup->to_string() == "[All, All]") {
-                    writeReports(reports, riskGroup, tradeGroup);
+            bool runSensiBased = sensiBased_;
+
+            // loop over all the trade groups
+            tradeGroups_->reset();
+            while (ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next()) {
+                runSensiBased = sensiBased_;
+                reset(riskGroup);
+
+                // Only look at this trade group if there required
+                if (!runTradeRiskGroup(tradeGroup, riskGroup))
+                    continue;
+
+                MEM_LOG;
+                LOG("Start processing for RiskGroup: " << riskGroup << ", TradeGroup: " << tradeGroup);
+
+                writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
+                tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
+
+                // populate the tradeIds
+                transform(tradeIdIdxPairs_.begin(), tradeIdIdxPairs_.end(), back_inserter(tradeIds_),
+                          [](const pair<string, Size>& elem) { return elem.first; });
+
+                set<SensitivityRecord> srs;
+
+                if (runSensiBased && sensiAgg) {
+                    map<string, QuantLib::ext::shared_ptr<NPVCube>>::iterator scube;
+
+                    auto tradeGpId = tradeGroupKey(tradeGroup);
+                    srs = sensiAgg->sensitivities(tradeGpId);
+
+                    // Populate the deltas and gammas for a parametric VAR benchmark calculation
+                    sensiAgg->generateDeltaGamma(tradeGpId, deltas_, gammas_);
+                    vector<RiskFactorKey> deltaKeys;
+                    for (const auto& [rfk, _] : deltas_)
+                        deltaKeys.push_back(rfk);
+
+                    string portfolio = portfolioId(tradeGroup);
+
+                    // riskGroups_ and tradeGroups_ are ordered so we should always run
+                    // [Product Class, Risk Class, Margin Type] = [All, All, All] first.
+                    // This populates every possible scenario shift to a cube for quicker
+                    // generation of Sensi PnLs.
+                    scube = sensiShiftCube.find(portfolio);
+                    if (sensiArgs_->shiftCalculator_) {
+                        if (scube == sensiShiftCube.end()) {
+                            DLOG("Populating Sensi Shifts for portfolio '" << portfolio << "'");
+
+                            // if we have no senis for this run we skip this, and set runSensiBased to false
+                            if (srs.size() == 0) {
+                                ALOG("No senitivities found for RiskGroup = "
+                                     << riskGroup << " and tradeGroup " << tradeGroup << "; Skipping Sensi based PnL.");
+                                runSensiBased = false;
+                            } else {
+                                scube = sensiShiftCube.insert({portfolio, QuantLib::ext::shared_ptr<NPVCube>()}).first;
+                                vector<RiskFactorKey> riskFactorKeys;
+                                transform(deltas_.begin(), deltas_.end(), back_inserter(riskFactorKeys),
+                                          [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
+                                sensiPnlCalculator_->populateSensiShifts(scube->second, riskFactorKeys,
+                                                                         sensiArgs_->shiftCalculator_);
+                            }
+                        }
+                    }
+
+                    if (runSensiBased) {
+                        ext::shared_ptr<CovarianceCalculator> covCalculator;
+                        // if a covariance matrix has been provided as an input we use that
+                        if (sensiArgs_->covarianceInput_.size() > 0) {
+                            std::vector<bool> sensiKeyHasNonZeroVariance(deltaKeys.size(), false);
+
+                            // build global covariance matrix
+                            covarianceMatrix_ = Matrix(deltaKeys.size(), deltaKeys.size(), 0.0);
+                            Size unusedCovariance = 0;
+                            for (const auto& c : sensiArgs_->covarianceInput_) {
+                                auto k1 = std::find(deltaKeys.begin(), deltaKeys.end(), c.first.first);
+                                auto k2 = std::find(deltaKeys.begin(), deltaKeys.end(), c.first.second);
+                                if (k1 != deltaKeys.end() && k2 != deltaKeys.end()) {
+                                    covarianceMatrix_(k1 - deltaKeys.begin(), k2 - deltaKeys.begin()) = c.second;
+                                    if (k1 == k2)
+                                        sensiKeyHasNonZeroVariance[k1 - deltaKeys.begin()] = true;
+                                } else
+                                    ++unusedCovariance;
+                            }
+                            DLOG("Found " << sensiArgs_->covarianceInput_.size() << " covariance matrix entries, "
+                                          << unusedCovariance
+                                          << " do not match a portfolio sensitivity and will not be used.");
+                            for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
+                                if (!sensiKeyHasNonZeroVariance[i])
+                                    WLOG("Zero variance assigned to sensitivity key " << deltaKeys[i]);
+                            }
+
+                            // make covariance matrix positive semi-definite
+                            DLOG("Covariance matrix has dimension " << deltaKeys.size() << " x " << deltaKeys.size());
+                            if (salvage_ && !covarianceMatrix_.empty()) {
+                                DLOG("Covariance matrix is not salvaged, check for positive semi-definiteness");
+                                SymmetricSchurDecomposition ssd(covarianceMatrix_);
+                                Real evMin = ssd.eigenvalues().back();
+                                QL_REQUIRE(
+                                    evMin > 0.0 || close_enough(evMin, 0.0),
+                                    "ParametricVar: input covariance matrix is not positive semi-definite, smallest "
+                                    "eigenvalue is "
+                                        << evMin);
+                                DLOG("Smallest eigenvalue is " << evMin);
+                                salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
+                            }
+                        } else
+                            covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
+
+                        includeDeltaMargin_ = includeDeltaMargin(riskGroup);
+                        includeGammaMargin_ = includeGammaMargin(riskGroup);
+                        //  bool haveDetailTrd = btArgs_->reports_.count(ReportType::DetailTrade) == 1;
+
+                        if (covCalculator || pnlCalculators_.size() > 0) {
+                            sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
+                                                                   covCalculator, tradeIds_, includeGammaMargin_,
+                                                                   includeDeltaMargin_, runDetailTrd);
+
+                            covarianceMatrix_ = covCalculator->covariance();
+                        }
+                        handleSensiResults(reports, riskGroup, tradeGroup);
+                    }
                 }
-            } else {
+                // Do the full revaluation step
+                if (runFullReval(riskGroup))
+                    handleFullRevalResults(reports, riskGroup, tradeGroup);
+
                 writeReports(reports, riskGroup, tradeGroup);
-            } 
+            }
+            if (sensiBased_)
+                // Reset the sensitivity aggregator before changing the risk filter
+                sensiAgg->reset();
         }
-        if (sensiBased_)
-            // Reset the sensitivity aggregator before changing the risk filter
-            sensiAgg->reset();
     }
     closeReports(reports);
 }
