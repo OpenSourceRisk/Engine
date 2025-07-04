@@ -92,7 +92,6 @@ class AmcCgPricingEngine {
 public:
     virtual ~AmcCgPricingEngine() {}
     virtual void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                                       const bool reevaluateExerciseInStickyCloseOutDateRun = false,
                                        std::vector<TradeExposure>* tradeExposure = nullptr,
                                        TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const = 0;
 };
