@@ -181,7 +181,6 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
-    bool reevaluateExerciseInStickyCloseOutDateRun_;
 };
 
 } // namespace data
