@@ -34,7 +34,7 @@ class AmcCgFxForwardEngine : public QuantExt::FxForward::engine, public AmcCgBas
 public:
     AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
                          const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates)
-        : AmcCgBaseEngine(modelCg, simulationDates), domCcy_(domCcy), forCcy_(forCcy) {
+        : AmcCgBaseEngine(modelCg, simulationDates, false), domCcy_(domCcy), forCcy_(forCcy) {
         registerWith(modelCg);
     }
     void calculate() const override;
