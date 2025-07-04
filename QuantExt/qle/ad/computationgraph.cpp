@@ -370,4 +370,15 @@ std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::st
     return g.insert({a}, RandomVariableOpCode::NormalPdf, label);
 }
 
+std::set<std::size_t> dependentNodes(const ComputationGraph& g, const std::size_t start, const std::size_t end) {
+    std::set<std::size_t> nodes;
+    for (std::size_t n = start; n < end; ++n) {
+        std::for_each(g.predecessors(n).begin(), g.predecessors(n).end(), [&nodes, start](const std::size_t p) {
+            if (p < start)
+                nodes.insert(p);
+        });
+    }
+    return nodes;
+}
+
 } // namespace QuantExt
