@@ -188,13 +188,6 @@ public:
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
 
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
-        trade from being asked for its cashflows, the method can be overridden to return \c false.
-    */
-    virtual bool hasCashflows() const { return true; }
-    //@}
-
     //! Get cumulative timing spent on pricing
     boost::timer::nanosecond_type getCumulativePricingTime() const {
         return savedCumulativePricingTime_ + (instrument_ != nullptr ? instrument_->getCumulativePricingTime() : 0);
