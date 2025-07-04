@@ -1091,7 +1091,7 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     std::vector<RandomVariable> tmp(g->size());
 
     std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].componentPathValues.back() + 1;
-    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives + 1;
+    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
 
     // set the values we need for evaluation
 
@@ -1110,7 +1110,7 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     std::vector<bool> keepNodes(g->size(), false);
     keepNodes[endNode] = true;
 
-    forwardEvaluation(*g, tmp, ops_, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode);
+    forwardEvaluation(*g, tmp, ops_, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode + 1);
 
     return tmp[endNode];
 }
