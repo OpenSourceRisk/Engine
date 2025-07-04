@@ -122,7 +122,9 @@ AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Cu
 
     QL_REQUIRE(domCcy != forCcy, "AmcCgFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
-    return QuantLib::ext::make_shared<E>(domCcy.code(), forCcy.code(), modelCg_, simulationDates_);
+    return QuantLib::ext::make_shared<E>(
+        domCcy.code(), forCcy.code(), modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>

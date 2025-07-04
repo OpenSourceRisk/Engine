@@ -380,7 +380,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()), ast_,
             context, params_, indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(),
             interactive_, generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
-            useDoublePrecisionForExternalCalculation_);
+            useDoublePrecisionForExternalCalculation_, reevaluateExerciseInStickyCloseOutDateRun_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -558,6 +558,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     indicatorSmoothingForDerivatives_ =
         parseReal(engineParameter("IndicatorSmoothingForDerivatives", getModelEngineQualifiers(), false, "0.2"));
     referenceCalibrationGrid_ = modelParameter("ReferenceCalibrationGrid", getModelEngineQualifiers(), false, "");
+    reevaluateExerciseInStickyCloseOutDateRun_ =
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", getModelEngineQualifiers(), false, "false"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)

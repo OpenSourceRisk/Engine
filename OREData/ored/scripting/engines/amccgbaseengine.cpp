@@ -54,8 +54,10 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {}
+                                 const std::vector<QuantLib::Date>& simulationDates,
+                                 const bool reevaluateExerciseInStickyCloseOutDateRun)
+    : modelCg_(modelCg), simulationDates_(simulationDates),
+      reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
@@ -436,7 +438,6 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 }
 
 void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            const bool reevaluateExerciseInStickyCloseOutDateRun,
                                             std::vector<TradeExposure>* tradeExposure,
                                             TradeExposureMetaInfo* tradeExposureMetaInfo) const {
 
@@ -630,7 +631,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 }
             }
 
-            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun) {
+            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun_) {
 
                 // reuse exercise indicator from previous run on valuation dates
 
