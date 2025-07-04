@@ -82,14 +82,22 @@ public:
         return tryParse(str, obj, parser);
     }
 
-    void loadScenarioSimMarketParameters(QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& obj,
-                                         const std::string& analytic, const std::string& param);
-    void loadScenarioGeneratorData(QuantLib::ext::shared_ptr<ScenarioGeneratorData>& obj, const std::string& analytic, const std::string& param);
-    void loadCrossAssetModelData(QuantLib::ext::shared_ptr<CrossAssetModelData>& obj, const std::string& analytic,
-                                 const std::string& param);
-    void loadStressTestScenarioData(QuantLib::ext::shared_ptr<StressTestScenarioData>& obj, const std::string& analytic,
-                                    const std::string& param);
+    template <typename T>
+    bool loadParameterXML(
+        QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
+        const std::string& param, const bool mandatory = false) {
+        string str = loadParameterXMLString(analytic, param, mandatory);
+        obj = QuantLib::ext::make_shared<T>();
+        obj->fromXMLString(str);
+    }
     
+    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {        
+        return std::string();
+    }
+    virtual std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) {
+        return std::string();
+    }
+        
      /*********
      * Setters
      *********/
@@ -960,8 +968,6 @@ protected:
     // Each analytic type comes with additional input requirements, see below
     std::set<std::string> analytics_;
 
-    virtual std::string loadParameterString(const std::string& analytic, const std::string& param,
-                                            bool mandatory) = 0;
 
     /***********************************
      * Basic setup, across all run types

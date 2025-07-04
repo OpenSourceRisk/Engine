@@ -72,40 +72,6 @@ InputParameters::InputParameters() {
 
 bool checkString(const std::string& obj) { return true; }
 
-void InputParameters::loadScenarioSimMarketParameters(QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& obj,
-                                                      const std::string& analytic, const std::string& param) {
-    string str = loadParameterString(analytic, param, true);
-    obj = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
-    obj->fromFile((inputPath_ / str).generic_string());
-}
-
-void InputParameters::loadScenarioGeneratorData(QuantLib::ext::shared_ptr<ScenarioGeneratorData>& obj,
-                                                const std::string& analytic, const std::string& param) {
-    string str = loadParameterString(analytic, param, true);
-    if (!str.empty()) {
-        obj = QuantLib::ext::make_shared<ScenarioGeneratorData>();
-        obj->fromFile((inputPath_ / str).generic_string());
-    }
-}
-
-void InputParameters::loadCrossAssetModelData(QuantLib::ext::shared_ptr<CrossAssetModelData>& obj,
-                                              const std::string& analytic, const std::string& param) {
-    string str = loadParameterString(analytic, param, true);
-    if (!str.empty()) {
-        obj = QuantLib::ext::make_shared<CrossAssetModelData>();
-        obj->fromFile((inputPath_ / str).generic_string());
-    }
-}
-
-void InputParameters::loadStressTestScenarioData(QuantLib::ext::shared_ptr<StressTestScenarioData>& obj,
-                                                 const std::string& analytic, const std::string& param) {
-    string str = loadParameterString(analytic, param, true);
-    if (!str.empty()) {
-        obj = QuantLib::ext::make_shared<StressTestScenarioData>();
-        obj->fromFile((inputPath_ / str).generic_string());
-    }
-}
-
 void InputParameters::setAsOfDate(const std::string& s) {
     asof_ = parseDate(s);
     Settings::instance().evaluationDate() = asof_;

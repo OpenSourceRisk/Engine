@@ -69,15 +69,15 @@ void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
         type_, analyticStr, "scenarioType", true,
         std::function<ScenarioGenerationAnalyticImpl::Type(const string&)>(parseScenarioGenerationType));
 
-    inputs_->loadScenarioSimMarketParameters(analytic()->configurations().simMarketParams, analyticStr,
-                                            "simulationConfigFile");
-    if (type_ == ScenarioGenerationAnalyticImpl::Type::stress) {
-        inputs_->loadStressTestScenarioData(stressTestScenarioData_, analyticStr, "stressConfigFile");
-    } else if (type_ == ScenarioGenerationAnalyticImpl::Type::exposure) {
-        inputs_->loadScenarioGeneratorData(analytic()->configurations().scenarioGeneratorData, analyticStr,
-                                           "simulationConfigFile");
-        inputs_->loadCrossAssetModelData(analytic()->configurations().crossAssetModelData, analyticStr,
-                                         "simulationConfigFile");
+    inputs_->loadParameterXML<ScenarioSimMarketParameters>(analytic()->configurations().simMarketParams, analyticStr,
+                                                           "simulationConfigFile");
+    if (type_ == ScenarioGenerationAnalyticImpl::Type::stress)
+        inputs_->loadParameterXML<StressTestScenarioData>(stressTestScenarioData_, analyticStr, "stressConfigFile");
+    else if (type_ == ScenarioGenerationAnalyticImpl::Type::exposure) {        
+        inputs_->loadParameterXML<ScenarioGeneratorData>(analytic()->configurations().scenarioGeneratorData,
+                                                         analyticStr, "simulationConfigFile");
+        inputs_->loadParameterXML<CrossAssetModelData>(analytic()->configurations().crossAssetModelData, analyticStr,
+                                                       "simulationConfigFile");
 	}
 
     inputs_->loadParameter<Size>(scenarioDistributionSteps_, analyticStr, "distributionBuckets", false,
@@ -86,7 +86,7 @@ void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<bool>(scenarioOutputStatistics_, analyticStr, "outputStatistics", false,
                                  std::function<bool(const string&)>(parseBool));
-    inputs_->loadParameter<bool>(scenarioOutputDistributions_, analyticStr, "outputStatistics", false,
+    inputs_->loadParameter<bool>(scenarioOutputDistributions_, analyticStr, "outputDistributions", false,
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<string>(amcPathDataOutput_, analyticStr, "amcPathDataOutput", false);
 }
@@ -105,7 +105,7 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
                                                             const bool allowModelFallbacks) {
     if (type_ == ScenarioGenerationAnalyticImpl::Type::exposure) {
         if (!model_)
-            buildCrossAssetModel(continueOnCalibrationError, const bool allowModelFallbacks);
+            buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
         ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
         QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
         string config = inputs_->marketConfig("simulation");

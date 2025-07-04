@@ -95,8 +95,6 @@ public:
     CurveConfigurationsManager& curveConfigs();
     const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams() const;
     const std::string& marketDataLoaderOutput();
-    const bool scenarioOutputStatistics();
-    const bool scenarioOutputDistributions();
     const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
     const ext::shared_ptr<EngineData>& pricingEngine() const;
 
@@ -308,8 +306,6 @@ public:
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setCube(const ext::shared_ptr<NPVCube>& file);
     void setMarketCube(const ext::shared_ptr<AggregationScenarioData>& file);
-    void setScenarioOutputStatistics(const bool b);
-    void setScenarioOutputDistributions(const bool b);
 
     const std::map<std::string, std::string>&  marketConfigs() const; 
 };

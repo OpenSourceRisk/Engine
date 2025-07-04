@@ -631,6 +631,13 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
     return params_->get(analytic, param, mandatory);
 }
 
+std::string OREAppInputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
+    bool mandatory) {
+    auto file = loadParameterString(analytic, param, mandatory);
+    XMLDocument doc(file);
+    return doc.toString();
+}
+
 void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
 
