@@ -97,7 +97,7 @@ private:
     std::size_t createRegressionModel(const std::size_t amount, const Date& d,
                                       const std::vector<CashflowInfo>& cashflowInfo,
                                       const std::function<bool(std::size_t)>& cashflowRelevant,
-                                      const std::size_t filter, TradeExposure* tradeExposure = nullptr) const;
+                                      const std::size_t filter) const;
 };
 
 } // namespace data
