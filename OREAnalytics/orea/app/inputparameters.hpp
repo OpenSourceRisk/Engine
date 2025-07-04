@@ -714,6 +714,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
+    const string& maxScenario() const { return maxScenario_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
   
     /*****************
@@ -1134,6 +1135,7 @@ protected:
     bool fullInitialCollateralisation_ = false;
     std::string collateralCalculationType_ = "NoLag";
     std::string exposureAllocationMethod_ = "None";
+    std::string maxScenario_ = "None";
     Real marginalAllocationLimit_ = 1.0;
     // intermediate results of the exposure simulation, before aggregation
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
