@@ -48,8 +48,7 @@ public:
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
         const bool includePastCashflows = false, const bool useCachedSensis = false,
-        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false,
-        const bool reevaluateExerciseInStickyCloseOutDateRun = false);
+        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
@@ -119,7 +118,6 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
-    bool reevaluateExerciseInStickyCloseOutDateRun_;
 
     // state
     mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
