@@ -4,7 +4,7 @@ import sys
 import logging
 import unittest
 from pathlib import Path
-import nose
+import pytest
 import collections
 #collections.Callable = collections.abc.Callable
 
@@ -125,7 +125,7 @@ def regress_all_utests():
         testable = add_utest(name)
         testable_name = 'test_{0}'.format(name2)
         testable.__name__ = testable_name
-        class_name = 'Test_{0}'.format(name2)
+        class_name = 'test_{0}'.format(name2)
         globals()[class_name] = type(class_name, (TestExamples,), {testable_name: testable})
 
 
@@ -136,5 +136,6 @@ setup_logging()
 regress_all_utests()
 
 if __name__ == '__main__':
-    print("run nose tests")
-    nose.runmodule(name='__main__')
+    print("run pytest")
+    ret_code = pytest.main([sys.argv[0], "-n", "16", "-o", "log_cli=true"])
+    print("PyTest Return Code: ", ret_code)
