@@ -122,4 +122,8 @@ std::size_t cg_pow(ComputationGraph& g, const std::size_t a, const std::size_t b
 std::size_t cg_normalCdf(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
     
+// utility functions on cg
+
+std::set<std::size_t> dependentNodes(const ComputationGraph& g, const std::size_t start, const std::size_t end);
+
 } // namespace QuantExt
