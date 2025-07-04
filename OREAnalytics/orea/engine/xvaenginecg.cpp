@@ -281,7 +281,7 @@ void XvaEngineCG::buildCgPartB() {
         std::vector<TradeExposure> tradeExposure;
         TradeExposureMetaInfo metaInfo;
 
-        engine->buildComputationGraph(false, false, &tradeExposure, &metaInfo);
+        engine->buildComputationGraph(false, &tradeExposure, &metaInfo);
 
         for (auto& t : tradeExposure)
             t.multiplier = multiplier;
@@ -307,7 +307,7 @@ void XvaEngineCG::buildCgPartB() {
         if (!closeOutDates_.empty()) {
 
             if (!stickyCloseOutDates_.empty()) {
-                engine->buildComputationGraph(true, false, &tradeExposure, &metaInfo);
+                engine->buildComputationGraph(true, &tradeExposure, &metaInfo);
                 for (auto& t : tradeExposure)
                     t.multiplier = multiplier;
             }
