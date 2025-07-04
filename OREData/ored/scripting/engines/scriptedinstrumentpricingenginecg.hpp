@@ -48,13 +48,13 @@ public:
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
         const bool includePastCashflows = false, const bool useCachedSensis = false,
-        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
+        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false,
+        const bool reevaluateExerciseInStickyCloseOutDateRun = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
 
     void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun = false,
                                std::vector<TradeExposure>* tradeExposure = nullptr,
                                TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
 
@@ -119,6 +119,7 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
+    bool reevaluateExerciseInStickyCloseOutDateRun_;
 
     // state
     mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
