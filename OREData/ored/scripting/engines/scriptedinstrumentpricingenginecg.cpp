@@ -76,14 +76,13 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
     const bool useCachedSensis, const bool useExternalComputeFramework,
-    const bool useDoublePrecisionForExternalCalculation, const bool reevaluateExerciseInStickyCloseOutDateRun)
+    const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys), ast_(ast),
       context_(context), params_(params), indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
-      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
-      reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
 
     // register with model
 
