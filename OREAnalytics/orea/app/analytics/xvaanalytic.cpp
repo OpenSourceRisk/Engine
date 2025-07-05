@@ -420,12 +420,15 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         if (inputs_->storeFlows())
             calculators.push_back(QuantLib::ext::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
+        if (inputs_->storeExerciseValues())
+            calculators.push_back(QuantLib::ext::make_shared<ExerciseCalculator>(
+                inputs_->exposureBaseCurrency(), cubeInterpreter_->exerciseValueIndex()));
         if (inputs_->storeCreditStateNPVs() > 0) {
             calculators.push_back(QuantLib::ext::make_shared<MultiStateNPVCalculator>(
                 inputs_->exposureBaseCurrency(), cubeInterpreter_->creditStateNPVsIndex(),
                 inputs_->storeCreditStateNPVs()));
         }
-	if (inputs_->storeSensis()) {
+        if (inputs_->storeSensis()) {
 	    LOG("CamSensitivityStorageManager: store sensis true");
 	    QL_REQUIRE(sensitivityStorageManager_, "sensitivity storage manager not set");
             calculators.push_back(QuantLib::ext::make_shared<SensitivityCalculator>(sensitivityStorageManager_));
@@ -925,8 +928,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = QuantLib::ext::make_shared<CubeInterpretation>(
-        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), grid_,
-        inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
+        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(),
+        inputs_->storeExerciseValues(), grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
         LOG("XVA: Build simulation market");

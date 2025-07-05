@@ -1796,6 +1796,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp == "Y")
             setStoreFlows(true);
 
+        tmp = params_->get("simulation", "storeExerciseValues", false);
+        if (tmp == "Y")
+            setStoreExerciseValues(true);
+
         tmp = params_->get("simulation", "storeSensis", false);
         if (tmp == "Y")
             setStoreSensis(true);
