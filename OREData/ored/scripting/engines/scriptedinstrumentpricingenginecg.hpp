@@ -54,7 +54,6 @@ public:
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
 
     void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun = false,
                                std::vector<TradeExposure>* tradeExposure = nullptr,
                                TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
 
