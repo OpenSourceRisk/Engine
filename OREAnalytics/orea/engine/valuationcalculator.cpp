@@ -85,22 +85,18 @@ Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Tr
     if (!optionWrapper || !optionWrapper->isOption() || !optionWrapper->isExercised())
         return QuantLib::Null<Real>();
     
+    Date today = Settings::instance().evaluationDate();
+    if (optionWrapper->exerciseDate() != today)
+        return QuantLib::Null<Real>();
+      
     Real exerciseValue = optionWrapper->cachedExerciseValue();
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
+    Real numeraire = simMarket->numeraire();
 
-    /*
-    Real npv = trade->instrument()->NPV();
-    Real value = npv;
-    if (!close_enough(npv, 0.0)) {
-        Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
-        Real numeraire = simMarket->numeraire();
-        value = npv * fx / numeraire;
-    }
-    Date asof = Settings::instance().evaluationDate();
-    DLOG("trade " << trade->id() << " " << io::iso_date(asof) << " exercised " << exerciseValue << " npv " << value
-                  << " index " << index_);
-    */
-    
-    return exerciseValue;
+    // DLOG("trade " << trade->id() << " " << io::iso_date(today) << " exercised " << exerciseValue << " index "
+    //               << index_);
+
+    return exerciseValue * fx / numeraire;
 }
 
 void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,

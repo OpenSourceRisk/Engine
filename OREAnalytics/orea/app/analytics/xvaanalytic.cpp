@@ -420,7 +420,8 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         if (inputs_->storeFlows())
             calculators.push_back(QuantLib::ext::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
-        if (inputs_->storeExerciseValues())
+	// Ensure that the NPV calculator is executed before the exercise calculator
+	if (inputs_->storeExerciseValues())
             calculators.push_back(QuantLib::ext::make_shared<ExerciseCalculator>(
                 inputs_->exposureBaseCurrency(), cubeInterpreter_->exerciseValueIndex()));
         if (inputs_->storeCreditStateNPVs() > 0) {
