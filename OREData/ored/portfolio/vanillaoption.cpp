@@ -343,11 +343,9 @@ void VanillaOptionTrade::setNotionalAndCurrencies() {
     npvCurrency_ = ccy.code();
     // Cash settled option with settlementdata
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
-    if(settlementType == Settlement::Cash && !option_.cashSettlementCurrency().empty())
-    {
+    if (settlementType == Settlement::Cash && !option_.cashSettlementCurrency().empty()) {
         npvCurrency_ = option_.cashSettlementCurrency();
     }
-
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_.value() * quantity_;
