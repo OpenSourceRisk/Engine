@@ -147,7 +147,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "MidCouponExercise", midCouponExercise_);
     }
 
-    if (!cashSettlementCurrency_.empty() || !cashSettlementFxIndex_.empty() || !cashSettlementFxIndex_.empty()) {
+    if (!cashSettlementCurrency_.empty() || !cashSettlementFxIndex_.empty() || !cashSettlementFixingDate_.empty()) {
         XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
         if (!cashSettlementCurrency_.empty()) {
             XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", cashSettlementCurrency_);
@@ -155,8 +155,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
         if (!cashSettlementFxIndex_.empty()) {
             XMLUtils::addChild(doc, settlementDataNode, "FXIndex", cashSettlementFxIndex_);
         }
-        if (!cashSettlementFxIndex_.empty()) {
-            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", cashSettlementFxIndex_);
+        if (!cashSettlementFixingDate_.empty()) {
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", cashSettlementFixingDate_);
         }
     }
 

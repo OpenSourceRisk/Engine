@@ -100,10 +100,11 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         }
 
         double fxRate = 1.0;
-        if (arguments_.fxIndex.has_value()){
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value() ?
-                *arguments_.cashSettlementFxFixingDate : arguments_.fxIndex.value()->fixingDate(expiryDate);
-            fxRate = arguments_.fxIndex.value()->fixing(fixingDate, false);
+        if (arguments_.fxIndex != nullptr) {
+            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+                                  ? *arguments_.cashSettlementFxFixingDate
+                                  : arguments_.fxIndex->fixingDate(expiryDate);
+            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
         }
 
         // Discount factor to payment date.
@@ -128,7 +129,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.additionalResults["payoffAmount"] = payoffAmount;
         results_.additionalResults["discountFactor"] = df_tp;
         results_.additionalResults["timeToExpiry"] = delta_tp;
-        results_.additionalResults["fxRate"] = fxRate;
+        results_.additionalResults["settlementFxFwd"] = fxRate;
 
     } else {
 
@@ -162,12 +163,12 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
         double fxRate = 1.0;
-        if (arguments_.fxIndex.has_value()){
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value() ?
-                *arguments_.cashSettlementFxFixingDate : arguments_.fxIndex.value()->fixingDate(expiryDate);
-            fxRate = arguments_.fxIndex.value()->fixing(fixingDate, false);
+        if (arguments_.fxIndex != nullptr) {
+            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+                                  ? *arguments_.cashSettlementFxFixingDate
+                                  : arguments_.fxIndex->fixingDate(expiryDate);
+            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
         }
-
 
         results_.value = df_te_tp * underlyingResults->value * fxRate;
         results_.delta = df_te_tp * underlyingResults->delta;
@@ -194,7 +195,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         cfResults.back().type = "ExpectedFlow";
         results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
-        results_.additionalResults["fxRate"] = fxRate;
+        results_.additionalResults["settlementFxFwd"] = fxRate;
     }
 
     

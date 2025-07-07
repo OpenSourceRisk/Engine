@@ -43,7 +43,7 @@ public:
                               const QuantLib::Date& paymentDate, bool automaticExercise,
                               const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
                               bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
-                              const std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndex = std::nullopt,
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                               const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option.
@@ -52,7 +52,7 @@ public:
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
                               const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
                               bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
-                              const std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndex = std::nullopt,
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                               const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option with digital payoff.
@@ -61,7 +61,7 @@ public:
                               bool automaticExercise,
                               const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
                               bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
-                              const std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndex = std::nullopt,
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                               const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option with digital payoff.
@@ -71,7 +71,7 @@ public:
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
                               const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
                               bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
-                              const std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndex = std::nullopt,
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                               const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! \name Instrument interface
@@ -101,7 +101,7 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::Index> underlying_;
     bool exercised_;
     QuantLib::Real priceAtExercise_;
-    std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
     std::optional<QuantLib::Date> cashSettlementFxFixingDate_;
     //! Shared initialisation
     void init(bool exercised, QuantLib::Real priceAtExercise);
@@ -117,7 +117,7 @@ public:
     QuantLib::ext::shared_ptr<QuantLib::Index> underlying;
     bool exercised;
     QuantLib::Real priceAtExercise;
-    std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     std::optional<QuantLib::Date> cashSettlementFxFixingDate;
 };
 

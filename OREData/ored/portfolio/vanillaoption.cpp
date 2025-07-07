@@ -29,6 +29,7 @@
 #include <ql/instruments/quantovanillaoption.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
+#include <qle/utilities/fxindex.hpp>
 
 using namespace QuantLib;
 using QuantExt::CashSettledEuropeanOption;
@@ -45,9 +46,8 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     // If non-empty, then check if the currencies are different for a Quanto payoff
     Currency ccy = parseCurrencyWithMinors(currency_);
     Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : underlyingCurrency_;
-    
     bool sameCcy = underlyingCurrency == ccy;
-
+    
     if (strike_.currency().empty())
         strike_.setCurrency(ccy.code());
 
@@ -99,9 +99,6 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
-
-
-
         // Get the payment date.
         const boost::optional<OptionPaymentData>& opd = option_.paymentData();
         Date paymentDate = expiryDate_;
@@ -118,23 +115,25 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
         }
 
-        std::optional<Currency> cashSettlementCurrency;
-        std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> cashSettlementFxIndex;
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
         std::optional<Date> cashSettlementFixingDate;
         
-        if (npvCurrency_ != ccy.code()) {
+        if (npvCurrency != ccy) {
             // If the cash settlement currency is different from the option currency, we need to build a cash settlement
             // FX index.
             auto fxIndexStr = option_.cashSettlementFxIndex();
             QL_REQUIRE(!fxIndexStr.empty(), "Cash settlement FX index must be provided when cash settlement currency is "
                                                "different from the option currency. Trade: " << id() << ".");
-            cashSettlementFxIndex = parseFxIndex(fxIndexStr);
-            auto fxIndex =
+            fxIndex = parseFxIndex(fxIndexStr);
+            QL_REQUIRE(validFxIndex(fxIndex, npvCurrency, ccy),
+                       "Trade contains cash settlement with cash settlement currency " << npvCurrency
+                           << " and option currency " << ccy.code()
+                           << ", but the FX index " << option_.cashSettlementFxIndex()
+                           << " is not valid or not available in the market.");
+            fxIndex =
                 buildFxIndex(option_.cashSettlementFxIndex(), npvCurrency_, ccy.code(),
                              engineFactory->market(), configuration);
-            QL_REQUIRE(fxIndex, "Could not build FX index for cash settlement FX index: "
-                                    << option_.cashSettlementFxIndex() << ". Trade: " << id() << ".");
-            cashSettlementFxIndex = fxIndex;
+            
             if (!option_.cashSettlementFixingDate().empty()) {
                 cashSettlementFixingDate = parseDate(option_.cashSettlementFixingDate());
             }
@@ -143,11 +142,11 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             requiredFixings_.addFixingDate(fixingDate, fxIndex->name(), paymentDate);
             DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
                  << io::iso_date(fixingDate) << " added to required fixings for trade " << id());
-            // if no specific discount curve is provided, use the cash settlement currency code
-            discountCurve = discountCurve.empty() ? cashSettlementCurrency->code() : discountCurve;
+            // if no specific discount curve is provided, use the default discount curve for the cash settlement currency
+            discountCurve = discountCurve.empty() ? npvCurrency_ : discountCurve;
         }
         // Use cash settlement option if the payment date is after the expiry date or if the cash settlement 
-        if (paymentDate > expiryDate_ || (cashSettlementFxIndex.has_value() && sameCcy)) {
+        if (paymentDate > expiryDate_ || ((npvCurrency != ccy) && sameCcy)) {
             QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
 
             // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
@@ -178,13 +177,11 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 requiredFixings_.addFixingDate(expiryDate_, indexName, paymentDate);
             }
 
-            
-
             // Build the instrument
             LOG("Build CashSettledEuropeanOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
                 type, strike_.value(), expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised,
-                exercisePrice, cashSettlementFxIndex, cashSettlementFixingDate);
+                exercisePrice, fxIndex, cashSettlementFixingDate);
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
