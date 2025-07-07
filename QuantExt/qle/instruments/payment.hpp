@@ -30,6 +30,7 @@
 #include <ql/quote.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -47,6 +48,10 @@ public:
     class engine;
 
     Payment(const Real amount, const Currency& currency, const Date& date);
+
+    Payment(const Real amount, const Currency& currency, const Date& date, const std::optional<Currency>& payCurrency,
+            const std::optional<QuantLib::ext::shared_ptr<FxIndex>>& fxIndex,
+            const std::optional<QuantLib::Date>& fixingDate);
 
     //! \name Instrument interface
     //@{
@@ -66,13 +71,17 @@ private:
     void setupExpired() const override;
     //@}
     Currency currency_;
+    std::optional<Currency> payCurrency_;
+    std::optional<QuantLib::ext::shared_ptr<FxIndex>> fxIndex_;
+    std::optional<QuantLib::Date> fixingDate_;
     QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow_;
 };
 
 class Payment::arguments : public virtual PricingEngine::arguments {
 public:
-    Currency currency;
     QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow;
+    std::optional<QuantLib::ext::shared_ptr<FxIndex>> fxIndex;
+    std::optional<QuantLib::Date> fixingDate;
     void validate() const override;
 };
 

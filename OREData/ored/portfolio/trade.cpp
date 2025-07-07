@@ -27,6 +27,7 @@
 #include <qle/cashflows/typedcashflow.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 using ore::data::XMLUtils;
 
@@ -69,16 +70,48 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         Currency premiumCurrency = parseCurrencyWithMinors(d.ccy);
         Real premiumAmount = convertMinorToMajorCurrency(d.ccy, d.amount);
-        auto fee = QuantLib::ext::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate);
+        std::optional<Currency> payCurrency =
+            d.payCurrency.empty() ? std::nullopt : std::make_optional(parseCurrencyWithMinors(d.payCurrency));
 
+        std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndex;
+        std::optional<QuantLib::Date> fixingDate;
+        DLOG("Adding premium " << d.amount << " " << d.ccy << " payable on " << d.payDate << " with multiplier "
+                               << premiumMultiplier);
+        DLOG("FxIndex = " << d.fxIndex << ", payCurrency = " << d.payCurrency << ", fixingDate = " << d.fixingDate);
+        if (!d.fxIndex.empty() && payCurrency.has_value() && payCurrency.value() != premiumCurrency) {
+            DLOG("Trade contains FX index " << d.fxIndex << " for premium data, pay currency is " << payCurrency.value()
+                                            << " and premium currency is " << premiumCurrency << ".");
+            auto ind = parseFxIndex(d.fxIndex);
+            QL_REQUIRE(ind != nullptr, "Trade contains invalid FX index " << d.fxIndex << " for premium data.");
+            QL_REQUIRE((ind->sourceCurrency() == premiumCurrency && ind->targetCurrency() == payCurrency.value()) ||
+                           (ind->sourceCurrency() == payCurrency.value() && ind->targetCurrency() == premiumCurrency),
+                       "Trade contains FX index " << d.fxIndex << " with source currency " << ind->sourceCurrency()
+                                                  << " and target currency " << ind->targetCurrency()
+                                                  << " for premium data, but pay currency is " << payCurrency.value()
+                                                  << " and premium currency is " << premiumCurrency << ".");
+
+            fxIndex = buildFxIndex(d.fxIndex, payCurrency.value().code(), premiumCurrency.code(), factory->market(),
+                                   configuration, true);
+            QL_REQUIRE(fxIndex.has_value(), "Trade contains invalid FX index " << d.fxIndex << " for premium data.");
+            if (!d.fixingDate.empty()) {
+                fixingDate = parseDate(d.fixingDate);
+            }
+        }
+        auto fee = QuantLib::ext::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate, payCurrency,
+                                                                 fxIndex, fixingDate);
         addMultipliers.push_back(premiumMultiplier);
 
+        std::string premiumSettlementCurrency = payCurrency.has_value() ? payCurrency.value().code() : premiumCurrency.code();
+
         Handle<YieldTermStructure> yts = discountCurve.empty()
-            ? factory->market()->discountCurve(d.ccy, configuration)
+            ? factory->market()->discountCurve(premiumSettlementCurrency, configuration)
             : indexOrYieldCurve(factory->market(), discountCurve, configuration);
         Handle<Quote> fx;
-        if (tradeCurrency.code() != d.ccy) {
-            fx = factory->market()->fxRate(d.ccy + tradeCurrency.code(), configuration);
+        DLOG("Premium Discounting currency is " << premiumSettlementCurrency
+                                                  << ", trade currency is " << tradeCurrency.code()
+                                                  << ", configuration is " << configuration);
+        if (tradeCurrency.code() != premiumSettlementCurrency) {
+            fx = factory->market()->fxRate(premiumSettlementCurrency + tradeCurrency.code(), configuration);
         }
         QuantLib::ext::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
         fee->setPricingEngine(discountingEngine);

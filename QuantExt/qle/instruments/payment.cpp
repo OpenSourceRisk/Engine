@@ -27,9 +27,23 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-Payment::Payment(const Real amount, const Currency& currency, const Date& date) 
-    : currency_(currency) {
+Payment::Payment(const Real amount, const Currency& currency, const Date& date)
+    : Payment(amount, currency, date, std::nullopt, std::nullopt, std::nullopt) {}
+
+Payment::Payment(const Real amount, const Currency& currency, const Date& date,
+                 const std::optional<Currency>& payCurrency,
+                 const std::optional<QuantLib::ext::shared_ptr<FxIndex>>& fxIndex,
+                 const std::optional<QuantLib::Date>& fixingDate)
+    : currency_(currency), payCurrency_(payCurrency), fxIndex_(fxIndex), fixingDate_(fixingDate) {
     cashflow_ = QuantLib::ext::make_shared<SimpleCashFlow>(amount, date);
+    QL_REQUIRE(!fxIndex_.has_value() || payCurrency_.has_value(),
+               "Payment: pay currency must be set if fx index is set");
+    QL_REQUIRE(!fxIndex_.has_value() || (fxIndex_.value()->sourceCurrency().code() == currency.code() &&
+                                         fxIndex_.value()->targetCurrency().code() == payCurrency_->code()),
+               "Payment: fx index currency must match pay and premium currency, got indec "
+                   << fxIndex_.value()->name() << " with source " << fxIndex_.value()->sourceCurrency().code()
+                   << " and target " << fxIndex_.value()->targetCurrency().code() << ", pay currency "
+                   << payCurrency_->code() << " and premium currency " << currency.code());
 }
 
 bool Payment::isExpired() const { return cashflow_->hasOccurred(); }
@@ -39,8 +53,9 @@ void Payment::setupExpired() const { Instrument::setupExpired(); }
 void Payment::setupArguments(PricingEngine::arguments* args) const {
     Payment::arguments* arguments = dynamic_cast<Payment::arguments*>(args);
     QL_REQUIRE(arguments, "wrong argument type in deposit");
-    arguments->currency = currency_;
     arguments->cashflow = cashflow_;
+    arguments->fxIndex = fxIndex_;
+    arguments->fixingDate = fixingDate_;
 }
 
 void Payment::fetchResults(const PricingEngine::results* r) const {
