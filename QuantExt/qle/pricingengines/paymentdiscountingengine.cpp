@@ -68,11 +68,11 @@ void PaymentDiscountingEngine::calculate() const {
     results_.additionalResults["premium_date"] = arguments_.cashflow->date();
     results_.additionalResults["premium_df"] = discountCurve_->discount(arguments_.cashflow->date());;
 
-    if (arguments_.fxIndex.has_value()) {
+    if (arguments_.fxIndex) {
         auto fixingDate = arguments_.fixingDate.has_value()
                               ? *arguments_.fixingDate
-                              : arguments_.fxIndex.value()->fixingDate(arguments_.cashflow->date());
-        auto fxForward = arguments_.fxIndex.value()->fixing(fixingDate);
+                              : arguments_.fxIndex->fixingDate(arguments_.cashflow->date());
+        auto fxForward = arguments_.fxIndex->fixing(fixingDate);
         NPV *= fxForward;
         results_.additionalResults["premium_fx_fwd_rate"] = fxForward;
     } 

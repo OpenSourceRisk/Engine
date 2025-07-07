@@ -29,6 +29,7 @@
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/utilities/fxindex.hpp>
 using ore::data::XMLUtils;
 
 namespace ore {
@@ -70,29 +71,21 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         Currency premiumCurrency = parseCurrencyWithMinors(d.ccy);
         Real premiumAmount = convertMinorToMajorCurrency(d.ccy, d.amount);
-        std::optional<Currency> payCurrency =
-            d.payCurrency.empty() ? std::nullopt : std::make_optional(parseCurrencyWithMinors(d.payCurrency));
-
-        std::optional<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndex;
+        Currency payCurrency = d.payCurrency.empty() ? premiumCurrency : parseCurrencyWithMinors(d.payCurrency);
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
         std::optional<QuantLib::Date> fixingDate;
-        DLOG("Adding premium " << d.amount << " " << d.ccy << " payable on " << d.payDate << " with multiplier "
-                               << premiumMultiplier);
-        DLOG("FxIndex = " << d.fxIndex << ", payCurrency = " << d.payCurrency << ", fixingDate = " << d.fixingDate);
-        if (!d.fxIndex.empty() && payCurrency.has_value() && payCurrency.value() != premiumCurrency) {
-            DLOG("Trade contains FX index " << d.fxIndex << " for premium data, pay currency is " << payCurrency.value()
-                                            << " and premium currency is " << premiumCurrency << ".");
+        if (payCurrency != premiumCurrency) {
+            QL_REQUIRE(!d.fxIndex.empty(), "Trade contains premium data with premium currency " << premiumCurrency
+                                                  << " and cash settlement payment currency " << payCurrency
+                                                  << ", but no FX index is provided for conversion.");
             auto ind = parseFxIndex(d.fxIndex);
-            QL_REQUIRE(ind != nullptr, "Trade contains invalid FX index " << d.fxIndex << " for premium data.");
-            QL_REQUIRE((ind->sourceCurrency() == premiumCurrency && ind->targetCurrency() == payCurrency.value()) ||
-                           (ind->sourceCurrency() == payCurrency.value() && ind->targetCurrency() == premiumCurrency),
-                       "Trade contains FX index " << d.fxIndex << " with source currency " << ind->sourceCurrency()
-                                                  << " and target currency " << ind->targetCurrency()
-                                                  << " for premium data, but pay currency is " << payCurrency.value()
-                                                  << " and premium currency is " << premiumCurrency << ".");
+            QL_REQUIRE(validFxIndex(ind, premiumCurrency, payCurrency), "Trade contains premium data with premium currency " << premiumCurrency
+                                                  << " and cash settlement payment currency " << payCurrency
+                                                  << ", but the FX index " << d.fxIndex
+                                                  << " is not valid or not available in the market.");
 
-            fxIndex = buildFxIndex(d.fxIndex, payCurrency.value().code(), premiumCurrency.code(), factory->market(),
+            fxIndex = buildFxIndex(d.fxIndex, payCurrency.code(), premiumCurrency.code(), factory->market(),
                                    configuration, true);
-            QL_REQUIRE(fxIndex.has_value(), "Trade contains invalid FX index " << d.fxIndex << " for premium data.");
             if (!d.fixingDate.empty()) {
                 fixingDate = parseDate(d.fixingDate);
             }
@@ -101,7 +94,7 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
                                                                  fxIndex, fixingDate);
         addMultipliers.push_back(premiumMultiplier);
 
-        std::string premiumSettlementCurrency = payCurrency.has_value() ? payCurrency.value().code() : premiumCurrency.code();
+        std::string premiumSettlementCurrency = payCurrency.code();
 
         Handle<YieldTermStructure> yts = discountCurve.empty()
             ? factory->market()->discountCurve(premiumSettlementCurrency, configuration)
@@ -110,6 +103,9 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
         DLOG("Premium Discounting currency is " << premiumSettlementCurrency
                                                   << ", trade currency is " << tradeCurrency.code()
                                                   << ", configuration is " << configuration);
+        
+        // If the premium settlement currency is different from the trade currency, we need to get the FX rate
+        // for the premium settlement currency to the trade npvcurrency.                                                  
         if (tradeCurrency.code() != premiumSettlementCurrency) {
             fx = factory->market()->fxRate(premiumSettlementCurrency + tradeCurrency.code(), configuration);
         }
@@ -121,17 +117,16 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
         //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
-        if (fxIndex) {
-            auto fxFixingDate = fixingDate.has_value() ? fixingDate.value() : fxIndex.value()->fixingDate(fee->cashFlow()->date());
+        if (premiumCurrency != payCurrency) {
+            auto fxFixingDate = fixingDate ? fixingDate.value() : fxIndex->fixingDate(fee->cashFlow()->date());
             legs_.push_back(Leg(1, QuantLib::ext::make_shared<QuantExt::FXLinkedTypedCashFlow>(
                                        fee->cashFlow()->date(), fxFixingDate,
-                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier, fxIndex.value(),
+                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier, fxIndex,
                                        QuantExt::TypedCashFlow::Type::Premium)));
         } else {
-            legs_.push_back(
-                Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
-                    fee->cashFlow()->date(),
-                    QuantExt::TypedCashFlow::Type::Premium)));
+            legs_.push_back(Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(
+                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+                                       fee->cashFlow()->date(), QuantExt::TypedCashFlow::Type::Premium)));
         }
         legCurrencies_.push_back(fee->currency().code());
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
