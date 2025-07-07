@@ -866,6 +866,22 @@
       <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDeltaVega">Y</Parameter>
+      <Parameter name="ComputeGamma">N</Parameter>
+      <Parameter name="BucketTimesDeltaGamma">
+	0.0417, 0.0833, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0
+      </Parameter>
+      <Parameter name="BucketTimesVega">
+	0.0417, 0.0833, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0
+      </Parameter>
+    </EngineParameters>
+  </Product>
+<!--
   <Product type="FxOptionEuropeanCS">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>
@@ -873,7 +889,8 @@
     <EngineParameters>
       <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
-  </Product>
+    </Product>
+-->
   <Product type="BondRepo">
     <Model>Accrual</Model>
     <ModelParameters>
