@@ -59,11 +59,6 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return false; }
-    //@}
-
 private:
     QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
 
