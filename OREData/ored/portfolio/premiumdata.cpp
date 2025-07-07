@@ -85,7 +85,7 @@ XMLNode* PremiumData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, p, "Amount", d.amount);
         XMLUtils::addChild(doc, p, "Currency", d.ccy);
         XMLUtils::addChild(doc, p, "PayDate", ore::data::to_string(d.payDate));
-        if(!d.payCurrency.empty() || !d.fxIndex.empty() || !d.fixingDate.empty()) {
+        if (!d.payCurrency.empty() || !d.fxIndex.empty() || !d.fixingDate.empty()) {
             XMLNode* settlementDataNode = XMLUtils::addChild(doc, p, "SettlementData");
             if (!d.payCurrency.empty()) {
                 XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", d.payCurrency);
