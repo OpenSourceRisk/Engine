@@ -311,7 +311,7 @@ class LegBuilder {
 public:
     LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&,
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          RequiredFixings& requiredFixings, const string& configuration,
                          const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
                          const bool attachPricer = true,

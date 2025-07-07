@@ -54,8 +54,10 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {}
+                                 const std::vector<QuantLib::Date>& simulationDates,
+                                 const bool reevaluateExerciseInStickyCloseOutDateRun)
+    : modelCg_(modelCg), simulationDates_(simulationDates),
+      reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
@@ -436,7 +438,6 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 }
 
 void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            const bool reevaluateExerciseInStickyCloseOutDateRun,
                                             std::vector<TradeExposure>* tradeExposure,
                                             TradeExposureMetaInfo* tradeExposureMetaInfo) const {
 
@@ -630,7 +631,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 }
             }
 
-            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun) {
+            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun_) {
 
                 // reuse exercise indicator from previous run on valuation dates
 
@@ -816,27 +817,20 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                     cg_const(g, 1.0));
                 std::size_t futureOptionValueCond = createRegressionModel(
                     comp2, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
-                    cg_const(g, 1.0), &(*tradeExposure)[simCounter + 1]);
+                    cg_const(g, 1.0));
 
                 // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
                 // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
                 // floor at zero
-                std::size_t rderiv =
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
 
-                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives = rderiv;
-                (*tradeExposure)[simCounter + 1].startNodeRecombine = exercisedValueCond;
-                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(wasExercised);
-                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 1.0));
-                (*tradeExposure)[simCounter + 1].additionalRequiredNodes.insert(cg_const(g, 0.0));
-
                 // here we can take max(0, futureOptionValueCond)
-                std::size_t r = cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
-                                       cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
-                                               cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
-
-                (*tradeExposure)[simCounter + 1].targetConditionalExpectation = r;
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectation =
+                    cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
+                                   cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
 
                 // increase counters and continue
 
@@ -851,11 +845,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, const Date& d,
                                                    const std::vector<CashflowInfo>& cashflowInfo,
                                                    const std::function<bool(std::size_t)>& cashflowRelevant,
-                                                   const std::size_t filter, TradeExposure* tradeExposure) const {
+                                                   const std::size_t filter) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
     auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
-    if (tradeExposure)
-        tradeExposure->regressors = regressors;
     return modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors);
 }
 

@@ -281,7 +281,7 @@ void XvaEngineCG::buildCgPartB() {
         std::vector<TradeExposure> tradeExposure;
         TradeExposureMetaInfo metaInfo;
 
-        engine->buildComputationGraph(false, false, &tradeExposure, &metaInfo);
+        engine->buildComputationGraph(false, &tradeExposure, &metaInfo);
 
         for (auto& t : tradeExposure)
             t.multiplier = multiplier;
@@ -307,7 +307,7 @@ void XvaEngineCG::buildCgPartB() {
         if (!closeOutDates_.empty()) {
 
             if (!stickyCloseOutDates_.empty()) {
-                engine->buildComputationGraph(true, false, &tradeExposure, &metaInfo);
+                engine->buildComputationGraph(true, &tradeExposure, &metaInfo);
                 for (auto& t : tradeExposure)
                     t.multiplier = multiplier;
             }
@@ -668,10 +668,9 @@ void XvaEngineCG::doForwardEvaluation() {
     if (enableDynamicIM_) {
         for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
-                for (auto const n : tradeExposureValuation_[j][i].regressors) {
-                    keepNodes_[n] = true;
-                }
-                for (auto const n : tradeExposureValuation_[j][i].additionalRequiredNodes) {
+                for (auto const n :
+                     dependentNodes(*g, tradeExposureValuation_[j][i + 1].componentPathValues.back() + 1,
+                                    tradeExposureValuation_[j][i + 1].targetConditionalExpectationDerivatives + 1)) {
                     keepNodes_[n] = true;
                 }
             }
@@ -1091,13 +1090,12 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     std::vector<RandomVariable> tmp(g->size());
 
+    std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].componentPathValues.back() + 1;
+    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
+
     // set the values we need for evaluation
 
-    for (auto const n : tradeExposureValuation_[tradeId][timeStep].regressors) {
-        tmp[n] = values_[n];
-    }
-
-    for (auto const n : tradeExposureValuation_[tradeId][timeStep].additionalRequiredNodes) {
+    for (auto const n : dependentNodes(*g, startNode, endNode)) {
         tmp[n] = values_[n];
     }
 
@@ -1108,16 +1106,6 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     }
 
     // combine the components
-
-    std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].startNodeRecombine;
-    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
-
-    QL_REQUIRE(
-        startNode != ComputationGraph::nan,
-        "XvaEngineCG::dynamicImCombineComponents(): startNodeRecombine is not set, can not calculate derivatives.");
-    QL_REQUIRE(endNode != ComputationGraph::nan,
-               "XvaEngineCG::dynamicImCombineComponents(): targetConditionalExpectationDerivatives is not set, can not "
-               "calculate derivatives.");
 
     std::vector<bool> keepNodes(g->size(), false);
     keepNodes[endNode] = true;
@@ -1405,7 +1393,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
                                               irVegaConverter, fxVegaConverter, conditionalIrDelta, conditionalFxDelta,
                                               conditionalIrVega, conditionalFxVega);
-                }
+            }
 
         } // loop over individual trades
 

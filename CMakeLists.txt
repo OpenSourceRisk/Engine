@@ -41,5 +41,5 @@ endif()
 
 # add examples testsuite
 if (ORE_BUILD_EXAMPLES AND ORE_BUILD_TESTS)
-add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND nosetests run_examples_testsuite.py)
+add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND pytest run_examples_testsuite.py)
 endif()
