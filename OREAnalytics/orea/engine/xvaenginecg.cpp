@@ -281,7 +281,7 @@ void XvaEngineCG::buildCgPartB() {
         std::vector<TradeExposure> tradeExposure;
         TradeExposureMetaInfo metaInfo;
 
-        engine->buildComputationGraph(false, false, &tradeExposure, &metaInfo);
+        engine->buildComputationGraph(false, &tradeExposure, &metaInfo);
 
         for (auto& t : tradeExposure)
             t.multiplier = multiplier;
@@ -307,7 +307,7 @@ void XvaEngineCG::buildCgPartB() {
         if (!closeOutDates_.empty()) {
 
             if (!stickyCloseOutDates_.empty()) {
-                engine->buildComputationGraph(true, false, &tradeExposure, &metaInfo);
+                engine->buildComputationGraph(true, &tradeExposure, &metaInfo);
                 for (auto& t : tradeExposure)
                     t.multiplier = multiplier;
             }
@@ -668,10 +668,9 @@ void XvaEngineCG::doForwardEvaluation() {
     if (enableDynamicIM_) {
         for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
-                for (auto const n : tradeExposureValuation_[j][i].regressors) {
-                    keepNodes_[n] = true;
-                }
-                for (auto const n : tradeExposureValuation_[j][i].additionalRequiredNodes) {
+                for (auto const n :
+                     dependentNodes(*g, tradeExposureValuation_[j][i + 1].componentPathValues.back() + 1,
+                                    tradeExposureValuation_[j][i + 1].targetConditionalExpectationDerivatives + 1)) {
                     keepNodes_[n] = true;
                 }
             }
@@ -914,11 +913,23 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
                    "XvaEngineCG::populateDynamicIMOutputCube(): netting set "
                        << ns << " not found in output cube, this is an internal error.");
 
-        dynamicIMOutputCube_->setT0(im[0].at(0), 0);
+        // dynamicIMOutputCube_->setT0(im[0].at(0), 0);
+        dynamicIMOutputCube_->setT0(im[0].at(0), nidx->second, 0);
+	dynamicIMOutputCube_->setT0(dynamicDeltaIM_[ns][0].at(0), nidx->second, 1);
+	dynamicIMOutputCube_->setT0(dynamicVegaIM_[ns][0].at(0), nidx->second, 2);
+	dynamicIMOutputCube_->setT0(dynamicCurvatureIM_[ns][0].at(0), nidx->second, 3);
 
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size k = 0; k < im[i + 1].size(); ++k) {
+                // // convention in the output cube is im deflated by numeraire
+                // dynamicIMOutputCube_->set(im[i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 0);
+                // dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 1);
+                // dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 2);
+                // dynamicIMOutputCube_->set(dynamicCurvatureIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 3);
                 dynamicIMOutputCube_->set(im[i + 1][k], nidx->second, i, k, 0);
+                dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k], nidx->second, i, k, 1);
+                dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k], nidx->second, i, k, 2);
+                dynamicIMOutputCube_->set(dynamicCurvatureIM_[ns][i + 1][k], nidx->second, i, k, 3);
             }
         }
     }
@@ -1091,13 +1102,12 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     std::vector<RandomVariable> tmp(g->size());
 
+    std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].componentPathValues.back() + 1;
+    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
+
     // set the values we need for evaluation
 
-    for (auto const n : tradeExposureValuation_[tradeId][timeStep].regressors) {
-        tmp[n] = values_[n];
-    }
-
-    for (auto const n : tradeExposureValuation_[tradeId][timeStep].additionalRequiredNodes) {
+    for (auto const n : dependentNodes(*g, startNode, endNode)) {
         tmp[n] = values_[n];
     }
 
@@ -1108,16 +1118,6 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     }
 
     // combine the components
-
-    std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].startNodeRecombine;
-    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
-
-    QL_REQUIRE(
-        startNode != ComputationGraph::nan,
-        "XvaEngineCG::dynamicImCombineComponents(): startNodeRecombine is not set, can not calculate derivatives.");
-    QL_REQUIRE(endNode != ComputationGraph::nan,
-               "XvaEngineCG::dynamicImCombineComponents(): targetConditionalExpectationDerivatives is not set, can not "
-               "calculate derivatives.");
 
     std::vector<bool> keepNodes(g->size(), false);
     keepNodes[endNode] = true;
@@ -1142,6 +1142,10 @@ void XvaEngineCG::calculateDynamicIM() {
 
     for (auto const& n : nettingSetIds) {
         dynamicIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicDeltaIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicVegaIM_[n] = std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
+        dynamicCurvatureIM_[n] =
+            std::vector<RandomVariable>(valuationDates_.size() + 1, RandomVariable(model_->size()));
     }
 
     // sensi bucketing configuration
@@ -1204,6 +1208,7 @@ void XvaEngineCG::calculateDynamicIM() {
         keepNodesDerivatives[n] = true;
     }
 
+    
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
@@ -1228,6 +1233,14 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
+	// additional IM calculator results
+	auto deltaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	auto vegaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	auto curvatureMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	auto deltaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	auto vegaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	auto curvatureMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+	
         for (auto const& [parameterGroup, exposureNode] : dynamicImInfo_[i].plainTradeSumGrouped) {
 
             // init derivatives container
@@ -1405,7 +1418,7 @@ void XvaEngineCG::calculateDynamicIM() {
                 dynamicImAddToConvertedSensis(ccy, tmpIrDelta, tmpIrVega, tmpFxVega, tmpFxDelta, irDeltaConverter,
                                               irVegaConverter, fxVegaConverter, conditionalIrDelta, conditionalFxDelta,
                                               conditionalIrVega, conditionalFxVega);
-                }
+            }
 
         } // loop over individual trades
 
@@ -1422,9 +1435,21 @@ void XvaEngineCG::calculateDynamicIM() {
 
         for (auto const& n : nettingSetIds) {
             dynamicIM_[n][i] =
-                imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega);
+	      imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega,
+				 deltaMarginIr, vegaMarginIr, curvatureMarginIr,
+				 deltaMarginFx, vegaMarginFx, curvatureMarginFx);
+            if (deltaMarginIr && deltaMarginFx)
+                dynamicDeltaIM_[n][i] = *deltaMarginIr + *deltaMarginFx;
+            if (vegaMarginIr && vegaMarginFx)
+                dynamicVegaIM_[n][i] = *vegaMarginIr + *vegaMarginFx;
+            if (curvatureMarginIr && curvatureMarginFx)
+                dynamicCurvatureIM_[n][i] = *curvatureMarginIr + *curvatureMarginFx;
+
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
+		dynamicDeltaIM_[n][j] = dynamicDeltaIM_[n][i];
+                dynamicVegaIM_[n][j] = dynamicVegaIM_[n][i];
+                dynamicCurvatureIM_[n][j] = dynamicCurvatureIM_[n][i];
             }
         }
 

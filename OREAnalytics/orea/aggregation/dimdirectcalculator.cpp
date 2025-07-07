@@ -36,23 +36,30 @@ DirectDynamicInitialMarginCalculator::DirectDynamicInitialMarginCalculator(
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<NPVCube>& imCube, const std::map<std::string, Real>& currentIM)
     : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, Null<Real>(), 0,
-                                     currentIM),
+                                     currentIM, imCube->depth()),
       imCube_(imCube) {}
 
 void DirectDynamicInitialMarginCalculator::build() {
     DLOG("DirectDynamicInitialMarginCalculator:build() called");
+    QL_REQUIRE(dimCube_->depth() == imCube_->depth(),
+	       "dim and im cube depths don't match " << dimCube_->depth() << " vs " << imCube_->depth());
     for (const auto& n : nettingSetIds_) {
         DLOG("Process netting set " << n);
         auto ns = imCube_->idsAndIndexes().find(n);
         QL_REQUIRE(ns != imCube_->idsAndIndexes().end(), "DirectDynamicInitialMarginCalculator::build(): netting set '"
                                                              << n << "' not found in im-cube. Internal error.");
         unscaledCurrentDIM_[n] = imCube_->getT0(ns->second, 0);
+        for (Size d = 0; d < imCube_->depth(); ++d) {
+            Real dim = imCube_->getT0(ns->second, d);
+            dimCube_->setT0(dim, ns->second, d);
+        }
         for (Size j = 0; j < cube_->dates().size(); ++j) {
             nettingSetExpectedDIM_[n][j] = 0.0;
             for (Size k = 0; k < cube_->samples(); ++k) {
                 nettingSetDIM_[n][j][k] = imCube_->get(ns->second, j, k, 0);
                 nettingSetExpectedDIM_[n][j] += imCube_->get(ns->second, j, k, 0);
-                dimCube_->set(imCube_->get(ns->second, j, k, 0), ns->second, j, k);
+                for (Size d = 0; d < imCube_->depth(); ++d)
+                    dimCube_->set(imCube_->get(ns->second, j, k, d), ns->second, j, k, d);
             }
             nettingSetExpectedDIM_[n][j] /= static_cast<double>(cube_->samples());
         }

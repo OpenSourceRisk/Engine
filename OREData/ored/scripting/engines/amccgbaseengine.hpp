@@ -41,10 +41,10 @@ using QuantLib::Size;
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates);
+                    const std::vector<QuantLib::Date>& simulationDates,
+                    const bool reevaluateExerciseInStickyCloseOutDateRun);
 
     void buildComputationGraph(const bool stickyCloseOutDateRun = false,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun = false,
                                std::vector<TradeExposure>* tradeExposure = nullptr,
                                TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
     void calculate() const;
@@ -53,6 +53,7 @@ protected:
     // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
+    bool reevaluateExerciseInStickyCloseOutDateRun_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;
@@ -96,7 +97,7 @@ private:
     std::size_t createRegressionModel(const std::size_t amount, const Date& d,
                                       const std::vector<CashflowInfo>& cashflowInfo,
                                       const std::function<bool(std::size_t)>& cashflowRelevant,
-                                      const std::size_t filter, TradeExposure* tradeExposure = nullptr) const;
+                                      const std::size_t filter) const;
 };
 
 } // namespace data

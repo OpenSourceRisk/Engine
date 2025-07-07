@@ -36,7 +36,7 @@ public:
     AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<Date>& simulationDates)
         : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
+          AmcCgBaseEngine(modelCg, simulationDates, false), ccy_(ccy) {
         registerWith(modelCg);
     }
 

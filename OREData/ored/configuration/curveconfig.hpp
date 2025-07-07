@@ -34,6 +34,7 @@ namespace data {
 using ore::data::XMLSerializable;
 using std::set;
 using std::string;
+using std::pair;
 
 //! Base curve configuration
 /*!
@@ -58,6 +59,7 @@ public:
     set<string> requiredNames(const MarketObject o, const std::string& configuration) const;
     map<CurveSpec::CurveType, set<string>> requiredCurveIds() const;
     map<MarketObject, set<string>> requiredNames(const std::string& configuration) const;
+    map<pair<MarketObject, string>, set<string>> requiredNames() const;
     //@}
 
     //! \name Setters
