@@ -8,6 +8,7 @@ import csv
 import datetime
 from dateutil import parser
 from lxml import etree as et
+from io import StringIO
 
 def getSamples(simulationXml):
     tree = et.parse(simulationXml)
@@ -383,3 +384,19 @@ def fxVegaEvolution(sample, simmCubeFile, outputFile, depth):
 
     df4.to_csv(outputFile, sep=',')
     
+def expiryDate(filterSample, trade, rawCubeFile, expiryDepth):
+
+    data = pd.read_csv(rawCubeFile)
+
+    for index, row in data.iterrows():
+        
+        trade = row["#Id"]
+        date = row["Date"]
+        sample = row["Sample"]
+        depth = row["Depth"]
+        value = row["Value"]
+
+        if depth == expiryDepth and sample == filterSample and not np.isnan(value):
+            return date
+
+    return ""

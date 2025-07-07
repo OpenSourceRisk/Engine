@@ -27,7 +27,6 @@
       <Index>USD-LIBOR-3M</Index>
       <Index>USD-SOFR-3M</Index>
     </Indices>
-    <!--
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
@@ -50,7 +49,6 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
-    -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>

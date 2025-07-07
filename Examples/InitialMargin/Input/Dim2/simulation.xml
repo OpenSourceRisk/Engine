@@ -4,12 +4,7 @@
   <Parameters>
       <Discretization>Euler</Discretization>
       <TimeStepsPerYear>24</TimeStepsPerYear>
-      <Grid>65,1M</Grid>
-      <!--<Grid>135,2W</Grid>-->
-      <!--<Grid>52,1W</Grid>-->
-      <!--<Grid>121,1M</Grid>-->
-      <!--<Grid>270,2W</Grid>-->
-      <!--<Grid>1M,1Y,4Y,8Y</Grid>-->
+      <Grid>121,1M</Grid>
       <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
@@ -155,6 +150,42 @@
       <SwapIndex>
         <Name>GBP-CMS-30Y</Name>
         <DiscountingIndex>GBP-SONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
     

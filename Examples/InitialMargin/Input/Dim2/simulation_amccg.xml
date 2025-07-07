@@ -3,9 +3,9 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
-      <Grid>65,1M</Grid>
+      <!--<Grid>65,1M</Grid>-->
       <!--<Grid>135,2W</Grid>-->
-      <!--<Grid>121,1M</Grid>-->
+      <Grid>121,1M</Grid>
       <!--<Grid>270,2W</Grid>-->
       <!--<Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>-->
       <TimeStepsPerYear>24</TimeStepsPerYear>
@@ -144,6 +144,10 @@
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
         <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-1Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-10Y</Name>

@@ -23,30 +23,30 @@ print("+-----------------------------------------------------+")
 #oreex.decorate_plot(title="SIMM Evolution", ylabel="SIMM", xlabel="Time",legend_loc="lower left")
 #oreex.save_plot_to_file()
 
-dimCubeFile = "Output/Dim2/AmcCg/dim_cube.csv"
-dimCubeFile2 = "Output/Dim2/SimmAnalytic/dim_cube.csv"
+amcCubeFile = "Output/Dim2/AmcCg/dim_cube.csv"
+asCubeFile = "Output/Dim2/SimmAnalytic/dim_cube.csv"
 simmCubeFile = "Output/DimValidation/simm_cube.csv"
 
 def pathwiseComparison(s, oreex, color1, color2, color3, depth):
-    dimEvolutionFile = "Dim2/AmcCg/dim_evolution_" + str(s) + "_" + str(depth) + ".csv"
-    utilities.simmEvolution(s - 1, dimCubeFile, "Output/" + dimEvolutionFile, depth)
-    print("evolution file", dimEvolutionFile, "written")
+    amcEvolutionFile = "Dim2/AmcCg/dim_evolution_" + str(s) + "_" + str(depth) + ".csv"
+    utilities.simmEvolution(s - 1, amcCubeFile, "Output/" + amcEvolutionFile, depth)
+    print("evolution file", amcEvolutionFile, "written")
 
-    dimEvolutionFile2 = "Dim2/SimmAnalytic/dim_evolution_" + str(s) + "_" + str(depth) + ".csv"
-    utilities.simmEvolution(s - 1, dimCubeFile2, "Output/" + dimEvolutionFile2, depth)
-    print("evolution file", dimEvolutionFile, "written")
+    asEvolutionFile = "Dim2/SimmAnalytic/dim_evolution_" + str(s) + "_" + str(depth) + ".csv"
+    utilities.simmEvolution(s - 1, asCubeFile, "Output/" + asEvolutionFile, depth)
+    print("evolution file", asEvolutionFile, "written")
 
     simmEvolutionFile = "DimValidation/simm_evolution_" + str(s) + "_" + str(depth) + ".csv"
     utilities.simmEvolution(s, simmCubeFile, "Output/" + simmEvolutionFile, depth)
     print("evolution file", simmEvolutionFile, "written")
 
-    oreex.plot(simmEvolutionFile, 1, 5, color3, "SIMM Sample " + str(s) + " Depth " + str(depth))
-#    oreex.plot(dimEvolutionFile, 1, 5, color2, "DIM AMC/AD Sample " + str(s))
-    oreex.plot(dimEvolutionFile2, 1, 5, color1, "DIM Classic Sample " + str(s) + " Depth " + str(depth))
+    oreex.plot(simmEvolutionFile, 1, 5, color3, "SIMM Sample " + str(s))
+    oreex.plot(amcEvolutionFile, 1, 5, color2, "DIM AMC Sample " + str(s))
+    oreex.plot(asEvolutionFile, 1, 5, color1, "DIM Classic Sample " + str(s))
 
 
 sampleRange = [1, 2, 3, 4, 5, 6, 7, 8]
-depthRange = [0]
+depthRange = [0, 1, 2, 3]
 
 for s in sampleRange:
     for d in depthRange:

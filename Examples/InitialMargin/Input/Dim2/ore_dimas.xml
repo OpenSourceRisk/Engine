@@ -6,7 +6,7 @@
     <Parameter name="outputPath">Output/Dim2/SimmAnalytic</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">marketdata.csv</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
@@ -63,16 +63,7 @@
       <Parameter name="calculationType">Symmetric</Parameter>
       <Parameter name="allocationMethod">None</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
-      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="dim">Y</Parameter>
       <!-- DynamicIM requires xvaCgDynamicIM = true under simulation above -->
       <Parameter name="dimModel">SimmAnalytic</Parameter>

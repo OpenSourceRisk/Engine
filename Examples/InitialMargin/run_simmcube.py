@@ -116,7 +116,7 @@ for s in sampleRange:
             depth = depth_dict[mt]
             if pf == nettingSet and pc == 'All' and rc == 'All' and bk == 'All' and side == 'Call':
                 simmRowList.append([pf, s, asof0, 0.0, '{:.6f}'.format(im), currency, side, depth, mt])
-
+                
     for asof in refDates:
 
         numeraire = utilities.num(asof, numeraireData)

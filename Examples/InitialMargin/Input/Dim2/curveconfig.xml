@@ -63,7 +63,8 @@
     <SwaptionVolatility>
       <CurveId>EUR</CurveId>
       <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -82,7 +83,8 @@
     <SwaptionVolatility>
       <CurveId>GBP</CurveId>
       <CurveDescription>GBP normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -117,7 +119,8 @@
     <SwaptionVolatility>
       <CurveId>USD-SOFR</CurveId>
       <CurveDescription>USD-SOFR normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
