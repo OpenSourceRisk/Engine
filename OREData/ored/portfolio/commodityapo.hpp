@@ -91,11 +91,6 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return true; }
-    //@}
-
 private:
     ore::data::OptionData optionData_;
     ore::data::BarrierData barrierData_;
