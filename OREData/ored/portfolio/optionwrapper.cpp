@@ -76,6 +76,7 @@ void OptionWrapper::reset() {
     exercised_ = false;
     exerciseDate_ = Date();
     settlementDate_ = Date();
+    cachedExerciseValue_ = QuantLib::Null<Real>();
 }
 
 Real OptionWrapper::NPV() const {
@@ -151,8 +152,9 @@ bool EuropeanOptionWrapper::exercise() const {
         return false;
 
     // for European Exercise, we only require that underlying has positive PV
-    bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
-    return res;
+    Real value = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
+    cachedExerciseValue_ = value;
+    return value > 0.0;
 }
 
 bool AmericanOptionWrapper::exercise() const {
@@ -160,11 +162,13 @@ bool AmericanOptionWrapper::exercise() const {
         return false;
 
     if (Settings::instance().evaluationDate() == effectiveExerciseDates_.back()) {
-        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
-        return res;
+        Real value = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
+	cachedExerciseValue_ = value;
+        return value > 0.0;
     } else {
-        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
-        return res;
+        Real value = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ - getTimedNPV(instrument_) * multiplier_;
+	cachedExerciseValue_ = value;
+        return value > 0.0;
     }
 }
 
@@ -181,7 +185,10 @@ bool BermudanOptionWrapper::exercise() const {
         }
     }
 
-    return getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
+    Real value = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ - getTimedNPV(instrument_) * multiplier_;
+    cachedExerciseValue_ = value;
+    
+    return value > 0.0;
 }
 } // namespace data
 } // namespace ore
