@@ -61,7 +61,7 @@ public:
     //@}
     //! \name Additional interface
     //@{
-    Currency currency() const { return currency_; }
+    Currency currency() const { return payCurrency_.value_or(currency_); }
     const QuantLib::ext::shared_ptr<SimpleCashFlow>& cashFlow() const { return cashflow_; }
     //@}
 

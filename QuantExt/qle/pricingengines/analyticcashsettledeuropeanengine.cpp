@@ -20,6 +20,7 @@
 #include <ql/exercise.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 using QuantLib::close;
 using QuantLib::Date;
@@ -185,6 +186,13 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // Take the additional results from the underlying engine and add more.
         results_.additionalResults = underlyingResults->additionalResults;
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount = results_.value / df_te_tp;
+        cfResults.back().payDate = arguments_.exercise->lastDate();
+        cfResults.back().legNumber = 0;
+        cfResults.back().type = "ExpectedFlow";
+        results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
         results_.additionalResults["fxRate"] = fxRate;
     }

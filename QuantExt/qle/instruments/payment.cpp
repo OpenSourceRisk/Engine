@@ -40,7 +40,7 @@ Payment::Payment(const Real amount, const Currency& currency, const Date& date,
                "Payment: pay currency must be set if fx index is set");
     QL_REQUIRE(!fxIndex_.has_value() || (fxIndex_.value()->sourceCurrency().code() == currency.code() &&
                                          fxIndex_.value()->targetCurrency().code() == payCurrency_->code()),
-               "Payment: fx index currency must match pay and premium currency, got indec "
+               "Payment: fx index currency must match pay and premium currency, got index "
                    << fxIndex_.value()->name() << " with source " << fxIndex_.value()->sourceCurrency().code()
                    << " and target " << fxIndex_.value()->targetCurrency().code() << ", pay currency "
                    << payCurrency_->code() << " and premium currency " << currency.code());

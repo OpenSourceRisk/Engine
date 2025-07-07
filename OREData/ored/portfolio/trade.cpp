@@ -28,7 +28,7 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/indexes/fxindex.hpp>
-
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 using ore::data::XMLUtils;
 
 namespace ore {
@@ -121,12 +121,19 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
         //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
-        legs_.push_back(
-            Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
-                fee->cashFlow()->date(),
-                QuantExt::TypedCashFlow::Type::Premium)));
+        if (fxIndex) {
+            auto fxFixingDate = fixingDate.has_value() ? fixingDate.value() : fxIndex.value()->fixingDate(fee->cashFlow()->date());
+            legs_.push_back(Leg(1, QuantLib::ext::make_shared<QuantExt::FXLinkedTypedCashFlow>(
+                                       fee->cashFlow()->date(), fxFixingDate,
+                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier, fxIndex.value(),
+                                       QuantExt::TypedCashFlow::Type::Premium)));
+        } else {
+            legs_.push_back(
+                Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+                    fee->cashFlow()->date(),
+                    QuantExt::TypedCashFlow::Type::Premium)));
+        }
         legCurrencies_.push_back(fee->currency().code());
-
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
 
