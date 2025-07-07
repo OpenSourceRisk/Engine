@@ -3,16 +3,20 @@
 
   <Parameters>
       <Discretization>Euler</Discretization>
+      <Grid>60,1M</Grid>
+      <!--<Grid>1D,1M,1Y,2Y,3Y,4Y,5Y</Grid>-->
       <TimeStepsPerYear>24</TimeStepsPerYear>
-      <Grid>121,1M</Grid>
       <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>10</Samples>
+      <Samples>10000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+      <CloseOutLag>2W</CloseOutLag>
+      <MporMode>StickyDate</MporMode>
+      <DayCounter>A365F</DayCounter>
   </Parameters>
 
   <CrossAssetModel>
@@ -28,25 +32,20 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <!-- Bootstrap, BestFit -->
         <Volatility>
-	  <!--
-          <Calibrate>N</Calibrate>
-          <VolatilityType>Hagan</VolatilityType>
-          <ParamType>Constant</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.00002</InitialValue>
-	  -->
-	  <Calibrate>Y</Calibrate>
+          <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Piecewise</ParamType>
           <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
           <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
-	</Volatility>
+        </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
+          <!-- Hagan, HullWhite -->
           <ParamType>Constant</ParamType>
+          <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
+          <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
@@ -64,19 +63,13 @@
         <DomesticCcy>EUR</DomesticCcy>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
-	  <Calibrate>Y</Calibrate>
-	  <ParamType>Piecewise</ParamType>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
           <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
           <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <!--
-	  <Calibrate>N</Calibrate>
-	  <ParamType>Constant</ParamType>
-	  <TimeGrid/>
-          <InitialValue>0.00001</InitialValue>
-	  -->
 	</Sigma>
         <CalibrationOptions>
-          <Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
           <!-- ATMF, +25D, -25D, 1.2345 -->
         </CalibrationOptions>
@@ -117,9 +110,9 @@
       <Index>GBP-LIBOR-3M</Index>
       <Index>GBP-LIBOR-6M</Index>
       <Index>USD-SOFR</Index>
-      <Index>USD-SOFR-3M</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
+      <Index>USD-SOFR-3M</Index>
     </Indices>
     
     <SwapIndices>
@@ -138,10 +131,6 @@
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
         <DiscountingIndex>EUR-ESTER</DiscountingIndex>
-      </SwapIndex>
-      <SwapIndex>
-        <Name>GBP-CMS-1Y</Name>
-        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>GBP-CMS-10Y</Name>
@@ -190,7 +179,7 @@
     </SwapIndices>
     
     <SwaptionVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternatives: ForwardVariance, ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
@@ -198,20 +187,19 @@
         <Currency>GBP</Currency>
         <Currency>USD</Currency>
       </Currencies>
-      <!--<Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>-->
-      <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
-      <Terms>1Y,2Y,3Y,4Y,5Y,10Y</Terms>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Expiries>
+      <Terms>1Y,5Y,10Y</Terms>
     </SwaptionVolatilities>
 
     <FxVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternatives: ForwardVariance, ConstantVariance -->
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
         <CurrencyPair>GBPEUR</CurrencyPair>
       </CurrencyPairs>
-      <Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
     
     <AggregationScenarioDataCurrencies>
@@ -232,7 +220,6 @@
       <Index>USD-SOFR</Index>
       <Index>USD-FedFunds</Index>
       <Index>USD-LIBOR-3M</Index>
-      <Index>USD-SOFR-3M</Index>
     </AggregationScenarioDataIndices>
 
   </Market>

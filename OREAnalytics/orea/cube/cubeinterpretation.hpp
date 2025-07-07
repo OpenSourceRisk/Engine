@@ -44,12 +44,14 @@ namespace analytics {
 class CubeInterpretation {
 public:
     CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
+		       const bool withExerciseValue = false,
                        const QuantLib::ext::shared_ptr<DateGrid>& dateGrid = nullptr,
                        const Size storeCreditStateNPVs = 0, const bool flipViewXVA = false);
 
     //! inspectors
     bool storeFlows() const;
     bool withCloseOutLag() const;
+    bool withExerciseValue() const;
     const QuantLib::ext::shared_ptr<DateGrid>& dateGrid() const; // might be nullptr
     Size storeCreditStateNPVs() const;
     bool flipViewXVA() const;
@@ -60,6 +62,7 @@ public:
     //! indices in depth direction, might be Null<Size>() if not applicable
     Size defaultDateNpvIndex() const;
     Size closeOutDateNpvIndex() const;
+    Size exerciseValueIndex() const;
     Size mporFlowsIndex() const;
     Size creditStateNPVsIndex() const;
 
@@ -73,6 +76,9 @@ public:
     //! Retrieve the close-out date NPV from the Cube
     Real getCloseOutNpv(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                         const QuantLib::ext::shared_ptr<AggregationScenarioData>& data) const;
+
+    //! Retrieve the exerciseValue from the Cube
+    Real getExerciseValue(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
     //! Retrieve the aggregate value of Margin Period of Risk positive cashflows from the Cube
     Real getMporPositiveFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
@@ -100,6 +106,7 @@ public:
 private:
     bool storeFlows_;
     bool withCloseOutLag_;
+    bool withExerciseValue_;
     QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
     Size storeCreditStateNPVs_;
     bool flipViewXVA_;
@@ -107,6 +114,7 @@ private:
     Size requiredCubeDepth_;
     Size defaultDateNpvIndex_ = QuantLib::Null<Size>();
     Size closeOutDateNpvIndex_ = QuantLib::Null<Size>();
+    Size exerciseValueIndex_ = QuantLib::Null<Size>();
     Size mporFlowsIndex_ = QuantLib::Null<Size>();
     Size creditStateNPVsIndex_ = QuantLib::Null<Size>();
 };

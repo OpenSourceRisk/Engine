@@ -43,8 +43,12 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     LOG("Get CRIF records from CRIF loader and fill amountUSD");        
     CONSOLEW("SIMM: Load CRIF");
     simmAnalytic->loadCrifRecords(loader);
-    CONSOLE("OK");
-
+    if (simmAnalytic->crif()) {
+        CONSOLE("OK");
+    } else {
+        CONSOLE("FAILED");
+	return;
+    }
     if (analytic()->getWriteIntermediateReports()) {
         QuantLib::ext::shared_ptr<Crif> simmDataCrif = simmAnalytic->crif()->aggregate();
         QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -121,11 +125,11 @@ void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::In
         if (crif_) {
             crif_->fillAmountUsd(market());
 	    hasNettingSetDetails_ = crif_->hasNettingSetDetails();
+	    LOG("Completed generating CRIF for SIMM internally");
 	}
 	else {
-            QL_FAIL("Generating CRIF for SIMM failed");
+            ALOG("Generating CRIF for SIMM failed");
         }
-        LOG("Completed generating CRIF for SIMM internally");
     }
 }
 
