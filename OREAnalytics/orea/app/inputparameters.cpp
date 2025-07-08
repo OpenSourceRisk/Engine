@@ -673,12 +673,18 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
 }
 
 void InputParameters::setScenarioReader(const std::string& fileName) {
-    boost::filesystem::path baseScenarioPath(fileName);
-    QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
-    QL_REQUIRE(is_regular_file(baseScenarioPath),
-               "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
-        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+    boost::filesystem::path baseScenarioPath;
+    try {
+        boost::filesystem::path baseScenarioPath(fileName);
+        if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+            scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
+                fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+        }
+    } catch (const std::exception& e) {
+        // If the file does not exist or fails, assume it is a scenario string
+        scenarioReader_ = QuantLib::ext::make_shared<ScenarioBufferReader>(
+            fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(true));
+    }
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {

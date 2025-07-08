@@ -91,11 +91,18 @@ public:
         obj->fromXMLString(str);
     }
     
-    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {        
-        return std::string();
+    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {
+        if (parameters_.has(analytic, param))
+            return parameters_.get(analytic, param, mandatory);
+        else
+            return std::string();
     }
     virtual std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) {
-        return std::string();
+        return loadParameterString(analytic, param, mandatory);
+    }
+
+    void setParameter(std::string analytic, std::string parameter, std::string val) { 
+        parameters_.set(analytic, parameter, val);
     }
         
      /*********
@@ -988,6 +995,8 @@ protected:
     Size ignoreFixingLag_ = 0;
     optional<bool> includeTodaysCashFlows_;
     bool includeReferenceDateEvents_ = false;
+        
+    Parameters parameters_;
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;

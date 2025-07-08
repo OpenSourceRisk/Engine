@@ -87,6 +87,8 @@ class Parameters {
 %shared_ptr(InputParameters)
 class InputParameters {
 public:
+    
+    void setParameter(std::string analytic, std::string parameter, std::string val);
 
     // Getters, to be continued
     const QuantLib::Date& asof();
