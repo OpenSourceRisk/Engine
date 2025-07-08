@@ -89,6 +89,7 @@ public:
         string str = loadParameterXMLString(analytic, param, mandatory);
         obj = QuantLib::ext::make_shared<T>();
         obj->fromXMLString(str);
+        return true;
     }
     
     virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {
