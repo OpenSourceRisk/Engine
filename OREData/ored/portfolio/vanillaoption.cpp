@@ -95,7 +95,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     string discountCurve = envelope().additionalField("discount_curve", false, std::string());
 
     Currency npvCurrency = parseCurrencyWithMinors(npvCurrency_);
-
+    std::optional<Currency> cashSettlementCurrency;
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
@@ -143,7 +143,8 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
                  << io::iso_date(fixingDate) << " added to required fixings for trade " << id());
             // if no specific discount curve is provided, use the default discount curve for the cash settlement currency
-            discountCurve = discountCurve.empty() ? npvCurrency_ : discountCurve;
+
+            cashSettlementCurrency = npvCurrency;
         }
         // Use cash settlement option if the payment date is after the expiry date or if the cash settlement 
         if (paymentDate > expiryDate_ || ((npvCurrency != ccy) && sameCcy)) {
@@ -301,9 +302,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
         if (forwardDate_ != Date()) {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, false));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, false, cashSettlementCurrency));
         } else {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, true));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, true, cashSettlementCurrency));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
         addProductModelEngine(*vanillaOptionBuilder);
