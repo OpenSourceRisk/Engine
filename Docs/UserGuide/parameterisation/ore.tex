@@ -599,35 +599,6 @@ The PFE analytic type is the same as the XVA analytic, however it only returns r
 \label{lst:ore_xva}
 \end{listing}
 
-The PFE analytic type is the same as the XVA analytic, however it only returns results specific to PFE and only requires a subset of the XVA parameters.
-
-\begin{listing}[H]
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Analytics>
-  <Analytic type="pfe">
-    <Parameter name="active">Y</Parameter>
-    <Parameter name="csaFile">netting.xml</Parameter>
-    <Parameter name="cubeFile">cube.dat</Parameter>
-    <Parameter name="hyperCube">Y</Parameter>
-    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
-    <Parameter name="baseCurrency">EUR</Parameter>
-    <Parameter name="exposureProfiles">Y</Parameter>
-    <Parameter name="exposureProfilesByTrade">Y</Parameter>
-    <Parameter name="quantile">0.95</Parameter>
-    <Parameter name="calculationType">Symmetric</Parameter>
-    <Parameter name="allocationMethod">None</Parameter>
-    <Parameter name="marginalAllocationLimit">1.0</Parameter>
-    <Parameter name="exerciseNextBreak">N</Parameter>
-    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-  </Analytic>
-</Analytics>
-\end{minted}
-\caption{ORE analytic: xva}
-\label{lst:ore_xva}
-\end{listing}
-
 Parameters:
 \begin{itemize}
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum
