@@ -670,7 +670,7 @@ void XvaEngineCG::doForwardEvaluation() {
             for (std::size_t j = 0; j < tradeExposureMetaInfo_.size(); ++j) {
                 for (auto const n :
                      dependentNodes(*g, tradeExposureValuation_[j][i + 1].componentPathValues.back() + 1,
-                                    tradeExposureValuation_[j][i + 1].targetConditionalExpectationDerivatives + 1)) {
+                                    tradeExposureValuation_[j][i + 1].targetConditionalExpectationDerivative + 1)) {
                     keepNodes_[n] = true;
                 }
             }
@@ -1103,7 +1103,7 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
     std::vector<RandomVariable> tmp(g->size());
 
     std::size_t startNode = tradeExposureValuation_[tradeId][timeStep].componentPathValues.back() + 1;
-    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivatives;
+    std::size_t endNode = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpectationDerivative;
 
     // set the values we need for evaluation
 

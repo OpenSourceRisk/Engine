@@ -822,7 +822,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
                 // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
                 // floor at zero
-                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivatives =
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivative =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
 
