@@ -72,13 +72,16 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-    const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& params,
-    const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives, const std::string& script,
-    const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
-    const bool useCachedSensis, const bool useExternalComputeFramework,
-    const bool useDoublePrecisionForExternalCalculation)
-    : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys), ast_(ast),
-      context_(context), params_(params), indicatorSmoothingForValues_(indicatorSmoothingForValues),
+    const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
+    const std::string& amcCgTargetDerivative, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
+    const Model::Params& params, const double indicatorSmoothingForValues,
+    const double indicatorSmoothingForDerivatives, const std::string& script, const bool interactive,
+    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+    : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
+      amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
+      amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
+      indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
@@ -105,6 +108,8 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
 void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyCloseOutDateRun,
                                                               std::vector<TradeExposure>* tradeExposure,
                                                               TradeExposureMetaInfo* tradeExposureMetaInfo) const {
+
+    // TODO add sticky close-out states
 
     if (cgVersion_ != model_->cgVersion() || (stickyCloseOutDateRun && !cgForStickyCloseOutDateRunIsBuilt_)) {
 
@@ -170,12 +175,106 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 
         if (tradeExposure != nullptr) {
 
-            // TODO
+            auto s = workingContext_->arrays.find("_AMC_SimDates");
+            QL_REQUIRE(s != workingContext_->arrays.end(),
+                       "ScriptedInstrumentPricingEngineCG::calculate(): did not find amc exposure result _AMC_NPV");
+
+            tradeExposure->clear();
+            tradeExposure->resize(s->second.size() + 1);
+
+            if (amcCgComponents_.empty()) {
+
+                for (Size i = 0; i < tradeExposure->size(); ++i) {
+
+                    Date valDate = i == 0 ? model_->referenceDate() : boost::get<EventVec>(s->second[i - 1]).value;
+                    std::string name = i == 0 ? npv_ : "_AMC_NPV_" + std::to_string(i - 1);
+
+                    std::size_t n = g->variable(name, ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
+                                   << name << " (arrays are written with suffix _{index}) not found.");
+
+                    (*tradeExposure)[i].componentPathValues.resize(1);
+                    (*tradeExposure)[i].componentPathValues[0] = n;
+
+                    (*tradeExposure)[i].regressors = model_->npvRegressors(valDate, minimalModelCcys_);
+                }
+
+            } else {
+
+                QL_REQUIRE(!amcCgTargetValue_.empty(),
+                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): non-empty components vector "
+                           "found, but no targetValue specification.");
+
+                std::string effectiveAmcCgTargetDerivative =
+                    amcCgTargetDerivative_.empty() ? amcCgTargetValue_ : amcCgTargetDerivative_;
+
+                for (Size i = 0; i < tradeExposure->size(); ++i) {
+
+                    if (i == 0) {
+                        (*tradeExposure)[i].componentPathValues.resize(1);
+                        std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
+                        QL_REQUIRE(n != ComputationGraph::nan,
+                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
+                                       << npv_ << " not found.");
+
+                        (*tradeExposure)[i].componentPathValues.resize(1);
+                        (*tradeExposure)[i].componentPathValues[0] = n;
+
+                        (*tradeExposure)[i].regressors =
+                            model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
+                        continue;
+                    }
+
+                    (*tradeExposure)[i].componentPathValues.resize(amcCgComponents_.size());
+
+                    for (Size c = 0; c < amcCgComponents_.size(); ++c) {
+                        std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
+                                                    ComputationGraph::VarDoesntExist::Nan);
+                        QL_REQUIRE(n != ComputationGraph::nan,
+                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                       << amcCgComponents_[c] << " at index " << i << " not found.");
+                        (*tradeExposure)[i].componentPathValues[c] = n;
+                    }
+
+                    std::size_t n = g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1),
+                                                ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                   << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
+                    (*tradeExposure)[i].targetConditionalExpectation = n;
+
+                    n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
+                                    ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                   << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
+                    (*tradeExposure)[i + 1].targetConditionalExpectationDerivative = n;
+                }
+            }
         }
 
         if (tradeExposureMetaInfo != nullptr) {
 
-            // TODO
+            tradeExposureMetaInfo->hasVega = true;
+            tradeExposureMetaInfo->relevantCurrencies = minimalModelCcys_;
+
+            for (auto const& ccy : minimalModelCcys_) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+                if (ccy != model_->baseCcy()) {
+                    tradeExposureMetaInfo->relevantModelParameters.insert(
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+                }
+                if (tradeExposureMetaInfo->hasVega) {
+                    tradeExposureMetaInfo->relevantModelParameters.insert(
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+                    if (ccy != model_->baseCcy()) {
+                        tradeExposureMetaInfo->relevantModelParameters.insert(
+                            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+                    }
+                }
+            }
         }
     }
 }
