@@ -101,7 +101,7 @@ public:
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+    virtual Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
                      const QuantLib::ext::shared_ptr<SimMarket>& simMarket);
 
     void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
@@ -219,5 +219,27 @@ private:
     std::vector<std::vector<std::vector<TradeCashflowReportData>>>& cfCube_;
 };
 
+//! ExerciseCalculator
+/*! Calculate the exercise value of the given (option wrapper) trade, if exercised. Te exercise value is not
+ *  converted into base currency, nor discounted by the numeraire, since this is meant to be an indicator
+ *  whether exercise happened or not, i.e. it will be flat on a path beyond the exercise date. In case of
+ *  cash settlement the NPV beyond exercise is simply zero, in case of physical settlement it is the underlying
+ *  NPV.
+ *  The exercise vlaue is stored in the NPVCube at an extra depth. For any non-option(wrapper) trade, or if
+ *  not exercised, we store Null<Real>().
+ *  If the NPV() call throws, we log an exception and write 0 to the cube
+ *
+ */
+class ExerciseCalculator : public NPVCalculator {
+public:
+    //! base ccy and index to write to
+    ExerciseCalculator(const std::string& baseCcyCode, Size index = 1, bool laxFxConversion = false)
+        : NPVCalculator(baseCcyCode, index, laxFxConversion) {}
+
+    Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+	     const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
+
+};
+  
 } // namespace analytics
 } // namespace ore
