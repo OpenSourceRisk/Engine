@@ -64,9 +64,9 @@ void PaymentDiscountingEngine::calculate() const {
     Real NPV = 0.0;
     if (!arguments_.cashflow->hasOccurred(settlementDate, includeRefDateFlows))
         NPV = arguments_.cashflow->amount() * discountCurve_->discount(arguments_.cashflow->date());
-    results_.additionalResults["premium_amount"] = arguments_.cashflow->amount();
-    results_.additionalResults["premium_date"] = arguments_.cashflow->date();
-    results_.additionalResults["premium_df"] = discountCurve_->discount(arguments_.cashflow->date());;
+    results_.additionalResults["premiumAmount"] = arguments_.cashflow->amount();
+    results_.additionalResults["premiumDate"] = arguments_.cashflow->date();
+    results_.additionalResults["premiumDiscountFactor"] = discountCurve_->discount(arguments_.cashflow->date());;
 
     if (arguments_.fxIndex) {
         auto fixingDate = arguments_.fixingDate.has_value()
