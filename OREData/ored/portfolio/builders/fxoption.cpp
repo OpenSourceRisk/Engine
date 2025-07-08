@@ -75,7 +75,13 @@ CamAmcFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const C
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -116,7 +122,9 @@ AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Cu
 
     QL_REQUIRE(domCcy != forCcy, "AmcCgFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
-    return QuantLib::ext::make_shared<E>(domCcy.code(), forCcy.code(), modelCg_, simulationDates_);
+    return QuantLib::ext::make_shared<E>(
+        domCcy.code(), forCcy.code(), modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>

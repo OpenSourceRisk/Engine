@@ -711,6 +711,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setContinueOnError(parseBool(tmp));
 
+    tmp = params_->get("setup", "allowModelBuilderFallbacks", false);
+    if (tmp != "")
+        setAllowModelBuilderFallbacks(parseBool(tmp));
+
     tmp = params_->get("setup", "lazyMarketBuilding", false);
     if (tmp != "")
         setLazyMarketBuilding(parseBool(tmp));
@@ -782,6 +786,14 @@ void OREAppInputParameters::loadParameters() {
         setIborFallbackConfigFromFile(tmp.generic_string());
     } else {
         WLOG("Using default Ibor fallback config");
+    }
+
+    if (params_->has("setup", "baselTrafficLightConfig") && params_->get("setup", "baselTrafficLightConfig") != "") {
+        filesystem::path tmp = inputPath / params_->get("setup", "baselTrafficLightConfig");
+        LOG("Loading Basel Traffic Light from file: " << tmp);
+        setBaselTrafficLightFromFile(tmp.generic_string());
+    } else {
+        WLOG("Using default Basel Traffic Light config");
     }
 
     if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
@@ -1828,6 +1840,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp == "Y")
             setStoreFlows(true);
 
+        tmp = params_->get("simulation", "storeExerciseValues", false);
+        if (tmp == "Y")
+            setStoreExerciseValues(true);
+
         tmp = params_->get("simulation", "storeSensis", false);
         if (tmp == "Y")
             setStoreSensis(true);
@@ -2061,10 +2077,12 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("pfe", "dimModel", false);
     if (tmp != "") {
-        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
-                       tmp == "DeltaGammaVaR",
-                   "DIM model " << tmp << " not supported, "
-                                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
+        QL_REQUIRE(
+            tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM" || tmp == "SimmAnalytic",
+            "DIM model "
+                << tmp << " not supported, "
+                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
         setDimModel(tmp);
     }
 
@@ -2391,9 +2409,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "") {
         QL_REQUIRE(
             tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
-                tmp == "DeltaGammaVaR" || tmp == "DynamicIM",
-            "DIM model " << tmp << " not supported, "
-                         << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM");
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM" || tmp == "SimmAnalytic",
+            "DIM model "
+                << tmp << " not supported, "
+                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
         setDimModel(tmp);
     }
 

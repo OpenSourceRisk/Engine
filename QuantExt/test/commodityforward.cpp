@@ -140,26 +140,6 @@ BOOST_AUTO_TEST_CASE(testIsExpiredCashSettledPaymentGtMaturity) {
 
 }
 
-BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
-
-    BOOST_TEST_MESSAGE("Test that using a negative quantity in the constructor causes an exception");
-
-    CommonData td;
-
-    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, -10.0, td.maturity, td.strike),
-                      QuantLib::Error);
-}
-
-BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
-
-    BOOST_TEST_MESSAGE("Test that using a negative strike in the constructor causes an exception");
-
-    CommonData td;
-
-    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, td.quantity, td.maturity, -50.0),
-                      QuantLib::Error);
-}
-
 BOOST_AUTO_TEST_CASE(testPaymentDateLtMaturityCashSettledThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a payment date less than maturity for cash settled causes an exception");

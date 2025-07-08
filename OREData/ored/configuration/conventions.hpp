@@ -1356,7 +1356,7 @@ public:
     /*! The anchor day type of commodity future convention
      */
     enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter, WeeklyDayOfTheWeek };
-    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek, CalendarDaysBefore };
 
     //! Classes to differentiate constructors below
     //@{
@@ -1370,6 +1370,11 @@ public:
         std::string calendarDaysBefore_;
     };
     
+    struct BusinessDaysBefore {
+        BusinessDaysBefore(const std::string& daysBefore) : businessDaysBefore_(daysBefore) {}
+        std::string businessDaysBefore_;
+    };
+
     struct BusinessDaysAfter {
         BusinessDaysAfter(const std::string& businessDaysAfter) : businessDaysAfter_(businessDaysAfter) {}
         std::string businessDaysAfter_;
@@ -1380,29 +1385,49 @@ public:
         std::string weekday_;
     };
 
-
     struct OptionExpiryAnchorDateRule {
         OptionExpiryAnchorDateRule()
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(""), minBusinessDaysBefore_("") {}
+
+        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::DayOfMonth), daysBefore_(""), expiryDay_(expiryDay.dayOfMonth_), nth_(""),
-              weekday_("") {}
-        OptionExpiryAnchorDateRule(const CalendarDaysBefore& businessDaysBefore)
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.calendarDaysBefore_),
-              expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday)
-            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday) {}
-        OptionExpiryAnchorDateRule(const std::string& lastWeekday)
-            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday) {}
-        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday)
+              weekday_(""), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const BusinessDaysBefore& businessDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.businessDaysBefore_),
+              expiryDay_(""), nth_(""), weekday_(""), calendarDaysBefore_(""),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const CalendarDaysBefore& calendarDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::CalendarDaysBefore), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday, const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& lastWeekday,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::WeeklyDayOfTheWeek), daysBefore_(""), expiryDay_(""), nth_(""),
-              weekday_(weekday.weekday_) {}
+              weekday_(weekday.weekday_), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
 
         OptionAnchorType type_;
         std::string daysBefore_;
         std::string expiryDay_;
         std::string nth_;
         std::string weekday_;
+        std::string calendarDaysBefore_;
+        std::string minBusinessDaysBefore_;
     };
     //@}
 
@@ -1635,6 +1660,8 @@ public:
     OptionAnchorType optionAnchorType() const { return optionAnchorType_; }
     QuantLib::Natural optionNth() const { return optionNth_; }
     QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
+    QuantLib::Natural optionCalendarDaysBefore() const { return optionCalendarDaysBefore_; }
+    QuantLib::Natural optionMinBusinessDaysBefore() const { return optionMinBusinessDaysBefore_; }
     const std::string& savingsTime() const { return savingsTime_; }
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
@@ -1698,13 +1725,16 @@ private:
     std::string strOptionExpiryDay_;
     std::string strOptionNth_;
     std::string strOptionWeekday_;
-    
+    std::string strOptionCalendarDaysBefore_;
+    std::string strOptionMinBusinessDaysBefore_;
     
     QuantLib::Frequency optionContractFrequency_;
     QuantLib::Natural optionExpiryOffset_;
     QuantLib::Natural optionNth_;
     QuantLib::Weekday optionWeekday_;
     QuantLib::Natural optionExpiryDay_;
+    QuantLib::Natural optionCalendarDaysBefore_;
+    QuantLib::Natural optionMinBusinessDaysBefore_ = 0;
 
     std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;

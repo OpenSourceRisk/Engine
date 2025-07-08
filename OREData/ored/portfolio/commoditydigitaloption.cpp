@@ -138,9 +138,10 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration; 
     Currency ccy = parseCurrencyWithMinors(currency_);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -bsIndicator,
-                    ccy, engineFactory, configuration);
+                    ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(expiryDate_, lastPremiumDate);
     maturityType_ = maturity_ == expiryDate_ ? "Expiry Date" : "Last Premium Date";
 

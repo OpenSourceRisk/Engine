@@ -66,9 +66,10 @@ QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory(
     return engineFactory_;
 }
 
-void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
-    LOG("Calibration: Build Simulation Model (continueOnCalibrationError = " << std::boolalpha
-                                                                             << continueOnCalibrationError << ")");
+void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
+                                                   const bool allowModelFallbacks) {
+    LOG("Calibration: Build Simulation Model (continueOnCalibrationError = "
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
     ext::shared_ptr<Market> market = analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
@@ -76,7 +77,8 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
         market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "", "xva cam building");
+        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "", "xva cam building", false,
+        allowModelFallbacks);
 
     model_ = *builder_->model();
 }
@@ -104,10 +106,14 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     LOG(msg);
     CONSOLEW(msg);
     ProgressMessage(msg, 0, 1).log();
+    auto continueOnErr = false;
+    auto allowModelFallbacks = false;
     auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
-    auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
-    bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
-    buildCrossAssetModel(continueOnErr);
+    if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+        continueOnErr = parseBool(c->second);
+    if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+        allowModelFallbacks = parseBool(c->second);
+    buildCrossAssetModel(continueOnErr, allowModelFallbacks);
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
 

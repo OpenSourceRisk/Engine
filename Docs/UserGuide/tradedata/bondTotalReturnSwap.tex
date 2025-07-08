@@ -27,7 +27,8 @@ are {\tt BondData}, {\tt TotalReturnData} and {\tt FundingData}.
 
   \begin{itemize}
   \item SecurityId: The underlying security identifier\\
-      Allowable values: Typically the ISIN of the underlying bond, with the ISIN: prefix.
+      Allowable values: Typically the ISIN of the underlying bond, with the ISIN: prefix. 
+      Note that Convertible Bonds are not supported as underlyings for BondTRS. For Convertible Bonds, trade type \emph{TotalReturnSwap} should be used instead.
   \item BondNotional: The quantity or number of bonds that is relevant for the TRS, with the convention that 1 bond always corresponds to a face value of 1 unit of bond currency.\\
       Allowable values: Any positive real number.
   \item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. If set to \emph{true}, the product class will be set to \emph{Credit} instead of \emph{RatesFX}, and there will be credit sensitivities. Note that if the underlying bond reference is set up without a CreditCurveId - typically for some highly rated government bonds -  the CreditRisk flag will have no impact on the product class and no credit sensitivities will be shown even if CreditRisk is set to \emph{true}. \\

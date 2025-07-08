@@ -593,7 +593,7 @@ class CommodityFutureConvention : public Convention {
   public:
 
     enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter, WeeklyDayOfTheWeek };
-    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
 
     struct DayOfMonth {
         DayOfMonth(const std::string& dayOfMonth) : dayOfMonth_(dayOfMonth) {}
@@ -601,6 +601,10 @@ class CommodityFutureConvention : public Convention {
 
     struct CalendarDaysBefore {
         CalendarDaysBefore(const std::string& calendarDaysBefore) : calendarDaysBefore_(calendarDaysBefore) {}
+    };
+    
+    struct BusinessDaysBefore {
+        BusinessDaysBefore(const std::string& daysBefore) : businessDaysBefore_(daysBefore) {}
     };
     
     struct BusinessDaysAfter {
@@ -613,20 +617,40 @@ class CommodityFutureConvention : public Convention {
 
     struct OptionExpiryAnchorDateRule {
         OptionExpiryAnchorDateRule()
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(""), minBusinessDaysBefore_("") {}
+
+        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::DayOfMonth), daysBefore_(""), expiryDay_(expiryDay.dayOfMonth_), nth_(""),
-              weekday_("") {}
-        OptionExpiryAnchorDateRule(const CalendarDaysBefore& businessDaysBefore)
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.calendarDaysBefore_),
-              expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday)
-            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday) {}
-        OptionExpiryAnchorDateRule(const std::string& lastWeekday)
-            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday) {}
-        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday)
+              weekday_(""), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const BusinessDaysBefore& businessDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.businessDaysBefore_),
+              expiryDay_(""), nth_(""), weekday_(""), calendarDaysBefore_(""),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const CalendarDaysBefore& calendarDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::CalendarDaysBefore), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& lastWeekday,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::WeeklyDayOfTheWeek), daysBefore_(""), expiryDay_(""), nth_(""),
-              weekday_(weekday.weekday_) {}
+              weekday_(weekday.weekday_), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
 
     };
 

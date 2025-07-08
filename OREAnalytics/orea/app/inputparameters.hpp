@@ -47,6 +47,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -79,6 +80,7 @@ public:
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
     void setBaseCurrency(const std::string& s) { baseCurrency_ = s; }
     void setContinueOnError(bool b) { continueOnError_ = b; }
+    void setAllowModelBuilderFallbacks(bool b) { allowModelBuilderFallbacks_ = b; }
     void setLazyMarketBuilding(bool b) { lazyMarketBuilding_ = b; }
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
@@ -101,6 +103,8 @@ public:
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
+    void setBaselTrafficLightConfig(const std::string& xml);
+    void setBaselTrafficLightFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setPricingEngine(const std::string& xml);
@@ -252,6 +256,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreExerciseValues(bool b) { storeExerciseValues_ = b; }
     void setStoreSensis(bool b) { storeSensis_ = b; }
     void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
@@ -523,6 +528,7 @@ public:
     const std::string& baseCurrency() const { return baseCurrency_; }
     const std::string& resultCurrency() const { return resultCurrency_; }
     bool continueOnError() const { return continueOnError_; }
+    bool allowModelBuilderFallbacks() const { return allowModelBuilderFallbacks_; }
     bool lazyMarketBuilding() const { return lazyMarketBuilding_; }
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
@@ -535,6 +541,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
+    const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
     CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& pricingEngine() const { return pricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const { return todaysMarketParams_; }
@@ -702,6 +709,7 @@ public:
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeExerciseValues() const { return storeExerciseValues_; }
     bool storeSensis() const { return storeSensis_; }
     bool allowPartialScenarios() const { return allowPartialScenarios_; }
     const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
@@ -966,6 +974,7 @@ protected:
     std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
+    bool allowModelBuilderFallbacks_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
@@ -978,6 +987,7 @@ protected:
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLightConfig_;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
@@ -1122,6 +1132,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeExerciseValues_ = false;
     bool storeSensis_ = false;
     bool allowPartialScenarios_ = false;
     vector<Real> curveSensiGrid_;

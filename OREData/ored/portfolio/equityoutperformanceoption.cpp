@@ -119,8 +119,9 @@ void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFac
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                       -bsInd, ccy, engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+                                       -bsInd, ccy, discountCurve, engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst, mult, additionalInstruments, additionalMultipliers));
     npvCurrency_ = currency_;
