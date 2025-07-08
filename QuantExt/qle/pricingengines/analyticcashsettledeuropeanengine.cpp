@@ -186,14 +186,16 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.itmCashProbability = underlyingResults->itmCashProbability;
 
         // Take the additional results from the underlying engine and add more.
+        // Set the currency of the cash flows to the source currency of the fx index, if available.
+        // In case the cash settlement currency is not the same as the option currency
         results_.additionalResults = underlyingResults->additionalResults;
-        std::vector<QuantExt::CashFlowResults> cfResults;
-        cfResults.emplace_back();
-        cfResults.back().amount = results_.value / df_te_tp;
-        cfResults.back().payDate = arguments_.exercise->lastDate();
-        cfResults.back().legNumber = 0;
-        cfResults.back().type = "ExpectedFlow";
-        results_.additionalResults["cashFlowResults"] = cfResults;
+        auto cashflowResultsIt = results_.additionalResults.find("cashFlowResults");
+        if (cashflowResultsIt != results_.additionalResults.end() && arguments_.fxIndex != nullptr) {
+            auto cashflowResults = boost::any_cast<vector<CashFlowResults>>(cashflowResultsIt->second);
+            if (!cashflowResults.empty()) {
+                cashflowResults.back().currency = arguments_.fxIndex->sourceCurrency().code();
+            }
+        }
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
         results_.additionalResults["settlementFxFwd"] = fxRate;
     }
