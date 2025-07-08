@@ -293,8 +293,9 @@ BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
         Real below = i == 0 ? 0.0 : detachPoints[i - 1];
         Real tranche = detachPoints[i] - below;
         Real above = 1.0 - detachPoints[i];
-        Real newBelow = max(below - lost, 0.0);
-        Real newTranche = tranche - max(min(recovered - above, tranche), 0.0) - max(min(lost - below, tranche), 0.0);
+        Real newBelow = std::max(below - lost, 0.0);
+        Real newTranche = tranche - std::max(std::min(recovered - above, tranche), 0.0) -
+                          std::max(std::min(lost - below, tranche), 0.0);
         Real newDetach = (newBelow + newTranche) / totalRemainingWeight;
 
         TLOG("Quoted detachment point " << detachPoints[i] << " adjusted to " << newDetach << ".");

@@ -78,7 +78,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                                                      settlementDays, averagingMethod);
     auto sd = swaptionData(helper);
 
-    // ensure point 1 from above
+    // ensure fallback rule 1
 
     Real atmStdDev = svts->volatility(sd.timeToExpiry, sd.swapLength, sd.atmForward) * std::sqrt(sd.timeToExpiry);
     if (vt == ShiftedLognormal) {
@@ -99,35 +99,6 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
         fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule1;
     }
 
-    // ensure point 2 from above
-
-    auto mv = std::abs(helper->marketValue());
-    if (mv < ore::data::LgmBuilder::mmv) {
-        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than minimum market value "
-                                   << ore::data::LgmBuilder::mmv << " so switching to helper with atm rate "
-                                   << sd.atmForward);
-        strike = sd.atmForward;
-        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
-                                                    settlementDays, averagingMethod);
-        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule2;
-    }
-
-    // ensure point 3 from above
-
-    mv = std::abs(helper->marketValue());
-    if (errorType != BlackCalibrationHelper::PriceError && mv < ore::data::LgmBuilder::smv) {
-        errorType = BlackCalibrationHelper::PriceError;
-        DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
-                                   << std::scientific << mv << " which is lower than " << ore::data::LgmBuilder::smv
-                                   << " so switching to a price error helper.");
-        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
-                                                    settlementDays, averagingMethod);
-        fallbackType = ore::data::LgmBuilder::FallbackType::FallbackRule3;
-    }
-
     DLOG("Created swaption helper with expiry " << expiry << " and term " << term << ": vol=" << vol->value()
                                                 << ", index=" << iborIndex->name() << ", strike=" << strike
                                                 << ", shift=" << shift);
@@ -145,13 +116,14 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                        const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
                        const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
-                       const bool allowChangingFallbacksUnderScenarios)
+                       const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
-      setCalibrationInfo_(setCalibrationInfo), id_(id),
+      setCalibrationInfo_(setCalibrationInfo), id_(id), calibrationErrorType_(calibrationErrorType),
+      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
+      allowModelFallbacks_(allowModelFallbacks),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)), calibrationErrorType_(calibrationErrorType),
-      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios) {
+      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
@@ -318,10 +290,15 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
 }
 
 void LgmBuilder::processException(const std::string& s, const std::exception& e) {
-    StructuredModelErrorMessage("Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" +
-                                    s + "'. Using a fallback, results depending on this object will be invalid.",
-                                e.what(), id_)
-        .log();
+    std::string message =
+        "Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" + s + "'.";
+    if (allowModelFallbacks_) {
+        message += " Using a fallback, results depending on this object will be invalid.";
+        StructuredModelErrorMessage(message, e.what(), id_).log();
+    } else {
+        message += " Fallbacks are not allowed for this model builder (error: " + std::string(e.what()) + ", id: " + id_;
+        QL_FAIL(message);
+    }
 }
 
 Real LgmBuilder::error() const {

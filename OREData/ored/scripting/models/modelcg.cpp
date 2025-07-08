@@ -44,22 +44,34 @@ ModelCG::getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& 
     return std::make_tuple(*l, *u, w1, w2);
 }
 
+std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>
+ModelCG::getInterpolationWeights(const double t, const QuantLib::TimeGrid& knownTimes) const {
+    auto u = std::upper_bound(knownTimes.begin(), knownTimes.end(), t);
+    QL_REQUIRE(u != knownTimes.begin(), "getInterpolationWeights(" << t << "): outside knownTimes range");
+    auto l = std::next(u, -1);
+    Real tmp = (t - *l) / (*u - *l);
+    std::size_t w1 = cg_const(*g_, 1.0 - tmp);
+    std::size_t w2 = cg_const(*g_, tmp);
+    return std::make_tuple(std::distance(knownTimes.begin(), l), std::distance(knownTimes.begin(), u), w1, w2);
+}
+
 ModelCG::ModelParameter::ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2,
                                         const QuantLib::Date& date, const QuantLib::Date& date2,
                                         const QuantLib::Date& date3, const std::size_t index, const std::size_t index2,
-                                        const std::size_t hash)
+                                        const std::size_t hash, const double time)
     : type_(type), qualifier_(qualifier), qualifier2_(qualifier2), date_(date), date2_(date2), date3_(date3),
-      index_(index), index2_(index2), hash_(hash) {}
+      index_(index), index2_(index2), hash_(hash), time_(time) {}
 
 bool operator==(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y) {
     return x.type_ == y.type_ && x.qualifier_ == y.qualifier_ && x.qualifier2_ == y.qualifier2_ && x.date_ == y.date_ &&
            x.date2_ == y.date2_ && x.date3_ == y.date3_ && x.index_ == y.index_ && x.index2_ == y.index2_ &&
-           x.hash_ == y.hash_;
+           x.hash_ == y.hash_ && x.time_ == y.time_;
 }
 
 bool operator<(const ModelCG::ModelParameter& x, const ModelCG::ModelParameter& y) {
-    return std::tie(x.type_, x.qualifier_, x.qualifier2_, x.date_, x.date2_, x.date3_, x.index_, x.index2_, x.hash_) <
-           std::tie(y.type_, y.qualifier_, y.qualifier2_, y.date_, y.date2_, x.date3_, y.index_, y.index2_, y.hash_);
+    return std::tie(x.type_, x.qualifier_, x.qualifier2_, x.date_, x.date2_, x.date3_, x.index_, x.index2_, x.hash_,
+                    x.time_) < std::tie(y.type_, y.qualifier_, y.qualifier2_, y.date_, y.date2_, x.date3_, y.index_,
+                                        y.index2_, y.hash_, y.time_);
 }
 
 std::size_t ModelCG::addModelParameter(const ModelParameter& p, const std::function<double(void)>& f) const {
@@ -138,7 +150,8 @@ std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter::Type& t
 std::ostream& operator<<(std::ostream& o, const ModelCG::ModelParameter& p) {
     return o << "(" << p.type() << "," << p.qualifier() << "," << p.qualifier2() << ","
              << QuantLib::io::iso_date(p.date()) << "," << QuantLib::io::iso_date(p.date2()) << ","
-             << QuantLib::io::iso_date(p.date3()) << "," << p.index() << "," << p.index2() << ")";
+             << QuantLib::io::iso_date(p.date3()) << "," << p.index() << "," << p.index2() << "," << p.time() << ","
+             << p.hash() << ")";
 }
 
 } // namespace data

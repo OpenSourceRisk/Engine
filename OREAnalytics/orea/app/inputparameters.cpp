@@ -91,6 +91,15 @@ void InputParameters::setRefDataManagerFromFile(const std::string& fileName) {
     refDataManager_ = QuantLib::ext::make_shared<BasicReferenceDataManager>(fileName);
 }
 
+void InputParameters::setBaselTrafficLightConfig(const std::string& xml) {
+    baselTrafficLightConfig_ = QuantLib::ext::make_shared<BaselTrafficLightData>();
+    baselTrafficLightConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setBaselTrafficLightFromFile(const std::string& fileName) {
+    baselTrafficLightConfig_ = QuantLib::ext::make_shared<BaselTrafficLightData>(fileName);
+}
+
 void InputParameters::setScriptLibrary(const std::string& xml) {
     ScriptLibraryData data;
     data.fromXMLString(xml);

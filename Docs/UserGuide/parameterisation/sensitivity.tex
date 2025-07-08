@@ -282,7 +282,7 @@ Using DiscountCurves as an example, the full sensitivity specification including
         <!--DEP, FRA, IRS, OIS, FXF, XBS -->
 	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
 	<SingleCurve>true</SingleCurve>
-	<Conventions>
+  <Conventions>
 	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
 	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
 	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
@@ -293,6 +293,39 @@ Using DiscountCurves as an example, the full sensitivity specification including
 \caption{Par sensitivity configuration}
 \label{lst:par_sensitivity_config}
 \end{longlisting}
+
+Using CapFloors as an example:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+		<CapFloorVolatility key="USD-SOFR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</ShiftExpiries>
+			<ShiftStrikes>-0.0075,-0.005,-0.0025,-0.0015,0.0,0.0025,0.005,0.0075,0.01,0.015,0.02,0.025</ShiftStrikes>
+			<Index>USD-SOFR</Index>
+			<IsRelative>false</IsRelative>
+			<ParConversion>
+				<Instruments>CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor,CapFloor</Instruments>
+				<DiscountCurve>USD-SOFR</DiscountCurve>
+				<RateComputationPeriod>3M</RateComputationPeriod>
+			</ParConversion>
+		</CapFloorVolatility>
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+
+ParConversion Fields:
+
+\begin{itemize}
+\item \textbf{Instruments} a comma seperated list of par instrument types, see below for the possible values.
+\item \textbf{DiscountCurve} \textit{optional}: discount curve used for pricing the par instrument.
+\item \textbf{RateComputationPeriod} \textit{optional}: required for OIS CapFloors, sepcify the period of the optionlet. 
+\end{itemize}
+
 
 Note
 \begin{itemize}
@@ -311,3 +344,4 @@ Note
 	\end{itemize}
 \item One convention needs to be referenced for each of the instrument codes	
 \end{itemize}
+

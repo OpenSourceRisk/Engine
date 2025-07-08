@@ -75,18 +75,24 @@ CamAmcFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const C
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+CamAmcFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                 const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                 const bool useFxSpot) {
     return engineImplBase<McCamFxOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate, useFxSpot);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+CamAmcFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                        const bool useFxSpot) {
     return engineImplBase<McCamFxEuropeanForwardOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
@@ -94,7 +100,7 @@ CamAmcFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, 
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+CamAmcFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                   const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                   const bool useFxSpot) {
     return engineImplBase<McCamFxEuropeanCSOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
@@ -103,7 +109,7 @@ CamAmcFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const
 
 template <typename E>
 QuantLib::ext::shared_ptr<PricingEngine>
-AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Currency& domCcy,
+AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                const bool useFxSpot) {
 
@@ -116,29 +122,31 @@ AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Cu
 
     QL_REQUIRE(domCcy != forCcy, "AmcCgFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
-    return QuantLib::ext::make_shared<E>(domCcy.code(), forCcy.code(), modelCg_, simulationDates_);
+    return QuantLib::ext::make_shared<E>(
+        domCcy.code(), forCcy.code(), modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-AmcCgFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+AmcCgFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                const bool useFxSpot) {
-    return engineImplBase<AmcCgFxOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate, useFxSpot);
+    return engineImplBase<AmcCgFxOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate, useFxSpot);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-AmcCgFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+AmcCgFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                       const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                       const bool useFxSpot) {
-    return engineImplBase<AmcCgFxEuropeanForwardOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+    return engineImplBase<AmcCgFxEuropeanForwardOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate,
                                                               useFxSpot);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-AmcCgFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+AmcCgFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
                                                  const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                  const bool useFxSpot) {
-    return engineImplBase<AmcCgFxEuropeanCSOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+    return engineImplBase<AmcCgFxEuropeanCSOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate,
                                                          useFxSpot);
 }
 

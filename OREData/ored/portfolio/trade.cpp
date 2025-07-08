@@ -19,10 +19,12 @@
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 
@@ -57,7 +59,7 @@ XMLNode* Trade::toXML(XMLDocument& doc) const {
 
 Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
                         const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                        const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                        const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                         const string& configuration) {
 
     Date latestPremiumPayDate = Date::minDate();
@@ -71,7 +73,9 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         addMultipliers.push_back(premiumMultiplier);
 
-        Handle<YieldTermStructure> yts = factory->market()->discountCurve(d.ccy, configuration);
+        Handle<YieldTermStructure> yts = discountCurve.empty()
+            ? factory->market()->discountCurve(d.ccy, configuration)
+            : indexOrYieldCurve(factory->market(), discountCurve, configuration);
         Handle<Quote> fx;
         if (tradeCurrency.code() != d.ccy) {
             fx = factory->market()->fxRate(d.ccy + tradeCurrency.code(), configuration);
@@ -85,14 +89,17 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
         // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
         //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
         legs_.push_back(
-            Leg(1, QuantLib::ext::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
-                                                      fee->cashFlow()->date())));
+            Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+                fee->cashFlow()->date(),
+                QuantExt::TypedCashFlow::Type::Premium)));
         legCurrencies_.push_back(fee->currency().code());
 
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
 
-	// update latest premium pay date
+        legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Always;
+
+        // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
 
         DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");
@@ -141,6 +148,7 @@ void Trade::reset() {
     npvCurrency_.clear();
     notional_ = Null<Real>();
     notionalCurrency_.clear();
+    legCashflowInclusion_.clear();
     maturity_ = Date();
     maturityType_.clear();
     issuer_.clear();
@@ -196,7 +204,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
-                    additionalData_["initialPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
+                    additionalData_["currentPeriodStartPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
                     additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
                     if (arc.startFixing != Null<Real>())
                         additionalData_["startEquityFixing[" + legID + "]"] = arc.startFixing;

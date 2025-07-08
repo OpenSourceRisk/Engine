@@ -68,6 +68,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 cashflows/trscashflow.cpp
+cashflows/typedcashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -289,6 +290,7 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
+pricingengines/fdblackscholesvanillaengine.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
@@ -393,6 +395,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/scenario.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -505,6 +508,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 cashflows/trscashflow.hpp
+cashflows/typedcashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -841,6 +845,7 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
+pricingengines/fdblackscholesvanillaengine.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
@@ -990,6 +995,7 @@ termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
+termstructures/scenario.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -1038,6 +1044,7 @@ utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp

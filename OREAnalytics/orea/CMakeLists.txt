@@ -13,10 +13,12 @@ aggregation/dimhelper.cpp
 aggregation/dimregressioncalculator.cpp
 aggregation/dynamiccreditxvacalculator.cpp
 aggregation/dynamicdeltavarcalculator.cpp
+aggregation/dynamicsimmcalculator.cpp
 aggregation/exposureallocator.cpp
 aggregation/exposurecalculator.cpp
 aggregation/nettedexposurecalculator.cpp
 aggregation/postprocess.cpp
+aggregation/simmhelper.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
@@ -63,8 +65,11 @@ cube/cube_io.cpp
 cube/cubecsvreader.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
+cube/inmemorycubeopt.cpp
+cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
@@ -107,6 +112,7 @@ engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
 engine/sensitivitystoragemanager.cpp
+engine/simmsensitivitystoragemanager.cpp
 engine/simpledynamicsimm.cpp
 engine/smrc.cpp
 engine/standardapproachcvacalculator.cpp
@@ -127,6 +133,7 @@ scenario/cvascenarioloader.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
 scenario/historicalscenariogenerator.cpp
+scenario/historicalscenarioreturn.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariofilereader.cpp
@@ -174,6 +181,7 @@ simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
+simm/simmconcentrationisdav2_7_2412.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -189,6 +197,7 @@ simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
+simm/simmconfigurationisdav2_7_2412.cpp
 simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
@@ -210,10 +219,12 @@ aggregation/dimhelper.hpp
 aggregation/dimregressioncalculator.hpp
 aggregation/dynamiccreditxvacalculator.hpp
 aggregation/dynamicdeltavarcalculator.hpp
+aggregation/dynamicsimmcalculator.hpp
 aggregation/exposureallocator.hpp
 aggregation/exposurecalculator.hpp
 aggregation/nettedexposurecalculator.hpp
 aggregation/postprocess.hpp
+aggregation/simmhelper.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
@@ -280,7 +291,6 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
-engine/cvacalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
@@ -318,6 +328,7 @@ engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystoragemanager.hpp
+engine/simmsensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
 engine/simpledynamicsimm.hpp
 engine/smrc.hpp
@@ -340,6 +351,7 @@ scenario/cvascenarioloader.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
 scenario/historicalscenariogenerator.hpp
+scenario/historicalscenarioreturn.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
@@ -392,6 +404,7 @@ simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
+simm/simmconcentrationisdav2_7_2412.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -407,6 +420,7 @@ simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
+simm/simmconfigurationisdav2_7_2412.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp

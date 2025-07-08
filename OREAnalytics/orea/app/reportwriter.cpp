@@ -170,11 +170,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
-        if (!trade->hasCashflows()) {
-            WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
         try {
 
             auto data = generateCashflowReportData(trade, baseCurrency, market, configuration, includePastCashflows);
@@ -787,9 +782,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -836,9 +831,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(it != tradeNettingSetMap.end() ? it->second : "");
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -858,9 +853,9 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
             report.add(sr.tradeId);
             report.add("");
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -1076,7 +1071,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
     vector<std::regex> regexes;
     regexes.reserve(regexStrs.size());
-    for (auto regexStr : regexStrs) {
+    for (const auto& regexStr : regexStrs) {
         regexes.push_back(regex(regexStr));
     }
 
@@ -1090,7 +1085,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
         // This could be slow
         for (const auto& regex : regexes) {
-            if (regex_match(mdName, regex)) {
+            if (std::regex_match(mdName, regex)) {
                 addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
@@ -1783,6 +1778,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
         .addColumn("ScenarioValue1", double(), 8)
         .addColumn("ScenarioValue2", double(), 8)
         .addColumn("ShiftType", string())
+        .addColumn("Displacement", double(), 8)
         .addColumn("Return", double(), 8)
         .addColumn("ScenarioValue", double(), 8);
 
@@ -1800,6 +1796,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
                 .add(d.scenarioValue1)
                 .add(d.scenarioValue2)
                 .add(ore::data::to_string(d.returnType))
+                .add(d.displacement)
                 .add(d.returnValue)
                 .add(d.scenarioValue);
         }

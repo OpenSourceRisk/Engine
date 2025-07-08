@@ -79,6 +79,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/trscashflow.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
@@ -415,6 +416,7 @@
 #include <qle/pricingengines/discountingriskybondenginemultistate.hpp>
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
 #include <qle/pricingengines/discretizedconvertible.hpp>
+#include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
@@ -564,6 +566,7 @@
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/sabrstrippedoptionletadapter.hpp>
+#include <qle/termstructures/scenario.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
@@ -612,6 +615,7 @@
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
+#include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
 #include <qle/utilities/time.hpp>

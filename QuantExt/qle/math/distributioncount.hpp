@@ -23,22 +23,52 @@
 
 #pragma once
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+
 namespace QuantExt {
 
 template <class I>
-void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts) {
-    Real xmin = *std::min_element(begin, end);
-    Real xmax = *std::max_element(begin, end);
+void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts,
+                       const Real coveredStdDevs = Null<Real>()) {
+
     std::vector<Real> v(begin, end);
     std::sort(v.begin(), v.end());
+
+    Real xmin, xmax;
+    if (coveredStdDevs == Null<Real>()) {
+
+        // cover [xmin, xmax] in output
+
+        xmin = *std::min_element(begin, end);
+        xmax = *std::max_element(begin, end);
+
+    } else {
+
+        // cover given number of std devs around mean in output
+
+        boost::accumulators::accumulator_set<
+            double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance>>
+            acc;
+        std::for_each(v.begin(), v.end(), [&acc](double x) { acc(x); });
+        double mean = boost::accumulators::mean(acc);
+        double stdDev = std::sqrt(boost::accumulators::variance(acc));
+        xmin = mean - coveredStdDevs * stdDev;
+        xmax = mean + coveredStdDevs * stdDev;
+    }
+
     Real h = (xmax - xmin) / static_cast<Real>(steps);
-    Size idx0 = 0;
+    Size idx0 = coveredStdDevs == Null<Real>() ? 0 : std::upper_bound(v.begin(), v.end(), xmin) - v.begin();
     counts.resize(steps);
     bounds.resize(steps);
     for (Size i = 0; i < steps; ++i) {
         Real v1 = xmin + static_cast<Real>(i + 1) * h;
-        // the code for "i == steps - 1" ensures all observations are accounted for
-        Size idx1 = i == steps - 1 ? v.size() : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
+        // if all data should be covered, ensure the counts sum up to v.size()
+        Size idx1 = coveredStdDevs == Null<Real>() && i == steps - 1
+                        ? v.size()
+                        : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
         counts[i] = idx1 - idx0;
         bounds[i] = v1;
         idx0 = idx1;

@@ -17,6 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -62,6 +63,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "ForwardBond: bond type " << bondType << " is not supported.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
@@ -75,6 +79,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
     Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
+
+    std::string openEndDateStr = builder_fwd->modelParameter("OpenEndDateReplacement", {}, false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
     Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
@@ -130,7 +137,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         auto configuration = builder_bd->configuration(MarketContext::pricing);
         auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
         leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
-                                   QuantLib::Date(), false, true, &productModelEngines);
+                                   openEndDateReplacement, false, true, &productModelEngines);
         separateLegs.push_back(leg);
         addProductModelEngine(productModelEngines);
     }

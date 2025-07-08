@@ -25,19 +25,58 @@
 
 namespace QuantExt {
 
+RandomVariable randomVariableOpConditionalExpectation(const Size size, const Size regressionOrder,
+                                                      QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                      QuantLib::Real regressionVarianceCutoff,
+                                                      const std::set<std::set<std::size_t>>& regressorGroups,
+                                                      const bool usePythonIntegration,
+                                                      const std::vector<const RandomVariable*>& args) {
+
+    std::vector<const RandomVariable*> regressor;
+    for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
+        if ((*r)->initialised() && !(*r)->deterministic())
+            regressor.push_back(*r);
+    }
+
+    if (regressor.empty())
+        return expectation(*args[0]);
+
+    bool trivialRegressorGroups =
+        regressorGroups.empty() || (regressorGroups.size() == 1 && regressorGroups.begin()->size() == regressor.size());
+
+    QL_REQUIRE(trivialRegressorGroups || regressionVarianceCutoff == Null<Real>(),
+               "RandomVariableOps::conditionalExpectation(): non-trivial regressor group do not work with "
+               "regressionVarianceCutoff ("
+                   << regressionVarianceCutoff << ")");
+
+    std::vector<RandomVariable> transformedRegressor;
+    Matrix coordinateTransform;
+    if (regressionVarianceCutoff != Null<Real>()) {
+        coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
+        transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+        regressor = vec2vecptr(transformedRegressor);
+    }
+
+    Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
+
+    if (usePythonIntegration && filter.deterministic() && filter[0]) {
+
+        // FIXME does not support regressor groups, non-trivial filters at the moment
+
+        return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+
+    } else {
+        auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
+                                        trivialRegressorGroups ? std::set<std::set<size_t>>{} : regressorGroups, size);
+        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
+    }
+}
+
 std::vector<RandomVariableOp>
 getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmBasisSystem::PolynomialType polynomType,
                      const double eps, QuantLib::Real regressionVarianceCutoff,
                      const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups,
                      const bool usePythonIntegration) {
-
-    QL_REQUIRE(regressionVarianceCutoff == Null<Real>() || regressorGroups.empty(),
-               "getRandomVariableOps(): regressionVarianceCutoff can not be combined with regressorGroups");
-
-    // note: a possible way to combine regressionVarianceCutoff and regressorGroups would be to perform the pca
-    // transform on each regressor group separately and then build new groups from the resuting variables before
-    // performing the regression analysis (TODO think about this a bit more before implementation and removal of the
-    // above restriction)
 
     std::vector<RandomVariableOp> ops;
 
@@ -73,34 +112,10 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
     // ConditionalExpectation = 6
     ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups,
                    usePythonIntegration](const std::vector<const RandomVariable*>& args, const Size node) {
-        std::vector<const RandomVariable*> regressor;
-        for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
-            if ((*r)->initialised() && !(*r)->deterministic())
-                regressor.push_back(*r);
-        }
-        std::vector<RandomVariable> transformedRegressor;
-        Matrix coordinateTransform;
-        if (regressionVarianceCutoff != Null<Real>()) {
-            coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
-            transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
-            regressor = vec2vecptr(transformedRegressor);
-        }
-        if (regressor.empty())
-            return expectation(*args[0]);
-        else {
-            auto g = regressorGroups.find(node);
-            auto tmp =
-                multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
-                                     g == regressorGroups.end() ? std::set<std::set<size_t>>{} : g->second, size);
-            Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
-            if (usePythonIntegration && filter.deterministic() && filter[0]) {
-                // FIXME does not support regressor groups, non-trivial filters at the moment
-                return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
-            } else {
-                return conditionalExpectation(*args[0], regressor, tmp,
-                                              !close_enough(*args[1], RandomVariable(size, 0.0)));
-            }
-        }
+        auto g = regressorGroups.find(node);
+        return randomVariableOpConditionalExpectation(
+            size, regressionOrder, polynomType, regressionVarianceCutoff,
+            g == regressorGroups.end() ? std::set<std::set<std::size_t>>{} : g->second, usePythonIntegration, args);
     });
 
     // IndicatorEq = 7
@@ -179,8 +194,8 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     std::vector<RandomVariableGrad> grads;
 
     // None = 0
-    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable()}; });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0)}; });
 
     // Add = 1
     grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,

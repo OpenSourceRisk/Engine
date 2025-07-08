@@ -46,14 +46,13 @@ public:
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                   const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                  const std::set<Date>& simulationDates, const Size timeStepsPerYear = 1,
+                  const std::set<Date>& simulationDates,
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const std::vector<Date>& stickyCloseOutDates = {});
+                  const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);
 
     // Model interface implementation
-    Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
@@ -111,7 +110,11 @@ protected:
     mutable std::map<Date, std::vector<std::size_t>> underlyingPaths_; // per simulation date index states
     mutable std::map<Date, std::vector<std::size_t>> irStates_;        // per simulation date ir states for currencies_
     mutable std::map<Date, std::vector<std::pair<std::size_t, std::size_t>>>
-        infStates_;                                       // per simulation date dk (x,y) or jy (x,y)
+        infStates_; // per simulation date dk (x,y) or jy (x,y)
+    mutable std::vector<std::vector<std::size_t>> underlyingPathsOnFullTimeGrid_; // index states on timeGrid_
+    mutable std::vector<std::vector<std::size_t>> irStatesOnFullTimeGrid_;        // ir states on timeGrid_
+    mutable std::vector<std::vector<std::pair<std::size_t, std::size_t>>>
+        infStatesOnFullTimeGrid_;                         // dk (x,y) or jy (x,y) on timeGrid_
     mutable std::vector<Size> indexPositionInProcess_;    // maps index no to position in state process
     mutable std::vector<Size> infIndexPositionInProcess_; // maps inf index no to position in state process
     mutable std::vector<Size> currencyPositionInProcess_; // maps currency no to position in state process

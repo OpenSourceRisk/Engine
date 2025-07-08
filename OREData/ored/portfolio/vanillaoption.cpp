@@ -229,11 +229,16 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
-            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
-            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuilder = tradeType_ + "Forward";
+            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX) {
+                if (exerciseType == QuantLib::Exercise::Type::European) {
+                    tradeTypeBuilder = tradeType_ + "Forward";
+                } else if (exerciseType == QuantLib::Exercise::Type::American) {
+                    vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                    tradeTypeBuilder = tradeType_ + "American";
+                }
+            }
         }
 
         // If the tradeTypeBuilder has not been modified yet..
@@ -249,6 +254,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
     // might change after build, and we get errors for the edge case valuation date = expiry date for European options.
     string configuration = Market::defaultConfiguration;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
@@ -258,9 +264,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
         if (forwardDate_ != Date()) {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, false));
         } else {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, true));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
         addProductModelEngine(*vanillaOptionBuilder);
@@ -286,7 +292,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                         -bsInd, ccy, engineFactory, configuration);
+                                         -bsInd, ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";

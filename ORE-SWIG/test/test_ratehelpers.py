@@ -17,7 +17,7 @@ class AverageOISRateHelpersTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Average OIS Rate Helpers"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.fixedRate = QuoteHandle(SimpleQuote(0.05))
         self.spotLagTenor = Period(1,Days)
         self.swapTenor = Period(10,Years)
@@ -32,7 +32,11 @@ class AverageOISRateHelpersTest(unittest.TestCase):
         self.rateCutoff=1
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.termStructureOIS=RelinkableYieldTermStructureHandle(self.flat_forward)
-        self.averageOisRateHelper=AverageOISRateHelper(self.fixedRate,self.spotLagTenor,self.swapTenor,self.fixedTenor,self.fixedDayCounter,self.fixedCalendar,self.fixedConvention,self.fixedPaymentAdjustment,self.overnightIndex,self.onTenor,self.onSpread,self.rateCutoff,self.termStructureOIS)
+        self.onIndexGiven=True
+        self.averageOisRateHelper=AverageOISRateHelper(self.fixedRate,self.spotLagTenor,self.swapTenor,self.fixedTenor,
+                                                       self.fixedDayCounter,self.fixedCalendar,self.fixedConvention,
+                                                       self.fixedPaymentAdjustment,self.overnightIndex, self.onIndexGiven, 
+                                                       self.onTenor, self.onSpread,self.rateCutoff,self.termStructureOIS)
 
         
     def testSimpleInspectors(self):
@@ -43,7 +47,7 @@ class CrossCcyBasisSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Cross Curency Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date   
         self.fixedDayCounter=Actual360()
         self.spreadQuote=QuoteHandle(SimpleQuote(0.05))
         self.spotFX=QuoteHandle(SimpleQuote(1.0))
@@ -59,9 +63,18 @@ class CrossCcyBasisSwapHelperTest(unittest.TestCase):
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.flatDiscountCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
         self.spreadDiscountCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
+        self.flatIndexGiven=True
+        self.spreadIndexGiven=True
+        self.flatDiscountCurveGiven=True
+        self.spreadDiscountCurveGiven=False
         self.eom=False
         self.flatIsDomestic=True
-        self.ratehelper = CrossCcyBasisSwapHelper(self.spreadQuote, self.spotFX, self.settlementDays, self.settlementCalendar, self.swapTenor, self.rollConvention, self.flatIbor, self.spreadIbor, self.flatDiscountCurve, self.spreadDiscountCurve, self.eom, self.flatIsDomestic)
+        self.ratehelper = CrossCcyBasisSwapHelper(self.spreadQuote, self.spotFX, self.settlementDays,
+                                                  self.settlementCalendar, self.swapTenor, self.rollConvention, 
+                                                  self.flatIbor, self.spreadIbor, self.flatDiscountCurve, 
+                                                  self.spreadDiscountCurve, self.flatIndexGiven, self.spreadIndexGiven,
+                                                  self.flatDiscountCurveGiven, self.spreadDiscountCurveGiven, 
+                                                  self.eom, self.flatIsDomestic)
 
     def testSimpleInspectors(self):
         """ Test Cross Curency Basis Swap Helper simple inspector. """
@@ -73,7 +86,7 @@ class TenorBasisSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Tenor Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(3,Months)
         self.forecast_curve = RelinkableYieldTermStructureHandle()
@@ -86,11 +99,20 @@ class TenorBasisSwapHelperTest(unittest.TestCase):
         self.fixedDayCounter=Actual360()
         self.flat_forward=FlatForward(self.todays_date, 0.03, self.fixedDayCounter)
         self.discountingCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
+        self.payIndexGiven=True
+        self.receiveIndexGiven=True
+        self.discountingCurveGiven=False
         self.spreadOnShort = True
         self.includeSpread = False
         self.telescopicValueDates = False
         self.type = SubPeriodsCoupon1.Compounding
-        self.tenorbasisswaphelper=self.tenorbasisswaphelper=TenorBasisSwapHelper(self.spread,self.swapTenor,self.longIbor,self.shortIbor,self.discountingCurve,self.spreadOnShort,self.includeSpread,self.longPayTenor,self.shortPayTenor,self.telescopicValueDates,self.type)
+        self.tenorbasisswaphelper=self.tenorbasisswaphelper=TenorBasisSwapHelper(self.spread,self.swapTenor,self.longIbor,
+                                                                                 self.shortIbor,self.discountingCurve,
+                                                                                 self.payIndexGiven, self.receiveIndexGiven,
+                                                                                 self.discountingCurveGiven,
+                                                                                 self.spreadOnShort,self.includeSpread,
+                                                                                 self.longPayTenor,self.shortPayTenor,
+                                                                                 self.telescopicValueDates,self.type)
         
 
     def testSimpleInspectors(self):
@@ -102,7 +124,7 @@ class SubPeriodsSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of SubPeriods Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date   
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(6,Months)
         self.fixedTenor=Period(6,Months)
@@ -125,7 +147,7 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of basis to swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(6,Months)
         self.calendar=UnitedStates(UnitedStates.NYSE)
@@ -133,6 +155,7 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
         self.longFixedConvention=Following
         self.longFixedDayCount=Actual360()
         self.longFloat=Eonia()
+        self.longIndexGiven=True
         self.shortFixedFrequency=Annual
         self.shortFixedConvention=Following
         self.shortFixedDayCount=Actual360()
@@ -140,8 +163,16 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
         self.ffcurve=RelinkableYieldTermStructureHandle(self.flat_forward)
         self.shortFloat=FedFunds(self.ffcurve)
         self.longMinusShort=True
+        self.shortIndexGiven=True
         self.discountingCurve=RelinkableYieldTermStructureHandle(self.flat_forward)
-        self.basistwoswaphelper=BasisTwoSwapHelper(self.spread,self.swapTenor,self.calendar,self.longFixedFrequency,self.longFixedConvention,self.longFixedDayCount,self.longFloat,self.shortFixedFrequency,self.shortFixedConvention,self.shortFixedDayCount,self.shortFloat,self.longMinusShort,self.discountingCurve)
+        self.discountCurveGiven=False
+        self.basistwoswaphelper=BasisTwoSwapHelper(self.spread,self.swapTenor,self.calendar,
+                                                   self.longFixedFrequency,self.longFixedConvention,
+                                                   self.longFixedDayCount,self.longFloat,
+                                                   self.longIndexGiven, self.shortFixedFrequency,
+                                                   self.shortFixedConvention,self.shortFixedDayCount,
+                                                   self.shortFloat,self.longMinusShort,self.shortIndexGiven,
+                                                   self.discountingCurve, self.discountCurveGiven)
 
 
     def testSimpleInspectors(self):
@@ -153,7 +184,7 @@ class OICCBSHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test OICCBS Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.settlementDays=2
         self.term=Period(6,Months)
         self.payFloat=Sonia()
@@ -192,7 +223,7 @@ class CrossCcyFixFloatSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Set-up crossccyfixfloat rate helper """
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.rate=QuoteHandle(SimpleQuote(0.02))
         self.spotFx=QuoteHandle(SimpleQuote(1.0))
         self.settlementDays=2

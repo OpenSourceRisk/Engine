@@ -49,7 +49,7 @@ public:
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
                                const std::vector<Date>& amcSimDates)
-        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmcCg_(true), amcCgModel_(amcCgModel),
           amcSimDates_(amcSimDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
@@ -71,7 +71,7 @@ protected:
     // hook for correlation retrieval - by default the correlation for a pair of indices is queried from the market
     // other implementations might want to estimate the correlation on the fly based on historical data
     virtual QuantLib::Handle<QuantExt::CorrelationTermStructure> correlationCurve(const std::string& index1,
-                                                                                  const std::string& index2);
+                                                                                  const std::string& index2) const;
 
     // sub tasks for engine building
     void clear();
@@ -91,6 +91,7 @@ protected:
     void buildBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildFdBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
+    void buildFdLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
     void buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
     void buildFdGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
@@ -107,6 +108,9 @@ protected:
     std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
                                const bool mandatory = true, const std::string& defaultValue = "") const override;
 
+    // get model / engine qualifiers based on product tag, trade type and (optionally) an additional qualifier
+    std::vector<std::string> getModelEngineQualifiers(const std::string& addQualifier = {}) const;
+
     // gets eq ccy from market
     std::string getEqCcy(const IndexInfo& e);
 
@@ -115,6 +119,7 @@ protected:
 
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     bool buildingAmc_ = false;
+    bool buildingAmcCg_ = false;
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> amcCgModel_;
     const std::vector<Date> amcSimDates_, amcStickyCloseOutDates_;
@@ -131,6 +136,7 @@ protected:
     std::string scheduleProductClass_;
     std::string sensitivityTemplate_;
     std::map<std::string, std::set<Date>> fixings_;
+    std::string tradeType_;
 
     // temporary variables used during engine building
     QuantLib::ext::shared_ptr<StaticAnalyser> staticAnalyser_;
@@ -159,12 +165,9 @@ protected:
     std::string modelParam_, infModelType_, engineParam_, baseCcyParam_, gridCoarsening_;
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
-    Model::McParams mcParams_;
-    bool interactive_, zeroVolatility_, continueOnCalibrationError_;
+    Model::Params params_;
+    bool interactive_, zeroVolatility_, continueOnCalibrationError_, allowModelFallbacks_;
     std::vector<Real> calibrationMoneyness_;
-    Real mesherEpsilon_, mesherScaling_, mesherConcentration_;
-    Size mesherMaxConcentratingPoints_;
-    bool mesherIsStatic_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;
     bool calibrate_;
@@ -177,7 +180,6 @@ protected:
     std::string externalComputeDevice_;
     bool includePastCashflows_;
     bool staticNpvMem_;
-    SalvagingAlgorithm::Type salvagingAlgorithm_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
 };
 

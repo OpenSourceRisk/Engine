@@ -193,7 +193,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(builder, "No FxOption builder found");
     QuantLib::ext::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
+    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
 
     // Add additional premium payments
     Position::Type positionType = parsePositionType(option_.longShort());
@@ -201,9 +201,10 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers,
                 (positionType == Position::Long ? 1.0 : -1.0) * boughtAmount_, option_.premiumData(), -bsInd, soldCcy,
-                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+                discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     // we build a knock out option
     QuantLib::ext::shared_ptr<Instrument> barrier =

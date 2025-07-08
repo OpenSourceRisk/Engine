@@ -47,6 +47,7 @@
 #include <orea/simm/simmconfiguration.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
@@ -79,6 +80,7 @@ public:
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
     void setBaseCurrency(const std::string& s) { baseCurrency_ = s; }
     void setContinueOnError(bool b) { continueOnError_ = b; }
+    void setAllowModelBuilderFallbacks(bool b) { allowModelBuilderFallbacks_ = b; }
     void setLazyMarketBuilding(bool b) { lazyMarketBuilding_ = b; }
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
@@ -101,6 +103,8 @@ public:
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
+    void setBaselTrafficLightConfig(const std::string& xml);
+    void setBaselTrafficLightFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setPricingEngine(const std::string& xml);
@@ -200,6 +204,7 @@ public:
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
+    void setTradePnl(bool b) { tradePnL_ = b; }
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
@@ -225,6 +230,7 @@ public:
     void setXvaCgDynamicIM(bool b) { xvaCgDynamicIM_ = b; }
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
+    void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
@@ -244,6 +250,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreExerciseValues(bool b) { storeExerciseValues_ = b; }
     void setStoreSensis(bool b) { storeSensis_ = b; }
     void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
@@ -280,6 +287,7 @@ public:
     void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
+    void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
     void setLoadCube(bool b) { loadCube_ = b; }
     // TODO: API for setting NPV and market cubes
@@ -339,6 +347,8 @@ public:
     void setDimRegressionOrder(Size s) { dimRegressionOrder_ = s; }
     void setDimRegressors(const std::string& s); // parse to vector<string>
     void setDimOutputGridPoints(const std::string& s); // parse to vector<Size>
+    void setDimDistributionCoveredStdDevs(Real r) { dimDistributionCoveredStdDevs_ = r; }
+    void setDimDistributionGridSize(Size n) { dimDistributionGridSize_ = n; }
     void setDimOutputNettingSet(const std::string& s) { dimOutputNettingSet_ = s; }
     void setDimLocalRegressionEvaluations(Size s) { dimLocalRegressionEvaluations_ = s; }
     void setDimLocalRegressionBandwidth(Real r) { dimLocalRegressionBandwidth_ = r; }
@@ -512,6 +522,7 @@ public:
     const std::string& baseCurrency() const { return baseCurrency_; }
     const std::string& resultCurrency() const { return resultCurrency_; }
     bool continueOnError() const { return continueOnError_; }
+    bool allowModelBuilderFallbacks() const { return allowModelBuilderFallbacks_; }
     bool lazyMarketBuilding() const { return lazyMarketBuilding_; }
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
@@ -524,6 +535,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
+    const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
     CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& pricingEngine() const { return pricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const { return todaysMarketParams_; }
@@ -640,6 +652,7 @@ public:
     SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
+    bool tradePnl() const { return tradePnL_; }
     bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
@@ -663,6 +676,7 @@ public:
     bool xvaCgDynamicIM() const { return xvaCgDynamicIM_; }
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
+    double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
@@ -683,6 +697,7 @@ public:
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeExerciseValues() const { return storeExerciseValues_; }
     bool storeSensis() const { return storeSensis_; }
     bool allowPartialScenarios() const { return allowPartialScenarios_; }
     const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
@@ -706,6 +721,7 @@ public:
     /*****************
      * Getters for xva
      *****************/
+    bool xvaUseDoublePrecisionCubes() const { return xvaUseDoublePrecisionCubes_; }
     const std::string& xvaBaseCurrency() const { return xvaBaseCurrency_; }
     bool loadCube() { return loadCube_; }
     const QuantLib::ext::shared_ptr<NPVCube>& cube() const { return cube_; }
@@ -761,6 +777,8 @@ public:
     Size dimRegressionOrder() const { return dimRegressionOrder_; }
     const std::vector<std::string>& dimRegressors() const { return dimRegressors_; }
     const std::vector<Size>& dimOutputGridPoints() const { return dimOutputGridPoints_; }
+    Real dimDistributionCoveredStdDevs() const { return dimDistributionCoveredStdDevs_; }
+    Size dimDistributionGridSize() const { return dimDistributionGridSize_; }
     const std::string& dimOutputNettingSet() const { return dimOutputNettingSet_; }
     Size dimLocalRegressionEvaluations() const { return dimLocalRegressionEvaluations_; }
     Real dimLocalRegressionBandwidth() const { return dimLocalRegressionBandwidth_; }
@@ -944,6 +962,7 @@ protected:
     std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
+    bool allowModelBuilderFallbacks_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
@@ -956,6 +975,7 @@ protected:
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLightConfig_;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
@@ -1052,6 +1072,7 @@ protected:
     SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
+    bool tradePnL_ = false;
     bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
@@ -1074,6 +1095,7 @@ protected:
     bool xvaCgDynamicIM_ = false;
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
+    double xvaCgRegressionVarianceCutoff_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
@@ -1091,6 +1113,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeExerciseValues_ = false;
     bool storeSensis_ = false;
     bool allowPartialScenarios_ = false;
     vector<Real> curveSensiGrid_;
@@ -1126,6 +1149,7 @@ protected:
     /**************
      * XVA analytic
      **************/
+    bool xvaUseDoublePrecisionCubes_ = false;
     std::string xvaBaseCurrency_ = "";
     bool loadCube_ = false;
     bool flipViewXVA_ = false;
@@ -1164,6 +1188,8 @@ protected:
     Size dimRegressionOrder_ = 0;
     vector<string> dimRegressors_;
     vector<Size> dimOutputGridPoints_;
+    Real dimDistributionCoveredStdDevs_ = 5.0;
+    Size dimDistributionGridSize_ = 50;
     string dimOutputNettingSet_;
     Size dimLocalRegressionEvaluations_ = 0;
     Real dimLocalRegressionBandwidth_ = 0.25;

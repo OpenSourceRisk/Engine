@@ -60,8 +60,8 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
+    void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);
 
     void initCubeDepth();
     void initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);
@@ -75,7 +75,7 @@ protected:
     amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& simDates,
                      const std::vector<Date>& stickyCloseOutDates);
     void buildAmcPortfolio();
-    void amcRun(bool doClassicRun);
+    void amcRun(bool doClassicRun, bool continueOnCalibrationError, bool allowModelFallbacks);
 
     void runPostProcessor();
 

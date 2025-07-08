@@ -22,6 +22,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
@@ -69,18 +70,20 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     Time ttp = discountCurve_->timeFromReference(paymentDate);
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
-    auto parameterFlow1 =
-        derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, arguments_.longAssetFxIndex);
+    auto parameterFlow1 = derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, exerciseDate,
+                                                         arguments_.longAssetFxIndex);
 
-    auto parameterFlow2 =
-        derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, arguments_.shortAssetFxIndex);
+    auto parameterFlow2 = derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, exerciseDate,
+                                                         arguments_.shortAssetFxIndex);
 
     double F1 = parameterFlow1.atm;
     double F2 = parameterFlow2.atm;
     double sigma1 = parameterFlow1.sigma;
     double sigma2 = parameterFlow2.sigma;
-    double obsTime1 = parameterFlow1.tn;
-    double obsTime2 = parameterFlow2.tn;
+    double pricingTime1 = parameterFlow1.tn;
+    double pricingTime2 = parameterFlow2.tn;
+    double obsTime1 = std::min(tte, pricingTime1);
+    double obsTime2 = std::min(tte, pricingTime2);
     double accruals1 = parameterFlow1.accruals;
     double accruals2 = parameterFlow2.accruals;
 
@@ -113,8 +116,8 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         }
 
     } else {
-        sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
-        sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
+        sigma1 = sigma1 * std::sqrt(obsTime1 / tte);
+        sigma2 = sigma2 * std::sqrt(obsTime2 / tte);
         correlation = rho();
         // KirkFormula
         Y = (F2 * w2 + effectiveStrike);
@@ -129,14 +132,19 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     }
 
     // Calendar spread adjustment if observation period is before the exercise date
+    mp["eff_strike"] = effectiveStrike;
     mp["F1"] = F1;
     mp["accruals1"] = accruals1;
     mp["sigma1"] = sigma1;
+    mp["sigma1_without_time_adjustment"] = parameterFlow1.sigma;
     mp["obsTime1"] = obsTime1;
+    mp["pricingTime1"] = pricingTime1;
     mp["F2"] = F2;
     mp["accruals2"] = accruals2;
     mp["sigma2"] = sigma2;
+    mp["sigma2_without_time_adjustment"] = parameterFlow2.sigma;
     mp["obsTime2"] = obsTime2;
+    mp["pricingTime2"] = pricingTime2;
     mp["tte"] = tte;
     mp["ttp"] = ttp;
     mp["df"] = df;
@@ -160,34 +168,48 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
+   
+    vector<CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / df;
+    cfResults.back().payDate = paymentDate;
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    mp["cashFlowResults"] =  cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
 CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                                       const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                                                      const Date& exerciseDate,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const {
     PricingParameter res;
+
     if (auto cf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(flow)) {
         res.accruals = 0.0;
-        res.tn = vol->timeFromReference(cf->pricingDate());
+        // In case exercise is after future expiry (e.g. calendar spreads)
+        auto pricingDate = std::min(exerciseDate, cf->pricingDate());
+        res.tn = std::max(vol->timeFromReference(pricingDate), 0.0);
         double fxSpot = 1.0;
         if (fxIndex) {
-            fxSpot = fxIndex->fixing(cf->pricingDate());
+            fxSpot = fxIndex->fixing(pricingDate);
         }
-        double atmUnderlyingCurrency = cf->index()->fixing(cf->pricingDate());
+        double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
-                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
+                        ? vol->blackVol(cf->pricingDate(), atmUnderlyingCurrency, true)
                         : 0.0;
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);
-        res.pricingDates.push_back(cf->pricingDate());
+        res.pricingDates.push_back(pricingDate);
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
-                      std::placeholders::_2, vol));
+                      std::placeholders::_2, vol),
+            Null<Real>(), exerciseDate);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
@@ -218,7 +240,7 @@ Real CommoditySpreadOptionAnalyticalEngine::rho() const {
         return rho_->correlation(arguments_.exercise->lastDate());
     } else {
         return intraAssetCorrelation(arguments_.shortAssetLastPricingDate, arguments_.longAssetLastPricingDate,
-                                      *volTSLongAsset_);
+                                     *volTSLongAsset_);
     }
 }
 

@@ -41,18 +41,19 @@ using QuantLib::Size;
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates);
-    std::string npvName() const override { return "__AMCCG_NPV"; }
-    std::set<std::string> relevantCurrencies() const override;
-    bool hasVega() const override;
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
+                    const std::vector<QuantLib::Date>& simulationDates,
+                    const bool reevaluateExerciseInStickyCloseOutDateRun);
+
+    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                               std::vector<TradeExposure>* tradeExposure = nullptr,
+                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
     void calculate() const;
 
 protected:
     // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
+    bool reevaluateExerciseInStickyCloseOutDateRun_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;

@@ -20,6 +20,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
@@ -31,15 +32,15 @@ namespace ore::data{
 \ingroup builders
 */
 
-class CommoditySpreadOptionBaseEngineBuilder : public CachingPricingEngineBuilder<std::string, const Currency&, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&,
+class CommoditySpreadOptionBaseEngineBuilder : public CachingPricingEngineBuilder<std::string, const Currency&, const std::string&, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&,
                                                                                   QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&, std::string const&> {
 public:
     CommoditySpreadOptionBaseEngineBuilder(const std::string& model, const std::string& engine,
                                            const std::set<std::string>& tradeTypes)
         : CachingEngineBuilder(model, engine, tradeTypes) {}
 protected:
-    std::string keyImpl(const Currency&, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const&, std::string const& id) override {
-        return id;
+    std::string keyImpl(const Currency& ccy, const std::string& discountCurveName, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& comm1, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& comm2, std::string const& id) override {
+        return id + "/" + ccy.code() + "/" + discountCurveName + "/" + comm1->name() + "/" + comm2->name();
     }
 
 };
@@ -57,8 +58,10 @@ public:
         : CommoditySpreadOptionBaseEngineBuilder("BlackScholes", "CommoditySpreadOptionEngine", {"CommoditySpreadOption"}){}
 protected:
 
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override{
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurveName, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& longIndex, QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> const& shortIndex, string const& id) override{
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
         Handle<QuantLib::BlackVolTermStructure> volLong =
             market_->commodityVolatility(longIndex->underlyingName(), configuration(MarketContext::pricing));
         Handle<QuantLib::BlackVolTermStructure> volShort =

@@ -1276,6 +1276,7 @@
       <xs:element type="xs:decimal" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="MinFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="DontThrowSteps" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="Global" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   

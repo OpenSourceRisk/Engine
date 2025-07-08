@@ -155,14 +155,15 @@ class OreExample(object):
     def get_output_data_from_column(self, csv_name, colidx, offset=1, filter='', filterCol=0):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))
         data = []
+        count = 0
         for line in f:
             tokens = line.split(',')
-            if colidx < len(line.split(',')):
-#                if (filter == '' or tokens[filterCol] == filter):
-                if (filter == '' or (filter in tokens[filterCol])):
-                    data.append(line.split(',')[colidx])
+            if colidx < len(tokens):
+                if (filter == '' or (filter in tokens[filterCol]) or count == 0):
+                    data.append(tokens[colidx])
             else:
                 data.append("Error")
+            count = count + 1
         return [float(i) for i in data[offset:]]
 
     def save_output_to_subdir(self, subdir, files):

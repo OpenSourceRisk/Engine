@@ -62,6 +62,7 @@ private:
 
     PricingParameter derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                     const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                                    const Date& expiryDate,
                                                     const ext::shared_ptr<FxIndex>& fxIndex) const;
 
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2

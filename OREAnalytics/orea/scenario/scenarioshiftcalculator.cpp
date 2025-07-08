@@ -25,9 +25,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using ore::analytics::parseShiftType;
-using ore::analytics::RiskFactorKey;
-using ore::analytics::Scenario;
 using ore::analytics::ScenarioSimMarketParameters;
 using ore::analytics::SensitivityScenarioData;
 using ore::analytics::ShiftScenarioGenerator;

@@ -405,7 +405,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             DLOG("Create composite " << i);
             Real nominal, gearing;
             Date paymentDate;
-            QuantLib::ext::shared_ptr<CPICoupon> coupon = QuantLib::ext::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
+            QuantLib::ext::shared_ptr<QuantLib::CPICoupon> coupon =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICoupon>(legs_[0][i]);
             QuantLib::ext::shared_ptr<CPICashFlow> cashflow = QuantLib::ext::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
@@ -534,8 +535,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
-                                       -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                       -multiplier, parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)

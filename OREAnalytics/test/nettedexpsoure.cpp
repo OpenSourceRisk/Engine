@@ -356,8 +356,8 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     // Calculate Cube
     boost::timer::cpu_timer t;
     //BOOST_TEST_MESSAGE("dg->numDates() " << dateGrid->valuationDates().size()<<", " <<"dg->dates() "<<dateGrid->dates().size());
-    QuantLib::ext::shared_ptr<NPVCube> cube =
-        QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+        today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
 
     vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
     QuantLib::ext::shared_ptr<NPVCalculator> npvCalc = QuantLib::ext::make_shared<NPVCalculator>("EUR");
@@ -603,11 +603,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         if (withCloseOutGrid[k]) {
             fileName = "scenarioData_closeout.csv";
             asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, dateGrid);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, false, dateGrid);
         } else {
             fileName = "scenarioData.csv";
             asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false, false);
         }
 
         if (!withCompounding){

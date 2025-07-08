@@ -232,14 +232,16 @@
     <FxVolatility ccypair="USDEUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <!--<ShiftScheme>Forward</ShiftScheme>-->
+      <ShiftScheme>Central</ShiftScheme>
       <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>0.0</ShiftStrikes>
     </FxVolatility>
     <FxVolatility ccypair="GBPEUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <ShiftScheme>Forward</ShiftScheme>
+      <!--<ShiftScheme>Forward</ShiftScheme>-->
+      <ShiftScheme>Central</ShiftScheme>
       <ShiftExpiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftExpiries>
       <ShiftStrikes>0.0</ShiftStrikes>
     </FxVolatility>

@@ -1,6 +1,7 @@
 <TodaysMarket>
   <Configuration id="xois">
     <DiscountingCurvesId>xois</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <YieldCurves/>
   <DiscountingCurves id="default">

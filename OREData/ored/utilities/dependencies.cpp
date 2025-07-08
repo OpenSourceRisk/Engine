@@ -323,12 +323,13 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 	return false;
 }
 
-void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
+void addMarketObjectDependencies(map<string, map<ore::data::MarketObject, set<string>>>* objects,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
-    const string& baseCcyDiscountCurve) {
+    const string& baseCcyDiscountCurve, const IborFallbackConfig& iborFallbackConfig) {
 
+    Date asof = QuantLib::Settings::instance().evaluationDate();
     for (const auto& [config, mp] : *objects) {
-        std::map<CurveSpec::CurveType, std::set<string>> dependencies;
+        map<pair<CurveSpec::CurveType, string>, set<string>> dependencies;
 
         for (const auto& [o, s] : mp) {
             auto ct = marketObjectToCurveType(o);
@@ -404,7 +405,15 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {
                             if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
-                                dependencies[ct1].insert(id);
+                                dependencies[make_pair(ct1, config)].insert(id);
+                        }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                dependencies[make_pair(ct2, config)].insert(id);
                         }
                     }
                 }
@@ -412,24 +421,39 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
         }
         Size i = 0; // check to prevent infinite loop
         while (dependencies.size() > 0 && i < 1000) {
-            std::map<CurveSpec::CurveType, std::set<string>> newDependencies;
+            map<pair<CurveSpec::CurveType, string>, set<string>> newDependencies;
             for (const auto& [ct, ids] : dependencies) {
                 for (const auto& cId : ids) {
-                    MarketObject mo = curveTypeToMarketObject(ct, cId, curveConfigs);
-                    string name = curveSpecToName(ct, cId, curveConfigs);
+                    MarketObject mo = curveTypeToMarketObject(ct.first, cId, curveConfigs);
+                    string name = curveSpecToName(ct.first, cId, curveConfigs);
                     if (mo == MarketObject::IndexCurve && isGenericIborIndex(name))
                         continue;
-                    (*objects)[Market::defaultConfiguration][mo].insert(name);
-                    auto deps = curveConfigs->requiredCurveIds(ct, cId);
+                    (*objects)[config][mo].insert(name);
+                    auto deps = curveConfigs->requiredCurveIds(ct.first, cId);
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {
-                            if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
-                                newDependencies[ct1].insert(id);
+                            if (!checkMarketObject(objects, ct1, id, curveConfigs, ct.second))
+                                newDependencies[make_pair(ct1, ct.second)].insert(id);
                         }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct.first, cId);
+                    for (const auto& [o, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(o.first);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, o.second))
+                                newDependencies[make_pair(ct2, o.second)].insert(id);
+                        }
+                    }
+                    // handle ibor fallback dependency
+                    if (mo == MarketObject::IndexCurve && iborFallbackConfig.isIndexReplaced(name, asof)) {
+                        auto ct3 = marketObjectToCurveType(mo);
+                        auto id = iborFallbackConfig.fallbackData(name).rfrIndex;
+                        if (!checkMarketObject(objects, ct3, id, curveConfigs, ct.second))
+                            newDependencies[make_pair(ct3, ct.second)].insert(id);
                     }
                     // for SwapIndexes we are still missing the discount curve dependency
                     if (mo == MarketObject::SwapIndexCurve)
-                        newDependencies[CurveSpec::CurveType::Yield].insert(
+                        newDependencies[make_pair(CurveSpec::CurveType::Yield, ct.second)].insert(
                             swapIndexDiscountCurve(name.substr(0, 3), baseCcy, name));
                 }
             }
@@ -575,10 +599,10 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
 
         set<string> baseCcys = getCollateralisedDiscountCcy(ccy, curveConfigs);
 
-        string commonDiscount = "";
+        string commonDiscount;
         // Look for a common discount curve curve to use as a cross
         auto it = baseCcys.begin();
-        while (it != baseCcys.end() && commonDiscount == "") {
+        while (it != baseCcys.end() && commonDiscount.empty()) {
             auto pos = baseDiscountCcys.find(*it);
             if (pos != baseDiscountCcys.end()) {
                 commonDiscount = *pos;
@@ -591,11 +615,11 @@ void buildCollateralCurveConfig(const string& id, const string& baseCcy, const :
         } else {
             vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments;
             segments.push_back(QuantLib::ext::make_shared<DiscountRatioYieldCurveSegment>(
-                "Discount Ratio", baseCurve, baseCcy, ccy + "-IN-" + commonDiscount, ccy,
-                baseCcy + "-IN-" + commonDiscount, baseCcy));
+                "Discount Ratio", baseCurve, base, ccy + "-IN-" + commonDiscount, ccy,
+                base + "-IN-" + commonDiscount, base));
 
             QuantLib::ext::shared_ptr<YieldCurveConfig> ycc = QuantLib::ext::make_shared<YieldCurveConfig>(
-                id, ccy + " collateralised in " + baseCcy, ccy, "", segments);
+                id, ccy + " collateralised in " + base, ccy, "", segments);
 
             curveConfigs->add(CurveSpec::CurveType::Yield, id, ycc);
         }

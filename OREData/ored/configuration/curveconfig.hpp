@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <set>
@@ -33,6 +34,7 @@ namespace data {
 using ore::data::XMLSerializable;
 using std::set;
 using std::string;
+using std::pair;
 
 //! Base curve configuration
 /*!
@@ -53,8 +55,11 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
-    virtual set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const;
-    virtual map<CurveSpec::CurveType, set<string>> requiredCurveIds() const;
+    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const;
+    set<string> requiredNames(const MarketObject o, const std::string& configuration) const;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const;
+    map<MarketObject, set<string>> requiredNames(const std::string& configuration) const;
+    map<pair<MarketObject, string>, set<string>> requiredNames() const;
     //@}
 
     //! \name Setters
@@ -63,16 +68,24 @@ public:
     string& curveDescription() { return curveDescription_; }
     void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const set<string>& ids);
     void setRequiredCurveIds(const map<CurveSpec::CurveType, set<string>>& ids);
+    void setRequiredNames(const MarketObject o, const std::string& configuration, const set<string>& ids);
+    void setRequiredNames(const map<std::pair<MarketObject, std::string>, set<string>>& ids);
     //@}
 
     //! Return all the market quotes required for this config
     virtual const vector<string>& quotes() { return quotes_; }
 
 protected:
+    virtual void populateRequiredIds() const = 0;
+
+    mutable bool requiredIdsInitialized_ = false;
+    mutable map<CurveSpec::CurveType, set<string>> requiredCurveIds_;
+    // empty market configuration (second component of tuple) matches all configurations
+    mutable map<std::pair<MarketObject, std::string>, set<string>> requiredNames_;
+
     string curveID_;
     string curveDescription_;
     vector<string> quotes_;
-    map<CurveSpec::CurveType, set<string>> requiredCurveIds_;
 };
 
 } // namespace data

@@ -117,7 +117,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     Type type_;
     QuoteType quoteType_;

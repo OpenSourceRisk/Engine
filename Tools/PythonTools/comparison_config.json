@@ -955,6 +955,51 @@
           }
         ]
       },
+      "scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "simm_scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "crif_scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
       ".*scenariostatistics.*\\.csv": {
         "keys": [
           "Date",
@@ -1454,7 +1499,9 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1871,6 +1918,7 @@
           {
             "names": [
               "data/discountFactor",
+              "data/forwardRate",
               "data/time",
               "data/zeroRate",
               "data/cpi"
@@ -1890,11 +1938,12 @@
           {
             "names": [
               "data/time",
+              "data/yoyRate",
               "data/zeroRate",
               "data/cpi"
             ],
             "abs_tol": 1e-15,
-            "rel_tol": 1e-09
+            "rel_tol": 1e-08
           }
         ]
       },

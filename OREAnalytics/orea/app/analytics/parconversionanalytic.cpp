@@ -94,6 +94,10 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
 
         parAnalysis->computeParInstrumentSensitivities(simMarket);
 
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        analytic()->addReport("PARCONVERSION", "parConversionScenarioParRates", parScenarioRatesReport);
+
         QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
             QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
@@ -119,7 +123,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
                     ALOG("Currency in the sensitivity input and config aren't consistent. Skip trade " << id);
                     break;
                 }
-                auto [rf, desc] = deconstructFactor(zero.riskFactor);
+                auto [rf, desc] = QuantExt::deconstructFactor(zero.riskFactor);
                 if (rf.keytype != RiskFactorKey::KeyType::None) {
                     auto it = factorToIndex.find(rf);
                     if (it == factorToIndex.end()) {
@@ -179,7 +183,8 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         }
 
         auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
-        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> report =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
 

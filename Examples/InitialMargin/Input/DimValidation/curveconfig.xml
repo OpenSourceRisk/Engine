@@ -41,7 +41,7 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
       <Report/>
@@ -56,7 +56,7 @@
       <Calendar>JoinHolidays(US settlement, UK settlement)</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>USD-CMS-2Y</ShortSwapIndexBase>
       <SwapIndexBase>USD-CMS-30Y</SwapIndexBase>
       <Report/>
@@ -71,7 +71,7 @@
       <Calendar>UK settlement</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y</SwapTenors>
       <ShortSwapIndexBase>GBP-CMS-2Y</ShortSwapIndexBase>
       <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
       <Report/>

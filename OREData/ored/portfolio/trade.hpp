@@ -146,6 +146,10 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
+    // default if leg is not listed in map: IfNoEngineCashflows
+    enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
+    const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
+
     const string& npvCurrency() const { return npvCurrency_; }
 
     //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
@@ -160,7 +164,7 @@ public:
 
     virtual bool isExpired(const Date& d) const {
         ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-	return detail::simple_event(maturity_).hasOccurred(d, inc);
+        return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
     }
 
     const string& issuer() const { return issuer_; }
@@ -183,13 +187,6 @@ public:
     //@{
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
-
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
-        trade from being asked for its cashflows, the method can be overridden to return \c false.
-    */
-    virtual bool hasCashflows() const { return true; }
-    //@}
 
     //! Get cumulative timing spent on pricing
     boost::timer::nanosecond_type getCumulativePricingTime() const {
@@ -216,6 +213,8 @@ protected:
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
+    std::map<std::size_t, LegCashflowInclusion> legCashflowInclusion_;
+
     string npvCurrency_;
     QuantLib::Real notional_;
     string notionalCurrency_;
@@ -237,7 +236,7 @@ protected:
     // The returned date is the latest premium payment date added.
     Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;

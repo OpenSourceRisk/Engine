@@ -84,7 +84,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     portfolio->reset();
     portfolio->build(factory, "stress analysis");
 
-    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
     std::vector<std::vector<std::vector<TradeCashflowReportData>>> cfCube;

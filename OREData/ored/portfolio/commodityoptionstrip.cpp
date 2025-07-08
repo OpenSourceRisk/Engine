@@ -128,7 +128,9 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(npvCurrency_);
+    legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Never;
 }
+
 
 std::map<ore::data::AssetClass, std::set<std::string>>
 CommodityOptionStrip::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
@@ -263,7 +265,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const QuantLib::ext::shared
         vector<TempOptionData> tempData;
         Date exerciseDate = cf->indices().rbegin()->first;
         vector<string> strExerciseDate = {to_string(exerciseDate)};
-        maturity_ = maturity_ == Date() ? cf->date() : max(maturity_, cf->date());
+        maturity_ = maturity_ == Date() ? cf->date() : std::max(maturity_, cf->date());
         if (maturity_ == cf->date())
             maturityType_ = "CommodityIndexedAverageCashFlow Payment Date";
         string stemId = id() + "_" + strExerciseDate[0] + "_";
@@ -342,8 +344,9 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const QuantLib::ext::shared
 
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_, 1.0,
-                                       parseCurrency(legData_.currency()), engineFactory,
+                                       parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
@@ -388,13 +391,13 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
             paymentData = OptionPaymentData(strPaymentDate);
 
             // Update the maturity - cash-settled strip, it is the maximum payment date.
-            maturity_ = maturity_ == Date() ? paymentDate : max(maturity_, paymentDate);
+            maturity_ = maturity_ == Date() ? paymentDate : std::max(maturity_, paymentDate);
             maturityType_ = "Payment Date";
 
         } else {
             // Update the maturity - physically-settled strip or American, it is the maximum
             // exercise date (no deferred delivery for Physical implemented yet).
-            maturity_ = maturity_ == Date() ? exerciseDate : max(maturity_, exerciseDate);
+            maturity_ = maturity_ == Date() ? exerciseDate : std::max(maturity_, exerciseDate);
             maturityType_ = "Exercise Date";
         }
 
@@ -466,8 +469,9 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
 
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_, 1.0,
-                                       parseCurrency(legData_.currency()), engineFactory,
+                                       parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)

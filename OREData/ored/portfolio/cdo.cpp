@@ -222,7 +222,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                                                                       << basketNotionals.size() << ") doesnt match");
         Real notionalCorrectionFactor = origTotalNtl / totalNtl;
         // Scaling to Notional if relative error is close less than 10^-4
-        if (!close(totalNtl, origTotalNtl) && (abs(notionalCorrectionFactor - 1.0) <= 1e-4)) {
+        if (!close(totalNtl, origTotalNtl) && (std::abs(notionalCorrectionFactor - 1.0) <= 1e-4)) {
             ALOG("Trade " << id() << ", sum of notionals(" << totalNtl << ") is very close to total original notional ("
                           << origTotalNtl << "), will scale each notional by " << notionalCorrectionFactor
                           << ",  check the basket data for possible errors.");
@@ -321,10 +321,10 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // ignored if continue on error is true. Maybe better to have instrument that gives an NPV of 0.
     Real currTotalNtl = accumulate(basketNotionals.begin(), basketNotionals.end(), 0.0);
     QL_REQUIRE(!close(currTotalNtl, 0.0), "Trade " << id() << " has a current total notional of 0.0.");
-    Real currEquityNtl = max(origEquityNtl - lostNotional, 0.0);
-    Real currSeniorNtl = max(origSeniorNtl - recoveredNotional, 0.0);
-    Real currTrancheNtl = origTrancheNtl - max(min(recoveredNotional - origSeniorNtl, origTrancheNtl), 0.0) -
-                          max(min(lostNotional - origEquityNtl, origTrancheNtl), 0.0);
+    Real currEquityNtl = std::max(origEquityNtl - lostNotional, 0.0);
+    Real currSeniorNtl = std::max(origSeniorNtl - recoveredNotional, 0.0);
+    Real currTrancheNtl = origTrancheNtl - std::max(std::min(recoveredNotional - origSeniorNtl, origTrancheNtl), 0.0) -
+                          std::max(std::min(lostNotional - origEquityNtl, origTrancheNtl), 0.0);
     QL_REQUIRE(!close(currTrancheNtl, 0.0), "Trade " << id() << " has a current tranche notional of 0.0.");
     Real adjAttachPoint = currEquityNtl / currTotalNtl;
     Real adjDetachPoint = (currEquityNtl + currTrancheNtl) / currTotalNtl;
@@ -659,8 +659,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vector<Real> mults;
         Real upfrontAmount = upfrontFee_ * origTrancheNtl;
         string configuration = cdoEngineBuilder->configuration(MarketContext::pricing);
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         Date lastPremiumDate = addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
-                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory, configuration);
+                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, discountCurve, engineFactory, configuration);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";

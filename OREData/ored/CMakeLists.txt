@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
+configuration/baseltrafficlightconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -331,6 +332,7 @@ scripting/engines/amccgcurrencyswapengine.cpp
 scripting/engines/amccgfxforwardengine.cpp
 scripting/engines/amccgfxoptionengine.cpp
 scripting/engines/amccgmultilegoptionengine.cpp
+scripting/engines/amccgpricingengine.cpp
 scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
@@ -343,15 +345,11 @@ scripting/engines/scriptedinstrumentpricingengine.cpp
 scripting/engines/scriptedinstrumentpricingenginecg.cpp
 scripting/grammar.cpp
 scripting/models/blackscholes.cpp
-scripting/models/blackscholesbase.cpp
 scripting/models/blackscholescg.cpp
-scripting/models/blackscholescgbase.cpp
-scripting/models/fdblackscholesbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
 scripting/models/lgmcg.cpp
-scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
 scripting/models/modelcgimpl.cpp
 scripting/models/modelimpl.cpp
@@ -396,6 +394,7 @@ utilities/xmlutils.cpp)
 
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
+configuration/baseltrafficlightconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
@@ -761,16 +760,12 @@ scripting/engines/scriptedinstrumentpricingenginecg.hpp
 scripting/grammar.hpp
 scripting/models/amcmodel.hpp
 scripting/models/blackscholes.hpp
-scripting/models/blackscholesbase.hpp
 scripting/models/blackscholescg.hpp
-scripting/models/blackscholescgbase.hpp
 scripting/models/dummymodel.hpp
-scripting/models/fdblackscholesbase.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
 scripting/models/lgmcg.hpp
-scripting/models/localvol.hpp
 scripting/models/model.hpp
 scripting/models/modelcg.hpp
 scripting/models/modelcgimpl.hpp

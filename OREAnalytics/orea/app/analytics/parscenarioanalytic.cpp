@@ -20,6 +20,8 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 
+#include <ored/utilities/parsers.hpp>
+
 using namespace ore::analytics;
 
 namespace ore {

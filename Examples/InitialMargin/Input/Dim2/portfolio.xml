@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <Portfolio>
 
+  <!--
   <Trade id="Swap_Euribor">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -27,7 +28,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -56,7 +57,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -70,7 +71,8 @@
 	</LegData>
     </SwapData>
   </Trade>
-
+  -->
+  
   <!--
   <Trade id="Swap_EUR">
     <TradeType>Swap</TradeType>
@@ -213,6 +215,8 @@
     </SwapData>
   </Trade>
   -->
+
+  <!--
   <Trade id="Swap_SOFR_3M">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -239,7 +243,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -268,7 +272,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>2025-02-12</StartDate>
-            <EndDate>2035-02-12</EndDate>
+            <EndDate>2030-02-12</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>US</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -282,6 +286,8 @@
 	</LegData>
     </SwapData>
   </Trade>
+  -->
+  
   <!--
   <Trade id="FXFWD_EURUSD">
     <TradeType>FxForward</TradeType>
@@ -299,6 +305,7 @@
     </FxForwardData>
   </Trade>
   -->
+
   <!--
   <Trade id="FX_CALL_OPTION_EURUSD">
     <TradeType>FxOption</TradeType>
@@ -315,13 +322,13 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2035-02-10</ExerciseDate>
+          <ExerciseDate>2030-03-10</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
-      <SoldAmount>1030750</SoldAmount>
+      <SoldAmount>1035807</SoldAmount>
     </FxOptionData>
   </Trade>
   -->
@@ -396,7 +403,7 @@
     </SwapData>
   </Trade>
   -->
-  <!--
+
   <Trade id="EuropeanSwaptionCash">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -413,6 +420,96 @@
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
           <ExerciseDate>2030-02-10</ExerciseDate>
+        </ExerciseDates>
+	<PaymentData>
+	  <Dates>
+	    <Date>2030-02-11</Date>
+	  </Dates>
+	</PaymentData>
+      </OptionData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2030-02-12</StartDate>
+            <EndDate>2035-02-12</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.0244</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2030-02-12</StartDate>
+            <EndDate>2035-02-12</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>Following</Convention>
+            <TermConvention>Following</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwaptionData>
+  </Trade>
+
+  <!--
+  <Trade id="BermudanSwaptionCash">
+    <TradeType>Swaption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwaptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2030-02-10</ExerciseDate>
+          <ExerciseDate>2031-02-10</ExerciseDate>
+          <ExerciseDate>2032-02-10</ExerciseDate>
+          <ExerciseDate>2033-02-10</ExerciseDate>
+          <ExerciseDate>2034-02-10</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <LegData>
@@ -476,8 +573,7 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  -->
-
+-->
   <!--
   <Trade id="Swap_SONIA_3M">
     <TradeType>Swap</TradeType>

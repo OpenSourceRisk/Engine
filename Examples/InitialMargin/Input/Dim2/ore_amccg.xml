@@ -6,7 +6,7 @@
     <Parameter name="outputPath">Output/Dim2/AmcCg</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">marketdata.csv</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
@@ -57,6 +57,8 @@
       <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <!-- regression variance cutoff in xva cg engine, the cutoff is disabled when the parameter is not given -->
+      <!-- <Parameter name="xvaCgRegressionVarianceCutoff">0.01</Parameter> -->
       <!-- whether to use python integration (conditional expectation calculation) -->
       <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
@@ -104,6 +106,10 @@
       <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- cover n std devs around mean of the data in dim distribution output, or "inf" to cover all of the  data -->
+      <Parameter name="dimDistributionCoveredStdDevs">5.0</Parameter>
+      <!-- grid size for dim distribution report -->
+      <Parameter name="dimDistributionGridSize">50</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
       <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->

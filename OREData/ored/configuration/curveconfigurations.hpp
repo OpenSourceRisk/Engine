@@ -156,6 +156,12 @@ public:
     /*! Return all curve ids required by a given curve id of a given type */
     std::map<CurveSpec::CurveType, std::set<string>> requiredCurveIds(const CurveSpec::CurveType& type,
                                                                       const std::string& curveId) const;
+
+    /*! Return all names (this is the LHS of tmp assignments) required by a given curve id of a given type 
+        in a given market configuration */
+    std::map<MarketObject, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId,
+                                                           const std::string& configuration) const;
+    std::map<std::pair<MarketObject, std::string>, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId) const;
     //@}
 
     void add(const CurveSpec::CurveType& type, const string& curveId, const QuantLib::ext::shared_ptr<CurveConfig>& config);    

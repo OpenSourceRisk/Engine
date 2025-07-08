@@ -2,17 +2,15 @@
 <Simulation>
 
   <Parameters>
-      <Discretization>Exact</Discretization>
-      <!--<Grid>41,3M</Grid>-->
-      <!--<Grid>52,1D</Grid>-->
-      <!--<Grid>121,1M</Grid>-->
-      <Grid>1M,1Y,4Y,8Y</Grid>
-      <Calendar>EUR,USD</Calendar>
-      <!--<Calendar>NullCalendar</Calendar>-->
+      <Discretization>Euler</Discretization>
+      <TimeStepsPerYear>24</TimeStepsPerYear>
+      <Grid>121,1M</Grid>
+      <!--<Calendar>EUR,USD</Calendar>-->
+      <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>1000</Samples>
+      <Samples>10</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>
@@ -78,7 +76,7 @@
 	  -->
 	</Sigma>
         <CalibrationOptions>
-          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Expiries>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
           <!-- ATMF, +25D, -25D, 1.2345 -->
         </CalibrationOptions>
@@ -153,6 +151,42 @@
         <Name>GBP-CMS-30Y</Name>
         <DiscountingIndex>GBP-SONIA</DiscountingIndex>
       </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-2Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-LIBOR3M-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
     </SwapIndices>
     
     <SwaptionVolatilities>
@@ -166,7 +200,7 @@
       </Currencies>
       <!--<Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>-->
       <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
-      <Terms>1Y,5Y,10Y</Terms>
+      <Terms>1Y,2Y,3Y,4Y,5Y,10Y</Terms>
     </SwaptionVolatilities>
 
     <FxVolatilities>

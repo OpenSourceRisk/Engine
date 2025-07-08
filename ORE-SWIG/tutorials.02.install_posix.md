@@ -48,7 +48,7 @@ you have the latest version:
 You probably want a copy of the example Python scripts from the ORE project.
 So point your browser at the git repo...
 
-https://github.com/OpenSourceRisk/ORE-SWIG
+https://github.com/OpenSourceRisk/Engine/Examples/ORE-Python/ExampleScripts
 
 ...and click on the download button.  Download a zip file of the repo and
 uncompress it somewhere on your hard drive.
@@ -56,7 +56,7 @@ uncompress it somewhere on your hard drive.
 Back at the command prompt, cd into the directory containing the example
 scripts, e.g:
 
-    cd /path/to/OREAnalytics-SWIG/Python/Examples
+    cd /path/to/Engine/Examples/ORE-Python/ExampleScripts
 
 ## Virtual Environment
 

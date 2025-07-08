@@ -341,9 +341,10 @@ void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<Eng
     auto ccy = parseCurrency(notionalCurrency_);
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date premiumPayDate =
         addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
+                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, discountCurve, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
     // Use the instrument added as the main instrument and clear the vectors
@@ -371,8 +372,9 @@ Date CreditDefaultSwapOption::addPremium(const QuantLib::ext::shared_ptr<EngineF
         // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
-                           indicatorLongShort, tradeCurrency, ef, marketConfig);
+                           indicatorLongShort, tradeCurrency, discountCurve, ef, marketConfig);
 }
 
 }
