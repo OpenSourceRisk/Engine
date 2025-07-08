@@ -139,7 +139,13 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             }
             Date fixingDate = cashSettlementFixingDate.has_value() ? cashSettlementFixingDate.value()
                                                                    : fxIndex->fixingDate(paymentDate);
-            requiredFixings_.addFixingDate(fixingDate, fxIndex->name(), paymentDate);
+            if (!fxIndex->fixingCalendar().isBusinessDay(fixingDate)) {
+                Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+                requiredFixings_.addFixingDate(adjustedFixingDate, fxIndexStr);
+
+            } else {
+                requiredFixings_.addFixingDate(fixingDate, fxIndexStr);
+            }
             DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
                  << io::iso_date(fixingDate) << " added to required fixings for trade " << id());
             // if no specific discount curve is provided, use the default discount curve for the cash settlement currency
