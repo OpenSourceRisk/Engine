@@ -111,7 +111,7 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             fprintf(fp_, "\n");
         }
 
-        fprintf(fp_, "%s%c%zu%c%.8f", to_string(d).c_str(), sep_, s->label(), sep_, s->getNumeraire());
+        fprintf(fp_, "%s%c%s%c%.8f", to_string(d).c_str(), sep_, s->label().c_str(), sep_, s->getNumeraire());
         for (auto k : keys_)
             fprintf(fp_, "%c%.8f", sep_, s->get(k));
         fprintf(fp_, "\n");
