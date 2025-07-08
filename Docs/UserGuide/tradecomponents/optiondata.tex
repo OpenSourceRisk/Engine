@@ -256,7 +256,7 @@ The second method is a set of rules that are used to generate the settlement dat
 
 \end{enumerate}
 
-\item SettlementData [Optional]: Only relevant for cash‐settled options. Converts the payoff into a currency different from the option's own currency. It specifies the payment currency, the FX index to perform the conversion, and the date on which the FX rate is fixed. Its XML form is shown in listing \ref{settlement_data_cash_settled_options}.
+\item SettlementData [Optional]: Only relevant for cash settled options. Converts the payoff into a currency different from the option's own currency. It specifies the payment currency, the FX index to perform the conversion, and the date on which the FX rate is fixed. Its XML form is shown in listing \ref{lst:settlement_data_cash_settled_options}.
 
 \begin{itemize}
   \item \lstinline!PayCurrency!: Currency in which the option payoff will be settled.
@@ -301,7 +301,7 @@ The second method is a set of rules that are used to generate the settlement dat
   <FixingDate>2020-03-28</FixingDate>
 </SettlementData>
 \end{minted}
-\caption{SettlementData node for cash‐settled options}
+\caption{SettlementData node for cash settled options}
 \label{lst:settlement_data_cash_settled_options}
 \end{listing}
 
