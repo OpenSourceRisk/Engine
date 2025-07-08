@@ -154,7 +154,8 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         underlyingEngine_.calculate();
 
         // Discount factor from payment date back to expiry date i.e. P(t_e, t_p) when rates are deterministic.
-        DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / dts->discount(expiryDate);
+        DiscountFactor df_te = dts->discount(expiryDate);
+        DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / df_te;
         Time delta_te_tp = dts->timeFromReference(arguments_.paymentDate) - dts->timeFromReference(expiryDate);
 
         // Populate this engine's results using the results from the underlying engine.
@@ -186,16 +187,14 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.itmCashProbability = underlyingResults->itmCashProbability;
 
         // Take the additional results from the underlying engine and add more.
-        // Set the currency of the cash flows to the source currency of the fx index, if available.
-        // In case the cash settlement currency is not the same as the option currency
         results_.additionalResults = underlyingResults->additionalResults;
-        auto cashflowResultsIt = results_.additionalResults.find("cashFlowResults");
-        if (cashflowResultsIt != results_.additionalResults.end() && arguments_.fxIndex != nullptr) {
-            auto cashflowResults = boost::any_cast<vector<CashFlowResults>>(cashflowResultsIt->second);
-            if (!cashflowResults.empty()) {
-                cashflowResults.back().currency = arguments_.fxIndex->sourceCurrency().code();
-            }
-        }
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount = results_.value / (df_te_tp * df_te);
+        cfResults.back().payDate = arguments_.paymentDate;
+        cfResults.back().legNumber = 0;
+        cfResults.back().type = "ExpectedFlow";
+        results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
         results_.additionalResults["settlementFxFwd"] = fxRate;
     }
