@@ -72,6 +72,7 @@ void CommodityPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineF
             auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
             ConventionsBasedFutureExpiry feCalc(*convention);
             Date expiry = Settings::instance().evaluationDate();
+            Date optionExpiry = expiry;
             Size nOffset = u.futureMonthOffset() == Null<Size>() ? 0 : u.futureMonthOffset();
             if (u.deliveryRollDays() != Null<Size>()) {
                 auto cal =
@@ -90,8 +91,9 @@ void CommodityPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineF
             } else if (!u.futureExpiryDate().empty()) {
                 expiry = parseDate(u.futureExpiryDate());
                 expiry = feCalc.nextExpiry(true, expiry, nOffset, false);
+                optionExpiry = feCalc.priorExpiry(true, expiry, true);
             }
-            index = index->clone(expiry, pts);
+            index = index->clone(expiry, optionExpiry, pts);
         }
         indices_.push_back(index);
         weights_.push_back(u.weight());
