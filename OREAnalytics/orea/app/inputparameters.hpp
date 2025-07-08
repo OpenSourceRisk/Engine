@@ -250,6 +250,7 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreExerciseValues(bool b) { storeExerciseValues_ = b; }
     void setStoreSensis(bool b) { storeSensis_ = b; }
     void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
@@ -696,6 +697,7 @@ public:
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeExerciseValues() const { return storeExerciseValues_; }
     bool storeSensis() const { return storeSensis_; }
     bool allowPartialScenarios() const { return allowPartialScenarios_; }
     const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
@@ -1112,6 +1114,7 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeExerciseValues_ = false;
     bool storeSensis_ = false;
     bool allowPartialScenarios_ = false;
     vector<Real> curveSensiGrid_;

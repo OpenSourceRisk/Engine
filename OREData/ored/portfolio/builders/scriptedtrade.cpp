@@ -377,9 +377,10 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                  << generateAdditionalResults << "), both of which do not support external devices at the moment.");
         }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()), ast_,
-            context, params_, indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(),
-            interactive_, generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
+            script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
+            script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
+            indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(), interactive_,
+            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
             useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
