@@ -633,8 +633,9 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
 
 std::string OREAppInputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
     bool mandatory) {
-    auto file = loadParameterString(analytic, param, mandatory);
-    XMLDocument doc(file);
+    string filename = loadParameterString(analytic, param, mandatory);
+    filesystem::path filepath = inputPath_ / filename;
+    XMLDocument doc(filepath.generic_string());
     return doc.toString();
 }
 

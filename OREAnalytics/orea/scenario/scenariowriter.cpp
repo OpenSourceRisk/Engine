@@ -26,22 +26,26 @@ namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
                                const char sep, const string& filemode, const std::vector<RiskFactorKey>& headerKeys,
-                               const bool writeDuplicateDates)
-    : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates) {
+                               const bool writeDuplicateDates, Size precision)
+    : src_(src), fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
+      precision_(precision) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode,
-                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates)
-    : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates) {
+                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
+                               Size precision)
+    : fp_(nullptr), i_(0), sep_(sep), headerKeys_(headerKeys), writeDuplicateDates_(writeDuplicateDates),
+      precision_(precision) {
     open(filename, filemode);
 }
 
 ScenarioWriter::ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
                                QuantLib::ext::shared_ptr<ore::data::Report> report,
-                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates)
+                               const std::vector<RiskFactorKey>& headerKeys, const bool writeDuplicateDates,
+                               Size precision)
     : src_(src), report_(report), fp_(nullptr), i_(0), sep_(','), headerKeys_(headerKeys),
-      writeDuplicateDates_(writeDuplicateDates) {}
+      writeDuplicateDates_(writeDuplicateDates), precision_(precision) {}
 
 void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
@@ -111,7 +115,8 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
             fprintf(fp_, "\n");
         }
 
-        fprintf(fp_, "%s%c%s%c%.8f", to_string(d).c_str(), sep_, s->label().c_str(), sep_, s->getNumeraire());
+        fprintf(fp_, "%s%c%s%c%.*f", to_string(d).c_str(), sep_,
+                s->label().empty() ? to_string(i_).c_str() : s->label().c_str(), sep_, precision_, s->getNumeraire());
         for (auto k : keys_)
             fprintf(fp_, "%c%.8f", sep_, s->get(k));
         fprintf(fp_, "\n");
@@ -125,14 +130,14 @@ void ScenarioWriter::writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
                 headerKeys_ = keys_;
             report_->addColumn("Date", string());
             report_->addColumn("Scenario", string());
-            report_->addColumn("Numeraire", double(), 12);
+            report_->addColumn("Numeraire", double(), precision_);
             for (Size i = 0; i < headerKeys_.size(); i++)
-                report_->addColumn(to_string(headerKeys_[i]), double(), 12);
+                report_->addColumn(to_string(headerKeys_[i]), double(), precision_);
         }
 
         report_->next();
         report_->add(to_string(d));
-        report_->add(s->label());
+        report_->add(s->label().empty() ? to_string(i_) : s->label());
         report_->add(s->getNumeraire());
         for (auto k : headerKeys_) {
             if (s->has(k))

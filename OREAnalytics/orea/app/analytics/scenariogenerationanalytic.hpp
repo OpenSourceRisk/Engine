@@ -55,12 +55,13 @@ protected:
     
 
 private:
-    Type type_ = Type::stress;
+    Type type_ = Type::exposure;
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressTestScenarioData_;
     Size scenarioDistributionSteps_ = 20;
     bool scenarioOutputZeroRate_ = false;
     bool scenarioOutputStatistics_ = true;
     bool scenarioOutputDistributions_ = true;
+    QuantLib::Size scenarioPrecision_ = 8;
     std::string amcPathDataOutput_;
 };
 

@@ -20,7 +20,7 @@
   </Product>
   <Product type="EuropeanSwaption">
     <Model>BlackBachelier</Model>
-    <ModelParameters/>s
+    <ModelParameters/>
     <Engine>BlackBachelierSwaptionEngineDeltaGamma</Engine>
     <EngineParameters>
       <Parameter name="ComputeDeltaVega">Y</Parameter>

@@ -66,7 +66,7 @@ void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
     
     string analyticStr = "scenarioGeneration";
     inputs_->loadParameter<ScenarioGenerationAnalyticImpl::Type>(
-        type_, analyticStr, "scenarioType", true,
+        type_, analyticStr, "scenarioType", false,
         std::function<ScenarioGenerationAnalyticImpl::Type(const string&)>(parseScenarioGenerationType));
 
     inputs_->loadParameterXML<ScenarioSimMarketParameters>(analytic()->configurations().simMarketParams, analyticStr,
@@ -88,6 +88,8 @@ void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<bool>(scenarioOutputDistributions_, analyticStr, "outputDistributions", false,
                                  std::function<bool(const string&)>(parseBool));
+    inputs_->loadParameter<Size>(scenarioPrecision_, analyticStr, "scenarioPrecision", false,
+                                 std::function<bool(const string&)>(parseReal));
     inputs_->loadParameter<string>(amcPathDataOutput_, analyticStr, "amcPathDataOutput", false);
 }
 
