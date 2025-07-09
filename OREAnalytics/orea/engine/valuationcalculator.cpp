@@ -79,6 +79,26 @@ Real NPVCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>&
     return npv * fx / numeraire;
 }
 
+Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+			       const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
+    auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());    
+    if (!optionWrapper || !optionWrapper->isOption() || !optionWrapper->isExercised())
+        return QuantLib::Null<Real>();
+    
+    Date today = Settings::instance().evaluationDate();
+    if (optionWrapper->exerciseDate() != today)
+        return QuantLib::Null<Real>();
+      
+    Real exerciseValue = optionWrapper->cachedExerciseValue();
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
+    Real numeraire = simMarket->numeraire();
+
+    // DLOG("trade " << trade->id() << " " << io::iso_date(today) << " exercised " << exerciseValue << " index "
+    //               << index_);
+
+    return exerciseValue * fx / numeraire;
+}
+
 void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                               const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
     DLOG("init CashflowCalculator");
@@ -227,8 +247,6 @@ void CashflowReportCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>&
                                          Size dateIndex, Size sample, bool isCloseOut) {
     QL_REQUIRE(dateIndex == 0, "CashflowReportCalculator::calculate(): date ("
                                    << dateIndex << ") not allowed for this calculator. Expected 0.");
-    if (!trade->hasCashflows())
-        return;
     cfCube_[tradeIndex][sample + 1] =
         generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
 }
@@ -237,8 +255,6 @@ void CashflowReportCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade
                                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
                                            QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                                            QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
-    if (!trade->hasCashflows())
-        return;
     cfCube_[tradeIndex][0] =
         generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
 }

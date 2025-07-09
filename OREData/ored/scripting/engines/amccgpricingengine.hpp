@@ -79,7 +79,7 @@ struct TradeExposure {
     std::size_t targetConditionalExpectation = QuantExt::ComputationGraph::nan;
     std::set<std::size_t> regressors;
 
-    std::size_t targetConditionalExpectationDerivatives = QuantExt::ComputationGraph::nan;
+    std::size_t targetConditionalExpectationDerivative = QuantExt::ComputationGraph::nan;
 
     double multiplier = 1.0;
 };
