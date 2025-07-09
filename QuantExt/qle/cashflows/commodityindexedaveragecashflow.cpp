@@ -160,19 +160,21 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
         // If using future prices, first fill indices assuming delivery date roll is 0.
         for (const Date& pd : pds) {
             auto expiry = calc->nextExpiry(true, pd, futureMonthOffset_);
+            auto optionExpiry = calc->priorExpiry(true, expiry, true);
 
             // If given an offset for each expiry, apply it now.
             if (dailyExpiryOffset_ != Null<Natural>()) {
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
 
-            indices_.push_back({pd, index_->clone(expiry)});
+            indices_.push_back({pd, index_->clone(expiry, optionExpiry)});
         }
 
         // Update indices_ where necessary if delivery date roll is greater than 0.
         if (deliveryDateRoll_ > 0) {
 
             Date expiry;
+            Date optionExpiry;
             Date prevExpiry;
             Date rollDate;
 
@@ -189,7 +191,28 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 // If the pricing date is after the roll date, we use the next expiry.
                 if (kv.first > rollDate) {
                     expiry = calc->nextExpiry(false, expiry);
-                    kv.second = index_->clone(expiry);
+                    optionExpiry = calc->priorExpiry(false, expiry, true);
+                    kv.second = index_->clone(expiry, optionExpiry);
+                }
+
+            }
+            //take care of the option expiry rolldates
+            prevExpiry = Date();
+            for (auto& kv : indices_) {
+
+                // If expiry is different from previous expiry, update the roll date.
+                optionExpiry = kv.second->optionExpiryDate();
+                if (optionExpiry != prevExpiry) {
+                    rollDate = pricingCalendar_.advance(optionExpiry,
+                        -static_cast<Integer>(deliveryDateRoll_), Days);
+                }
+                prevExpiry = optionExpiry;
+
+                // If the pricing date is after the roll date, we use the next expiry.
+                if (kv.first > rollDate) {
+                    expiry = kv.second->expiryDate();
+                    optionExpiry = calc->nextExpiry(false, expiry, futureMonthOffset_, true);
+                    kv.second = index_->clone(expiry, optionExpiry);
                 }
 
             }
