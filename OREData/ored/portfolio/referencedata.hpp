@@ -141,13 +141,12 @@ public:
 
     struct BondFutureData : XMLSerializable {
         std::string currency;
-        std::vector<std::string> secList;
-        std::string deliverableGrade; // futureType differentiating the underlying
-        std::string lastTrading;      // expiry
-        std::string lastDelivery;     // settlement date
-        std::string fairPrice;        // indicates whether strike = 0 (false) or settlement price (true)
-        std::string settlement;       // Cash or Physical
-        std::string settlementDirty;  // true (dirty) or false (clean)
+        std::vector<std::string> deliveryBasket;    // devlierable basket
+        std::string deliverableGrade;               // underlying deliverable grade
+        std::string lastTrading;                    // expiry
+        std::string lastDelivery;                   // settlement date
+        std::string settlement;                     // Cash or Physical
+        std::string dirtyQuotation;                 // true (dirty) or false (clean)
         // bond future date conventions to derive lastTrading and lastDelivery
         std::string contractMonth;
         std::string rootDate;        // first, end, nth weekday (e.g. 'Monday,3') taken
@@ -160,21 +159,19 @@ public:
     };
 
     BondFutureReferenceDatum() { setType(TYPE); }
-
     BondFutureReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
-
+    BondFutureReferenceDatum(const string& id, const BondFutureData& bondFutureData) : ReferenceDatum(TYPE, id), bondFutureData_(bondFutureData) {}
     BondFutureReferenceDatum(const string& id, const QuantLib::Date& validFrom) : ReferenceDatum(TYPE, id, validFrom) {}
+    BondFutureReferenceDatum(const string& id, const QuantLib::Date& validFrom, const BondFutureData& bondFutureData)
+        : ReferenceDatum(TYPE, id, validFrom), bondFutureData_(bondFutureData) {}
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const Handle<Quote>& contractSettlementPrice() const { return contractSettlementPrice_; }
     const BondFutureData& bondFutureData() const { return bondFutureData_; }
-    void setContractSettlementPrice(const Handle<Quote>& price) { contractSettlementPrice_ = price; }
 
 private:
     BondFutureData bondFutureData_;
-    Handle<Quote> contractSettlementPrice_;
 };
 
 /*! Hold reference data on a constituent of a credit index.

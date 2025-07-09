@@ -397,7 +397,7 @@
 
   <xs:complexType name="deliveryBasket">
     <xs:sequence>
-      <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="Id" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

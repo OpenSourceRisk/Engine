@@ -121,20 +121,19 @@
 
   <xs:complexType name="bondFutureReferenceDatum">
     <xs:all>
-      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ContractMonth" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="DeliverableGrade" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="FairPrice" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="Settlement" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementDirty" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="RootDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExpiryBasis" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementBasis" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExpiryLag" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementLag" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="LastTradingDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="xs:string" name="LastDeliveryDate" maxOccurs="1" minOccurs="0"/>
-      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="deliveryBasket" name="DeliveryBasket" minOccurs="0"/>
+      <xs:element type="xs:string" name="DeliverableGrade" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastTradingDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastDeliveryDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
+      <xs:element type="xs:string" name="DirtyQuotation" minOccurs="0"/>
+      <xs:element type="xs:string" name="ContractMonth" minOccurs="0"/>
+      <xs:element type="xs:string" name="RootDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryBasis" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementBasis" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementLag" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

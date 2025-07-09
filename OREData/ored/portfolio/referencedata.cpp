@@ -119,48 +119,36 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
 
 void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondFutureReferenceDatum::BondFutureData::fromXML(): no node given");
-
-    secList.clear();
-    XMLNode* basket = XMLUtils::getChildNode(node, "DeliveryBasket");
-    if (basket) {
-        for (XMLNode* child = XMLUtils::getChildNode(basket, "SecurityId"); child;
-             child = XMLUtils::getNextSibling(child))
-            secList.push_back(XMLUtils::getNodeValue(child));
-    }
     currency = XMLUtils::getChildValue(node, "Currency", false);
-    contractMonth = XMLUtils::getChildValue(node, "ContractMonth", false);
+    deliveryBasket = getChildrenValues(node, "DeliveryBasket", "Id", false);
     deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false);
-    fairPrice = XMLUtils::getChildValue(node, "FairPrice", false);
+    lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false);
+    lastDelivery = XMLUtils::getChildValue(node, "LastDeliveryDate", false);
     settlement = XMLUtils::getChildValue(node, "Settlement", false);
-    settlementDirty = XMLUtils::getChildValue(node, "SettlementDirty", false);
+    dirtyQuotation = XMLUtils::getChildValue(node, "DirtyQuotation", false);
+    contractMonth = XMLUtils::getChildValue(node, "ContractMonth", false);
     rootDate = XMLUtils::getChildValue(node, "RootDate", false);
     expiryBasis = XMLUtils::getChildValue(node, "ExpiryBasis", false);
     settlementBasis = XMLUtils::getChildValue(node, "SettlementBasis", false);
     expiryLag = XMLUtils::getChildValue(node, "ExpiryLag", false);
     settlementLag = XMLUtils::getChildValue(node, "SettlementLag", false);
-    lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false);
-    lastDelivery = XMLUtils::getChildValue(node, "LastDeliveryDate", false);
 }
 
 XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BondFutureReferenceData");
     XMLUtils::addChild(doc, node, "Currency", currency);
-    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
+    XMLUtils::addChildren(doc, node, "DeliveryBasket", "Id", deliveryBasket);
     XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);
-    XMLUtils::addChild(doc, node, "FairPrice", fairPrice);
+    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
+    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
     XMLUtils::addChild(doc, node, "Settlement", settlement);
-    XMLUtils::addChild(doc, node, "SettlementDirty", settlementDirty);
+    XMLUtils::addChild(doc, node, "DirtyQuotation", settlementDirty);
+    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
     XMLUtils::addChild(doc, node, "RootDate", rootDate);
     XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis);
     XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis);
     XMLUtils::addChild(doc, node, "ExpiryLag", expiryLag);
     XMLUtils::addChild(doc, node, "SettlementLag", settlementLag);
-    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
-    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
-    XMLNode* dbNode = XMLUtils::addChild(doc, node, "DeliveryBasket");
-    for (auto& sec : secList)
-        XMLUtils::addChild(doc, dbNode, "SecurityId", sec);
-
     return node;
 }
 
