@@ -450,7 +450,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
+                                       inputs_->xvaSensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);
     }
 }
