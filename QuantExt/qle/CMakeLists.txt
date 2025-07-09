@@ -428,7 +428,6 @@ utilities/cashflows.cpp
 utilities/commodity.cpp
 utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
-utilities/fxindex.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -1042,7 +1041,6 @@ utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
-utilities/fxindex.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp

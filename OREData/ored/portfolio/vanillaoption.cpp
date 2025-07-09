@@ -29,7 +29,6 @@
 #include <ql/instruments/quantovanillaoption.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
-#include <qle/utilities/fxindex.hpp>
 
 using namespace QuantLib;
 using QuantExt::CashSettledEuropeanOption;
@@ -125,11 +124,6 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             QL_REQUIRE(!fxIndexStr.empty(), "Cash settlement FX index must be provided when cash settlement currency is "
                                                "different from the option currency. Trade: " << id() << ".");
             fxIndex = parseFxIndex(fxIndexStr);
-            QL_REQUIRE(validFxIndex(fxIndex, npvCurrency, ccy),
-                       "Trade contains cash settlement with cash settlement currency " << npvCurrency
-                           << " and option currency " << ccy.code()
-                           << ", but the FX index " << option_.cashSettlementFxIndex()
-                           << " is not valid or not available in the market.");
             fxIndex =
                 buildFxIndex(option_.cashSettlementFxIndex(), npvCurrency_, ccy.code(),
                              engineFactory->market(), configuration);
@@ -139,13 +133,10 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             }
             Date fixingDate = cashSettlementFixingDate.has_value() ? cashSettlementFixingDate.value()
                                                                    : fxIndex->fixingDate(paymentDate);
-            if (!fxIndex->fixingCalendar().isBusinessDay(fixingDate)) {
-                Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
-                requiredFixings_.addFixingDate(adjustedFixingDate, fxIndexStr);
 
-            } else {
-                requiredFixings_.addFixingDate(fixingDate, fxIndexStr);
-            }
+            Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+            requiredFixings_.addFixingDate(adjustedFixingDate, fxIndexStr);
+
             DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
                  << io::iso_date(fixingDate) << " added to required fixings for trade " << id());
             // if no specific discount curve is provided, use the default discount curve for the cash settlement currency

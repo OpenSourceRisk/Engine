@@ -29,7 +29,6 @@
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/utilities/fxindex.hpp>
 using ore::data::XMLUtils;
 
 namespace ore {
@@ -79,11 +78,6 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
                                                   << " and cash settlement payment currency " << payCurrency
                                                   << ", but no FX index is provided for conversion.");
             auto ind = parseFxIndex(d.fxIndex);
-            QL_REQUIRE(validFxIndex(ind, premiumCurrency, payCurrency), "Trade contains premium data with premium currency " << premiumCurrency
-                                                  << " and cash settlement payment currency " << payCurrency
-                                                  << ", but the FX index " << d.fxIndex
-                                                  << " is not valid or not available in the market.");
-
             fxIndex = buildFxIndex(d.fxIndex, payCurrency.code(), premiumCurrency.code(), factory->market(),
                                    configuration, true);
             if (!d.fixingDate.empty()) {

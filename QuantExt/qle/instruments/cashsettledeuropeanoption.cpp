@@ -142,13 +142,8 @@ void CashSettledEuropeanOption::init(bool exercised, Real priceAtExercise) {
     if (exercised)
         exercise(priceAtExercise);
 
-    if (automaticExercise_ && underlying_)
-        registerWith(underlying_);
-
-    if (fxIndex_) {
-        // Register with the fx index if it is provided.
-        registerWith(fxIndex_);
-    }
+    registerWith(underlying_);
+    registerWith(fxIndex_);
 }
 
 bool CashSettledEuropeanOption::isExpired() const { return QuantLib::detail::simple_event(paymentDate_).hasOccurred(); }

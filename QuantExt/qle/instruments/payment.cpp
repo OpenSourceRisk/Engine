@@ -20,7 +20,6 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <qle/instruments/payment.hpp>
-#include <qle/utilities/fxindex.hpp>
 
 using namespace QuantLib;
 
@@ -33,7 +32,7 @@ Payment::Payment(const Real amount, const Currency& currency, const Date& date, 
                  const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const std::optional<QuantLib::Date>& fixingDate)
     : currency_(currency), payCurrency_(payCurrency), fxIndex_(fxIndex), fixingDate_(fixingDate) {
     cashflow_ = QuantLib::ext::make_shared<SimpleCashFlow>(amount, date);
-    QL_REQUIRE(payCurrency_ == currency_ || validFxIndex(fxIndex_, currency_, payCurrency_),
+    QL_REQUIRE(payCurrency_ == currency_ || fxIndex_ != nullptr,
                "Payment: pay currency must be the same as premium currency or an FX index must be provided, got pay "
                    << payCurrency_.code() << " and premium currency " << currency_.code());
     if (payCurrency_ != currency_) {

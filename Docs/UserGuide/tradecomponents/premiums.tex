@@ -39,7 +39,8 @@ The meanings and allowable values of the elements in the \lstinline!Premium! nod
 \begin{itemize}
   \item \lstinline!PayCurrency!: Currency in which the option premium will be settled.
   \item \lstinline!FXIndex!: FX index used to convert from the premium currency into the settlement currency.
-  \item \lstinline!FixingDate!: Date on which the FX rate is taken. If omitted, the engine will use the index convention to derive the fixing date from the payment date.
+  \item \lstinline!FixingDate! [Optional]: Date on which the FX rate is taken. If omitted, the engine will use the index convention to derive the fixing date from the payment date. 
+    It will subtract **FixingDays** from the payment date and adjust the resulting date for the holidays according to the fx index conventions.
 \end{itemize}
 \end{itemize}
 
