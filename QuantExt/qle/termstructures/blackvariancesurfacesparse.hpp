@@ -32,8 +32,9 @@ namespace QuantExt {
 
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
+template <class StrikeInterpolation = QuantLib::Linear, class TimeInterpolation = QuantLib::Linear>
 class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
-                                   public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
+                                   public OptionInterpolator2d<StrikeInterpolation, TimeInterpolation> {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
@@ -59,7 +60,14 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(QuantLib::AcyclicVisitor&) override;
+    virtual void accept(QuantLib::AcyclicVisitor& v) override {
+        using thisSurface = BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>;
+        QuantLib::Visitor<thisSurface>* v1 = dynamic_cast<QuantLib::Visitor<thisSurface>*>(&v);
+        if (v1 != 0)
+            v1->visit(*this);
+        else
+            QuantLib::BlackVarianceTermStructure::accept(v);
+    }
     //@}
 
 protected:
@@ -70,14 +78,14 @@ protected:
 
 // inline definitions
 
-inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) {
-    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 =
-        dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
-    if (v1 != 0)
-        v1->visit(*this);
-    else
-        QuantLib::BlackVarianceTermStructure::accept(v);
-}
+//inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) override {
+//    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 =
+//        dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
+//    if (v1 != 0)
+//        v1->visit(*this);
+//    else
+//        QuantLib::BlackVarianceTermStructure::accept(v);
+//}
 } // namespace QuantExt
 
 #endif

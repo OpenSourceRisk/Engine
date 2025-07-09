@@ -23,14 +23,15 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
+template <class StrikeInterpolation, class TimeInterpolation>
+BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
                                                        bool upperStrikeConstExtrap,
                                                        QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
     : BlackVarianceTermStructure(referenceDate, cal),
-      OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
+      OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
       timeExtrapolation_(timeExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
@@ -58,7 +59,8 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
     initialise(modDates, modStrikes, variances);
 }
 
-QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
+template <class StrikeInterpolation, class TimeInterpolation>
+QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
     QuantLib::Time tb = times().back();
     if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
         return getValue(t, strike);
@@ -73,4 +75,6 @@ QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, Q
         QL_FAIL("Unknown time extrapolation method");
     }
 };
+
+template class BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>;
 } // namespace QuantExt

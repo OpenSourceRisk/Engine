@@ -670,7 +670,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
+        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
             asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation);
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
