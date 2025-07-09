@@ -16,20 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/payment.hpp>
-
+#include <boost/make_shared.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-
-#include <boost/make_shared.hpp>
+#include <qle/instruments/payment.hpp>
 
 using namespace QuantLib;
 
-namespace QuantExt {
+namespace QuantExt{
 
-Payment::Payment(const Real amount, const Currency& currency, const Date& date) 
-    : currency_(currency) {
+Payment::Payment(const Real amount, const Currency& currency, const Date& date)
+    : Payment(amount, currency, date, currency, nullptr, std::nullopt) {}
+
+Payment::Payment(const Real amount, const Currency& currency, const Date& date, const Currency& payCurrency,
+                 const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const std::optional<QuantLib::Date>& fixingDate)
+    : currency_(currency), payCurrency_(payCurrency), fxIndex_(fxIndex), fixingDate_(fixingDate) {
     cashflow_ = QuantLib::ext::make_shared<SimpleCashFlow>(amount, date);
+    QL_REQUIRE(payCurrency_ == currency_ || fxIndex_ != nullptr,
+               "Payment: pay currency must be the same as premium currency or an FX index must be provided, got pay "
+                   << payCurrency_.code() << " and premium currency " << currency_.code());
+    if (payCurrency_ != currency_) {
+        registerWith(fxIndex_);
+    }
 }
 
 bool Payment::isExpired() const { return cashflow_->hasOccurred(); }
@@ -39,8 +47,9 @@ void Payment::setupExpired() const { Instrument::setupExpired(); }
 void Payment::setupArguments(PricingEngine::arguments* args) const {
     Payment::arguments* arguments = dynamic_cast<Payment::arguments*>(args);
     QL_REQUIRE(arguments, "wrong argument type in deposit");
-    arguments->currency = currency_;
     arguments->cashflow = cashflow_;
+    arguments->fxIndex = payCurrency_ != currency_ ? fxIndex_ : nullptr;
+    arguments->fixingDate = fixingDate_;
 }
 
 void Payment::fetchResults(const PricingEngine::results* r) const {
