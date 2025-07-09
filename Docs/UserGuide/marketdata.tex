@@ -1471,7 +1471,7 @@ Examples:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Bond Conversion Factor}
+\subsection{Bond Future Conversion Factor}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -1482,17 +1482,18 @@ Examples:
     Instrument Type & \emph{BOND} & \\ \hline
     Quote Type & \emph{CONVERSION\_FACTOR} & \\ \hline
     Name & String & Identifying name of the bond \\ \hline
+    FutureContract & String & Identifying name of the future contract \\ \hline
   \end{tabular}
   \caption{Bond Conversion Factor}
   \label{tab:bond_conversion_factor}
 \end{table}
 
-This quote provides the conversion factor for a bond future contract.
+This quote provides the conversion factor for a deliverable bond of a bond future contract.
 
 \medskip
 Examples:
 \begin{itemize}
-	\item BOND/CONVERSION\_FACTOR/SECURITY\_1
+	\item BOND/CONVERSION\_FACTOR/ISIN:US91282CDJ71/TYH25
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

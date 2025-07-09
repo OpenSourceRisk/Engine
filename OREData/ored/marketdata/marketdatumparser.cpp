@@ -68,6 +68,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
         {"BOND", MarketDatum::InstrumentType::BOND},
+        {"BOND_FUTURE", MarketDatum::InstrumentType::BOND_OPTION},
         {"BOND_OPTION", MarketDatum::InstrumentType::BOND_OPTION},
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
@@ -699,14 +700,17 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
     }
 
     case MarketDatum::InstrumentType::BOND: {
-        QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        if (quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
+        if (quoteType == MarketDatum::QuoteType::YIELD_SPREAD) {
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
-        else if (quoteType == MarketDatum::QuoteType::PRICE)
+        } else if (quoteType == MarketDatum::QuoteType::PRICE) {
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
-        else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR)
-            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID);
+        } else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR) {
+            QL_REQUIRE(tokens.size() >= 3, "4 tokens expected in " << datumName);
+            std::string futureContract = tokens[3];
+            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID,
+                                                                          futureContract);
+        }
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {

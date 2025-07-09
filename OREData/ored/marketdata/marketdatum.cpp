@@ -658,6 +658,7 @@ template <class Archive> void BondPriceQuote::serialize(Archive& ar, const unsig
 template <class Archive> void BondFutureConversionFactor::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& securityID_;
+    ar& futureConract_;
 }
 
 template <class Archive> void TransitionProbabilityQuote::serialize(Archive& ar, const unsigned int version) {
