@@ -24,11 +24,23 @@
 #define quantext_black_variance_surface_sparse_hpp
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
+
+// Default cubic spline wrapper
+struct CubicSpline {
+    CubicSpline() = default;
+
+    template<class I1, class I2> 
+    auto interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+        auto interpolator_ = QuantLib::CubicNaturalSpline(xBegin, xEnd, yBegin);
+        return interpolator_;
+    }
+};
 
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
