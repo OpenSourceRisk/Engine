@@ -214,7 +214,7 @@ public:
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
         std::string calendarStr = std::string(), QuantLib::Natural priority = 0, 
-        bool timeExtrapolationInVariance = true);
+        bool timeExtrapolationInVariance = true, const std::string& interpolationMethod = "");
 
     //! \name Inspectors
     //@{
@@ -224,6 +224,7 @@ public:
     const std::string& timeExtrapolation() const;
     bool timeExtrapolationVariance() const;
     const std::string& strikeExtrapolation() const;
+    const std::string& interpolationMethod() const;
     //@}
 
     /*! Return a vector of pairs of expiry and strike. The first element in the pair is the expiry and the second
@@ -248,6 +249,7 @@ private:
     std::string timeExtrapolation_;
     std::string strikeExtrapolation_;
     bool timeExtrapolationInVariance_;
+    std::string interpolationMethod_;
 };
 
 /*! Volatility configuration for a 2-D absolute strike volatility surface
@@ -262,13 +264,13 @@ public:
 
     //! Explicit constructor
     VolatilityStrikeSurfaceConfig(const std::vector<std::string>& strikes, const std::vector<std::string>& expiries,
-        const std::string& timeInterpolation, const std::string& strikeInterpolation,
-        bool extrapolation, const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation,
-        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-        bool timeExtrapolationInVariance = true);
+                                  const std::string& timeInterpolation, const std::string& strikeInterpolation,
+                                  bool extrapolation, const std::string& timeExtrapolation,
+                                  const std::string& strikeExtrapolation,
+                                  MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+                                  QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+                                  std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+                                  bool timeExtrapolationInVariance = true, const std::string& interpolationMethod = "");
 
     //! \name Inspectors
     //@{
