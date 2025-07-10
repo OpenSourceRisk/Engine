@@ -46,6 +46,7 @@ using namespace ore::data;
     incomeCurveId
     volatilityCurveId
     coupons */
+
 void populateFromBondReferenceData(std::string& subType, std::string& issuerId, std::string& settlementDays,
                                    std::string& calendar, std::string& issueDate, std::string& priceQuoteMethod,
                                    std::string& priceQuoteBaseValue, std::string& creditCurveId,
@@ -64,8 +65,36 @@ Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Ca
    - ConvertibleBondReferenceDatum:TYPE   ("ConvertibleBond")
 
    or an empty string if no reference data was found. */
+
 std::string getBondReferenceDatumType(const std::string& id,
                                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
+
+/* We use special security ids to mark securities being part of a bond future contract. For example,
+
+   ISIN:US91282CDJ71
+
+   is the securityId of a bond. If that bond is part of the future contract TYH25 we write
+
+   ISIN:US91282CDJ71_FUTURE_TYH25_2025-03-20
+
+   The rationale is that we need security spreads implied from bond future quotes for the bond future underlyings. */
+
+class StructuredSecurityId {
+public:
+    StructuredSecurityId(const std::string& id);
+    StructuredSecurityId(const std::string& securityId, const std::string& futureContract,
+                         const QuantLib::Date& expiryDate);
+    std::string operator();
+    std::string securityId() const { return securityId_; }
+    std::string futureContract() const { return futureContract_; }
+    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+
+private:
+    std::string id_;
+    std::string securityId_;
+    std::string futureContract_;
+    QuantLib::Date futureExpiryDate_;
+};
 
 } // namespace data
 } // namespace ore
