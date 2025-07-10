@@ -159,7 +159,9 @@ protected:
 };
 
 //! Bond Futures Index
-/*! \ingroup indexes */
+/*! The ctd refers to the ctd for the current global evaluation date
+    \ingroup indexes
+*/
 class BondFuturesIndex : public Index {
 public:
     BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate,
