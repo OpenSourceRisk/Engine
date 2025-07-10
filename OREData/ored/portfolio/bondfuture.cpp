@@ -650,14 +650,5 @@ BondBuilder::Result BondFutureBuilder::build(const QuantLib::ext::shared_ptr<Eng
     return res;
 }
 
-void BondFutureBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                            const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                            const std::string& securityId) const {
-
-    DLOG("BondFutureBuilder::modifyToForwardBond called for " << securityId);
-    QL_FAIL("BondFutureBuilder::modifyToForwardBond not implememted");
-}
-
 } // namespace data
 } // namespace ore

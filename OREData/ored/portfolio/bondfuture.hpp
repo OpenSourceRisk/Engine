@@ -119,11 +119,6 @@ struct BondFutureBuilder : public BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& contractName) const override;
-
-    void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                             const std::string& securityId) const override;
 };
 
 } // namespace data
