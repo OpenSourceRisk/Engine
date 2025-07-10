@@ -705,11 +705,24 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
         } else if (quoteType == MarketDatum::QuoteType::PRICE) {
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
+        } else {
+            QL_FAIL("invalid quote type " << quoteType << " for instrument type BOND in datum " << datumName
+                                          << ", expected YIELD_SPREAD or PRICE");
+        }
+    }
+
+    case MarketDatum::InstrumentType::BOND_FUTURE: {
+        const string& securityID = tokens[2];
+        if (quoteType == MarketDatum::QuoteType::PRICE) {
+            return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
         } else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR) {
             QL_REQUIRE(tokens.size() >= 3, "4 tokens expected in " << datumName);
             std::string futureContract = tokens[3];
             return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID,
                                                                           futureContract);
+        } else {
+            QL_FAIL("invalid quote type " << quoteType << " for instrument type BOND_FUTURE in datum " << datumName
+                                          << ", expected PRICE or CONVERSION_FACTOR");
         }
     }
 

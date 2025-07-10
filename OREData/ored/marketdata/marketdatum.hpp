@@ -1947,6 +1947,35 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Bond Future Price Quote
+/*!
+This class holds single market points of type
+- Price
+\ingroup marketdata
+*/
+class BondFuturePriceQuote : public MarketDatum {
+public:
+    BondFuturePriceQuote() {}
+    //! Constructor
+    BondFuturePriceQuote(Real value, Date asofDate, const string& name, const string& futureContract)
+        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND_FUTURE), futureContract_(futureContract) {}
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<BondFuturePriceQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& futureContract() const { return futureContract_; }
+    //@}
+private:
+    string futureContract_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 //! Bond Future ConversionFactor
 /*! This class holds single market points of type CONVERSION_FACTOR for a deliverable bond
     of a bond future contract
@@ -1958,7 +1987,7 @@ public:
     //! Constructor
     BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId,
                                const string& futureContract)
-        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND),
+        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND_FUTURE),
           securityID_(securityId), futureContract_(futureContract) {}
 
     //! Make a copy of the market datum

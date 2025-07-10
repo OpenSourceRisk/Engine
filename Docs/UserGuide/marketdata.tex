@@ -1462,12 +1462,38 @@ Examples:
   \label{tab:bondprice_quote}
 \end{table}
 
-This quote provides the clean price for a specified bond in units.
+This quote provides the price for a specified bond. The reference data of the bond specifies the further characteristics
+of the price, i.e. type (clean or dirty) and quote method (percentage of par or currency per unit).
 
 \medskip
 Examples:
 \begin{itemize}
 	\item BOND/PRICE/SECURITY\_1
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Name & String & Identifying name of the future contract \\ \hline
+  \end{tabular}
+  \caption{Bond Future Prices}
+  \label{tab:bondfutureprice_quote}
+\end{table}
+
+This quote provides the price for a specified bond future contract.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item BOND\_FUTURE/PRICE/TYH25
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1479,13 +1505,13 @@ Examples:
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
   \hline
   {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{BOND} & \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE} & \\ \hline
     Quote Type & \emph{CONVERSION\_FACTOR} & \\ \hline
     Name & String & Identifying name of the bond \\ \hline
     FutureContract & String & Identifying name of the future contract \\ \hline
   \end{tabular}
   \caption{Bond Conversion Factor}
-  \label{tab:bond_conversion_factor}
+  \label{tab:bond_future_conversion_factor}
 \end{table}
 
 This quote provides the conversion factor for a deliverable bond of a bond future contract.
@@ -1493,7 +1519,7 @@ This quote provides the conversion factor for a deliverable bond of a bond futur
 \medskip
 Examples:
 \begin{itemize}
-	\item BOND/CONVERSION\_FACTOR/ISIN:US91282CDJ71/TYH25
+	\item BOND\_FUTURE/CONVERSION\_FACTOR/ISIN:US91282CDJ71/TYH25
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
