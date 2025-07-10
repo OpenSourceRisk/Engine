@@ -160,37 +160,41 @@ protected:
 
 //! Bond Futures Index
 /*! \ingroup indexes */
-class BondFuturesIndex : public BondIndex {
+class BondFuturesIndex : public Index {
 public:
-    BondFuturesIndex(
-        const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
-        const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-        const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
-        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-        const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
-        const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
-        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
-        const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
-        const double priceQuoteBaseValue = 1.0);
+    BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate,
+                     const boost::shared_ptr<BondIndex>& ctd);
 
     //! \name Index interface
     //@{
     std::string name() const override;
+    Calendar fixingCalendar() const override;
+    bool isValidFixingDate(const Date& fixingDate) const override;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
+    //@}
+
+    //! \name Observer interface
+    //@{
+    void update() override;
     //@}
 
     //! \name Fixing calculations
     //@{
-    Rate forecastFixing(const Date& fixingDate) const override;
+    virtual Rate forecastFixing(const Date& fixingDate) const;
+    Rate pastFixing(const Date& fixingDate) const override;
     //@}
 
     //! \name Inspectors
     //@{
-    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    const std::string& futureContract() const { return futureContract_; }
+    const QuantLib::Date& expiryDate() const { return futureExpiryDate_; }
+    const QuantLib::ext::shared_ptr<BondIndex>& ctd() const { return ctd_; }
     //@}
 
 private:
-    Date expiryDate_;
+    std::string futureContract_;
+    Date futureExpiryDate_;
+    QuantLib::ext::shared_ptr<BondIndex> ctd_;
     mutable std::string name_;
 };
 
