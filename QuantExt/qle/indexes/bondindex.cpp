@@ -53,8 +53,9 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
     registerWith(securitySpread_);
     registerWith(incomeCurve_);
 
-    vanillaBondEngine_ = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(discountCurve, defaultCurve, recoveryRate,
-                                                                        securitySpread, 6 * Months, boost::none);
+    vanillaBondEngine_ = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(
+        discountCurve, defaultCurve, recoveryRate, securitySpread, 6 * Months, boost::none, incomeCurve_,
+        conditionalOnSurvival_);
 }
 
 std::string BondIndex::name() const { return "BOND-" + securityName_; }
@@ -112,9 +113,9 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     // simply discounting its cashflows
 
     if (price == Null<Real>()) {
-        auto res = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate),
-                                                    bond_->settlementDate(fixingDate), bond_->cashflows(), boost::none,
-                                                    incomeCurve_, conditionalOnSurvival_, false);
+        auto res =
+            vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
+                                             bond_->cashflows(), boost::none, false);
         price = res.npv;
     }
 
@@ -224,9 +225,9 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(fixingDate >= today, "BondFuturesIndex::forecastFixing(): fixingDate ("
                                         << fixingDate << ") must be >= today (" << today << ")");
     QL_REQUIRE(bond_, "BondFuturesIndex::forecastFixing(): bond required");
-    auto bondNpvResults = vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_),
-                                                           bond()->settlementDate(expiryDate_), bond()->cashflows(),
-                                                           boost::none, bond()->incomeCurve(), bond()->conditionalOnSurvival(), false);
+    auto bondNpvResults =
+        vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->settlementDate(expiryDate_),
+                                         bond()->cashflows(), boost::none, false);
     return bondNpvResults.npv - bond()->accruedAmount(expiryDate_) / 100.0 * bond()->notional(expiryDate_);
 }
 
