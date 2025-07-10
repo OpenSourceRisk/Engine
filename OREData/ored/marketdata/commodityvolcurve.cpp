@@ -471,17 +471,24 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // 2. wildcard strikes and/or wildcard expiries (3 combinations) => BlackVarianceSurfaceSparse
 
     bool expWc = false;
-    if (find(vssc.expiries().begin(), vssc.expiries().end(), "*") != vssc.expiries().end()) {
-        expWc = true;
-        QL_REQUIRE(vssc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
-        DLOG("Have expiry wildcard pattern " << vssc.expiries()[0]);
-    }
-
     bool strkWc = false;
-    if (find(vssc.strikes().begin(), vssc.strikes().end(), "*") != vssc.strikes().end()) {
+    if (vssc.interpolationMethod() == "BiLinear" || vssc.interpolationMethod() == "BiCubic" ||
+        vssc.interpolationMethod() == "CubicThenLinear") {
+        expWc = true;
         strkWc = true;
-        QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
-        DLOG("Have strike wildcard pattern " << vssc.strikes()[0]);
+    }
+    else {
+        if (find(vssc.expiries().begin(), vssc.expiries().end(), "*") != vssc.expiries().end()) {
+            expWc = true;
+            QL_REQUIRE(vssc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
+            DLOG("Have expiry wildcard pattern " << vssc.expiries()[0]);
+        }
+
+        if (find(vssc.strikes().begin(), vssc.strikes().end(), "*") != vssc.strikes().end()) {
+            strkWc = true;
+            QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
+            DLOG("Have strike wildcard pattern " << vssc.strikes()[0]);
+        }
     }
 
     // If we do not have a strike wild card, we expect a list of absolute strike values
@@ -669,9 +676,25 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
-
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
-            asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation);
+        std::cout << "vssc.interpolationMethod() == ";
+        if (vssc.interpolationMethod() == "BiCubic") {
+            std::cout << "BiCubic" << std::endl;
+            volatility_ =
+                QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
+                    asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                    timeExtrapolation);
+        } else if (vssc.interpolationMethod() == "CubicThenLinear") {
+            std::cout << "CubicThenLinear" << std::endl;
+            volatility_ =
+                QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
+                    asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                    timeExtrapolation);
+        } else {
+            std::cout << "BiLinear" << std::endl;
+            volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
+                asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                timeExtrapolation);
+        }
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
