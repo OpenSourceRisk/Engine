@@ -105,7 +105,7 @@ public:
         string referenceCurveId;
         string incomeCurveId;
         string volatilityCurveId;
-	    string priceQuoteMethod;
+        string priceQuoteMethod;
         string priceQuoteBaseValue;
         std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
         std::vector<LegData> legData;
