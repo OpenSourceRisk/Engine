@@ -26,7 +26,7 @@
 
 #include <ql/index.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-
+#include <qle/indexes/fxindex.hpp>
 namespace QuantExt {
 
 /*! Vanilla cash settled European options allowing for deferred payment and automatic exercise.
@@ -41,30 +41,38 @@ public:
     //! Constructor for cash settled vanilla European option.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, const QuantLib::Date& expiryDate,
                               const QuantLib::Date& paymentDate, bool automaticExercise,
-                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
-                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
+                              bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                              const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, const QuantLib::Date& expiryDate,
                               QuantLib::Natural paymentLag, const QuantLib::Calendar& paymentCalendar,
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
-                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
-                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
+                              bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                              const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option with digital payoff.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, QuantLib::Real cashPayoff,
                               const QuantLib::Date& expiryDate, const QuantLib::Date& paymentDate,
-                              bool automaticExercise, const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
-                              bool exercised = false,
-                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+                              bool automaticExercise,
+                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
+                              bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                              const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! Constructor for cash settled vanilla European option with digital payoff.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, QuantLib::Real cashPayoff,
                               const QuantLib::Date& expiryDate, QuantLib::Natural paymentLag,
                               const QuantLib::Calendar& paymentCalendar,
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
-                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
-                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+                              const QuantLib::ext::shared_ptr<QuantLib::Index>& underlying = nullptr,
+                              bool exercised = false, QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>(),
+                              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                              const std::optional<QuantLib::Date>& cashSettlementFxFixingDate = std::nullopt);
 
     //! \name Instrument interface
     //@{
@@ -93,7 +101,8 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::Index> underlying_;
     bool exercised_;
     QuantLib::Real priceAtExercise_;
-
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    std::optional<QuantLib::Date> cashSettlementFxFixingDate_;
     //! Shared initialisation
     void init(bool exercised, QuantLib::Real priceAtExercise);
 };
@@ -108,6 +117,8 @@ public:
     QuantLib::ext::shared_ptr<QuantLib::Index> underlying;
     bool exercised;
     QuantLib::Real priceAtExercise;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
+    std::optional<QuantLib::Date> cashSettlementFxFixingDate;
 };
 
 //! Engine

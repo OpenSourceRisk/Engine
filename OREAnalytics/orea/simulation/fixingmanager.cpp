@@ -88,7 +88,7 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
                     if (safeExpiryDate != Date() && !index->keepDays()) {
                         safeExpiryDate = Date::endOfMonth(safeExpiryDate);
                     }
-                    fixingMap_[index->clone(safeExpiryDate,
+                    fixingMap_[index->clone(safeExpiryDate, safeExpiryDate,
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<FxIndex>(rawIndex)) {
