@@ -75,7 +75,7 @@ std::string getBondReferenceDatumType(const std::string& id,
 
    is the securityId of a bond. If that bond is part of the future contract TYH25 we write
 
-   ISIN:US91282CDJ71_FUTURE_TYH25_2025-03-20
+   ISIN:US91282CDJ71_FUTURE_TYH25
 
    The rationale is that we need security spreads implied from bond future quotes for the bond future underlyings. */
 
@@ -87,13 +87,11 @@ public:
     std::string operator();
     std::string securityId() const { return securityId_; }
     std::string futureContract() const { return futureContract_; }
-    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
 
 private:
     std::string id_;
     std::string securityId_;
     std::string futureContract_;
-    QuantLib::Date futureExpiryDate_;
 };
 
 } // namespace data

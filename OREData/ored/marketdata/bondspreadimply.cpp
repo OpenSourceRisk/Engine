@@ -208,7 +208,12 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     DLOG("price quote method adj  = " << adj);
     DLOG("effective market price  = " << priceAdj * inflationFactor * adj);
 
-    Date expiry = structuredSecurityId.futureExpiryDate();
+    Date expiry;
+    if(auto fc = structuredSecurityId.futureContract(); !fc.empty()) {
+        QL_REQUIRE(referenceDataManager->hasData("BondFuture", fc),
+                   "BondSpreadImply: no reference data found for bond future contract " << fc);
+        expiry = getBondFutureExpiry(referenceDataManager, fc);
+    }
 
     auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, &expiry](const Real s) {
         spreadQuote->setValue(s);

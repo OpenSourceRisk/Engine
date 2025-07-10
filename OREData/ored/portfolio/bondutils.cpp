@@ -160,17 +160,7 @@ StructuredSecurityId::StructuredSecurityId(const std::string& id) : id_(id) {
         securityId_ = id_;
     } else {
         securityId_ = id_.substr(0, ind);
-        std::vector<std::string> tokens;
-        boost::split(tokens, id_.substr(ind + 8), boost::is_any_of("_"));
-        QL_REQUIRE(tokens.size() == 2, "StructuredSecurityId: invalid future-related security id '"
-                                           << id_ << "', expected is e.g. ISIN:US91282CDJ71_FUTURE_TYH25_2025-03-20");
-        futureContract_ = tokens[0];
-        try {
-            futureExpiryDate_ = parseDate(tokens[1]);
-        } catch (const std::exception& e) {
-            QL_FAIL("StructuredSecurityId: Invalid expiry date in future-related security id '" << id_ << "'.");
-            c
-        }
+        futureContract_ = id_.substr(ind + 8);
     }
 }
 
@@ -180,7 +170,7 @@ StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const 
     if (futureContract.empty()) {
         id_ = securityId_;
     } else {
-        id_ = securityId_ + "_FUTURE_" + futureContract_ + "_" + QuantLib::io::iso_string(futureExpiryDate_);
+        id_ = securityId_ + "_FUTURE_" + futureContract_;
     }
 }
 
