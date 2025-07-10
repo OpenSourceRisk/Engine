@@ -72,6 +72,19 @@ InputParameters::InputParameters() {
 
 bool checkString(const std::string& obj) { return true; }
 
+std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
+                                                         bool mandatory) {
+    if (parameters_.has(analytic, param))
+        return parameters_.get(analytic, param, mandatory);
+    else
+        return std::string();
+}
+
+std::string InputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
+                                                    bool mandatory) {
+    return loadParameterString(analytic, param, mandatory);
+}
+
 void InputParameters::setAsOfDate(const std::string& s) {
     asof_ = parseDate(s);
     Settings::instance().evaluationDate() = asof_;

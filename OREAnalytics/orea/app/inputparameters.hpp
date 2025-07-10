@@ -71,7 +71,8 @@ class InputParameters {
 public:
     InputParameters();
     virtual ~InputParameters() {} 
-
+        
+    //! load and convert an object from a string for the given (analytic, param) pair
     template <typename T>
     bool loadParameter(
         T& obj, const std::string& analytic, const std::string& param, const bool mandatory = false,
@@ -82,6 +83,7 @@ public:
         return tryParse(str, obj, parser);
     }
 
+    //! load the XML object from an XML string for the given (analytic, param) pair
     template <typename T>
     bool loadParameterXML(
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
@@ -92,15 +94,11 @@ public:
         return true;
     }
     
-    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {
-        if (parameters_.has(analytic, param))
-            return parameters_.get(analytic, param, mandatory);
-        else
-            return std::string();
-    }
-    virtual std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) {
-        return loadParameterString(analytic, param, mandatory);
-    }
+    //! virtual function to load a parameter string for the given (analytic, param) pair
+    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory);
+        
+    //! virtual function to load an XML string for the given (analytic, param) pair
+    virtual std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory);
 
     void setParameter(std::string analytic, std::string parameter, std::string val) { 
         parameters_.set(analytic, parameter, val);

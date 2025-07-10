@@ -80,16 +80,16 @@ void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
                                                        "simulationConfigFile");
 	}
 
-    inputs_->loadParameter<Size>(scenarioDistributionSteps_, analyticStr, "distributionBuckets", false,
-                                 std::function<Size(const string&)>(parseInteger));
+    inputs_->loadParameter<Integer>(scenarioDistributionSteps_, analyticStr, "distributionBuckets", false,
+                                 std::function<Integer(const string&)>(parseInteger));
     inputs_->loadParameter<bool>(scenarioOutputZeroRate_, analyticStr, "outputZeroRate", false,
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<bool>(scenarioOutputStatistics_, analyticStr, "outputStatistics", false,
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<bool>(scenarioOutputDistributions_, analyticStr, "outputDistributions", false,
                                  std::function<bool(const string&)>(parseBool));
-    inputs_->loadParameter<Size>(scenarioPrecision_, analyticStr, "scenarioPrecision", false,
-                                 std::function<bool(const string&)>(parseReal));
+    inputs_->loadParameter<Integer>(scenarioPrecision_, analyticStr, "scenarioPrecision", false,
+                                 std::function<Integer(const string&)>(parseInteger));
     inputs_->loadParameter<string>(amcPathDataOutput_, analyticStr, "amcPathDataOutput", false);
 }
 
@@ -140,8 +140,8 @@ void ScenarioGenerationAnalyticImpl::buildScenarioGenerator(const bool continueO
 
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     analytic()->addReport("SCENARIO_GENERATION", "scenario", report);
-    scenarioGenerator_ =
-        QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
+    scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(
+        scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false, scenarioPrecision_);
 }
 
 void ScenarioGenerationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
