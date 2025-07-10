@@ -378,7 +378,7 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
-                                       inputs_->sensiThreshold());
+                                       inputs_->xvaSensiThreshold());
         analytic()->addReport(label(), "xva_zero_sensitivity_" + to_string(valueAdjustment), zeroSensiReport);
     }
     LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
@@ -450,7 +450,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
+                                       inputs_->xvaSensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);
     }
 }

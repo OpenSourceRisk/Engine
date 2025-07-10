@@ -50,6 +50,9 @@ public:
 
     Payment(const Real amount, const Currency& currency, const Date& date);
 
+    Payment(const Real amount, const Currency& currency, const Date& date, const Currency& payCurrency,
+            const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const std::optional<QuantLib::Date>& fixingDate);
+
     //! \name Instrument interface
     //@{
     bool isExpired() const override;
@@ -58,7 +61,7 @@ public:
     //@}
     //! \name Additional interface
     //@{
-    Currency currency() const { return currency_; }
+    Currency currency() const { return payCurrency_; }
     const QuantLib::ext::shared_ptr<SimpleCashFlow>& cashFlow() const { return cashflow_; }
     //@}
 
@@ -68,13 +71,17 @@ private:
     void setupExpired() const override;
     //@}
     Currency currency_;
+    Currency payCurrency_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    std::optional<QuantLib::Date> fixingDate_;
     QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow_;
 };
 
 class Payment::arguments : public virtual PricingEngine::arguments {
 public:
-    Currency currency;
     QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
+    std::optional<QuantLib::Date> fixingDate;
     void validate() const override;
 };
 
