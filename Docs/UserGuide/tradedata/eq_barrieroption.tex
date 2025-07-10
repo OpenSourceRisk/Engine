@@ -1,16 +1,57 @@
 \subsubsection{Equity Barrier Option}
 
-European exercise, American barrier.
+\ifdefined\IncludePayoff{{\bf Payoff}
 
-The \lstinline!EquityBarrierOptionData!  node is the trade data container for the \emph{EquityBarrierOption} trade type. The barrier level of an Equity Barrier Option should be quoted in the currency of 
-the underlying Equity spot price. The \lstinline!EquityBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the Equity Barrier Option. 
+An Equity Barrier Option is a path-dependent option whose existence depends upon an 
+Equity spot rate reaching a pre-set barrier level. Exercise is European. 
+
+This product has a continuously monitored single barrier with a Vanilla European 
+Equity Option Underlying. A set number of shares of a single name equity or an equity 
+index is specified by the ``Quantity".
+
+Single Equity Barrier Options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes 
+active when the Equity spot rate reaches the barrier level at any point in the option's 
+life. Once a barrier is knocked-in, the option will not cease to exist until the 
+option expires and effectively it becomes a Vanilla Equity Option.
+\item A knock-out option starts its life active, but ceases to exist/becomes 
+inactive, if the barrier is reached during the life of the option.
+\end{itemize}
+
+When a Single Equity Barrier option expires inactive, the payoff may be zero, or 
+there may be a cash rebate (barrier rebate) paid out as a fraction of the 
+original option premium. 
+
+There are four main types of Single Barrier Equity Options:
+\begin{itemize}
+\item Up-and-out: The Equity spot price starts below the barrier level and has to 
+move up for the option to be knocked out.
+\item Down-and-out: The Equity spot price starts above the barrier level and has 
+to move down for the option to become knocked out.
+\item Up-and-in: The Equity spot price starts below the barrier level and has to 
+move up for the option to become activated.
+\item Down-and-in: The Equity spot price starts above the barrier level and has 
+to move down for the option to become activated.
+\end{itemize}
+
+{\bf Input}}
+
+\else
+
+European exercise, American barrier.
 
 An Equity Barrier Option is a path-dependent option whose existence depends upon an Equity underlying
 spot price reaching a pre-set barrier level. Exercise is European.
 
-This product has a continuously monitored single barrier (American Barrier style) with a Vanilla European Equity
-Option Underlying.
+This product has a continuously monitored single barrier (American Barrier style) with a Vanilla
+European Equity Option Underlying.
+
+\fi
+
+The \lstinline!EquityBarrierOptionData!  node is the trade data container for the \emph{EquityBarrierOption} trade type. The barrier level of an Equity Barrier Option should be quoted in the currency of 
+the underlying Equity spot price. The \lstinline!EquityBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the Equity Barrier Option. 
 
 The structure of an example \lstinline!EquityBarrierOptionData! node for an Equity Barrier Option is shown in Listing
 \ref{lst:eqbarrieroption_data}.
@@ -25,17 +66,18 @@ The structure of an example \lstinline!EquityBarrierOptionData! node for an Equi
             <BarrierData>
                 ...
             </BarrierData>
-            <StartDate>2019-01-25</StartDate>
+            <StartDate>2025-01-25</StartDate>
             <Calendar>TARGET</Calendar>
             <EQIndex>EQ-RIC:.SPX</EQIndex>            
             <Name>RIC:.SPX</Name>
             <StrikeData>
-				<StrikePrice>
-					<Value>3200.00</Value>
-					<Currency>USD</Currency>
-				</StrikePrice>
+            <StrikePrice>
+             <Value>3200.00</Value>
+             <Currency>USD</Currency>
+            </StrikePrice>
             </StrikeData>
             <Quantity>1000</Quantity>
+            <Currency>USD</Currency>
         </EquityBarrierOptionData>
 \end{minted}
 \caption{Equity Barrier Option data}
@@ -65,11 +107,20 @@ Allowable values:  The format of the Equity Index is``EQ-RIC:Code''.
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}.
 
-\item StrikeData: A node containing the strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!.
+\item StrikeData: A node containing the strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!. I.e. compo options with strike currency not equal to underlying equity currency are not supported for this trade type.
+
 Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
 	    
 \item Quantity: The number of units of the underlying covered by the transaction.
+
+Allowable values: Any positive real number.
+
+\item Currency: The payment currency of the trade.
+
+Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}. This
+should be equal to the underlying equity except for the major / minor distinction. I.e. quanto payoffs that are usually
+identified by setting the payment currency to a different currency than the underlying equity currency, are not allowed
+for this trade type.
     
-Allowable values:  Any positive real number.
 
 \end{itemize}

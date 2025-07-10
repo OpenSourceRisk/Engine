@@ -31,12 +31,19 @@ McCamFxForwardEngine::McCamFxForwardEngine(
     const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
     const SobolBrownianGenerator::Ordering ordering, const SobolRsg::DirectionIntegers directionIntegers,
     const std::vector<Handle<YieldTermStructure>>& discountCurves, const std::vector<Date>& simulationDates,
-    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel,
-    const Real regressionVarianceCutoff)
+    const std::vector<Date>& stickyCloseOutDates, const std::vector<Size>& externalModelIndices,
+    const bool minimalObsDate, const RegressorModel regressorModel, const Real regressionVarianceCutoff,
+    const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun,
+    const Size cfOnCpnMaxSimTimes, const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr,
+    const Size regressionMaxSimTimesFx, const Size regressionMaxSimTimesEq,
+    const VarGroupMode regressionVarGroupMode)
     : McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                            calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                           discountCurves, simulationDates, externalModelIndices, minimalObsDate, regressorModel,
-                           regressionVarianceCutoff),
+                           discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+                           regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                           reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
+                           regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
+                           regressionVarGroupMode),
       domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {
     registerWith(model_);
     for (auto const& h : discountCurves)
@@ -52,8 +59,7 @@ void McCamFxForwardEngine::calculate() const {
     currency_ = {foreignCcy_, domesticCcy_};
     payer_ = {false, true};
     exercise_ = nullptr;
-    includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
-        
+    
     McMultiLegBaseEngine::calculate();
 
     // convert base ccy result from McMultiLegbaseEngine to desired npv currency

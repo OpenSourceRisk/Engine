@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<Simulation>
+  
+  <Market>
+
+    <BaseCurrency>EUR</BaseCurrency>
+
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <Tenors>1Y, 5Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <!-- Alternative: LinearZero -->
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-LIBOR-6M</Index>
+    </Indices>
+    
+    <BenchmarkCurves>
+      <BenchmarkCurve>
+        <Name>BANK_EUR_LEND</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve>
+      <BenchmarkCurve>
+        <Name>BANK_EUR_BORROW</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+    
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-1Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-30Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    
+    <DefaultCurves>
+      <Names>
+        <Name>CPTY_A</Name>
+        <Name>BANK</Name>
+      </Names>
+      <Tenors>1Y, 5Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <SimulateRecoveryRates>true</SimulateRecoveryRates>
+      <Calendars>
+        <Calendar name="">TARGET</Calendar>
+      </Calendars>
+      <Extrapolation>FlatZero</Extrapolation>
+    </DefaultCurves>
+
+    <SwaptionVolatilities>
+      <Simulate>true</Simulate>
+      <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Currencies>
+        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
+      </Currencies>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y</Expiries>
+      <Terms>1Y,2Y,3Y,5Y,7Y,10Y</Terms>
+      <SimulateATMOnly>true</SimulateATMOnly>
+    </SwaptionVolatilities>
+    
+    <FxVolatilities>
+      <Simulate>true</Simulate>
+      <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y</Expiries>
+    </FxVolatilities>
+    
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </AggregationScenarioDataCurrencies>
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-LIBOR-3M</Index>
+    </AggregationScenarioDataIndices>
+
+  </Market>
+
+</Simulation>

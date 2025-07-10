@@ -51,7 +51,7 @@ namespace {
 template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, QuantLib::ext::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
-    return it->second->handle();
+    return it->second->handle(spec);
 }
 
 } // namespace
@@ -68,6 +68,27 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const bool buildCalibrationInfo, const Market* market) {
     init(asof, spec, loader, curveConfigs, fxSpots, yieldCurves, fxVols, correlationCurves, buildCalibrationInfo,
          market);
+}
+
+QuantExt::FxVolatilityTimeWeighting FXVolCurve::buildTimeWeighting(const Date& asof, const DayCounter& dc) const {
+    std::vector<double> weekdayWeights;
+    std::vector<std::pair<QuantLib::Calendar, double>> tradingCenters;
+    std::map<QuantLib::Date, double> events;
+
+    if (timeWeighting_) {
+
+        weekdayWeights = timeWeighting_->weekdayWeights();
+
+        for (auto const& t : timeWeighting_->tradingCenters()) {
+            tradingCenters.push_back(std::make_pair(parseCalendar(t.calendar), t.weight));
+        }
+
+        for (auto const& e : timeWeighting_->events()) {
+            events[e.date] = e.weight;
+        }
+    }
+
+    return QuantExt::FxVolatilityTimeWeighting(asof, dc, weekdayWeights, tradingCenters, events);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
@@ -372,7 +393,16 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
         interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic;
     else {
-        QL_FAIL("BFRR FX vol surface: invalid interpolation, expected Linear, Cubic");
+        QL_FAIL("BFRR FX vol surface: invalid smile interpolation, expected Linear, Cubic");
+    }
+
+    QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation interp2;
+    if (config->timeInterpolation() == FXVolatilityCurveConfig::TimeInterpolation::V)
+        interp2 = QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation::V;
+    else if (config->timeInterpolation() == FXVolatilityCurveConfig::TimeInterpolation::V2T)
+        interp2 = QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation::V2T;
+    else {
+        QL_FAIL("BFRR FX vol surface: invalid time interpolation, expected V, V2T");
     }
 
     std::vector<Date> dates;
@@ -386,7 +416,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
+        buildTimeWeighting(asof, config->dayCounter()), config->butterflyErrorTolerance());
 
     vol_->enableExtrapolation();
 }
@@ -911,6 +942,14 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
         }
 
+        if (!config->timeWeighting().empty() && conventions->has(config->timeWeighting())) {
+            auto tmp = QuantLib::ext::dynamic_pointer_cast<FxOptionTimeWeightingConvention>(
+                conventions->get(config->timeWeighting()));
+            QL_REQUIRE(tmp, "unable to cast convention '" << config->timeWeighting()
+                                                          << "' to FxOptionTimeWeightingConvention");
+            timeWeighting_ = *tmp;
+        }
+
         auto spotSpec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
         QL_REQUIRE(spotSpec != nullptr,
                    "could not parse '" << config->fxSpotID() << "' to FXSpotSpec, expected FX/CCY1/CCY2");
@@ -1171,10 +1210,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             " deltas that were initially provided, because all smiles were invalid.");
                     }
                     for (Size i = 0; i < bfrr->dates().size(); ++i) {
-                        if (bfrr->smileHasError()[i]) {
-                            calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
-                                                                 ore::data::to_string(bfrr->dates()[i]) + ": " +
-                                                                 bfrr->smileErrorMessage()[i]);
+                        if (bfrr->smileHasError()[i] || bfrr->smileHasWarning()[i]) {
+                            calibrationInfo_->messages.push_back(
+                                "Smile at expiry " + ore::data::to_string(bfrr->dates()[i]) + " (" +
+                                (bfrr->smileHasError()[i] ? "error" : "recoverable warning") +
+                                "): " + boost::join(bfrr->smileMessages()[i], " / "));
                         }
                     }
                 }

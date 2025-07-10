@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Cap_on_CMS">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Short</LongShort>
+            <LegData>
+                <LegType>CMS</LegType>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>75000000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>F</PaymentConvention>
+                <CMSLegData>
+                    <Index>USD-CMS-30Y</Index>
+                    <Spreads>
+                        <Spread>0.000000</Spread>
+                    </Spreads>
+                </CMSLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2027-03-02</StartDate>
+                        <EndDate>2028-03-01</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Backward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+            <Caps>
+                <Cap>0.0015</Cap>
+            </Caps>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

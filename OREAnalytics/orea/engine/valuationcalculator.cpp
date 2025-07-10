@@ -22,6 +22,8 @@
 */
 
 #include <orea/engine/valuationcalculator.hpp>
+
+#include <ored/marketdata/market.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -43,7 +45,8 @@ void NPVCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, 
     
     ccyQuotes_.resize(ccys.size());
     for (Size i = 0; i < ccys.size(); ++i)
-        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+        ccyQuotes_[i] = laxFxConversion_ ? (simMarket->fxSpot(*std::next(ccys.begin(), i) + baseCcyCode_))
+                                         : (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
     fxRates_.resize(ccys.size());
 }
 
@@ -74,6 +77,26 @@ Real NPVCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>&
     Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
+}
+
+Real ExerciseCalculator::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+			       const QuantLib::ext::shared_ptr<SimMarket>& simMarket) {
+    auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());    
+    if (!optionWrapper || !optionWrapper->isOption() || !optionWrapper->isExercised())
+        return QuantLib::Null<Real>();
+    
+    Date today = Settings::instance().evaluationDate();
+    if (optionWrapper->exerciseDate() != today)
+        return QuantLib::Null<Real>();
+      
+    Real exerciseValue = optionWrapper->cachedExerciseValue();
+    Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
+    Real numeraire = simMarket->numeraire();
+
+    // DLOG("trade " << trade->id() << " " << io::iso_date(today) << " exercised " << exerciseValue << " index "
+    //               << index_);
+
+    return exerciseValue * fx / numeraire;
 }
 
 void CashflowCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
@@ -188,7 +211,8 @@ void NPVCalculatorFXT0::init(const QuantLib::ext::shared_ptr<Portfolio>& portfol
     }
     fxRates_.resize(ccys.size());
     for (Size i = 0; i < ccys.size(); ++i)
-        fxRates_[i] = t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
+        fxRates_[i] = laxFxConversion_ ? t0Market_->fxSpot(*std::next(ccys.begin(), i) + baseCcyCode_)->value()
+                                       : t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
 }
 
 void NPVCalculatorFXT0::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -214,6 +238,25 @@ Real NPVCalculatorFXT0::npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Tra
     Real fx = fxRates_[tradeCcyIndex_[tradeIndex]];
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
+}
+
+void CashflowReportCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                         const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                         QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                         QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date,
+                                         Size dateIndex, Size sample, bool isCloseOut) {
+    QL_REQUIRE(dateIndex == 0, "CashflowReportCalculator::calculate(): date ("
+                                   << dateIndex << ") not allowed for this calculator. Expected 0.");
+    cfCube_[tradeIndex][sample + 1] =
+        generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
+}
+
+void CashflowReportCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                                           const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                                           QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                                           QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
+    cfCube_[tradeIndex][0] =
+        generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
 }
 
 } // namespace analytics

@@ -59,6 +59,7 @@ using namespace data;
   - Basel Effective Expected Exposure, EEE_B: max( EEE_B(t-1), EE_B(t))
   - Basel Effective Expected Positive Exposure, EEPE_B
   - Potential Future Exposure, PFE: q-Quantile of the distribution of
+  - Time-Weighted Exposure (only on netting set level): 1 / T SUM_i=0^T EPE(t) \DELTA(t)
 
   2) Dynamic Initial Margin via regression
 
@@ -129,7 +130,8 @@ public:
         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
             QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
-        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation = QuantLib::ext::shared_ptr<CubeInterpretation>(),
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation =
+            QuantLib::ext::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! CVA spread sensitivity grid
@@ -169,7 +171,15 @@ public:
         //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
         bool withMporStickyDate = false,
         //! Treatment of cash flows over the margin period of risk
-        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified);
+        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified,
+        //! Treatment of the initial difference between vm collateral balance and mtm
+        //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
+        //! and vice-versa for over-collateralisation in case of positive mtm
+        const bool firstMporCollateralAdjustment = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false,
+        //! use double precision cubes
+        bool useDoublePrecisionCubes = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -178,11 +188,12 @@ public:
     const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
-    //! Return list of Trade IDs in the portfolio
+    //! Return map of Trade IDs to cube trade indices
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
-    //! Return list of netting set IDs in the portfolio
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    //! Return map netting set IDs to (net-)cube netting set indices
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
     }
@@ -203,6 +214,10 @@ public:
     const Real& tradeEEPE_B(const string& tradeId);
     //! Return trade level Potential Future Exposure evolution
     const vector<Real>& tradePFE(const string& tradeId);
+    //! Return trade level Expected Positive Exposure evolution
+    const vector<Real>& tradeEPE_B_timeWeighted(const string& tradeId);
+    //! Return trade level Effective Expected Positive Exposure evolution
+    const vector<Real>& tradeEEPE_B_timeWeighted(const string& tradeId);
     // const vector<Real>& tradeVAR(const string& tradeId);
 
     //! Return Netting Set Expected Positive Exposure evolution
@@ -220,7 +235,10 @@ public:
     //! Return Netting Set Potential Future Exposure evolution
     const vector<Real>& netPFE(const string& nettingSetId);
     // const vector<Real>& netVAR(const string& nettingSetId);
-
+    // Return Netting Set Basel the time averaged Expected Positive Exposure evolution
+    const vector<Real>& netEPE_B_timeWeighted(const string& nettingSetId);
+    // Return Netting Set Basel the time averaged Effective Expected Positive Exposure evolution
+    const vector<Real>& netEEPE_B_timeWeighted(const string& nettingSetId);
     //! Return the netting set's expected collateral evolution
     const vector<Real>& expectedCollateral(const string& nettingSetId);
     //! Return the netting set's expected COLVA increments through time
@@ -233,6 +251,10 @@ public:
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
   
+    //! Return the time-averaged pathwise positive and negative exposures before and after collateral
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+    timeAveragedNettedExposure() const;
+
     //! Return Netting Set CVA Hazard Rate Sensitivity vector
     vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitivity vector
@@ -299,8 +321,14 @@ public:
     const QuantLib::ext::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
     const QuantLib::ext::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
+
     //! Return the dynamic initial margin cube (regression approach)
     //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    //! Write DIM distributions through time for all netting sets
+    void exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize = 50,
+                               const Real coveredStdDevs = Null<Real>());
+    //! Write DIM cube for all netting sets
+    void exportDimCube(ore::data::Report& dimCubeReport);
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
@@ -381,6 +409,9 @@ protected:
     std::vector<std::vector<Real>> creditMigrationPdf_;
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
+    bool firstMporCollateralAdjustment_;
+    bool continueOnError_;
+    bool useDoublePrecisionCubes_;
 };
 
 } // namespace analytics

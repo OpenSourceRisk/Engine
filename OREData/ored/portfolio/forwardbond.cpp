@@ -17,6 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -62,10 +63,15 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "ForwardBond: bond type " << bondType << " is not supported.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     notionalCurrency_ = currency_;
+
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
 
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
@@ -73,6 +79,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
     Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
+
+    std::string openEndDateStr = builder_fwd->modelParameter("OpenEndDateReplacement", {}, false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
     Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
@@ -123,11 +132,14 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     std::vector<Leg> separateLegs;
     for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+        std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
         Leg leg;
         auto configuration = builder_bd->configuration(MarketContext::pricing);
         auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+                                   openEndDateReplacement, false, true, &productModelEngines);
         separateLegs.push_back(leg);
+        addProductModelEngine(productModelEngines);
     }
     Leg leg = joinLegs(separateLegs);
     auto bond = QuantLib::ext::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
@@ -138,6 +150,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     legPayers_ = {firstLegIsPayer};
     Currency currency = parseCurrency(currency_);
     maturity_ = bond->cashflows().back()->date();
+    maturityType_ = "Bond Cashflow Date";
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
@@ -150,14 +163,16 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    QuantLib::ext::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
+    QuantLib::ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
-                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
-                                                     bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
+        bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
+
     setSensitivityTemplate(*fwdBondBuilder);
+    addProductModelEngine(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();

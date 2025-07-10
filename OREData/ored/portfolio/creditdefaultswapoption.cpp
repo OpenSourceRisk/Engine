@@ -24,6 +24,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -205,7 +206,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // the strike spread. It may matter for the resulting valuation depending on the engine that is used - see 
     // "A CDS Option Miscellany, Richard J. Martin, 2019, Section 2.4".
     const auto& legData = swap_.leg();
-    QL_REQUIRE(legData.legType() == "Fixed", "CDS option " << id() << " requires fixed leg.");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "CDS option " << id() << " requires fixed leg.");
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();
@@ -237,6 +238,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // Copying here what is done for the index CDS option. The comment there is:
     // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
     maturity_ = std::max(cds->coupons().back()->date(), option_.premiumData().latestPremiumDate());
+    maturityType_ = maturity_ == cds->coupons().back()->date() ? "Last CDS Coupon Date" : "Option's Latest Premium Date";
 
     // Set engine on the underlying CDS.
     auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(
@@ -246,7 +248,6 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     npvCurrency_ = legData.currency();
     auto ccy = parseCurrency(npvCurrency_);
     cds->setPricingEngine(cdsBuilder->engine(ccy, swap_.creditCurveId(), swap_.recoveryRate()));
-    setSensitivityTemplate(*cdsBuilder);
 
     // Check option data
     QL_REQUIRE(option_.style() == "European", "CreditDefaultSwapOption option style must" <<
@@ -278,6 +279,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
         " builder for underlying while building trade " << id() << ".");
     cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
     setSensitivityTemplate(*cdsOptionEngineBuilder);
+    addProductModelEngine(*cdsOptionEngineBuilder);
 
     // Set Trade members.
     legs_ = { cds->coupons() };
@@ -304,9 +306,14 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate, exerciseDate, 
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
+
+    additionalData_["exerciseDate"] = to_string(exerciseDate);
+    Date today = Settings::instance().evaluationDate();
+    DayCounter actact = ActualActual(ActualActual::ISMA);
+    additionalData_["exerciseTime"] = actact.yearFraction(today, exerciseDate);
 }
 
 void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -334,15 +341,17 @@ void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<Eng
     auto ccy = parseCurrency(notionalCurrency_);
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date premiumPayDate =
         addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
+                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, discountCurve, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
     // Use the instrument added as the main instrument and clear the vectors
     auto qlInst = additionalInstruments.back();
     QL_REQUIRE(qlInst, "Expected a FEP payment to have been added for CDS option " << id() << ".");
     maturity_ = std::max(paymentDate, premiumPayDate);
+    maturityType_ = maturity_ == paymentDate ? "Payment Date" : "Premium Pay Date";
     additionalInstruments.clear();
     additionalMultipliers.clear();
 
@@ -363,8 +372,9 @@ Date CreditDefaultSwapOption::addPremium(const QuantLib::ext::shared_ptr<EngineF
         // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
-                           indicatorLongShort, tradeCurrency, ef, marketConfig);
+                           indicatorLongShort, tradeCurrency, discountCurve, ef, marketConfig);
 }
 
 }

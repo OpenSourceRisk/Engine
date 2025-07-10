@@ -89,7 +89,7 @@ RandomVariable executeScript(const std::string& script, const QuantLib::ext::sha
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars.find("result") != context->scalars.end());
     BOOST_REQUIRE(context->scalars.at("result").which() == ValueTypeWhich::Number);
-    return QuantLib::ext::get<RandomVariable>(context->scalars.at("result"));
+    return boost::get<RandomVariable>(context->scalars.at("result"));
 }
 } // namespace
 
@@ -190,16 +190,16 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // sort x, but store result in y
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -207,28 +207,28 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
     result = c->arrays.at("y");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // sort x, store result in y and index permutation in i
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -236,40 +236,40 @@ BOOST_AUTO_TEST_CASE(testSortFunction) {
     BOOST_REQUIRE_NO_THROW(engine3.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
     result = c->arrays.at("y");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
     result = c->arrays.at("i");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 4.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 1.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 3.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 4.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 1.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 3.0, tol);
 
     // check illegal call with y having a different size from x
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -330,16 +330,16 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // permute x, but store result in y
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -347,28 +347,28 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), x.at(0).at(1), tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), x.at(1).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), x.at(2).at(1), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), x.at(3).at(1), tol);
     result = c->arrays.at("y");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), 1.0, tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), 4.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // check illegal call with p having a different size from x
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(testPermuteFunction) {
     // check illegal call with p having the correct size, but containing an illegal permutation index
     c = QuantLib::ext::make_shared<Context>(*c0);
     std::vector<ValueType> pv2 = pv;
-    QuantLib::ext::get<RandomVariable>(pv2[2]).set(1, 5.0);
+    boost::get<RandomVariable>(pv2[2]).set(1, 5.0);
     c->arrays["p"] = pv2;
     ScriptEngine engine5(ScriptParser("PERMUTE(x,p);").ast(), c, QuantLib::ext::make_shared<DummyModel>(2));
     BOOST_REQUIRE_THROW(engine5.run(), std::exception);
@@ -440,16 +440,16 @@ BOOST_AUTO_TEST_CASE(testSortPermuteFunctionsWithFilter) {
     BOOST_REQUIRE_NO_THROW(engine.run());
     std::vector<ValueType> result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 
     // permute x if y is positive, i.e. again on path #1, but not on path#0
     c = QuantLib::ext::make_shared<Context>(*c0);
@@ -458,16 +458,16 @@ BOOST_AUTO_TEST_CASE(testSortPermuteFunctionsWithFilter) {
     BOOST_REQUIRE_NO_THROW(engine2.run());
     result = c->arrays.at("x");
     BOOST_REQUIRE(result.size() == x.size());                                         // check array size
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
-    BOOST_REQUIRE(QuantLib::ext::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
-    BOOST_CHECK_CLOSE(QuantLib::ext::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(0)).size() == x.at(0).size()); // check number of paths
+    BOOST_REQUIRE(boost::get<RandomVariable>(result.at(1)).size() == x.at(1).size());
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(0), x.at(0).at(0), tol); // check path #0
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(0), x.at(1).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(0), x.at(2).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(0), x.at(3).at(0), tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(0)).at(1), 1.0, tol); // check path #1
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(1)).at(1), 2.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(2)).at(1), 3.0, tol);
+    BOOST_CHECK_CLOSE(boost::get<RandomVariable>(result.at(3)).at(1), 4.0, tol);
 }
 
 BOOST_AUTO_TEST_CASE(testHistoricFixingsFunction) {
@@ -509,9 +509,9 @@ BOOST_AUTO_TEST_CASE(testHistoricFixingsFunction) {
     BOOST_REQUIRE(context->scalars["hasFixing2"].which() == ValueTypeWhich::Number);
     BOOST_REQUIRE(context->scalars["hasFixing3"].which() == ValueTypeWhich::Number);
 
-    RandomVariable rv1 = QuantLib::ext::get<RandomVariable>(context->scalars["hasFixing1"]);
-    RandomVariable rv2 = QuantLib::ext::get<RandomVariable>(context->scalars["hasFixing2"]);
-    RandomVariable rv3 = QuantLib::ext::get<RandomVariable>(context->scalars["hasFixing3"]);
+    RandomVariable rv1 = boost::get<RandomVariable>(context->scalars["hasFixing1"]);
+    RandomVariable rv2 = boost::get<RandomVariable>(context->scalars["hasFixing2"]);
+    RandomVariable rv3 = boost::get<RandomVariable>(context->scalars["hasFixing3"]);
 
     BOOST_CHECK(rv1.deterministic());
     BOOST_CHECK(rv2.deterministic());
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     ScriptEngine engine1(parser.ast(), context1, model);
     BOOST_REQUIRE_NO_THROW(engine1.run());
     BOOST_REQUIRE(context1->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv1 = QuantLib::ext::get<RandomVariable>(context1->scalars["i"]);
+    RandomVariable rv1 = boost::get<RandomVariable>(context1->scalars["i"]);
     BOOST_CHECK(rv1.deterministic());
     BOOST_CHECK_CLOSE(rv1.at(0), 1.0, tol);
 
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     ScriptEngine engine2(parser.ast(), context2, model);
     BOOST_REQUIRE_NO_THROW(engine2.run());
     BOOST_REQUIRE(context2->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv2 = QuantLib::ext::get<RandomVariable>(context2->scalars["i"]);
+    RandomVariable rv2 = boost::get<RandomVariable>(context2->scalars["i"]);
     BOOST_CHECK(rv2.deterministic());
     BOOST_CHECK_CLOSE(rv2.at(0), 2.0, tol);
 
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     ScriptEngine engine3(parser.ast(), context3, model);
     BOOST_REQUIRE_NO_THROW(engine3.run());
     BOOST_REQUIRE(context3->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv3 = QuantLib::ext::get<RandomVariable>(context3->scalars["i"]);
+    RandomVariable rv3 = boost::get<RandomVariable>(context3->scalars["i"]);
     BOOST_CHECK(rv3.deterministic());
     BOOST_CHECK_CLOSE(rv3.at(0), 0.0, tol);
 
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionEq) {
     ScriptEngine engine4(parser.ast(), context4, model);
     BOOST_REQUIRE_NO_THROW(engine4.run());
     BOOST_REQUIRE(context4->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv4 = QuantLib::ext::get<RandomVariable>(context4->scalars["i"]);
+    RandomVariable rv4 = boost::get<RandomVariable>(context4->scalars["i"]);
     BOOST_CHECK(rv4.deterministic());
     BOOST_CHECK_CLOSE(rv4.at(0), 0.0, tol);
 
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     ScriptEngine engine1(parser.ast(), context1, model);
     BOOST_REQUIRE_NO_THROW(engine1.run());
     BOOST_REQUIRE(context1->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv1 = QuantLib::ext::get<RandomVariable>(context1->scalars["i"]);
+    RandomVariable rv1 = boost::get<RandomVariable>(context1->scalars["i"]);
     BOOST_CHECK(rv1.deterministic());
     BOOST_CHECK_CLOSE(rv1.at(0), 1.0, tol);
 
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     ScriptEngine engine2(parser.ast(), context2, model);
     BOOST_REQUIRE_NO_THROW(engine2.run());
     BOOST_REQUIRE(context2->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv2 = QuantLib::ext::get<RandomVariable>(context2->scalars["i"]);
+    RandomVariable rv2 = boost::get<RandomVariable>(context2->scalars["i"]);
     BOOST_CHECK(rv2.deterministic());
     BOOST_CHECK_CLOSE(rv2.at(0), 2.0, tol);
 
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     ScriptEngine engine3(parser.ast(), context3, model);
     BOOST_REQUIRE_NO_THROW(engine3.run());
     BOOST_REQUIRE(context3->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv3 = QuantLib::ext::get<RandomVariable>(context3->scalars["i"]);
+    RandomVariable rv3 = boost::get<RandomVariable>(context3->scalars["i"]);
     BOOST_CHECK(rv3.deterministic());
     BOOST_CHECK_CLOSE(rv3.at(0), 3.0, tol);
 
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     ScriptEngine engine4(parser.ast(), context4, model);
     BOOST_REQUIRE_NO_THROW(engine4.run());
     BOOST_REQUIRE(context4->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv4 = QuantLib::ext::get<RandomVariable>(context4->scalars["i"]);
+    RandomVariable rv4 = boost::get<RandomVariable>(context4->scalars["i"]);
     BOOST_CHECK(rv4.deterministic());
     BOOST_CHECK_CLOSE(rv4.at(0), 1.0, tol);
 
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(testDateIndexFunctionGeq) {
     ScriptEngine engine5(parser.ast(), context5, model);
     BOOST_REQUIRE_NO_THROW(engine5.run());
     BOOST_REQUIRE(context5->scalars["i"].which() == ValueTypeWhich::Number);
-    RandomVariable rv5 = QuantLib::ext::get<RandomVariable>(context5->scalars["i"]);
+    RandomVariable rv5 = boost::get<RandomVariable>(context5->scalars["i"]);
     BOOST_CHECK(rv5.deterministic());
     BOOST_CHECK_CLOSE(rv5.at(0), 2.0, tol);
 }
@@ -700,15 +700,16 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
 
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
     irIndices.push_back(std::make_pair(indexName, on));
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
+    Model::Params params;
+    params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
+        Model::Type::MC, nPaths, std::vector<std::string>{"EUR"}, std::vector<Handle<YieldTermStructure>>{yts},
         std::vector<Handle<Quote>>(), irIndices,
-        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), std::vector<std::string>(),
-        std::vector<std::string>(), Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
-        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), mcParams,
-        std::set<Date>{});
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(),
+        std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
+        Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
+        std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
+        IborFallbackConfig::defaultConfig(), "ATM", std::map<std::string, std::vector<Real>>(), params);
 
     auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["underlying"] = IndexVec{nPaths, indexName};
@@ -745,7 +746,7 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["rate"].which() == ValueTypeWhich::Number);
-    RandomVariable rv = QuantLib::ext::get<RandomVariable>(context->scalars["rate"]);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["rate"]);
     BOOST_TEST_MESSAGE("rate from engine = " << rv.at(0) << " rate from coupon = " << coupon.rate());
     BOOST_CHECK_CLOSE(rv.at(0), coupon.rate(), 1E-10);
 }
@@ -786,18 +787,19 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts0, volts);
     std::set<Date> simulationDates = {date1, date2};
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 1;
+    Model::Params params;
+    params.regressionOrder = 1;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts0, "EQ-Dummy", "USD",
-        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts0, "EQ-Dummy", "USD",
+        BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["AboveProb"].which() == ValueTypeWhich::Number);
     BOOST_REQUIRE(context->scalars["BelowProb"].which() == ValueTypeWhich::Number);
-    RandomVariable rvAbove = QuantLib::ext::get<RandomVariable>(context->scalars["AboveProb"]);
-    RandomVariable rvBelow = QuantLib::ext::get<RandomVariable>(context->scalars["BelowProb"]);
+    RandomVariable rvAbove = boost::get<RandomVariable>(context->scalars["AboveProb"]);
+    RandomVariable rvBelow = boost::get<RandomVariable>(context->scalars["BelowProb"]);
     BOOST_REQUIRE(rvAbove.size() == nPaths);
     BOOST_REQUIRE(rvBelow.size() == nPaths);
 
@@ -931,15 +933,16 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
         payDates.insert(s.second.begin(), s.second.end());
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
-    RandomVariable rv = QuantLib::ext::get<RandomVariable>(context->scalars["Option"]);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
     BOOST_REQUIRE(rv.size() == nPaths);
     Real avg = expectation(rv).at(0);
     timer.stop();
@@ -1042,16 +1045,17 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
-    RandomVariable rv = QuantLib::ext::get<RandomVariable>(context->scalars["Option"]);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
     BOOST_REQUIRE(rv.size() == nPaths);
     Real avg = expectation(rv).at(0);
     timer.stop();
@@ -1129,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     BOOST_REQUIRE_EQUAL(simulationDates.size(), observationDates.size());
     Size i = 0;
     for (auto const& d : simulationDates)
-        BOOST_CHECK_EQUAL(d, QuantLib::ext::get<EventVec>(observationDates[i++]).value);
+        BOOST_CHECK_EQUAL(d, boost::get<EventVec>(observationDates[i++]).value);
 
     Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
     Handle<YieldTermStructure> yts0(QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
@@ -1139,15 +1143,16 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, "USD", yts, "EQ-SP5", "USD",
-        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), mcParams, simulationDates);
+        Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
+        BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
+        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
-    RandomVariable rv = QuantLib::ext::get<RandomVariable>(context->scalars["Option"]);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
     BOOST_REQUIRE(rv.size() == nPaths);
     Real avg = expectation(rv).at(0);
     timer.stop();
@@ -1156,7 +1161,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     // hardcoded version of the script
     std::vector<Real> times;
     for (auto const& d : observationDates)
-        times.push_back(process->riskFreeRate()->timeFromReference(QuantLib::ext::get<EventVec>(d).value));
+        times.push_back(process->riskFreeRate()->timeFromReference(boost::get<EventVec>(d).value));
     auto pg = makeMultiPathGenerator(SobolBrownianBridge, process, TimeGrid(times.begin(), times.end()),
                                      SobolBrownianGenerator::Steps);
     double avg2 = 0.0;
@@ -1169,7 +1174,7 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
         Real v = std::max(payoff / static_cast<double>(observationDates.size()) - strike, 0.0);
         avg2 += v;
     }
-    avg2 *= quantity * process->riskFreeRate()->discount(QuantLib::ext::get<EventVec>(observationDates.back()).value) /
+    avg2 *= quantity * process->riskFreeRate()->discount(boost::get<EventVec>(observationDates.back()).value) /
             static_cast<double>(nPaths);
     timer.stop();
     BOOST_TEST_MESSAGE("result with hardcoded script " << avg2 << "(timing " << timer.format(default_places, "%w")
@@ -1269,14 +1274,14 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     i = 0;
     BOOST_REQUIRE_EQUAL(indexInfo->payObsDates().begin()->second.size(), observationDates.size());
     for (auto const& d : indexInfo->payObsDates().begin()->second) {
-        BOOST_CHECK_EQUAL(d, QuantLib::ext::get<EventVec>(observationDates[i++]).value);
+        BOOST_CHECK_EQUAL(d, boost::get<EventVec>(observationDates[i++]).value);
     }
     BOOST_REQUIRE_EQUAL(indexInfo->payPayDates().size(), 1);
     BOOST_CHECK_EQUAL(indexInfo->payPayDates().begin()->first, "USD");
     i = 0;
     BOOST_REQUIRE_EQUAL(indexInfo->payPayDates().begin()->second.size(), settlementDates.size());
     for (auto const& d : indexInfo->payPayDates().begin()->second) {
-        BOOST_CHECK_EQUAL(d, QuantLib::ext::get<EventVec>(settlementDates[i++]).value);
+        BOOST_CHECK_EQUAL(d, boost::get<EventVec>(settlementDates[i++]).value);
     }
 
     // compile the sim and pay dates required by the BS model ctor below
@@ -1309,19 +1314,20 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
     correlations[std::make_pair("EQ-2", "EQ-3")] = Handle<QuantExt::CorrelationTermStructure>(
         QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.6, ActualActual(ActualActual::ISDA)));
     cpu_timer timer;
-    Model::McParams mcParams;
-    mcParams.regressionOrder = 6;
+    Model::Params params;
+    params.regressionOrder = 6;
     auto model = QuantLib::ext::make_shared<BlackScholes>(
-        nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
-        std::vector<Handle<Quote>>(), std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
+        Model::Type::MC, nPaths, std::vector<std::string>(1, "USD"), std::vector<Handle<YieldTermStructure>>(1, yts),
+        std::vector<Handle<Quote>>(),
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>(),
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
-        std::vector<std::string>(3, "USD"),
-        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations, mcParams,
-        simulationDates);
+        std::vector<std::string>(3, "USD"), std::set<std::string>{"USD"},
+        BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations,
+        simulationDates, IborFallbackConfig::defaultConfig(), "ATM", std::map<string, std::vector<Real>>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
-    RandomVariable rv = QuantLib::ext::get<RandomVariable>(context->scalars["Option"]);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
     BOOST_REQUIRE(rv.size() == nPaths);
     Real avg = expectation(rv).at(0);
     timer.stop();
@@ -1370,13 +1376,13 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
             if (v == nObs - 1) {
                 if (knockedIn == 1 && terminated == 0) {
                     Option = notional * (1 - Value / StrikePrice) *
-                             yts->discount(QuantLib::ext::get<EventVec>(settlementDates[v]).value);
+                             yts->discount(boost::get<EventVec>(settlementDates[v]).value);
                 }
             } else {
                 if (v > 0 && terminated == 0) {
                     if (Value > StrikePrice && !close_enough(Value, StrikePrice)) {
                         Option =
-                            notional * (v + 1) * 0.06 * yts->discount(QuantLib::ext::get<EventVec>(settlementDates[v]).value);
+                            notional * (v + 1) * 0.06 * yts->discount(boost::get<EventVec>(settlementDates[v]).value);
                         terminated = 1;
                     }
                 }

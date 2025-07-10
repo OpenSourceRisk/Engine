@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -15,39 +15,39 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-/*! \file qle/termstructures/inflation/inflationtraits.hpp
-    \brief interpolated correlation term structure
-*/
-
 #pragma once
 
 #include <ql/termstructures/bootstraphelper.hpp>
-#include <ql/termstructures/inflation/interpolatedyoyinflationcurve.hpp>
-#include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
+#include <qle/termstructures/inflation/cpicurve.hpp>
+#include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
 
 namespace QuantExt {
 
 namespace detail {
-const QuantLib::Rate avgInflation = 0.02;
-const QuantLib::Rate maxInflation = 0.5;
+constexpr double minCPI = 1.0;
+constexpr double maxCPI = 100000.0;
 } // namespace detail
 
 //! Bootstrap traits to use for PiecewiseZeroInflationCurve
-class ZeroInflationTraits {
+class CPITraits {
 public:
-    class BootstrapFirstDateInitializer {
-    public:
-        virtual ~BootstrapFirstDateInitializer() = default;
-        virtual QuantLib::Date initialDate() const = 0;
+    template <class Interpolator> struct curve {
+        typedef InterpolatedCPIInflationCurve<Interpolator> type;
     };
-
     typedef QuantLib::BootstrapHelper<QuantLib::ZeroInflationTermStructure> helper;
-
     // start of curve data
-    static QuantLib::Date initialDate(const BootstrapFirstDateInitializer* t) { return t->initialDate(); }
+    static QuantLib::Date initialDate(const QuantLib::ZeroInflationTermStructure* t) {
+        if (t->hasExplicitBaseDate())
+            return t->baseDate();
+        else
+            return QuantLib::inflationPeriod(t->referenceDate() - t->observationLag(), t->frequency()).first;
+    }
     // value at reference date
-    static QuantLib::Rate initialValue(const QuantLib::ZeroInflationTermStructure* t) { return t->baseRate(); }
+
+    static QuantLib::Rate initialValue(const CPICurve* ts) {
+        // this will be overwritten during bootstrap
+        return ts->baseCPI();
+    }
 
     // guesses
     template <class C>
@@ -56,36 +56,31 @@ public:
     {
         if (validData) // previous iteration value
             return c->data()[i];
-
-        if (i == 1) // first pillar
-            return detail::avgInflation;
-
-        // could/should extrapolate
-        return detail::avgInflation;
+        return c->baseCPI();
     }
 
     // constraints
     template <class C>
-    static QuantLib::Rate minValueAfter(QuantLib::Size i, const C* c, bool validData,
+    static QuantLib::Rate minValueAfter(QuantLib::Size, const C* c, bool validData,
                                         QuantLib::Size) // firstAliveHelper
     {
         if (validData) {
             QuantLib::Rate r = *(std::min_element(c->data().begin(), c->data().end()));
-            return r < 0.0 ? r * 2.0 : r / 2.0;
+            return r < 0.0 ? QuantLib::Real(r * 2.0) : r / 2.0;
         }
-        return -detail::maxInflation;
+        return detail::minCPI;
     }
     template <class C>
-    static QuantLib::Rate maxValueAfter(QuantLib::Size i, const C* c, bool validData,
+    static QuantLib::Rate maxValueAfter(QuantLib::Size, const C* c, bool validData,
                                         QuantLib::Size) // firstAliveHelper
     {
         if (validData) {
             QuantLib::Rate r = *(std::max_element(c->data().begin(), c->data().end()));
-            return r < 0.0 ? r / 2.0 : r * 2.0;
+            return r < 0.0 ? QuantLib::Real(r / 2.0) : r * 2.0;
         }
         // no constraints.
         // We choose as max a value very unlikely to be exceeded.
-        return detail::maxInflation;
+        return detail::maxCPI;
     }
 
     // update with new guess
@@ -96,4 +91,5 @@ public:
     // calibration is trivial, should be immediate
     static QuantLib::Size maxIterations() { return 5; }
 };
+
 } // namespace QuantExt

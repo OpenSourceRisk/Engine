@@ -67,8 +67,10 @@ public:
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const override;
     std::set<QuantLib::Size> relevantScenarios() const override;
 
-    void remove(Size id) override;
-    void remove(Size id, Size sample) override;
+    void removeT0(Size id) override;
+    void remove(Size id, Size sample, bool useT0) override;
+
+    bool usesDoublePrecision() const override;
 
 private:
     const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;

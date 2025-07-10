@@ -23,7 +23,9 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
 
+#include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
 
 namespace ore {
@@ -32,10 +34,11 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const string& assetName,
-                                                                         const Currency& domCcy,
-                                                                         const AssetClass& assetClassUnderlying,
-                                                                         const Date& expiryDate, const bool useFxSpot) {
+template <typename E>
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Currency& domCcy,
+                                                const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                const bool useFxSpot) {
 
     QL_REQUIRE(assetClassUnderlying == AssetClass::FX, "FX Option required");
     Currency forCcy = parseCurrency(assetName);
@@ -46,59 +49,105 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl
 
     QL_REQUIRE(domCcy != forCcy, "CamAmcFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
-    std::vector<Size> externalModelIndices;
-    std::vector<Handle<YieldTermStructure>> discountCurves;
-    std::vector<Size> cIdx;
-    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
-    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
-
-    // add the IR and FX components in the order they appear in the CAM; this way
-    // we can sort the external model indices and be sure that they match up with
-    // the indices 0,1,2,3,... of the projected model we build here
-    // keep the base ccy in every case
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
     for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
         if (i == 0 || cam_->irlgm1f(i)->currency() == domCcy || cam_->irlgm1f(i)->currency() == forCcy) {
-            lgm.push_back(cam_->lgm(i));
-            externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::IR, i));
-            cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::IR, i));
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
             if (i > 0) {
-                fx.push_back(cam_->fxbs(i - 1));
-                externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, i - 1));
-                cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::FX, i - 1));
+                selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
             }
         }
     }
 
-    std::sort(externalModelIndices.begin(), externalModelIndices.end());
-    std::sort(cIdx.begin(), cIdx.end());
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
-    // build correlation matrix
-    Matrix corr(cIdx.size(), cIdx.size(), 1.0);
-    for (Size i = 0; i < cIdx.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            corr(i, j) = corr(j, i) = cam_->correlation()(cIdx[i], cIdx[j]);
-        }
-    }
-    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
-    // we assume that the model has the pricing discount curves attached already, so
-    // we leave the discountCurves vector empty here
-
-    // build the pricing engine
-
-    // NPV should be in domCcy, consistent with the npv currency of an ORE FX Option Trade
-    auto engine = QuantLib::ext::make_shared<McCamFxOptionEngine>(
+    return QuantLib::ext::make_shared<E>(
         model, domCcy, forCcy, domCcy, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+}
 
-    return engine;
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                                const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<McCamFxOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate, useFxSpot);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                                       const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                       const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<McCamFxEuropeanForwardOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+                                                              useFxSpot);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                                  const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                  const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<McCamFxEuropeanCSOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+                                                         useFxSpot);
+}
+
+template <typename E>
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                               const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                               const bool useFxSpot, const std::optional<Currency>&) {
+
+    QL_REQUIRE(assetClassUnderlying == AssetClass::FX, "FX Option required");
+    Currency forCcy = parseCurrency(assetName);
+
+    std::string ccysStr = forCcy.code() + "_" + domCcy.code();
+
+    DLOG("Building AMC FX option engine for ccys " << ccysStr << " (from externally given CAM)");
+
+    QL_REQUIRE(domCcy != forCcy, "AmcCgFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
+
+    return QuantLib::ext::make_shared<E>(
+        domCcy.code(), forCcy.code(), modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                               const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                               const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<AmcCgFxOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate, useFxSpot, std::nullopt);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                                      const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                      const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<AmcCgFxEuropeanForwardOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate,
+                                                              useFxSpot, std::nullopt);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy, const string& discountCurveName,
+                                                 const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                 const bool useFxSpot, const std::optional<Currency>&) {
+    return engineImplBase<AmcCgFxEuropeanCSOptionEngine>(assetName, domCcy, discountCurveName, assetClassUnderlying, expiryDate,
+                                                         useFxSpot, std::nullopt);
 }
 
 } // namespace data

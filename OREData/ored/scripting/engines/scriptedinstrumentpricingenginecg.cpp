@@ -71,13 +71,18 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams, const std::string& script,
-    const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
-    const bool useCachedSensis, const bool useExternalComputeFramework,
-    const bool useDoublePrecisionForExternalCalculation)
-    : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-      mcParams_(mcParams), script_(script), interactive_(interactive),
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
+    const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
+    const std::string& amcCgTargetDerivative, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
+    const Model::Params& params, const double indicatorSmoothingForValues,
+    const double indicatorSmoothingForDerivatives, const std::string& script, const bool interactive,
+    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
+    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+    : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
+      amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
+      amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
+      indicatorSmoothingForValues_(indicatorSmoothingForValues),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
@@ -93,16 +98,22 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
-                                    mcParams_.regressionVarianceCutoff);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
-                                            mcParams_.regressionVarianceCutoff);
+        ops_ = getRandomVariableOps(model_->size(), params_.regressionOrder, params_.polynomType,
+                                    indicatorSmoothingForValues_, params_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), params_.regressionOrder, params_.polynomType,
+                                            indicatorSmoothingForDerivatives_, params_.regressionVarianceCutoff);
     }
 }
 
-void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                              std::vector<TradeExposure>* tradeExposure,
+                                                              TradeExposureMetaInfo* tradeExposureMetaInfo) const {
 
-    if (cgVersion_ != model_->cgVersion()) {
+    // TODO add sticky close-out states
+
+    if (cgVersion_ != model_->cgVersion() || (stickyCloseOutDateRun && !cgForStickyCloseOutDateRunIsBuilt_)) {
+
+        cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
 
         auto g = model_->computationGraph();
 
@@ -125,7 +136,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         for (auto const& v : workingContext_->scalars) {
             if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = QuantLib::ext::get<RandomVariable>(v.second);
+                auto r = boost::get<RandomVariable>(v.second);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                   << v.first << "' from initial context to be deterministic, got "
                                                   << r);
@@ -136,7 +147,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         for (auto const& a : workingContext_->arrays) {
             for (Size i = 0; i < a.second.size(); ++i) {
                 if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = QuantLib::ext::get<RandomVariable>(a.second[i]);
+                    auto r = boost::get<RandomVariable>(a.second[i]);
                     QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                       << a.first << "[" << i
                                                       << "]' from initial context to be deterministic, got " << r);
@@ -147,7 +158,8 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         // build graph
 
-        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_);
+        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
+                                          minimalModelCcys_);
         cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
@@ -158,6 +170,112 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         // clear stored base model params
 
         haveBaseValues_ = false;
+
+        // populate exposure results
+
+        if (tradeExposure != nullptr) {
+
+            auto s = workingContext_->arrays.find("_AMC_SimDates");
+            QL_REQUIRE(s != workingContext_->arrays.end(),
+                       "ScriptedInstrumentPricingEngineCG::calculate(): did not find amc exposure result _AMC_NPV");
+
+            tradeExposure->clear();
+            tradeExposure->resize(s->second.size() + 1);
+
+            if (amcCgComponents_.empty()) {
+
+                for (Size i = 0; i < tradeExposure->size(); ++i) {
+
+                    Date valDate = i == 0 ? model_->referenceDate() : boost::get<EventVec>(s->second[i - 1]).value;
+                    std::string name = i == 0 ? npv_ : "_AMC_NPV_" + std::to_string(i - 1);
+
+                    std::size_t n = g->variable(name, ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
+                                   << name << " (arrays are written with suffix _{index}) not found.");
+
+                    (*tradeExposure)[i].componentPathValues.resize(1);
+                    (*tradeExposure)[i].componentPathValues[0] = n;
+
+                    (*tradeExposure)[i].regressors = model_->npvRegressors(valDate, minimalModelCcys_);
+                }
+
+            } else {
+
+                QL_REQUIRE(!amcCgTargetValue_.empty(),
+                           "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): non-empty components vector "
+                           "found, but no targetValue specification.");
+
+                std::string effectiveAmcCgTargetDerivative =
+                    amcCgTargetDerivative_.empty() ? amcCgTargetValue_ : amcCgTargetDerivative_;
+
+                for (Size i = 0; i < tradeExposure->size(); ++i) {
+
+                    if (i == 0) {
+                        (*tradeExposure)[i].componentPathValues.resize(1);
+                        std::size_t n = g->variable(npv_, ComputationGraph::VarDoesntExist::Nan);
+                        QL_REQUIRE(n != ComputationGraph::nan,
+                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): variable "
+                                       << npv_ << " not found.");
+
+                        (*tradeExposure)[i].componentPathValues.resize(1);
+                        (*tradeExposure)[i].componentPathValues[0] = n;
+
+                        (*tradeExposure)[i].regressors =
+                            model_->npvRegressors(model_->referenceDate(), minimalModelCcys_);
+                        continue;
+                    }
+
+                    (*tradeExposure)[i].componentPathValues.resize(amcCgComponents_.size());
+
+                    for (Size c = 0; c < amcCgComponents_.size(); ++c) {
+                        std::size_t n = g->variable(amcCgComponents_[c] + "_" + std::to_string(i - 1),
+                                                    ComputationGraph::VarDoesntExist::Nan);
+                        QL_REQUIRE(n != ComputationGraph::nan,
+                                   "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                       << amcCgComponents_[c] << " at index " << i << " not found.");
+                        (*tradeExposure)[i].componentPathValues[c] = n;
+                    }
+
+                    std::size_t n = g->variable(amcCgTargetValue_ + "_" + std::to_string(i - 1),
+                                                ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                   << amcCgTargetValue_ << " at index " << (i + 1) << " not found.");
+                    (*tradeExposure)[i].targetConditionalExpectation = n;
+
+                    n = g->variable(effectiveAmcCgTargetDerivative + "_" + std::to_string(i - 1),
+                                    ComputationGraph::VarDoesntExist::Nan);
+                    QL_REQUIRE(n != ComputationGraph::nan,
+                               "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): array "
+                                   << effectiveAmcCgTargetDerivative << " at index " << i << " not found.");
+                    (*tradeExposure)[i + 1].targetConditionalExpectationDerivative = n;
+                }
+            }
+        }
+
+        if (tradeExposureMetaInfo != nullptr) {
+
+            tradeExposureMetaInfo->hasVega = true;
+            tradeExposureMetaInfo->relevantCurrencies = minimalModelCcys_;
+
+            for (auto const& ccy : minimalModelCcys_) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+                if (ccy != model_->baseCcy()) {
+                    tradeExposureMetaInfo->relevantModelParameters.insert(
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+                }
+                if (tradeExposureMetaInfo->hasVega) {
+                    tradeExposureMetaInfo->relevantModelParameters.insert(
+                        ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+                    if (ccy != model_->baseCcy()) {
+                        tradeExposureMetaInfo->relevantModelParameters.insert(
+                            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -175,7 +293,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
     lastCalculationWasValid_ = false;
 
-    buildComputationGraph();
+    buildComputationGraph(false);
 
     if (!haveBaseValues_ || !useCachedSensis_) {
 
@@ -190,9 +308,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
             ComputeContext::Settings settings;
             settings.debug = false;
             settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
-            settings.rngSequenceType = mcParams_.sequenceType;
-            settings.rngSeed = mcParams_.seed;
-            settings.regressionOrder = mcParams_.regressionOrder;
+            settings.rngSequenceType = params_.sequenceType;
+            settings.rngSeed = params_.seed;
+            settings.regressionOrder = params_.regressionOrder;
             std::tie(externalCalculationId_, newExternalCalc) =
                 ComputeEnvironment::instance().context().initiateCalculation(model_->size(), externalCalculationId_,
                                                                              cgVersion_, settings);
@@ -219,13 +337,16 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         // set model parameters
 
-        baseModelParams_ = model_->modelParameters();
-        for (auto const& p : baseModelParams_) {
-            TLOG("setting model parameter at node " << p.first << " to value " << std::setprecision(16) << p.second);
+        baseModelParams_.clear();
+        for (auto const& p : model_->modelParameters()) {
+            double v = p.eval();
+            TLOG("setting model parameter " << p << "  at node " << p.node() << " to value " << std::setprecision(16)
+                                            << v);
+            baseModelParams_.push_back(std::make_pair(p.node(), v));
             if (useExternalComputeFramework_) {
-                valuesExternal[p.first] = ExternalRandomVariable(p.second);
+                valuesExternal[p.node()] = ExternalRandomVariable(v);
             } else {
-                values[p.first] = RandomVariable(model_->size(), p.second);
+                values[p.node()] = RandomVariable(model_->size(), v);
             }
         }
         DLOG("set " << baseModelParams_.size() << " model parameters");
@@ -244,11 +365,11 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     }
                 }
             } else {
-                if (mcParams_.sequenceType == QuantExt::SequenceType::MersenneTwister &&
-                    mcParams_.externalDeviceCompatibilityMode) {
+                if (params_.sequenceType == QuantExt::SequenceType::MersenneTwister &&
+                    params_.externalDeviceCompatibilityMode) {
                     // use same order for rng generation as it is (usually) done on external devices
                     // this is mainly done to be able to reconcile results produced on external devices
-                    auto rng = std::make_unique<MersenneTwisterUniformRng>(mcParams_.seed);
+                    auto rng = std::make_unique<MersenneTwisterUniformRng>(params_.seed);
                     QuantLib::InverseCumulativeNormal icn;
                     for (Size j = 0; j < rv.front().size(); ++j) {
                         for (Size i = 0; i < rv.size(); ++i) {
@@ -259,9 +380,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     }
                 } else {
                     // use the 'usual' path generation that we also use elsewhere
-                    auto gen = makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(),
-                                                             mcParams_.seed, mcParams_.sobolOrdering,
-                                                             mcParams_.sobolDirectionIntegers);
+                    auto gen =
+                        makeMultiPathVariateGenerator(params_.sequenceType, rv.size(), rv.front().size(), params_.seed,
+                                                      params_.sobolOrdering, params_.sobolDirectionIntegers);
                     for (Size path = 0; path < model_->size(); ++path) {
                         auto p = gen->next();
                         for (Size j = 0; j < rv.front().size(); ++j) {
@@ -281,8 +402,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         keepNodes[cg_var(*g, npv_ + "_0")] = true;
 
-        for (auto const& p : baseModelParams_)
-            keepNodes[p.first] = true;
+        for (auto const& [n, _] : baseModelParams_)
+            keepNodes[n] = true;
 
         if (generateAdditionalResults_) {
             for (auto const& r : additionalResults_) {
@@ -293,7 +414,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 auto v = workingContext_->arrays.find(r.second);
                 if (v != workingContext_->arrays.end()) {
                     for (Size i = 0; i < v->second.size(); ++i) {
-                        keepNodes[cg_var(*g, r.second + "_" + std::to_string(i))] = true;
+                        if (v->second[i].which() == ValueTypeWhich::Number) {
+                            keepNodes[cg_var(*g, r.second + "_" + std::to_string(i))] = true;
+                        }
                     }
                 }
             }
@@ -416,12 +539,14 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
                 Real fx = 1.0;
-                Real discount = 1.0;
+                Real discount = 0.0;
+                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
                 if (paylog->dates().at(i) > model_->referenceDate()) {
                     fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                    cashFlowResults[i].amount /= fx * discount;
                 }
-                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
+                cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);
@@ -462,19 +587,22 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         // useCachedSensis => calculate npv from stored base npv, sensis, model params
 
-        auto modelParams = model_->modelParameters();
+        std::vector<std::pair<std::size_t, double>> modelParams;
+        for (auto const& p : model_->modelParameters()) {
+            modelParams.push_back(std::make_pair(p.node(), p.eval()));
+        }
 
         double npv = baseNpv_;
         DLOG("computing npv using baseNpv " << baseNpv_ << " and sensis.");
 
         for (Size i = 0; i < baseModelParams_.size(); ++i) {
-            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first, "internal error: modelParams["
-                                                                              << i << "] node " << modelParams[i].first
-                                                                              << " does not match baseModelParams node "
-                                                                              << baseModelParams_[i].first);
+            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first,
+                       "internal error: modelParams[" << i << "] node " << modelParams[i].first
+                                                      << ") does not match baseModelParams node "
+                                                      << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            DLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
+            TLOG("node " << modelParams[i].first << ": " << modelParams[i].second << " (current) - "
                          << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 

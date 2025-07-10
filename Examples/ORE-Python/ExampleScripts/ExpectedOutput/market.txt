@@ -1,0 +1,15 @@
+RUN market.py
+Run ORE using ../Input/ore_market.xml
+Get analytic MARKETDATA
+Get market object from analytic MARKETDATA
+Market asof date February 5th, 2016
+Get term structures for ccy  EUR and index EUR-EURIBOR-6M
+   discount curve is of type <class 'ORE.YieldTermStructureHandle'>
+   ibor index is of type <class 'ORE.IborIndex'>
+   forward curve is of type <class 'ORE.YieldTermStructureHandle'>
+Evaluate term structures
+   10y discount factor (discount curve) is 1.0001383845613816
+   10y discout factor (forward curve) is 0.9999795014847501
+   10y zero rate (discount curve) is -0.168356 % Actual/365 (Fixed) continuous compounding
+   10y zero rate (forward curve) is 0.024940 % Actual/365 (Fixed) continuous compounding
+Done

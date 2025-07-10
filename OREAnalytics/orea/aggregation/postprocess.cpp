@@ -52,26 +52,31 @@ using namespace boost::accumulators;
 namespace ore {
 namespace analytics {
 
-PostProcess::PostProcess(
-    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
-    const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
-    const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration, const QuantLib::ext::shared_ptr<NPVCube>& cube,
-    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, const map<string, bool>& analytics,
-    const string& baseCurrency, const string& allocMethod, Real marginalAllocationLimit, Real quantile,
-    const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
-    const string& fvaLendingCurve, const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
-    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize, Real kvaCapitalDiscountRate, Real kvaAlpha,
-    Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight,
-    Real kvaTheirCvaRiskWeight, const QuantLib::ext::shared_ptr<NPVCube>& cptyCube, const string& flipViewBorrowingCurvePostfix,
-    const string& flipViewLendingCurvePostfix,
-    const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
-    const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
-    const Matrix& creditStateCorrelationMatrix, bool withMporStickyDate, MporCashFlowMode mporCashFlowMode)
-: portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
-      market_(market), configuration_(configuration),
-      cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
-      quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
+PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                         const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+                         const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
+                         const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration,
+                         const QuantLib::ext::shared_ptr<NPVCube>& cube,
+                         const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+                         const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
+                         Real marginalAllocationLimit, Real quantile, const string& calculationType,
+                         const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
+                         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+                         const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+                         bool fullInitialCollateralisation, vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
+                         Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle,
+                         Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight,
+                         const QuantLib::ext::shared_ptr<NPVCube>& cptyCube,
+                         const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix,
+                         const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
+                         const std::vector<Real>& creditMigrationDistributionGrid,
+                         const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
+                         bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
+                         const bool firstMporCollateralAdjustment, bool continueOnError, bool useDoublePrecisionCubes)
+    : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
+      market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
+      analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
+      calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
       cvaSpreadSensiGrid_(cvaSensiGrid), cvaSpreadSensiShiftSize_(cvaSensiShiftSize),
@@ -81,7 +86,11 @@ PostProcess::PostProcess(
       creditSimulationParameters_(creditSimulationParameters),
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
-      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
+      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment), continueOnError_(continueOnError),
+      useDoublePrecisionCubes_(useDoublePrecisionCubes) {
+
+    LOG("PostProcess: started.");
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
 
@@ -103,51 +112,10 @@ PostProcess::PostProcess(
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
-    // check portfolio and cube have the same trade ids, in the same order
-    QL_REQUIRE(portfolio->size() == cube_->idsAndIndexes().size(),
-               "PostProcess::PostProcess(): portfolio size ("
-                   << portfolio->size() << ") does not match cube trade size (" << cube_->idsAndIndexes().size() << ")");
-    
-    auto portfolioIt = portfolio->trades().begin();
-    auto cubeIdIt = cube_->idsAndIndexes().begin();
-    for (size_t i = 0; i < portfolio->size(); i++, portfolioIt++, cubeIdIt++) {
-        const std::string& portfolioTradeId = portfolioIt->first;
-        const std::string& cubeTradeId = cubeIdIt->first;
-        QL_REQUIRE(portfolioTradeId == cubeTradeId, "PostProcess::PostProcess(): portfolio trade #"
-                                                        << i << " (id=" << portfolioTradeId
-                                                        << ") does not match cube trade id (" << cubeTradeId);
-    }
-
-    if (analytics_["dynamicCredit"]) {
-        QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
-        // check portfolio and cptyCube have the same counterparties, in the same order
-        auto cptyIds = portfolio->counterparties();
-        cptyIds.insert(dvaName_);
-        QL_REQUIRE(cptyIds.size() == cptyCube_->idsAndIndexes().size(),
-                   "PostProcess::PostProcess(): portfolio counterparty size ("
-                       << cptyIds.size() << ") does not match cpty cube trade size ("
-                       << cptyCube_->idsAndIndexes().size() << ")");
-
-        auto cptyIt = cptyIds.begin();
-        cubeIdIt = cptyCube_->idsAndIndexes().begin();
-        for (size_t i = 0; i < cptyIds.size(); ++i, ++cptyIt, ++cubeIdIt) {
-            const std::string& counterpartyId = *cptyIt;
-            const std::string& cubeTradeId = cubeIdIt->first;
-            QL_REQUIRE(counterpartyId == cubeTradeId, "PostProcess::PostProcess(): portfolio counterparty #"
-                                                          << i << " (id=" << counterpartyId
-                                                          << ") does not match cube name id (" << cubeTradeId);
-        }
-    }
+    QL_REQUIRE(!analytics_["dynamicCredit"] || cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
 
     ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
 
-    /***********************************************
-     * Step 0: Netting as of today
-     * a) Compute the netting set NPV as of today
-     * b) Find the final maturity of the netting set
-     */
-    LOG("Compute netting set NPVs as of today and netting set maturity");
-    // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market->asofDate();
     LOG("AsOfDate = " << QuantLib::io::iso_date(today));
 
@@ -171,12 +139,10 @@ PostProcess::PostProcess(
      *    and scenario. This prepares the netting set exposure
      *    calculation below
      */
-    exposureCalculator_ =
-        QuantLib::ext::make_shared<ExposureCalculator>(
-            portfolio, cube_, cubeInterpretation_,
-            market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
-            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"]
-        );
+    exposureCalculator_ = QuantLib::ext::make_shared<ExposureCalculator>(
+        portfolio, cube_, cubeInterpretation_, scenarioData_, market_, analytics_["exerciseNextBreak"], baseCurrency_,
+        configuration_, quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
+        analytics_["exposureProfilesUseCloseOutValues"], continueOnError_, useDoublePrecisionCubes_);
     exposureCalculator_->build();
 
     /******************************************************************
@@ -200,7 +166,8 @@ PostProcess::PostProcess(
         dimCalculator_, fullInitialCollateralisation_,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_);
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_,
+        analytics_["exposureProfilesUseCloseOutValues"], useDoublePrecisionCubes_);
     nettedExposureCalculator_->build();
 
     /********************************************************
@@ -230,7 +197,8 @@ PostProcess::PostProcess(
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], 
             flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     }
-    cvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        cvaCalculator_->build();
 
     /***************************
      * Simple allocation methods
@@ -291,12 +259,13 @@ PostProcess::PostProcess(
             NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
             flipViewLendingCurvePostfix);
     }
-    allocatedCvaCalculator_->build();
+    if (analytics_["cva"] || analytics_["dva"] || analytics_["fva"] || analytics_["mva"])
+        allocatedCvaCalculator_->build();
 
     /********************************************************
      * Cache average EPE and ENE
      */
-    for (const auto& [tradeId,_]: tradeIds()) {
+    for (const auto& tradeId: portfolio_->ids()) {
         tradeEPE_[tradeId] = exposureCalculator_->epe(tradeId);
         tradeENE_[tradeId] = exposureCalculator_->ene(tradeId);
         allocatedTradeEPE_[tradeId] = exposureCalculator_->allocatedEpe(tradeId);
@@ -621,6 +590,14 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
     return exposureCalculator_->pfe(tradeId);
 }
 
+const vector<Real>& PostProcess::tradeEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->epe_b_timeWeighted(tradeId);
+}
+
+const vector<Real>& PostProcess::tradeEEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->eepe_b_timeWeighted(tradeId);
+}
+
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
     QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
                "Netting set " << nettingSetId << " not found in exposure map");
@@ -665,6 +642,14 @@ const Real& PostProcess::netEEPE_B(const string& nettingSetId) {
 
 const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
     return nettedExposureCalculator_->pfe(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEPE_B_timeWeighted(const string& nettingSetId){
+    return nettedExposureCalculator_->epe_b_timeWeighted(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEEPE_B_timeWeighted(const string& nettingSetId) {
+    return nettedExposureCalculator_->eepe_b_timeWeighted(nettingSetId);
 }
 
 const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) {
@@ -806,6 +791,15 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     return nettedExposureCalculator_->collateralFloor(nettingSetId);
 }
 
+void PostProcess::exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize,
+                                        const Real coveredStdDevs) {
+    return dimCalculator_->exportDimDistribution(dimDistributionReport, gridSize, coveredStdDevs);
+}
+
+void PostProcess::exportDimCube(ore::data::Report& dimCubeReport) {
+    return dimCalculator_->exportDimCube(dimCubeReport);
+}
+
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
     dimCalculator_->exportDimEvolution(dimEvolutionReport);
 }
@@ -818,6 +812,11 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
 
     if (regCalc)
         regCalc->exportDimRegression(nettingSet, timeSteps, dimRegReports);
+}
+
+const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+PostProcess::timeAveragedNettedExposure() const {
+    return nettedExposureCalculator_->timeAveragedNettedExposure();
 }
 
 } // namespace analytics

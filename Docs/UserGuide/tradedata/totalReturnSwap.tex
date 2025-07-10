@@ -46,11 +46,11 @@ or equities, CFDs on an underlying basket of EquityPositions, proprietary indice
 indices.
 
 \begin{itemize}
-\item The {\tt UnderlyingData} block specifies on or more underlyings, which can be a trades of one of the following
-  types. See the trade type specific sections for details on the setup of these underlyings.
-  \begin{itemize}
-  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
-  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
+\item The {\tt UnderlyingData} block specifies one or more underlyings, which can be a trades of one of the following
+  types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
+    \begin{itemize}
+  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
+  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. To represent a TRS on a Bond Futures position a ForwardBond underlying is used.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
@@ -59,29 +59,32 @@ indices.
     out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
     security id field.
   \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
-    node. Notice that the equities given in the basket must be available as quoted market data.
+    node. Notice that the equities given in the basket must be available as quoted market data. To represent a TRS on an Equity Futures position, one or multiple EquityPosition underlyings are used, where the equity positions cover the underlying equity of the futures position.
+
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
-  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
-  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
-    exactly two subnodes
-    \begin{itemize}
-      \item Id: A unique identifier for the derivative position. Historical prices must be given under the fixing name
-        ``GENERIC-$<Id>$''.
+  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node for multiple underlying Bonds.
+  \item CashPosition: See \ref{ss:cash_position}, the trade data is given in a CashPositionData sub
+  node.
+  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The Derivative subnode has exactly two subnodes:
+      \begin{itemize}
+      \item Id: A string with a unique identifier for the derivative position, typically starting with \emph{DERIV:}. 
+      %Historical prices must be given under the fixing name ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
     \end{itemize}
-  \item PortfolioIndexTradeData: A collection of {\tt Trade} subnodes that must be part of the referencedata.
+  \item PortfolioIndexTradeData: This is a Portfolio Swap that references an underlying Basket via the \lstinline!BasketName! identifier. The underlying basket can have an arbitrary number underlying derivatives of any supported TradeType. The PortfolioIndexTradeData subnode has one subnode:
     \begin{itemize}
-      \item BasketName: A unique identifier for the portfolioIndex. Historical prices must be given under the fixing name
-        ``GENERIC-$<BasketName>$''.
+      \item BasketName: A string with a unique identifier for the portfolioIndex, matching the underlying reference basket. 
+      %Historical prices must be given under the fixing name ``GENERIC-$<BasketName>$''.
+      \item IndexQuantity: Number of shares of the index.
     \end{itemize}
-
   \end{itemize}
 
-  Each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
+  Except for PortfolioIndexTradeData, each trade is specified by a \verb+TradeType+ and a trade type dependent data block as listed above. Listing
   \ref{lst:trsdata} shows an example for a convertible bond underlying. Listing \ref{lst:trsdata2} shows an example for
   an equity basket underlying. Listing \ref{lst:trsdata3} shows an example for a bond basket underlying. Listing
-  \ref{lst:trsdata4} shows an example for a derivative underlying (a swaption in this case).
+  \ref{lst:trsdata4} shows an example for a Derivative underlying (with 3 underlying trades in this case). Listing
+  \ref{lst:trsdata_portfolio} shows an example for a PortfolioIndexTradeData underlying.
 
 \item The {\tt ReturnData} block specifies the details of the return leg.
   \begin{itemize}
@@ -407,20 +410,52 @@ indices.
     <TotalReturnSwapData>
       <UnderlyingData>
         <Derivative>
-          <Id>DERIV:XR3JF32BFD</Id>
+          <Id>DERIV:TEST1</Id>
           <Trade>
             <TradeType>Swaption</TradeType>
               <SwaptionData> ... </SwaptionData>
           </Trade>
         </Derivative>
+        <Derivative>
+          <Id>DERIV:TEST2</Id>
+          <Trade>
+            <TradeType>Swap</TradeType>
+              <SwapData> ... </SwapData>
+          </Trade>
+        </Derivative> 
+         <Derivative>
+          <Id>DERIV:TEST3</Id>
+          <Trade>
+            <TradeType>EquityPosition</TradeType>
+              <EquityPositionData> ... </EquityPositionData>
+          </Trade>
+        </Derivative>               
       </UnderlyingData>
       <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap on a derivative underlying}
+\caption{Generic Total Return Swap on a Derivative underlying}
 \label{lst:trsdata4}
 \end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <PortfolioIndexTradeData>
+          <BasketName>MSFDSJP</BasketName>
+        </PortfolioIndexTradeData>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a PortfolioIndexTradeData underlying}
+\label{lst:trsdata_portfolio}
+\end{listing}
+
 
 \begin{listing}[H]
 %\hrule\medskip

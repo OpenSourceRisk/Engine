@@ -230,6 +230,8 @@ public:
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<Quote> recoveryRate(const string&,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<Quote> conversionFactor(const string&,
+                                           const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name (Index) CDS Option volatilities
@@ -267,7 +269,7 @@ public:
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! CPI Inflation Cap Floor Volatility Surfaces
-    virtual Handle<CPIVolatilitySurface>
+    virtual Handle<QuantLib::CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const = 0;
 

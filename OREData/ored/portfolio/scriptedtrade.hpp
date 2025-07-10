@@ -164,6 +164,11 @@ public:
     const std::vector<std::string>& conditionalExpectationModelStates() const {
         return conditionalExpectationModelStates_;
     }
+    const std::vector<std::string>& amcCgComponents() const { return amcCgComponents_; }
+    const std::string& amcCgTargetValue() const { return amcCgTargetValue_; }
+    const std::string& amcCgTargetDerivative() const { return amcCgTargetDerivative_; }
+    const std::map<std::string, std::string>& engineParameterOverwrite() const { return engineParameterOverwrite_; }
+    const std::map<std::string, std::string>& modelParameterOverwrite() const { return modelParameterOverwrite_; }
 
 private:
     void formatCode();
@@ -175,6 +180,11 @@ private:
     std::vector<CalibrationData> calibrationSpec_;
     std::vector<std::string> stickyCloseOutStates_;
     std::vector<std::string> conditionalExpectationModelStates_;
+    std::vector<std::string> amcCgComponents_;
+    std::string amcCgTargetValue_;
+    std::string amcCgTargetDerivative_;
+    std::map<std::string, std::string> engineParameterOverwrite_;
+    std::map<std::string, std::string> modelParameterOverwrite_;
 };
 
 class ScriptLibraryData : public XMLSerializable {
@@ -233,6 +243,7 @@ public:
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+    bool isExpired(const Date& d) const override;
 
     // build and incorporate provided premium data
     void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
@@ -274,8 +285,10 @@ protected:
     std::string scriptName_;
 
     // set in build()
+    bool isPfAnalyserRun_ = false;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
+    bool includePastCashflows_ = false;
 };
 
 class ScriptLibraryStorage : public QuantLib::Singleton<ScriptLibraryStorage, std::integral_constant<bool, true>> {

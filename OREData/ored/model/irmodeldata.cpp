@@ -27,9 +27,9 @@ namespace data {
 
 std::ostream& operator<<(std::ostream& oss, const ParamType& type) {
     if (type == ParamType::Constant)
-        oss << "CONSTANT";
+        oss << "Constant";
     else if (type == ParamType::Piecewise)
-        oss << "PIECEWISE";
+        oss << "Piecewise";
     else
         QL_FAIL("Parameter type not covered by <<");
     return oss;
@@ -57,11 +57,11 @@ CalibrationType parseCalibrationType(const string& s) {
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationType& type) {
     if (type == CalibrationType::Bootstrap)
-        oss << "BOOTSTRAP";
+        oss << "Bootstrap";
     else if (type == CalibrationType::BestFit)
-        oss << "BESTFIT";
+        oss << "BestFit";
     else if (type == CalibrationType::None)
-        oss << "NONE";
+        oss << "None";
     else
         QL_FAIL("Calibration type not covered");
     return oss;
@@ -72,6 +72,8 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::CoterminalATM;
     else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
         return CalibrationStrategy::CoterminalDealStrike;
+    else if (boost::algorithm::to_upper_copy(s) == "DELTAGAMMAADJUSTED")
+        return CalibrationStrategy::DeltaGammaAdjusted;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
         return CalibrationStrategy::UnderlyingATM;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
@@ -79,20 +81,22 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationStrategy::None;
     else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
+        QL_FAIL("calibration strategy '" << s << "' not recognized.");
 }
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
     if (type == CalibrationStrategy::CoterminalATM)
-        oss << "COTERMINALATM";
+        oss << "CoterminalAtm";
     else if (type == CalibrationStrategy::CoterminalDealStrike)
-        oss << "COTERMINALDEALSTRIKE";
+        oss << "CoterminalDealStrike";
+    else if (type == CalibrationStrategy::DeltaGammaAdjusted)
+        oss << "DeltaGammaAdjusted";
     else if (type == CalibrationStrategy::UnderlyingATM)
-        oss << "UNDERLYINGATM";
+        oss << "UnderlyingAtm";
     else if (type == CalibrationStrategy::UnderlyingDealStrike)
-        oss << "UNDERLYINGDEALSTRIKE";
+        oss << "UnderlyingDealStrike";
     else if (type == CalibrationStrategy::None)
-        oss << "NONE";
+        oss << "None";
     else
         QL_FAIL("Calibration strategy not covered");
     return oss;

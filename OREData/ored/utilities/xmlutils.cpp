@@ -26,7 +26,6 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/erase.hpp>
 
@@ -129,6 +128,13 @@ string XMLDocument::toString() const {
     return oss.str();
 }
 
+string XMLDocument::toStringUnformatted() const {
+    std::stringstream stream;
+    std::ostream_iterator<char> iter(stream);
+    rapidxml::print(iter, *_doc, rapidxml::print_no_indenting);
+    return stream.str();
+}
+
 XMLNode* XMLDocument::allocNode(const string& nodeName) {
     XMLNode* n = _doc->allocate_node(node_element, allocString(nodeName));
     QL_REQUIRE(n, "Failed to allocate XMLNode for " << nodeName);
@@ -170,6 +176,13 @@ string XMLSerializable::toXMLString() const {
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
     return doc.toString();
+}
+
+string XMLSerializable::toXMLStringUnformatted() const {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toStringUnformatted();
 }
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
@@ -406,6 +419,7 @@ XMLNode* XMLUtils::locateNode(XMLNode* n, const string& name) {
 void XMLUtils::appendNode(XMLNode* parent, XMLNode* child) {
     QL_REQUIRE(parent, "XMLUtils::appendNode() parent is NULL");
     QL_REQUIRE(child, "XMLUtils::appendNode() child is NULL");
+    QL_REQUIRE(!child->parent(), "XMLUtils::appendNode() child has a parent already.");
     parent->append_node(child);
 }
 
@@ -635,8 +649,6 @@ string XMLUtils::convertToString(const Real value) {
     return result;
 }
 
-template <class T> string XMLUtils::convertToString(const T& value) { return boost::lexical_cast<std::string>(value); }
-
 /* Instantiate some template functions above for types T we want to support. Add instantiations for more types here,
    if required. This has two advantages over putting the templated version of the functions in the header file:
    - faster compile times
@@ -709,7 +721,6 @@ template vector<bool> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent,
                                                                 const string& name, const string& attrName,
                                                                 vector<string>& attrs,
                                                                 std::function<bool(string)> parser, bool mandatory);
-
 
 string XMLUtils::toString(XMLNode* node) {
     string xml_as_string;

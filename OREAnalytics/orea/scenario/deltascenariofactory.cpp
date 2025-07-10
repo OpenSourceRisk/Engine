@@ -35,14 +35,15 @@ DeltaScenarioFactory::DeltaScenarioFactory(const QuantLib::ext::shared_ptr<ore::
 }
 
 const QuantLib::ext::shared_ptr<ore::analytics::Scenario>
-DeltaScenarioFactory::buildScenario(QuantLib::Date asof, bool isAbsolute, const std::string& label,
+DeltaScenarioFactory::buildScenario(QuantLib::Date asof, bool isAbsolute, bool isPar, const std::string& label,
                                     QuantLib::Real numeraire) const {
     QL_REQUIRE(asof == baseScenario_->asof(),
                "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> incremental =
-        scenarioFactory_->buildScenario(asof, isAbsolute, label, numeraire);
+        scenarioFactory_->buildScenario(asof, isAbsolute, isPar, label, numeraire);
     QL_REQUIRE((label == incremental->label()) || (label == ""), "DeltaScenarioFactory has not updated scenario label");
     return QuantLib::ext::make_shared<DeltaScenario>(baseScenario_, incremental);
 }
+
 } // namespace sensitivity
 } // namespace ore

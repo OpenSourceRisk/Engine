@@ -31,7 +31,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 namespace ore {
 namespace analytics {
@@ -237,6 +237,8 @@ public:
         TradeBlock<T>& tb = blocks_[i];
         return tb.set(value, j, k, d);
     }
+
+    bool usesDoublePrecision() const override;
 
 protected:
     void check(Size i, Size j, Size k, Size d) const {

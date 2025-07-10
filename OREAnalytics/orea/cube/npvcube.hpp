@@ -108,14 +108,16 @@ public:
         set(value, index(id), index(date), sample, depth);
     }
 
-    /*! remove all values for a given id, i.e. change the state as if setT0() and set() has never been called for the id
-        the default implementation has generelly to be overriden in derived classes depending on how values are stored */
-    virtual void remove(Size id);
+    /*! Remove t0 values for a given id */
+    virtual void removeT0(Size id);
 
-    /*! simliar as above, but remove all values for a given id and scenario and keep T0 values */
-    virtual void remove(Size id, Size sample);
+    /*! Set non-t0 value to either 0 or the t0 value for a given id and sample. If sample is null, all samples are removed */
+    virtual void remove(Size id, Size sample, bool setToT0Value);
 
     Size getTradeIndex(const std::string& id) const { return index(id); }
+    Size getDateIndex(const QuantLib::Date& date) const { return index(date); }
+
+    virtual bool usesDoublePrecision() const = 0;
 
 protected:
     virtual Size index(const std::string& id) const {
@@ -134,21 +136,23 @@ protected:
 
 // impl
 
-inline void NPVCube::remove(Size id) {
-    for (Size date = 0; date < this->numDates(); ++date) {
-        for (Size depth = 0; depth < this->depth(); ++depth) {
-            setT0(0.0, id, depth);
-            for (Size sample = 0; sample < this->samples(); ++sample) {
-                set(0.0, id, date, sample, depth);
-            }
-        }
+inline void NPVCube::removeT0(Size id) {
+    for (Size depth = 0; depth < this->depth(); ++depth) {
+        setT0(0.0, id, depth);
     }
 }
 
-inline void NPVCube::remove(Size id, Size sample) {
+inline void NPVCube::remove(Size id, Size sample, bool setToT0Value) {
     for (Size date = 0; date < this->numDates(); ++date) {
         for (Size depth = 0; depth < this->depth(); ++depth) {
-            set(0.0, id, date, sample, depth);
+            Real value = setToT0Value ? getT0(id, depth) : 0.0;
+            if (sample != QuantLib::Null<Size>()) {
+                set(value, id, date, sample, depth);
+            } else {
+                for (Size sample = 0; sample < this->samples(); ++sample) {
+                    set(value, id, date, sample, depth);
+                }
+            }
         }
     }
 }

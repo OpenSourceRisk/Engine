@@ -102,16 +102,17 @@ void IndependentLogger::clear() { messages_.clear(); }
 
 ProgressLogger::ProgressLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
 
     // This logger should only receive/process logs that were emitted by a ProgressMessage
     sink->set_filter(messageType == ProgressMessage::name);
 
     // Use formatter to intercept and store the message.
     auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        boost::unique_lock<boost::shared_mutex> lock(this->mutex());
         this->messages().push_back(rec[lexpr::smessage]->c_str());
 
         // If a file sink exists, then send the log record to it.
@@ -165,11 +166,11 @@ void ProgressLogger::setCoutLog(const bool flag) {
     if (flag) {
         if (!coutSink_) {
             // Create backend and initialize it with a stream
-            QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
-            backend->add_stream(QuantLib::ext::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+            boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+            backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 
             // Wrap it into the frontend and register in the core
-            QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+            boost::shared_ptr<text_sink> sink(new text_sink(backend));
             sink->set_filter(messageType == ProgressMessage::name);
             logging::core::get()->add_sink(sink);
 
@@ -184,14 +185,15 @@ void ProgressLogger::setCoutLog(const bool flag) {
 
 StructuredLogger::StructuredLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
     sink->set_filter(messageType == StructuredMessage::name);
 
     // Use formatter to intercept and store the message.
     auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        boost::unique_lock<boost::shared_mutex> lock(this->mutex());
         const string& msg = rec[lexpr::smessage]->c_str();
 
         // Emit log record if it has not been logged before
@@ -449,7 +451,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 void Log::log(unsigned m) {
     string msg = ls_.str();
     map<string, QuantLib::ext::shared_ptr<Logger>>::iterator it;
-    if (sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
+    if (m >= ORE_DEBUG || sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
         for (auto& l : loggers_) {
             l.second->log(m, msg);
         }
@@ -491,6 +493,7 @@ LoggerStream::~LoggerStream() {
 void JSONMessage::log() const {
     if (!ore::data::Log::instance().checkExcludeFilters(msg()))
         emitLog();
+    logged_ = true;
 }
 
 string JSONMessage::jsonify(const boost::any& obj) {
@@ -619,6 +622,11 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
     }
 }
 
+StructuredMessage::~StructuredMessage() {
+    if (!logged_)
+        log();
+}
+
 void EventMessage::emitLog() const {
     lsrc::severity_logger_mt<oreSeverity> lg;
     lg.add_attribute(messageType.get_name(), lattr::constant<string>(name));
@@ -672,6 +680,8 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& grou
         out << "Logging";
     else if (group == StructuredMessage::Group::ReferenceData)
         out << "Reference Data";
+    else if (group == StructuredMessage::Group::Input)
+        out << "Input";
     else if (group == StructuredMessage::Group::Unknown)
         out << "UnknownType";
     else

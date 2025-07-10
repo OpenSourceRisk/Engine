@@ -22,29 +22,16 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/engine/cashflowreportgenerator.hpp>
 
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
-#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <qle/cashflows/indexedcoupon.hpp>
-#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
-#include <qle/instruments/cashflowresults.hpp>
-#include <qle/cashflows/durationadjustedcmscoupon.hpp>
+#include <qle/math/distributioncount.hpp>
 
-#include <ql/cashflows/averagebmacoupon.hpp>
-#include <ql/cashflows/indexedcashflow.hpp>
-#include <ql/cashflows/inflationcoupon.hpp>
-#include <ql/errors.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
@@ -151,9 +138,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                  QuantLib::ext::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
 
-    Date asof = Settings::instance().evaluationDate();
+    LOG("Writing cashflow report");
 
-    LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("CashflowNo", Size())
@@ -175,473 +161,49 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FXRate(Local-Base)", double(), 10)
         .addColumn("PresentValue(Base)", double(), 10)
         .addColumn("BaseCurrency", string())
-        .addColumn("FloorStrike", double(), 6)
-        .addColumn("CapStrike", double(), 6)
-        .addColumn("FloorVolatility", double(), 6)
-        .addColumn("CapVolatility", double(), 6)
-        .addColumn("EffectiveFloorVolatility", double(), 6)
-        .addColumn("EffectiveCapVolatility", double(), 6);
+        .addColumn("FloorStrike", double(), 10)
+        .addColumn("CapStrike", double(), 10)
+        .addColumn("FloorVolatility", double(), 10)
+        .addColumn("CapVolatility", double(), 10)
+        .addColumn("EffectiveFloorVolatility", double(), 10)
+        .addColumn("EffectiveCapVolatility", double(), 10);
 
-    std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades = portfolio->trades();
-
-    for (auto [tradeId, trade]: trades) {
+    for (auto [tradeId, trade]: portfolio->trades()) {
 
         try {
 
-            // if trade is marked as not having cashflows, we skip it
+            auto data = generateCashflowReportData(trade, baseCurrency, market, configuration, includePastCashflows);
 
-            if (!trade->hasCashflows()) {
-                WLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-                continue;
-            }
-
-            // if trade provides cashflows as additional results, we use that information instead of the legs
-
-            auto addResults = trade->instrument()->additionalResults();
-
-            auto cashFlowResults = addResults.find("cashFlowResults");
-
-            // ensures all cashFlowResults from composite trades are being accounted for
-            auto lower = addResults.lower_bound("cashFlowResults");
-            auto upper = addResults.lower_bound("cashFlowResults_a");
-
-            std::map<Size, Size> cashflowNumber;
-
-            const Real multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
-
-            if (lower != addResults.end()) {
-
-                for (auto cashFlowResults = lower; cashFlowResults != upper; ++cashFlowResults) {              
-
-                    // additional result based cashflow reporting
-
-                    QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
-                               "internal error: cashflowResults type does not match CashFlowResults: '"
-                                   << cashFlowResults->second.type().name() << "'");
-                    std::vector<CashFlowResults> cfResults =
-                        boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
-                    //std::map<Size, Size> cashflowNumber;
-                    for (auto const& cf : cfResults) {
-                        string ccy = "";
-                        if (!cf.currency.empty()) {
-                            ccy = cf.currency;
-                        } else if (trade->legCurrencies().size() > cf.legNumber) {
-                            ccy = trade->legCurrencies()[cf.legNumber];
-                        } else {
-                            ccy = trade->npvCurrency();
-                        }
-
-                        Real effectiveAmount = Null<Real>();
-                        Real discountFactor = Null<Real>();
-                        Real presentValue = Null<Real>();
-                        Real presentValueBase = Null<Real>();
-                        Real fxRateLocalBase = Null<Real>();
-                        Real floorStrike = Null<Real>();
-                        Real capStrike = Null<Real>();
-                        Real floorVolatility = Null<Real>();
-                        Real capVolatility = Null<Real>();
-                        Real effectiveFloorVolatility = Null<Real>();
-                        Real effectiveCapVolatility = Null<Real>();
-
-                        if (cf.amount != Null<Real>())
-                            effectiveAmount = cf.amount * multiplier;
-                        if (cf.discountFactor != Null<Real>())
-                            discountFactor = cf.discountFactor;
-                        else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
-                            discountFactor = cf.payDate < asof
-                                                 ? 0.0
-                                                 : market->discountCurve(cf.currency, configuration)->discount(cf.payDate);
-                        }
-                        if (cf.presentValue != Null<Real>()) {
-                            presentValue = cf.presentValue * multiplier;
-                        } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
-                            presentValue = effectiveAmount * discountFactor;
-                        }
-                        if (cf.fxRateLocalBase != Null<Real>()) {
-                            fxRateLocalBase = cf.fxRateLocalBase;
-                        } else if (market) {
-                            try {
-                                fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
-                            } catch (...) {
-                            }
-                        }
-                        if (cf.presentValueBase != Null<Real>()) {
-                            presentValueBase = cf.presentValueBase;
-                        } else if (presentValue != Null<Real>() && fxRateLocalBase != Null<Real>()) {
-                            presentValueBase = presentValue * fxRateLocalBase;
-                        }
-                        if (cf.floorStrike != Null<Real>())
-                            floorStrike = cf.floorStrike;
-                        if (cf.capStrike != Null<Real>())
-                            capStrike = cf.capStrike;
-                        if (cf.floorVolatility != Null<Real>())
-                            floorVolatility = cf.floorVolatility;
-                        if (cf.capVolatility != Null<Real>())
-                            capVolatility = cf.capVolatility;
-                        if (cf.effectiveFloorVolatility != Null<Real>())
-                            floorVolatility = cf.effectiveFloorVolatility;
-                        if (cf.effectiveCapVolatility != Null<Real>())
-                            capVolatility = cf.effectiveCapVolatility;
-
-                    // to be consistent with the leg-based cf report we should do this:
-                    // if (!includePastCashflows && cf.payDate <= asof)
-                    //     continue;
-                    // however, this changes a lot of results, so we output all cfs for the time being
-
+            for(auto const& d: data) {
                     report.next()
                         .add(trade->id())
                         .add(trade->tradeType())
-                        .add(++cashflowNumber[cf.legNumber])
-                        .add(cf.legNumber)
-                        .add(cf.payDate)
-                        .add(cf.type)
-                        .add(effectiveAmount)
-                        .add(ccy)
-                        .add(cf.rate)
-                        .add(cf.accrualPeriod)
-                        .add(cf.accrualStartDate)
-                        .add(cf.accrualEndDate)
-                        .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
-                        .add(cf.fixingDate)
-                        .add(cf.fixingValue)
-                        .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
-                        .add(discountFactor)
-                        .add(presentValue)
-                        .add(fxRateLocalBase)
-                        .add(presentValueBase)
-                        .add(baseCurrency)
-                        .add(floorStrike)
-                        .add(capStrike)
-                        .add(floorVolatility)
-                        .add(capVolatility)
-                        .add(effectiveFloorVolatility)
-                        .add(effectiveCapVolatility);
-                    }
-                }
+                        .add(d.cashflowNo)
+                        .add(d.legNo)
+                        .add(d.payDate)
+                        .add(d.flowType)
+                        .add(d.amount)
+                        .add(d.currency)
+                        .add(d.coupon)
+                        .add(d.accrual)
+                        .add(d.accrualStartDate)
+                        .add(d.accrualEndDate)
+                        .add(d.accruedAmount)
+                        .add(d.fixingDate)
+                        .add(d.fixingValue)
+                        .add(d.notional)
+                        .add(d.discountFactor)
+                        .add(d.presentValue)
+                        .add(d.fxRateLocalBase)
+                        .add(d.presentValueBase)
+                        .add(d.baseCurrency)
+                        .add(d.floorStrike)
+                        .add(d.capStrike)
+                        .add(d.floorVolatility)
+                        .add(d.capVolatility)
+                        .add(d.effectiveFloorVolatility)
+                        .add(d.effectiveCapVolatility);
             }
-            if (trade->legs().size() >= 1 && cashFlowResults == addResults.end()) {
-
-                // leg based cashflow reporting
-                auto maxLegNoIter = std::max_element(cashflowNumber.begin(), cashflowNumber.end());
-                Size addResultsLegs = 0;
-                if (maxLegNoIter != cashflowNumber.end())
-                    addResultsLegs = maxLegNoIter->first + 1;
-
-                const vector<Leg>& legs = trade->legs();
-                for (size_t i = 0; i < legs.size(); i++) {
-                    const QuantLib::Leg& leg = legs[i];
-                    bool payer = trade->legPayers()[i];
-                    string ccy = trade->legCurrencies()[i];
-                    Handle<YieldTermStructure> discountCurve;
-                    if (market)
-                    discountCurve = market->discountCurve(ccy, configuration);
-                    for (size_t j = 0; j < leg.size(); j++) {
-                    QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-                    Date payDate = ptrFlow->date();
-                    if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
-                            Real amount = ptrFlow->amount();
-                            string flowType = "";
-                            if (payer)
-                                amount *= -1.0;
-                            std::string ccy = trade->legCurrencies()[i];
-
-                            QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                                QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            QuantLib::ext::shared_ptr<QuantExt::CommodityCashFlow> ptrCommCf =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
-
-                            Real coupon;
-                            Real accrual;
-                            Real notional;
-                            Date accrualStartDate, accrualEndDate;
-                            Real accruedAmount;
-
-                            if (ptrCoupon) {
-                                coupon = ptrCoupon->rate();
-                                accrual = ptrCoupon->accrualPeriod();
-                                notional = ptrCoupon->nominal();
-                                accrualStartDate = ptrCoupon->accrualStartDate();
-                                accrualEndDate = ptrCoupon->accrualEndDate();
-                                accruedAmount = ptrCoupon->accruedAmount(asof);
-                                if (payer)
-                                    accruedAmount *= -1.0;
-                                flowType = "Interest";
-                            } else if (ptrCommCf) {
-                                coupon = Null<Real>();
-                                accrual = Null<Real>();
-                                notional =
-                                    ptrCommCf->periodQuantity(); // this is measured in units, e.g. barrels for oil
-                                accrualStartDate = accrualEndDate = Null<Date>();
-                                accruedAmount = Null<Real>();
-                                flowType = "Notional (units)";
-                            } else {
-                                coupon = Null<Real>();
-                                accrual = Null<Real>();
-                                notional = Null<Real>();
-                                accrualStartDate = accrualEndDate = Null<Date>();
-                                accruedAmount = Null<Real>();
-                                flowType = "Notional";
-                            }
-
-                            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                                ptrFlow = unpackIndexedCoupon(cpn);
-                            }
-
-                            QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                                QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                            QuantLib::ext::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                                QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
-                            QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                                QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
-                            QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
-                            QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
-                                QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
-
-                            Date fixingDate;
-                            Real fixingValue = Null<Real>();
-                            if (ptrFloat) {
-                                fixingDate = ptrFloat->fixingDate();
-                                if (fixingDate > asof)
-                                    flowType = "InterestProjected";
-
-                                try {
-                                    fixingValue = ptrFloat->index()->fixing(fixingDate);
-                                } catch (...) {
-                                }
-
-                                if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
-                                    fixingValue = (c->rate() - c->spread()) / c->gearing();
-                                }
-
-                                if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
-                                        ptrFloat)) {
-                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                  c->underlying()->gearing();
-                                }
-
-                                if (auto sc =
-                                        QuantLib::ext::dynamic_pointer_cast<QuantLib::StrippedCappedFlooredCoupon>(
-                                            ptrFloat)) {
-                                    if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(
-                                            sc->underlying())) {
-                                        fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                      c->underlying()->gearing();
-                                    }
-                                }
-
-                                // for (capped-floored) BMA / ON / subperiod coupons the fixing value is the
-                                // compounded / averaged rate, not a single index fixing
-
-                                if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(
-                                        ptrFloat)) {
-                                    fixingValue = (on->rate() - on->spread()) / on->gearing();
-                                } else if (auto on =
-                                               QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(
-                                                   ptrFloat)) {
-                                    fixingValue = (on->rate() - on->effectiveSpread()) / on->gearing();
-                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(
-                                               ptrFloat)) {
-                                    fixingValue = (c->rate() - c->spread()) / c->gearing();
-                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
-                                               QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                  c->underlying()->gearing();
-                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
-                                               QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
-                                    fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) /
-                                                  c->underlying()->gearing();
-                                } else if (auto c = QuantLib::ext::dynamic_pointer_cast<
-                                               QuantExt::CappedFlooredAverageBMACoupon>(ptrFloat)) {
-                                    fixingValue = (c->underlying()->rate() - c->underlying()->spread()) /
-                                                  c->underlying()->gearing();
-                                } else if (auto sp = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
-                                               ptrFloat)) {
-                                    fixingValue = (sp->rate() - sp->spread()) / sp->gearing();
-                                }
-                            } else if (ptrInfl) {
-                                fixingDate = ptrInfl->fixingDate();
-                                fixingValue = ptrInfl->indexFixing();
-                                flowType = "Inflation";
-                            } else if (ptrIndCf) {
-                                fixingDate = ptrIndCf->fixingDate();
-                                fixingValue = ptrIndCf->indexFixing();
-                                flowType = "Index";
-                            } else if (ptrFxlCf) {
-                                fixingDate = ptrFxlCf->fxFixingDate();
-                                fixingValue = ptrFxlCf->fxRate();
-                            } else if (ptrEqCp) {
-                                fixingDate = ptrEqCp->fixingEndDate();
-                                fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
-                            } else if (ptrCommCf) {
-                                fixingDate = ptrCommCf->lastPricingDate();
-                                fixingValue = ptrCommCf->fixing();
-                            } else {
-                                fixingDate = Null<Date>();
-                                fixingValue = Null<Real>();
-                            }
-
-                            Real effectiveAmount = Null<Real>();
-                            Real discountFactor = Null<Real>();
-                            Real presentValue = Null<Real>();
-                            Real presentValueBase = Null<Real>();
-                            Real fxRateLocalBase = Null<Real>();
-                            Real floorStrike = Null<Real>();
-                            Real capStrike = Null<Real>();
-                            Real floorVolatility = Null<Real>();
-                            Real capVolatility = Null<Real>();
-                            Real effectiveFloorVolatility = Null<Real>();
-                            Real effectiveCapVolatility = Null<Real>();
-
-                            if (amount != Null<Real>())
-                                effectiveAmount = amount * multiplier;
-
-                            if (market) {
-                                discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
-                                if (effectiveAmount != Null<Real>())
-                                    presentValue = discountFactor * effectiveAmount;
-                                try {
-                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
-                                    presentValueBase = presentValue * fxRateLocalBase;
-                                } catch (...) {
-                                }
-
-                                // scan for known capped / floored coupons and extract cap / floor strike and fixing
-                                // date
-
-                                // unpack stripped cap/floor coupon
-                                QuantLib::ext::shared_ptr<CashFlow> c = ptrFlow;
-                                if (auto tmp =
-                                        QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
-                                    c = tmp->underlying();
-                                }
-                                Date volFixingDate;
-                                std::string qlIndexName; // index used to retrieve vol
-                                bool usesCapVol = false, usesSwaptionVol = false;
-                                Period swaptionTenor;
-                                if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    volFixingDate = tmp->fixingDate();
-                                    qlIndexName = tmp->index()->name();
-                                    if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
-                                        swaptionTenor = cms->swapIndex()->tenor();
-                                        qlIndexName = cms->swapIndex()->iborIndex()->name();
-                                        usesSwaptionVol = true;
-                                    }else if(auto cms = boost::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
-                                        swaptionTenor = cms->swapIndex()->tenor();
-                                        qlIndexName = cms->swapIndex()->iborIndex()->name();
-                                        usesSwaptionVol = true;
-                                    }else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
-                                        qlIndexName = ibor->index()->name();
-                                        usesCapVol = true;
-                                    }
-                                } else if (auto tmp =
-                                               QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(
-                                                   c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    volFixingDate = tmp->underlying()->fixingDates().front();
-                                    qlIndexName = tmp->index()->name();
-                                    usesCapVol = true;
-                                    if (floorStrike != Null<Real>())
-                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                                    if (capStrike != Null<Real>())
-                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                                } else if (auto tmp =
-                                               QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(
-                                                   c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    volFixingDate = tmp->underlying()->fixingDates().front();
-                                    qlIndexName = tmp->index()->name();
-                                    usesCapVol = true;
-                                    if (floorStrike != Null<Real>())
-                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                                    if (capStrike != Null<Real>())
-                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                                } else if (auto tmp =
-                                               QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    volFixingDate = tmp->underlying()->fixingDates().front();
-                                    qlIndexName = tmp->index()->name();
-                                    usesCapVol = true;
-                                    if (floorStrike != Null<Real>())
-                                        effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-                                    if (capStrike != Null<Real>())
-                                        effectiveCapVolatility = tmp->effectiveCapletVolatility();
-                                }
-
-                                // get market volaility for cap / floor
-
-                                if (volFixingDate != Date() && fixingDate > market->asofDate()) {
-                                    volFixingDate = std::max(volFixingDate, market->asofDate() + 1);
-                                    if (floorStrike != Null<Real>()) {
-                                        if (usesSwaptionVol) {
-                                            floorVolatility =
-                                                market
-                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                                  configuration)
-                                                    ->volatility(volFixingDate, swaptionTenor, floorStrike);
-                                        } else if (usesCapVol && floorVolatility == Null<Real>()) {
-                                            floorVolatility =
-                                                market
-                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                                  configuration)
-                                                    ->volatility(volFixingDate, floorStrike);
-                                        }
-                                    }
-                                    if (capStrike != Null<Real>()) {
-                                        if (usesSwaptionVol) {
-                                            capVolatility =
-                                                market
-                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                                  configuration)
-                                                    ->volatility(volFixingDate, swaptionTenor, capStrike);
-                                        } else if (usesCapVol && capVolatility == Null<Real>()) {
-                                            capVolatility =
-                                                market
-                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
-                                                                  configuration)
-                                                    ->volatility(volFixingDate, capStrike);
-                                        }
-                                    }
-                                }
-                            }
-
-                            report.next()
-                                .add(trade->id())
-                                .add(trade->tradeType())
-                                .add(j + 1)
-                                .add(i + addResultsLegs)
-                                .add(payDate)
-                                .add(flowType)
-                                .add(effectiveAmount)
-                                .add(ccy)
-                                .add(coupon)
-                                .add(accrual)
-                                .add(accrualStartDate)
-                                .add(accrualEndDate)
-                                .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
-                                .add(fixingDate)
-                                .add(fixingValue)
-                                .add(notional * (notional == Null<Real>() ? 1.0 : multiplier))
-                                .add(discountFactor)
-                                .add(presentValue)
-                                .add(fxRateLocalBase)
-                                .add(presentValueBase)
-                                .add(baseCurrency)
-                                .add(floorStrike)
-                                .add(capStrike)
-                                .add(floorVolatility)
-                                .add(capVolatility)
-                                .add(effectiveFloorVolatility)
-                                .add(effectiveCapVolatility);
-                    }
-                    }
-                }
-            } 
 
         } catch (std::exception& e) {
             StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during cashflow report generation",
@@ -649,6 +211,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                 .log();
         }
     }
+
     report.end();
     LOG("Cashflow report written");
 }
@@ -678,11 +241,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
-        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn).at(i));
-        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
-        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn).at(i));
-        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn).at(i));
-        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn).at(i));
+        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn, i));
+        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn, i));
+        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn, i));
+        string ccy = boost::get<string>(cashflowReport.data(ccyColumn, i));
+        Real pv = boost::get<Real>(cashflowReport.data(pvColumn, i));
         Real fx = 1.0;
     // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
@@ -827,6 +390,8 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
     const vector<Real>& pfe = postProcess->tradePFE(tradeId);
     const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
+    const vector<Real>& epe_b = postProcess->tradeEPE_B_timeWeighted(tradeId);
+    const vector<Real>& eepe_b = postProcess->tradeEEPE_B_timeWeighted(tradeId);
     report.addColumn("TradeId", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
@@ -836,7 +401,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .addColumn("AllocatedENE", double())
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
-        .addColumn("BaselEEE", double());
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     report.next()
         .add(tradeId)
         .add(today)
@@ -847,7 +414,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .add(aene[0])
         .add(pfe[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
 
         Time time = dc.yearFraction(today, dates[j]);
@@ -861,7 +430,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
             .add(aene[j + 1])
             .add(pfe[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
     report.end();
 }
@@ -877,7 +448,8 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-
+    const vector<Real>& epe_b = postProcess->netEPE_B_timeWeighted(nettingSetId);
+    const vector<Real>& eepe_b = postProcess->netEEPE_B_timeWeighted(nettingSetId);
     report.next()
         .add(nettingSetId)
         .add(today)
@@ -887,7 +459,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
         .add(pfe[0])
         .add(ecb[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
         Real time = dc.yearFraction(today, dates[j]);
         report.next()
@@ -899,7 +473,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
             .add(pfe[j + 1])
             .add(ecb[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
 }
 
@@ -913,7 +489,9 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("PFE", double(), 2)
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
+        .addColumn("BaselEEE", double(), 2)
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     addNettingSetExposure(report, postProcess, nettingSetId);
     report.end();
 }
@@ -1204,9 +782,80 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
+void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ssNettingSets, const std::map<std::string, std::string>& tradeNettingSetMap, Real outputThreshold,
+                                             Size outputPrecision) {
+
+    LOG("Writing XVA Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
+
+    report.addColumn("NettingSetId", string());
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
+    report.addColumn("Currency", string());
+    report.addColumn("Base XVA", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
+
+    // Make sure that we are starting from the start
+    ssTrades->reset();
+    while (SensitivityRecord sr = ssTrades->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            auto it = tradeNettingSetMap.find(sr.tradeId);
+            report.next();
+            report.add(it != tradeNettingSetMap.end() ? it->second : "");
+            report.add(sr.tradeId);
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    ssNettingSets->reset();
+    while (SensitivityRecord sr = ssNettingSets->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add("");
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -1249,6 +898,7 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
     LOG("Sensitivity Config report finished.");
 }
 
+namespace {
 template <class T>
 void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
@@ -1259,6 +909,24 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
+
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+                 const std::size_t precision) {
+    auto p = parseBoostAny(result, precision);
+    if (boost::starts_with(p.first, "vector")) {
+        vector<std::string> tokens;
+        string vect = p.second;
+        vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        boost::split(tokens, vect, boost::is_any_of(","));
+        for (Size i = 0; i < tokens.size(); ++i) {
+            boost::trim(tokens[i]);
+            report.next().add(tradeId).add(field + "[" + std::to_string(i) + "]").add(p.first.substr(7)).add(tokens[i]);
+        }
+    } else {
+        report.next().add(tradeId).add(field).add(p.first).add(p.second);
+    }
+}
+} // namespace
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
                                                 QuantLib::ext::shared_ptr<Market> market,
@@ -1282,22 +950,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, precision);
-                if (boost::starts_with(p.first, "vector")) {
-                    vector<std::string> tokens;
-                    string vect = p.second;
-                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                    boost::split(tokens, vect, boost::is_any_of(","));
-                    for (Size i = 0; i < tokens.size(); i++) {
-                        boost::trim(tokens[i]);
-                        report.next()
-                            .add(tradeId)
-                            .add(kv.first + "[" + std::to_string(i) + "]")
-                            .add(p.first.substr(7))
-                            .add(tokens[i]);
-                    }
-                } else
-                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                addAnyResults(report, tradeId, kv.first, kv.second, precision);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1359,22 +1012,25 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, precision);
-                        if (boost::starts_with(p.first, "vector")) {
-                            vector<std::string> tokens;
-                            string vect = p.second;
-                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                            boost::split(tokens, vect, boost::is_any_of(","));
-                            for (Size i = 0; i < tokens.size(); i++) {
-                                boost::trim(tokens[i]);
-                                report.next()
-                                    .add(tradeId)
-                                    .add(kv.first + "[" + std::to_string(i) + "]")
-                                    .add(p.first.substr(7))
-                                    .add(tokens[i]);
+                        addAnyResults(report, tradeId, kv.first, kv.second, precision);
+                    }
+                }
+            }
+
+            // add coupon additional results
+
+            for (Size i = 0; i < trade->legs().size(); ++i) {
+                for (Size j = 0; j < trade->legs()[i].size(); ++j) {
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(trade->legs()[i][j])) {
+                        try {
+                            c->rate(); // ensure the additional results results are available
+                            for (auto const& kv : c->additionalResults()) {
+                                addAnyResults(report, tradeId,
+                                              kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                              kv.second, precision);
                             }
-                        } else
-                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        } catch (...) {
+                        }
                     }
                 }
             }
@@ -1415,7 +1071,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
     vector<std::regex> regexes;
     regexes.reserve(regexStrs.size());
-    for (auto regexStr : regexStrs) {
+    for (const auto& regexStr : regexStrs) {
         regexes.push_back(regex(regexStr));
     }
 
@@ -1429,7 +1085,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
         // This could be slow
         for (const auto& regex : regexes) {
-            if (regex_match(mdName, regex)) {
+            if (std::regex_match(mdName, regex)) {
                 addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
@@ -1490,6 +1146,63 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const QuantLib::
 
     report.end();
     LOG("Pricing stats report written");
+}
+
+void ReportWriter::writeRunTimes(ore::data::Report& report, const Timer& timer) {
+
+    LOG("Writing runtimes report");
+
+    report.addColumn("Key", string())
+        .addColumn("Total", Size())
+        .addColumn("Count", Size())
+        .addColumn("Max", Size())
+        .addColumn("Min", Size())
+        .addColumn("Average", double(), 2);
+    for (const auto& [key, stats] : timer.getTimes()) {
+        Size totalTime = stats.totalTime / 1000;
+        Size maxTime = stats.maxTime / 1000;
+        Size minTime = stats.minTime / 1000;
+        Size count = stats.count;
+        Real averageTime = stats.avgTime() / 1000;
+        report.next()
+            .add(boost::algorithm::join(key, "|"))
+            .add(totalTime)
+            .add(count)
+            .add(maxTime)
+            .add(minTime)
+            .add(averageTime);
+    }
+
+    report.end();
+    LOG("Finished writing runtimes report")
+}
+
+void ReportWriter::writeTimeAveragedNettedExposure(
+    ore::data::Report& report,
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>& data) {
+
+    LOG("Writing time averaged netted exposure");
+
+    report.addColumn("NettingSetId", string())
+        .addColumn("Sample", Size())
+        .addColumn("PosExpNoColl", double(), 4)
+        .addColumn("NegExpNoColl", double(), 4)
+        .addColumn("PosExpWithColl", double(), 4)
+        .addColumn("NegExpWithColl", double(), 4);
+
+    for (auto const& [n, avg] : data) {
+        for (Size k = 0; k < avg.size(); ++k) {
+            report.next()
+                .add(n)
+                .add(k)
+                .add(avg[k].positiveExposureBeforeCollateral)
+                .add(avg[k].negativeExposureBeforeCollateral)
+                .add(avg[k].positiveExposureAfterCollateral)
+                .add(avg[k].negativeExposureAfterCollateral);
+        }
+    }
+
+    report.end();
 }
 
 void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
@@ -1569,19 +1282,19 @@ typedef SimmConfiguration::MarginType MarginType;
 typedef SimmConfiguration::SimmSide SimmSide;
 
 void ReportWriter::writeSIMMReport(
-    const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
+    const map<SimmSide, map<NettingSetDetails, pair<CrifRecord::Regulation, SimmResults>>>& finalSimmResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, Real fxSpot,
     Real outputThreshold) {
 
 
     // Transform final SIMM results
-    map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>> finalSimmResults;
+    map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>> finalSimmResults;
     for (const auto& sv : finalSimmResultsMap) {
         const SimmSide& side = sv.first;
         for (const auto& nv : sv.second) {
             const NettingSetDetails& nettingSetDetails = nv.first;
-            const string& regulation = nv.second.first;
+            set<CrifRecord::Regulation> regulation({nv.second.first});
             const SimmResults& simmResults = nv.second.second;
 
             finalSimmResults[side][nettingSetDetails][regulation] = simmResults;
@@ -1593,7 +1306,7 @@ void ReportWriter::writeSIMMReport(
 }
 
 void ReportWriter::writeSIMMReport(
-    const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
+    const map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>>& simmResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, const bool isFinalSimm, Real fxSpot,
     Real outputThreshold) {
@@ -1617,7 +1330,7 @@ void ReportWriter::writeSIMMReport(
         .addColumn("Bucket", string())
         .addColumn("SimmSide", string())
         .addColumn("Regulation", string())
-        .addColumn("InitialMargin", double(), 2)
+        .addColumn("InitialMargin", double(), 9)
         .addColumn("Currency", string())
         .addColumn("CalculationCurrency", string());
     if (!reportCcy.empty()) {
@@ -1636,7 +1349,7 @@ void ReportWriter::writeSIMMReport(
         Real sumSidePortfolios = 0.0;
         Real sumSidePortfoliosReporting = 0.0;
 
-        set<string> winningRegs;
+        set<CrifRecord::Regulation> winningRegs;
         if (simmResultsMap.find(side) != simmResultsMap.end()) {
             for (const auto& nv : simmResultsMap.at(side)) {
                 const NettingSetDetails& portfolioId = nv.first;
@@ -1647,11 +1360,11 @@ void ReportWriter::writeSIMMReport(
                                "Final SIMM results should only have one (winning) regulation per netting set.");
 
                 for (const auto& rv : simmResultsMap) {
-                    const string& regulation = rv.first;
+                    const set<CrifRecord::Regulation>& regulations = rv.first;
                     const SimmResults& results = rv.second;
 
                     if (isFinalSimm)
-                        winningRegs.insert(regulation);
+                        winningRegs.insert(regulations.begin(), regulations.end());
 
                     QL_REQUIRE(results.resultCurrency() == simmResultCcy,
                                "writeSIMMReport(): SIMM results ("
@@ -1682,7 +1395,7 @@ void ReportWriter::writeSIMMReport(
                                 .add(ore::data::to_string(mt))
                                 .add(b)
                                 .add(sideString)
-                                .add(regulation)
+                                .add(regulationsToString(regulations))
                                 .add(result.second)
                                 .add(results.resultCurrency())
                                 .add(results.calculationCurrency());
@@ -1706,7 +1419,8 @@ void ReportWriter::writeSIMMReport(
         // Write out a row for the aggregate IM over all portfolios
         // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
         if (isFinalSimm) {
-            string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+            string finalWinningReg =
+                winningRegs.size() > 1 || winningRegs.empty() ? "" : ore::data::to_string(*winningRegs.begin());
 
             // Write out common columns
             report->next();
@@ -1742,7 +1456,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     // Add the headers to the report
 
     bool hasRegulations = false;
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
         if (!cr.collectRegulations.empty() || !cr.postRegulations.empty()) {
             hasRegulations = true;
             break;
@@ -1762,26 +1477,33 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
         .addColumn("Qualifier", string())
         .addColumn("Label1", string())
         .addColumn("Label2", string())
-        .addColumn("Amount", double())
-        .addColumn("IMModel", string());
+        .addColumn("AmountCurrency", string())
+        .addColumn("Amount", double(), 2)
+        .addColumn("AmountUSD", double(), 2);
 
     if (hasRegulations)
         dataReport->addColumn("collect_regulations", string())
             .addColumn("post_regulations", string());
 
     // Write the report body by looping over the netted CRIF records
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
+
         // Skip to next netted CRIF record if 'AmountUSD' is negligible
         if (close_enough(cr.amountUsd, 0.0))
             continue;
 
         // Skip Schedule IM records
-        if (cr.imModel == "Schedule")
+        if (cr.imModel == CrifRecord::IMModel::Schedule)
             continue;
-
+        
+        // Skip if the CRIF Record type is not SIMM
+        if (cr.type() != CrifRecord::RecordType::SIMM)
+            continue;
+        
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
-        if (cr.imModel.empty() &&
+        if (cr.imModel == CrifRecord::IMModel::Empty &&
             (cr.riskType == CrifRecord::RiskType::Notional || cr.riskType == CrifRecord::RiskType::PV))
             continue;
 
@@ -1796,16 +1518,13 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .add(cr.qualifier)
             .add(cr.label1)
             .add(cr.label2)
-            .add(cr.amountUsd)
-            .add(cr.imModel);
+            .add(cr.amountCurrency)
+            .add(cr.amount)
+            .add(cr.amountUsd);
 
         if (hasRegulations) {
-            string collectRegString = cr.collectRegulations.find(',') == string::npos
-                                        ? cr.collectRegulations
-                                        : '\"' + cr.collectRegulations + '\"';
-            string postRegString = cr.postRegulations.find(',') == string::npos
-                                        ? cr.postRegulations
-                                        : '\"' + cr.postRegulations + '\"';
+            string collectRegString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
+            string postRegString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
 
             dataReport->add(collectRegString)
                 .add(postRegString);
@@ -1817,139 +1536,148 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report, const Crif& crif) {
+void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report,
+                                   const QuantLib::ext::shared_ptr<Crif>& crif) {
 
-    // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
-    // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
-    // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
-    bool hasNettingSetDetails = false;
-    for (const auto& cr : crif) {
-        if (!cr.nettingSetDetails.emptyOptionalFields())
-            hasNettingSetDetails = true;
-    }
+    if (crif) {
+        // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
+        // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain
+        // edge cases e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but
+        // CRIF report still should.
+        bool hasNettingSetDetails = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-    std::vector<string> addFields;
-    bool hasCollectRegulations = false;
-    bool hasPostRegulations = false;
-    bool hasScheduleTrades = false;
-    for (const auto& cr : crif) {
-        // Check which additional fields are being used/populated
-        for (const auto& af : cr.additionalFields) {
-            if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
-                addFields.push_back(af.first);
+            if (!cr.nettingSetDetails.emptyOptionalFields())
+                hasNettingSetDetails = true;
+        }
+
+        std::vector<string> addFields;
+        bool hasCollectRegulations = false;
+        bool hasPostRegulations = false;
+        bool hasScheduleTrades = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
+
+            // Check which additional fields are being used/populated
+            for (const auto& af : cr.additionalFields) {
+                if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
+                    addFields.push_back(af.first);
+                }
+            }
+
+            // Check if regulations are being used
+            if (!hasCollectRegulations)
+                hasCollectRegulations = !cr.collectRegulations.empty();
+            if (!hasPostRegulations)
+                hasPostRegulations = !cr.postRegulations.empty();
+
+            // Check if there are Schedule trades
+            if (!hasScheduleTrades) {
+                try {
+                    hasScheduleTrades = cr.imModel == CrifRecord::IMModel::Schedule;
+                } catch (std::exception&) {
+                }
             }
         }
 
-        // Check if regulations are being used
-        if (!hasCollectRegulations)
-            hasCollectRegulations = !cr.collectRegulations.empty();
-        if (!hasPostRegulations)
-            hasPostRegulations = !cr.postRegulations.empty();
+        // Add report headers
 
-        // Check if there are Schedule trades
-        if (!hasScheduleTrades) {
-            try {
-                hasScheduleTrades = parseIMModel(cr.imModel) == SimmConfiguration::IMModel::Schedule;
-            } catch (std::exception&) {
-            }
-        }
-    }
+        report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
 
-    // Add report headers
-
-    report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
-    
-    // Add additional netting set fields if netting set details are being used instead of just the netting set ID
-    if (hasNettingSetDetails) {
-        for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-            report->addColumn(optionalField, string());
-    }
-
-    report->addColumn("ProductClass", string())
-        .addColumn("RiskType", string())
-        .addColumn("Qualifier", string())
-        .addColumn("Bucket", string())
-        .addColumn("Label1", string())
-        .addColumn("Label2", string())
-        .addColumn("AmountCurrency", string())
-        .addColumn("Amount", double(), 2)
-        .addColumn("AmountUSD", double(), 2)
-        .addColumn("IMModel", string())
-        .addColumn("TradeType", string());
-
-    if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-        report->addColumn("end_date", string());
-
-    if (crif.type() == Crif::CrifType::Frtb) {
-        report->addColumn("Label3", string())
-            .addColumn("CreditQuality", string())
-            .addColumn("LongShortInd", string())
-            .addColumn("CoveredBondInd", string())
-            .addColumn("TrancheThickness", string())
-            .addColumn("BB_RW", string());
-    }
-
-    if (hasCollectRegulations)
-        report->addColumn("collect_regulations", string());
-
-    if (hasPostRegulations)
-        report->addColumn("post_regulations", string());
-
-    // Add additional CRIF fields
-    for (const string& f : addFields) {
-        report->addColumn(f, string());
-    }
-
-    // Write individual CRIF records
-    for (const auto& cr : crif) {
-        
-        report->next().add(cr.tradeId).add(cr.portfolioId);
-
+        // Add additional netting set fields if netting set details are being used instead of just the netting set ID
         if (hasNettingSetDetails) {
-            map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
             for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-                report->add(crNettingSetDetailsMap[optionalField]);
+                report->addColumn(optionalField, string());
         }
 
-        report->add(ore::data::to_string(cr.productClass))
-            .add(ore::data::to_string(cr.riskType))
-            .add(cr.qualifier)
-            .add(cr.bucket)
-            .add(cr.label1)
-            .add(cr.label2)
-            .add(cr.amountCurrency)
-            .add(cr.amount)
-            .add(cr.amountUsd)
-            .add(cr.imModel)
-            .add(cr.tradeType);
+        report->addColumn("ProductClass", string())
+            .addColumn("RiskType", string())
+            .addColumn("Qualifier", string())
+            .addColumn("Bucket", string())
+            .addColumn("Label1", string())
+            .addColumn("Label2", string())
+            .addColumn("AmountCurrency", string())
+            .addColumn("Amount", double(), 2)
+            .addColumn("AmountUSD", double(), 2)
+            .addColumn("IMModel", string())
+            .addColumn("TradeType", string());
 
-        if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-            report->add(cr.endDate);
+        if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+            report->addColumn("end_date", string());
 
-        if (crif.type() == Crif::CrifType::Frtb) {
-            report->add(cr.label3)
-                .add(cr.creditQuality)
-                .add(cr.longShortInd)
-                .add(cr.coveredBondInd)
-                .add(cr.trancheThickness)
-                .add(cr.bb_rw);
+        if (crif->type() == Crif::CrifType::Frtb) {
+            report->addColumn("Label3", string())
+                .addColumn("CreditQuality", string())
+                .addColumn("LongShortInd", string())
+                .addColumn("CoveredBondInd", string())
+                .addColumn("TrancheThickness", string())
+                .addColumn("BB_RW", string());
         }
 
-        if (hasCollectRegulations) {
-            string regString = escapeCommaSeparatedList(cr.collectRegulations, '\0');
-            report->add(regString);
+        if (hasCollectRegulations)
+            report->addColumn("collect_regulations", string());
+
+        if (hasPostRegulations)
+            report->addColumn("post_regulations", string());
+
+        // Add additional CRIF fields
+        for (const string& f : addFields) {
+            report->addColumn(f, string());
         }
 
-        if (hasPostRegulations) {
-            string regString = escapeCommaSeparatedList(cr.postRegulations, '\0');
-            report->add(regString);
-        }
+        // Write individual CRIF records
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-        for (const string& af : addFields) {
-            if (cr.additionalFields.find(af) == cr.additionalFields.end())
-                report->add("");
-            else
-                report->add(cr.getAdditionalFieldAsStr(af));
+            report->next().add(cr.tradeId).add(cr.nettingSetDetails.nettingSetId());
+
+            if (hasNettingSetDetails) {
+                map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
+                for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+                    report->add(crNettingSetDetailsMap[optionalField]);
+            }
+
+            report->add(ore::data::to_string(cr.productClass))
+                .add(ore::data::to_string(cr.riskType))
+                .add(cr.qualifier)
+                .add(cr.bucket)
+                .add(cr.label1)
+                .add(cr.label2)
+                .add(cr.amountCurrency)
+                .add(cr.amount)
+                .add(cr.amountUsd)
+                .add(ore::data::to_string(cr.imModel))
+                .add(cr.tradeType);
+
+            if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+                report->add(cr.endDate);
+
+            if (crif->type() == Crif::CrifType::Frtb) {
+                report->add(cr.label3)
+                    .add(cr.creditQuality)
+                    .add(cr.longShortInd)
+                    .add(cr.coveredBondInd)
+                    .add(cr.trancheThickness)
+                    .add(cr.bb_rw);
+            }
+
+            if (hasCollectRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
+                report->add(regString);
+            }
+
+            if (hasPostRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
+                report->add(regString);
+            }
+
+            for (const string& af : addFields) {
+                if (cr.additionalFields.find(af) == cr.additionalFields.end())
+                    report->add("");
+                else
+                    report->add(cr.getAdditionalFieldAsStr(af));
+            }
         }
     }
 
@@ -2004,29 +1732,6 @@ void ReportWriter::writeScenarioStatistics(const QuantLib::ext::shared_ptr<Scena
     report.end();
 }
 
-namespace {
-template <class I>
-void distributionCount(I begin, I end, const Size steps, std::vector<Real>& bounds, std::vector<Size>& counts) {
-    Real xmin = *std::min_element(begin, end);
-    Real xmax = *std::max_element(begin, end);
-    std::vector<Real> v(begin, end);
-    std::sort(v.begin(), v.end());
-    Real h = (xmax - xmin) / static_cast<Real>(steps);
-    Size idx0 = 0;
-    counts.resize(steps);
-    bounds.resize(steps);
-    for (Size i = 0; i < steps; ++i) {
-        Real v1 = xmin + static_cast<Real>(i + 1) * h;
-        // Need the `i == steps - 1` here because noticed in backtest regression tests that xmax is not getting
-        // included in the count in the last bucket due to numerical accuracy. This ensures that it does.
-        Size idx1 = i == steps - 1 ? v.size() : std::upper_bound(v.begin(), v.end(), v1) - v.begin();
-        counts[i] = idx1 - idx0;
-        bounds[i] = v1;
-        idx0 = idx1;
-    }
-} // distributionCount
-} // namespace
-
 void ReportWriter::writeScenarioDistributions(const QuantLib::ext::shared_ptr<ScenarioGenerator>& generator,
                                               const std::vector<RiskFactorKey>& keys, const Size numPaths,
                                               const std::vector<Date>& dates, const Size distSteps,
@@ -2073,6 +1778,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
         .addColumn("ScenarioValue1", double(), 8)
         .addColumn("ScenarioValue2", double(), 8)
         .addColumn("ShiftType", string())
+        .addColumn("Displacement", double(), 8)
         .addColumn("Return", double(), 8)
         .addColumn("ScenarioValue", double(), 8);
 
@@ -2090,6 +1796,7 @@ void ReportWriter::writeHistoricalScenarioDetails(
                 .add(d.scenarioValue1)
                 .add(d.scenarioValue2)
                 .add(ore::data::to_string(d.returnType))
+                .add(d.displacement)
                 .add(d.returnValue)
                 .add(d.scenarioValue);
         }
@@ -2128,7 +1835,7 @@ void ReportWriter::writeStockSplitReport(const QuantLib::ext::shared_ptr<Scenari
 
                 Real price = Null<Real>();
                 if (std::find(hsdates.begin(), hsdates.end(), d) != hsdates.end()) {
-                    auto scen = hsloader->getHistoricalScenario(d);
+                    auto scen = hsloader->getScenario(d);
                     RiskFactorKey rf(RiskFactorKey::KeyType::EquitySpot, name);
                     if (scen->has(rf))
                         price = scen->get(rf);
@@ -2192,12 +1899,12 @@ void ReportWriter::writeHistoricalScenarios(const QuantLib::ext::shared_ptr<Hist
     // each scenario might have a different set of keys, so we collect the union of all keys
     // and write them out (missing keys will be written as NA to the report)
     std::set<RiskFactorKey> allKeys;
-    for (const auto& s : hsloader->historicalScenarios())
-        allKeys.insert(s->keys().begin(), s->keys().end());
+    for (const auto& s : hsloader->scenarios()[0])
+        allKeys.insert(s.second->keys().begin(), s.second-> keys().end());
     ScenarioWriter sw(nullptr, report, std::vector<RiskFactorKey>(allKeys.begin(), allKeys.end()));
     bool writeHeader = true;
-    for (const auto& s : hsloader->historicalScenarios()) {
-        sw.writeScenario(s, writeHeader);
+    for (const auto& s : hsloader->scenarios()[0]) {
+        sw.writeScenario(s.second, writeHeader);
         writeHeader = false;
     }
 }
@@ -2210,7 +1917,7 @@ typedef SimmConfiguration::SimmSide SimmSide;
 typedef IMScheduleCalculator::IMScheduleTradeData IMScheduleTradeData;
 
 void ReportWriter::writeIMScheduleSummaryReport(
-    const map<SimmSide, map<NettingSetDetails, pair<string, IMScheduleResults>>>& finalResultsMap,
+    const map<SimmSide, map<NettingSetDetails, pair<CrifRecord::Regulation, IMScheduleResults>>>& finalResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& reportCcy, Real fxSpot, Real outputThreshold) {
 
@@ -2244,11 +1951,11 @@ void ReportWriter::writeIMScheduleSummaryReport(
         Real sumSideScheduleIM = 0.0;
         Real sumSideScheduleIMReporting = 0.0;
 
-        std::set<std::string> winningRegs;
+        std::set<CrifRecord::Regulation> winningRegs;
         if (finalResultsMap.find(side) != finalResultsMap.end()) {
             for (const auto& nv : finalResultsMap.at(side)) {
                 const NettingSetDetails& portfolioId = nv.first;
-                const string& regulation = nv.second.first;
+                const CrifRecord::Regulation& regulation = nv.second.first;
                 const IMScheduleResults& results = nv.second.second;
 
                 winningRegs.insert(regulation);
@@ -2276,7 +1983,7 @@ void ReportWriter::writeIMScheduleSummaryReport(
                         .add(result.netRC)
                         .add(result.NGR)
                         .add(sideString)
-                        .add(regulation)
+                        .add(ore::data::to_string(regulation))
                         .add(im)
                         .add(results.currency());
 
@@ -2296,7 +2003,8 @@ void ReportWriter::writeIMScheduleSummaryReport(
 
         // Write out a row for the aggregate IM over all portfolios
         // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
-        string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+        string finalWinningReg =
+            winningRegs.size() > 1 || winningRegs.empty() ? "" : ore::data::to_string(*winningRegs.begin());
 
         // Write out common columns
         report->next();
@@ -2369,12 +2077,9 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
             for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
                 report->add(nettingSetMap.at(field));
             }
-            const string collectRegsString = tradeData.collectRegulations.find(',') == string::npos
-                                                 ? tradeData.collectRegulations
-                                                 : '\"' + tradeData.collectRegulations + '\"';
-            const string postRegsString = tradeData.postRegulations.find(',') == string::npos
-                                              ? tradeData.postRegulations
-                                              : '\"' + tradeData.postRegulations + '\"';
+            string collectRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.collectRegulations), '\0');
+            string postRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.postRegulations), '\0');
+            
             report->add(to_string(tradeData.productClass))
                 .add(to_string(tradeData.endDate))
                 .add(tradeData.maturity)
@@ -2413,14 +2118,14 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
 
     Real flow = 0.0;
     for (Size i = 0; i < cashFlowReport->rows(); ++i) {
-        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn).at(i));
+        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn, i));
     if (id != tradeId)
         continue;
-    Date date = boost::get<Date>(cashFlowReport->data(dateColumn).at(i));
+    Date date = boost::get<Date>(cashFlowReport->data(dateColumn, i));
     if (date <= d0 || date > d1)
         continue;
-    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn).at(i));
-    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn).at(i));
+    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn, i));
+    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn, i));
     Real fx = 1.0;
     if (ccy != baseCurrency)
         fx = market->fxRate(ccy + baseCurrency, configuration)->value();
@@ -2476,7 +2181,6 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     
     QL_REQUIRE(t0NpvReport->rows() == t0NpvLaggedReport->rows(), "different number of rows in npv reports");
     QL_REQUIRE(t0NpvReport->rows() == t1NpvLaggedReport->rows(), "different number of rows in npv reports");
-    QL_REQUIRE(t0NpvReport->rows() == t1NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(t0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
@@ -2508,30 +2212,30 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
     map<string, Size> t1IdMap;
     for (Size j = 0; j < t1NpvReport->rows(); ++j) {
-    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn).at(j));
+    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn, j));
         t1IdMap[tradeId] = j;
     }
 
     std::set<string> t0Ids;
     for (Size i = 0; i < t0NpvReport->rows(); ++i) {
         try {
-            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn).at(i));
+            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
-            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn).at(i));
-            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn).at(i));
+            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn, i));
+            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn, i));
             QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
-            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn).at(i));
-            Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn).at(i));
-            Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn).at(i));
-            string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn).at(i));
+            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
+            Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn, i));
+            Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn, i));
+            string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn, i));
             QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
-            Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn).at(i));
-            Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn).at(i));
-            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn).at(i));
-            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn).at(i));
+            Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn, i));
+            Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn, i));
+            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn, i));
+            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn, i));
 
             auto it = t1IdMap.find(tradeId);
-            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(it->second));
+            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn, it->second));
             
             Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
             Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
@@ -2578,13 +2282,13 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
           string tradeId = tId.first;
           Size loc = tId.second;
-          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn).at(loc));
-          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn).at(loc));
-          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn).at(loc));
-          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn).at(loc));
+          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn, loc));
+          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn, loc));
+          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn, loc));
+          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn, loc));
           QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
 
-          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(loc));
+          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn, loc));
           LOG("PnL report, writing line " << loc << " tradeId " << tradeId);
 
           report.next()
@@ -2698,6 +2402,116 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
         ALOG("Error during xva explain report generation, got " << e.what());
     }
 }
+  
+void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
+    report.addColumn(header, string());
+    report.next().add(xml);
+    report.end();
+}
 
+void ReportWriter::writeBaCvaReport(const QuantLib::ext::shared_ptr<BaCvaCalculator>& baCvaCalculator,
+                                    ore::data::Report& reportOut) {
+
+    reportOut.addColumn("Counterparty", string())
+        .addColumn("NettingSet", string())
+        .addColumn("Analytic", string())
+        .addColumn("Value", double(), 6);
+
+    std::map<std::string, std::set<std::string>> counterpartyNettingSets = baCvaCalculator->counterpartyNettingSets();
+
+    reportOut.next().add("All").add("All").add("BA_CVA_CAPITAL").add(baCvaCalculator->cvaResult());
+
+    for (auto it = counterpartyNettingSets.begin(); it != counterpartyNettingSets.end(); it++) {
+        reportOut.next().add(it->first).add("All").add("sCVA").add(baCvaCalculator->counterpartySCVA(it->first));
+        reportOut.next().add(it->first).add("All").add("RiskWeight").add(baCvaCalculator->riskWeight(it->first));
+        for (auto n : it->second) {
+            reportOut.next().add(it->first).add(n).add("EAD").add(baCvaCalculator->EAD(n));
+            reportOut.next().add(it->first).add(n).add("EffMaturity").add(baCvaCalculator->effectiveMaturity(n));
+            reportOut.next().add(it->first).add(n).add("DiscountFactor").add(baCvaCalculator->discountFactor(n));
+        }
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream>& ss,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    ss->reset();
+    while (CvaSensitivityRecord sr = ss->next()) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    for (auto sr : records) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
+                                         ore::data::Report& reportOut) {
+
+    LOG("Writing SA CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskType", string())
+        .addColumn("CvaType", string())
+        .addColumn("MarginType", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("Bucket", string())
+        .addColumn("Value", double(), 4);
+
+    for (auto sr : sensis) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.riskType));
+        reportOut.add(to_string(sr.cvaType));
+        reportOut.add(to_string(sr.marginType));
+        reportOut.add(sr.riskFactor);
+        reportOut.add(sr.bucket);
+        reportOut.add(sr.value);
+    }
+
+    reportOut.end();
+}
+  
 } // namespace analytics
 } // namespace ore

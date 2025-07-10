@@ -1,12 +1,7 @@
 include(CheckCXXCompilerFlag)
-if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-    include(CheckLinkerFlag)
-endif()
+include(CheckLinkerFlag)
 
-option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
-option(MSVC_PARALLELBUILD "Use flag /MP" ON)
-
-option(QL_USE_PCH OFF)
+include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
@@ -49,6 +44,26 @@ if (ORE_ENABLE_OPENCL)
   add_compile_definitions(ORE_ENABLE_OPENCL)
 endif()
 
+# set compiler macro if CUDA is enabled
+if (ORE_ENABLE_CUDA)
+  add_compile_definitions(ORE_ENABLE_CUDA)
+endif()
+
+# set compiler macro if ORE_PYTHON_INTEGRATION is set
+if (ORE_PYTHON_INTEGRATION)
+  add_compile_definitions(ORE_PYTHON_INTEGRATION)
+endif()
+
+# set compiler macro if zlib is enabled
+if(ORE_USE_ZLIB)
+  add_compile_definitions(ORE_USE_ZLIB)
+endif()
+
+# set compiler macro if cpu affinity
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+  add_compile_definitions(ORE_MULTITHREADING_CPU_AFFINITY)
+endif()
+
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -60,11 +75,10 @@ if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 endif()
 
+
+
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
-    add_compile_definitions(_WINVER=0x0601)
-    add_compile_definitions(_WIN32_WINNT=0x0601)
-    add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
     # build static libs always
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
@@ -126,8 +140,11 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
+
+    # use flat namespace to fix symbol lookup issues and align with linux more closely
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
     endif()
 
     if(QL_USE_PCH)
@@ -149,11 +166,11 @@ else()
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
     # the line below breaks the linux build
     #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
-    add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
+    #add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
-    add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
+    #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
     add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)
-    add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
+    #add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
     add_compiler_flag("-Werror=return-type" supportsReturnType)
     add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
@@ -166,6 +183,9 @@ else()
 
     # disable warnings from boost
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
+
+    add_compile_options("-Werror=unused-variable")
+    add_compile_options("-Werror=uninitialized")
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     # if QuantLib is build separately
@@ -196,6 +216,21 @@ if(NOT Boost_USE_STATIC_LIBS)
     # link against dynamic boost libraries
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+
+if(ORE_BOOST_AUTO_LINK_SYSTEM)
+    add_definitions(-DBOOST_AUTO_LINK_SYSTEM)
+endif()
+
+set(Boost_NO_WARN_NEW_VERSIONS ON)
+
+if (MSVC)
+    find_package(Boost)
+    if(Boost_VERSION_STRING LESS 1.84.0)
+        add_compile_definitions(_WINVER=0x0601)
+        add_compile_definitions(_WIN32_WINNT=0x0601)
+        add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
+    endif()
 endif()
 # Boost end #
 
@@ -261,3 +296,12 @@ macro(set_ql_library_name)
     get_library_name("QuantLib" QL_LIB_NAME)
   endif()
 endmacro()
+
+function(generate_git_hash custom_target_name)
+  file(WRITE ${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp)
+  add_custom_target(
+    ${custom_target_name} ALL
+    COMMAND ${CMAKE_COMMAND} -D IN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -D OUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
+                             -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endfunction()

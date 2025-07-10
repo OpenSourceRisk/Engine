@@ -28,6 +28,7 @@
 
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -94,6 +95,7 @@ ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
     : asof_(asof), simMarketParams_(simMarketParams), sensitivityData_(sensitivityData),
       marketConfiguration_(marketConfiguration), continueOnError_(continueOnError), typesDisabled_(typesDisabled) {
     const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    parConversionExcludeFixings_ = sensitivityData.parConversionExcludeFixings();
     QL_REQUIRE(conventions != nullptr, "conventions are empty");
     ParSensitivityInstrumentBuilder().createParInstruments(instruments_, asof_, simMarketParams_, sensitivityData_,
                                                            typesDisabled_, parTypes_, relevantRiskFactors_,
@@ -168,27 +170,44 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         TodaysFixingsRemover(const std::set<std::string>& names) : today_(Settings::instance().evaluationDate()) {
             Date today = Settings::instance().evaluationDate();
             for (auto const& n : names) {
+                QL_DEPRECATED_DISABLE_WARNING
                 TimeSeries<Real> t = IndexManager::instance().getHistory(n);
+                QL_DEPRECATED_ENABLE_WARNING
                 if (t[today] != Null<Real>()) {
                     DLOG("removing todays fixing (" << std::setprecision(6) << t[today] << ") from " << n);
                     savedFixings_.insert(std::make_pair(n, t[today]));
                     t[today] = Null<Real>();
+                    QL_DEPRECATED_DISABLE_WARNING
                     IndexManager::instance().setHistory(n, t);
+                    QL_DEPRECATED_ENABLE_WARNING
                 }
             }
         }
         ~TodaysFixingsRemover() {
+            QL_DEPRECATED_DISABLE_WARNING
             for (auto const& p : savedFixings_) {
                 TimeSeries<Real> t = IndexManager::instance().getHistory(p.first);
                 t[today_] = p.second;
                 IndexManager::instance().setHistory(p.first, t);
                 DLOG("restored todays fixing (" << std::setprecision(6) << p.second << ") for " << p.first);
             }
+            QL_DEPRECATED_ENABLE_WARNING
         }
         const Date today_;
         std::set<std::pair<std::string, Real>> savedFixings_;
     };
-    TodaysFixingsRemover fixingRemover(instruments_.removeTodaysFixingIndices_);
+
+    // Case insensitive
+    std::regex regex_pattern(parConversionExcludeFixings_, std::regex_constants::icase);
+    //Filter out elements that match any pattern
+    std::set<std::string> removeTodaysFixingIndicesRegex;
+    std::copy_if(instruments_.removeTodaysFixingIndices_.begin(), instruments_.removeTodaysFixingIndices_.end(),
+                 std::inserter(removeTodaysFixingIndicesRegex, removeTodaysFixingIndicesRegex.end()),
+                 [&regex_pattern](const std::string& s) {
+                     return std::regex_match(IndexNameTranslator::instance().oreName(s), regex_pattern);
+                 });
+    
+    TodaysFixingsRemover fixingRemover(removeTodaysFixingIndicesRegex);
 
     // We must have a ShiftScenarioGenerator
     QuantLib::ext::shared_ptr<ScenarioGenerator> simMarketScenGen = simMarket->scenarioGenerator();
@@ -220,6 +239,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             // Populate zero and par shift size for the current risk factor
             populateShiftSizes(p.first, parRate, simMarket);
+            auto shiftSize = shiftSizes_.at(p.first).second;
+            parRatesBaseAndScenarioValue_[p.first] = std::make_pair(parRate, parRate + shiftSize);
 
         } catch (const std::exception& e) {
             QL_FAIL("could not imply quote for par helper " << p.first << ": " << e.what());
@@ -232,18 +253,36 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                    "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
         QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
-
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parCapsYts_.at(c.first), 0.01,
-            instruments_.parCapsVts_.at(c.first)->volatilityType(), instruments_.parCapsVts_.at(c.first)->displacement());
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                     << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
+
+    for (auto& c : instruments_.oisParCaps_) {
+
+        QL_REQUIRE(instruments_.parCapsYts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
+        QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
+
+        Volatility parVol = impliedVolatility(c.first, instruments_);
+        parCapVols[c.first] = parVol;
+        TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                    << parVol << ".");
+
+        // Populate zero and par shift size for the current risk factor
+        populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
+    }
+
+
 
     for (auto& c : instruments_.parYoYCaps_) {
 
@@ -254,17 +293,15 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         QL_REQUIRE(instruments_.parYoYCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parYoYCapsYts_.at(c.first), 0.01,
-            instruments_.parYoYCapsVts_.at(c.first)->volatilityType(),
-            instruments_.parYoYCapsVts_.at(c.first)->displacement(), instruments_.parYoYCapsIndex_.at(c.first));
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                         << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
 
     LOG("Caching base scenario par rates and float vols done.");
@@ -410,6 +447,33 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
+
+        // process ois par caps
+
+        for (auto const& p : instruments_.oisParCaps_) {
+
+            if (p.second->isCalculated() && p.first != desc[i].key1())
+                continue;
+
+            auto fair = impliedVolatility(p.first, instruments_);
+            auto base = parCapVols.find(p.first);
+            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
+
+            Real tmp = (fair - base->second) / shiftSize;
+
+            // see par caps
+
+            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
+                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
+                                                           << " to 0.01 (got " << tmp << ")");
+                tmp = 0.01;
+            }
+
+            // write sensitivity
+
+            writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
+        }
+
 
         // process par yoy caps
 
@@ -561,6 +625,28 @@ void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real p
 
     TLOG("Zero and par shift size for risk factor '" << key << "' is (" << std::fixed << std::setprecision(12)
                                                      << zeroShiftSize << "," << parShiftSize << ")");
+}
+
+void ParSensitivityAnalysis::writeParRatesReport(ore::data::Report& report) {
+    
+    // Report headers
+    report.addColumn("ParKey", string());
+    report.addColumn("BaseParRate", double(), 12);
+    report.addColumn("ScenarioParRate", double(), 12);
+
+    // Report body
+    for (const auto& p : parRatesBaseAndScenarioValue_) {
+        RiskFactorKey key = p.first;
+        Real base = p.second.first;
+        Real scenario = p.second.second;
+
+        report.next();
+        report.add(to_string(key));
+        report.add(base);
+        report.add(scenario);
+    }
+
+    report.end();
 }
 
 set<RiskFactorKey::KeyType> ParSensitivityAnalysis::parTypes_ = {

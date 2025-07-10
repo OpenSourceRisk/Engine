@@ -115,19 +115,18 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
 }
 
 template <class T>
-void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
-                    bool doublePrecision) {
+void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance) {
 
     initCube(*cube);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none}, doublePrecision);
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
 
     // Create a new Cube and load it
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    auto cube2 = loadCube(filename, doublePrecision).cube;
+    auto cube2 = loadCube(filename).cube;
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
@@ -223,19 +222,19 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, QuantL
 
 template <class T>
 void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
-                    QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& d, bool doublePrecision) {
+                    QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& d) {
 
     initCube(*cube, portfolio, d);
 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none}, doublePrecision);
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
 
     // Create a new Cube and load it
     auto cube2 = QuantLib::ext::make_shared<T>();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    cube2 = loadCube(filename, doublePrecision).cube;
+    cube2 = loadCube(filename).cube;
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
@@ -370,7 +369,8 @@ QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib
         QuantLib::ext::shared_ptr<ore::data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<ore::data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
-        QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
+        QL_REQUIRE(swap->legData()[0].legType() == LegType::Floating && swap->legData()[1].legType() == LegType::Fixed,
+                   "Leg mixup");
         if (fixedFreqs.find(fixFreq) == fixedFreqs.end())
             fixedFreqs[fixFreq] = 1;
         else
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
     vector<Date> dates(100, d);
     Size samples = 1000;
     auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
-    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14, true);
+    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14);
 }
 
 BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
     Size samples = 200;
     Size depth = 6;
     auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(d, ids, dates, samples, depth);
-    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14, true);
+    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
 }
 
 BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {

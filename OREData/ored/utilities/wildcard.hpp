@@ -49,6 +49,9 @@ public:
     const std::string& regex() const;
     const std::string& prefix() const;
 
+    bool usePrefixes() const;
+    bool aggressivePrefixes() const;
+
 private:
     std::string pattern_;
     bool usePrefixes_;
@@ -60,6 +63,8 @@ private:
     boost::optional<std::string> prefixString_;
     mutable QuantLib::ext::shared_ptr<std::regex> regex_;
 };
+
+bool operator<(const Wildcard& w1, const Wildcard& w2);
 
 //! checks if at most one element in C has a wild card and returns it in this case
 template <class C> boost::optional<Wildcard> getUniqueWildcard(const C& c) {

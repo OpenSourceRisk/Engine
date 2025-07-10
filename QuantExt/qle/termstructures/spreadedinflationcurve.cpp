@@ -24,8 +24,7 @@ namespace QuantExt {
 SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflationTermStructure>& referenceCurve,
                                                        const std::vector<Time>& times,
                                                        const std::vector<Handle<Quote>>& quotes)
-    : ZeroInflationTermStructure(referenceCurve->dayCounter(), referenceCurve->baseRate(),
-                                 referenceCurve->observationLag(), referenceCurve->frequency(),
+    : ZeroInflationTermStructure(referenceCurve->baseDate(), referenceCurve->observationLag(), referenceCurve->frequency(), referenceCurve->dayCounter(),
                                  referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
@@ -68,12 +67,14 @@ Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
     return referenceCurve_->zeroRate(t) + (*interpolation_)(t);
 }
 
+QL_DEPRECATED_DISABLE_WARNING
 SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve,
                                                      const std::vector<Time>& times,
                                                      const std::vector<Handle<Quote>>& quotes)
-    : YoYInflationTermStructure(referenceCurve->dayCounter(), referenceCurve->baseRate(),
+    : YoYInflationTermStructure(referenceCurve->baseDate(), referenceCurve->baseRate(),
                                 referenceCurve->observationLag(), referenceCurve->frequency(),
-                                referenceCurve->indexIsInterpolated(), referenceCurve->seasonality()),
+                                referenceCurve->indexIsInterpolated(), referenceCurve->dayCounter(),
+                                referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(),
@@ -86,6 +87,7 @@ SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTe
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 Date SpreadedYoYInflationCurve::baseDate() const { return referenceCurve_->baseDate(); }
 

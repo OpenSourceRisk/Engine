@@ -62,13 +62,16 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioSimMarket() {
             false);
 }
 
-void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
+void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError,
+                                                            const bool allowModelFallbacks) {
     if (!model_)
-        buildCrossAssetModel(continueOnCalibrationError);
+        buildCrossAssetModel(continueOnCalibrationError, allowModelFallbacks);
     ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
     QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     string config = inputs_->marketConfig("simulation");
-    scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(), config); 
+    scenarioGenerator_ =
+        sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), analytic()->market(),
+                  config, QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), inputs_->amcPathDataOutput()); 
     QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator"); 
     samples_ = analytic()->configurations().scenarioGeneratorData->samples();
     LOG("simulation grid size " << grid_->size());
@@ -77,23 +80,24 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueO
     LOG("simulation grid front date " << io::iso_date(grid_->dates().front()));    
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));    
 
-    if (inputs_->writeScenarios()) {
-        auto report = QuantLib::ext::make_shared<InMemoryReport>();
-        analytic()->reports()["SCENARIO_STATISTICS"]["scenario"] = report;
-        scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
-    }
+    auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    analytic()->addReport("SCENARIO_STATISTICS", "scenario", report);
+    scenarioGenerator_ =
+        QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report, std::vector<RiskFactorKey>{}, false);
 }
 
-void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
+void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
+                                                          const bool allowModelFallbacks) {
     LOG("SCENARIO_STATISTICS: Build Simulation Model (continueOnCalibrationError = "
-        << std::boolalpha << continueOnCalibrationError << ")");
-    CrossAssetModelBuilder modelBuilder(
-        analytic()->market(), analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
-        inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
-        inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None,
-        "xva cam building");
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
+
+    CrossAssetModelBuilder modelBuilder(analytic()->market(), analytic()->configurations().crossAssetModelData,
+                                        inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
+                                        inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
+                                        inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
+                                        false, continueOnCalibrationError, "", "xva cam building", false,
+                                        allowModelFallbacks);
+
     model_ = *modelBuilder.model();
 }
 
@@ -116,10 +120,14 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     buildScenarioSimMarket();
 
     LOG("SCENARIO_STATISTICS: Build Scenario Generator");
+    auto continueOnErr = false;
+    auto allowModelFallbacks = false;
     auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
-    auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
-    bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
-    buildScenarioGenerator(continueOnErr);
+    if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+        continueOnErr = parseBool(c->second);
+    if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+        allowModelFallbacks = parseBool(c->second);
+    buildScenarioGenerator(continueOnErr, allowModelFallbacks);
 
     LOG("SCENARIO_STATISTICS: Attach Scenario Generator to ScenarioSimMarket");
     simMarket_->scenarioGenerator() = scenarioGenerator_;
@@ -134,17 +142,30 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
                                                             analytic()->configurations().simMarketParams)
         : scenarioGenerator_;
 
-        auto statsReport = QuantLib::ext::make_shared<InMemoryReport>();
-    scenarioGenerator->reset();
-        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->valuationDates(),
+    if (inputs_->scenarioOutputStatistics()) {
+        auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        scenarioGenerator->reset();
+        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(),
                                                *statsReport);
-    analytic()->reports()["SCENARIO_STATISTICS"]["scenario_statistics"] = statsReport;
+        analytic()->addReport("SCENARIO_STATISTICS", "scenario_statistics", statsReport);
+    }
 
-    auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>();
-    scenarioGenerator->reset();
-    ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->valuationDates(),
-                                              inputs_->scenarioDistributionSteps(), *distributionReport);
-    analytic()->reports()["SCENARIO_STATISTICS"]["scenario_distribution"] = distributionReport;
+    if (inputs_->scenarioOutputDistributions()) {
+        auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        scenarioGenerator->reset();
+        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
+                                                  inputs_->scenarioDistributionSteps(), *distributionReport);
+        analytic()->addReport("SCENARIO_STATISTICS", "scenario_distribution", distributionReport);
+    }
+
+    // if we just want to write out scenarios, loop over the samples/dates and the ScenarioWriter handles the output
+    if (!(inputs_->scenarioOutputDistributions() || inputs_->scenarioOutputStatistics())) {
+        const auto& dates = grid_->dates();
+        for (Size i = 0; i < samples_; ++i) {
+            for (Size d = 0; d < dates.size(); ++d)
+                scenarioGenerator->next(dates[d]);            
+        }
+    }
 }
 
 } // namespace analytics

@@ -49,6 +49,7 @@ public:
     void setTermStructure(QuantLib::OptionletVolatilityStructure* ovts) override;
     QuantLib::Real impliedQuote() const override;
     void accept(QuantLib::AcyclicVisitor&) override;
+    QuantLib::Real atmStrike() const;
 
 private:
     void initializeDates() override;

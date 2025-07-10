@@ -66,7 +66,7 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 2 && (tokens[0] == "Up" || tokens[0] == "Down")) {
         type_ = tokens[0] == "Up" ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
@@ -76,11 +76,11 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 3 && tokens[0] == "Cross") {
         type_ = ScenarioDescription::Type::Cross;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
-        temp = deconstructFactor(tokens[2]);
+        temp = QuantExt::deconstructFactor(tokens[2]);
         key2_ = temp.first;
         indexDesc2_ = temp.second;
 
@@ -151,57 +151,6 @@ ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescript
     return out;
 }
 
-pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
-
-    // If string is empty
-    if (factor.empty()) {
-        return make_pair(RiskFactorKey(), "");
-    }
-
-    boost::escaped_list_separator<char> sep('\\', '/', '\"');
-    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(factor, sep);
-
-    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
-
-    // first 3 tokens are the risk factor key, the remainder are the description
-    ostringstream o;
-    if (tokens.size() > 3) {
-        o << tokens[3];
-        Size i = 4;
-        while (i < tokens.size()) {
-            o << "/" << tokens[i];
-            i++;
-        }
-    }
-
-    return make_pair(RiskFactorKey(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2])), o.str());
-}
-
-string reconstructFactor(const RiskFactorKey& key, const string& desc) {
-    // If risk factor is empty
-    if (key == RiskFactorKey()) {
-        return "";
-    }
-
-    // If valid risk factor
-    return to_string(key) + "/" + desc;
-}
-
-QuantLib::ext::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {
-    // Use deconstructFactor to split in to pair: [key, additional token str]
-    auto p = deconstructFactor(str);
-
-    // The additional tokens
-    boost::escaped_list_separator<char> sep('\\', '/', '\"');
-    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(p.second, sep);
-
-    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
-    addTokens = tokens;
-
-    // Return the key value
-    return QuantLib::ext::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
-}
-
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& tenors, const vector<Real>& values,
                                         const vector<Real>& times, vector<Real>& shiftedValues, bool initialise) {
@@ -223,7 +172,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else if (j == 0) { // first shift tenor, flat extrapolation to the left
         Time t2 = tenors[j + 1];
@@ -238,7 +187,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else if (j == tenors.size() - 1) { // last shift tenor, flat extrapolation to the right
         Time t0 = tenors[j - 1];
@@ -253,7 +202,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else { // intermediate shift tenor
         Time t0 = tenors[j - 1];
@@ -269,7 +218,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     }
 }
@@ -299,7 +248,7 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
                 if (shiftType == ShiftType::Absolute)
                     shiftedData[k][l] += w * shiftSize;
                 else
-                    shiftedData[k][l] *= (1.0 + w * shiftSize);
+                    shiftedData[k][l] += data[k][l] * (w * shiftSize);
             }
         }
         return;
@@ -356,7 +305,7 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
             if (shiftType == ShiftType::Absolute)
                 shiftedData[ix][iy] += w * wx * wy * shiftSize;
             else
-                shiftedData[ix][iy] *= (1.0 + w * wx * wy * shiftSize);
+                shiftedData[ix][iy] += data[ix][iy] * (w * wx * wy * shiftSize);
         }
     }
 }

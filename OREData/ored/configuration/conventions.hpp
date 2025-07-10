@@ -81,7 +81,8 @@ public:
         CommodityForward,
         CommodityFuture,
         FxOption,
-	BondYield
+        FxOptionTimeWeighting,
+        BondYield
     };
 
     //! Default destructor
@@ -164,7 +165,7 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentConventions() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
+    InstrumentConventions() { clear(); }
 
     mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
@@ -174,7 +175,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
     void setConventions(const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions,
                         QuantLib::Date d = QuantLib::Date());
-    void clear() { conventions_.clear(); }
+    void clear() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
 };
 
 //! Container for storing Zero Rate conventions
@@ -759,15 +760,25 @@ public:
     //! Default constructor
     BMABasisSwapConvention() {}
     //! Detailed constructor
-    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex);
+    BMABasisSwapConvention(const string& id, const string& index, const string& bmaIndex);
     //@}
 
     //! \name Inspectors
     //@{
-    QuantLib::ext::shared_ptr<IborIndex> liborIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
-    const string& liborIndexName() const { return strLiborIndex_; }
+    const string& indexName() const { return strIndex_; }
     const string& bmaIndexName() const { return strBmaIndex_; }
+    const Calendar& bmaPaymentCalendar() const { return bmaPaymentCalendar_; }
+    BusinessDayConvention bmaPaymentConvention() const { return bmaPaymentConvention_; }
+    Natural bmaPaymentLag() const { return bmaPaymentLag_; }
+    const Calendar& indexPaymentCalendar() const { return indexPaymentCalendar_; }
+    BusinessDayConvention indexPaymentConvention() const { return indexPaymentConvention_; }
+    Natural indexPaymentLag() const { return indexPaymentLag_; }
+    Natural indexSettlementDays() const { return indexSettlementDays_; }
+    const Period& indexPaymentPeriod() const { return indexPaymentPeriod_; }
+    BusinessDayConvention indexConvention() const { return indexConvention_; }
+    Natural overnightLockoutDays() const { return overnightLockoutDays_; }
     //@}
 
     //! \name Serialisation
@@ -778,9 +789,30 @@ public:
     //@}
 
 private:
+    Calendar bmaPaymentCalendar_;
+    BusinessDayConvention bmaPaymentConvention_;
+    Natural bmaPaymentLag_;
+    Calendar indexPaymentCalendar_;
+    BusinessDayConvention indexPaymentConvention_;
+    Natural indexPaymentLag_;
+    Natural indexSettlementDays_;
+    Period indexPaymentPeriod_;
+    BusinessDayConvention indexConvention_;
+    Natural overnightLockoutDays_;
+
     // Strings to store the inputs
-    string strLiborIndex_;
+    string strIndex_;
     string strBmaIndex_;
+    string strBmaPaymentCalendar_;
+    string strBmaPaymentConvention_;
+    string strBmaPaymentLag_;
+    string strIndexPaymentCalendar_;
+    string strIndexPaymentConvention_;
+    string strIndexPaymentLag_;
+    string strIndexSettlementDays_;
+    string strIndexPaymentPeriod_;
+    string strIndexConvention_;
+    string strOvernightLockoutDays_;
 };
 
 //! Container for storing FX Spot quote conventions
@@ -1324,7 +1356,7 @@ public:
     /*! The anchor day type of commodity future convention
      */
     enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter, WeeklyDayOfTheWeek };
-    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek, CalendarDaysBefore };
 
     //! Classes to differentiate constructors below
     //@{
@@ -1338,6 +1370,11 @@ public:
         std::string calendarDaysBefore_;
     };
     
+    struct BusinessDaysBefore {
+        BusinessDaysBefore(const std::string& daysBefore) : businessDaysBefore_(daysBefore) {}
+        std::string businessDaysBefore_;
+    };
+
     struct BusinessDaysAfter {
         BusinessDaysAfter(const std::string& businessDaysAfter) : businessDaysAfter_(businessDaysAfter) {}
         std::string businessDaysAfter_;
@@ -1348,29 +1385,49 @@ public:
         std::string weekday_;
     };
 
-
     struct OptionExpiryAnchorDateRule {
         OptionExpiryAnchorDateRule()
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_("0"), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(""), minBusinessDaysBefore_("") {}
+
+        OptionExpiryAnchorDateRule(const DayOfMonth& expiryDay,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::DayOfMonth), daysBefore_(""), expiryDay_(expiryDay.dayOfMonth_), nth_(""),
-              weekday_("") {}
-        OptionExpiryAnchorDateRule(const CalendarDaysBefore& businessDaysBefore)
-            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.calendarDaysBefore_),
-              expiryDay_(""), nth_(""), weekday_("") {}
-        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday)
-            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday) {}
-        OptionExpiryAnchorDateRule(const std::string& lastWeekday)
-            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday) {}
-        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday)
+              weekday_(""), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const BusinessDaysBefore& businessDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::BusinessDaysBefore), daysBefore_(businessDaysBefore.businessDaysBefore_),
+              expiryDay_(""), nth_(""), weekday_(""), calendarDaysBefore_(""),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const CalendarDaysBefore& calendarDaysBefore,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::CalendarDaysBefore), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(""),
+              calendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_),
+              minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& nth, const std::string& weekday, const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const std::string& lastWeekday,
+                                   const std::string& minBusinessDaysBefore)
+            : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday),
+              calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
+
+        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday,
+                                   const std::string& minBusinessDaysBefore)
             : type_(OptionAnchorType::WeeklyDayOfTheWeek), daysBefore_(""), expiryDay_(""), nth_(""),
-              weekday_(weekday.weekday_) {}
+              weekday_(weekday.weekday_), calendarDaysBefore_(""), minBusinessDaysBefore_(minBusinessDaysBefore) {}
 
         OptionAnchorType type_;
         std::string daysBefore_;
         std::string expiryDay_;
         std::string nth_;
         std::string weekday_;
+        std::string calendarDaysBefore_;
+        std::string minBusinessDaysBefore_;
     };
     //@}
 
@@ -1603,6 +1660,8 @@ public:
     OptionAnchorType optionAnchorType() const { return optionAnchorType_; }
     QuantLib::Natural optionNth() const { return optionNth_; }
     QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
+    QuantLib::Natural optionCalendarDaysBefore() const { return optionCalendarDaysBefore_; }
+    QuantLib::Natural optionMinBusinessDaysBefore() const { return optionMinBusinessDaysBefore_; }
     const std::string& savingsTime() const { return savingsTime_; }
     const std::set<QuantLib::Month>& validContractMonths() const { return validContractMonths_; }
     bool balanceOfTheMonth() const { return balanceOfTheMonth_; }
@@ -1666,13 +1725,16 @@ private:
     std::string strOptionExpiryDay_;
     std::string strOptionNth_;
     std::string strOptionWeekday_;
-    
+    std::string strOptionCalendarDaysBefore_;
+    std::string strOptionMinBusinessDaysBefore_;
     
     QuantLib::Frequency optionContractFrequency_;
     QuantLib::Natural optionExpiryOffset_;
     QuantLib::Natural optionNth_;
     QuantLib::Weekday optionWeekday_;
     QuantLib::Natural optionExpiryDay_;
+    QuantLib::Natural optionCalendarDaysBefore_;
+    QuantLib::Natural optionMinBusinessDaysBefore_ = 0;
 
     std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;
@@ -1745,6 +1807,51 @@ private:
     string strLongTermDeltaType_;
     string strRiskReversalInFavorOf_;
     string strButterflyStyle_;
+};
+
+//! Container for storing FX Option Time Weighting scheme
+/*! Defines a time weighting scheme for fx vol interpolation
+\ingroup marketdata
+*/
+class FxOptionTimeWeightingConvention : public Convention {
+public:
+    struct TradingCenter {
+        std::string name;
+        std::string calendar;
+        double weight;
+    };
+    struct Event {
+        std::string description;
+        QuantLib::Date date;
+        double weight;
+    };
+
+    //! \name Constructors
+    //@{
+    FxOptionTimeWeightingConvention() {}
+    FxOptionTimeWeightingConvention(const string& id, const std::vector<double>& weekdayWeights,
+                                    const std::vector<TradingCenter>& tradingCenters = {},
+                                    const std::vector<Event>& events = {});
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const std::vector<double>& weekdayWeights() const { return weekdayWeights_; }
+    const std::vector<TradingCenter>& tradingCenters() const { return tradingCenters_; }
+    const std::vector<Event>& events() const { return events_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void build() override;
+    //@}
+
+private:
+    std::vector<double> weekdayWeights_;
+    std::vector<TradingCenter> tradingCenters_;
+    std::vector<Event> events_;
 };
 
 /*! Container for storing zero inflation index conventions

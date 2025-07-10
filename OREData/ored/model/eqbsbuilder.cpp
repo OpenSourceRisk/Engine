@@ -18,12 +18,15 @@
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <qle/models/eqbsconstantparametrization.hpp>
 #include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ored/model/eqbsbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -38,9 +41,10 @@ namespace data {
 
 EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<EqBsData>& data,
                          const QuantLib::Currency& baseCcy, const std::string& configuration,
-                         const std::string& referenceCalibrationGrid)
+                         const std::string& referenceCalibrationGrid,
+                         const std::string& id)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
-      baseCcy_(baseCcy) {
+      baseCcy_(baseCcy), id_(id) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
@@ -49,14 +53,40 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     LOG("Start building EqBs model for " << eqName);
 
-    // get market data
+    // try to get market objects, if sth fails, we fall back to a default and log a structured error
+
     std::string fxCcyPair = ccy.code() + baseCcy_.code();
-    eqSpot_ = market_->equitySpot(eqName, configuration_);
-    fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
-    // FIXME using the "discount curve" here instead of the equityReferenceRateCurve?
-    ytsRate_ = market_->discountCurve(ccy.code(), configuration_);
-    ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);
-    eqVol_ = market_->equityVol(eqName, configuration_);
+
+    Handle<YieldTermStructure> dummyYts(
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+
+    try {
+        eqSpot_ = market_->equitySpot(eqName, configuration_);
+    } catch (const std::exception& e) {
+        processException("equity spot", e);
+        eqSpot_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    }
+
+    try {
+        fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
+    } catch (const std::exception& e) {
+        processException("fx rate", e);
+        fxSpot_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    }
+
+    try {
+        ytsRate_ = market_->equityForecastCurve(eqName, configuration_);
+    } catch (const std::exception& e) {
+        processException("equity forecast curve", e);
+        ytsRate_ = dummyYts;
+    }
+
+    try {
+        ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);
+    } catch (const std::exception& e) {
+        processException("equity dividend curve", e);
+        ytsDiv_ = dummyYts;
+    }
 
     // register with market observables except vols
     marketObserver_->registerWith(eqSpot_);
@@ -64,16 +94,24 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     marketObserver_->registerWith(ytsRate_);
     marketObserver_->registerWith(ytsDiv_);
 
-    // register the builder with the vol and the market observer
-    registerWith(eqVol_);
+    // register the builder with the market observer
     registerWith(marketObserver_);
 
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma())
+    if (data->calibrateSigma()) {
+        try {
+            eqVol_ = market_->equityVol(eqName, configuration_);
+        } catch (const std::exception& e) {
+            processException("equity vol surface", e);
+            eqVol_ = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackConstantVol>(
+                0, NullCalendar(), 0.0010, Actual365Fixed()));
+        }
+        registerWith(eqVol_);
         buildOptionBasket();
+    }
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
@@ -103,6 +141,14 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
                                                                                      sigma[0], ytsRate_, ytsDiv_);
     else
         QL_FAIL("interpolation type not supported for Equity");
+}
+
+void EqBsBuilder::processException(const std::string& s, const std::exception& e) {
+    const std::string& qualifier = data_->eqName();
+    StructuredModelErrorMessage("Error while building EQ-BS model for qualifier '" + qualifier + "', context '" +
+                                s + "'. Using a fallback, results depending on this object will be invalid.",
+                                e.what(), id_)
+        .log();
 }
 
 Real EqBsBuilder::error() const {

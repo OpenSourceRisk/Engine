@@ -55,18 +55,15 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return true; }
-    //@}
-
     const std::map<std::string, boost::any>& additionalData() const override;
 
 private:
     string longShort_;
     LegData legData_;
     vector<double> caps_;
+    vector<string> capDates_;
     vector<double> floors_;
+    vector<string> floorDates_;
     PremiumData premiumData_;
 };
 } // namespace data

@@ -17,6 +17,7 @@
 */
 
 #include <qle/math/randomvariable_ops.hpp>
+#include <qle/python_integration/pythonfunctions.hpp>
 
 #include <ql/math/comparison.hpp>
 
@@ -24,106 +25,164 @@
 
 namespace QuantExt {
 
-std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
-                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                   const double eps, QuantLib::Real regressionVarianceCutoff) {
+RandomVariable randomVariableOpConditionalExpectation(const Size size, const Size regressionOrder,
+                                                      QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                                                      QuantLib::Real regressionVarianceCutoff,
+                                                      const std::set<std::set<std::size_t>>& regressorGroups,
+                                                      const bool usePythonIntegration,
+                                                      const std::vector<const RandomVariable*>& args) {
+
+    std::vector<const RandomVariable*> regressor;
+    for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
+        if ((*r)->initialised() && !(*r)->deterministic())
+            regressor.push_back(*r);
+    }
+
+    if (regressor.empty())
+        return expectation(*args[0]);
+
+    bool trivialRegressorGroups =
+        regressorGroups.empty() || (regressorGroups.size() == 1 && regressorGroups.begin()->size() == regressor.size());
+
+    QL_REQUIRE(trivialRegressorGroups || regressionVarianceCutoff == Null<Real>(),
+               "RandomVariableOps::conditionalExpectation(): non-trivial regressor group do not work with "
+               "regressionVarianceCutoff ("
+                   << regressionVarianceCutoff << ")");
+
+    std::vector<RandomVariable> transformedRegressor;
+    Matrix coordinateTransform;
+    if (regressionVarianceCutoff != Null<Real>()) {
+        coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
+        transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+        regressor = vec2vecptr(transformedRegressor);
+    }
+
+    Filter filter = !close_enough(*args[1], RandomVariable(size, 0.0));
+
+    if (usePythonIntegration && filter.deterministic() && filter[0]) {
+
+        // FIXME does not support regressor groups, non-trivial filters at the moment
+
+        return PythonFunctions::instance().conditionalExpectation(*args[0], regressor);
+
+    } else {
+        auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
+                                        trivialRegressorGroups ? std::set<std::set<size_t>>{} : regressorGroups, size);
+        return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
+    }
+}
+
+std::vector<RandomVariableOp>
+getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                     const double eps, QuantLib::Real regressionVarianceCutoff,
+                     const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups,
+                     const bool usePythonIntegration) {
+
     std::vector<RandomVariableOp> ops;
 
     // None = 0
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
+        if (args.size() == 1)
+            return *args[0];
+        else
+            return RandomVariable();
+    });
 
     // Add = 1
-    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
         return std::accumulate(args.begin(), args.end(), RandomVariable(args.front()->size(), 0.0),
                                [](const RandomVariable x, const RandomVariable* y) { return x + *y; });
     });
 
     // Subtract = 2
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] - (*args[1]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return *args[0] - (*args[1]); });
 
     // Negative = 3
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return -(*args[0]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) { return -(*args[0]); });
 
     // Mult = 4
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] * (*args[1]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return *args[0] * (*args[1]); });
 
     // Div = 5
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] / (*args[1]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomType,
-                   regressionVarianceCutoff](const std::vector<const RandomVariable*>& args) {
-        std::vector<const RandomVariable*> regressor;
-        for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
-            if ((*r)->initialised() && !(*r)->deterministic())
-                regressor.push_back(*r);
-        }
-        std::vector<RandomVariable> transformedRegressor;
-        Matrix coordinateTransform;
-        if (regressionVarianceCutoff != Null<Real>()) {
-            coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
-            transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
-            regressor = vec2vecptr(transformedRegressor);
-        }
-        if (regressor.empty())
-            return expectation(*args[0]);
-        else {
-            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, size);
-            return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
-        }
+    ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff, regressorGroups,
+                   usePythonIntegration](const std::vector<const RandomVariable*>& args, const Size node) {
+        auto g = regressorGroups.find(node);
+        return randomVariableOpConditionalExpectation(
+            size, regressionOrder, polynomType, regressionVarianceCutoff,
+            g == regressorGroups.end() ? std::set<std::set<std::size_t>>{} : g->second, usePythonIntegration, args);
     });
 
     // IndicatorEq = 7
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return indicatorEq(*args[0], *args[1]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
+        return indicatorEq(*args[0], *args[1]);
+    });
 
     // IndicatorGt = 8
-    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args, const Size node) {
         return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps);
     });
 
     // IndicatorGeq = 9
-    ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([eps](const std::vector<const RandomVariable*>& args, const Size node) {
         return indicatorGeq(*args[0], *args[1], 1.0, 0.0, eps);
     });
 
     // Min = 10
     if (eps == 0.0) {
-        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
+            return QuantExt::min(*args[0], *args[1]);
+        });
     } else {
-        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args, const Size node) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
         });
     }
 
     // Max = 11
     if (eps == 0.0) {
-        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
+            return QuantExt::max(*args[0], *args[1]);
+        });
     } else {
-        ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
+        ops.push_back([eps](const std::vector<const RandomVariable*>& args, const Size node) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
         });
     }
 
     // Abs = 12
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::abs(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::abs(*args[0]); });
 
     // Exp = 13
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::exp(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::exp(*args[0]); });
 
     // Sqrt = 14
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::sqrt(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::sqrt(*args[0]); });
 
     // Log = 15
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::log(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::log(*args[0]); });
 
     // Pow = 16
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::pow(*args[0], *args[1]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args, const Size node) {
+        return QuantExt::pow(*args[0], *args[1]);
+    });
 
     // NormalCdf = 17
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::normalCdf(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::normalCdf(*args[0]); });
 
     // NormalPdf = 18
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::normalPdf(*args[0]); });
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::normalPdf(*args[0]); });
 
     return ops;
 }
@@ -135,114 +194,106 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     std::vector<RandomVariableGrad> grads;
 
     // None = 0
-    grads.push_back([](const std::vector<const RandomVariable*>& args,
-                       const RandomVariable* v) -> std::vector<RandomVariable> { return {RandomVariable()}; });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0)}; });
 
     // Add = 1
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0), RandomVariable(size, 1.0)};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> {
+        return std::vector<RandomVariable>(args.size(), RandomVariable(size, 1.0));
+    });
 
     // Subtract = 2
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0), RandomVariable(size, -1.0)};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> {
+        return {RandomVariable(size, 1.0), RandomVariable(size, -1.0)};
+    });
 
     // Negative = 3
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, -1.0)};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, -1.0)}; });
 
     // Mult = 4
-    grads.push_back(
-        [](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {*args[1], *args[0]};
-        });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {*args[1], *args[0]}; });
 
     // Div = 5
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0) / *args[1], -*args[0] / (*args[1] * *args[1])};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> {
+        return {RandomVariable(size, 1.0) / *args[1], -*args[0] / (*args[1] * *args[1])};
+    });
 
     // ConditionalExpectation = 6
-    grads.push_back(
-        [](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            QL_FAIL("gradient of conditional expectation not implemented");
-        });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> {
+        QL_FAIL("gradient of conditional expectation not implemented");
+    });
 
     // IndicatorEq = 7
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 0.0), RandomVariable(size, 0.0)};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> {
+        return {RandomVariable(size, 0.0), RandomVariable(size, 0.0)};
+    });
 
     // IndicatorGt = 8
-    grads.push_back(
-        [eps](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            RandomVariable tmp = indicatorDerivative(*args[0] - *args[1], eps);
-            return {tmp, -tmp};
-        });
+    grads.push_back([eps](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                          const Size node) -> std::vector<RandomVariable> {
+        RandomVariable tmp = indicatorDerivative(*args[0] - *args[1], eps);
+        return {tmp, -tmp};
+    });
 
     // IndicatorGeq = 9
     grads.push_back(grads.back());
 
     // Min = 10
-    grads.push_back([eps](const std::vector<const RandomVariable*>& args,
-                          const RandomVariable* v) -> std::vector<RandomVariable> {
+    grads.push_back([eps](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                          const Size node) -> std::vector<RandomVariable> {
         return {
             indicatorDerivative(*args[1] - *args[0], eps) * (*args[1] - *args[0]) + indicatorGeq(*args[1], *args[0]),
             indicatorDerivative(*args[0] - *args[1], eps) * (*args[0] - *args[1]) + indicatorGeq(*args[0], *args[1])};
     });
 
     // Max = 11
-    grads.push_back([eps](const std::vector<const RandomVariable*>& args,
-                          const RandomVariable* v) -> std::vector<RandomVariable> {
+    grads.push_back([eps](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                          const Size node) -> std::vector<RandomVariable> {
         return {
             indicatorDerivative(*args[0] - *args[1], eps) * (*args[0] - *args[1]) + indicatorGeq(*args[0], *args[1]),
             indicatorDerivative(*args[1] - *args[0], eps) * (*args[1] - *args[0]) + indicatorGeq(*args[1], *args[0])};
     });
 
     // Abs = 12
-    grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {indicatorGeq(*args[0], RandomVariable(size, 0.0), 1.0, -1.0)};
-        });
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                           const Size node) -> std::vector<RandomVariable> {
+        return {indicatorGeq(*args[0], RandomVariable(size, 0.0), 1.0, -1.0)};
+    });
 
     // Exp = 13
-    grads.push_back([](const std::vector<const RandomVariable*>& args,
-                       const RandomVariable* v) -> std::vector<RandomVariable> { return {*v}; });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {*v}; });
 
     // Sqrt = 14
     grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 0.5) / *v};
-        });
+        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+               const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 0.5) / *v}; });
 
     // Log = 15
     grads.push_back(
-        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0) / *args[0]};
-        });
+        [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+               const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0) / *args[0]}; });
 
     // Pow = 16
-    grads.push_back(
-        [](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {*args[1] / *args[0] * (*v), QuantExt::log(*args[0]) * (*v)};
-        });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> {
+        return {*args[1] / *args[0] * (*v), QuantExt::log(*args[0]) * (*v)};
+    });
 
     // NormalCdf = 17
-    grads.push_back(
-        [](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {QuantExt::normalPdf(*args[0])};
-        });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::normalPdf(*args[0])}; });
 
     // NormalPdf = 18
-    grads.push_back([](const std::vector<const RandomVariable*>& args,
-                       const RandomVariable* v) -> std::vector<RandomVariable> { return {-(*args[0]) * *v}; });
+    grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {-(*args[0]) * *v}; });
 
     return grads;
 }

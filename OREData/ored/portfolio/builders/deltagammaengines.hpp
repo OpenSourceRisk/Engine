@@ -33,6 +33,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/log.hpp>
@@ -55,7 +56,8 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+                                                                const std::string& securitySpread,
+                                                                const std::set<std::string>& eqNames) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -82,8 +84,9 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                        const Currency& base) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                                bool useXccyYieldCurves,
+                                                                const std::set<std::string>& eqNames) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -93,7 +96,12 @@ protected:
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
         for (Size i = 0; i < ccys.size(); ++i) {
-            discountCurves.push_back(xccyYieldCurve(market_, ccys[i].code(), configuration(MarketContext::pricing)));
+            if (useXccyYieldCurves) {
+                discountCurves.push_back(
+                    xccyYieldCurve(market_, ccys[i].code(), configuration(MarketContext::pricing)));
+            } else {
+                discountCurves.push_back(market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing)));
+            }
             string pair = ccys[i].code() + base.code();
             fxQuotes.push_back(market_->fxRate(pair, configuration(MarketContext::pricing)));
         }
@@ -115,8 +123,9 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const std::string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const bool useFxSpot) override {
+                                                        const Date& expiryDate, const bool useFxSpot, const std::optional<Currency>&) override {
         std::vector<Time> bucketTimesDeltaGamma =
             parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
         std::vector<Time> bucketTimesVega = parseListOfValues<Time>(engineParameter("BucketTimesVega"), &parseReal);
@@ -182,5 +191,21 @@ protected:
     }
 };
 
+//! European Swaption Engine Builder
+/*! This builder uses QuantExt::BlackStyleSwaptionEngineDeltaGamma
+    \ingroup portfolio
+ */
+class EuropeanSwaptionEngineBuilderDeltaGamma : public SwaptionEngineBuilder {
+public:
+    EuropeanSwaptionEngineBuilderDeltaGamma()
+        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngineDeltaGamma", {"EuropeanSwaption"}) {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
+                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
+};
+  
 } // namespace data
 } // namespace ore

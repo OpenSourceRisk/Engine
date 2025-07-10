@@ -22,6 +22,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -78,9 +80,6 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     // Check that we have a valid configuration
     validate();
 
-    // Populate required curve ids
-    populateRequiredCurveIds();
-
     // Populate quotes
     populateQuotes();
 }
@@ -92,9 +91,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
       proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
       proxySourceRateComputationPeriod_(proxySourceRateComputationPeriod),
-      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {
-    populateRequiredCurveIds();
-}
+      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
@@ -120,8 +117,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetRateComputationPeriod_ = rateComputationPeriod_ =
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
         onCapSettlementDays_ = parseInteger(XMLUtils::getChildValue(target, "ONCapSettlementDays", false, "0"));
-
-        populateRequiredCurveIds();
 
     } else {
         // read in quote-based config
@@ -237,8 +232,24 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Populate quotes
         populateQuotes();
 
-        // Populate required curve ids
-        populateRequiredCurveIds();
+        // Output vol type
+        string outVolType = XMLUtils::getChildValue(node, "OutputVolatilityType", false);
+        if (outVolType.empty())
+            outputVolatilityType_ = VolatilityType::Normal; // for bwds compatibility before release 1.83.0
+        else if (outVolType == "Normal") {
+            outputVolatilityType_ = VolatilityType::Normal;
+        } else if (outVolType == "Lognormal") {
+            outputVolatilityType_ = VolatilityType::Lognormal;
+        } else if (outVolType == "ShiftedLognormal") {
+            outputVolatilityType_ = VolatilityType::ShiftedLognormal;
+        } else {
+            QL_FAIL("OutputVolatilityType '"
+                    << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
+        }
+
+        // Model and Output shift
+        outputShift_ = XMLUtils::getChildValueAsDouble(node, "ModelShift", false, Null<Real>());
+        modelShift_ = XMLUtils::getChildValueAsDouble(node, "OutputShift", false, Null<Real>());
     }
 
     // Optional report config
@@ -292,7 +303,11 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
-		XMLUtils::addChild(doc, node, "InputType", inputType_);
+        XMLUtils::addChild(doc, node, "InputType", inputType_);
+        if (modelShift_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "ModelShift", modelShift_);
+        if (outputShift_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "OutputShift", outputShift_);
     }
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
@@ -315,16 +330,18 @@ string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
     return volatilityTypeMap.right.at(type);
 }
 
-void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+void CapFloorVolatilityCurveConfig::populateRequiredIds() const {
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
+    if (!index_.empty())
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(index_);
     if (!proxySourceCurveId_.empty())
         requiredCurveIds_[CurveSpec::CurveType::CapFloorVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
     if (!proxySourceIndex_.empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(proxySourceIndex_);
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(proxySourceIndex_);
     if (!proxyTargetIndex_.empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(proxyTargetIndex_);
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(proxyTargetIndex_);
 }
 
 string CapFloorVolatilityCurveConfig::indexTenor() const {

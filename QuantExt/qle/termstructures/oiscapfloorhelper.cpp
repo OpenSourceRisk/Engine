@@ -42,8 +42,8 @@ OISCapFloorHelper::OISCapFloorHelper(CapFloorHelper::Type type, const Period& te
                                      const QuantLib::Date& effectiveDate, CapFloorHelper::QuoteType quoteType,
                                      QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
-          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<QuantLib::ext::function<Real(Real)>>>(
-              quote, QuantLib::ext::bind(&OISCapFloorHelper::npv, this, QuantLib::ext::placeholders::_1)))),
+          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<std::function<Real(Real)>>>(
+              quote, std::bind(&OISCapFloorHelper::npv, this, std::placeholders::_1)))),
       type_(type), tenor_(tenor), rateComputationPeriod_(rateComputationPeriod), strike_(strike), index_(index),
       discountHandle_(discountingCurve), moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType),
       quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement), rawQuote_(quote),
@@ -96,7 +96,7 @@ void OISCapFloorHelper::initializeDates() {
         auto cfon2 = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(capFloor_.back());
         QL_REQUIRE(cfon2, "OISCapFloorHelper: Expected the final cashflow on the cap floor instrument to be a "
                           "CappedFlooredOvernightIndexedCoupon");
-        pillarDate_ = latestDate_ = latestRelevantDate_ = cfon2->underlying()->fixingDates().back();
+        pillarDate_ = latestDate_ = latestRelevantDate_ = cfon2->underlying()->fixingDates().front();
     }
 }
 
@@ -185,6 +185,12 @@ Real OISCapFloorHelper::npv(Real quoteValue) {
         // If the quote value is a volatility, return the premium
         return CashFlows::npv(capFloorCopy_, **discountHandle_, false);
     }
+}
+
+Real OISCapFloorHelper::atmStrike() const{
+    QL_REQUIRE(!discountHandle_.empty() && discountHandle_.currentLink() != nullptr,
+               "OISCapFloorHelper::atmStrike: discountHandle is empty");
+    return CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
 }
 
 } // namespace QuantExt

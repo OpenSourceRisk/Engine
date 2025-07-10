@@ -134,9 +134,10 @@ void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                                        optionData_.premiumData(), -multiplier, parseCurrency(legCurrencies_.front()),
-                                       engineFactory, builder->configuration(MarketContext::pricing));
+                                       discountCurve, engineFactory, builder->configuration(MarketContext::pricing));
 
     // get engine and assign it
 
@@ -146,6 +147,7 @@ void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
                                   underlyingIndices);
     multiLegOption->setPricingEngine(engine);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     DLOG("Pricing engine set.")
 
@@ -160,6 +162,10 @@ void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     legPayers_ = underlyingPayers;
     notional_ = currentNotional(legs_.front());
     maturity_ = std::max(lastPremiumDate, multiLegOption->maturityDate());
+    maturityType_ = maturity_ == lastPremiumDate
+                        ? "Last Premium Date"
+                        : "Final Leg Date from MultiLegOption";
+
     // npv currency is base currency of the pricing model
     auto moe = QuantLib::ext::dynamic_pointer_cast<McMultiLegOptionEngine>(engine);
     QL_REQUIRE(moe != nullptr, "MultiLegOption::build(): expected McMultiLegOptionEngine from engine builder");

@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <qle/models/crossassetmodel.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -46,6 +46,15 @@ class FxEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
 public:
     FxEuropeanCSOptionEngineBuilder()
         : EuropeanCSOptionEngineBuilder("GarmanKohlhagen", {"FxOptionEuropeanCS"}, AssetClass::FX) {}
+};
+
+/*! Engine builder for European cash-settled FX options.
+    \ingroup builders
+ */
+class FxEuropeanForwardOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {
+public:
+    FxEuropeanForwardOptionEngineBuilder()
+        : EuropeanForwardOptionEngineBuilder("GarmanKohlhagen", {"FxOptionForward"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Finite Difference Method
@@ -71,23 +80,121 @@ public:
 };
 
 //! FX option engine builder for external cam, with additional simulation dates (AMC)
-class CamAmcFxOptionEngineBuilder : public VanillaOptionEngineBuilder {
+class CamAmcFxOptionEngineBuilderBase : public VanillaOptionEngineBuilder {
 public:
     // for external cam, with additional simulation dates (AMC)
-    CamAmcFxOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                const std::vector<Date>& simulationDates)
-        : VanillaOptionEngineBuilder("CrossAssetModel", "AMC", {"FxOption"}, AssetClass::FX, Date()), cam_(cam),
+    CamAmcFxOptionEngineBuilderBase(const std::set<std::string>& tradeTypes,
+                                    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                    const std::vector<Date>& simulationDates,
+                                    const std::vector<Date>& stickyCloseOutDates)
+        : VanillaOptionEngineBuilder("CrossAssetModel", "AMC", tradeTypes, AssetClass::FX, Date()), cam_(cam),
+          simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
+
+protected:
+    template <typename E>
+    QuantLib::ext::shared_ptr<PricingEngine> engineImplBase(const string& assetName, const Currency& domCcy,
+                                                            const AssetClass& assetClassUnderlying,
+                                                            const Date& expiryDate, const bool useFxSpot);
+
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    std::vector<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
+};
+
+class CamAmcFxEuropeanOptionEngineBuilder : public CamAmcFxOptionEngineBuilderBase {
+public:
+    CamAmcFxEuropeanOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                        const std::vector<Date>& simulationDates,
+                                        const std::vector<Date>& stickyCloseOutDates)
+        : CamAmcFxOptionEngineBuilderBase({"FxOption"}, cam, simulationDates, stickyCloseOutDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
+class CamAmcFxEuropeanForwardOptionEngineBuilder : public CamAmcFxOptionEngineBuilderBase {
+public:
+    CamAmcFxEuropeanForwardOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                               const std::vector<Date>& simulationDates,
+                                               const std::vector<Date>& stickyCloseOutDates)
+        : CamAmcFxOptionEngineBuilderBase({"FxOptionForward"}, cam, simulationDates, stickyCloseOutDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
+class CamAmcFxEuropeanCSOptionEngineBuilder : public CamAmcFxOptionEngineBuilderBase {
+public:
+    CamAmcFxEuropeanCSOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                          const std::vector<Date>& simulationDates,
+                                          const std::vector<Date>& stickyCloseOutDates)
+        : CamAmcFxOptionEngineBuilderBase({"FxOptionEuropeanCS"}, cam, simulationDates, stickyCloseOutDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
+//! FX option engine builder for external cam, with additional simulation dates (AMC-CG)
+class AmcCgFxOptionEngineBuilderBase : public VanillaOptionEngineBuilder {
+public:
+    AmcCgFxOptionEngineBuilderBase(const std::set<std::string>& tradeTypes,
+                                   const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                   const std::vector<Date>& simulationDates)
+        : VanillaOptionEngineBuilder("CrossAssetModel", "AMCCG", tradeTypes, AssetClass::FX, Date()), modelCg_(modelCg),
           simulationDates_(simulationDates) {}
 
 protected:
-    // the pricing engine depends on the ccys only, so the base class key implementation will just do fine
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                const AssetClass& assetClassUnderlying, const Date& expiryDate, const bool useFxSpot) override;
+    template <typename E>
+    QuantLib::ext::shared_ptr<PricingEngine> engineImplBase(const string& assetName, const Currency& domCcy,
+                                                            const string& discountCurveName,
+                                                            const AssetClass& assetClassUnderlying,
+                                                            const Date& expiryDate, const bool useFxSpot, const std::optional<Currency>&);
 
-private:
-    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
 };
-    
+
+class AmcCgFxEuropeanOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
+public:
+    AmcCgFxEuropeanOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                       const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOption"}, modelCg, simulationDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
+class AmcCgFxEuropeanForwardOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
+public:
+    AmcCgFxEuropeanForwardOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                              const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOptionForward"}, modelCg, simulationDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
+class AmcCgFxEuropeanCSOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
+public:
+    AmcCgFxEuropeanCSOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                         const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOptionEuropeanCS"}, modelCg, simulationDates) {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const string& discountCurveName,
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const bool useFxSpot, const std::optional<Currency>&) override;
+};
+
 } // namespace data
 } // namespace ore

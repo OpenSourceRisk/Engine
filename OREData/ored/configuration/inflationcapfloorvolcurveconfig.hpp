@@ -23,7 +23,9 @@
 
 #pragma once
 
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -68,7 +70,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const Type& type() const { return type_; }
+    Type getType() const { return type_; }
     const QuoteType& quoteType() const { return quoteType_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
@@ -88,6 +90,8 @@ public:
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& conventions() const { return conventions_; }
     const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
 
     //! \name Setters
@@ -113,7 +117,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     Type type_;
     QuoteType quoteType_;
@@ -135,10 +139,13 @@ private:
     std::string quoteIndex_;
     std::string conventions_;
     bool useLastAvailableFixingDate_;
+    ReportConfig reportConfig_;
+    BootstrapConfig bootstrapConfig_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::QuoteType t);
+std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::Type t);
 
 } // namespace data
 } // namespace ore

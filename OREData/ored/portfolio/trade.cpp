@@ -19,13 +19,16 @@
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
-
+#include <qle/indexes/fxindex.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 using ore::data::XMLUtils;
 
 namespace ore {
@@ -57,7 +60,7 @@ XMLNode* Trade::toXML(XMLDocument& doc) const {
 
 Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
                         const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                        const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                        const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                         const string& configuration) {
 
     Date latestPremiumPayDate = Date::minDate();
@@ -67,14 +70,38 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         Currency premiumCurrency = parseCurrencyWithMinors(d.ccy);
         Real premiumAmount = convertMinorToMajorCurrency(d.ccy, d.amount);
-        auto fee = QuantLib::ext::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate);
-
+        Currency payCurrency = d.payCurrency.empty() ? premiumCurrency : parseCurrencyWithMinors(d.payCurrency);
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
+        std::optional<QuantLib::Date> fixingDate;
+        if (payCurrency != premiumCurrency) {
+            QL_REQUIRE(!d.fxIndex.empty(), "Trade contains premium data with premium currency " << premiumCurrency
+                                                  << " and cash settlement payment currency " << payCurrency
+                                                  << ", but no FX index is provided for conversion.");
+            auto ind = parseFxIndex(d.fxIndex);
+            fxIndex = buildFxIndex(d.fxIndex, payCurrency.code(), premiumCurrency.code(), factory->market(),
+                                   configuration, true);
+            if (!d.fixingDate.empty()) {
+                fixingDate = parseDate(d.fixingDate);
+            }
+        }
+        auto fee = QuantLib::ext::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate, payCurrency,
+                                                                 fxIndex, fixingDate);
         addMultipliers.push_back(premiumMultiplier);
 
-        Handle<YieldTermStructure> yts = factory->market()->discountCurve(d.ccy, configuration);
+        std::string premiumSettlementCurrency = payCurrency.code();
+
+        Handle<YieldTermStructure> yts = discountCurve.empty()
+            ? factory->market()->discountCurve(premiumSettlementCurrency, configuration)
+            : indexOrYieldCurve(factory->market(), discountCurve, configuration);
         Handle<Quote> fx;
-        if (tradeCurrency.code() != d.ccy) {
-            fx = factory->market()->fxRate(d.ccy + tradeCurrency.code(), configuration);
+        DLOG("Premium Discounting currency is " << premiumSettlementCurrency
+                                                  << ", trade currency is " << tradeCurrency.code()
+                                                  << ", configuration is " << configuration);
+        
+        // If the premium settlement currency is different from the trade currency, we need to get the FX rate
+        // for the premium settlement currency to the trade npvcurrency.                                                  
+        if (tradeCurrency.code() != premiumSettlementCurrency) {
+            fx = factory->market()->fxRate(premiumSettlementCurrency + tradeCurrency.code(), configuration);
         }
         QuantLib::ext::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
         fee->setPricingEngine(discountingEngine);
@@ -84,15 +111,24 @@ Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addI
 
         // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
         //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
-        legs_.push_back(
-            Leg(1, QuantLib::ext::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
-                                                      fee->cashFlow()->date())));
+        if (premiumCurrency != payCurrency) {
+            auto fxFixingDate = fixingDate ? fixingDate.value() : fxIndex->fixingDate(fee->cashFlow()->date());
+            legs_.push_back(Leg(1, QuantLib::ext::make_shared<QuantExt::FXLinkedTypedCashFlow>(
+                                       fee->cashFlow()->date(), fxFixingDate,
+                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier, fxIndex,
+                                       QuantExt::TypedCashFlow::Type::Premium)));
+        } else {
+            legs_.push_back(Leg(1, QuantLib::ext::make_shared<QuantExt::TypedCashFlow>(
+                                       fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+                                       fee->cashFlow()->date(), QuantExt::TypedCashFlow::Type::Premium)));
+        }
         legCurrencies_.push_back(fee->currency().code());
-
         // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
         legPayers_.push_back(false);
 
-	// update latest premium pay date
+        legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Always;
+
+        // update latest premium pay date
         latestPremiumPayDate = std::max(latestPremiumPayDate, d.payDate);
 
         DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");
@@ -109,7 +145,7 @@ void Trade::validate() const {
     QL_REQUIRE(npvCurrency_ != "", "NPV currency has not been set for trade " << id_ << ".");
     // QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
     // QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
-    QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
+    QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");    
     QL_REQUIRE(envelope_.initialized(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
@@ -141,11 +177,15 @@ void Trade::reset() {
     npvCurrency_.clear();
     notional_ = Null<Real>();
     notionalCurrency_.clear();
+    legCashflowInclusion_.clear();
     maturity_ = Date();
+    maturityType_.clear();
     issuer_.clear();
     requiredFixings_.clear();
     sensitivityTemplate_.clear();
     sensitivityTemplateSet_ = false;
+    productModelEngine_.clear();
+    additionalData_.clear();
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
@@ -193,19 +233,21 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
 
                 if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
-                    additionalData_["initialPrice[" + legID + "]"] = arc.initialPrice;
+                    additionalData_["currentPeriodStartPrice[" + legID + "]"] = arc.currentPeriodStartPrice;
                     additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
                     if (arc.startFixing != Null<Real>())
                         additionalData_["startEquityFixing[" + legID + "]"] = arc.startFixing;
+                    if (arc.dividendFactor != Null<Real>())
+                        additionalData_["dividendFactor[" + legID + "]"] = arc.dividendFactor;
                     if (arc.startFixingTotal != Null<Real>())
                         additionalData_["startEquityFixingTotal[" + legID + "]"] =
                             arc.startFixingTotal;
                     if (arc.endFixingTotal != Null<Real>())
                         additionalData_["endEquityFixingTotal[" + legID + "]"] = arc.endFixingTotal;
-                    if (arc.startFxFixing != Null<Real>())
-                        additionalData_["startFxFixing[" + legID + "]"] = arc.startFxFixing;
-                    if (arc.endFxFixing != Null<Real>())
-                        additionalData_["endFxFixing[" + legID + "]"] = arc.endFxFixing;
+                    if (arc.currentPeriodStartFxFixing != Null<Real>())
+                        additionalData_["currentPeriodStartFxFixing[" + legID + "]"] = arc.currentPeriodStartFxFixing;
+                    if (arc.currentPeriodEndFxFixing != Null<Real>())
+                        additionalData_["currentPeriodEndFxFixing[" + legID + "]"] = arc.currentPeriodEndFxFixing;
                     if (arc.pastDividends != Null<Real>())
                         additionalData_["pastDividends[" + legID + "]"] = arc.pastDividends;
                     if (arc.forecastDividends != Null<Real>())
@@ -264,13 +306,14 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                         quantity = eqc->legInitialNotional() / eqc->initialPrice();
                     }
                 }
-                additionalData_["initialQuantity[" + legID + "]"] = quantity;
+
+                additionalData_[(eqc->notionalReset() ? "quantity[" : "initialQuantity[") + legID + "]"] = quantity;
 
                 Real currentPrice = Null<Real>();
                 if (eqc->equityCurve()->isValidFixingDate(asof)) {
                     currentPrice = eqc->equityCurve()->equitySpot()->value();
                 }
-                if (currentPrice != Null<Real>() && originalNotional != Null<Real>()) {
+                if (currentPrice != Null<Real>() && originalNotional != Null<Real>() && !eqc->notionalReset()) {
                     additionalData_["currentQuantity" + legID + "]"] = originalNotional / currentPrice;
                 }
             }
@@ -310,6 +353,36 @@ const std::string& Trade::sensitivityTemplate() const {
             .log();
     }
     return sensitivityTemplate_;
+}
+
+const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& Trade::productModelEngine() const {
+    return productModelEngine_;
+}
+
+void Trade::addProductModelEngine(const EngineBuilder& builder) {
+    productModelEngine_.insert(std::make_tuple(builder.tradeTypes(), builder.model(), builder.engine()));
+    updateProductModelEngineAdditionalData();
+}
+
+void Trade::addProductModelEngine(
+    const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine) {
+    productModelEngine_.insert(productModelEngine.begin(), productModelEngine.end());
+    updateProductModelEngineAdditionalData();
+}
+
+void Trade::updateProductModelEngineAdditionalData() {
+    Size counter = 0;
+    for (auto const& [p, m, e] : productModelEngine_) {
+        std::string suffix = productModelEngine_.size() > 1 ? "[" + std::to_string(counter) + "]" : std::string();
+        if (p.size() == 1) {
+            additionalData_["PricingConfigProductType" + suffix] = *p.begin();
+        } else {
+            additionalData_["PricingConfigProductType" + suffix] = std::vector<std::string>(p.begin(), p.end());
+        }
+        additionalData_["PricingConfigModel" + suffix] = m;
+        additionalData_["PricingConfigEngine" + suffix] = e;
+        ++counter;
+    }
 }
 
 } // namespace data

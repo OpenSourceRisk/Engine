@@ -52,9 +52,11 @@ public:
         const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpreter for cube storage (where to find which data items)
         const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+        //! Aggregation scenario data resulting from Monte Carlo simulation loop
+        const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
         //! Market data object to access e.g. discounting and funding curves
         const QuantLib::ext::shared_ptr<Market>& market,
-	    //! Flag to indicate exposure termination at the next break date
+        //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
         //! Expression currency for all results
         const string& baseCurrency,
@@ -64,11 +66,14 @@ public:
         const Real quantile,
         //! Collateral calculation type to be used, see class %CollateralExposureHelper
         const CollateralExposureHelper::CalculationType calcType,
-	    //! Flag to indicate exposure evaluation with dynamic credit
+        //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA
-    );
+        const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues_ = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false,
+        //! use double precision cube
+        bool useDoublePrecisionCubes = false);
 
     virtual ~ExposureCalculator() {}
 
@@ -118,18 +123,21 @@ public:
     vector<Real>& pfe(const string& tid) { return pfe_[tid]; }
     Real& epe_b(const string& tid) { return epe_b_[tid]; }
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
+    vector<Real>& epe_b_timeWeighted(const string& tid) { return epe_bTimeWeighted_[tid]; }
+    vector<Real>& eepe_b_timeWeighted(const string& tid) { return eepe_bTimeWeighted_[tid]; }
 
 protected:
-    const QuantLib::ext::shared_ptr<Portfolio> portfolio_;
-    const QuantLib::ext::shared_ptr<NPVCube> cube_;
-    const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
-    const QuantLib::ext::shared_ptr<Market> market_;
-    const bool exerciseNextBreak_;
-    const string baseCurrency_;
-    const string configuration_;
-    const Real quantile_;
-    const CollateralExposureHelper::CalculationType calcType_;
-    const bool multiPath_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
+    QuantLib::ext::shared_ptr<Market> market_;
+    bool exerciseNextBreak_;
+    string baseCurrency_;
+    string configuration_;
+    Real quantile_;
+    CollateralExposureHelper::CalculationType calcType_;
+    bool multiPath_;
     bool isRegularCubeStorage_;
 
     vector<Date> dates_;
@@ -149,8 +157,12 @@ protected:
     map<string, std::vector<Real>> pfe_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
+    map<string, std::vector<Real>> epe_bTimeWeighted_;
+    map<string, std::vector<Real>> eepe_bTimeWeighted_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
     bool flipViewXVA_;
+    bool exposureProfilesUseCloseOutValues_ = false;
+    bool continueOnError_;
 };
 
 } // namespace analytics

@@ -61,6 +61,8 @@ public:
         Cubic
     }; // Vanna Volga first/second approximation respectively
 
+    enum class TimeInterpolation { V, V2T };
+
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
@@ -101,6 +103,8 @@ public:
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
     const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
     const std::string& smileExtrapolation() const { return smileExtrapolation_; }
+    const TimeInterpolation& timeInterpolation() const { return timeInterpolation_; }
+    const string& timeWeighting() const { return timeWeighting_; }
     const string& conventionsID() const { return conventionsID_; }
     const std::vector<Size>& smileDelta() const { return smileDelta_; }
     const vector<string>& quotes() override;
@@ -108,6 +112,7 @@ public:
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
+    double butterflyErrorTolerance() const { return butterflyErrorTolerance_; }
     //@}
 
     //! \name Setters
@@ -115,6 +120,8 @@ public:
     Dimension& dimension() { return dimension_; }
     SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
     string& smileExtrapolation() { return smileExtrapolation_; }
+    TimeInterpolation& timeInterpolation() { return timeInterpolation_; }
+    string& timeWeighting() { return timeWeighting_; }
     vector<string>& deltas() { return deltas_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
@@ -127,10 +134,11 @@ public:
     string& baseVolatility1() { return baseVolatility1_; }
     string& baseVolatility2() { return baseVolatility2_; }
     string& fxIndexTag() { return fxIndexTag_; }
+    double& butterflyErrorTolerance() { return butterflyErrorTolerance_; }
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     Dimension dimension_;
     vector<string> expiries_;
@@ -145,10 +153,17 @@ private:
     std::set<string> requiredYieldCurveIDs_;
     SmileInterpolation smileInterpolation_;
     string smileExtrapolation_;
+    TimeInterpolation timeInterpolation_;
+    string timeWeighting_;
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;
     ReportConfig reportConfig_;
+    double butterflyErrorTolerance_ = 0.01;
 };
+
+FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s);
+std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::TimeInterpolation t);
+
 } // namespace data
 } // namespace ore

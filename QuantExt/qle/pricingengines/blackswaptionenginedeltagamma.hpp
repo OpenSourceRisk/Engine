@@ -22,9 +22,9 @@
     \ingroup engines
 */
 
-#ifndef quantext_pricers_black_swaption_deltagamma_hpp
-#define quantext_pricers_black_swaption_deltagamma_hpp
+#pragma once
 
+#include <qle/instruments/multilegoption.hpp>
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
@@ -46,7 +46,9 @@ class Quote;
 }
 
 namespace QuantExt {
+
 using namespace QuantLib;
+
 namespace detail {
 
 /*! Generic Black-style-formula swaption engine
@@ -72,7 +74,7 @@ namespace detail {
     \warning Cash settled swaption are priced, but the annuity used is the one from physical settlement currently
 */
 
-template <class Spec> class BlackStyleSwaptionEngineDeltaGamma : public QuantLib::Swaption::engine {
+template <class Spec> class BlackStyleSwaptionEngineDeltaGamma : public QuantExt::MultiLegOption::engine {
 public:
     BlackStyleSwaptionEngineDeltaGamma(const Handle<YieldTermStructure>& discountCurve, Volatility vol,
                                        const DayCounter& dc = Actual365Fixed(), Real displacement = 0.0,
@@ -102,7 +104,6 @@ public:
 private:
     Handle<YieldTermStructure> discountCurve_;
     Handle<SwaptionVolatilityStructure> vol_;
-    const Real displacement_;
     const std::vector<Time> bucketTimesDeltaGamma_, bucketTimesVegaOpt_, bucketTimesVegaUnd_;
     const bool computeDeltaVega_, computeGamma_, linearInZero_;
 };
@@ -248,11 +249,12 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
     const std::vector<Time>& bucketTimesDeltaGamma, const std::vector<Time>& bucketTimesVegaOpt,
     const std::vector<Time>& bucketTimesVegaUnd, const bool computeDeltaVega, const bool computeGamma,
     const bool linearInZero)
-    : discountCurve_(discountCurve), vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
-                                         0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
-      displacement_(displacement), bucketTimesDeltaGamma_(bucketTimesDeltaGamma),
-      bucketTimesVegaOpt_(bucketTimesVegaOpt), bucketTimesVegaUnd_(bucketTimesVegaUnd),
-      computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma), linearInZero_(linearInZero) {
+    : discountCurve_(discountCurve),
+      vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(
+          new ConstantSwaptionVolatility(0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
+      bucketTimesDeltaGamma_(bucketTimesDeltaGamma), bucketTimesVegaOpt_(bucketTimesVegaOpt),
+      bucketTimesVegaUnd_(bucketTimesVegaUnd), computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma),
+      linearInZero_(linearInZero) {
     registerWith(discountCurve_);
     QL_REQUIRE((!bucketTimesDeltaGamma_.empty() && !bucketTimesVegaOpt_.empty() && !bucketTimesVegaUnd_.empty()) ||
                    (!computeDeltaVega && !computeGamma),
@@ -265,11 +267,12 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
     const std::vector<Time>& bucketTimesDeltaGamma, const std::vector<Time>& bucketTimesVegaOpt,
     const std::vector<Time>& bucketTimesVegaUnd, const bool computeDeltaVega, const bool computeGamma,
     const bool linearInZero)
-    : discountCurve_(discountCurve), vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
-                                         0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
-      displacement_(displacement), bucketTimesDeltaGamma_(bucketTimesDeltaGamma),
-      bucketTimesVegaOpt_(bucketTimesVegaOpt), bucketTimesVegaUnd_(bucketTimesVegaUnd),
-      computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma), linearInZero_(linearInZero) {
+    : discountCurve_(discountCurve),
+      vol_(QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(
+          new ConstantSwaptionVolatility(0, NullCalendar(), Following, vol, dc, Spec().type, displacement))),
+      bucketTimesDeltaGamma_(bucketTimesDeltaGamma), bucketTimesVegaOpt_(bucketTimesVegaOpt),
+      bucketTimesVegaUnd_(bucketTimesVegaUnd), computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma),
+      linearInZero_(linearInZero) {
     registerWith(discountCurve_);
     registerWith(vol_);
     QL_REQUIRE((!bucketTimesDeltaGamma_.empty() && !bucketTimesVegaOpt_.empty() && !bucketTimesVegaUnd_.empty()) ||
@@ -283,10 +286,9 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
     const std::vector<Time>& bucketTimesDeltaGamma, const std::vector<Time>& bucketTimesVegaOpt,
     const std::vector<Time>& bucketTimesVegaUnd, const bool computeDeltaVega, const bool computeGamma,
     const bool linearInZero)
-    : discountCurve_(discountCurve), vol_(volatility), displacement_(0.0),
-      bucketTimesDeltaGamma_(bucketTimesDeltaGamma), bucketTimesVegaOpt_(bucketTimesVegaOpt),
-      bucketTimesVegaUnd_(bucketTimesVegaUnd), computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma),
-      linearInZero_(linearInZero) {
+    : discountCurve_(discountCurve), vol_(volatility), bucketTimesDeltaGamma_(bucketTimesDeltaGamma),
+      bucketTimesVegaOpt_(bucketTimesVegaOpt), bucketTimesVegaUnd_(bucketTimesVegaUnd),
+      computeDeltaVega_(computeDeltaVega), computeGamma_(computeGamma), linearInZero_(linearInZero) {
     registerWith(discountCurve_);
     registerWith(vol_);
     QL_REQUIRE((!bucketTimesDeltaGamma_.empty() && !bucketTimesVegaOpt_.empty() && !bucketTimesVegaUnd_.empty()) ||
@@ -295,11 +297,46 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
 }
 
 template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate() const {
-    Date exerciseDate = arguments_.exercise->date(0);
-    VanillaSwap swap = *arguments_.swap;
-    Rate strike = swap.fixedRate();
 
-    std::vector<Leg> floatLeg(1, swap.leg(1)), fixedLeg(1, swap.leg(0));
+    // note: we expect a QuantLib::VanillaSwap basically, we do not ensure this fully here
+    // note: the floating leg has to have a zero spread, we do not check this
+
+    QL_REQUIRE(arguments_.legs.size() == 2,
+               "BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate(): expected two legs in underlying swap, got "
+                   << arguments_.legs.size());
+
+    Size fixedLegIndex = Null<Size>(), floatLegIndex = Null<Size>();
+    Real strike = Null<Real>();
+
+    for (Size i = 0; i < arguments_.legs.size(); ++i) {
+        QL_REQUIRE(!arguments_.legs[i].empty(), "BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate(): leg #"
+                                                    << i << " is empty, this is not allowed.");
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(arguments_.legs[i].front())) {
+            fixedLegIndex = i;
+            floatLegIndex = 1 - i;
+            strike = c->rate();
+        }
+    }
+
+    QL_REQUIRE(
+        fixedLegIndex != Null<Size>() && floatLegIndex != Null<Size>(),
+        "BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate(): could not determine fixedLegIndex, floatLegIndex.");
+    QL_REQUIRE(strike != Null<Real>(),
+               "BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate(): could not determine strike.");
+
+    Date exerciseDate = arguments_.exercise->date(0);
+    QuantLib::Swap swap(arguments_.legs, arguments_.payer);
+
+    Date firstDate = Null<Date>(), lastDate = Null<Date>();
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(swap.leg(floatLegIndex).front()))
+        firstDate = cpn->accrualStartDate();
+    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(swap.leg(floatLegIndex).back()))
+        lastDate = cpn->accrualEndDate();
+
+    QL_REQUIRE(firstDate != Null<Date>() && lastDate != Null<Date>(),
+               "BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate(): could not determine firstDate or lastDate.");
+
+    std::vector<Leg> floatLeg(1, swap.leg(floatLegIndex)), fixedLeg(1, swap.leg(fixedLegIndex));
     std::vector<bool> payerFloat(1, false), payerFixed(1, false);
     QuantLib::Swap swapFloatLeg(floatLeg, payerFloat), swapFixedLeg(fixedLeg, payerFixed);
 
@@ -315,38 +352,26 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
 
     Rate atmForward = swapFloatLeg.NPV() / swapFixedLeg.legBPS(0);
 
-    // If we allow for non-zero spreads, more adjustments are needed than below, investigate this later
-    QL_REQUIRE(QuantLib::close_enough(swap.spread(), 0.0), "BlackSwaptionEngineDeltaGamma requires zero spread");
-
-    // Volatilities are quoted for zero-spreaded swaps.
-    // Therefore, any spread on the floating leg must be removed
-    // with a corresponding correction on the fixed leg.
-    // if (swap.spread() != 0.0) {
-    //     Spread correction = swap.spread() * std::fabs(swap.floatingLegBPS() / swap.fixedLegBPS());
-    //     strike -= correction;
-    //     atmForward -= correction;
-    //     results_.additionalResults["spreadCorrection"] = correction;
-    // } else {
-    //     results_.additionalResults["spreadCorrection"] = 0.0;
-    // }
-
     results_.additionalResults["strike"] = strike;
     results_.additionalResults["atmForward"] = atmForward;
 
     swap.setPricingEngine(QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve_, false)));
 
     // TODO this is for physical settlement only, add pricing + sensitivities for cash settlement
-    Real annuity = std::fabs(swap.fixedLegBPS()) / 1.0E-4;
+    Real annuity = std::fabs(swapFixedLeg.legBPS(0));
     results_.additionalResults["annuity"] = annuity;
 
-    Time swapLength = vol_->swapLength(swap.floatingSchedule().dates().front(), swap.floatingSchedule().dates().back());
+    Time swapLength = vol_->swapLength(firstDate, lastDate);
     results_.additionalResults["swapLength"] = swapLength;
 
     Real variance = vol_->blackVariance(exerciseDate, swapLength, strike);
+    Real vol = vol_->volatility(exerciseDate, swapLength, strike);
+    Real atmVol = vol_->volatility(exerciseDate, swapLength, Null<Real>());
     Real stdDev = std::sqrt(variance);
+    Real displacement = vol_->volatilityType() == ShiftedLognormal ? vol_->shift(exerciseDate, swapLength) : 0.0;
     results_.additionalResults["stdDev"] = stdDev;
-    Option::Type w = (arguments_.type == VanillaSwap::Payer) ? Option::Call : Option::Put;
-    results_.value = Spec().value(w, strike, atmForward, stdDev, annuity, displacement_);
+    Option::Type w = arguments_.payer[fixedLegIndex] ? Option::Call : Option::Put;
+    results_.value = Spec().value(w, strike, atmForward, stdDev, annuity, displacement);
 
     // sensitivity calculation
     QL_REQUIRE(!computeGamma_ || computeDeltaVega_,
@@ -383,7 +408,7 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
             w2 = (bucketTimesVegaUnd_[b2] - swapLength) / (bucketTimesVegaUnd_[b2] - bucketTimesVegaUnd_[b2 - 1]);
             i2 = b2 - 1;
         }
-        Real singleVega = Spec().vega(strike, atmForward, stdDev, exerciseTime, annuity, displacement_);
+        Real singleVega = Spec().vega(strike, atmForward, stdDev, exerciseTime, annuity, displacement);
         Matrix vega(n1, n2, 0.0);
         if (i1 >= 0) {
             if (i2 < n2)
@@ -398,10 +423,14 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
         if (i1 < n1 && i2 < n2)
             vega[i1 + 1][i2 + 1] = (1.0 - w1) * (1.0 - w2) * singleVega;
         results_.additionalResults["vega"] = vega;
+        results_.additionalResults["singleVega"] = singleVega;
+        results_.additionalResults["vol"] = vol;
+        results_.additionalResults["atmVol"] = atmVol;
+        results_.additionalResults["exerciseDate"] = exerciseDate;
         // delta
         Real mu = swapFloatLeg.NPV();
         Real black = results_.value / annuity;
-        Real blackDelta = Spec().delta(w, strike, atmForward, stdDev, 1.0, displacement_);
+        Real blackDelta = Spec().delta(w, strike, atmForward, stdDev, 1.0, displacement);
         std::vector<Real> A_s_1 = swapFixedLeg.result<std::vector<std::vector<Real>>>("deltaBPS")[0];
         Array A_s(A_s_1.begin(), A_s_1.end());
         std::vector<Real> mu_sd_1 = swapFloatLeg.result<std::vector<Real>>("deltaDiscount");
@@ -418,11 +447,11 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
         results_.additionalResults["deltaForward"] = deltaForward1;
         // theta
         results_.additionalResults["theta"] =
-            annuity * Spec().theta(strike, atmForward, stdDev, exerciseTime, 1.0, displacement_);
+            annuity * Spec().theta(strike, atmForward, stdDev, exerciseTime, 1.0, displacement);
         if (computeGamma_) {
             // gamma
             Size n = bucketTimesDeltaGamma_.size();
-            Real blackGamma = Spec().gamma(strike, atmForward, stdDev, 1.0, displacement_);
+            Real blackGamma = Spec().gamma(strike, atmForward, stdDev, 1.0, displacement);
             Matrix A_ss = swapFixedLeg.result<std::vector<Matrix>>("gammaBPS")[0];
             Matrix mu_ss = swapFloatLeg.result<Matrix>("gamma");
             Matrix result(2 * n, 2 * n, 0.0);
@@ -467,5 +496,3 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
 
 } // namespace detail
 } // namespace QuantExt
-
-#endif

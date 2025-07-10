@@ -19,6 +19,8 @@
 #include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
@@ -26,6 +28,7 @@
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 
 #include <ored/model/fxbsbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -38,9 +41,12 @@ using namespace std;
 namespace ore {
 namespace data {
 
-FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<FxBsData>& data,
-                         const std::string& configuration, const std::string& referenceCalibrationGrid)
-    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
+FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                         const QuantLib::ext::shared_ptr<FxBsData>& data, const std::string& configuration,
+                         const std::string& referenceCalibrationGrid,
+                         const std::string& id)
+    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
+      id_(id) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
@@ -50,15 +56,36 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     LOG("Start building FxBs model for " << ccyPair);
 
-    // get market data
-    fxSpot_ = market_->fxSpot(ccyPair, configuration_);
-    ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
-    ytsFor_ = market_->discountCurve(ccy.code(), configuration_);
+    // try to get market objects, if sth fails, we fall back to a default and log a structured error
+
+    Handle<YieldTermStructure> dummyYts(
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+
+    try {
+        fxSpot_ = market_->fxSpot(ccyPair, configuration_);
+    } catch (const std::exception& e) {
+        processException("fx spot", e);
+        fxSpot_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    }
+
+    try {
+        ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
+    } catch (const std::exception& e) {
+        processException("domestic discount curve", e);
+        ytsDom_ = dummyYts;
+    }
+
+    try {
+        ytsFor_ = market_->discountCurve(ccy.code(), configuration_);
+    } catch (const std::exception& e) {
+        processException("foreign discount curve", e);
+        ytsFor_ = dummyYts;
+    }
 
     // register with market observables except vols
     marketObserver_->addObservable(fxSpot_);
-    marketObserver_->addObservable(market_->discountCurve(domesticCcy.code()));
-    marketObserver_->addObservable(market_->discountCurve(ccy.code()));
+    marketObserver_->addObservable(ytsDom_);
+    marketObserver_->addObservable(ytsFor_);
 
     // register the builder with the market observer
     registerWith(marketObserver_);
@@ -68,14 +95,20 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     // build option basket and derive parametrization from it
     if (data->calibrateSigma()) {
-        fxVol_ = market_->fxVol(ccyPair, configuration_);
+        try {
+            fxVol_ = market_->fxVol(ccyPair, configuration_);
+        } catch (const std::exception& e) {
+            processException("fx vol surface", e);
+            fxVol_ = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackConstantVol>(
+                0, NullCalendar(), 0.0010, Actual365Fixed()));
+        }
         registerWith(fxVol_);
         buildOptionBasket();
     }
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
-        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma tme grid expected");
+        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma time grid expected");
         QL_REQUIRE(data->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
         sigmaTimes = Array(0);
         sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
@@ -86,8 +119,8 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
             sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
         } else {
             // use input time grid and input alpha array otherwise
-            sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
             sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+            sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
             QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
         }
     }
@@ -102,6 +135,14 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
         parametrization_ = QuantLib::ext::make_shared<QuantExt::FxBsConstantParametrization>(ccy, fxSpot_, sigma[0]);
     else
         QL_FAIL("interpolation type not supported for FX");
+}
+
+void FxBsBuilder::processException(const std::string& s, const std::exception& e) {
+    const std::string& qualifier = data_->foreignCcy() + '/' + data_->domesticCcy();
+    StructuredModelErrorMessage("Error while building FX-BS model for qualifier '" + qualifier + "', context '" +
+                                s + "'. Using a fallback, results depending on this object will be invalid.",
+                                e.what(), id_)
+        .log();
 }
 
 Real FxBsBuilder::error() const {
@@ -143,7 +184,8 @@ Real FxBsBuilder::optionStrike(const Size j) const {
     Real strikeValue;
     BlackDeltaCalculator bdc(Option::Type::Call, DeltaVolQuote::DeltaType::Spot, fxSpot_->value(),
                              ytsDom_->discount(expiryDate), ytsFor_->discount(expiryDate),
-                             fxVol_->blackVol(expiryDate, Null<Real>()) * sqrt(fxVol_->timeFromReference(expiryDate)));
+                             fxVol_->blackVol(expiryDate, Null<Real>()) *
+                                 std::sqrt(fxVol_->timeFromReference(expiryDate)));
 
     // TODO: Extend strike type coverage
     if (strike.type == ore::data::Strike::Type::ATMF)
@@ -210,8 +252,9 @@ void FxBsBuilder::buildOptionBasket() const {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
             Handle<Quote> quote(QuantLib::ext::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
-            QuantLib::ext::shared_ptr<QuantExt::FxEqOptionHelper> helper = QuantLib::ext::make_shared<QuantExt::FxEqOptionHelper>(
-                expiryDate, strikeValue, fxSpot_, quote, ytsDom_, ytsFor_);
+            QuantLib::ext::shared_ptr<QuantExt::FxEqOptionHelper> helper =
+                QuantLib::ext::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot_, quote, ytsDom_,
+                                                                       ytsFor_);
             optionBasket_.push_back(helper);
             helper->performCalculations();
             expiryTimes.push_back(ytsDom_->timeFromReference(helper->option()->exercise()->date(0)));

@@ -1,0 +1,355 @@
+\documentclass[12pt, a4paper]{article}
+
+\newcommand{\IncludePayoff}{}
+
+\input{settings}
+
+\begin{document}
+
+\title{ORE Product Catalogue \\ [1ex] \large Payoffs, Trade Input, Pricing}
+\date{24 June 2025}
+\maketitle
+
+\newpage
+
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|p{9cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+7 October 2016 & Quaternion & initial release\\
+28 April 2017 & Quaternion  & updates for release 2\\
+7 December 2017 & Quaternion & updates for release 3\\
+20 March 2019 & Quaternion & updates for release 4\\
+19 June 2020 & Quaternion & updates for release 5\\
+30 June 2021 & Acadia & updates for release 6\\
+16 September 2022 & Acadia & updates for release 7\\
+6 December 2022 & Acadia & updates for release 8\\
+31 March 2023 & Acadia & updates for release 9\\
+16 June 2023 & Acadia & updates for release 10\\
+16 October 2023 & Acadia & updates for release 11\\
+24 May 2024 & Acadia & updates for release 12\\
+September 2024 & Acadia & updates for release 13\\
+January 2025 & Acadia & separate user guide, risk methodology, product catalogue\\
+\hline
+\end{supertabular}
+\end{center}
+
+\newpage
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+The ORE documentation comes in three parts
+\begin{itemize}
+\item User Guide: ORE overview and history, discussion of the usage examples that come with ORE, ``static'' parameterisation reference, market data reference  
+\item Methodology: Overview over the risk methods applied in ORE
+\item Products: Product catalogue with a full description of instrument payoffs, pricing methodology and ORE XML input guide
+\end{itemize}
+
+This document is the third part. It starts with descriptions of payoffs and ORE XML input rules for all products covered by ORE,
+followed by a similar length elaboration of the pricing methodology applied per product.
+
+\input{tradedata/intro}
+\input{tradedata/envelope}
+\input{tradedata/nettingsetdetails}
+\input{tradedata/tradespecifics}
+\input{tradedata/swap}
+\input{tradedata/zerocouponswap} 
+\input{tradedata/capfloor}
+\input{tradedata/forwardrateagreement}
+\input{tradedata/swaption}
+\input{tradedata/callableswap}
+\input{tradedata/cashposition}
+\input{tradedata/fxforward}
+\input{tradedata/fxswap}
+\input{tradedata/fxoption}
+\input{tradedata/fx_asianoption}
+\input{tradedata/fx_barrieroption}
+\input{tradedata/fx_digitalbarrieroption}
+\input{tradedata/fx_digitaloption}
+\input{tradedata/fx_doublebarrieroption}
+\input{tradedata/fx_doubletouchoption}
+\input{tradedata/fx_europeanbarrieroption}
+\input{tradedata/fx_kikobarrieroption}
+\input{tradedata/fx_touchoption}
+\input{tradedata/fxvarianceswap}
+\input{tradedata/equityoption}
+\input{tradedata/equityfuturesoption}
+\input{tradedata/equityforward}
+\input{tradedata/equityswap}
+\input{tradedata/eq_asianoption}
+\input{tradedata/eq_barrieroption}
+\input{tradedata/eq_digitaloption}
+\input{tradedata/eq_doublebarrieroption}
+\input{tradedata/eq_doubletouchoption}
+\input{tradedata/eq_europeanbarrieroption}
+\input{tradedata/eq_touchoption}
+\input{tradedata/equityvarianceswap}
+\input{tradedata/equitycliquetoption}
+\input{tradedata/equityposition}
+\input{tradedata/equityoptionposition}
+
+\input{tradedata/cpiswap}
+\input{tradedata/yyswap}
+
+\input{tradedata/bond}
+\input{tradedata/bondposition}
+\input{tradedata/forwardbond}
+\input{tradedata/bondForward_refdata}
+\input{tradedata/bondrepo}
+\input{tradedata/bondoption}
+\input{tradedata/bondoption_refdata}
+\input{tradedata/bondTotalReturnSwap}
+\input{tradedata/convertiblebond}
+\input{tradedata/ascot}
+\input{tradedata/cbodata.tex}
+
+\input{tradedata/compositetrade}
+
+\input{tradedata/creditdefaultswap}
+\input{tradedata/indexcds}
+\input{tradedata/indexcdsoption}
+\input{tradedata/syntheticcdo}
+\input{tradedata/rpa}
+\input{tradedata/creditlinkedswap}
+
+\input{tradedata/commodityforward}
+\input{tradedata/commodityswap}
+\input{tradedata/commodityswaption}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityapo}
+\input{tradedata/commodityoptionstrip}
+\input{tradedata/commodityvarianceswap}
+\input{tradedata/commodityposition}
+
+\input{tradedata/totalReturnSwap}
+
+% "compiled" scripted products, look like classic ORE XMl  
+\input{tradedata/eq_outperformance.tex}
+\input{tradedata/doubledigitaloption}
+\input{tradedata/europeanoptioncontingentonabarrier}
+\input{tradedata/autocallable_01}
+\input{tradedata/performanceoption_01}
+\input{tradedata/window_barrieroption}
+\input{tradedata/generic_barrieroption}
+\input{tradedata/bestentryoption}
+\input{tradedata/basketoption}
+\input{tradedata/worstofbasketswap}
+\input{tradedata/accumulator}
+\input{tradedata/tarf}
+\input{tradedata/knockoutswap}
+% generic scripted products
+\input{tradedata/rainbow_option} % 12 variations of scripted payoffs
+\input{tradedata/var_and_vol_derivatives} % 12 variations of scripted payoffs
+\input{tradedata/genericscriptedproducts}
+%\input{tradedata/scriptedtrades} % 17 variations of scripted payoffs, exlcuded here for now
+
+\input{tradedata/flexiswap}
+\input{tradedata/balanceguaranteedswap}
+
+%\include{tradecomponents}
+\input{tradecomponents/tradecomponentsintro}
+\input{tradecomponents/optiondata}
+\input{tradecomponents/premiums}
+\input{tradecomponents/legdatanotionals}
+\input{tradecomponents/scheduledata}
+\input{tradecomponents/fixedlegdatarates}
+\input{tradecomponents/floatinglegdata}
+\input{tradecomponents/legdataamortisation}
+\input{tradecomponents/indexings}
+\input{tradecomponents/cashflowleg}
+\input{tradecomponents/cmsleg}
+\input{tradecomponents/cmbleg}
+\input{tradecomponents/digitalcmsleg}
+\input{tradecomponents/durationadjustedcmsleg}
+\input{tradecomponents/cmsspreadleg}
+\input{tradecomponents/digitalcmsspreadleg}
+\input{tradecomponents/equityleg}
+\input{tradecomponents/cpileg}
+\input{tradecomponents/yyleg}
+\input{tradecomponents/zerocouponleg}
+\input{tradecomponents/commodityfixedleg}
+\input{tradecomponents/commodityfloatingleg}
+\input{tradecomponents/equitymarginleg}
+\input{tradecomponents/cdsreferenceinformation}
+\input{tradecomponents/basketdata}
+\input{tradecomponents/underlying}
+\input{tradecomponents/strikedata}
+\input{tradecomponents/barrierdata}
+\input{tradecomponents/rangebound}
+\input{tradecomponents/bondbasketdata.tex}
+\input{tradecomponents/cbotranches.tex}
+\input{tradecomponents/formulabasedlegdata}
+
+\include{allowablevalues}
+\input{nettingdata}
+
+% Scripted Trades overview
+\input{tradedata/scriptedtradesappendix}
+
+%-------------------------------------------------------------------------------
+\section{Pricing Methodology}
+\label{sec:pricingmethods}
+
+\input{pricing/methods.tex}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Interest Rate Derivatives}
+Vanilla IR instruments are priced using a multi-currency framework of discount 
+curves by cash flow currency and forwarding curves per index (see Section 
+\ref{sec:curves} for details of curve building). 
+
+If the floating leg of an interest rate swap contains capped/floored/collared 
+payments, the pricing approach described in the relevant cap/floor instrument 
+methodology is applied to the cap/floor components.
+
+\input{pricing/ir_irs.tex}
+\input{pricing/ir_fra.tex}
+\input{pricing/ir_bs.tex}
+\input{pricing/ir_ccs.tex}
+\input{pricing/ir_ois.tex}
+\input{pricing/ir_zero.tex}
+\input{pricing/ir_bma.tex}
+\input{pricing/ir_cms.tex}
+\input{pricing/ir_cmb.tex}
+\input{pricing/ir_digitalcms.tex}
+\input{pricing/ir_capfloor.tex}
+
+\todo[inline]{Digital IBOR Cap/Floor pricing not implemented yet}
+%\input{pricing/ir_digital.tex}
+
+\input{pricing/ir_euroswaption.tex}
+\input{pricing/ir_bermswaption.tex}
+\input{pricing/ir_callableswap.tex}
+\input{pricing/ir_cmsspreadoption.tex}
+\input{pricing/ir_digitalcmsspreadoption.tex}
+\input{pricing/ir_flexiswap.tex}
+\input{pricing/cr_bgs.tex}
+\input{pricing/ir_formulacouponirs.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Foreign Exchange Derivatives}
+Vanilla FX instruments are priced using a multi-currency framework of discount 
+curves by cash flow currency and forwarding curves per index, see \ref{sec:curves}.
+
+\input{pricing/fx_forward.tex}
+\input{pricing/fx_swap.tex}
+\input{pricing/fx_option.tex}
+\input{pricing/fx_americanoption.tex}
+\input{pricing/fx_barrieroption.tex}
+\input{pricing/fx_europeanbarrieroption.tex}
+\input{pricing/fx_kikobarrieroption.tex}
+\input{pricing/fx_digitaloption.tex}
+\input{pricing/fx_digitalbarrieroption.tex}
+\input{pricing/fx_touchoption.tex}
+\input{pricing/fx_doublebarrieroption.tex}
+\input{pricing/fx_doubletouchoption.tex}
+\input{pricing/fx_asianoption.tex}
+\input{pricing/fx_varianceswap.tex}
+ %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Inflation Derivatives}
+\input{pricing/inf_zciis.tex}
+\input{pricing/inf_zciicapfloor.tex}
+\input{pricing/inf_yyiis.tex}
+\input{pricing/inf_yyiicapfloor.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Equity Derivatives}
+\input{pricing/eq_forward.tex}
+\input{pricing/eq_swap.tex}
+\input{pricing/eq_option.tex}
+\input{pricing/eq_americanoption.tex}
+\input{pricing/eq_barrieroption.tex}
+\input{pricing/eq_europeanbarrieroption.tex}
+\input{pricing/eq_europeancompositeoption.tex}
+\input{pricing/eq_digitaloption.tex}
+\input{pricing/eq_touchoption.tex}
+\input{pricing/eq_doubletouchoption.tex}
+\input{pricing/eq_asianoption.tex}
+\input{pricing/eq_varianceswap.tex}
+\input{pricing/equityposition.tex}
+\input{pricing/equityoptionposition.tex}
+\input{pricing/eq_outperformanceoption.tex}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{FX / Equity / Commodity / Rates / Inflation Exotics}
+\input{pricing/doubledigitaloption}
+\input{pricing/europeanoptioncontingentonabarrier}
+\input{pricing/autocallable_01}
+\input{pricing/performanceoption_01}
+\input{pricing/eq_cliquetoption}
+\input{pricing/window_barrieroption}
+\input{pricing/generic_barrieroption}
+\input{pricing/bestentryoption}
+\input{pricing/basketoption}
+\input{pricing/worstofbasketswap}
+\input{pricing/rainbow_option}
+\input{pricing/var_and_vol_derivatives}
+\input{pricing/accumulator}
+\input{pricing/tarf}
+\input{pricing/knockoutswap}
+\input{pricing/scriptedtrades}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Credit Derivatives}
+\input{pricing/cr_cds.tex}
+\input{pricing/cr_cdsoption.tex}
+\input{pricing/cr_indexcdsoption.tex}
+\input{pricing/cr_cdo.tex}
+\input{pricing/cr_rpa.tex}
+\input{pricing/creditlinkedswap.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Commodity Derivatives}
+\input{pricing/com_forward.tex}
+\input{pricing/com_option.tex}
+\input{pricing/com_futuresoption.tex}
+\input{pricing/com_swap.tex}
+\input{pricing/com_basisswap.tex}
+\input{pricing/com_swaption.tex}
+\input{pricing/com_apo.tex}
+\input{pricing/com_spreadoption.tex}
+\input{pricing/com_varianceswap.tex}
+%\input{pricing/com_pm_forward.tex}
+%\input{pricing/com_pm_option.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Bond Derivatives}
+\input{pricing/bondForward.tex}
+\input{pricing/bondTotalReturnSwap.tex}
+\input{pricing/bondOption.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Hybrid Trades}
+\input{pricing/hyb_compositetrade.tex}
+\input{pricing/totalReturnSwap.tex}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsection{Cash Products}
+
+\input{pricing/cash_bond.tex}
+\input{pricing/cash_bondrepo.tex}
+\input{pricing/convertiblebond.tex}
+\input{pricing/ascot.tex}
+\input{pricing/cr_cbo.tex}
+
+%-------------------------------------------------------------------------------
+\input{pricing/models.tex}
+
+%-------------------------------------------------------------------------------
+\input{pricing/curves.tex}
+
+%-------------------------------------------------------------------------------
+\section{Libor Fallback}
+\input{pricing/liborfallback.tex}
+
+%-------------------------------------------------------------------------------
+\input{pricing/pricingengines}
+
+\newpage
+\input{references}
+
+\end{document}
+

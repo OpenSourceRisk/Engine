@@ -30,12 +30,11 @@
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/mclgmswaptionengine.hpp>
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -45,16 +44,16 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup builders
 */
-class SwapEngineBuilderBase
-    : public CachingPricingEngineBuilder<string, const Currency&, const std::string&, const std::string&> {
+class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&, const std::string&,
+                                                                 const std::string&, const std::set<std::string>&> {
 public:
     SwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Swap"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy, const std::string& discountCurve,
-                           const std::string& securitySpread) override {
-        return ccy.code() + discountCurve + securitySpread;
+    virtual string keyImpl(const Currency& ccy, const std::string& discountCurve, const std::string& securitySpread,
+                           const std::set<std::string>& eqNames) override {
+        return ccy.code() + "_" + discountCurve + "_" + securitySpread + "_" + boost::join(eqNames, "_");
     }
 };
 
@@ -68,7 +67,8 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+                                                                const std::string& securitySpread,
+                                                                const std::set<std::string>& eqNames) override {
         Handle<YieldTermStructure> yts =
             discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                   : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
@@ -79,45 +79,26 @@ protected:
     }
 };
 
-//! Engine Builder for Single Currency Swaps
-/*! This builder uses QuantExt::DiscountingSwapEngineMultiCurve
-    \ingroup builders
-*/
-class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
-public:
-    SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
-
-protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
-
-        Handle<YieldTermStructure> yts =
-            discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-                                  : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-        if (!securitySpread.empty())
-            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-                yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-        return QuantLib::ext::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(yts);
-    }
-};
-
 //! Engine Builder base class for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
     \ingroup builders
 */
 class CrossCurrencySwapEngineBuilderBase
-    : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {
+    : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&, bool,
+                                         const std::set<std::string>&> {
 public:
     CrossCurrencySwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"CrossCurrencySwap"}) {}
 
 protected:
-    virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base) override {
+    virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base, bool useXccyYieldCurves,
+                           const std::set<std::string>& eqNames) override {
         std::ostringstream ccyskey;
         ccyskey << base << "/";
         for (Size i = 0; i < ccys.size(); ++i)
-            ccyskey << ccys[i] << ((i < ccys.size() - 1) ? "-" : "");
+            ccyskey << ccys[i] << "-";
+        ccyskey << useXccyYieldCurves;
         return ccyskey.str();
     }
 };
@@ -129,8 +110,9 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                        const Currency& base) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                                bool useXccyYieldCurves,
+                                                                const std::set<std::string>& eqNames) override {
 
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
@@ -138,12 +120,17 @@ protected:
         std::string baseCcyCode = base.code();
         for (Size i = 0; i < ccys.size(); ++i) {
             string ccyCode = ccys[i].code();
-            discountCurves.push_back(xccyYieldCurve(market_, ccyCode, config));
+            if (useXccyYieldCurves) {
+                discountCurves.push_back((xccyYieldCurve)(market_, ccyCode, config));
+            } else {
+                discountCurves.push_back(market_->discountCurve(ccyCode, config));
+            }
             string pair = ccyCode + baseCcyCode;
             fxQuotes.push_back(market_->fxRate(pair, config));
         }
 
-        return QuantLib::ext::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys,
+                                                                                   base);
     }
 };
 
@@ -153,20 +140,41 @@ protected:
 class CamAmcSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     CamAmcSwapEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                            const std::vector<Date>& simulationDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+                            const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override;
+                                                                const std::string& securitySpread,
+                                                                const std::set<std::string>& eqNames) override;
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
-                                                   const Handle<YieldTermStructure>& discountCurve,
-                                                   const std::vector<Date>& simulationDates,
-                                                   const std::vector<Size>& externalModelIndices);
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& lgm,
+                                                           const Handle<YieldTermStructure>& discountCurve,
+                                                           const std::vector<Size>& externalModelIndices);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
+};
+
+//! Implementation of SwapEngineBuilderBase implementing AMC-CG interface
+/*! \ingroup portfolio
+ */
+class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
+public:
+    AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                           const std::vector<Date>& simulationDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                                const std::string& securitySpread,
+                                                                const std::set<std::string>& eqNames) override;
+
+private:
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
 };
 

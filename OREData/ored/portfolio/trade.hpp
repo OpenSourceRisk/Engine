@@ -146,6 +146,10 @@ public:
 
     const std::vector<bool>& legPayers() const { return legPayers_; }
 
+    // default if leg is not listed in map: IfNoEngineCashflows
+    enum class LegCashflowInclusion { IfNoEngineCashflows, Never, Always };
+    const std::map<size_t, LegCashflowInclusion>& legCashflowInclusion() const { return legCashflowInclusion_; }
+
     const string& npvCurrency() const { return npvCurrency_; }
 
     //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
@@ -156,7 +160,12 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
-    virtual bool isExpired(const Date& d) { return d >= maturity_; }
+    const string& maturityType() const { return maturityType_; }
+
+    virtual bool isExpired(const Date& d) const {
+        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
+    }
 
     const string& issuer() const { return issuer_; }
 
@@ -168,19 +177,16 @@ public:
     /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
         this is only available after build() has been called */
     const std::string& sensitivityTemplate() const;
+
+    /*! return the product(s),model,engine triplet(s) of the engine builders of this trade,
+       this is only available after build() has been called */
+    const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine() const;
     //@}
 
     //! \name Utility
     //@{
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
-
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
-        trade from being asked for its cashflows, the method can be overridden to return \c false.
-    */
-    virtual bool hasCashflows() const { return true; }
-    //@}
 
     //! Get cumulative timing spent on pricing
     boost::timer::nanosecond_type getCumulativePricingTime() const {
@@ -192,19 +198,32 @@ public:
         return savedNumberOfPricings_ + (instrument_ != nullptr ? instrument_->getNumberOfPricings() : 0);
     }
 
+    /* add additional data on product types, model, engine from builder */
+    void addProductModelEngine(const EngineBuilder& builder);
+    void addProductModelEngine(
+        const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine);
+
+    /* sets the sensitivity template for this trade */
+    void setSensitivityTemplate(const EngineBuilder& builder);
+    void setSensitivityTemplate(const std::string& id);
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
+    std::map<std::size_t, LegCashflowInclusion> legCashflowInclusion_;
+
     string npvCurrency_;
     QuantLib::Real notional_;
     string notionalCurrency_;
     Date maturity_;
+    string maturityType_;
     string issuer_;
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngine_;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
@@ -217,7 +236,7 @@ protected:
     // The returned date is the latest premium payment date added.
     Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const string& discountCurve, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
@@ -228,9 +247,8 @@ protected:
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
-    /* sets the sensitivity template for this trade */
-    void setSensitivityTemplate(const EngineBuilder& builder);
-    void setSensitivityTemplate(const std::string& id);
+    // update additional data based on stored product, model, engine
+    void updateProductModelEngineAdditionalData();
 
 private:
     string id_;

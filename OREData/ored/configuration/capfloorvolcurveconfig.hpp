@@ -82,6 +82,9 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
+    const VolatilityType& outputVolatilityType() const { return outputVolatilityType_; }
+    QuantLib::Real modelShift() const { return modelShift_; }
+    QuantLib::Real outputShift() const { return outputShift_; }
     MarketDatum::QuoteType quoteType() const;
     bool extrapolate() const { return extrapolate_; }
     bool flatExtrapolation() const { return flatExtrapolation_; }
@@ -126,6 +129,9 @@ public:
 
 private:
     VolatilityType volatilityType_ = VolatilityType::Normal;
+    VolatilityType outputVolatilityType_ = VolatilityType::Normal;
+    QuantLib::Real modelShift_ = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real outputShift_ = QuantLib::Null<QuantLib::Real>();
     bool extrapolate_ = true;
     bool flatExtrapolation_ = true;
     bool includeAtm_ = false;
@@ -162,7 +168,7 @@ private:
     ReportConfig reportConfig_;
 
     //! Populate required curve ids
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     //! Populate the quotes vector
     void populateQuotes();

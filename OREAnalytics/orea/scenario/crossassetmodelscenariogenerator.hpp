@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/engine/pathdata.hpp>
 #include <orea/scenario/scenariofactory.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -35,6 +36,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedswaptionvoltermstructure.hpp>
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
@@ -71,11 +73,12 @@ public:
                                      QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
                                      QuantLib::Date today, QuantLib::ext::shared_ptr<DateGrid> grid,
                                      QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
-                                     const std::string& configuration = Market::defaultConfiguration);
+                                     const std::string& configuration = Market::defaultConfiguration,
+                                     const std::string& amcPathDataOutput = std::string(), QuantLib::Size samples = QuantLib::Null<QuantLib::Size>());
     //! Default destructor
-    ~CrossAssetModelScenarioGenerator(){};
+    ~CrossAssetModelScenarioGenerator() {};
     std::vector<QuantLib::ext::shared_ptr<Scenario>> nextPath() override;
-    void reset() override { pathGenerator_->reset(); }
+    void reset() override;
 
 private:
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
@@ -91,9 +94,10 @@ private:
     std::vector<RiskFactorKey> crStateKeys_, survivalWeightKeys_, recoveryRateKeys_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrossAssetModelImpliedSwaptionVolTermStructure>> swaptionVols_;
     std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_, ten_com_;
     std::vector<bool> modelCcyRelevant_;
-    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_;
+    Size n_ccy_, n_fx_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_, n_com_, n_crstates_, n_survivalweights_, n_states_;
 
     vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::ModelImpliedPriceTermStructure>> comCurves_;
@@ -107,6 +111,11 @@ private:
     vector<QuantLib::ext::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
     vector<QuantLib::ext::shared_ptr<QuantExt::CreditCurve>> survivalWeightsDefaultCurves_;
+    std::string amcPathDataOutput_;
+    PathData pathData_;
+    Size currentSample_ = 0;
+    Size totalSamples_;
+    std::vector<Size> gridIndexInPath_;
 };
 
 } // namespace analytics

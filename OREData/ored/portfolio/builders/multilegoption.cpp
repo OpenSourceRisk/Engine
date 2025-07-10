@@ -16,16 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
-#include <ored/model/irlgmdata.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/multilegoption.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -237,14 +239,23 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
     bool calibrate = globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
 
     auto builder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
-        market_, QuantLib::ext::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
-        configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois, !calibrate,
-        continueOnCalibrationError, "", SalvagingAlgorithm::Spectral, id);
+        market_,
+        QuantLib::ext::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance, "LGM",
+                                                        CrossAssetModel::Discretization::Exact,
+                                                        SalvagingAlgorithm::Spectral),
+        configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+        configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks, allowModelFallbacks);
 
     modelBuilders_.insert(std::make_pair(id, builder));
 
@@ -258,7 +269,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, std::vector<Date>(),
-        std::vector<Size>());
+        std::vector<Date>(), std::vector<Size>());
 
     return engine;
 }
@@ -280,45 +291,24 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
                                                          << fixingDates.size() << ") must match indexes size ("
                                                          << indexes.size() << ")");
 
-    std::vector<Size> externalModelIndices;
-    std::vector<Handle<YieldTermStructure>> discountCurves;
-    std::vector<Size> cIdx;
-    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
-    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
+    // get projected model
 
-    // base ccy is the base ccy of the external cam by definition
-    // but in case we only have one currency, we don't need this
     bool needBaseCcy = currencies.size() > 1;
 
-    // add the IR and FX components in the order they appear in the CAM; this way
-    // we can sort the external model indices and be sure that they match up with
-    // the indices 0,1,2,3,... of the projected model we build here
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) ||
-            std::find(currencies.begin(), currencies.end(), cam_->irlgm1f(i)->currency()) != currencies.end()) {
-            lgm.push_back(cam_->lgm(i));
-            externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::IR, i));
-            cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::IR, i));
-            if (i > 0) {
-                fx.push_back(cam_->fxbs(i - 1));
-                externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, i - 1));
-                cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::FX, i - 1));
-            }
-        }
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
     }
-
-    std::sort(externalModelIndices.begin(), externalModelIndices.end());
-    std::sort(cIdx.begin(), cIdx.end());
-
-    // build correlation matrix
-    Matrix corr(cIdx.size(), cIdx.size(), 1.0);
-    for (Size i = 0; i < cIdx.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            corr(i, j) = corr(j, i) = cam_->correlation()(cIdx[i], cIdx[j]);
-        }
+    for (auto const& c : currencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
     }
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
-    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
 
@@ -331,12 +321,42 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engineImpl(
+    const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
+    const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) {
+
+    std::vector<std::string> ccys;
+    std::transform(currencies.begin(), currencies.end(), std::back_inserter(ccys),
+                   [](const Currency& c) { return c.code(); });
+
+    DLOG("Building multi leg option engine for ccys " << boost::join(ccys, ",") << " (from externally given CAM)");
+
+    QL_REQUIRE(!currencies.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
+    QL_REQUIRE(fixingDates.size() == indexes.size(), "CamMcMultiLegOptionEngineBuilder: fixing dates size ("
+                                                         << fixingDates.size() << ") must match indexes size ("
+                                                         << indexes.size() << ")");
+
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
+        ccys, modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

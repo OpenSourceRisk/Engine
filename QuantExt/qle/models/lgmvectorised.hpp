@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -66,6 +67,14 @@ public:
                                     const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
                                     const bool localCapFloor, const bool nakedOption, const Time t,
                                     const RandomVariable& x) const;
+    RandomVariable compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
+                                    const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
+                                    const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
+                                    const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
+                                    const bool localCapFloor, const bool nakedOption,
+                                    const std::vector<Time>& simTime,
+                                    const std::vector<Size>& simIdx,
+                                    const std::function<const RandomVariable*(Size)>& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
@@ -75,6 +84,14 @@ public:
                                   const Real gearing, const Period lookback, Real cap, Real floor,
                                   const bool localCapFloor, const bool nakedOption, const Time t,
                                   const RandomVariable& x) const;
+    RandomVariable averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
+                                  const std::vector<Date>& valueDates, const std::vector<Real>& dt,
+                                  const Natural rateCutoff, const bool includeSpread, const Real spread,
+                                  const Real gearing, const Period lookback, Real cap, Real floor,
+                                  const bool localCapFloor, const bool nakedOption,
+                                  const std::vector<Time>& simTime,
+                                  const std::vector<Size>& simIdx,
+                                  const std::function<const RandomVariable*(Size)>& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
@@ -83,9 +100,13 @@ public:
                                    const Real spread, const Real gearing, Real cap, Real floor, const bool nakedOption,
                                    const Time t, const RandomVariable& x) const;
 
-    /* Approximation via plain Ibor coupon with fixing date = first fixing date and the fixing() method above. */
+    /* Exact. Requires observation time t <= fixingDate */
     RandomVariable subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
-                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x) const;
+                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x,
+                                  const std::vector<Time>& accrualFractions,
+                                  const SubPeriodsCoupon1::Type type, const bool includeSpread,
+                                  const Spread spread, const Real gearing,
+                                  const Time accrualPeriod) const;
 
 private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;

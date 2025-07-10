@@ -41,23 +41,24 @@ class CurveSpec {
 public:
     //! Supported curve types
     enum class CurveType {
-        FX,
-        Yield,
-        CapFloorVolatility,
-        SwaptionVolatility,
-        YieldVolatility,
-        FXVolatility,
-        Default,
-        CDSVolatility,
-        Inflation,
-        InflationCapFloorVolatility,
-        Equity,
-        EquityVolatility,
-        Security,
-        BaseCorrelation,
-        Commodity,
-        CommodityVolatility,
-        Correlation
+        FX = 0,
+        Yield = 1,
+        CapFloorVolatility = 2,
+        SwaptionVolatility = 3,
+        YieldVolatility = 4,
+        FXVolatility = 5,
+        Default = 6,
+        CDSVolatility = 7,
+        Inflation = 8,
+        InflationCapFloorVolatility = 9,
+        Equity = 10,
+        EquityVolatility = 11,
+        Security = 12,
+        BaseCorrelation = 13,
+        Commodity = 14,
+        CommodityVolatility = 15,
+        Correlation = 16,
+        SwapIndex = 17
     };
 
     //! Default constructor
@@ -267,7 +268,7 @@ public:
     //! Default constructor
     FXSpotSpec() {}
     //! Detailed constructor
-    FXSpotSpec(string unitCcy, string ccy) : unitCcy_(unitCcy), ccy_(ccy) {}
+    FXSpotSpec(string unitCcy, string ccy) : CurveSpec(unitCcy + ccy), unitCcy_(unitCcy), ccy_(ccy) {}
     //@}
 
     //! \name Inspectors
@@ -480,6 +481,27 @@ public:
     string subName() const override { return curveConfigID(); }
     //@}
 private:
+};
+
+//! Swap Index curve description
+/*!  \ingroup curves
+ */
+class SwapIndexCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Detailed constructor
+    SwapIndexCurveSpec(const string& curveConfigID) : CurveSpec(curveConfigID) {}
+    //! Default constructor
+    SwapIndexCurveSpec() {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const override { return CurveType::SwapIndex; }
+    string subName() const override { return curveConfigID(); }
+    //@}
+
 };
 
 } // namespace data

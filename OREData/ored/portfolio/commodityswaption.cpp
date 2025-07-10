@@ -92,6 +92,7 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Currency currency = parseCurrency(ccy_);
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(currency, name_);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
     swaption->setPricingEngine(engine);
 
     // Set the instrument wrapper properly
@@ -100,11 +101,12 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swaption, multiplier);
     } else {
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate, exDate,
                                                                 settleType == Settlement::Physical, swap);
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
+    maturityType_ = "Underlying Maturity Date";
 }
 
 QuantLib::Real CommoditySwaption::notional() const {
@@ -119,15 +121,15 @@ QuantLib::ext::shared_ptr<QuantLib::Swap> CommoditySwaption::buildSwap(const Qua
     QL_REQUIRE(legData_[0].isPayer() != legData_[1].isPayer(),
                "Both commodity legs are " << (legData_[0].isPayer() ? "paying" : "receiving"));
 
-    QL_REQUIRE(legData_[0].legType() == "CommodityFixed" || legData_[0].legType() == "CommodityFloating",
+    QL_REQUIRE(legData_[0].legType() == LegType::CommodityFixed || legData_[0].legType() == LegType::CommodityFloating,
                "Leg type needs to be CommodityFixed or CommodityFloating but 1st leg has type "
                    << legData_[0].legType());
-    QL_REQUIRE(legData_[1].legType() == "CommodityFixed" || legData_[1].legType() == "CommodityFloating",
+    QL_REQUIRE(legData_[1].legType() == LegType::CommodityFixed || legData_[1].legType() == LegType::CommodityFloating,
                "Leg type needs to be CommodityFixed or CommodityFloating but 2nd leg has type "
                    << legData_[1].legType());
 
-    if (legData_[0].legType() == "CommodityFixed") {
-        QL_REQUIRE(legData_[1].legType() == "CommodityFloating",
+    if (legData_[0].legType() == LegType::CommodityFixed) {
+        QL_REQUIRE(legData_[1].legType() == LegType::CommodityFloating,
                    "1st leg is CommodityFixed so 2nd leg should be CommodityFloating but is " << legData_[1].legType());
         auto floatLeg = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[1].concreteLegData());
         name_ = floatLeg->name();

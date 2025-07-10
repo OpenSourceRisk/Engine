@@ -53,6 +53,17 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
     }
 }
 
+std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::Type t) {
+    switch (t) {
+    case InflationCapFloorVolatilityCurveConfig::Type::ZC:
+        return out << "ZC";
+    case InflationCapFloorVolatilityCurveConfig::Type::YY:
+        return out << "YY";
+    default:
+        QL_FAIL("unknown Type(" << Integer(t) << ")");
+    }
+}
+
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Type type, const QuoteType& quoteType,
     const VolatilityType& volatilityType, const bool extrapolate, const vector<string>& tenors,
@@ -66,11 +77,9 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure), observationLag_(observationLag), quoteIndex_(quoteIndex),
-      conventions_(conventions), useLastAvailableFixingDate_(useLastAvailableFixingDate) {
-    populateRequiredCurveIds();
-}
+      conventions_(conventions), useLastAvailableFixingDate_(useLastAvailableFixingDate) {}
 
-void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+void InflationCapFloorVolatilityCurveConfig::populateRequiredIds() const {
     if (!yieldTermStructure().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldTermStructure())->curveConfigID());
     if (!indexCurve().empty())
@@ -80,20 +89,14 @@ void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
 
-        string type;
-        if (type_ == Type::ZC)
-            type = "ZC";
-        else if (type_ == Type::YY)
-            type = "YY";
-
         // Determine the index string to use for the quotes.
         string index = quoteIndex_.empty() ? index_ : quoteIndex_;
 
         std::stringstream ssBase;
         if (quoteType_ == QuoteType::Price)
-            ssBase << type << "_INFLATIONCAPFLOOR/PRICE/" << index << "/";
+            ssBase << type_ << "_INFLATIONCAPFLOOR/PRICE/" << index << "/";
         else
-            ssBase << type << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index << "/";
+            ssBase << type_ << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index << "/";
         string base = ssBase.str();
 
         // TODO: how to tell if atmFlag or relative flag should be true
@@ -115,7 +118,7 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index + "/" + t);
+                quotes_.push_back(to_string(type_) + "_INFLATIONCAPFLOOR/SHIFT/" + index + "/" + t);
             }
         }
     }
@@ -177,6 +180,11 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             strikes_.push_back(to_string(s));
         for (Size i = 0; i < strikes_.size(); ++i)
             DLOG("ZC Inflation Cap/Floor Strike " << i << " = " << strikes_[i]);
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
+        }
     } else {
         strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
         QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");
@@ -198,7 +206,10 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     conventions_ = XMLUtils::getChildValue(node, "Conventions", false, "");
     useLastAvailableFixingDate_ =
         XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
-    populateRequiredCurveIds();
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -206,13 +217,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-
-    if (type_ == Type::ZC) {
-        XMLUtils::addChild(doc, node, "Type", "ZC");
-    } else if (type_ == Type::YY) {
-        XMLUtils::addChild(doc, node, "Type", "YY");
-    } else
-        QL_FAIL("Unknown Type in InflationCapFloorVolatilityCurveConfig::toXML()");
+    XMLUtils::addChild(doc, node, "Type", to_string(type_));
 
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "QuoteType", "Price");
@@ -251,6 +256,8 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Conventions", conventions_);
     if (useLastAvailableFixingDate_)
         XMLUtils::addChild(doc, node, "UseLastFixingDate", useLastAvailableFixingDate_);
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     return node;
 }
 } // namespace data

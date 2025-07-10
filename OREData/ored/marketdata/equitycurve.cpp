@@ -25,7 +25,9 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
+#include <qle/indexes/dividendmanager.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
+#include <qle/termstructures/equityannounceddividendcurve.hpp>
 #include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
@@ -87,7 +89,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         QL_REQUIRE(itr != requiredYieldCurves.end(),
                    "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = itr->second;
-        forecastYieldTermStructure = yieldCurve->handle();
+        forecastYieldTermStructure = yieldCurve->handle(ycspec.name());
 
         // Set the interpolation variables
         dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
@@ -257,6 +259,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
         // the curve type that we will build
         EquityCurveConfig::Type buildCurveType = curveType_;
+        config->setOutputType(curveType_);
 
         // for curveType ForwardPrice or OptionPremium populate the terms_ and quotes_ with forward prices
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
@@ -287,6 +290,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (quotes_.size() == 0) {
                 DLOG("No Equity Forward quotes provided for " << config->curveID()
                                                               << ", continuing without dividend curve.");
+                config->setOutputType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
@@ -294,6 +298,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             if (oqt.size() == 0) {
                 DLOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
+                config->setOutputType(EquityCurveConfig::Type::NoDividends);
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
                 DLOG("Building Equity Dividend Yield curve from Option Volatilities");
@@ -367,37 +372,62 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 } else {
                     DLOG("No overlapping call and put quotes for equity " << spec.curveConfigID()
                                                                           << " building NoDividends curve");
+                    config->setOutputType(EquityCurveConfig::Type::NoDividends);
                     buildCurveType = EquityCurveConfig::Type::NoDividends;
                 }
             }
         }
+        
+        
+        std::set<QuantExt::Dividend> dividends;
+        const std::set<QuantExt::Dividend>& history = DividendManager::instance().getHistory(spec.curveConfigID());
+        if (!history.empty()) {
+            for (std::set<QuantExt::Dividend>::const_iterator fd = history.begin();
+                 fd != history.end(); ++fd)
+                if (fd->exDate > asof && fd->announcementDate <= asof)
+                    dividends.insert(*fd);            
+        }
+
+        Handle<EquityAnnouncedDividendCurve> announcedDividendCurve;
 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
         if (buildCurveType == EquityCurveConfig::Type::ForwardPrice ||
             buildCurveType == EquityCurveConfig::Type::ForwardDividendPrice ||
-            buildCurveType == EquityCurveConfig::Type::OptionPremium) {
-            // Convert Fwds into dividends.
-            // Fwd = Spot e^{(r-q)T}
-            // => q = 1/T Log(Spot/Fwd) + r
-            for (Size i = 0; i < quotes_.size(); i++) {
-                QL_REQUIRE(quotes_[i] > 0, "Invalid Forward Price " << quotes_[i] << " for " << spec_.name()
-                                                                    << ", expiry: " << terms_[i]);
-                Time t = dc_.yearFraction(asof, terms_[i]);
-                Rate ir_rate = forecastYieldTermStructure->zeroRate(t, Continuous);
-                dividendRates.push_back(::log(equitySpot->value() / quotes_[i]) / t + ir_rate);
+            buildCurveType == EquityCurveConfig::Type::OptionPremium ||
+            buildCurveType == EquityCurveConfig::Type::NoDividends) {
+
+            announcedDividendCurve = Handle<EquityAnnouncedDividendCurve>(ext::make_shared<EquityAnnouncedDividendCurve>(
+                asof, dividends, forecastYieldTermStructure, calendar, dc_));
+
+            if (buildCurveType == EquityCurveConfig::Type::NoDividends) {
+                DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
+                // Return a flat curve @ 0%
+                dividendYieldTermStructure =
+                    Handle<YieldTermStructure>(ext::make_shared<FlatForward>(asof, 0.0, dc_));
+                equityIndex_ = ext::make_shared<EquityIndex2>(
+                    spec.curveConfigID(), calendar, parseCurrency(config->currency()), equitySpot,
+                    forecastYieldTermStructure, dividendYieldTermStructure, announcedDividendCurve);
+                return;
+            } else {
+                // Convert Fwds into dividends.
+                // Fwd = (Spot - A_0) e^{(r-q)T} + A_t 
+                // A_t is the discounted announed dividend at t
+                // => q = 1/T Log(Spot - A_0/(Fwd - A_t)) + r
+                Real announcedDividendT0 = announcedDividendCurve->discountedFutureDividends(0);
+                for (Size i = 0; i < quotes_.size(); i++) {
+                    QL_REQUIRE(quotes_[i] > 0, "Invalid Forward Price " << quotes_[i] << " for " << spec_.name()
+                                                                        << ", expiry: " << terms_[i]);
+                    Time t = dc_.yearFraction(asof, terms_[i]);
+                    Rate ir = forecastYieldTermStructure->zeroRate(t, Continuous);
+                    Real announcedDividend = announcedDividendCurve->discountedFutureDividends(t);
+                    dividendRates.push_back(
+                        ::log((equitySpot->value() - announcedDividendT0) / (quotes_[i] - announcedDividend)) / t + ir);
+                }
             }
         } else if (buildCurveType == EquityCurveConfig::Type::DividendYield) {
             DLOG("Building Equity Dividend Yield curve from Dividend Yield rates");
             dividendRates = quotes_;
-        } else if (buildCurveType == EquityCurveConfig::Type::NoDividends) {
-            DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
-            // Return a flat curve @ 0%
-            dividendYieldTermStructure = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(asof, 0.0, dc_));
-            equityIndex_ =
-                QuantLib::ext::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
-                                                equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
-            return;
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
@@ -462,8 +492,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
         equityIndex_ =
-            QuantLib::ext::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
-                                            equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
+            QuantLib::ext::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()), equitySpot, 
+                forecastYieldTermStructure, dividendYieldTermStructure, announcedDividendCurve);
 
         if (buildCalibrationInfo) {
 

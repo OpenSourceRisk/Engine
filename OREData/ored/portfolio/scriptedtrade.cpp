@@ -41,6 +41,9 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     DLOG("ScriptedTrade::build() called for trade " << id());
 
+    auto rt = engineFactory->engineData()->globalParameters().find("RunType");
+    isPfAnalyserRun_ = rt != engineFactory->engineData()->globalParameters().end() && rt->second == "PortfolioAnalyser";
+
     auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
 
     QL_REQUIRE(builder, "no builder found for ScriptedTrade");
@@ -51,11 +54,15 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     setIsdaTaxonomyFields();
 
-    auto qleInstr = QuantLib::ext::make_shared<ScriptedInstrument>(builder->lastRelevantDate());
+    includePastCashflows_ = builder->includePastCashflows();
+
+    auto qleInstr =
+        QuantLib::ext::make_shared<ScriptedInstrument>(builder->lastRelevantDate(), includePastCashflows_);
     qleInstr->setPricingEngine(engine);
 
     npvCurrency_ = builder->npvCurrency();
     maturity_ = builder->lastRelevantDate();
+    maturityType_ = builder->lastRelevantDateType();
     notional_ = Null<Real>(); // is handled by override of notional()
     notionalCurrency_ = "";   // is handled by override of notionalCurrency()
     legs_.clear();
@@ -64,9 +71,14 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
-                                                premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
-                                                builder->configuration(MarketContext::pricing)));
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
+                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), discountCurve, 
+                                         engineFactory, builder->configuration(MarketContext::pricing));
+    maturity_ = std::max(maturity_, latestPremiumDate);
+    if (maturity_ == latestPremiumDate)
+        maturityType_ = "Latest Premium Date";
+
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qleInstr, 1.0, additionalInstruments, additionalMultipliers);
     
@@ -75,11 +87,10 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         for (auto const& d : f.second) {
             IndexInfo info(f.first);
             if (info.isInf()) {
-                QL_DEPRECATED_DISABLE_WARNING
-                requiredFixings_.addZeroInflationFixingDate(d, info.infName(), info.inf()->interpolated(),
+                requiredFixings_.addZeroInflationFixingDate(d, info.infName(), info.infIsInterpolated(),
                                                             info.inf()->frequency(), info.inf()->availabilityLag(),
                                                             CPI::AsIndex, info.inf()->frequency(), Date::maxDate(), false, false);
-                QL_DEPRECATED_ENABLE_WARNING
+
             } else if (info.isFx()) {
                 // for FX we do not know if FX-TAG-CCY1-CCY2 or FX-TAG-CCY2-CCY1 is in the history, require both
                 requiredFixings_.addFixingDate(d, f.first, Date::maxDate(), false, false);
@@ -92,6 +103,7 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // set sensitivity template
     setSensitivityTemplate(builder->sensitivityTemplate());
+    addProductModelEngine(*builder);
 }
 
 void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -133,7 +145,7 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
 }
 
 QuantLib::Real ScriptedTrade::notional() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return 0.0;
     // try to get the notional from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
@@ -154,7 +166,7 @@ QuantLib::Real ScriptedTrade::notional() const {
 }
 
 std::string ScriptedTrade::notionalCurrency() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return npvCurrency_;
     // try to get the notional ccy from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
@@ -183,6 +195,8 @@ void ScriptedTrade::clear() {
     scriptName_ = productTag_ = "";
     script_.clear();
 }
+
+bool ScriptedTrade::isExpired(const Date& d) const { return Trade::isExpired(d) && !includePastCashflows_; }
 
 namespace {
 
@@ -553,6 +567,30 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     if (XMLNode* ns = XMLUtils::getChildNode(node, "ConditionalExpectation")) {
         conditionalExpectationModelStates_ = XMLUtils::getChildrenValues(ns, "ModelStates", "ModelState", false);
     }
+    if (XMLNode* ns = XMLUtils::getChildNode(node, "AmcCg")) {
+        amcCgComponents_ = XMLUtils::getChildrenValues(ns, "Components", "Component");
+        if (XMLNode* t = XMLUtils::getChildNode(ns, "Target")) {
+            amcCgTargetValue_ = XMLUtils::getChildValue(t, "Value", false);
+            amcCgTargetDerivative_ = XMLUtils::getChildValue(t, "Value", false);
+        }
+    }
+    if (XMLNode* peOverwrite = XMLUtils::getChildNode(node, "PricingEngineConfigOverwrite")) {
+        {
+        std::vector<std::string> keys;
+        auto values =
+            XMLUtils::getChildrenValuesWithAttributes(peOverwrite, "EngineParameters", "Parameter", "name", keys, true);
+        for (Size i = 0; i < keys.size(); ++i) {
+            engineParameterOverwrite_[keys[i]] = values[i];
+        }
+        }
+        {
+        std::vector<std::string> keys;
+        auto values =
+            XMLUtils::getChildrenValuesWithAttributes(peOverwrite, "ModelParameters", "Parameter", "name", keys, true);
+        for (Size i = 0; i < keys.size(); ++i)
+            modelParameterOverwrite_[keys[i]] = values[i];
+        }
+    }
 }
 
 XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
@@ -577,9 +615,37 @@ XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(calibrations, c.toXML(doc));
     }
     XMLUtils::addChildren(doc, n, "StickyCloseOutStates", "StickyCloseOutState", stickyCloseOutStates_);
+    XMLNode* amccg = doc.allocNode("AmcCg");
+    XMLUtils::appendNode(n, amccg);
+    XMLUtils::addChildren(doc, amccg, "Components", "Component", amcCgComponents_);
+    XMLNode* target = doc.allocNode("Target");
+    XMLUtils::appendNode(amccg, target);
+    XMLUtils::addChild(doc, target, "Value", amcCgTargetValue_);
+    XMLUtils::addChild(doc, target, "Derivative", amcCgTargetDerivative_);
     XMLNode* condExp = doc.allocNode("ConditionalExpectation");
     XMLUtils::appendNode(n, condExp);
     XMLUtils::addChildren(doc, condExp, "ModelStates", "ModelState", conditionalExpectationModelStates_);
+    if (!engineParameterOverwrite_.empty() || !modelParameterOverwrite_.empty()) {
+        XMLNode* peOverwrite = doc.allocNode("PricingEngineConfigOverwrite");
+        XMLUtils::appendNode(n, peOverwrite);
+        {
+            std::vector<std::string> keys, values;
+            for (auto const& [k, v] : engineParameterOverwrite_) {
+                keys.push_back(k);
+                values.push_back(v);
+            }
+            XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "EngineParameters", "Parameter", keys, "name",
+                                                values);
+        }
+        {
+            std::vector<std::string> keys, values;
+            for (auto const& [k, v] : modelParameterOverwrite_) {
+                keys.push_back(k);
+                values.push_back(v);
+            }
+            XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "ModelParameters", "Parameter", keys, "name", values);
+        }
+    }
     return n;
 }
 

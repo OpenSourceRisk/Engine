@@ -41,15 +41,12 @@ public:
 
     ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source);
 
-    QL_DEPRECATED ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source,
-                              const CPI::InterpolationType interpolation);
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> source_;
-    QL_DEPRECATED const CPI::InterpolationType interpolation_;
 };
 
 //! Wrapper that creates a yoy from a zc index
@@ -66,8 +63,13 @@ private:
 */
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
+    YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
+                             const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
+
+    [[deprecated]]
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
+
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }

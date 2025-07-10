@@ -30,6 +30,7 @@
 #include <orea/app/initbuilders.hpp>
 
 #include <qle/version.hpp>
+#include <qle/gitversion.hpp>
 
 #include <iostream>
 
@@ -39,8 +40,6 @@
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
 // Find the name of the correct boost library with which to link.
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
@@ -63,6 +62,13 @@ int main(int argc, char** argv) {
 
     if (argc == 2 && (string(argv[1]) == "-v" || string(argv[1]) == "--version")) {
         cout << "ORE version " << OPEN_SOURCE_RISK_VERSION << endl;
+        exit(0);
+    }
+
+    if (argc == 2 && (string(argv[1]) == "-h" || string(argv[1]) == "--hash")) {
+        #ifdef GIT_HASH
+        cout << "Git hash " << GIT_HASH << endl;
+        #endif
         exit(0);
     }
 

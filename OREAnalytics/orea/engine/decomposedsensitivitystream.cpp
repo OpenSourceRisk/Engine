@@ -166,9 +166,9 @@ double DecomposedSensitivityStream::fxRiskShiftSize(const std::string ccy) const
     auto fxpair = ccy + baseCurrency_;
     auto fxShiftSizeIt = ssd_->fxShiftData().find(fxpair);
     QL_REQUIRE(fxShiftSizeIt != ssd_->fxShiftData().end(), "Couldn't find shiftsize for " << fxpair);
-    QL_REQUIRE(fxShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
+    QL_REQUIRE(fxShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative fxSpot shift for index decomposition");
-    return fxShiftSizeIt->second.shiftSize;
+    return fxShiftSizeIt->second->shiftSize;
 }
 
 std::map<std::string, double>
@@ -186,9 +186,9 @@ DecomposedSensitivityStream::fxRiskShiftSizes(const std::map<std::string, std::v
 double DecomposedSensitivityStream::equitySpotShiftSize(const std::string name) const {
     auto eqShiftSizeIt = ssd_->equityShiftData().find(name);
     QL_REQUIRE(eqShiftSizeIt != ssd_->equityShiftData().end(), "Couldn't find a equity shift size for " << name);
-    QL_REQUIRE(eqShiftSizeIt->second.shiftType == ore::analytics::ShiftType::Relative,
+    QL_REQUIRE(eqShiftSizeIt->second->shiftType == ore::analytics::ShiftType::Relative,
                "Requires a relative eqSpot shift for index decomposition");
-    return eqShiftSizeIt->second.shiftSize;
+    return eqShiftSizeIt->second->shiftSize;
 }
 
 double DecomposedSensitivityStream::assetSpotShiftSize(const std::string indexName,
@@ -284,7 +284,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
                    "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
                        << sr.tradeId);
 
-        Date today = QuantLib::Settings::instance().evaluationDate();
+        QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
 
         auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + indexName)->second;
 

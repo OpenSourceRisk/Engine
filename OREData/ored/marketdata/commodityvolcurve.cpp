@@ -161,14 +161,14 @@ QuantLib::ext::shared_ptr<OptionPriceSurface> optPriceSurface(const CallPutData&
 namespace ore {
 namespace data {
 
-CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                                     const CurveConfigurations& curveConfigs,
-                                     const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
-                                     const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                     const Market* fxIndices, const bool buildCalibrationInfo) {
+CommodityVolCurve::CommodityVolCurve(
+    const Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
+    const CurveConfigurations& curveConfigs, const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+    const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves,
+    const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves, const Market* fxIndices,
+    const std::string& configuration, const bool buildCalibrationInfo) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -200,7 +200,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 // Do different things depending on the type of volatility configured
                 if (auto eqvc = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, commodityCurves, commodityVolCurves, fxVolCurves,
-                                    correlationCurves, fxIndices);
+                                    correlationCurves, fxIndices, configuration);
                 } else if (auto qvc = QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
 
                     if (auto cvc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
@@ -587,7 +587,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
-    bool flatTimeExtrap = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -605,7 +605,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Time extrapolation switched to using interpolator.");
-            flatTimeExtrap = false;
+            timeExtrapolation = vssc.timeExtrapolationVariance()
+                                    ? QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVariance
+                                    : QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility;
         } else if (timeExtrapType == Extrapolation::None) {
             DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (timeExtrapType == Extrapolation::Flat) {
@@ -668,8 +670,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes,
-            vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
+            asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation);
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
@@ -686,9 +688,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         auto pSurface = optPriceSurface(cpData, asof, dayCounter_, false);
 
         DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
-        auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(pts_, yts_, cSurface, pSurface, calendar_,
-            dayCounter_, vssc.exerciseType(), flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap,
-            preferOutOfTheMoney, solverOptions);
+        auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(
+            pts_, yts_, cSurface, pSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
         volatility_ = coss->volSurface();
 
         // If data level logging, output the stripped volatilities.
@@ -836,6 +838,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurface time extrapolation is hard-coded to constant in volatility.
     BlackVarianceSurface::Extrapolation strikeExtrap = BlackVarianceSurface::ConstantExtrapolation;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vssc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
@@ -851,17 +854,33 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
         }
 
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVarianceSurface only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = vssc.timeExtrapolationVariance()
+                                    ? QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVariance
+                                    : QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
+
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
              << " strike extrapolation settings are ignored");
     }
 
+    if(timeExtrapolation == QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility && vssc.timeInterpolation() != "Linear"){
+        QL_FAIL("Time extrapolation in volatility only for linear interpolation supported. Change TimeInterpolation to "
+                "linear or set time extrapolation to flat or to variance extrapolation.");
+    }
+
     DLOG("Creating BlackVarianceSurface object");
-    auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes, volatilities,
-                                                        dayCounter_, strikeExtrap, strikeExtrap);
+    auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes,
+                                                                volatilities, dayCounter_, strikeExtrap, strikeExtrap,
+                                                                timeExtrapolation);
 
     // Set the interpolation if configured properly. The default is Bilinear.
     if (!(vssc.timeInterpolation() == "Linear" && vssc.strikeInterpolation() == "Linear")) {
@@ -872,6 +891,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
         } else if (vssc.timeInterpolation() == "Cubic") {
             DLOG("Setting interpolation to BiCubic");
             tmp->setInterpolation<Bicubic>();
+            
         } else {
             DLOG("Interpolation type " << vssc.timeInterpolation() << " not supported in 2 dimensions");
         }
@@ -1062,13 +1082,14 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVolatilitySurfaceDelta time extrapolation is hard-coded to constant in volatility.
-    bool flatExtrapolation = true;
+    bool flatStrikeExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vdsc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vdsc.strikeExtrapolation());
         if (strikeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Strike extrapolation switched to using interpolator.");
-            flatExtrapolation = false;
+            flatStrikeExtrapolation = false;
         } else if (strikeExtrapType == Extrapolation::None) {
             DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
         } else if (strikeExtrapType == Extrapolation::Flat) {
@@ -1078,8 +1099,17 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vdsc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVolatilitySurfaceDelta only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = vdsc.timeExtrapolationVariance()
+                                    ? QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVariance
+                                    : QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1124,7 +1154,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     bool hasAtm = true;
     volatility_ = QuantLib::ext::make_shared<BlackVolatilitySurfaceDelta>(
         asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, spot, yts_, pyts, deltaType,
-        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
+        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatStrikeExtrapolation,
+        timeExtrapolation);
 
     DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
     volatility_->enableExtrapolation(vdsc.extrapolation());
@@ -1282,6 +1313,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
     bool flatExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vmsc.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vmsc.strikeExtrapolation());
@@ -1297,8 +1329,17 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vmsc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("BlackVarianceSurfaceMoneyness only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = vmsc.timeExtrapolationVariance()
+                                    ? QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVariance
+                                    : QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1338,15 +1379,16 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         pyts->enableExtrapolation();
 
         DLOG("Creating BlackVarianceSurfaceMoneynessForward object");
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, expiryTimes,
-                                                                               moneynessLevels, vols, dayCounter_, pyts,
-                                                                               yts_, stickyStrike, flatExtrapolation);
+        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
+            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, pyts, yts_, stickyStrike,
+            flatExtrapolation, timeExtrapolation);
 
     } else {
 
         DLOG("Creating BlackVarianceSurfaceMoneynessSpot object");
         volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(
-            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation);
+            calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation,
+            timeExtrapolation);
     }
 
     DLOG("Setting BlackVarianceSurfaceMoneyness extrapolation to " << to_string(vmsc.extrapolation()));
@@ -1396,6 +1438,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to
     // constant in volatility.
     bool flatExtrapolation = true;
+    BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility;
     if (vapo.extrapolation()) {
 
         auto strikeExtrapType = parseExtrapolation(vapo.strikeExtrapolation());
@@ -1411,8 +1454,17 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         auto timeExtrapType = parseExtrapolation(vapo.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::Flat) {
-            DLOG("ApoFutureSurface only supports flat volatility extrapolation in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            timeExtrapolation = vapo.timeExtrapolationVariance()
+                                    ? QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVariance
+                                    : QuantLib::BlackVolTimeExtrapolation::UseInterpolatorVolatility;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
@@ -1430,8 +1482,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     }
 
     DLOG("Creating ApoFutureSurface object");
-    volatility_ = QuantLib::ext::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, expCalc_, baseVts,
-                                                       baseExpCalc, beta, flatExtrapolation, maxTenor);
+    volatility_ = QuantLib::ext::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, expCalc_,
+                                                               baseVts, baseExpCalc, beta, flatExtrapolation, maxTenor,
+                                                               timeExtrapolation);
 
     DLOG("Setting ApoFutureSurface extrapolation to " << to_string(vapo.extrapolation()));
     volatility_->enableExtrapolation(vapo.extrapolation());
@@ -1444,7 +1497,8 @@ void CommodityVolCurve::buildVolatility(
     const ProxyVolatilityConfig& pvc, const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& comCurves,
     const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& volCurves,
     const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
-    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices) {
+    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves, const Market* fxIndices,
+    const std::string& configuration) {
 
     DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
@@ -1507,7 +1561,7 @@ void CommodityVolCurve::buildVolatility(
             fxSurface->enableExtrapolation();
         }
 
-        fxIndex = fxIndices->fxIndex(proxyVolConfig.currency() + config.currency()).currentLink();
+        fxIndex = fxIndices->fxIndex(proxyVolConfig.currency() + config.currency(), configuration).currentLink();
         FXSpotSpec spotSpec(proxyVolConfig.currency(), config.currency());
         
         CorrelationCurveSpec corrSpec(pvc.correlationCurve());
@@ -1701,7 +1755,7 @@ void CommodityVolCurve::populateCurves(const CommodityVolatilityConfig& config,
         if (!ytsId.empty()) {
             auto itYts = yieldCurves.find(ytsId);
             if (itYts != yieldCurves.end()) {
-                yts_ = itYts->second->handle();
+                yts_ = itYts->second->handle(ytsId);
             } else if (!dontThrow) {
                 QL_FAIL("CommodityVolCurve: can't find yield curve with id " << ytsId);
             }
@@ -1743,15 +1797,26 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                                                 const CurveConfigurations& curveConfigs,
                                                 const CommodityVolatilityConfig& config) {
     DLOG("CommodityVolCurve: building volatility calibration info");
-    try{
-
+    try {
         ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigCommVols(), config.reportConfig());
         bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
         bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
         std::vector<Real> moneyness = *rc.moneyness();
         std::vector<std::string> deltas = *rc.deltas();
-        std::vector<Period> expiries = *rc.expiries();
-
+        std::vector<Date> expiryDates;
+        if (rc.continuationExpiries() && !rc.continuationExpiries()->empty()) {
+            DLOG("Build calibration report time grid from continuation expiries")
+            for (const auto& expiry : *rc.continuationExpiries()) {
+                expiryDates.push_back(
+                    getExpiry(asof, expiry, config.futureConventionsId(), config.optionExpiryRollDays()));
+            }
+        } else if (rc.expiries()) {
+            DLOG("Build calibration report time grid from periods")
+            std::vector<Period> expiries = *rc.expiries();
+            for (const auto& p : expiries) {
+                expiryDates.push_back(volatility_->optionDateFromTenor(p));
+            }
+        }
 
         auto info = QuantLib::ext::make_shared<FxEqCommVolCalibrationInfo>();
 
@@ -1774,8 +1839,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
         info->butterflyStyle = "na";
 
         std::vector<Real> times, forwards;
-        for (auto const& p : expiries) {
-            auto d = volatility_->optionDateFromTenor(p);
+        for (auto const& d : expiryDates) {
             info->expiryDates.push_back(d);
             times.push_back(volatility_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
                                                               : volatility_->timeFromReference(d));
@@ -1787,10 +1851,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         if (reportOnDeltaGrid) {
             info->deltas = deltas;
-            info->deltaCallPrices =
-                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            info->deltaPutPrices =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaCallPrices = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            info->deltaPutPrices = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             info->deltaGridProb = std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
@@ -1809,14 +1871,18 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                     maxTime = volatility_->timeFromReference(maxExpiry_);
             }
 
+            Handle<YieldTermStructure> pyts =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*pts_, *yts_));
+            pyts->enableExtrapolation();
+
             DeltaVolQuote::AtmType at;
             DeltaVolQuote::DeltaType dt;
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 at = atmType;
                 dt = deltaType;
-                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike (as in equities)
-                // from delta conversions: we use fwd delta always and ATM DNS
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // (as in equities) from delta conversions: we use fwd delta always and ATM DNS
                 if (t > maxTime) {
                     at = DeltaVolQuote::AtmDeltaNeutral;
                     dt = DeltaVolQuote::Fwd;
@@ -1827,22 +1893,24 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                     try {
                         Real strike;
                         if (d.isAtm()) {
-                            strike =
-                                QuantExt::getAtmStrike(dt, at, pts_->price(asof,true), yts_->discount(t), 1., volatility_, t);
+                            strike = QuantExt::getAtmStrike(dt, at, pts_->price(asof, true), yts_->discount(t),
+                                                            pyts->discount(t), volatility_, t);
                         } else if (d.isCall()) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof,true),
-                                                                  yts_->discount(t), 1., volatility_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof, true),
+                                                                  yts_->discount(t), pyts->discount(t), volatility_, t);
                         } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, pts_->price(asof,true),
-                                                                  yts_->discount(t), 1., volatility_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, pts_->price(asof, true),
+                                                                  yts_->discount(t), pyts->discount(t), volatility_, t);
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
 
                         if (d.isPut()) {
-                            info->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaPutPrices[i][j] =
+                                blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
                         } else {
-                            info->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                            info->deltaCallPrices[i][j] =
+                                blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
                         }
 
                         info->deltaGridStrikes[i][j] = strike;
@@ -1934,8 +2002,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
             }
         }
     calibrationInfo_ = info;
-    }
-    catch (std::exception& e){
+    } catch (std::exception& e) {
         QL_FAIL("CommodityVolCurve: calibration info building failed: " << e.what());
     } catch (...) {
         QL_FAIL("CommodityVolCurve:  calibration info building failed: unknown error");

@@ -31,16 +31,18 @@ using QuantExt::PriceTermStructure;
 namespace QuantExt {
 
 CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate,
-                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
+                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve,
+                               const QuantLib::Date& optionExpiryDate)
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
-      curve_(curve), keepDays_(false) {
+      curve_(curve), keepDays_(false), optionExpiryDate_(optionExpiryDate) {
     init();
 }
 
 CommodityIndex::CommodityIndex(const string& underlyingName, const Date& expiryDate,
-                               const Calendar& fixingCalendar, bool keepDays, const Handle<PriceTermStructure>& curve)
+                               const Calendar& fixingCalendar, bool keepDays, const Handle<PriceTermStructure>& curve,
+                               const QuantLib::Date& optionExpiryDate)
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
-      curve_(curve), keepDays_(keepDays) {
+      curve_(curve), keepDays_(keepDays), optionExpiryDate_(optionExpiryDate) {
     init();
 }
 
@@ -64,8 +66,9 @@ void CommodityIndex::init() {
 
     registerWith(curve_);
     registerWith(Settings::instance().evaluationDate());
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(name()));
-
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -120,17 +123,18 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
         return curve_->price(fixingDate);
 }
 
-QuantLib::ext::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
+QuantLib::ext::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate, const Date& optionExpiry,
                                                             const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     return QuantLib::ext::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
 }
 
-QuantLib::ext::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry,
+QuantLib::ext::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry, const Date& optionExpiry,
                                                                const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
-    return QuantLib::ext::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
+    const auto& oed = optionExpiry == Date() ? optionExpiryDate() : optionExpiry;
+    return QuantLib::ext::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts, oed);
 }
 
 } // namespace QuantExt

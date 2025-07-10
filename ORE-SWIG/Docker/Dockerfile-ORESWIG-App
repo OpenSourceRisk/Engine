@@ -1,0 +1,52 @@
+#syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
+
+ARG ore_version=latest
+ARG debian_tag=latest
+
+FROM env_oreswig:${ore_version} as env_oreswig
+FROM env_ore:${ore_version} as env_ore
+FROM debian:${debian_tag}
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip vim \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install matplotlib pandas pytest pytest-xdist nose nose_xunitmp datacompy jupyter jsondiff xmldiff numpy scipy ipywidgets
+
+WORKDIR /
+RUN mkdir /oreswig
+RUN mkdir /oreswig/pythonlib
+
+COPY --from=env_oreswig /oreswig/ORE.py /oreswig/pythonlib/ORE.py 
+COPY --from=env_oreswig /oreswig/_OREP.so /oreswig/pythonlib/_OREP.so
+
+COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+RUN true
+
+COPY --from=env_ore /usr/local/lib /usr/local/lib
+
+ENV PYTHONPATH=/oreswig/pythonlib
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+RUN mkdir /oreswig/tests
+
+COPY ore/ORE-SWIG/QuantLib-SWIG/Python/test /oreswig/tests/QuantLibTestSuite
+# Delete the init.py otherwise nosetest will not pick up all the tests
+RUN rm oreswig/tests/QuantLibTestSuite/__init__.py
+COPY ore/ORE-SWIG/test /oreswig/tests/ORETestSuite
+COPY ore/Examples /oreswig/Examples
+# due to relative path imports in the notebooks, we need to copy utilities.py directly into the example folder
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_1
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_2
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_3
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_4
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_5
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_6
+RUN cp oreswig/Examples/ORE-Python/Notebooks/utilities.py oreswig/Examples/ORE-Python/Notebooks/Example_7
+COPY ore/Tools /oreswig/Tools
+# Set env variable to run the ore examples with the python interface instead of the executable
+ENV ORE_EXAMPLES_USE_PYTHON=1
+
+CMD bash

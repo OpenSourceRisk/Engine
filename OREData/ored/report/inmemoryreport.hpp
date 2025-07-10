@@ -41,7 +41,7 @@ using std::vector;
  */
 class InMemoryReport : public Report {
 public:
-    explicit InMemoryReport(Size bufferSize=100000) : i_(0), bufferSize_(bufferSize) {}
+    explicit InMemoryReport(Size bufferSize=0) : i_(0), bufferSize_(bufferSize), cacheIndex_(0) {}
     ~InMemoryReport() override;
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
@@ -58,7 +58,7 @@ public:
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
-    const vector<ReportType>& data(Size i) const;
+    const ReportType& data(Size i, Size j) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
     void jumpToColumn(Size i) { i_ = i; }
@@ -78,6 +78,10 @@ private:
     vector<vector<ReportType>> data_;
     vector<string> files_;
     std::map<std::string, size_t> headersMap_;
+    mutable vector<vector<ReportType>> cache_;
+    mutable Size cacheIndex_;
+    const vector<vector<ReportType>>& cache(Size cacheIndex) const;
+    const Report::ReportType& dataImpl(const vector<vector<ReportType>>& data, Size i, Size j, Size expectedSize) const;
 };
 
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings
@@ -95,13 +99,13 @@ public:
     vector<string> dataAsString(Size i) const { return data_T<string>(i, 2); }
     vector<Date> dataAsDate(Size i) const { return data_T<Date>(i, 3); }
     vector<Period> dataAsPeriod(Size i) const { return data_T<Period>(i, 4); }
+    Size rows() const { return columns() == 0 ? 0 : imReport_->rows(); }
     // for convenience, access by row j and column i
-    Size rows() const { return columns() == 0 ? 0 : imReport_->data(0).size(); }
-    int dataAsSize(Size j, Size i) const { return int(boost::get<Size>(imReport_->data(i).at(j))); }
-    Real dataAsReal(Size j, Size i) const { return boost::get<Real>(imReport_->data(i).at(j)); }
-    string dataAsString(Size j, Size i) const { return boost::get<string>(imReport_->data(i).at(j)); }
-    Date dataAsDate(Size j, Size i) const { return boost::get<Date>(imReport_->data(i).at(j)); }
-    Period dataAsPeriod(Size j, Size i) const { return boost::get<Period>(imReport_->data(i).at(j)); }
+    int dataAsSize(Size j, Size i) const { return int(boost::get<Size>(imReport_->data(i, j))); }
+    Real dataAsReal(Size j, Size i) const { return boost::get<Real>(imReport_->data(i, j)); }
+    string dataAsString(Size j, Size i) const { return boost::get<string>(imReport_->data(i, j)); }
+    Date dataAsDate(Size j, Size i) const { return boost::get<Date>(imReport_->data(i, j)); }
+    Period dataAsPeriod(Size j, Size i) const { return boost::get<Period>(imReport_->data(i, j)); }
 
 private:
     template <typename T> vector<T> data_T(Size i, Size w) const {
@@ -109,8 +113,8 @@ private:
                    "PlainTypeInMemoryReport::data_T(column=" << i << ",expectedType=" << w
                    << "): Type mismatch, have " << columnType(i));
         vector<T> tmp;
-        for(auto const& d: imReport_->data(i))
-            tmp.push_back(boost::get<T>(d));
+        for (Size j=0; j<imReport_->rows(); j++)
+            tmp.push_back(boost::get<T>(imReport_->data(i, j)));
         return tmp;
     }
     vector<int> sizeToInt(const vector<Size>& v) const {

@@ -66,6 +66,8 @@ void InfJyData::setRealRateReversion(ReversionParameter p) { realRateReversion_ 
 
 void InfJyData::setRealRateVolatility(VolatilityParameter p) { realRateVolatility_ = std::move(p); }
 
+void InfJyData::setIndexVolatility(VolatilityParameter p) { indexVolatility_ = std::move(p); }
+
 bool InfJyData::linkRealRateParamsToNominalRateParams() const { return linkRealToNominalRateParams_; }
 
 Real InfJyData::linkedRealRateVolatilityScaling() const { return linkedRealRateVolatilityScaling_; }
@@ -110,8 +112,8 @@ XMLNode* InfJyData::toXML(XMLDocument& doc) const {
     InflationModelData::append(doc, node);
 
     XMLNode* rrNode = doc.allocNode("RealRate");
-    XMLUtils::appendNode(rrNode, realRateReversion_.toXML(doc));
     XMLUtils::appendNode(rrNode, realRateVolatility_.toXML(doc));
+    XMLUtils::appendNode(rrNode, realRateReversion_.toXML(doc));
     XMLUtils::appendNode(rrNode, reversionTransformation_.toXML(doc));
     XMLUtils::appendNode(node, rrNode);
 

@@ -91,7 +91,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarket
     simMarketData->setSwapVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true);
 
     simMarketData->setFxVolExpiries("",
@@ -159,7 +159,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarket
     simMarketData->setSwapVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP", "USD", "CHF", "JPY"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true); // false;
 
     simMarketData->setFxVolExpiries("",
@@ -225,14 +225,16 @@ SensitivityScenarioData::CurveShiftParData createCurveShiftData() {
 QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>(false);
 
-    SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = ShiftType::Relative;
-    fxsData.shiftSize = 0.01;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
+    fxsData->shiftType = ShiftType::Relative;
+    fxsData->shiftSize = 0.01;
 
-    SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = ShiftType::Relative;
-    fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = {2 * Years, 5 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>();
+    fxvsData->shiftType = ShiftType::Relative;
+    fxvsData->shiftSize = 1.0;
+    fxvsData->shiftExpiries = {2 * Years, 5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = ShiftType::Absolute;
@@ -240,11 +242,12 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.05};
 
-    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = ShiftType::Relative;
-    swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
-    swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
+    swvsData->shiftType = ShiftType::Relative;
+    swvsData->shiftSize = 0.01;
+    swvsData->shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
+    swvsData->shiftTerms = {2 * Years, 5 * Years, 10 * Years};
 
     SensitivityScenarioData::CurveShiftParData eurDiscountData = createCurveShiftData();
     eurDiscountData.parInstrumentSingleCurve = true;
@@ -304,11 +307,15 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
-    sensiData->equityShiftData()["SP5"] = eqsData;
-    sensiData->equityShiftData()["Lufthansa"] = eqsData;
+    sensiData->equityShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
+    sensiData->equityShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
 
-    sensiData->equityVolShiftData()["SP5"] = eqvsData;
-    sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+    sensiData->equityVolShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
+    sensiData->equityVolShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
 
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
@@ -339,15 +346,16 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData =
         QuantLib::ext::make_shared<SensitivityScenarioData>(parConversion);
 
-    SensitivityScenarioData::SpotShiftData fxsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
 
-    fxsData.shiftType = ShiftType::Relative;
-    fxsData.shiftSize = 0.01;
+    fxsData->shiftType = ShiftType::Relative;
+    fxsData->shiftSize = 0.01;
 
-    SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = ShiftType::Relative;
-    fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = {5 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>();
+    fxvsData->shiftType = ShiftType::Relative;
+    fxvsData->shiftSize = 1.0;
+    fxvsData->shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = ShiftType::Absolute;
@@ -355,16 +363,18 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = ShiftType::Relative;
-    swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
-    swvsData.shiftTerms = {5 * Years, 10 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
+    swvsData->shiftType = ShiftType::Relative;
+    swvsData->shiftSize = 0.01;
+    swvsData->shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
+    swvsData->shiftTerms = {5 * Years, 10 * Years};
 
-    SensitivityScenarioData::CdsVolShiftData cdsvsData;
-    cdsvsData.shiftType = ShiftType::Relative;
-    cdsvsData.shiftSize = 0.01;
-    cdsvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::CdsVolShiftData> cdsvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::CdsVolShiftData>();
+    cdsvsData->shiftType = ShiftType::Relative;
+    cdsvsData->shiftSize = 0.01;
+    cdsvsData->shiftExpiries = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
 
     // sensiData->creditCurveShiftData()["dc"] = cvsData;
 
@@ -501,11 +511,16 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
-    sensiData->equityShiftData()["SP5"] = eqsData;
-    sensiData->equityShiftData()["Lufthansa"] = eqsData;
+    sensiData->equityShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
+    sensiData->equityShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
+    ;
 
-    sensiData->equityVolShiftData()["SP5"] = eqvsData;
-    sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+    sensiData->equityVolShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
+    sensiData->equityVolShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
 
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
@@ -657,7 +672,7 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     ValuationEngine engine(today, dg, simMarket);
     // run scenarios and fill the cube
     boost::timer::cpu_timer t;
-    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
     double elapsed = t.elapsed().wall * 1e-9;
@@ -1518,8 +1533,8 @@ void ParSensitivityAnalysisTest::test2dZeroShifts() {
     // collect shifted data at tenors of the underlying 2d grid (different from the grid above)
     // aggregate "observed" shifts
     // compare to expected total shifts
-    vector<Period> expiryShiftTenors = sensiData->swaptionVolShiftData()["EUR"].shiftExpiries;
-    vector<Period> termShiftTenors = sensiData->swaptionVolShiftData()["EUR"].shiftTerms;
+    vector<Period> expiryShiftTenors = sensiData->swaptionVolShiftData()["EUR"]->shiftExpiries;
+    vector<Period> termShiftTenors = sensiData->swaptionVolShiftData()["EUR"]->shiftTerms;
     vector<Real> shiftExpiryTimes(expiryShiftTenors.size());
     vector<Real> shiftTermTimes(termShiftTenors.size());
     for (Size i = 0; i < expiryShiftTenors.size(); ++i)

@@ -183,9 +183,8 @@ void PnlExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
     QuantLib::ext::shared_ptr<InMemoryReport> report =
         QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(0));  
     
-    const vector<ore::data::Report::ReportType>& tradeIds = report->data(0);
-    for (Size j = 0; j < tradeIds.size(); j++) {
-        string tradeId = QuantLib::ext::get<std::string>(tradeIds[j]);
+    for (Size j = 0; j <  report->rows(); j++) {
+        string tradeId = boost::get<std::string>(report->data(0, j));
         PnlExplainResults res;
         const auto& r = results_.find(tradeId);
         if (r == results_.end())

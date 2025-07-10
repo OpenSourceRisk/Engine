@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <orea/app/inputparameters.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
@@ -67,13 +67,14 @@ public:
         Real quantile = 0.99,
         //! VaR holding period in calendar days
         Size horizonCalendarDays = 14,
-	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
+        //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+	Size dimCubeDepth = 1);
 
     virtual ~DynamicInitialMarginCalculator() {}
 
     //! Model implied t0 DIM by netting set, does not need a call to build() before
-    virtual map<string, Real> unscaledCurrentDIM() = 0;
+    virtual const map<string, Real>& unscaledCurrentDIM() const = 0;
 
     //! t0 IM by netting set, as provided as an arguments
     const map<string, Real>& currentIM() const { return currentIM_; }
@@ -84,20 +85,27 @@ public:
     //! DIM evolution report
     virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport) const;
 
+    //! DIM distribution report
+    virtual void exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize = 50,
+                                       const Real coveredStdDevs = 5.0) const;
+
+    //! DIM cube report
+    virtual void exportDimCube(ore::data::Report& dimCubeReport) const;
+
     //! DIM by nettingSet, date, sample returned as a regular NPV cube
-    const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& dimCube() const { return dimCube_; }
 
     //! DIM matrix by date and sample index for the specified netting set
-    const vector<vector<Real>>& dynamicIM(const string& nettingSet);
+    const vector<vector<Real>>& dynamicIM(const string& nettingSet) const;
 
     //! Cash flow matrix by date and sample index for the specified netting set
-    const vector<vector<Real>>& cashFlow(const string& nettingSet);
+    const vector<vector<Real>>& cashFlow(const string& nettingSet) const;
 
     //! Expected DIM vector by date for the specified netting set
-    const vector<Real>& expectedIM(const string& nettingSet);
+    const vector<Real>& expectedIM(const string& nettingSet) const;
 
     //! Get the implied netting set specific scaling factors
-    const std::map<std::string, Real>& getInitialMarginScaling() { return nettingSetScaling_; }
+    const std::map<std::string, Real>& getInitialMarginScaling() const { return nettingSetScaling_; }
 
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;

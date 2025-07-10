@@ -112,6 +112,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     }
     QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
+    maturityType_ = maturity_ == payDate ? "Pay Date" : "Option's Latest Premium Date";
 
     Real levelLow = barrier_.levels()[0].value();
     Real levelHigh = barrier_.levels()[1].value();
@@ -159,6 +160,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         QuantLib::ext::dynamic_pointer_cast<FxDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(fxDoubleTouchOptBuilder->engine(fgnCcy, domCcy, payDate, flipResults));
     setSensitivityTemplate(*fxDoubleTouchOptBuilder);
+    addProductModelEngine(*fxDoubleTouchOptBuilder);
 
     // if a knock-in option is triggered it becomes a simple forward cashflow
     // which we price as a swap
@@ -166,21 +168,22 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(builder, "No builder found for Swap");
     QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
+    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string(), {}));
 
     bool isLong = (positionType == Position::Long) ? true : false;
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
-                option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
-                builder->configuration(MarketContext::pricing));
+                option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), discountCurve,
+                engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-        doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
-        start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-
+        doubleTouch, isLong, expiryDate, payDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
+        start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
+        barrier_.overrideTriggered());
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
@@ -188,19 +191,6 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
 
-}
-
-bool FxDoubleTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
-    switch (type) {
-    case Barrier::DownIn:
-    case Barrier::DownOut:
-        return spot <= barrier;
-    case Barrier::UpIn:
-    case Barrier::UpOut:
-        return spot >= barrier;
-    default:
-        QL_FAIL("unknown barrier type " << type);
-    }
 }
 
 void FxDoubleTouchOption::fromXML(XMLNode* node) {

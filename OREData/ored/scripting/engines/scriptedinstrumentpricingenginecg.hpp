@@ -31,29 +31,33 @@
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/paylog.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 
 #include <ored/configuration/conventions.hpp>
 
 namespace ore {
 namespace data {
 
-class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine {
+class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine,
+                                          public AmcCgPricingEngine {
 public:
-    ScriptedInstrumentPricingEngineCG(const std::string& npv,
-                                      const std::vector<std::pair<std::string, std::string>>& additionalResults,
-                                      const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                      const QuantLib::ext::shared_ptr<Context>& context,
-                                      const Model::McParams& mcParams, const std::string& script = "",
-                                      const bool interactive = false, const bool generateAdditionalResults = false,
-                                      const bool includePastCashflows = false, const bool useCachedSensis = false,
-                                      const bool useExternalComputeFramework = false,
-                                      const bool useDoublePrecisionForExternalCalculation = false);
+    ScriptedInstrumentPricingEngineCG(
+        const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
+        const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
+        const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
+        const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+        const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
+        const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+        const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
+        const bool includePastCashflows = false, const bool useCachedSensis = false,
+        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
-    const std::string& npvName() const { return npv_; }
 
-    void buildComputationGraph() const;
+    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                               std::vector<TradeExposure>* tradeExposure = nullptr,
+                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
 
 private:
     void calculate() const override;
@@ -100,19 +104,29 @@ private:
 
     // inputs
 
-    const std::string npv_;
-    const std::vector<std::pair<std::string, std::string>> additionalResults_;
-    const QuantLib::ext::shared_ptr<ModelCG> model_;
-    const ASTNodePtr ast_;
-    const QuantLib::ext::shared_ptr<Context> context_;
-    const Model::McParams mcParams_;
-    const std::string script_;
-    const bool interactive_;
-    const bool generateAdditionalResults_;
-    const bool includePastCashflows_;
-    const bool useCachedSensis_;
-    const bool useExternalComputeFramework_;
-    const bool useDoublePrecisionForExternalCalculation_;
+    std::string npv_;
+    std::vector<std::pair<std::string, std::string>> additionalResults_;
+    QuantLib::ext::shared_ptr<ModelCG> model_;
+    std::set<std::string> minimalModelCcys_;
+    std::vector<std::string> amcCgComponents_;
+    std::string amcCgTargetValue_;
+    std::string amcCgTargetDerivative_;
+
+    ASTNodePtr ast_;
+    QuantLib::ext::shared_ptr<Context> context_;
+    Model::Params params_;
+    double indicatorSmoothingForValues_;
+    double indicatorSmoothingForDerivatives_;
+    std::string script_;
+    bool interactive_;
+    bool generateAdditionalResults_;
+    bool includePastCashflows_;
+    bool useCachedSensis_;
+    bool useExternalComputeFramework_;
+    bool useDoublePrecisionForExternalCalculation_;
+
+    // state
+    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
 };
 
 } // namespace data

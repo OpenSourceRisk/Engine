@@ -82,16 +82,18 @@ public:
         //! Post side trade IDs to be considered in the backtest. Other trades' PnLs will be removed from the total PnL
         std::set<std::string> postTradeIds_ = {};
 
+        const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLight_;
+
         //! Confidence levels that feed in to defining the stop light bounds
         std::vector<QuantLib::Real> ragLevels_ = {0.95, 0.9999};
         BacktestArgs(
             ore::data::TimePeriod btPeriod, ore::data::TimePeriod bmPeriod,
             QuantLib::Real conf = 0.99, QuantLib::Real exThres = 0.01, 
             bool tdc = false, const std::set<std::string>& callTradeIds = {},
-            const std::set<std::string>& postTradeIds = {})
+            const std::set<std::string>& postTradeIds = {}, const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight = nullptr)
             : backtestPeriod_(btPeriod), benchmarkPeriod_(bmPeriod),
               confidence_(conf), exceptionThreshold_(exThres),
-              tradeDetailIncludeAllColumns_(tdc), callTradeIds_(callTradeIds), postTradeIds_(postTradeIds) {}
+              tradeDetailIncludeAllColumns_(tdc), callTradeIds_(callTradeIds), postTradeIds_(postTradeIds), baselTrafficLight_(baselTrafficLight) {}
     };
 
     //! Used to pass information
@@ -109,6 +111,9 @@ public:
         QuantLib::Real postValue;
         QuantLib::Size postExceptions;
         std::vector<QuantLib::Size> bounds;
+        QuantLib::Size callExceptionsDecorrelated;
+        QuantLib::Size postExceptionsDecorrelated;
+        std::vector<QuantLib::Size> boundsDecorrelated;
     };
 
     struct VarBenchmark {
@@ -165,6 +170,8 @@ protected:
     std::set<std::string> callTradeIds_;
     std::set<std::string> postTradeIds_;
 
+    std::map<int, ore::data::BaselTrafficLightData::ObservationData> baselTrafficLightMatrix_;
+
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size>> summaryColumns() = 0;
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size, bool>> detailColumns() = 0;
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size>> pnlColumns() = 0;
@@ -196,13 +203,15 @@ protected:
     
     //! Add a row to the detail report
     virtual void addDetailRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
-        QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull, QuantLib::Real pnl, 
-        const std::string& result, const std::string& tradeId = "") const = 0;
+                              QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull,
+                              QuantLib::Real pnl, const std::string& result, QuantLib::Real pnlDecoorelated,
+                              const std::string& resultDecorrelated, const std::string& tradeId = "") const = 0;
 
     //! Add a row to the summary report
     virtual void addSummaryRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
-                               QuantLib::Real im, QuantLib::Size observations,
-                               bool isFull, QuantLib::Size exceptions, const std::vector<QuantLib::Size>& ragBounds,
+                               QuantLib::Real im, QuantLib::Size observations, bool isFull, QuantLib::Size exceptions,
+                               const std::vector<QuantLib::Size>& ragBounds, QuantLib::Size exceptionsDecorrelated,
+                               const std::vector<QuantLib::Size>& ragBoundsDecorrelated,
                                const VarBenchmarks& sensiBenchmarks, const VarBenchmarks& fullBenchmarks) const = 0;
 
     //! Calculate and update the benchmarks

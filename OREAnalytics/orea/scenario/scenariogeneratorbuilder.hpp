@@ -57,7 +57,7 @@ public:
     ScenarioGeneratorBuilder() {}
 
     //! Constructor
-    ScenarioGeneratorBuilder(QuantLib::ext::shared_ptr<ScenarioGeneratorData> data) : data_(data) {}
+    explicit ScenarioGeneratorBuilder(const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& data) : data_(data) {}
 
     //! Build function
     QuantLib::ext::shared_ptr<ScenarioGenerator>
@@ -65,7 +65,9 @@ public:
           QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
           QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
           const std::string& configuration = ore::data::Market::defaultConfiguration,
-          const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf = QuantLib::ext::make_shared<MultiPathGeneratorFactory>());
+          const QuantLib::ext::shared_ptr<PathGeneratorFactory>& pf =
+              QuantLib::ext::make_shared<MultiPathGeneratorFactory>(),
+          const std::string& amcPathDataInput = std::string());
 
 private:
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> data_;

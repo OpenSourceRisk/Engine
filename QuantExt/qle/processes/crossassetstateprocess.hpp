@@ -28,8 +28,6 @@
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/stochasticprocess.hpp>
 
-#include <boost/unordered_map.hpp>
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -53,6 +51,9 @@ public:
 
     // enables and resets the cache, once enabled the simulated times must stay the stame
     void resetCache(const Size timeSteps) const;
+
+    // get sqrt correlation matrix (only available for Euler discretization, empty otherwise)
+    const Matrix& sqrtCorrelation() const { return sqrtCorrelation_; }
 
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;

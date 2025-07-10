@@ -67,12 +67,14 @@ Docs/UserGuide/userguide.pdf
 ##########################
 # Examples
 ##########################
-Examples/Example_?/Output/
-Examples/Example_[0-9][0-9]/Output/
+Examples/Legacy/Example_?/Output/
+Examples/Legacy/Example_[0-9][0-9]/Output/
+Examples/Academy/*/Output/
 # these are generated
-Examples/Example_26/Input/EUR_xois_portfolio.xml
-Examples/Example_26/Input/USD_xois_portfolio.xml
-Examples/Example_26/Input/ois_portfolio.xml
+Examples/Legacy/Example_26/Input/EUR_xois_portfolio.xml
+Examples/Legacy/Example_26/Input/USD_xois_portfolio.xml
+Examples/Legacy/Example_26/Input/ois_portfolio.xml
+Examples/Legacy/Example_75/amcTraining_*
 
 ##################
 # XCode files
@@ -170,6 +172,12 @@ OREData/test/ored-test-suite
 OREData/test/main.cpp
 OREAnalytics/test/orea-test-suite
 OREAnalytics/test/main.cpp
+OREAnalytics/test/[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]
+OREAnalytics/test/crossgammReport
+OREAnalytics/test/cube*.csv
+OREAnalytics/test/defaultReturnConfig.xml
+OREAnalytics/test/scenario
+OREAnalytics/test/scenario*.csv
 App/Release
 App/Debug
 App/lib
@@ -218,6 +226,24 @@ QuantLib/test-suite/quantlib-benchmark
 QuantLib/test-suite/quantlib-test-suite
 QuantLib/test-suite/main.cpp
 
+##########################
+# SWIG generated code
+##########################
+*.idb
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib/QuantLib.py
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib/quantlib_wrap.cpp
+ORE-SWIG/QuantLib-SWIG/Python/QuantLib_Python.egg-info/
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics/OREAnalytics.py
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics/oreanalytics_wrap.cpp
+ORE-SWIG/OREAnalytics-SWIG/Python/OREAnalytics_Python.egg-info/
+ORE-SWIG/.build-stamp
+ORE-SWIG/examples/Output/
+ORE-SWIG/ORE.py
+ORE-SWIG/oreanalytics_wrap.cpp
+ORE-SWIG/dist/
+ORE-SWIG/open_source_risk_engine.egg-info/
+
+
 ###############################
 #generatedlog4cxxexecutables
 ###############################
@@ -245,6 +271,7 @@ build_debug/
 *.opensdf
 *.db
 .vs/
+*.pdb
 
 # Visual Studio Code files
 .vscode/
@@ -308,6 +335,7 @@ ipch/
 *log.txt
 *.dat
 
+QuantExt/qle/gitversion.hpp
 
 ##########################
 # Examples output
@@ -322,3 +350,4 @@ Examples/**/pricingstats.csv
 *.fls
 
 .gitmodules
+

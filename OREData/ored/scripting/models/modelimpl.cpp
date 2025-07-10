@@ -32,13 +32,15 @@ namespace data {
 
 using namespace QuantLib;
 
-ModelImpl::ModelImpl(const DayCounter& dayCounter, const Size size, const std::vector<std::string>& currencies,
-                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
-                     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
-                     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                     const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
-    : Model(size), dayCounter_(dayCounter), currencies_(currencies), indexCurrencies_(indexCurrencies),
-      simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
+ModelImpl::ModelImpl(
+    const Type type, const Params& params, const DayCounter& dayCounter, const Size size,
+    const std::vector<std::string>& currencies,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
+    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    : Model(size), type_(type), params_(params), dayCounter_(dayCounter), currencies_(currencies),
+      indexCurrencies_(indexCurrencies), simulationDates_(simulationDates), iborFallbackConfig_(iborFallbackConfig) {
 
     // populate index vectors
 
@@ -186,7 +188,6 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
     IndexInfo indexInfo(index);
 
     // 1 handle inflation indices
-    QL_DEPRECATED_DISABLE_WARNING
     // Remove in later version, scripts should take care of interpolation
     if (indexInfo.isInf()) {
         auto inf = std::find_if(infIndices_.begin(), infIndices_.end(), comp(indexInput));
@@ -199,7 +200,7 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
         // if the index is not interpolated we are done
-        if (!indexInfo.inf()->interpolated()) {
+        if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
         ALOG("Interpolated Inflation Indices are deprecated, adjust your script to handle interpolation there");
@@ -212,7 +213,6 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
                (indexEnd - indexStart) * RandomVariable(size(), static_cast<Real>(effectiveFixingDate - lim.first) /
                                                                     static_cast<Real>(lim.second + 1 - lim.first));
     }
-    QL_DEPRECATED_ENABLE_WARNING
     // 2 handle non-inflation indices
 
     // 2a handle historical fixings and today's fixings (if given as a historical fixing)

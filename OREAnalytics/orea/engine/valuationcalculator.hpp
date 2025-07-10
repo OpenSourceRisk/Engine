@@ -25,6 +25,8 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/simulation/simmarket.hpp>
+#include <orea/engine/cashflowreportgenerator.hpp>
+
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/dategrid.hpp>
 
@@ -87,14 +89,15 @@ public:
 class NPVCalculator : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    NPVCalculator(const std::string& baseCcyCode, Size index = 0) : baseCcyCode_(baseCcyCode), index_(index) {}
+    NPVCalculator(const std::string& baseCcyCode, Size index = 0, bool laxFxConversion = false)
+        : baseCcyCode_(baseCcyCode), index_(index), laxFxConversion_(laxFxConversion) {}
 
-    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                            QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
@@ -107,6 +110,7 @@ public:
 protected:
     std::string baseCcyCode_;
     Size index_;
+    bool laxFxConversion_;
 
     std::vector<Handle<Quote>> ccyQuotes_;
     std::vector<double> fxRates_;
@@ -125,12 +129,12 @@ public:
                        Size index)
         : baseCcyCode_(baseCcyCode), t0Date_(t0Date), dateGrid_(dateGrid), index_(index) {}
 
-    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                            QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
@@ -158,15 +162,16 @@ private:
 class NPVCalculatorFXT0 : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    NPVCalculatorFXT0(const std::string& baseCcyCode, const QuantLib::ext::shared_ptr<Market>& t0Market, Size index = 0)
-        : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index) {}
+    NPVCalculatorFXT0(const std::string& baseCcyCode, const QuantLib::ext::shared_ptr<Market>& t0Market, Size index = 0,
+                      bool laxFxConversion = false)
+        : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index), laxFxConversion_(laxFxConversion) {}
 
-    virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                            QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
                            Size sample, bool isCloseOut = false) override;
 
-    virtual void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                              const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                              QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
@@ -179,10 +184,62 @@ private:
     std::string baseCcyCode_;
     QuantLib::ext::shared_ptr<Market> t0Market_;
     Size index_;
+    bool laxFxConversion_;
 
     std::vector<double> fxRates_;
     std::vector<Size> tradeCcyIndex_;
 };
 
+//! CashflowReportCalculator
+/*! Calculates cashflow report data under stress or sensitivity scenarios. */
+class CashflowReportCalculator : public ValuationCalculator {
+public:
+    CashflowReportCalculator(const std::string& baseCcyCode, const bool includePastCashflows,
+                             std::vector<std::vector<std::vector<TradeCashflowReportData>>>& cfCube)
+        : baseCcyCode_(baseCcyCode), includePastCashflows_(includePastCashflows), cfCube_(cfCube) {}
+
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                   QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                   Size sample, bool isCloseOut = false) override;
+
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                     const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
+                     QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                     QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
+
+    void init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+              const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override {}
+    void initScenario() override {}
+
+private:
+    std::string baseCcyCode_;
+    bool includePastCashflows_;
+    std::vector<std::vector<std::vector<TradeCashflowReportData>>>& cfCube_;
+};
+
+//! ExerciseCalculator
+/*! Calculate the exercise value of the given (option wrapper) trade, if exercised. Te exercise value is not
+ *  converted into base currency, nor discounted by the numeraire, since this is meant to be an indicator
+ *  whether exercise happened or not, i.e. it will be flat on a path beyond the exercise date. In case of
+ *  cash settlement the NPV beyond exercise is simply zero, in case of physical settlement it is the underlying
+ *  NPV.
+ *  The exercise vlaue is stored in the NPVCube at an extra depth. For any non-option(wrapper) trade, or if
+ *  not exercised, we store Null<Real>().
+ *  If the NPV() call throws, we log an exception and write 0 to the cube
+ *
+ */
+class ExerciseCalculator : public NPVCalculator {
+public:
+    //! base ccy and index to write to
+    ExerciseCalculator(const std::string& baseCcyCode, Size index = 1, bool laxFxConversion = false)
+        : NPVCalculator(baseCcyCode, index, laxFxConversion) {}
+
+    Real npv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+	     const QuantLib::ext::shared_ptr<SimMarket>& simMarket) override;
+
+};
+  
 } // namespace analytics
 } // namespace ore

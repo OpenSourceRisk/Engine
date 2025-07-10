@@ -19,7 +19,6 @@
 */
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
@@ -28,8 +27,8 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
@@ -83,12 +82,23 @@ void BondData::fromXML(XMLNode* node) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
-        if (ld.concreteLegData()->legType() == "CPI") {
+        if (ld.concreteLegData()->legType() == LegType::CPI) {
             isInflationLinked_ = true;
         }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
     hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
+    if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "clean") {
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)) == "dirty") {
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Dirty;
+    } else if (boost::to_lower_copy(XMLUtils::getChildValue(node, "PriceType", false)).empty()) {
+        quotedDirtyPrices_ = std::nullopt;
+    } else {
+        DLOG("the PriceType is not valid. Value must be 'Clean' or 'Dirty'. Overiding to 'Clean'.");
+        quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
+    }
+    
     initialise();
 }
 
@@ -115,11 +125,17 @@ XMLNode* BondData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     if (!issueDate_.empty())
         XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
-    if(!priceQuoteMethod_.empty())
-	XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
-    if(!priceQuoteBaseValue_.empty())
-	XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
+    if (!priceQuoteMethod_.empty())
+        XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
+    if (!priceQuoteBaseValue_.empty())
+        XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
+    if (quotedDirtyPrices_ != std::nullopt) {
+        if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean)
+            XMLUtils::addChild(doc, bondNode, "PriceType", "Clean");
+        else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty)
+            XMLUtils::addChild(doc, bondNode, "PriceType", "Dirty");
+    }
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     if (!hasCreditRisk_)
@@ -161,9 +177,10 @@ void BondData::initialise() {
         // fill isInflationLinked
         for (Size i = 0; i < coupons().size(); ++i) {
             if (i == 0)
-                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == LegType::CPI;
             else {
-                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                bool isIthCouponInflationLinked =
+                    coupons()[i].concreteLegData()->legType() == LegType::CPI;
                 QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
                            "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
                                         << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
@@ -173,26 +190,30 @@ void BondData::initialise() {
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
-					       const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
-                                             priceQuoteBaseValue_, creditCurveId_, creditGroup_, referenceCurveId_,
-                                             incomeCurveId_, volatilityCurveId_, coupons_, securityId_, referenceDatum,
-                                             startDate, endDate);
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_,
+                                             priceQuoteMethod_, priceQuoteBaseValue_, creditCurveId_, creditGroup_,
+                                             referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
+                                             quotedDirtyPrices_, securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-					     const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
-    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
-        DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+    string strippedSecId = BondBuilder::checkForwardBond(securityId_).second;
+    if (strippedSecId.empty())
+        strippedSecId = securityId_;
+
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, strippedSecId)) {
+        DLOG("could not get BondReferenceDatum for name " << strippedSecId << " leave data in trade unchanged");
         initialise();
         checkData();
     } else {
         auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
+            referenceData->getData(BondReferenceDatum::TYPE, strippedSecId));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData, startDate, endDate);
     }
@@ -250,6 +271,8 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
@@ -259,27 +282,34 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
                                                 parseDate(bondData_.maturityDate())));
     } else { // Coupon bond
         for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+            std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+            LegData legData = bondData_.coupons()[i];
+            legData.setPaymentLag(bondData_.paymentLag());
+            leg = legBuilder->buildLeg(legData, engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
+            addProductModelEngine(productModelEngines);
         } // for coupons_
         Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     }
 
     Currency currency = parseCurrency(bondData_.currency());
-    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
-                                               bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(
+        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     setSensitivityTemplate(*bondBuilder);
+    addProductModelEngine(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
+    maturityType_ = "Final Bond Cashlow Date";
     notional_ = currentNotional(bond->cashflows());
     notionalCurrency_ = bondData_.currency();
 
@@ -333,7 +363,12 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
                                        const std::string& securityId) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
-        if (referenceData->hasData(b.first, securityId)) {
+
+        string strippedSecId = BondBuilder::checkForwardBond(securityId).second;
+        if (strippedSecId.empty())
+            strippedSecId = securityId;
+
+        if (referenceData && referenceData->hasData(b.first, strippedSecId)) {
             auto tmp = b.second->build(engineFactory, referenceData, securityId);
             tmp.builderLabel = b.first;
             return tmp;
@@ -346,8 +381,8 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
                "data and that there is a builder for the reference data type.");
 }
 
-void BondFactory::addBuilder(const std::string& referenceDataType, const QuantLib::ext::shared_ptr<BondBuilder>& builder,
-                             const bool allowOverwrite) {
+void BondFactory::addBuilder(const std::string& referenceDataType,
+                             const QuantLib::ext::shared_ptr<BondBuilder>& builder, const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(referenceDataType, builder)).second || allowOverwrite,
                "BondFactory::addBuilder(" << referenceDataType << "): builder for key already exists.");
@@ -358,22 +393,27 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
                                               const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
-    ore::data::Bond bond(Envelope(), data);
-    bond.id() = "VanillaBondBuilder_" + securityId;
-    bond.build(engineFactory);
+    auto bond = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), data);
+    bond->id() = "VanillaBondBuilder_" + securityId;
+    bond->build(engineFactory);
 
-    QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(bond->instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
-    QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
+    QL_REQUIRE(bond->instrument() && bond->instrument()->qlInstrument(),
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
+    Date expiry = checkForwardBond(securityId).first;
+    if (expiry != Date())
+        modifyToForwardBond(expiry, qlBond, engineFactory, referenceData, securityId);
+
     Result res;
     res.bond = qlBond;
-
+    res.trade = bond;
+    res.bondData = data;
     if (data.isInflationLinked()) {
-        res.isInflationLinked = true;       
+        res.isInflationLinked = true;
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();
@@ -382,7 +422,60 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.creditGroup = data.creditGroup();
     res.priceQuoteMethod = data.priceQuoteMethod();
     res.priceQuoteBaseValue = data.priceQuoteBaseValue();
+    res.quotedDirtyPrices = data.quotedDirtyPrices();
     return res;
+}
+
+std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& securityId) {
+
+    // forward bonds shall have a security id of type isin_FWDEXP_expiry
+
+    Date expiry;
+    string strippedId;
+
+    auto pos = securityId.find("_FWDEXP_");
+    if (pos != std::string::npos) {
+        strippedId = securityId.substr(0, pos);
+        expiry = parseDate(securityId.substr(pos + 8));
+        DLOG("BondBuilder::checkForwardBond : Forward Bond identified, strippedId = " << strippedId << ", expiry "
+                                                                                      << expiry);
+    }
+
+    return std::make_pair(expiry, strippedId);
+}
+
+void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
+                                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                             const std::string& securityId) const {
+
+    DLOG("VanillaBondBuilder::modifyToForwardBond called for " << securityId);
+
+    // truncate legs akin to fwd bond method...
+    Leg modifiedLeg;
+    for (auto& cf : bond->cashflows()) {
+        if (!cf->hasOccurred(expiry))
+            modifiedLeg.push_back(cf);
+    }
+
+    // uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
+    QuantLib::ext::shared_ptr<QuantLib::Bond> modifiedBond = QuantLib::ext::make_shared<QuantLib::Bond>(
+        bond->settlementDays(), bond->calendar(), 1.0, bond->maturityDate(), bond->issueDate(), modifiedLeg);
+
+    // retrieve additional required information
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+
+    // Set pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << securityId);
+    modifiedBond->setPricingEngine(bondBuilder->engine(parseCurrency(data.currency()), data.creditCurveId(),
+                                                       securityId, data.referenceCurveId()));
+
+    // store modified bond
+    bond = modifiedBond;
 }
 
 } // namespace data

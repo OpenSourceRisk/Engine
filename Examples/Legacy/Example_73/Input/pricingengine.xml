@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="ForwardBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingForwardBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">1M</Parameter>
+      <Parameter name="SpreadOnIncomeCurve">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+</PricingEngines>

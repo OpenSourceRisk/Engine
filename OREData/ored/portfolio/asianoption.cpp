@@ -101,6 +101,7 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         additionalData_ = delegatingBuilderTrade_->additionalData();
 	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
         setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
 
         // notional and notional currency are defined in overriden methods!
 
@@ -180,6 +181,7 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
         setSensitivityTemplate(*asianOptionBuilder);
+        addProductModelEngine(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");
@@ -192,10 +194,14 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
-    maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                        positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
-                                        configuration));
+    maturityType_ = "Expiry Date";
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                       positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, discountCurve,
+                                       engineFactory, configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 

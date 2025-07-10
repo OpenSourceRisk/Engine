@@ -113,9 +113,9 @@ public:
     const set<string>& tradeTypes() const { return tradeTypes_; }
 
     //! Return a configuration (or the default one if key not found)
-    const string& configuration(const MarketContext& key) {
-        if (configurations_.count(key) > 0) {
-            return configurations_.at(key);
+    const string& configuration(const MarketContext& key) const {
+        if (auto c = configurations_.find(key); c != configurations_.end()) {
+            return c->second;
         } else {
             return Market::defaultConfiguration;
         }
@@ -142,13 +142,16 @@ public:
     const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
-    std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
-                                const bool mandatory = true, const std::string& defaultValue = "") const;
+    virtual std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                                        const bool mandatory = true, const std::string& defaultValue = "") const;
     /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
-    std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
-                               const bool mandatory = true, const std::string& defaultValue = "") const;
+    virtual std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
+                                       const bool mandatory = true, const std::string& defaultValue = "") const;
 
 protected:
+    std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
+                             const std::vector<std::string>& qs, const bool mandatory,
+                             const std::string& defaultValue) const;
     string model_;
     string engine_;
     set<string> tradeTypes_;
@@ -173,11 +176,12 @@ public:
 //! Engine/ Leg Builder Factory - notice that both engine and leg builders are allowed to maintain a state
 class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, std::integral_constant<bool, true>> {
     std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>()>> engineBuilderBuilders_;
-    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                               const std::vector<Date>& grid)>>
+    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
+        const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& simDates,
+        const std::vector<Date>& stickyCloseOutDates)>>
         amcEngineBuilderBuilders_;
-    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                                               const std::vector<Date>& grid)>>
+    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid)>>
         amcCgEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
@@ -185,13 +189,14 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
 public:
     void addEngineBuilder(const std::function<QuantLib::ext::shared_ptr<EngineBuilder>()>& builder,
                           const bool allowOverwrite = false);
-    void addAmcEngineBuilder(
-        const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                                             const std::vector<Date>& grid)>& builder,
-        const bool allowOverwrite = false);
+    void
+    addAmcEngineBuilder(const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
+                            const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                            const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates)>& builder,
+                        const bool allowOverwrite = false);
     void addAmcCgEngineBuilder(
-        const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                                             const std::vector<Date>& grid)>& builder,
+        const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
+            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& builder,
         const bool allowOverwrite = false);
     void addLegBuilder(const std::function<QuantLib::ext::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
@@ -199,10 +204,10 @@ public:
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> generateEngineBuilders() const;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
     generateAmcEngineBuilders(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                              const std::vector<Date>& grid) const;
+                              const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
     generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                const std::vector<Date>& grid) const;
+                                const std::vector<Date>& simDates) const;
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 
@@ -272,7 +277,7 @@ public:
     void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
 
     //! Get a leg builder by leg type
-    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const string& legType);
+    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
 
     //! Add a set of default engine and leg builders
     void addDefaultBuilders();
@@ -295,7 +300,7 @@ private:
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
-    map<string, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
+    map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
 };
@@ -304,15 +309,17 @@ private:
 class RequiredFixings;
 class LegBuilder {
 public:
-    LegBuilder(const string& legType) : legType_(legType) {}
+    LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                         const bool useXbsCurves = false) const = 0;
-    const string& legType() const { return legType_; }
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                         RequiredFixings& requiredFixings, const string& configuration,
+                         const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                         const bool attachPricer = true,
+                         std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr) const = 0;
+    const LegType& legType() const { return legType_; }
 
 private:
-    const string legType_;
+    LegType legType_;
 };
 
 } // namespace data

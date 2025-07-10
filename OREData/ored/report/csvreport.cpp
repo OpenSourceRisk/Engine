@@ -38,8 +38,8 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec, char quoteChar = '\0', const string& nullString = "#N/A")
-        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), quoteChar_(quoteChar), null_(nullString) {}
+    ReportTypePrinter(FILE* fp, int prec, char quoteChar = '\0', char sep =',', const string& nullString = "#N/A")
+        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), quoteChar_(quoteChar), sep_(sep), null_(nullString) {}
 
     void operator()(const Size i) const {
         if (i == QuantLib::Null<Size>()) {
@@ -78,16 +78,32 @@ private:
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
-        if (!quoted && quoteChar_ != '\0')
-            fputc(quoteChar_, fp_);
-        fprintf(fp_, "%s", s.c_str());
-        if (!quoted && quoteChar_ != '\0')
-            fputc(quoteChar_, fp_);
+        string sc = quoted ? s.substr(1, s.size() - 2) : s;
+
+        bool containsSep = sc.find(sep_) != std::string::npos;
+        
+        boost::replace_all(sc, "\n", "\\n");
+        boost::replace_all(sc, "\t", "\\t");
+
+        // If quote character is \0, use double quotes instead
+        char effectiveQuoteChar = (quoteChar_ == '\0' && containsSep) ? '"' : quoteChar_;
+
+        if (effectiveQuoteChar != '\0') {
+            if (effectiveQuoteChar == '"')
+                boost::replace_all(sc, "\"", "\"\"");            
+            fputc(effectiveQuoteChar, fp_);
+        }
+
+        fprintf(fp_, "%s", sc.c_str());
+
+        if (effectiveQuoteChar != '\0')
+            fputc(effectiveQuoteChar, fp_);
     }
 
     FILE* fp_;
     QuantLib::Rounding rounding_;
     char quoteChar_;
+    char sep_;
     string null_;
 };
 
@@ -137,7 +153,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
     checkIsOpen("addColumn(" + name + ")");
     columnTypes_.push_back(rt);
     headers_.push_back(name);
-    printers_.push_back(ReportTypePrinter(fp_, precision, quoteChar_, nullString_));
+    printers_.push_back(ReportTypePrinter(fp_, precision, quoteChar_, sep_, nullString_));
     if (i_ == 0 && commentCharacter_)
         fprintf(fp_, "#");
     if (i_ > 0)

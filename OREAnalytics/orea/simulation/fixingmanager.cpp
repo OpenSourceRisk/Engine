@@ -88,7 +88,7 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
                     if (safeExpiryDate != Date() && !index->keepDays()) {
                         safeExpiryDate = Date::endOfMonth(safeExpiryDate);
                     }
-                    fixingMap_[index->clone(safeExpiryDate,
+                    fixingMap_[index->clone(safeExpiryDate, safeExpiryDate,
                                             market->commodityPriceCurve(index->underlyingName(), configuration))]
                         .insert(dates.begin(), dates.end());
                 } else if (auto index = QuantLib::ext::dynamic_pointer_cast<FxIndex>(rawIndex)) {
@@ -113,7 +113,9 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
 
     // Now cache the original fixings so we can re-write on reset()
     for (auto const& m : fixingMap_) {
+        QL_DEPRECATED_DISABLE_WARNING
         fixingCache_[m.first] = IndexManager::instance().getHistory(m.first->name());
+        QL_DEPRECATED_ENABLE_WARNING
     }
 }
 
@@ -131,11 +133,13 @@ void FixingManager::update(Date d) {
 
 //! Reset fixings to t0 (today)
 void FixingManager::reset() {
+    QL_DEPRECATED_DISABLE_WARNING
     if (modifiedFixingHistory_) {
         for (auto& kv : fixingCache_)
             IndexManager::instance().setHistory(kv.first->name(), kv.second);
         modifiedFixingHistory_ = false;
     }
+    QL_DEPRECATED_ENABLE_WARNING
     fixingsEnd_ = today_;
 }
 

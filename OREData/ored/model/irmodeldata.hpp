@@ -66,7 +66,7 @@ enum class CalibrationType {
 };
 
 //! Supported calibration strategies
-enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, UnderlyingATM, UnderlyingDealStrike, None };
+enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, UnderlyingATM, UnderlyingDealStrike, DeltaGammaAdjusted, None };
 
 //! Convert calibration type string into enumerated class value
 CalibrationType parseCalibrationType(const string& s);
@@ -109,6 +109,7 @@ public:
     //! \name Setters/Getters
     //@{
     const std::string& name() { return name_; }
+    const std::string& qualifier() const { return qualifier_; }
     std::string& qualifier() { return qualifier_; }
     CalibrationType& calibrationType() { return calibrationType_; }
 

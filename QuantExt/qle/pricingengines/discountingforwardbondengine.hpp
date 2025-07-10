@@ -47,16 +47,16 @@ public:
                                  const Handle<YieldTermStructure>& bondReferenceYieldCurve,
                                  const Handle<Quote>& bondSpread,
                                  const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                 const Handle<Quote>& recoveryRate, Period timestepPeriod,
-                                 boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                 const Handle<Quote>& recoveryRate, const Handle<Quote>& conversionFactor,
+                                 Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                  const Date& settlementDate = Date(), const Date& npvDate = Date());
 
     void calculate() const override;
     Real calculateBondNpv(Date, Date) const;
-    QuantLib::ext::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
+    std::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
                                                                   Date computeDate, Date settlementDate,
                                                                   bool cashSettlement, Date cmpPaymentDate,
-                                                                  bool dirty) const;
+                                                                  bool dirty, double conversionFactor) const;
 
     const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
     const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }
@@ -64,6 +64,7 @@ public:
     const Handle<Quote>& bondSpread() const { return bondSpread_; }
     const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve() const { return bondDefaultCurve_; }
     const Handle<Quote>& bondRecoveryRate() const { return bondRecoveryRate_; }
+    const Handle<Quote>& conversionFactor() const { return conversionFactor_; }
 
 private:
     Handle<YieldTermStructure> discountCurve_;
@@ -72,6 +73,7 @@ private:
     Handle<Quote> bondSpread_;
     Handle<DefaultProbabilityTermStructure> bondDefaultCurve_;
     Handle<Quote> bondRecoveryRate_;
+    Handle<Quote> conversionFactor_;
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;

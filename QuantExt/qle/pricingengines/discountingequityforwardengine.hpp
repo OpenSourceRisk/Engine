@@ -28,6 +28,7 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 #include <qle/instruments/equityforward.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 namespace QuantExt {
 
@@ -42,13 +43,8 @@ namespace QuantExt {
 */
 class DiscountingEquityForwardEngine : public EquityForward::engine {
 public:
-    /*! \param equityInterestRateCurve
-               The IR rate curve for estimating forward price.
-        \param dividendYieldCurve
-               The dividend yield term structure for estimating
-               forward price.
-        \param equitySpot
-               The market spot rate quote.
+    /*! \param equityIndex
+               Equity Index structure to calculate forwards.
         \param discountCurve
                The discount curve
         \param includeSettlementDateFlows, settlementDate
@@ -60,24 +56,17 @@ public:
                Discount to this date. If not given the npv date
                is set to the evaluation date
     */
-    DiscountingEquityForwardEngine(const Handle<YieldTermStructure>& equityInterestRateCurve,
-                                   const Handle<YieldTermStructure>& dividendYieldCurve,
-                                   const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
+    DiscountingEquityForwardEngine(const Handle<EquityIndex2>& equityIndex, const Handle<YieldTermStructure>& discountCurve,
                                    boost::optional<bool> includeSettlementDateFlows = boost::none,
                                    const Date& settlementDate = Date(), const Date& npvDate = Date());
 
     void calculate() const override;
 
-    const Handle<YieldTermStructure>& equityReferenceRateCurve() const { return equityRefRateCurve_; }
-    const Handle<YieldTermStructure>& divYieldCurve() const { return divYieldCurve_; }
+    const Handle<EquityIndex2>& equityIndex() const { return equityIndex_; }
     const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
 
-    const Handle<Quote>& equitySpot() const { return equitySpot_; }
-
 private:
-    Handle<YieldTermStructure> equityRefRateCurve_;
-    Handle<YieldTermStructure> divYieldCurve_;
-    Handle<Quote> equitySpot_;
+    Handle<EquityIndex2> equityIndex_;
     Handle<YieldTermStructure> discountCurve_;
     boost::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;

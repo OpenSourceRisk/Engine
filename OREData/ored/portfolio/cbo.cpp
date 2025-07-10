@@ -117,9 +117,11 @@ void CBO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(cboBuilder, "No Builder found for CBO: " << id());
     cbo->setPricingEngine(cboBuilder->engine(bondbasket_->pool()));
     setSensitivityTemplate(*cboBuilder);
+    addProductModelEngine(*cboBuilder);
     instrument_.reset(new VanillaInstrument(cbo, multiplier_));
 
     maturity_ = schedule.endDate();
+    maturityType_ = "Final Schedule Date";
     npvCurrency_ = ccy_;
     notional_ = investedNotional_;
     legs_ = vector<QuantLib::Leg>(1, tranches[idx].leg);
@@ -280,9 +282,9 @@ void CBOTrsUnderlyingBuilder::build(
     for (Size i = 0; i < bonds.size(); ++i) {
         creditQualifierMapping[ore::data::securitySpecificCreditCurveName(bonds[i]->bondData().securityId(),
                                                                           bonds[i]->bondData().creditCurveId())] =
-            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup());
+            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup(), true);
         creditQualifierMapping[bonds[i]->bondData().creditCurveId()] =
-            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup());
+            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup(), true);
     }
 }
 

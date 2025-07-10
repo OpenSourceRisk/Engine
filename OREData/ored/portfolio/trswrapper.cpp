@@ -132,7 +132,11 @@ TRSWrapper::TRSWrapper(
         lastDate_ = std::max(lastDate_, c->date());
 }
 
-bool TRSWrapper::isExpired() const { return detail::simple_event(lastDate_).hasOccurred(); }
+bool TRSWrapper::isExpired() const {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(lastDate_).hasOccurred(refDate, includeToday);
+}
 
 void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     TRSWrapper::arguments* a = dynamic_cast<TRSWrapper::arguments*>(args);
@@ -296,6 +300,10 @@ Real getFxIndexFixing(const QuantLib::ext::shared_ptr<FxIndex>& fx, const Curren
 }
 } // namespace
 
+TRSWrapperAccrualEngine::TRSWrapperAccrualEngine(
+    const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve)
+    : additionalCashflowCurrencyDiscountCurve_(additionalCashflowCurrencyDiscountCurve) {}
+
 Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Currency& source, const Currency& target,
                                                   const bool enforceProjection) const {
 
@@ -366,17 +374,31 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        auto tmp = getUnderlyingNPV(i);
+        return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
     try {
         auto tmp = arguments_.underlyingIndex_[i]->fixing(adjustedDate);
         return tmp;
     } catch (const std::exception&) {
-        if (adjustedDate == today)
-            return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        if (adjustedDate == today) {
+            auto tmp = getUnderlyingNPV(i);
+            return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
+        }
         else
             throw;
+    }
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    if (auto b = QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]);
+        b != nullptr &&
+        QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) == nullptr) {
+        Date today = Settings::instance().evaluationDate();
+        return b->fixing(today, true) * arguments_.underlyingMultiplier_[i];
+    } else {
+        return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
 
@@ -423,7 +445,7 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if (endDate == Null<Date>()) {
-                    s1 = arguments_.underlying_[i]->instrument()->NPV();
+                    s1 = getUnderlyingNPV(i);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];
@@ -755,11 +777,16 @@ void TRSWrapperAccrualEngine::calculate() const {
     Real additionalCashflowLegNpv = 0.0;
     for (auto const& cf : arguments_.additionalCashflowLeg_) {
         if (cf->date() > today) {
+            QL_REQUIRE(!additionalCashflowCurrencyDiscountCurve_.empty(),
+                       "TRSWrapperAccrualEngine::calculate(): additionalCashflowCurrencyDiscountCurve is empty, but "
+                       "additional cashflows are present.");
             Real tmp = cf->amount() * (arguments_.additionalCashflowLegPayer_ ? -1.0 : 1.0);
-            additionalCashflowLegNpv += tmp;
+            Real discountFactor = additionalCashflowCurrencyDiscountCurve_->discount(cf->date());
+            additionalCashflowLegNpv += tmp * discountFactor;
             // add additional cashflows to additional results
             cfResults.emplace_back();
             cfResults.back().amount = tmp;
+            cfResults.back().discountFactor = discountFactor;
             cfResults.back().payDate = cf->date();
             cfResults.back().currency = arguments_.additionalCashflowCurrency_.code();
             cfResults.back().legNumber = 0;

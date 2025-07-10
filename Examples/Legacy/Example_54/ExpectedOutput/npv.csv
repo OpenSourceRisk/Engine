@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+BermSwp,ScriptedTrade,2036-03-03,20.073770,51640.311738,EUR,51640.311738,EUR,#N/A,#N/A,#N/A,CPTY_A,CPTY_A
+LPISwp,ScriptedTrade,2035-02-01,18.989303,58943.176453,GBP,73283.715939,EUR,#N/A,#N/A,#N/A,CPTY_B,CPTY_B

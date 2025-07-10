@@ -27,6 +27,17 @@ using namespace ore::data;
 
 namespace ore {
 namespace data {
+    
+std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t) {
+    switch (t) {
+    case InflationCurveConfig::Type::ZC:
+        return out << "ZC";
+    case InflationCurveConfig::Type::YY:
+        return out << "YY";
+    default:
+        QL_FAIL("unknown Type(" << Integer(t) << ")");
+    }
+}
 
 InflationCurveConfig::InflationCurveConfig(
     const string& curveID, const string& curveDescription, const string& nominalTermStructure, const Type type,
@@ -34,19 +45,20 @@ InflationCurveConfig::InflationCurveConfig(
     const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
     const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
     const Frequency& seasonalityFrequency,
-    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors)
+    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors,
+    const InterpolationVariable& interpolationVariable)
     : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
       type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
       lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
-      seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors) {
+      seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors),
+      interpolationVariable_(interpolationVariable) {
     quotes_ = swapQuotes;
     quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
-    populateRequiredCurveIds();
 }
 
-void InflationCurveConfig::populateRequiredCurveIds() {
+void InflationCurveConfig::populateRequiredIds() const {
     if (!nominalTermStructure().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(nominalTermStructure())->curveConfigID());
 }
@@ -88,6 +100,15 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     if (baseZr != "")
         baseRate_ = parseReal(baseZr);
 
+    string interpolationVariableStr = XMLUtils::getChildValue(node, "InterpolationVariable", false);
+    if(interpolationVariableStr.empty() || interpolationVariableStr != "PriceIndex"){
+        interpolationVariable_ = InterpolationVariable::ZeroRate;
+    } else {
+        interpolationVariable_ = InterpolationVariable::PriceIndex;
+    }
+
+    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false, "Linear");
+
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
 
@@ -106,7 +127,6 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         std::string overrideFctStr = XMLUtils::getChildValue(seasonalityNode, "OverrideFactors", false);
         overrideSeasonalityFactors_ = parseListOfValues<Real>(overrideFctStr, &parseReal);
     }
-    populateRequiredCurveIds();
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
@@ -115,13 +135,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "NominalTermStructure", nominalTermStructure_);
-
-    if (type_ == Type::ZC) {
-        XMLUtils::addChild(doc, node, "Type", "ZC");
-    } else if (type_ == Type::YY) {
-        XMLUtils::addChild(doc, node, "Type", "YY");
-    } else
-        QL_FAIL("Unknown Type in InflationCurveConfig::toXML()");
+    XMLUtils::addChild(doc, node, "Type", to_string(type_));
 
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", swapQuotes_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
@@ -140,6 +154,13 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Frequency", to_string(frequency_));
     XMLUtils::addChild(doc, node, "BaseRate", baseRateStr);
     XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
+
+    XMLUtils::addChild(doc, node, "InterpolationVariable",
+                       interpolationVariable_ == InterpolationVariable::PriceIndex ? "PriceIndex" : "ZeroRate");
+
+    if (!interpolationMethod_.empty()) {
+        XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
+    } 
 
     if (useLastAvailableFixingAsBaseDate_)
         XMLUtils::addChild(doc, node, "UseLastFixingDate", to_string(useLastAvailableFixingAsBaseDate_));

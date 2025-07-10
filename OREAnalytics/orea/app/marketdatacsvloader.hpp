@@ -32,10 +32,10 @@ class MarketDataCsvLoaderImpl : public MarketDataLoaderImpl {
 public:
     MarketDataCsvLoaderImpl() {}
 
-    MarketDataCsvLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
-        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
+    MarketDataCsvLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                            const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
         : inputs_(inputs), csvLoader_(csvLoader) {}
-    
+
     void loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                  const std::map<std::string, std::string>& equities) override;
     
@@ -53,7 +53,7 @@ private:
 };
 
 class MarketDataCsvLoader : public MarketDataLoader {
-public: 
+public:
     MarketDataCsvLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                         const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
         : MarketDataLoader(inputs, QuantLib::ext::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader)) {}

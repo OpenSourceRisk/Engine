@@ -1,0 +1,110 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>EUR</BaseCurrency>
+		<Currencies>
+			<Currency>EUR</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+			</Configuration>
+		</YieldCurves>
+		<Indices>
+			<Index>EUR-EONIA</Index>
+			<Index>EUR-ESTER</Index>
+			<Index>EUR-EURIBOR-3M</Index>
+			<Index>EUR-EURIBOR-6M</Index>
+		</Indices>
+		<DefaultCurves>
+			<Names>
+				<Name>CPTY_C</Name>
+			</Names>
+			<Tenors>1Y, 2Y, 3Y, 5Y, 10Y</Tenors>
+			<SimulateSurvivalProbabilities>false</SimulateSurvivalProbabilities>
+			<SimulateRecoveryRates>false</SimulateRecoveryRates>
+			<Calendars>
+				<Calendar name="">TARGET</Calendar>
+			</Calendars>
+			<Extrapolation>FlatZero</Extrapolation>
+		</DefaultCurves>
+		<BenchmarkCurves/>
+		<Securities>
+			<Simulate>false</Simulate>
+			<Names>
+				<Name>SECURITY_1_FWDEXP_20251220</Name>
+				<Name>SECURITY_1_cutted</Name>
+			</Names>
+		</Securities>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+	</Market>
+	<CrossAssetModel>
+		<DomesticCcy>EUR</DomesticCcy>
+		<Currencies>
+			<Currency>EUR</Currency>
+		</Currencies>
+		<BootstrapTolerance>0.0001</BootstrapTolerance>
+		<InterestRateModels>
+			<LGM ccy="default">
+				<CalibrationType>Bootstrap</CalibrationType>	<!-- Bootstrap, BestFit -->
+				<Volatility>
+					<Calibrate>Y</Calibrate>
+					<VolatilityType>Hagan</VolatilityType>		<!-- Hagan, HullWhite -->
+					<ParamType>Piecewise</ParamType>			<!-- Constant, Piecewise -->
+					<TimeGrid/>
+					<InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+				</Volatility>
+				<Reversion>
+					<Calibrate>N</Calibrate>
+					<ReversionType>HullWhite</ReversionType>	<!-- Hagan, HullWhite -->
+					<ParamType>Constant</ParamType>				<!-- Constant, Piecewise -->
+					<TimeGrid/>
+					<InitialValue>0.0</InitialValue>
+				</Reversion>
+				<CalibrationSwaptions>
+					<Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+					<Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+					<Strikes/>
+				</CalibrationSwaptions>
+				<ParameterTransformation>
+					<ShiftHorizon>0.0</ShiftHorizon>
+					<Scaling>1.0</Scaling>
+				</ParameterTransformation>
+			</LGM>
+		</InterestRateModels>
+		<ForeignExchangeModels>
+			<CrossCcyLGM foreignCcy="default">
+				<DomesticCcy>EUR</DomesticCcy>
+				<CalibrationType>Bootstrap</CalibrationType>
+				<Sigma>
+					<Calibrate>Y</Calibrate>
+					<ParamType>Piecewise</ParamType>
+					<TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+					<InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+				</Sigma>
+				<CalibrationOptions>
+					<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+					<Strikes/>
+				</CalibrationOptions>
+			</CrossCcyLGM>
+		</ForeignExchangeModels>
+		<InstantaneousCorrelations/>
+	</CrossAssetModel>
+	<Parameters>
+		<Discretization>Exact</Discretization>
+		<Grid>81,3M</Grid>
+		<Calendar>EUR</Calendar>
+		<Sequence>SobolBrownianBridge</Sequence>
+		<Scenario>Simple</Scenario>
+		<Seed>42</Seed>
+		<Samples>10000</Samples>
+		<DayCounter>A365</DayCounter>
+	</Parameters>
+</Simulation>
+

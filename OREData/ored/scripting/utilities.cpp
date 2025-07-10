@@ -20,6 +20,7 @@
 #include <ored/scripting/utilities.hpp>
 
 #include <qle/math/randomvariablelsmbasissystem.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -29,10 +30,9 @@
 
 #include <ql/models/marketmodels/browniangenerators/mtbrowniangenerator.hpp>
 #include <ql/settings.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
+#include <ql/optional.hpp>
 
 #include <boost/algorithm/string.hpp>
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -231,7 +231,7 @@ QuantLib::ext::shared_ptr<Context> makeContext(Size nPaths, const std::string& g
                     for (auto const& d : base->second) {
                         QL_REQUIRE(d.which() == ValueTypeWhich::Event,
                                    "expected event in base schedule, got " << valueTypeLabels.at(d.which()));
-                        EventVec e = QuantLib::ext::get<EventVec>(d);
+                        EventVec e = boost::get<EventVec>(d);
                         tmp.push_back(EventVec{nPaths, cal.advance(e.value, shift, conv)});
                     }
                     context->arrays[ds.second.name()] = tmp;
@@ -338,8 +338,8 @@ void addNewSchedulesToContext(QuantLib::ext::shared_ptr<Context> context,
             Size n = 0;
             for (auto const& s : sources) {
                 for (auto const& d : s) {
-                    tmp.insert(QuantLib::ext::get<EventVec>(d).value);
-                    n = QuantLib::ext::get<EventVec>(d).size;
+                    tmp.insert(boost::get<EventVec>(d).value);
+                    n = boost::get<EventVec>(d).size;
                 }
             }
             for (auto const& d : tmp) {
@@ -386,7 +386,7 @@ void amendContextVariablesSizes(QuantLib::ext::shared_ptr<Context> context, cons
 }
 
 IndexInfo::IndexInfo(const std::string& name, const QuantLib::ext::shared_ptr<Market>& market) : name_(name), market_(market) {
-    isFx_ = isEq_ = isComm_ = isIr_ = isInf_ = isIrIbor_ = isIrSwap_ = isGeneric_ = false;
+    isFx_ = isEq_ = isComm_ = isIr_ = isInf_ = isIrIbor_ = isIrSwap_ = isGeneric_ = infIsInterpolated_ = false;
     bool done = false;
     // first handle the index types that we can recognise by a prefix
     if (boost::starts_with(name, "COMM-")) {
@@ -434,9 +434,7 @@ IndexInfo::IndexInfo(const std::string& name, const QuantLib::ext::shared_ptr<Ma
     // and same for inflation
     if (!done) {
         try {
-            auto res = parseScriptedInflationIndex(name);
-            inf_ = res.first;
-            infName_ = res.second;
+            QuantExt::ext::tie(inf_, infName_, infIsInterpolated_) = parseScriptedInflationIndex(name);
             isInf_ = done = true;
         } catch (...) {
         }
@@ -587,9 +585,9 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
     return res;
 }
 
-QL_DEPRECATED_DISABLE_WARNING
+
 // Remove in the next release, interpolation has to happen in the coupon (script) and not in the index
-std::pair<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName) {
     QL_REQUIRE(!indexName.empty(), "parseScriptedInflationIndex(): empty index name");
     std::vector<std::string> tokens;
@@ -605,11 +603,9 @@ parseScriptedInflationIndex(const std::string& indexName) {
     } else {
         QL_FAIL("parseScriptedInflationIndex(): expected IndexName or IndexName#[F|L], got '" << indexName << "'");
     }
-    return std::make_pair(
-        parseZeroInflationIndex(plainIndexName, interpolated, Handle<ZeroInflationTermStructure>()),
-        plainIndexName);
+    return QuantExt::ext::make_tuple(parseZeroInflationIndex(plainIndexName, Handle<ZeroInflationTermStructure>()),
+                                     plainIndexName, interpolated);
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& underlying) {
     if (underlying->type() == "Equity") {
@@ -661,11 +657,7 @@ Size getInflationSimulationLag(const QuantLib::ext::shared_ptr<ZeroInflationInde
     // this is consistent with the lag computation in CrossAssetModel::infDki()
     Date d1 = index->zeroInflationTermStructure()->baseDate();
     Date d2 = index->zeroInflationTermStructure()->referenceDate();
-    QL_DEPRECATED_DISABLE_WARNING
-    if (!index->interpolated()) {
-        d2 = inflationPeriod(d2, index->frequency()).first;
-    }
-    QL_DEPRECATED_ENABLE_WARNING
+    d2 = inflationPeriod(d2, index->frequency()).first;
     return d2 - d1;
 }
 
@@ -681,7 +673,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
         if (index != context->scalars.end()) {
             QL_REQUIRE(index->second.which() == ValueTypeWhich::Index,
                 "calibration index variable '" << c.index() << "' must evaluate to an index");
-            std::string indexName = QuantLib::ext::get<IndexVec>(index->second).value;
+            std::string indexName = boost::get<IndexVec>(index->second).value;
             // replace fixing source tag in FX indices by GENERIC, since this is what is passed to the model
             // TODO FX indices might be reorganised vs. a base ccy != their original target ccy, is there anything
             // we can do to get an effective calibration at the specified deal strike?
@@ -697,7 +689,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
                     QL_REQUIRE(indexes->second[i].which() == ValueTypeWhich::Index,
                                "calibration strike variable '" << c.index() << "[" << i
                                                                << "]' must evaluate to an index");
-                    auto indexName = QuantLib::ext::get<IndexVec>(indexes->second[i]).value;
+                    auto indexName = boost::get<IndexVec>(indexes->second[i]).value;
                     IndexInfo info(indexName);
                     if (info.isFx())
                         indexName = "FX-GENERIC-" + info.fx()->sourceCurrency().code() + "-" +
@@ -716,7 +708,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
             if (strike != context->scalars.end()) {
                 QL_REQUIRE(strike->second.which() == ValueTypeWhich::Number,
                             "calibration strike variable '" << strikeStr << "' must evaluate to a number");
-                auto strikeNum = QuantLib::ext::get<RandomVariable>(strike->second);
+                auto strikeNum = boost::get<RandomVariable>(strike->second);
                 QL_REQUIRE(strikeNum.deterministic(), "calibration strike variable '"
                                                             << strikeStr << "' must be deterministic, got "
                                                             << strikeNum);
@@ -735,7 +727,7 @@ getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData
                             QL_REQUIRE(strikeVec->second[ind].which() == ValueTypeWhich::Number,
                                         "calibration strike variable '" << strikeStr << "[" << i
                                                                         << "]' must evaluate to a number");
-                            auto strikeNum = QuantLib::ext::get<RandomVariable>(strikeVec->second[ind]);
+                            auto strikeNum = boost::get<RandomVariable>(strikeVec->second[ind]);
                             QL_REQUIRE(strikeNum.deterministic(), "calibration strike variable '"
                                                                     "calibration strike variable '"
                                                                         << strikeStr << "[" << i

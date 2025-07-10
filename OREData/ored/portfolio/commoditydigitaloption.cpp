@@ -96,8 +96,13 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         }
     }
 
+    Real spread = 0.01;
+    if (engineFactory->engineData()->globalParameters().find("StrikeSpread") !=
+        engineFactory->engineData()->globalParameters().end()) {
+        spread = parseReal(engineFactory->engineData()->globalParameters().find("StrikeSpread")->second);
+    }
     // Build digital as call or put spread 
-    Real strikeSpread = strike_ * 0.01; // FIXME, what is a usual spread here, and where should we put it?
+    Real strikeSpread = strike_ * spread; 
     Real strike1 = strike_ - strikeSpread/2;
     Real strike2 = strike_ + strikeSpread/2;
     CommodityOption opt1(envelope(), optionData_, name_, currency_, 1.0, TradeStrike(strike1, currency_), isFuturePrice_, futureExpiryDate_);
@@ -109,6 +114,7 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
+    addProductModelEngine(opt1.productModelEngine());
 
     QuantLib::ext::shared_ptr<CompositeInstrument> composite = QuantLib::ext::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values
@@ -132,8 +138,12 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration; 
     Currency ccy = parseCurrencyWithMinors(currency_);
-    maturity_ = std::max(expiryDate_, addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-						  optionData_.premiumData(), -bsIndicator, ccy, engineFactory, configuration));
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -bsIndicator,
+                    ccy, discountCurve, engineFactory, configuration);
+    maturity_ = std::max(expiryDate_, lastPremiumDate);
+    maturityType_ = maturity_ == expiryDate_ ? "Expiry Date" : "Last Premium Date";
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, multiplier, additionalInstruments, additionalMultipliers));
@@ -150,6 +160,7 @@ void CommodityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     }
 
     additionalData_["payoff"] = payoff_;
+    additionalData_["spread"] = spread;
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;    

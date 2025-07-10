@@ -194,7 +194,7 @@ with conversion factor set to 1.
     Quote Type & \emph{RATE} & \\ \hline
     Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
     Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
-    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity. Alternatively, the maturity date.\\ \hline
 %    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
   \end{tabular}
   \caption{FX Forward Rate}
@@ -216,7 +216,7 @@ with conversion factor set to 1.
     Quote Type & \emph{PRICE} & \\ \hline
     Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
     Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
-    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity. Alternatively, the maturity date.\\ \hline
 %    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
   \end{tabular}
   \caption{FX Forward Rate}
@@ -227,6 +227,7 @@ Example:
 \begin{itemize}
 \item {FXFWD/RATE/EUR/USD/1M}
 \item{FXFWD/PRICE/EUR/USD/3M}
+\item{FXFWD/PRICE/EUR/USD/2026-03-02}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -666,7 +667,8 @@ Example:
   \label{tab:cdsspread_quote}
 \end{table}
 
-There are two possible quote types to allow for the presence of two CDS spread types in the market data. In particular, there is typically a conventional CDS spread and a par CDS spread quoted in the market. The quote type distinction here would allow the conventional spreads to be stored with quote type set to \lstinline!CONV_CREDIT_SPREAD! and the par spreads to be stored with quote type set to \lstinline!CREDIT_SPREAD!. As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
+Currently, only par CDS spreads (quote type \lstinline!CREDIT_SPREAD!) are supported. Conventional CDS spreads (quote type \lstinline!CONV_CREDIT_SPREAD!) are not supported at this time. 
+As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y/100!
@@ -1466,6 +1468,31 @@ This quote provides the clean price for a specified bond in units.
 Examples:
 \begin{itemize}
 	\item BOND/PRICE/SECURITY\_1
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Conversion Factor}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND} & \\ \hline
+    Quote Type & \emph{CONVERSION\_FACTOR} & \\ \hline
+    Name & String & Identifying name of the bond \\ \hline
+  \end{tabular}
+  \caption{Bond Conversion Factor}
+  \label{tab:bond_conversion_factor}
+\end{table}
+
+This quote provides the conversion factor for a bond future contract.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item BOND/CONVERSION\_FACTOR/SECURITY\_1
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

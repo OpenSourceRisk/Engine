@@ -26,6 +26,7 @@
       <xs:element type="commodityForwardType" name="CommodityForward"/>
       <xs:element type="commodityFutureType" name="CommodityFuture"/>
       <xs:element type="fxOption" name="FxOption"/>
+      <xs:element type="fxOptionTimeWeighting" name="FxOptionTimeWeighting"/>
       <xs:element type="zeroInflationIndexType" name="ZeroInflationIndex"/>
       <xs:element type="bondYield" name="BondYield"/>
     </xs:choice>
@@ -175,9 +176,18 @@
 
   <xs:complexType name="bmaBasisSwapType">
     <xs:all>
-      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="LiborIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="BMAIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Id"/>
+      <xs:element type="xs:string" name="Index"/>
+      <xs:element type="xs:string" name="BMAIndex"/>
+      <xs:element type="xs:string" name="BMAPaymentCalendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BMAPaymentConvention" minOccurs="0"/>
+      <xs:element type="xs:integer" name="BMAPaymentLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="IndexPaymentCalendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="IndexPaymentConvention" minOccurs="0"/>
+      <xs:element type="xs:integer" name="IndexPaymentLag" minOccurs="0"/>
+      <xs:element type="xs:integer" name="IndexSettlementDays" minOccurs="0"/>
+      <xs:element type="period" name="IndexPaymentPeriod" minOccurs="0"/>
+      <xs:element type="xs:integer" name="OvernightLockoutDays" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -444,6 +454,8 @@
       <xs:element type="xs:integer" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="OptionContractFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionCalendarDaysBefore" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionMinBusinessDaysBefore" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayOfMonth" name="OptionExpiryDay" minOccurs="0" maxOccurs="1"/>
       <xs:element type="nthWeekdayType" name="OptionNthWeekday" minOccurs="0" maxOccurs="1"/>
       <xs:element type="weekdayType" name="OptionExpiryLastWeekdayOfMonth" minOccurs="0" maxOccurs="1"/>
@@ -473,6 +485,55 @@
       <xs:element type="xs:string" name="LongTermDeltaType" minOccurs="0"/>
       <xs:element type="xs:string" name="RiskReversalInFavorOf" minOccurs="0"/>
       <xs:element type="xs:string" name="ButterflyStyle" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="fxOptionTimeWeighting">
+    <xs:all>
+      <xs:element type="xs:string" name="Id"/>
+      <xs:element name="WeekdayWeights">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:float" name="Monday"/>
+            <xs:element type="xs:float" name="Tuesday"/>
+            <xs:element type="xs:float" name="Wednesday"/>
+            <xs:element type="xs:float" name="Thursday"/>
+            <xs:element type="xs:float" name="Friday"/>
+            <xs:element type="xs:float" name="Saturday"/>
+            <xs:element type="xs:float" name="Sunday"/>
+         </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="TradingCenters" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="TradingCenter">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element type="xs:string" name="Name" />
+                  <xs:element type="xs:string" name="Calendar" />
+                  <xs:element type="xs:float" name="Weight" />
+                </xs:all>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Events" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Event">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element type="xs:string" name="Description" />
+                  <xs:element type="date" name="Date" />
+                  <xs:element type="xs:float" name="Weight" />
+                </xs:all>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 

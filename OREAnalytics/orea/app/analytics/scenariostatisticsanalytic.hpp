@@ -40,8 +40,8 @@ public:
     
 protected:
     void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
+    void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
@@ -53,8 +53,10 @@ protected:
 
 class ScenarioStatisticsAnalytic : public Analytic {
 public:
-    ScenarioStatisticsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs, true, false, true, true) {}
+    ScenarioStatisticsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                               const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs,
+                   analyticsManager, true, false, true, true) {}
 };
 
 } // namespace analytics

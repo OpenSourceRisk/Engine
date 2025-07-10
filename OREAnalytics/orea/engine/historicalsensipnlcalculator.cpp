@@ -161,6 +161,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
 
     hisScenGen_->reset();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
+    bool isPar = baseScenario->isPar();
 
     set<string> keyNames;
     std::map<std::string, RiskFactorKey> keyNameMapping;
@@ -169,7 +170,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
         keyNameMapping.insert({ore::data::to_string(k), k});
     }
 
-    cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
+    cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
         baseScenario->asof(), keyNames, vector<Date>(1, baseScenario->asof()), hisScenGen_->numScenarios());
 
     // Loop over each historical scenario which represents the market move from t_i to
@@ -180,12 +181,12 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
         Size j = 0;
         for (const auto& [_, key] : keyNameMapping) {
             try {
-                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
+                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario, isPar);
                 cube->set(shift, j, 0, i);
             } catch (const std::exception& e) {
                 StructuredAnalyticsErrorMessage(
                     "HistocialSensiPnlCalculator",
-                    "Shift calcuation failed. Check consistency of simulation and sensi config.",
+                    "Shift calculation failed. Check consistency of simulation and sensi config.",
                     "Error retrieving sensi key '" + ore::data::to_string(key) + "' from ssm scenario: '" + e.what())
                     .log();
             }

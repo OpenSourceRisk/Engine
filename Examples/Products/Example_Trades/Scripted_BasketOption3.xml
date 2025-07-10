@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="LookbackCallBasketOption#1">
+        <TradeType>ScriptedTrade</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <LookbackCallBasketOptionData>
+            <Expiry type="event">2025-08-31</Expiry>
+            <Settlement type="event">2025-09-05</Settlement>
+            <ObservationDates type="event">
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2024-08-22</StartDate>
+                        <EndDate>2025-08-22</EndDate>
+                        <Tenor>1D</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>F</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </ObservationDates>
+            <LongShort type="longShort">Long</LongShort>
+            <Notional type="number">1</Notional>
+            <Underlyings type="index">
+                <Value>EQ-RIC:.SPX</Value>
+                <Value>EQ-RIC:.STOXX50E</Value>
+            </Underlyings>
+            <Weights type="number">
+                <Value>1.0</Value>
+                <Value>1.0</Value>
+            </Weights>
+            <PayCcy type="currency">USD</PayCcy>
+        </LookbackCallBasketOptionData>
+        <!--
+  <ScriptedTradeData>
+    <ScriptName>LookbackCallBasketOption</ScriptName>
+    <Data>
+      <Event>
+        <Name>Expiry</Name>
+        <Value>2020-02-15</Value>
+      </Event>
+      <Event>
+        <Name>Settlement</Name>
+        <Value>2020-02-20</Value>
+      </Event>
+      <Event>
+        <Name>ObservationDates</Name>
+        <ScheduleData>
+          <Rules>
+           <StartDate>2019-02-06</StartDate>
+           <EndDate>2020-02-06</EndDate>
+           <Tenor>1D</Tenor>
+           <Calendar>US</Calendar>
+           <Convention>F</Convention>
+           <Rule>Forward</Rule>
+         </Rules>
+       </ScheduleData>
+      </Event>      
+      <Number>
+	<Name>LongShort</Name>
+	<Value>1</Value>
+      </Number>
+      <Number>
+        <Name>Notional</Name>
+        <Value>1</Value>
+      </Number>
+      <Index>
+        <Name>Underlyings</Name>
+        <Values>
+                <Value>EQ-RIC:.SPX</Value>
+                <Value>EQ-RIC:.STOXX50E</Value>
+        </Values>
+      </Index>
+      <Number>
+        <Name>Weights</Name>
+        <Values>
+          <Value>1.0</Value>
+          <Value>1.0</Value>
+        </Values>
+      </Number>
+      <Currency>
+        <Name>PayCcy</Name>
+        <Value>USD</Value>
+      </Currency>
+    </Data>
+  </ScriptedTradeData>
+  -->
+    </Trade>
+</Portfolio>

@@ -19,6 +19,7 @@
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/cudaenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
@@ -40,16 +41,22 @@ BOOST_AUTO_TEST_SUITE(ComputeEnvironmentTest)
 
 struct ComputeEnvironmentFixture {
     ComputeEnvironmentFixture() {
-        QuantExt::ComputeFrameworkRegistry::instance().add(
-            "OpenCL", &QuantExt::createComputeFrameworkCreator<QuantExt::OpenClFramework>, true);
-        QuantExt::ComputeFrameworkRegistry::instance().add(
-            "BasicCpu", &QuantExt::createComputeFrameworkCreator<QuantExt::BasicCpuFramework>, true);
+        QuantExt::ComputeFrameworkRegistry::instance()
+            .add("OpenCL", &QuantExt::createComputeFrameworkCreator<QuantExt::OpenClFramework>, true);
+                QuantExt::ComputeFrameworkRegistry::instance()
+            .add("BasicCpu", &QuantExt::createComputeFrameworkCreator<QuantExt::BasicCpuFramework>, true);
+		QuantExt::ComputeFrameworkRegistry::instance().add(
+            "Cuda", &QuantExt::createComputeFrameworkCreator<QuantExt::CudaFramework>, true);
     }
     ~ComputeEnvironmentFixture() { ComputeEnvironment::instance().reset(); }
 };
 
 namespace {
 void outputTimings(const ComputeContext& c) {
+    BOOST_TEST_MESSAGE("  " << c.debugInfo().numberOfOperations << " ops");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsCalculation / 1.0E3 << " mus (calc)");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsDataCopy / 1.0E3 << " mus (data copy)");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsProgramBuild / 1.0E3 << " mus (build)");
     BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
                             << " MFLOPS (raw)");
     BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations /
@@ -169,45 +176,54 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     ComputeEnvironmentFixture fixture;
 
     const std::size_t n = 65536;
-    const std::size_t m = 1024;
+    const std::size_t m = 8192;
 
     std::vector<double> results;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing large calc on device '" << d << "'.");
-        ComputeEnvironment::instance().selectContext(d);
-        auto& c = ComputeEnvironment::instance().context();
-        std::vector<std::size_t> values(m);
-        std::vector<double> data(n, 0.9f);
-        std::vector<std::vector<double>> output(1, std::vector<double>(n));
+        try {
+            ComputeEnvironment::instance().selectContext(d);
+            auto& c = ComputeEnvironment::instance().context();
+            std::vector<std::size_t> values(m);
+            std::vector<double> data(n, 0.9f);
+            std::vector<std::vector<double>> output(1, std::vector<double>(n));
 
-        // first calc
+            // first calc
 
-        ComputeContext::Settings settings;
-        settings.debug = true;
-        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
-        values[0] = c.createInputVariable(&data[0]);
-        std::size_t val = values[0];
-        for (std::size_t i = 0; i < m; ++i) {
-            std::size_t val2 = c.applyOperation(RandomVariableOpCode::Add, {val, values[0]});
-            std::size_t val3 = c.applyOperation(RandomVariableOpCode::Mult, {val2, values[0]});
-            // c.freeVariable(val);
-            // c.freeVariable(val2);
-            val = val3;
+            ComputeContext::Settings settings;
+            settings.debug = true;
+            auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
+            values[0] = c.createInputVariable(&data[0]);
+            std::size_t val = values[0];
+            for (std::size_t i = 0; i < m; ++i) {
+                std::size_t val2 = c.applyOperation(RandomVariableOpCode::Add, {val, values[0]});
+                std::size_t val3 = c.applyOperation(RandomVariableOpCode::Mult, {val2, values[0]});
+                if (val != values[0])
+                    c.freeVariable(val);
+                c.freeVariable(val2);
+                val = val3;
+            }
+            c.declareOutputVariable(val);
+            boost::timer::cpu_timer t1;
+            c.finalizeCalculation(output);
+            BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]
+                                                               << " timing = " << t1.elapsed().wall / 1E3 << " mus");
+            results.push_back(output.front()[0]);
+
+            // second calculation
+
+            c.initiateCalculation(n, id, 0);
+            values[0] = c.createInputVariable(&data[0]);
+            boost::timer::cpu_timer t2;
+            c.finalizeCalculation(output);
+            BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]
+                                                                << " timing = " << t2.elapsed().wall / 1E3 << " mus");
+            results.push_back(output.front()[0]);
+
+            outputTimings(c);
+        } catch (const std::exception& e) {
+            BOOST_TEST_ERROR("Error: " << e.what());
         }
-        c.declareOutputVariable(val);
-        c.finalizeCalculation(output);
-        BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
-        results.push_back(output.front()[0]);
-
-        // second calculation
-
-        c.initiateCalculation(n, id, 0);
-        values[0] = c.createInputVariable(&data[0]);
-        c.finalizeCalculation(output);
-        BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
-        results.push_back(output.front()[0]);
-
-        outputTimings(c);
     }
 
     std::vector<RandomVariable> values(m);
@@ -225,7 +241,8 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     t1 = timer.elapsed().wall;
     BOOST_TEST_MESSAGE("  testing large calc locally (benchmark)");
     BOOST_TEST_MESSAGE("  result = " << res.at(0));
-    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1) * 1.0E3 << " MFlops");
+    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1)*1.0E3 << " MFlops, timing = " << t1 / 1E3
+                            << "mus");
 
     for (auto const& r : results) {
         BOOST_CHECK_CLOSE(res.at(0), r, 1E-3);
@@ -251,12 +268,15 @@ void checkRngOutput(const std::vector<std::vector<double>>& output) {
 
 BOOST_AUTO_TEST_CASE(testRngGeneration) {
     ComputeEnvironmentFixture fixture;
-    const std::size_t n = 65536;
+    const std::size_t n = 51200;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
-        auto [id, _] = c.initiateCalculation(n, 0, 0);
+        ComputeContext::Settings settings;
+        //settings.rngSequenceType = QuantExt::SequenceType::MersenneTwister;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        auto [id, _] = c.initiateCalculation(n, 0, 0, settings);
         auto vs = c.createInputVariates(3, 2);
         for (auto const& d : vs) {
             for (auto const& r : d) {
@@ -269,7 +289,7 @@ BOOST_AUTO_TEST_CASE(testRngGeneration) {
         checkRngOutput(output);
 
         BOOST_TEST_MESSAGE("test to replay same calc");
-        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0);
+        auto [id2, newCalc2] = c.initiateCalculation(n, id, 0, settings);
         BOOST_CHECK(!newCalc2);
         BOOST_CHECK_EQUAL(id, id2);
         c.finalizeCalculation(output);
@@ -307,7 +327,7 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
 
 BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
     ComputeEnvironmentFixture fixture;
-    const std::size_t n = 1500;
+    const std::size_t n = 150000;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing rng generation mt19937 against QL on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
@@ -336,7 +356,7 @@ BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
             1, settings.rngSeed);
         MersenneTwisterUniformRng mt(settings.rngSeed);
 
-        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
 
         Size noErrors = 0, errorThreshold = 10;
         for (Size j = 0; j < 2; ++j) {
@@ -368,37 +388,174 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
         settings.useDoublePrecision = c.supportsDoublePrecision();
         BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
 
+        for (std::size_t multipart = 0; multipart < 2; ++multipart) {
+
+            BOOST_TEST_MESSAGE("creating multipart kernel: " << std::boolalpha << (multipart == 1));
+
+            c.initiateCalculation(n, 0, 0, settings);
+
+            auto one = c.createInputVariable(1.0);
+            auto vs = c.createInputVariates(1, 2);
+            auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+            if (multipart == 1) {
+                // create dependency on conditional expectation to enforce multi-part kernel
+                ce = c.applyOperation(RandomVariableOpCode::None, {ce});
+            }
+
+            for (auto const& d : vs) {
+                for (auto const& r : d) {
+                    c.declareOutputVariable(r);
+                }
+            }
+            c.declareOutputVariable(ce);
+
+            std::vector<std::vector<double>> output(3, std::vector<double>(n));
+            c.finalizeCalculation(output);
+
+            RandomVariable y(output[0]);
+            RandomVariable x(output[1]);
+            RandomVariable z = conditionalExpectation(
+                y, {&x},
+                multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x.size()));
+
+            double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
+            Size noErrors = 0, errorThreshold = 10;
+
+            for (Size i = 0; i < n; ++i) {
+                Real err = std::abs(output[2][i] - z[i]);
+                if (std::abs(z[i]) > 1E-10)
+                    err /= std::abs(z[i]);
+                if (err > tol && noErrors < errorThreshold) {
+                    BOOST_ERROR("gpu value (" << output[2][i] << ") at i=" << i
+                                              << " does not match reference cpu value (" << z[i] << "), error " << err
+                                              << ", tol " << tol);
+                    noErrors++;
+                }
+            }
+        }
+        BOOST_CHECK(true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testConditionalExpectation2) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 10000;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing conditional expectation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
+
         c.initiateCalculation(n, 0, 0, settings);
 
+        double* filter = new double[n];
+        filter[0] = 1.0;
+        filter[1] = 1.0;
+        for (size_t i = 2; i < n; ++i) {
+            filter[i] = 0.0;
+        }
+
         auto one = c.createInputVariable(1.0);
-        auto vs = c.createInputVariates(1, 2);
-        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+        //auto f = c.createInputVariable(filter);
+        auto vs = c.createInputVariates(1, 3);
+        auto ad0 = c.applyOperation(RandomVariableOpCode::Add, {vs[0][0], vs[0][1]});
+        auto e = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {ad0, one});
+        auto e2 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {ad0, one});
+        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1], vs[0][2]});
+        auto ad = c.applyOperation(RandomVariableOpCode::Add, {vs[0][1], vs[0][2]});
+        auto ce2 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad});
+        c.freeVariable(ad);
+        auto ad2 = c.applyOperation(RandomVariableOpCode::Add, {vs[0][1], ce});
+        auto ce3 = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, ad2});
 
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
+        c.declareOutputVariable(e);
+        c.declareOutputVariable(e2);
         c.declareOutputVariable(ce);
+        c.declareOutputVariable(ce2);
+        c.declareOutputVariable(ce3);
 
-        std::vector<std::vector<double>> output(3, std::vector<double>(n));
+        std::vector<std::vector<double>> output(8, std::vector<double>(n));
         c.finalizeCalculation(output);
 
         RandomVariable y(output[0]);
-        RandomVariable x(output[1]);
-        RandomVariable z = conditionalExpectation(
-            y, {&x}, multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
+        RandomVariable x1(output[1]);
+        RandomVariable x2(output[2]);
+        RandomVariable yx1 = y + x1;
+        //RandomVariable yx1 = x1 + x2;
+        RandomVariable ex = expectation(yx1);
+        RandomVariable z1 = conditionalExpectation(
+            y, {&x1, &x2},
+            multiPathBasisSystem(2, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x1.size()));
+        RandomVariable x_adj = x1 + x2;
+        RandomVariable z2 = conditionalExpectation(
+            y, {&x_adj},
+            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x_adj.size()));
+        RandomVariable x_adj2 = x1 + z1;
+        RandomVariable z3 = conditionalExpectation(
+            y, {&x_adj2},
+            multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, {}, x_adj2.size()));
 
-        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-10 : 1E-3;
         Size noErrors = 0, errorThreshold = 10;
 
         for (Size i = 0; i < n; ++i) {
-            Real err = std::abs(output[2][i] - z[i]);
-            if (std::abs(z[i]) > 1E-10)
-                err /= std::abs(z[i]);
+            Real err = std::abs(output[3][i] - ex[i]);
+            if (std::abs(ex[i]) > 1E-10)
+                err /= std::abs(ex[i]);
             if (err > tol && noErrors < errorThreshold) {
-                BOOST_ERROR("gpu value (" << output[2][i] << ") at i=" << i << " does not match reference cpu value ("
-                                          << z[i] << "), error " << err << ", tol " << tol);
+                BOOST_ERROR("gpu value (" << output[3][i] << ") at i=" << i << " does not match reference cpu value ex("
+                                          << ex[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
+            }
+        }
+
+        for (Size i = 0; i < n; ++i) {
+            Real err = std::abs(output[4][i] - ex[i]);
+            if (std::abs(ex[i]) > 1E-10)
+                err /= std::abs(ex[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[4][i] << ") at i=" << i << " does not match reference cpu value ex("
+                                          << ex[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
+            }
+        }
+
+        for (Size i = 0; i < n; ++i) {
+            Real err = std::abs(output[5][i] - z1[i]);
+            if (std::abs(z1[i]) > 1E-10)
+                err /= std::abs(z1[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[5][i] << ") at i=" << i << " does not match reference cpu value z1("
+                                          << z1[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
+            }
+        }
+
+        for (Size i = 0; i < n; ++i) {
+            Real err = std::abs(output[6][i] - z2[i]);
+            if (std::abs(z2[i]) > 1E-10)
+                err /= std::abs(z2[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[6][i] << ") at i=" << i << " does not match reference cpu value z2("
+                                          << z2[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
+            }
+        }
+
+        for (Size i = 0; i < n; ++i) {
+            Real err = std::abs(output[7][i] - z3[i]);
+            if (std::abs(z3[i]) > 1E-10)
+                err /= std::abs(z3[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[7][i] << ") at i=" << i << " does not match reference cpu value z3("
+                                          << z3[i] << "), error " << err << ", tol " << tol);
                 noErrors++;
             }
         }

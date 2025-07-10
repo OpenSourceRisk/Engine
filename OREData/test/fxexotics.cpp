@@ -102,11 +102,13 @@ public:
             TimeSeries<Real> pastFixings;
             pastFixings[Date(1, Feb, 2016)] = 100;
             pastFixings[Date(2, Feb, 2016)] = 90;
+            QL_DEPRECATED_DISABLE_WARNING
             IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
             TimeSeries<Real> pastFixingsInverted;
             pastFixingsInverted[Date(1, Feb, 2016)] = 1 / pastFixings[Date(1, Feb, 2016)];
             pastFixingsInverted[Date(2, Feb, 2016)] = 1 / pastFixings[Date(2, Feb, 2016)];
             IndexManager::instance().setHistory("Reuters JPY/EUR", pastFixingsInverted);
+            QL_DEPRECATED_ENABLE_WARNING
         }
     }
 
@@ -157,6 +159,8 @@ BOOST_AUTO_TEST_CASE(testFXDigitalOptionPrice) {
         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
+        engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
+        engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
 
         QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
@@ -766,6 +770,8 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionParity) {
             engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
             engineData->model("FxDigitalOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
+            engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
+            engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
             QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
             fxOption.build(engineFactory);
@@ -855,6 +861,8 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionTouched) {
                 engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
                 engineData->model("FxDigitalOption") = "GarmanKohlhagen";
                 engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
+                engineData->model("FxDigitalOptionEuropeanCS") = "GarmanKohlhagen";
+                engineData->engine("FxDigitalOptionEuropeanCS") = "AnalyticCashSettledEuropeanEngine";
                 QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
                 fxOption.build(engineFactory);
@@ -1090,6 +1098,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
 
     vector<string> payoutCcys = {"EUR", "JPY"};
     vector<string> fxIndices = {"FX-Reuters-EUR-JPY", "FX-Reuters-JPY-EUR"};
+    
     for (auto& f : fxt) {
         // build market
         QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
@@ -1098,11 +1107,13 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
         TimeSeries<Real> pastFixings;
         pastFixings[market->asofDate() - 1 * Days] = f.s_1;
         pastFixings[market->asofDate() - 2 * Days] = f.s_2;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
         TimeSeries<Real> pastFixingsInverted;
         pastFixingsInverted[market->asofDate() - 1 * Days] = 1 / pastFixings[market->asofDate() - 1 * Days];
         pastFixingsInverted[market->asofDate() - 2 * Days] = 1 / pastFixings[market->asofDate() - 2 * Days];
         IndexManager::instance().setHistory("Reuters JPY/EUR", pastFixingsInverted);
+        QL_DEPRECATED_ENABLE_WARNING
         for (auto& payoutCcy : payoutCcys) {
             for (auto& fxIndex : fxIndices) {
                 // build FXBarrierOption - expiry in 6 months
@@ -1307,7 +1318,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionParity) {
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
-        Date exDate = today + Integer(f.t * 360 + 0.5);
+        Date exDate = parseCalendar("EUR,JPY").adjust(today + Integer(f.t * 360 + 0.5));
         OptionData optionData("Long", f.optionType, "European", true, vector<string>(1, ore::data::to_string(exDate)));
         vector<Real> barriers = {f.barrierLow, f.barrierHigh};
         vector<TradeBarrier> tradeBarriers;
@@ -1451,12 +1462,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionTouched) {
         TimeSeries<Real> pastFixings;
         pastFixings[market->asofDate() - 1 * Days] = f.s_1;
         pastFixings[market->asofDate() - 2 * Days] = f.s_2;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
         TimeSeries<Real> pastFixingsInverted;
         pastFixingsInverted[market->asofDate() - 1 * Days] = 1 / pastFixings[market->asofDate() - 1 * Days];
         pastFixingsInverted[market->asofDate() - 2 * Days] = 1 / pastFixings[market->asofDate() - 2 * Days];
         IndexManager::instance().setHistory("Reuters JPY/EUR", pastFixingsInverted);
-
+        QL_DEPRECATED_ENABLE_WARNING
         // build FXBarrierOption - expiry in 6 months
         OptionData optionData("Long", "Call", "European", true, vector<string>(1, "20160801"));
 
@@ -1659,12 +1671,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionTouched) {
         TimeSeries<Real> pastFixings;
         pastFixings[market->asofDate() - 1 * Days] = f.s_1;
         pastFixings[market->asofDate() - 2 * Days] = f.s_2;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
         TimeSeries<Real> pastFixingsInverted;
         pastFixingsInverted[market->asofDate() - 1 * Days] = 1 / pastFixings[market->asofDate() - 1 * Days];
         pastFixingsInverted[market->asofDate() - 2 * Days] = 1 / pastFixings[market->asofDate() - 2 * Days];
         IndexManager::instance().setHistory("Reuters JPY/EUR", pastFixingsInverted);
-
+        QL_DEPRECATED_ENABLE_WARNING
         for (auto& payoutCcy : payoutCcys) {
             for (auto& fxIndex : fxIndices) {
                 // build FXBarrierOption - expiry in 6 months
@@ -1946,8 +1959,9 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         // knocked in npv = knockOut npv
         TimeSeries<Real> pastFixings;
         pastFixings[market->asofDate() - 1 * Days] = f.barrierKnockIn;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
-
+        QL_DEPRECATED_ENABLE_WARNING
         kikoBarrierOption.reset();
         kikoBarrierOption.build(engineFactory);
         koBarrierOption.build(engineFactory);
@@ -1957,7 +1971,9 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         TimeSeries<Real> pastFixings2;
         pastFixings2[market->asofDate() - 1 * Days] = f.barrierKnockIn;
         pastFixings2[market->asofDate() - 2 * Days] = f.barrierKnockOut;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings2);
+        QL_DEPRECATED_ENABLE_WARNING
         kikoBarrierOption.reset();
         kikoBarrierOption.build(engineFactory);
 
@@ -2135,7 +2151,9 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         TimeSeries<Real> pastFixings;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
+        QL_DEPRECATED_ENABLE_WARNING
         // untouched  kiko_npv = untouched ki_npv
         kikoBarrierOption.build(engineFactory);
         kiBarrierOption.build(engineFactory);
@@ -2155,8 +2173,9 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
 
         // knocked in  kiko_npv = knocked in ki_npv
         pastFixings[market->asofDate() - 1 * Days] = f.barrierKnockIn;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
-
+        QL_DEPRECATED_ENABLE_WARNING
         kikoBarrierOption.reset();
         kiBarrierOption.reset();
         dkoBarrierOption.reset();
@@ -2244,8 +2263,9 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         TimeSeries<Real> pastFixings;
+        QL_DEPRECATED_DISABLE_WARNING
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
-        
+        QL_DEPRECATED_ENABLE_WARNING
         kikoBarrierOption.build(engineFactory);
         kiBarrierOption.build(engineFactory);
         koBarrierOption.build(engineFactory);

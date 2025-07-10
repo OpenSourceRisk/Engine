@@ -70,7 +70,6 @@
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
@@ -206,8 +205,9 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     Real arrFixings[] = {98.5, 98.0, 99.0, 100.2, 99.4, 98.2};
     std::vector<Real> fixings(arrFixings, arrFixings + sizeof(arrFixings) / sizeof(Real));
     TimeSeries<Real> fixingHistory(pastDates.begin(), pastDates.end(), fixings.begin());
+    QL_DEPRECATED_DISABLE_WARNING
     IndexManager::instance().setHistory(equityName, fixingHistory);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // add strikes in C++98 compatible way
     Real arrStrikes[] = {50.0,  55.0,  60.0,  65.0,  70.0,  75.0,  80.0, 85.0, 90.0, 95.0, 100.0, // Put Strikes
                          105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0};                        // Call Strikes
@@ -250,7 +250,9 @@ BOOST_AUTO_TEST_CASE(testSeasonedSwapPricing) {
     BOOST_CHECK_CLOSE(result, expected, tol);
 
     // A little clean up of the environment.
+    QL_DEPRECATED_DISABLE_WARNING
     IndexManager::instance().clearHistory("EQ/" + equityName);
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 BOOST_AUTO_TEST_CASE(testForwardStartPricing) {

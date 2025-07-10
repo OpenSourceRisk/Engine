@@ -66,7 +66,8 @@ void SpreadedBlackVolatilityCurve::performCalculations() const {
 
 Real SpreadedBlackVolatilityCurve::blackVolImpl(Time t, Real k) const {
     calculate();
-    return referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t);
+    return std::max(0.0,
+                    referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t));
 }
 
 } // namespace QuantExt

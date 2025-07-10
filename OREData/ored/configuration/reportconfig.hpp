@@ -24,8 +24,10 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/expiry.hpp>
+#include <ql/time/date.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -33,44 +35,49 @@ namespace data {
 class ReportConfig : public XMLSerializable {
 public:
     ReportConfig() {}
-    ReportConfig(const boost::optional<bool>& reportOnDeltaGrid, const boost::optional<bool>& reportOnMoneynessGrid,
-                 const boost::optional<bool>& reportOnStrikeGrid, const boost::optional<bool>& reportOnStrikeSpreadGrid,
-                 const boost::optional<std::vector<std::string>>& deltas,
-                 const boost::optional<std::vector<Real>>& moneyness, const boost::optional<std::vector<Real>>& strikes,
-                 const boost::optional<std::vector<Real>>& strikeSpreads,
-                 const boost::optional<std::vector<Period>>& expiries,
-                 const boost::optional<std::vector<Period>>& underlyingTenors)
+    ReportConfig(const QuantLib::ext::optional<bool>& reportOnDeltaGrid, const QuantLib::ext::optional<bool>& reportOnMoneynessGrid,
+                 const QuantLib::ext::optional<bool>& reportOnStrikeGrid, const QuantLib::ext::optional<bool>& reportOnStrikeSpreadGrid,
+                 const QuantLib::ext::optional<std::vector<std::string>>& deltas,
+                 const QuantLib::ext::optional<std::vector<Real>>& moneyness, const QuantLib::ext::optional<std::vector<Real>>& strikes,
+                 const QuantLib::ext::optional<std::vector<Real>>& strikeSpreads,
+                 const QuantLib::ext::optional<std::vector<Period>>& expiries,
+                 const QuantLib::ext::optional<std::vector<Date>>& pillarDates,
+                 const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors,
+                 const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>>& continuationExpiries)
         : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid),
           reportOnStrikeGrid_(reportOnStrikeGrid), reportOnStrikeSpreadGrid_(reportOnStrikeSpreadGrid), deltas_(deltas),
           moneyness_(moneyness), strikes_(strikes), strikeSpreads_(strikeSpreads), expiries_(expiries),
-          underlyingTenors_(underlyingTenors) {}
+          pillarDates_(pillarDates), underlyingTenors_(underlyingTenors), continuationExpiries_(continuationExpiries) {}
 
-    const boost::optional<bool> reportOnDeltaGrid() const { return reportOnDeltaGrid_; }
-    const boost::optional<bool> reportOnMoneynessGrid() const { return reportOnMoneynessGrid_; }
-    const boost::optional<bool> reportOnStrikeGrid() const { return reportOnStrikeGrid_; }
-    const boost::optional<bool> reportOnStrikeSpreadGrid() const { return reportOnStrikeSpreadGrid_; }
-    const boost::optional<std::vector<std::string>>& deltas() const { return deltas_; }
-    const boost::optional<std::vector<Real>>& moneyness() const { return moneyness_; }
-    const boost::optional<std::vector<Real>>& strikes() const { return strikes_; }
-    const boost::optional<std::vector<Real>>& strikeSpreads() const { return strikeSpreads_; }
-    const boost::optional<std::vector<Period>>& expiries() const { return expiries_; }
-    const boost::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
-
+    const QuantLib::ext::optional<bool> reportOnDeltaGrid() const { return reportOnDeltaGrid_; }
+    const QuantLib::ext::optional<bool> reportOnMoneynessGrid() const { return reportOnMoneynessGrid_; }
+    const QuantLib::ext::optional<bool> reportOnStrikeGrid() const { return reportOnStrikeGrid_; }
+    const QuantLib::ext::optional<bool> reportOnStrikeSpreadGrid() const { return reportOnStrikeSpreadGrid_; }
+    const QuantLib::ext::optional<std::vector<std::string>>& deltas() const { return deltas_; }
+    const QuantLib::ext::optional<std::vector<Real>>& moneyness() const { return moneyness_; }
+    const QuantLib::ext::optional<std::vector<Real>>& strikes() const { return strikes_; }
+    const QuantLib::ext::optional<std::vector<Real>>& strikeSpreads() const { return strikeSpreads_; }
+    const QuantLib::ext::optional<std::vector<Period>>& expiries() const { return expiries_; }
+    const QuantLib::ext::optional<std::vector<Date>>& pillarDates() const { return pillarDates_; }
+    const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
+    const QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>>& continuationExpiries() const { return continuationExpiries_; }
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
-    boost::optional<bool> reportOnDeltaGrid_;
-    boost::optional<bool> reportOnMoneynessGrid_;
-    boost::optional<bool> reportOnStrikeGrid_;
-    boost::optional<bool> reportOnStrikeSpreadGrid_;
+    QuantLib::ext::optional<bool> reportOnDeltaGrid_;
+    QuantLib::ext::optional<bool> reportOnMoneynessGrid_;
+    QuantLib::ext::optional<bool> reportOnStrikeGrid_;
+    QuantLib::ext::optional<bool> reportOnStrikeSpreadGrid_;
 
-    boost::optional<std::vector<std::string>> deltas_;
-    boost::optional<std::vector<Real>> moneyness_;
-    boost::optional<std::vector<Real>> strikes_;
-    boost::optional<std::vector<Real>> strikeSpreads_;
-    boost::optional<std::vector<Period>> expiries_;
-    boost::optional<std::vector<Period>> underlyingTenors_;
+    QuantLib::ext::optional<std::vector<std::string>> deltas_;
+    QuantLib::ext::optional<std::vector<Real>> moneyness_;
+    QuantLib::ext::optional<std::vector<Real>> strikes_;
+    QuantLib::ext::optional<std::vector<Real>> strikeSpreads_;
+    QuantLib::ext::optional<std::vector<Period>> expiries_;
+    QuantLib::ext::optional<std::vector<Date>> pillarDates_;
+    QuantLib::ext::optional<std::vector<Period>> underlyingTenors_;
+    QuantLib::ext::optional<std::vector<QuantLib::ext::shared_ptr<Expiry>>> continuationExpiries_;
 };
 
 ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig);

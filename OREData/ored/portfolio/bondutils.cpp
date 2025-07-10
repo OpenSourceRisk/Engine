@@ -19,16 +19,18 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/convertiblebondreferencedata.hpp>
 
 namespace ore {
 namespace data {
 
-void populateFromBondReferenceData(std::string& subType,
-                                   std::string& issuerId, std::string& settlementDays, std::string& calendar,
-                                   std::string& issueDate, std::string& priceQuoteMethod, string& priceQuoteBaseValue,
-                                   std::string& creditCurveId, std::string& creditGroup, std::string& referenceCurveId,
-                                   std::string& incomeCurveId, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
+void populateFromBondReferenceData(std::string& subType, std::string& issuerId, std::string& settlementDays,
+                                   std::string& calendar, std::string& issueDate, std::string& priceQuoteMethod,
+                                   string& priceQuoteBaseValue, std::string& creditCurveId, std::string& creditGroup,
+                                   std::string& referenceCurveId, std::string& incomeCurveId,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons, 
+                                   std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices,
+                                   const std::string& name,
                                    const QuantLib::ext::shared_ptr<BondReferenceDatum>& bondRefData,
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
@@ -111,6 +113,13 @@ void populateFromBondReferenceData(std::string& subType,
                 .log();
 	}
     }
+    if (!quotedDirtyPrices) {
+        quotedDirtyPrices = bondRefData->bondData().quotedDirtyPrices;
+        if (!quotedDirtyPrices) {
+            quotedDirtyPrices = QuantLib::Bond::Price::Type::Clean;
+            DLOG("the PriceType is being defaulted to 'Clean'.");
+        }
+    }
       
     DLOG("populating bond data from reference data done.");
 }
@@ -129,6 +138,20 @@ Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Ca
          << QuantLib::io::iso_date(result) << " (today = " << QuantLib::io::iso_date(today)
          << ", OpenEndDateReplacement from pricing engine config = " << replacementPeriodStr << ")");
     return result;
+}
+
+std::string getBondReferenceDatumType(const std::string& id,
+                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData) {
+    if (refData == nullptr)
+        return std::string();
+
+    if (refData->hasData(BondReferenceDatum::TYPE, id)) {
+        return BondReferenceDatum::TYPE;
+    } else if (refData->hasData(ConvertibleBondReferenceDatum::TYPE, id)) {
+        return ConvertibleBondReferenceDatum::TYPE;
+    }
+
+    return std::string();
 }
 
 } // namespace data

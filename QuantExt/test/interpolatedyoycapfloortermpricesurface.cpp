@@ -32,6 +32,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -163,9 +164,9 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
         instruments.push_back(anInstrument);
     };
 
-    Rate baseZeroRate = ratesZCII[0] / 100.0;
-    QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-        asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, baseZeroRate, instruments));
+    QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(3, Months), Monthly, ii);
+    QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
+        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, 3 * Months, Monthly, Actual365Fixed(), instruments));
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 
@@ -176,14 +177,14 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
 
     yoyIndex =
         QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
-
+    QL_DEPRECATED_DISABLE_WARNING
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
         0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
         maturities, capPrice, floorPrice);
 
     QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // check the cap and floor prices from the surface
     Real tol = 1.0E-8;
     for (Size i = 0; i < maturities.size(); i++) {

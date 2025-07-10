@@ -41,9 +41,6 @@ void ZeroToParShiftAnalyticImpl::setUpConfigurations() {
 
 void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                              const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("StressTestAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -80,7 +77,7 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     ZeroToParShiftConverter shiftConvert(instruments, simMarket);
 
-    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     
     report->addColumn("ScenarioLabel", string());
     report->addColumn("ParKey", string());
@@ -102,12 +99,9 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
                 }
         }
     }
-    analytic()->reports()[label()]["parshifts"] = report;
+    analytic()->addReport(label(), "parshifts", report);
     CONSOLE("OK");
 }
 
-ZeroToParShiftAnalytic::ZeroToParShiftAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<ZeroToParShiftAnalyticImpl>(inputs), {"ZEROTOPARSHIFT"}, inputs, false, false, false,
-               false) {}
 } // namespace analytics
 } // namespace ore

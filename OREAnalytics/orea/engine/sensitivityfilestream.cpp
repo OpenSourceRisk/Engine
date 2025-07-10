@@ -24,7 +24,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using ore::analytics::deconstructFactor;
 using ore::data::parseBool;
 using ore::data::parseReal;
 using std::getline;
@@ -41,6 +40,7 @@ void SensitivityInputStream::setStream(std::istream* stream) {
 SensitivityRecord SensitivityInputStream::next() {
     // Get the next valid SensitivityRecord
     string line;
+    string comment{comment_};
     while (getline(*stream_, line)) {
         // Update the current line number
         ++lineNo_;
@@ -49,14 +49,13 @@ SensitivityRecord SensitivityInputStream::next() {
         boost::trim(line);
 
         // If line is empty or a comment line, skip to next
-        if (line.empty() || boost::starts_with(line, comment_))
+        if (line.empty() || boost::starts_with(line, comment))
             continue;
 
         // Try to parse line in to a SensitivityRecord
         DLOG("Processing line number " << lineNo_ << ": " << line);
         vector<string> entries;
-        boost::split(
-            entries, line, [this](char c) { return c == delim_; }, boost::token_compress_off);
+        entries = parseListOfValues(line, escapeChar_, delim_, quoteChar_);
         return processRecord(entries);
     }
 
@@ -79,12 +78,12 @@ SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& en
     sr.tradeId = entries[0];
     sr.isPar = parseBool(entries[1]);
 
-    auto p = deconstructFactor(entries[2]);
+    auto p = QuantExt::deconstructFactor(entries[2]);
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
     tryParseReal(entries[3], sr.shift_1);
 
-    p = deconstructFactor(entries[4]);
+    p = QuantExt::deconstructFactor(entries[4]);
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
     tryParseReal(entries[5], sr.shift_2);
@@ -97,8 +96,9 @@ SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& en
     return sr;
 }
 
-SensitivityFileStream::SensitivityFileStream(const string& fileName, char delim, const string& comment)
-    : SensitivityInputStream(delim, comment) {
+SensitivityFileStream::SensitivityFileStream(const string& fileName, char delim, char comment,
+                                             char quoteChar, char escapeChar)
+    : SensitivityInputStream(delim, comment, quoteChar, escapeChar) {
 
     // set file name
     file_ = new std::ifstream(fileName);
@@ -117,8 +117,9 @@ SensitivityFileStream::~SensitivityFileStream() {
     LOG("The file stream has been closed");
 }
 
-SensitivityBufferStream::SensitivityBufferStream(const std::string& buffer, char delim, const std::string& comment)
-    : SensitivityInputStream(delim, comment) {
+SensitivityBufferStream::SensitivityBufferStream(const std::string& buffer, char delim, char comment,
+                                                 char quoteChar, char escapeChar)
+    : SensitivityInputStream(delim, comment, quoteChar, escapeChar) {
     std::stringstream* stream = new std::stringstream(buffer);
     setStream(stream);
 }

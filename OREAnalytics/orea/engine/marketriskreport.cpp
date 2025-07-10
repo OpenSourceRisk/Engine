@@ -26,7 +26,8 @@
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
-#include <boost/regex.hpp>
+
+#include <regex>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -54,7 +55,8 @@ bool MarketRiskGroup::allLevel() const {
 map<MarketRiskConfiguration::RiskClass, Size> MarketRiskGroupContainer::CompRisk::rcOrder = {
     {MarketRiskConfiguration::RiskClass::All, 0},       {MarketRiskConfiguration::RiskClass::InterestRate, 1},
     {MarketRiskConfiguration::RiskClass::Inflation, 2}, {MarketRiskConfiguration::RiskClass::Credit, 3},
-    {MarketRiskConfiguration::RiskClass::Equity, 4},    {MarketRiskConfiguration::RiskClass::FX, 5}};
+    {MarketRiskConfiguration::RiskClass::Equity, 4},    {MarketRiskConfiguration::RiskClass::FX, 5},
+    {MarketRiskConfiguration::RiskClass::Commodity, 6}};
 
 map<MarketRiskConfiguration::RiskType, Size> MarketRiskGroupContainer::CompRisk::rtOrder = {
     {MarketRiskConfiguration::RiskType::All, 0},
@@ -151,7 +153,7 @@ void MarketRiskReport::initialise() {
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
-            ext::shared_ptr<NPVCube> cube = ext::make_shared<DoublePrecisionInMemoryCube>(
+            ext::shared_ptr<NPVCube> cube = ext::make_shared<InMemoryCubeOpt<double>>(
                 fullRevalArgs_->simMarket_->asofDate(), portfolio_->ids(),
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 
@@ -173,15 +175,18 @@ void MarketRiskReport::initialise() {
 }
 
 void MarketRiskReport::initialiseRiskGroups() {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
     riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
 
     // build portfolio filter, if given
     bool hasFilter = false;
-    boost::regex filter;
+    std::regex filter;
     if (portfolioFilter_ != "") {
         hasFilter = true;
-        filter = boost::regex(portfolioFilter_);
+        filter = std::regex(portfolioFilter_);
         LOG("Portfolio filter: " << portfolioFilter_);
     }
 
@@ -192,7 +197,7 @@ void MarketRiskReport::initialiseRiskGroups() {
 
     QL_REQUIRE(portfolio_, "No portfolio given");
     for (const auto& pId : portfolio_->portfolioIds()) {
-        if (breakdown_ && (!hasFilter || boost::regex_match(pId, filter))) {
+        if (breakdown_ && (!hasFilter || std::regex_match(pId, filter))) {
             auto tradeGroupP = QuantLib::ext::make_shared<TradeGroup>(pId);
             tradeGroups_->add(tradeGroupP);
         }
@@ -203,7 +208,7 @@ void MarketRiskReport::initialiseRiskGroups() {
             tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
         else {
             for (auto const& pId : trade->portfolioIds()) {
-                if (!hasFilter || boost::regex_match(pId, filter)) {
+                if (!hasFilter || std::regex_match(pId, filter)) {
                     tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
                     if (breakdown_)
                         tradeIdGroups_[pId].insert(make_pair(tradeId, pos));
@@ -298,6 +303,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
         // loop over all the trade groups
         tradeGroups_->reset();
         while (ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next()) {
+            runSensiBased = sensiBased_;
             reset(riskGroup);
 
             // Only look at this trade group if there required
