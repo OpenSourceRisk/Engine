@@ -30,6 +30,8 @@
 #include <ql/quote.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
+#include <qle/indexes/fxindex.hpp>
+#include <optional>
 
 namespace QuantExt {
 using namespace QuantLib;

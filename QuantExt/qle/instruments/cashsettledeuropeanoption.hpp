@@ -26,6 +26,8 @@
 
 #include <ql/index.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <qle/indexes/fxindex.hpp>
+#include <optional>
 
 namespace QuantExt {
 
