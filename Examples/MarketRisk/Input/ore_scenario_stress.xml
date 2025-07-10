@@ -27,7 +27,7 @@
     <Analytic type="stress">
       <Parameter name="active">Y</Parameter>
       <Parameter name="precision">6</Parameter>
-	  <Parameter name="scenarioFile">StressScenarios/scenarios.csv</Parameter>
+	  <Parameter name="scenarioFile">StressScenarios/stress_scenarios.csv</Parameter>
       <Parameter name="marketConfigFile">stressmarket.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>

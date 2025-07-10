@@ -29,7 +29,7 @@
       <Parameter name="scenarioType">stress</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="simulationConfigFile">stressmarket.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenarios.csv</Parameter>
+      <Parameter name="scenarioOutputFile">stress_scenarios.csv</Parameter>
       <Parameter name="scenarioPrecision">12</Parameter>
       <Parameter name="outputStatistics">N</Parameter>
       <Parameter name="outputDistributions">N</Parameter>	  
