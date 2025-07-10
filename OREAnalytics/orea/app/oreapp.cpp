@@ -711,6 +711,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setContinueOnError(parseBool(tmp));
 
+    tmp = params_->get("setup", "allowModelBuilderFallbacks", false);
+    if (tmp != "")
+        setAllowModelBuilderFallbacks(parseBool(tmp));
+
     tmp = params_->get("setup", "lazyMarketBuilding", false);
     if (tmp != "")
         setLazyMarketBuilding(parseBool(tmp));
@@ -1797,6 +1801,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp == "Y")
             setStoreFlows(true);
 
+        tmp = params_->get("simulation", "storeExerciseValues", false);
+        if (tmp == "Y")
+            setStoreExerciseValues(true);
+
         tmp = params_->get("simulation", "storeSensis", false);
         if (tmp == "Y")
             setStoreSensis(true);
@@ -2030,10 +2038,12 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("pfe", "dimModel", false);
     if (tmp != "") {
-        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
-                       tmp == "DeltaGammaVaR",
-                   "DIM model " << tmp << " not supported, "
-                                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
+        QL_REQUIRE(
+            tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM" || tmp == "SimmAnalytic",
+            "DIM model "
+                << tmp << " not supported, "
+                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
         setDimModel(tmp);
     }
 
@@ -2360,9 +2370,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "") {
         QL_REQUIRE(
             tmp == "Regression" || tmp == "Flat" || tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" ||
-                tmp == "DeltaGammaVaR" || tmp == "DynamicIM",
-            "DIM model " << tmp << " not supported, "
-                         << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM");
+                tmp == "DeltaGammaVaR" || tmp == "DynamicIM" || tmp == "SimmAnalytic",
+            "DIM model "
+                << tmp << " not supported, "
+                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
         setDimModel(tmp);
     }
 

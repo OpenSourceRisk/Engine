@@ -201,7 +201,8 @@ std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b
 }
 
 std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label) {
-    QL_REQUIRE(!a.empty(), "cg_add(): empty arguments vector is not allowed");
+    if (a.empty())
+        return cg_const(g, 0.0);
     if (a.size() == 1)
         return a[0];
     if (a.size() == 2)
@@ -367,6 +368,17 @@ std::size_t cg_normalPdf(ComputationGraph& g, const std::size_t a, const std::st
     if (g.isConstant(a))
         return cg_const(g, boost::math::pdf(n, g.constantValue(a)));
     return g.insert({a}, RandomVariableOpCode::NormalPdf, label);
+}
+
+std::set<std::size_t> dependentNodes(const ComputationGraph& g, const std::size_t start, const std::size_t end) {
+    std::set<std::size_t> nodes;
+    for (std::size_t n = start; n < end; ++n) {
+        std::for_each(g.predecessors(n).begin(), g.predecessors(n).end(), [&nodes, start](const std::size_t p) {
+            if (p < start)
+                nodes.insert(p);
+        });
+    }
+    return nodes;
 }
 
 } // namespace QuantExt

@@ -18,10 +18,12 @@
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dynamiccreditxvacalculator.hpp>
 #include <orea/aggregation/dynamicdeltavarcalculator.hpp>
+#include <orea/aggregation/dynamicsimmcalculator.hpp>
 #include <orea/aggregation/exposureallocator.hpp>
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/aggregation/simmhelper.hpp>
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
@@ -126,6 +128,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/simmsensitivitystoragemanager.hpp>
 #include <orea/engine/simpledynamicsimm.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>

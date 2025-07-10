@@ -23,6 +23,306 @@ conversion ratio resets, make-whole calls, dividend-forfeit clauses, copay claus
 Refer to \cite{Spiegeleer_convertible_handbook} and \cite{Bloomberg_OVCV} for a deeper dive into the convertible bond
 universe.
 
+In the following we use the notation from table \ref{tab:convertiblebond_notation}.
+
+\begin{table}[h]
+  \begin{tabular}{p{2cm}|p{13cm}}
+    Variable & Description \\
+    \hline
+    $N_0$ & Bond Face Value at $t=0$, the bond reference data in ORE is typically set up such that $N_0 = 1$, even if
+            the true face value of the bond quoted in the market is $100$ or $100,000$. \\ \hline
+    $N_t$ & The outstanding notional at time $t$. For bullet bonds, $N_t = N_0$. For amortising bonds $N_t \leq N_0$ and it
+            is assumed that a conversion payout is scaled down by $N_t / N_0$ in this case. \\ \hline
+    $S_t$ & The share price at time $t$ \\ \hline
+    $C^R_t$ & The conversion ratio at time $t$. The conversion ratio is the number
+              of shares $S_t$ received for one bond (i.e. for the bond face value $N_0$) upon conversion.
+              The conversion ratio can vary with time, typically due to the presence of dividend protection or
+              reset features. It is also possible to set up a deterministic schedule of varying conversion rates in the
+              trade term sheet, but this is less common. \\   \hline
+    $C^V_t$ & The conversion value or ``parity'', i.e. the payout from a conversion $C^V_t = C^R_t S_t$.
+              Notice that for amortising bonds an
+              additional factor $N_t/N_0$ is applied to the actual payout, but $C^V$ is defined without this factor.
+              For cross-currency trades the parity is expressed in bond ccy, i.e. $C^V_t = C^R_t S_t X_t$ where
+              $X_t$ convertes on equity ccy unit to bond ccy. \\ \hline
+    $C^P_t$ & The conversion price, $C^P_t = N_0 / C^R_t$, i.e. the price of the share that upon conversion would give a
+              payout of $N_0$. For cross-currency trades the conversion price is usually quoted in equity ccy, i.e.
+              $C^P_t = N_0 / (C^R_t X_t)$ where $X_t$ converts one equity ccy unit to bond ccy.
+              \\ \hline
+  \end{tabular}
+  \caption{Notation for convertible bonds}
+  \label{tab:convertiblebond_notation}
+\end{table}
+
+\underline{Vanilla bond underlying:}
+
+The underlying bond will pay coupons and the final redemption $N_0$ (or $N_T$ for amortising bonds) at its maturity
+$T$. The coupons are usually fixed rate coupons for convertibles, but floating rate coupons are also possible. For
+amortising bonds, there will be additional intermediate redemption payments. We denote all cashflows of the underlying
+bond by
+
+\begin{equation}
+c_i,\, i = 1, \ldots, n
+\end{equation}
+
+i.e. thess include the all coupon and intermediate and final redemption payments.
+
+\underline{Calls and Puts, forced conversion:}
+
+The bond may be callable or puttable or both. Usually, issuer calls are American style, while investor puts are Bermudan
+style. For a hard issuer call at $t$, the issuer has the option to pay
+
+\begin{equation}\label{formula:convertible_bond_callpayout}
+  P N_t + a
+\end{equation}
+
+to the investor and terminate the bond transaction. Here, $P$ is the call price in clean terms, e.g. $1.00$ for a call
+at par or $1.02$ if the bond can be called at $102\%$. $a$ are the accruals to be paid for the current bond coupon
+period. There might be a clause in the term sheet excluding the payment of the accruals $a$. Call prices can be
+specified both in clean and dirty terms for convenience, but this does not control the payout
+\ref{formula:convertible_bond_callpayout}, i.e. whether $a$ is paid or not is specified separately from the quotation
+style of the call price.
+
+For a soft issuer call, the call can only be exercised if the stock price observed on the exercise date exceeds a
+barrier
+
+\begin{equation}
+  S_t > C^P_t T
+\end{equation}
+
+defined by a trigger level $T$ and the current conversion price $C^P_t$. If the trigger is for example $T=1.3$ and the
+current conversion ratio is $C^R_t = 0.05$ (and $N_0=1$), then the conversion price is $C^P_t = 20$ and the soft call
+can only be exercised if the current stock price $S_t$ is above $1.3\cdot 20 = 26$. Notice that for cross currency
+trades it does not matter if we compare the share price in equity ccy with $C^P_t T$ with $C^P_t$ expressed in equity
+currency, or both expressed in bond currency, i.e. converted to the bond currency by multiplying with $X_t$.
+
+For both hard and soft calls, an issuer call will give the investor the option to instead convert the bond on the
+exercise date at the current conversion ratio $C^R_t$, i.e. to receive $C^R_t\cdot S_t$ instead of the call price payout
+\ref{formula:convertible_bond_callpayout} (``forced conversion''). In reality, there is usually a notice period that can
+be several months after the exercise date and the investor can decide to convert during this whole period, a feature
+that we ignore in the pricing though. This type of conversion is called forced conversion as opposed to voluntary
+conversion described below.
+
+Sometimes a call triggers an extra payout for the investor. One variant is that in case of an issuer call the conversion
+ratio is adjusted upwards, so that in case of a forced conversion the investore receives a higher payout. The adjustment
+of the conversion ratio is in general a function of the exercise time and current stock price on the conversion date.
+
+If there is a investor put option, the investor has the option to receive
+
+\begin{equation}
+P N_t + a
+\end{equation}
+
+on the exercise date from the issuer and terminate the bond transaction. Again, the payment of the accruals $a$ can be
+excluded in the trade terms.
+
+More features, that are currently {\em not} supported, include:
+
+\begin{itemize}
+\item There might be an additional fee payable by the issuer on a call that makes a call less attractive to the issuer
+  (``Make whole'' payment). This payment can be computed in several ways, e.g. as a fixed amount or as the NPV of
+  outstanding coupon payment in the underlying bond discounted on the treasury curve.
+
+\item Soft call execution can be conditioned on a barrier condition $S_t > B$ that is met on $N$ out of $M$ days before
+  the exercise date (typcially $20$ out of $30$).
+\end{itemize}
+
+\underline{Voluntary conversion}
+
+The (voluntary) conversion right is held by the investor and can be Bermudan or American style. On a date where a
+conversion is possible, the investor has the right to terminate the bond transaction and receive
+
+\begin{equation}
+  C^R_t S_t + a
+\end{equation}
+
+i.e. $C^R_t$ shares per bond face value $N_0$ from the issuer and where $a$ are unpaid accruals. For cross currency
+trades think of $C^R_tS_t$ as the amount converted to the bond currency, i.e. multiplied by $X_t$. For an amortising
+bond, this amount is scaled by $N_t/N_0$.  There might be a cash-out option for the usser, i.e. the rigt to settle the
+payment in cash instead of delivering shares, a feature that can be of dramatic importance for the investor, but which
+does not impact the valuation.
+
+\underline{Contingent conversion}
+
+The conversion right may be contingent on a condition
+
+\begin{equation}
+  C^R_t S_t > B
+\end{equation}
+
+i.e. the conversion is only possible if the current ``Parity'' $C^R_t S_t$ exceeds a given barrier $B$. The observation
+of the trigger condition can be made on the conversion date itself (Spot) or on the start date of the current conversion
+period (StartOfPeriod, for American style conversion rights only). For cross currency trades the parity is expressed in
+bond ccy, i.e. as $C^R S_t X_t$, where $X_t$ converts one unit in equity ccy to bond ccy.
+
+\underline{Mandatory conversion}
+
+A mandatory conversion date is a date (obviously placed after all other, voluntary conversion dates, if any) where a
+conversion is enforced, i.e. it is neither an option of the investor nor the issuer. There are several types of payoffs
+possible, we support
+
+\begin{itemize}
+  \item PEPS (Preferred Redeemable Increased Dividend Securities), where the payoff is defined as
+
+\begin{eqnarray*}
+  \begin{cases}
+    C^{R1} \cdot S_t & \text{for } S_t < S_1 \\
+    N_t / S_t \cdot S_t &  \text{for }S_1 \leq S_t \leq S_2 \\
+    C^{R2} \cdot S_t &  \text{for } S_t > S_2
+  \end{cases}
+\end{eqnarray*}
+
+with barrier levels $S_1$ and $S_2$ and associated prespecified conversion ratios $C^{R1}$ and $C^{R2}$. As for the
+usual voluntary conversion the payoff for $S_t<S_1$ and $S_t>S_2$ is multiplied by $N_t/N_0$ for amortising bonds. For
+cross-currency trades the barrier levels $S_1$ and $S_2$ are expressed in equity currency and the payoff for $S_1 \leq
+S_t \leq S_2$ is defined as $N_t /(X_t S_t) \cdot X_t S_t$, which of course is just $N_t$ (paid in bond ccy) again.
+
+\end{itemize}
+
+\underline{Conversion ratio reset}
+
+The conversion ratio can be dynamically adjuted during the lifetime of a convertible bond. For this a reset schedule is
+defined. On each date of the reset schedule the conversion ratio is adjusted as follows
+
+\begin{equation}\label{formula:convertible_bond_reset1}
+C^R \rightarrow \max \left\{ C^R, \min\left( \frac{N_0}{g\cdot S_t}, \frac{N_0}{f\cdot C^P_0}, \frac{N_0}{F\cdot
+C^P_0} \right) \right\}
+\end{equation}
+
+if the stock price on the reset date falls below a threshold $T$
+
+\begin{equation}\label{formula:convertible_bond_reset2}
+S_t < T C^P_0
+\end{equation}
+
+with a gearing $g$, a floor $f$ and a global floor $F$. Here, the reference for the trigger price and the floor is the
+initial conversion price $C^P_0$. Alternatively, the reference can also be chosen to be the current conversion price
+$C^P_t$ (i.e. the one from the most recent reset), i.e. the trigger condition is
+
+\begin{equation}
+S_t < T C^P_t
+\end{equation}
+
+For cross-currency trades, $C^P_0$ and $C^P_t$ are expressed in equity currency, i.e. $C^P_0 = N_0 / (C^R_0 X_t)$ and
+$C^P_t = N_0 / (C^R_t X_t)$. Notice that we use $X_t$ to convert $C^P_0$, so that the trigger conditions can be both
+expressed with a conversion price quoted in equity or bond currency and the same trigger level $T$. The adjustment
+formula \ref{formula:convertible_bond_reset1} changes to
+
+\begin{equation}\label{formula:convertible_bond_reset1_ccy}
+C^R \rightarrow \max \left\{ C^R, \min\left( \frac{N_0}{g\cdot X_t S_t}, \frac{N_0}{f\cdot X_t C^P_0}, \frac{N_0}{X_t F} \right) \right\}
+\end{equation}
+
+and likewise the corresponding formula when using the current conversion price $C^P_t$ instead of $C^P_0$, both of which
+are expressed in equity ccy here. Notice that in particular the global floor is expressed in equity ccy.
+
+As a (single-currency) example consider the case $C^P_0 = 20$, $T = 0.9$: If the stock price falls below $90\%$ of the
+initial conversion price, i.e. below $20\cdot 0.9 = 18$, the conversion ratio is adjusted upwards. Let's assume the
+current stock price is $S_t=16$ and $g=0.8$, $f=0.7$, $F=15$. The adjustment by the gearing would result in a new
+conversion price of $0.8\cdot 16=12.8$. However, this value is floored by $0.7\cdot 20 = 14$ (the . In addition, a
+global floor at $F=15$ is defined, so that the final adjustment of the conversion price is $20 \rightarrow 15$. In other
+words the conversion ratio is adjusted from $0.05$ to $0.0667$.
+
+\underline{Dividend protection}
+
+A dividend protection schedule is a series of dates on which either dividend amounts are passed through to the investor
+as an additional payment or on which the conversion ratio is adjusted. The first date in the schedule defines the start
+of the dividend protection phase, i.e. dividends that are paid from this date on are accounted for in the conversion
+ratio adjustments or passthroughs, which take place on the second, third, ..., last date of the given schedule.
+
+Let's denote the absolute dividend amount that is paid between the last and the current dividend protection date by
+$D$. There is a threshold $H$ defined, such that the difference $D-H$ is passed through to the investor (in case $D<H$
+the investor pays the difference $H-D$ to the issuer) or $\max(D-H,0)$ is passed through to the investor (in case $D<H$
+no payment is done). The former form is called pass-through dividend protection with up-and-down compensation, while the
+latter is a pass-through dividend protection with up-only compensation. The dividend amount per share determined in this
+way is mulplied by the current conversion ratio before passed on to the investor.
+
+The variant where the conversion ratio is adjusted works as follows. If the adjustment is agreed upon on an absolute
+basis, the conversion rate is adjusted as follows
+
+\begin{equation}
+  C^R \rightarrow C^R \frac{S_t}{S_t-C}
+\end{equation}
+
+where
+
+\begin{eqnarray*}
+C=\begin{cases}
+  D-H & \text{up-and-down adjustment} \\
+  \max(D-H, 0) & \text{up-only adjustment}
+\end{cases}
+\end{eqnarray*}
+
+Notice that for cross-currency trades the threshold $H$ is expressed in equity ccy.
+
+If the adjustment is made on a relative basis on the other hand, the conversion rate will be adjusted
+
+\begin{equation}
+  C^R \rightarrow C^R ( 1 + C)
+\end{equation}
+
+where
+
+\begin{eqnarray*}
+C=\begin{cases}
+  D / S_t -H & \text{up-and-down adjustment} \\
+  \max(D / S_t -H, 0) & \text{up-only adjustment}
+\end{cases}
+\end{eqnarray*}
+
+In all cases, $S_t$ is the stock price observed on the dividend protection date. The adjustment styles used in the trade
+xml associated to these adjustments are ``CrUpDown'', ``CrUpOnly''.
+
+There is an alternative adjustment formula
+
+\begin{equation}
+  C^R \rightarrow C^R \frac{S_t - H}{S_t - D}
+\end{equation}
+
+associated to adjustment style ``CrUpDown2''. The up-only variant of this adjustment
+
+\begin{equation}
+  C^R \rightarrow C^R \max\left(1, \frac{S_t - H}{S_t - D} \right)
+\end{equation}
+
+is associated to adjustment style ``CrUpOnly2''. The latter two styles are only defined for dividend type = absolute,
+i.e. relative is not allowed.
+
+\underline{Default of the issuer, secured and unsecured exchangables}
+
+For non-exchangeables the investor has generally only a claim on the higher of the recovery value of the bond and the
+conversion value of the issuer stock, i.e.
+
+\begin{equation}
+\max( \rho N_t, C^V )
+\end{equation}
+
+where $\rho$ is the recovery value.
+
+For exchangeables, there are two variants:
+
+\begin{itemize}
+\item non-secured: the investor has a claim only on the bond recovery value $\rho N_t$, with $\rho$ the recovery rate,
+  if the bond issuer defaults. If the equity issuer defaults, the investor has still a claim on the full notional of the
+  bond.
+\item secured with pledged shares: In case of the bond issuer default, the investor has a claim on the conversion value
+  plus the recovery value on the bond notional less the conversion value (if positive), i.e.
+  $C^V + \max ( \rho (N_t - C^V), 0 )$. In case of the equity issuer default, the invstor has a claim on the full
+  notional of the bond.
+\end{itemize}
+
+\underline{Copay clause (currently not supported)}
+
+If the bond price at the $i$th coupon is below a barrier $L$ or above a barrier $H$, the $(i+1)$th coupon will be adjusted
+forward either as a percentage of $N_t$ or as a percentage of the bond price at the $i$th coupon payment date.
+
+\underline{Dividend forfeit clause (currently not supported)}
+
+Shares delivered by the issuer on conversion may be new shares, for which the investor does not receive a dividend
+payment in the current fiscal year.
+
+\underline{Variable conversion ratio (currently not supported)}
+
+The conversion ratio is a function of the stock price at the conversion date.
+
 {\bf Input}}\fi
 
 A convertible bond is set up in ORE using a {\tt ConvertibleBondData} block as shown in listing

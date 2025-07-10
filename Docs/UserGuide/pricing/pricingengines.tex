@@ -1654,19 +1654,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model Black, Engine BlackIndexCdsOptionEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}
 \end{longlisting}
 
@@ -1685,19 +1685,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>LognormalAdjustedIndexSpread</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>NumericalIntegrationEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model LognormalAdjustedIndexSpread, Engine NumericalIntegrationEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}
 \end{longlisting}
 
@@ -5248,6 +5248,10 @@ In addition to product specific settings there is also a block with global param
 \item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item AllowModelFallbacks: If set to true a missing market object during the build of a model will not cause the build
+  to fail. Instead, a fallback will be used. For example, if a volatility surface is missing during the build of the LGM
+  or CAM model, a zero volatility surface might be used as a fallback and the calculation continues. Optional, defaults
+  to false.
 \item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
   only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
   true.

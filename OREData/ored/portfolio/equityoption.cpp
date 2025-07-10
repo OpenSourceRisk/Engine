@@ -162,8 +162,9 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                             -bsInd, ccy, engineFactory, configuration);
+                                             -bsInd, ccy, discountCurve, engineFactory, configuration);
         maturity_ = std::max(maturity_, latestPremiumDate);
         if (maturity_ == latestPremiumDate)
             maturityType_ = "Latest Premium Date";

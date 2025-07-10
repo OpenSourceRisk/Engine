@@ -44,7 +44,9 @@ public:
     ScriptedInstrumentPricingEngineCG(
         const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
         const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
-        const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
+        const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
+        const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+        const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
         const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
         const bool includePastCashflows = false, const bool useCachedSensis = false,
@@ -52,12 +54,10 @@ public:
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
-    std::string npvName() const override { return npv_; }
-    std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
-    bool hasVega() const override { return true; }
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                               std::vector<TradeExposure>* tradeExposure = nullptr,
+                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
 
 private:
     void calculate() const override;
@@ -108,6 +108,10 @@ private:
     std::vector<std::pair<std::string, std::string>> additionalResults_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
     std::set<std::string> minimalModelCcys_;
+    std::vector<std::string> amcCgComponents_;
+    std::string amcCgTargetValue_;
+    std::string amcCgTargetDerivative_;
+
     ASTNodePtr ast_;
     QuantLib::ext::shared_ptr<Context> context_;
     Model::Params params_;

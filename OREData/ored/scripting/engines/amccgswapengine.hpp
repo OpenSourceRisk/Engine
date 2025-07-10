@@ -36,12 +36,10 @@ public:
     AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                     const std::vector<Date>& simulationDates)
         : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
+          AmcCgBaseEngine(modelCg, simulationDates, false), ccy_(ccy) {
         registerWith(modelCg);
     }
 
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const override;
 
 private:

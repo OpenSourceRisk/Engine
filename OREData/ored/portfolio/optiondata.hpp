@@ -48,17 +48,19 @@ public:
     OptionData() : payoffAtExpiry_(true), automaticExercise_(false), midCouponExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
-               string settlement = "Cash", string settlementMethod = "", const PremiumData& premiumData = {},
+               string settlement = "Cash", string settlementMethod = std::string(), const PremiumData& premiumData = {},
                vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>(),
-               string noticePeriod = "", string noticeCalendar = "", string noticeConvention = "",
+               string noticePeriod = std::string(), string noticeCalendar = std::string(), string noticeConvention = std::string(),
                const vector<string>& exerciseFeeDates = vector<string>(),
-               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
-               string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
-               string payoffType = "", string payoffType2 = "",
+               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = std::string(),
+               string exerciseFeeSettlementCalendar = std::string(), string exerciseFeeSettlementConvention = std::string(),
+               string payoffType = std::string(), string payoffType2 = std::string(),
                const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
                const boost::optional<OptionPaymentData>& paymentData = boost::none,
-               const bool midCouponExercise = false)
+               const bool midCouponExercise = false, const std::string& cashSettlementCurrency = std::string(),
+               const std::string& cashSettlementFxIndex = std::string(),
+               const std::string& cashSettlementFixingDate = std::string())
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), payoffType2_(payoffType2), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -68,7 +70,8 @@ public:
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
           automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
-          midCouponExercise_(midCouponExercise) {}
+          midCouponExercise_(midCouponExercise), cashSettlementCurrency_(cashSettlementCurrency), 
+          cashSettlementFxIndex_(cashSettlementFxIndex), cashSettlementFixingDate_(cashSettlementFixingDate) {}
 
     //! \name Inspectors
     //@{
@@ -97,6 +100,9 @@ public:
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
     const bool midCouponExercise() const { return midCouponExercise_; }
+    const string& cashSettlementCurrency() const { return cashSettlementCurrency_; }
+    const string& cashSettlementFxIndex() const { return cashSettlementFxIndex_; }
+    const string& cashSettlementFixingDate() const { return cashSettlementFixingDate_; }
     //@}
 
     //! \name Setters
@@ -111,6 +117,15 @@ public:
     void setPayoffAtExpiry(const bool payoffAtExpiry) { payoffAtExpiry_ = payoffAtExpiry; }
     void setNoticePeriod(const std::string& noticePeriod) { noticePeriod_ = noticePeriod; }
     void setSettlement(const std::string& settlement) { settlement_ = settlement; }
+    void setCashSettlementCurrency(const std::string& cashSettlementCurrency) {
+        cashSettlementCurrency_ = cashSettlementCurrency;
+    }
+    void setCashSettlementFxIndex(const std::string& cashSettlementFxIndex) {
+        cashSettlementFxIndex_ = cashSettlementFxIndex;
+    }
+    void setCashSettlementFixingDate(const std::string& cashSettlementFixingDate) {
+        cashSettlementFixingDate_ = cashSettlementFixingDate;
+    }
     //@}
 
     //! \name Serialisation
@@ -148,6 +163,9 @@ private:
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
     bool midCouponExercise_;
+    string cashSettlementCurrency_;
+    string cashSettlementFxIndex_; 
+    string cashSettlementFixingDate_; 
 };
 
 // Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
