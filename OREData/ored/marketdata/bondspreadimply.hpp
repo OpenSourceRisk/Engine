@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/marketdata/bondspreadimplymarket.hpp>
 
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -41,27 +40,21 @@ public:
     static std::map<std::string, QuantLib::ext::shared_ptr<Security>>
     requiredSecurities(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
                        const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
-                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                        const bool continueOnError = false, const std::string& excludeRegex = std::string());
 
     /*! Imply bond spreads and add them to the loader. */
     static QuantLib::ext::shared_ptr<Loader>
     implyBondSpreads(const std::map<std::string, QuantLib::ext::shared_ptr<Security>>& securities,
                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                     const QuantLib::ext::shared_ptr<Market>& market,
-                     const QuantLib::ext::shared_ptr<EngineData>& engineData, const std::string& configuration,
-                     const IborFallbackConfig& iborFallbackConfig);
-
-    static void addPriceToRefData(const std::string& securityId, const Handle<Quote>& marketQuote,
-                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+                     const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<EngineData>& engineData,
+                     const std::string& configuration, const IborFallbackConfig& iborFallbackConfig);
 
 private:
     //! helper function that computes a single implied spread for a bond
-    static Real implySpread(const std::string& securityId, const Handle<Quote>& marketQuote,
+    static Real implySpread(const std::string& securityId, const Real price,
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::ext::shared_ptr<BondSpreadImplyMarket>& market,
-                            const std::string& configuration);
+                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
 };
 
 } // namespace data
