@@ -32,15 +32,15 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& recoveryRate,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows,
-                                                       const bool includePastCashflows)
+DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
+    const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread, Period timestepPeriod,
+    boost::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
+    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
-      includePastCashflows_(includePastCashflows) {
+      includePastCashflows_(includePastCashflows), incomeCurve_(incomeCurve),
+      conditionalOnSurvival_(conditionalOnSurvival) {
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
@@ -53,9 +53,12 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
+                                                       boost::optional<bool> includeSettlementDateFlows,
+                                                       const Handle<YieldTermStructure>& incomeCurve = {},
+                                                       const bool conditionalOnSurvival = true)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
+      includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
+      conditionalOnSurvival_(conditionalOnSurvival) {
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
@@ -94,6 +97,12 @@ void DiscountingRiskyBondEngine::calculate() const {
         results_.additionalResults["recoveryRate"] = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
     }
 }
+
+Real DiscountinRiskyBondEngine::forwardNpv(const Date& forwardDate) const {
+    return calculateNpv(forwardDate, forwardDate, arguments_.cashflows, includeSettlementDateFlows_, incomeCurve_,
+                        conditionalOnSurvival_);
+}
+
 
 DiscountingRiskyBondEngine::BondNPVCalculationResults
 DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,

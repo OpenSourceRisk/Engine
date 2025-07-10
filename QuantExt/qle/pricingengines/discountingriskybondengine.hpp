@@ -21,14 +21,16 @@
     \ingroup engines
 */
 
-#ifndef quantext_discounting_riskybond_engine_hpp
-#define quantext_discounting_riskybond_engine_hpp
+#pragma once
+
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 #include <ql/instruments/bond.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
-#include <qle/instruments/cashflowresults.hpp>
+
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -48,7 +50,7 @@ using namespace QuantLib;
     \ingroup engines
 
 */
-class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
+class DiscountingRiskyBondEngine : public QuantLib::Bond::engine, public QuantExt::ForwardEnabledBondEngine {
 public:
 
     struct BondNPVCalculationResults {
@@ -64,13 +66,20 @@ public:
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
-                               const bool includePastCashflows = false);
+                               const bool includePastCashflows = false,
+                               const Handle<YieldTermStructure>& incomeCurve = {},
+                               const bool conditionalOnSurvival = true);
 
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
+                               const Handle<YieldTermStructure>& incomeCurve = {},
+                               const bool conditionalOnSurvival = true);
 
     void calculate() const override;
+
+    //! ForwardEnabledBondEngine interface
+    Real forwardNpv(const Date& forwardDate) const override;
 
     /*! Calculate the npv, compoundFactorSettlement, cashflowsBeforeSettlementValue and the additional CashflowResults
         as of the npvDate including cashflows eligible w.r.t. the given settlement date
@@ -80,8 +89,6 @@ public:
           built in the engine as discount curve + security Spread is used. */
     BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
                                            boost::optional<bool> includeSettlementDateFlows = boost::none,
-                                           const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-                                           const bool conditionalOnSurvival = true,
                                            const bool additionalResults = true) const;
 
     // inspectors
@@ -98,7 +105,8 @@ protected:
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
     bool includePastCashflows_;
+    Handle<YieldTermStructure>& incomeCurve_,
+    bool conditionalOnSurvival_);
 };
-} // namespace QuantExt
 
-#endif
+} // namespace QuantExt
