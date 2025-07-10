@@ -330,6 +330,15 @@
       <xs:element type="bool" name="AutomaticExercise" minOccurs="0"/>
       <xs:element type="optionExerciseData" name="ExerciseData" minOccurs="0"/>
       <xs:element type="optionPaymentData" name="PaymentData" minOccurs="0"/>
+      <xs:element name="SettlementData" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="currencyCode" name="PayCurrency"/>
+            <xs:element type="xs:string" name="FXIndex"/>
+            <xs:element type="xs:string" name="FixingDate" minOccurs="0" maxOccurs="1"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 
