@@ -474,8 +474,13 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     bool strkWc = false;
     if (vssc.interpolationMethod() == "BiLinear" || vssc.interpolationMethod() == "BiCubic" ||
         vssc.interpolationMethod() == "CubicThenLinear") {
+        QL_REQUIRE(vssc.expiries().size() == 1 && vssc.expiries()[0] == "*",
+                   "When InterpolationMethod is given, only wild card expiry is allowed.");
+        QL_REQUIRE(vssc.strikes().size() == 1 && vssc.strikes()[0] == "*",
+                   "When InterpolationMethod is given, only wild card strike is allowed.");
         expWc = true;
         strkWc = true;
+        DLOG("InterpolationMethod set to " << vssc.interpolationMethod() << ", TimeInterpolation and StrikeInterpolation are ignored.")
     }
     else {
         if (find(vssc.expiries().begin(), vssc.expiries().end(), "*") != vssc.expiries().end()) {
@@ -676,21 +681,17 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
-        std::cout << "vssc.interpolationMethod() == ";
         if (vssc.interpolationMethod() == "BiCubic") {
-            std::cout << "BiCubic" << std::endl;
             volatility_ =
                 QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                     timeExtrapolation);
         } else if (vssc.interpolationMethod() == "CubicThenLinear") {
-            std::cout << "CubicThenLinear" << std::endl;
             volatility_ =
                 QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                     timeExtrapolation);
         } else {
-            std::cout << "BiLinear" << std::endl;
             volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
                 asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                 timeExtrapolation);
