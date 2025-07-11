@@ -297,12 +297,12 @@ recastScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
 
         auto c0 = oldCoordinates.find(k);
         auto c1 = newCoordinates.find(k);
-        QL_REQUIRE(c0 != scenario->coordinates().end(), "recastScenario(): no coordinates for "
-                                                            << k.first << "/" << k.second
-                                                            << " found in old coordinates. This is unexpected.");
-        QL_REQUIRE(c1 != scenario->coordinates().end(), "recastScenario(): no coordinates for "
-                                                            << k.first << "/" << k.second
-                                                            << " found in new coordinates. This is unexpected.");
+        QL_REQUIRE(c0 != oldCoordinates.end(), "recastScenario(): no coordinates for "
+                                                   << k.first << "/" << k.second
+                                                   << " found in old coordinates. This is unexpected.");
+        QL_REQUIRE(c1 != newCoordinates.end(), "recastScenario(): no coordinates for "
+                                                   << k.first << "/" << k.second
+                                                   << " found in new coordinates. This is unexpected.");
         QL_REQUIRE(c0->second.size() == c1->second.size(), "recastScenario(): number of dimensions in old ("
                                                                << c0->second.size() << ") and new ("
                                                                << c1->second.size() << ") coordinates for " << k.first
