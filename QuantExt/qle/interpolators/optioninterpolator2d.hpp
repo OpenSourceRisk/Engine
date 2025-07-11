@@ -313,6 +313,11 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
         if (expiries_.size() == 1) {
             return getValueForStrike(strike, strikes_[0], values_[0], interpolations_[0]);
         }
+        vector<Real> tmpVars(times_.size());
+        for (Size i = 0; i < times_.size(); ++i) {
+            tmpVars[i] = getValueForStrike(strike, strikes_[i], values_[i], interpolations_[i]);
+        }
+        /*
         // ind1 and ind2 two expiries on either side of requested time.
         Size ind1, ind2;
         if (t <= times_.front()) {
@@ -337,6 +342,8 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
         tmpVars[0] = getValueForStrike(strike, strikes_[ind1], values_[ind1], interpolations_[ind1]);
         tmpVars[1] = getValueForStrike(strike, strikes_[ind2], values_[ind2], interpolations_[ind2]);
         Interpolation interp = interpolatorExpiry_.interpolate(xAxis.begin(), xAxis.end(), tmpVars.begin());
+        */
+        Interpolation interp = interpolatorExpiry_.interpolate(times_.begin(), times_.end(), tmpVars.begin());
         // linear extrapolation of expiries in case t > time_.back() above.
         interp.enableExtrapolation(true);
         return interp(t);
