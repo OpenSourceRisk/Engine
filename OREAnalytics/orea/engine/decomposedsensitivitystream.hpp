@@ -21,13 +21,13 @@
  */
 
 #pragma once
+#include <fstream>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-
-#include <fstream>
 #include <set>
 #include <string>
 
