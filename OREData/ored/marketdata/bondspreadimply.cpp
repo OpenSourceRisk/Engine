@@ -171,8 +171,8 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
 
     if (expiry != Date()) {
         auto f = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardEnabledBondEngine>(b.bond->pricingEngine());
-        QL_REQUIRE(f != nullptr, "BondSpreadImply: forward bond spread imply not supported by pricing engine.");
-        return f->forwardNpv(expiry) - b.bond->accruedAmount(expiry) / 100.0;
+        QL_REQUIRE(f != nullptr, "BondSpreadImply::implySpread(): pricing engine does not support forward pricing");
+        return f->forwardCleanPrice(expiry, true) / 100.0;
     } else // this is the standaed bond case
         return b.bond->cleanPrice() / 100.0;
 }

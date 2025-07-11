@@ -355,11 +355,37 @@ void BondFutureUtils::checkDates(const QuantLib::Date& expiry, const QuantLib::D
                                                << io::iso_date(settlementDate));
 }
 
-static double BondFutureUtils::conversionFactor(double coupon, const FutureType& type, const Date& bondMaturity,
-                                                const Date& futureExpiry) {
+double BondFutureUtils::conversionFactor(const BondFutureUtils::FutureType& type, const Date& futureExpiry,
+                                         const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {
 
     QL_REQUIRE(type == LongTenorUS || type == ShortTenorUS,
                "BondFutureUtils::conversionFactor(): type " << static_cast<int>(type) << " not supported.");
+
+    // get fixed rate
+    double coupon;
+    if (bond.bondData.coupons().size() == 1 &&
+        bond.bondData.coupons().front().concreteLegData()->legType() == LegType::Fixed) {
+        auto fixedLegData = ext::dynamic_pointer_cast<FixedLegData>(bond.bondData.coupons().front().concreteLegData());
+        QL_REQUIRE(fixedLegData, "expecting FixedLegData object");
+        if (fixedLegData->rates().size() > 1)
+            ALOG("calc conversionFactor: there is a vector of rates, took the first. sec " << sec);
+        coupon = fixedLegData->rates().front();
+    } else {
+        QL_FAIL("expected bond " << sec << " with one leg " << bond.bondData.coupons().size() << " of LegType::Fixed "
+                                 << bond.bondData.coupons().front().concreteLegData()->legType());
+    }
+    Date endDate = Date();
+    try {
+        endDate = parseDate(bond.bondData.coupons().data()->schedule().rules().data()->endDate());
+    } catch (const std::exception& e) {
+        endDate = bond.trade->maturity();
+        ALOG("endDate for conversionfactor is set to maturity, given the calendar adjustment, this can "
+             "lead to inaccuracy.")
+    }
+    conversionFactor = conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), endDate, expiry);
+    DLOG("calculated conversionFactor " << conversionFactor << " secId " << sec << " cpn " << coupon
+                                        << " deliverableGrade " << deliverableGrade_ << " secMat "
+                                        << io::iso_date(endDate) << " futureExpiry " << io::iso_date(expiry));
 
     // inspired by:
     // CME GROUP, Calculating U.S. Treasury Futures Conversion Factors
@@ -413,68 +439,42 @@ static double BondFutureUtils::conversionFactor(double coupon, const FutureType&
 }
 
 static std::pair<std::string, double>
-BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
-                                 const std::string& futureContract) {
+BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const std::string& futureContract,
+                                 const bool noPricing) {
 
     DLOG("BondFuture::identifyCtdBond called.");
-    // get settlement price for future
-    double settlementPriceFuture = getSettlementPriceFuture(engineFactory);
 
-    double lowestValue = QL_MAX_REAL; // arbitray high number
-    string ctdSec = string();
-    double ctdCf = Real();
+    double lowestValue = QL_MAX_REAL;
+    string ctdSec;
+    double ctdCf;
 
-    for (const auto& sec : secList_) {
-        // create bond instrument
-        auto bond = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), sec);
-        // get value at expiry
-        QuantLib::ext::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
-            QuantLib::ext::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(bond.bond->pricingEngine());
-        QL_REQUIRE(drbe != nullptr, "could not find DiscountingRiskyBondEngine, unexpected");
-        double cleanBondPriceAtExpiry =
-            drbe->calculateNpv(expiry, expiry, bond.bond->cashflows()).npv - bond.bond->accruedAmount(expiry) / 100.0;
+    QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", futureContract),
+               "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << futureContract);
 
-        // get conversion factor
-        double conversionFactor = Real();
+    auto refData = engineFactory->referenceData()->getData("BondFuture", futureContract);
+
+    for (const auto& sec : ref->deliveryBasket()) {
+
+        auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
+                                               StructuredSecurityId(sec, futureContract));
+
+        auto f = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardEnabledBondEngine>(b.bond->pricingEngine());
+        QL_REQUIRE(f != nullptr, "BondFutureUtils::identifyCtdBond(): pricing engine does not support forward pricing");
+
+        Date expiry = deduceDates(refData).first;
+        double cleanBondPriceAtExpiry = noPricing ? 100.0 : f->forwardCleanPrice(expiry);
+
+        double conversionFactor;
         try {
             conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
         } catch (const std::exception& e) {
-            DLOG("no conversion factor provided from market, start calculation");
-            if (parseCurrency(currency_) == USDCurrency()) {
-                // get fixed rate
-                double coupon = Real();
-                if (bond.bondData.coupons().size() == 1 &&
-                    bond.bondData.coupons().front().concreteLegData()->legType() == LegType::Fixed) {
-                    auto fixedLegData =
-                        ext::dynamic_pointer_cast<FixedLegData>(bond.bondData.coupons().front().concreteLegData());
-                    QL_REQUIRE(fixedLegData, "expecting FixedLegData object");
-                    if (fixedLegData->rates().size() > 1)
-                        ALOG("calc conversionFactor: there is a vector of rates, took the first. sec " << sec);
-                    coupon = fixedLegData->rates().front();
-                } else {
-                    QL_FAIL("expected bond " << sec << " with one leg " << bond.bondData.coupons().size()
-                                             << " of LegType::Fixed "
-                                             << bond.bondData.coupons().front().concreteLegData()->legType());
-                }
-                Date endDate = Date();
-                try {
-                    endDate = parseDate(bond.bondData.coupons().data()->schedule().rules().data()->endDate());
-                } catch (const std::exception& e) {
-                    endDate = bond.trade->maturity();
-                    ALOG("endDate for conversionfactor is set to maturity, given the calendar adjustment, this can "
-                         "lead to inaccuracy.")
-                }
-                conversionFactor = conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), endDate, expiry);
-                DLOG("calculated conversionFactor " << conversionFactor << " secId " << sec << " cpn " << coupon
-                                                    << " deliverableGrade " << deliverableGrade_ << " secMat "
-                                                    << io::iso_date(endDate) << " futureExpiry "
-                                                    << io::iso_date(expiry));
-            } else {
-                QL_FAIL("Conversion factor calculation for other currency than USD not supported ");
-            }
+            DLOG("no conversion factor provided from market, calculate internally");
+            conversionFactor =
+                BondFutureUtils::conversionFactor(BondFutureUtils::getBondFutureType(refData->deliverableGrade), expiry,
+                                                  getFixedRate(b.bondData.coupons()), b.bondData.maturityDate());
         }
-        // do the test, inspired by
-        //  HULL: OPTIONS, FUTURES, AND OTHER DERIVATIVES, 7th Edition, page 134
+
+        // see e.g. Hull, Options, Futures and other derivatives, 7th Edition, page 134
         double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
         DLOG("BondFuture::identifyCtdBond underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry
                                                        << " conversionFactor " << conversionFactor << " Value "
@@ -485,8 +485,10 @@ BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFac
             ctdCf = conversionFactor;
         }
     }
-    QL_REQUIRE(!ctdSec.empty(), "No CTD bond found.");
-    DLOG("BondFuture::identifyCtdBond -- selected CTD for " << id() << " is " << ctdSec);
+
+    QL_REQUIRE(!ctdSec.empty(), "BondFutureUtils::identifyCtdBond(): no ctd bond found.");
+
+    DLOG("BondFuture::identifyCtdBond -- selected ctd bond for " << futureContract << " is " << ctdSec);
 
     return make_pair(ctdSec, ctdCf);
 }

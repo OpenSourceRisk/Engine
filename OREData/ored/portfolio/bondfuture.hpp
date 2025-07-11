@@ -29,14 +29,13 @@
 namespace ore {
 namespace data {
 
-
 class BondFuture : public Trade {
 public:
     //! Default constructor
     BondFuture() : Trade("BondFuture") {}
 
     //! Constructor to set up a bondfuture from reference data
-    BondFuture(const string& contractName, Real contractNotional, const string& longShort = "Long",
+    BondFuture(const string& contractName, Real contractNotional, const std::string longShort = "Long",
                Envelope env = Envelope())
         : Trade("BondFuture", env), contractName_(contractName), contractNotional_(contractNotional),
           longShort_(longShort) {}
@@ -46,50 +45,13 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
-    //! Add underlying Bond names
-    // std::map<AssetClass, std::set<std::string>>
-    // underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const
-    // override;
-
-    //! inspectors
-    const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
-    const string& ctdId() const { return ctdId_; }
-    const string& currency() const { return currency_; }
-
-    void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
-
 protected:
     void checkData();
 
 private:
-    // mandatory information
     std::string contractName_;
     double contractNotional_;
     std::string longShort_;
-
-    // shall be in reference data
-    std::string currency_;
-    std::vector<std::string> secList_; // list of DeliveryBasket securities
-    std::string deliverableGrade_;     // futureType differentiating the underlying -> USD conversion factor derivation
-    std::string lastTrading_;          // expiry
-    std::string lastDelivery_;         // settlement date
-
-    // flags with fallbacks
-    std::string fairPrice_; // indicates whether strike = 0 (false) or settlement price (true)
-    bool fairPriceBool_;
-    std::string settlement_;      // Cash or Physical
-    std::string settlementDirty_; // true (dirty) or false (clean)
-
-    // bond future date conventions to derive lastTrading and lastDelivery
-    std::string contractMonth_;
-    std::string rootDate_;        // first, end, nth weekday (e.g. 'Monday,3') taken
-    std::string expiryBasis_;     // ROOT, SETTLEMENT taken
-    std::string settlementBasis_; // ROOT, EXPIRY taken
-    std::string expiryLag_;       // periods taken
-    std::string settlementLag_;   // periods taken
-
-    BondBuilder::Result ctdUnderlying_;
-    std::string ctdId_;
 };
 
 } // namespace data
