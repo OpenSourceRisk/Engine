@@ -29,14 +29,6 @@
 namespace ore {
 namespace data {
 
-enum FutureType { ShortTenor, LongTenor };
-
-void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
-                                         string& fairPrice, string& settlement, string& settlementDirty,
-                                         string& rootDate, string& expiryBasis, string& settlementBasis,
-                                         string& expiryLag, string& settlementLag, string& lastTrading,
-                                         string& lastDelivery, vector<string>& secList,
-                                         const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData);
 
 class BondFuture : public Trade {
 public:
@@ -63,26 +55,11 @@ public:
     const BondBuilder::Result& ctdUnderlying() const { return ctdUnderlying_; }
     const string& ctdId() const { return ctdId_; }
     const string& currency() const { return currency_; }
-    const bool fairPrice() const { return fairPriceBool_; }
 
     void populateFromBondFutureReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 
 protected:
     void checkData();
-
-    void deduceDates(QuantLib::Date& expiry, QuantLib::Date& settlement);
-
-    FutureType selectTypeUS(const std::string& value);
-
-    void checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement);
-
-    std::pair<std::string, double> identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
-                                                   const Date& expiry);
-
-    const double getSettlementPriceFuture(const ext::shared_ptr<EngineFactory>& engineFactory) const;
-
-    double conversionfactor_usd(double coupon, const FutureType& type, const Date& bondMaturity,
-                                const Date& futureExpiry);
 
 private:
     // mandatory information
@@ -113,12 +90,6 @@ private:
 
     BondBuilder::Result ctdUnderlying_;
     std::string ctdId_;
-};
-
-struct BondFutureBuilder : public BondBuilder {
-    virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const std::string& contractName) const override;
 };
 
 } // namespace data
