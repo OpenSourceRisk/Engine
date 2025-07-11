@@ -87,17 +87,6 @@ protected:
 
     QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
 };
-
-// inline definitions
-
-//inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) override {
-//    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 =
-//        dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
-//    if (v1 != 0)
-//        v1->visit(*this);
-//    else
-//        QuantLib::BlackVarianceTermStructure::accept(v);
-//}
 } // namespace QuantExt
 
 #endif
