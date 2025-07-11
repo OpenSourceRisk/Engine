@@ -62,6 +62,7 @@
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="interpolationMethodType" name="TimeInterpolation"/>
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
+	  <xs:element type="interpolationMethodType2" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
@@ -807,6 +808,15 @@
       <xs:enumeration value="BackwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="commodityInterpolationMethodType">
+    <xs:restriction base="interpolationMethodType2">
+      <xs:enumeration value="BiLinear"/>
+      <xs:enumeration value="CubicThenLinear"/>
+      <xs:enumeration value="BiCubic"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 
   <xs:complexType name="commodityBasisConfig">
     <xs:all>
