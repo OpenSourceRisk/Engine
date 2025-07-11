@@ -1389,6 +1389,11 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
         QuantLib::setCouponPricer(tmpLeg, couponPricer);
         if (productModelEngines)
             productModelEngines->insert(std::make_tuple(builder->tradeTypes(), builder->model(), builder->engine()));
+    } else {
+        setCouponPricer(tmpLeg,
+                        QuantLib::ext::make_shared<BlackIborCouponPricer>(
+                            Handle<OptionletVolatilityStructure>(), BlackIborCouponPricer::TimingAdjustment::Black76,
+                            Handle<Quote>(ext::make_shared<SimpleQuote>(1.0))));
     }
 
     // build naked option leg if required
