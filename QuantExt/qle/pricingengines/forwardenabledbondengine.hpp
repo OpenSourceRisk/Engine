@@ -24,7 +24,8 @@
 namespace QuantExt {
 
 struct ForwardEnabledBondEngine {
-    QuantLib::Real forwardNpv(const QuantLib::Date& forwardDate) const = 0;
+    QuantLib::Real forwardCleanPrice(const QuantLib::Date& forwardDate) const = 0;
+    QuantLib::Real forwardDirtyPrice(const QuantLib::Date& forwardDate) const = 0;
 };
 
 } // namespace QuantExt
