@@ -483,9 +483,6 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
         DLOG("Have strike wildcard pattern " << vssc.strikes()[0]);
     }
-    std::cout << "void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityConfig& vc, const "
-                 "VolatilityStrikeSurfaceConfig& vssc, const Loader& loader)"
-              << std::endl;
 
     // If we do not have a strike wild card, we expect a list of absolute strike values
     vector<Real> configuredStrikes;
@@ -672,18 +669,13 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
-        std::cout << "vssc.strikeInterpolation() = "
-                  << vssc.strikeInterpolation() << std::endl;
-        std::cout << "vssc.timeInterpolation() = " << vssc.timeInterpolation() << std::endl;
         if (vssc.strikeInterpolation() == "Cubic") {
             if (vssc.timeInterpolation() == "Cubic") {
-                std::cout << "CubicSpline, CubicSpline" << std::endl;
                 volatility_ = QuantLib::ext::make_shared<
                     BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                     timeExtrapolation);
             } else if (vssc.timeInterpolation() == "Linear") {
-                std::cout << "CubicSpline, Linear" << std::endl;
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
@@ -695,13 +687,11 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                                << vssc.timeInterpolation());
         } else if (vssc.strikeInterpolation() == "Linear") {
             if (vssc.timeInterpolation() == "Cubic") {
-                std::cout << "Linear, CubicSpline" << std::endl;
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                         timeExtrapolation);
             } else if (vssc.timeInterpolation() == "Linear") {
-                std::cout << "Linear, Linear" << std::endl;
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
