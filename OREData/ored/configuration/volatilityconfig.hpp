@@ -214,7 +214,7 @@ public:
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
         std::string calendarStr = std::string(), QuantLib::Natural priority = 0, 
-        bool timeExtrapolationInVariance = true, const std::string& interpolationMethod = "");
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -224,7 +224,6 @@ public:
     const std::string& timeExtrapolation() const;
     bool timeExtrapolationVariance() const;
     const std::string& strikeExtrapolation() const;
-    const std::string& interpolationMethod() const;
     //@}
 
     /*! Return a vector of pairs of expiry and strike. The first element in the pair is the expiry and the second
@@ -270,7 +269,7 @@ public:
                                   MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
                                   QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
                                   std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-                                  bool timeExtrapolationInVariance = true, const std::string& interpolationMethod = "");
+                                  bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{

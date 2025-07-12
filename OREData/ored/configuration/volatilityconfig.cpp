@@ -215,10 +215,10 @@ VolatilitySurfaceConfig::VolatilitySurfaceConfig(MarketDatum::QuoteType quoteTyp
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, string calendarStr, Natural priority, bool timeExtrapolationInVariance, const string& interpolationMethod)
+    Exercise::Type exerciseType, string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation), extrapolation_(extrapolation), timeExtrapolation_(timeExtrapolation),
-      strikeExtrapolation_(strikeExtrapolation), timeExtrapolationInVariance_(timeExtrapolationInVariance), interpolationMethod_(interpolationMethod) {}
+      strikeExtrapolation_(strikeExtrapolation), timeExtrapolationInVariance_(timeExtrapolationInVariance) {}
 
 const string& VolatilitySurfaceConfig::timeInterpolation() const { return timeInterpolation_; }
 
@@ -232,8 +232,6 @@ const string& VolatilitySurfaceConfig::strikeExtrapolation() const { return stri
 
 bool VolatilitySurfaceConfig::timeExtrapolationVariance() const { return timeExtrapolationInVariance_;  }
 
-const string& VolatilitySurfaceConfig::interpolationMethod() const { return interpolationMethod_; }
-
 void VolatilitySurfaceConfig::fromNode(XMLNode* node) {
     timeInterpolation_ = XMLUtils::getChildValue(node, "TimeInterpolation", true);
     strikeInterpolation_ = XMLUtils::getChildValue(node, "StrikeInterpolation", true);
@@ -241,7 +239,6 @@ void VolatilitySurfaceConfig::fromNode(XMLNode* node) {
     timeExtrapolation_ = XMLUtils::getChildValue(node, "TimeExtrapolation", true);
     strikeExtrapolation_ = XMLUtils::getChildValue(node, "StrikeExtrapolation", true);
     timeExtrapolationInVariance_ = parseBool(XMLUtils::getChildValue(node, "TimeExtrapolationVariance", false, "true"));
-    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false, "");
 }
 
 void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
@@ -251,7 +248,6 @@ void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
     XMLUtils::addChild(doc, node, "TimeExtrapolation", timeExtrapolation_);
     XMLUtils::addChild(doc, node, "StrikeExtrapolation", strikeExtrapolation_);
     XMLUtils::addChild(doc, node, "TimeExtrapolationVariance", timeExtrapolationInVariance_);
-    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
 }
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType,
@@ -262,10 +258,10 @@ VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
     const vector<string>& strikes, const vector<string>& expiries, const string& timeInterpolation,
     const string& strikeInterpolation, bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    string calendarStr, Natural priority, bool timeExtrapolationInVariance, const string& interpolationMethod)
+    string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
                               strikeExtrapolation, quoteType, exerciseType, calendarStr, priority, 
-                              timeExtrapolationInVariance, interpolationMethod),
+                              timeExtrapolationInVariance),
       strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }

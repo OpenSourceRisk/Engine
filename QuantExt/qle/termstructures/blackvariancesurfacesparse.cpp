@@ -77,6 +77,7 @@ QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation
 };
 
 template class BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>;
+template class BlackVarianceSurfaceSparse<QuantLib::Linear, CubicSpline>;
 template class BlackVarianceSurfaceSparse<CubicSpline, QuantLib::Linear>;
 template class BlackVarianceSurfaceSparse<CubicSpline, CubicSpline>;
 } // namespace QuantExt
