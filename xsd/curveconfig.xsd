@@ -60,9 +60,8 @@
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
       <xs:element type="xs:string" name="Strikes"/>
       <xs:element type="xs:string" name="Expiries"/>
-      <xs:element type="interpolationMethodType" name="TimeInterpolation" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="interpolationMethodType" name="StrikeInterpolation" minOccurs="0" maxOccurs="1"/>
-	  <xs:element type="commodityInterpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="interpolationMethodType" name="TimeInterpolation"/>
+      <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="bool" name="TimeExtrapolationVariance" minOccurs="0" maxOccurs="1"/>
@@ -809,15 +808,6 @@
     </xs:restriction>
   </xs:simpleType>
   
-  <xs:simpleType name="commodityInterpolationMethodType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="BiLinear"/>
-      <xs:enumeration value="CubicThenLinear"/>
-      <xs:enumeration value="BiCubic"/>
-    </xs:restriction>
-  </xs:simpleType>
-  
-
   <xs:complexType name="commodityBasisConfig">
     <xs:all>
       <xs:element type="xs:string" name="BasePriceCurve"/>
