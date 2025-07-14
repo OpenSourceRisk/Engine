@@ -491,7 +491,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
         for (Size i = 0; i < on->fixingDates().size(); ++i) {
-            auto t = time(on->valueDates()[i]);
+            auto t = time(on->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -512,7 +512,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(on->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(on->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -582,8 +582,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < cfon->underlying()->valueDates().size(); ++i) {
-            auto t = time(cfon->underlying()->valueDates()[i]);
+        for (Size i = 0; i < cfon->underlying()->fixingDates().size(); ++i) {
+            auto t = time(cfon->underlying()->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -604,7 +604,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(cfon->underlying()->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(cfon->underlying()->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -675,8 +675,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < av->valueDates().size(); ++i) {
-            auto t = time(av->valueDates()[i]);
+        for (Size i = 0; i < av->fixingDates().size(); ++i) {
+            auto t = time(av->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -697,7 +697,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(av->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(av->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -767,8 +767,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < cfav->underlying()->valueDates().size(); ++i) {
-            auto t = time(cfav->underlying()->valueDates()[i]);
+        for (Size i = 0; i < cfav->underlying()->fixingDates().size(); ++i) {
+            auto t = time(cfav->underlying()->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -789,7 +789,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(cfav->underlying()->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(cfav->underlying()->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
