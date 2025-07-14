@@ -73,6 +73,7 @@ void PaymentDiscountingEngine::calculate() const {
                               : arguments_.fxIndex->fixingDate(arguments_.cashflow->date());
         auto fxRate = arguments_.fxIndex->fixing(fixingDate);
         NPV *= fxRate;
+        results_.additionalResults["premiumFxRateDate"] = fixingDate;
         results_.additionalResults["premiumFxRate"] = fxRate;
     } 
     

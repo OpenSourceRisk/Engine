@@ -164,8 +164,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
         double fxRate = 1.0;
+        Date fixingDate = Date();
         if (arguments_.fxIndex != nullptr) {
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+            fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
                                   ? *arguments_.cashSettlementFxFixingDate
                                   : arguments_.fxIndex->fixingDate(expiryDate);
             fxRate = arguments_.fxIndex->fixing(fixingDate, false);
@@ -196,6 +197,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         cfResults.back().type = "ExpectedFlow";
         results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
+        results_.additionalResults["settlementFxFwdDate"] = fixingDate;
         results_.additionalResults["settlementFxFwd"] = fxRate;
     }
 
