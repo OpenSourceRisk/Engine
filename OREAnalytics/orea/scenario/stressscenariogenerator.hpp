@@ -75,7 +75,8 @@ public:
                             const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                             const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
                             const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
-                            const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
+                            const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr,
+                            boost::optional<bool> useSpreadedTermStructuresOverride = boost::none);
     //! Default destructor
     ~StressScenarioGenerator() {}
 
@@ -106,6 +107,7 @@ private:
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
+    bool useSpreadedTermStructures_ = true;
 };
 } // namespace analytics
 } // namespace ore

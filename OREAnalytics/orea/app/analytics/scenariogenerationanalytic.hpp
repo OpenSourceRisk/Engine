@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/scenariostatisticsanalytic.hpp
-    \brief ORE Scenario Statistics Analytics
+/*! \file orea/app/analytics/scenariogeneratorsanalytic.hpp
+    \brief ORE Scenario Generator Analytics
 */
 
 #pragma once
@@ -27,37 +27,54 @@
 namespace ore {
 namespace analytics {
 
-class ScenarioStatisticsAnalyticImpl : public Analytic::Impl {
+class ScenarioGenerationAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "SCENARIO_STATISTICS";
+    static constexpr const char* LABEL = "SCENARIO_GENERATION";
 
-    ScenarioStatisticsAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    enum class Type { stress, sensitivity, exposure};
+    ScenarioGenerationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+        setLabel(LABEL);
+    }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator() { return scenarioGenerator_; }
-    
+
 protected:
     void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
-    void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);
+    void buildCrossAssetModel(const bool continueOnError, const bool allowModelFallbacks);
+    void buildScenarioGenerator(const bool continueOnError, const bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    
+
     QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
+    
+
+private:
+    Type type_ = Type::exposure;
+    QuantLib::ext::shared_ptr<StressTestScenarioData> stressTestScenarioData_;
+    QuantLib::Integer scenarioDistributionSteps_ = 20;
+    bool scenarioOutputZeroRate_ = false;
+    bool scenarioOutputStatistics_ = true;
+    bool scenarioOutputDistributions_ = true;
+    QuantLib::Integer scenarioPrecision_ = 8;
+    std::string amcPathDataOutput_;
 };
 
-class ScenarioStatisticsAnalytic : public Analytic {
+ScenarioGenerationAnalyticImpl::Type parseScenarioGenerationType(const std::string& s);
+std::ostream& operator<<(std::ostream& out, ScenarioGenerationAnalyticImpl::Type t);
+
+class ScenarioGenerationAnalytic : public Analytic {
 public:
-    ScenarioStatisticsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    ScenarioGenerationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
-        : Analytic(std::make_unique<ScenarioStatisticsAnalyticImpl>(inputs), {"SCENARIO_STATISTICS"}, inputs,
+        : Analytic(std::make_unique<ScenarioGenerationAnalyticImpl>(inputs), {"SCENARIO_GENERATOR"}, inputs,
                    analyticsManager, true, false, true, true) {}
 };
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore
