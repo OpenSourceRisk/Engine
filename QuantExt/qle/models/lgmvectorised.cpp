@@ -275,8 +275,10 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
         for (Size j = 0; j < simIdx.size(); ++j) {
 
             Date startValueDate = j == 0 ? valueDates[i] : valueDates[simIdx[j]];
+            startValueDate = std::max(startValueDate, valueDates[i]);
             Date endValueDate = ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ?
                                 valueDates[n] : valueDates[simIdx[j + 1]];
+            endValueDate = std::max(startValueDate, endValueDate);
             Date endValueDatePreCutoff = std::max(std::min(valueDates[nCutoff], endValueDate), startValueDate);
             DiscountFactor startDiscount = curve->discount(startValueDate);
             DiscountFactor endDiscount =  curve->discount(endValueDatePreCutoff);
@@ -447,8 +449,10 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
         for (Size j = 0; j < simIdx.size(); ++j) {
 
             Date startValueDate = j == 0 ? valueDates[i] : valueDates[simIdx[j]];
+            startValueDate = std::max(startValueDate, valueDates[i]);
             Date endValueDate = ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ?
                                 valueDates[n] : valueDates[simIdx[j + 1]];
+            endValueDate = std::max(startValueDate, endValueDate);
             Date endValueDatePreCutoff = std::max(std::min(valueDates[nCutoff], endValueDate), startValueDate);
             DiscountFactor startDiscount = curve->discount(startValueDate);
             DiscountFactor endDiscount =  curve->discount(endValueDatePreCutoff);
