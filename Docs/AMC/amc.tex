@@ -116,7 +116,7 @@ na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
 na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
 na & 18 June 2024 & Henning Segger & add bond engine\\
 na & 19 September 2024 & Peter Caspers & add parameters RecalibrateOnStickyCloseOutDates, ReevaluateExerciseInStickyRun\\
-na & 23 June 2025 & Alex Chow & add parameters CashFlowGeneration.OnCpnMaxSimTimes,
+na & 23 June 2025 & Alex Chow & add parameters CashflowGeneration.OnCpnMaxSimTimes,
   CashflowGeneration.OnCpnAddSimTimesCutoff, Regression.MaxSimTimesIR, Regression.MaxSimTimesFX,
   Regression.MaxSimTimesEQ, Regression.VarGroupMode\\
 \hline
@@ -269,7 +269,7 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
     <Parameter name="RecalibrateOnStickyCloseOutDates">false</Parameter>
     <Parameter name="ReevaluateExerciseInStickyRun">false</Parameter>
-    <Parameter name="CashFlowGeneration.OnCpnMaxSimTimes">1</Parameter>
+    <Parameter name="CashflowGeneration.OnCpnMaxSimTimes">1</Parameter>
     <Parameter name="CashflowGeneration.OnCpnAddSimTimesCutoff">0D</Parameter>
     <Parameter name="Regression.MaxSimTimesIR">0</Parameter>
     <Parameter name="Regression.MaxSimTimesFX">0</Parameter>
@@ -329,7 +329,7 @@ engine types. The engine parameters are the same for all products:
 \item \verb+ReevaluateExerciseInStickyRun+: Optional, defaults to false. If true, the exercise decision is updated for
   the run on sticky close-out dates, otherwise the exercise indicator from the valuation date is reused on the close-out
   date.
-\item \verb+CashFlowGeneration.OnCpnMaxSimTimes+ [optional]: The maximum number of IR states used in calculation of
+\item \verb+CashflowGeneration.OnCpnMaxSimTimes+ [optional]: The maximum number of IR states used in calculation of
   Overnight Indexed cashflow value in the training phase. If not given, it defaults to 1. If set to 0, there is no limit
   to number of states per model.
 \item \verb+CashflowGeneration.OnCpnAddSimTimesCutoff+ [optional]: The cutoff time for IR states being included in
