@@ -23,39 +23,44 @@
 
 #pragma once
 
-#include <orea/engine/marketriskreport.hpp>
 #include <ored/report/report.hpp>
+#include <qle/math/covariancesalvage.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
+#include <orea/engine/historicalpnlgenerator.hpp>
 
 namespace ore {
 namespace analytics {
 
 
-class CorrelationReport : public MarketRiskReport {
+class CorrelationReport{
 public:
-    CorrelationReport(const std::string& correlationMethod, const std::string& baseCurrency,
-                      const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const std::string& portfolioFilter,
+    CorrelationReport(const QuantLib::ext::shared_ptr<ScenarioReader>& scenario,
+                      const std::string& correlationMethod,
                       boost::optional<ore::data::TimePeriod> period,
                       const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
-                      std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-                      std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool requireTradePnl = false)
-        : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                           std::move(fullRevalArgs), nullptr, false){
-        sensiBased_ = true;
-        correlation_ = true;
-        correlationMethod_ = correlationMethod;
+                      const QuantLib::ext::shared_ptr<ScenarioShiftCalculator>& shiftCalc = nullptr)
+        : scenario_(scenario), correlationMethod_(correlationMethod), period_(period), hisScenGen_(hisScenGen),
+          shiftCalc_(shiftCalc) {
     }
 
-protected:
-    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports);
-    void writeHeader(const QuantLib::ext::shared_ptr<Report>& report);
-    void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
-                      const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
-                      const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+    void writeReports(const QuantLib::ext::shared_ptr<Report>& report);
+    void calculate(const QuantLib::ext::shared_ptr<Report>& report);
 
-    virtual void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
-                                        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
+
+protected:
+    QuantLib::ext::shared_ptr<ScenarioReader> scenario_;
+    std::string correlationMethod_;
+    boost::optional<ore::data::TimePeriod> period_;
+    QuantLib::ext::shared_ptr<HistoricalSensiPnlCalculator> sensiPnlCalculator_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
+    QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalc_;
+    QuantLib::Matrix covarianceMatrix_;
+    QuantLib::Matrix correlationMatrix_;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationPairs_;
+    std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
+    
+    ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
+    std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
 };
 
 } // namespace analytics

@@ -39,14 +39,11 @@ void CorrelationAnalyticImpl::setUpConfigurations() {
 }
 
 void CorrelationAnalyticImpl::buildDependencies() {
-    auto sensiAnalytic =
-        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
-    if (sensiAnalytic.second)
-        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+    //auto sensiAnalytic =
+    //    AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    //if (sensiAnalytic.second)
+    //    addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
 
-    //auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
-    //if (pnlAnalytic.second)
-    //    addDependentAnalytic(pnlLookupKey, pnlAnalytic.second, true);
 }
 
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -75,16 +72,15 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
     LOG("Call Correlation calculation");
     CONSOLEW("Risk: Correlation Calculation");
-    ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
+    ext::shared_ptr<Report> reports = QuantLib::ext::make_shared<CSVFileReport>(
+        path(inputs_->resultsPath() / "correlation.csv").string(), ',', false, inputs_->csvQuoteChar(),
+        inputs_->reportNaString());
     QuantLib::ext::shared_ptr<InMemoryReport> correlationReport =
         QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    reports->add(correlationReport);
+    correlationReport_->calculate(correlationReport);
+    correlationReport->end();
 
-    //addAdditionalReports(reports);
-
-    correlationReport_->calculate(reports);
     CONSOLE("OK");
-
     analytic()->addReport(label_, "correlation", correlationReport);
 
     LOG("Correlation completed");
@@ -99,12 +95,12 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     LOG("Build Correlation calculator");
     if (inputs_->correlationData().size() > 0) {
         TimePeriod period({inputs_->asof(), inputs_->mporDate()});
-        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
+        /*std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
             std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
 
         correlationReport_ = ext::make_shared<CorrelationReport>(
             inputs_->correlationMethod(), inputs_->baseCurrency(), analytic()->portfolio(),
-            inputs_->portfolioFilter(), period, nullptr, std::move(sensiArgs));
+            inputs_->portfolioFilter(), period, nullptr, std::move(sensiArgs));*/
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
@@ -114,7 +110,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
         auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
-
+        
         auto scenarios = buildHistoricalScenarioGenerator(
             inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
@@ -130,13 +126,9 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator =
             QuantLib::ext::make_shared<ScenarioShiftCalculator>(analytic()->configurations().sensiScenarioData,
                                                                 analytic()->configurations().simMarketParams);
-
-        std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
-            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
-        // No FullRevelArgs, no MultiThreadsArgs, no requireTradePnL
-        correlationReport_ = ext::make_shared<CorrelationReport>(
-            inputs_->correlationMethod(), inputs_->baseCurrency(), analytic()->portfolio(), 
-            inputs_->portfolioFilter(), benchmarkVarPeriod, scenarios, std::move(sensiArgs));
+        
+        correlationReport_ = ext::make_shared<CorrelationReport>(inputs_->scenarioReader(),
+            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator);
     }
 
 }
