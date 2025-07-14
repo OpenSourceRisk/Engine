@@ -13,7 +13,9 @@ cases = [ "run_sensi.py",           # 15, 40
           "run_parconversion.py",   # 50
           "run_basescenario.py",    # 57
           "run_zerotoparshift.py",  # 69
-          "run_sensistress.py"
+          "run_sensistress.py",
+          "run_stressscenariogeneration.py",
+          "run_scenariostress.py"
          ]
 
 for c in cases:

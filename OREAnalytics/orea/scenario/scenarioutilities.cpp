@@ -400,5 +400,58 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
     };
 }
 
+QuantLib::ext::shared_ptr<Scenario>
+absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
+    const QuantLib::ext::shared_ptr<Scenario>& b,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData) {
+
+    auto result = s->clone();
+
+    for (auto const& k : s->keys()) {
+        Real scenRate = s->get(k);
+        Real baseRate = b->get(k);
+        Real spread = 0.0;
+        switch (k.keytype) {
+        case RiskFactorKey::KeyType::SwaptionVolatility:
+        case RiskFactorKey::KeyType::YieldVolatility:
+        case RiskFactorKey::KeyType::OptionletVolatility:
+        case RiskFactorKey::KeyType::FXVolatility:
+        case RiskFactorKey::KeyType::EquityVolatility:
+        case RiskFactorKey::KeyType::CDSVolatility:
+        case RiskFactorKey::KeyType::BaseCorrelation:
+        case RiskFactorKey::KeyType::ZeroInflationCurve:
+        case RiskFactorKey::KeyType::YoYInflationCurve:
+        case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+        case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+        case RiskFactorKey::KeyType::CommodityCurve:
+        case RiskFactorKey::KeyType::CommodityVolatility:
+        case RiskFactorKey::KeyType::SecuritySpread:
+        case RiskFactorKey::KeyType::Correlation:
+        case RiskFactorKey::KeyType::CPR:
+        case RiskFactorKey::KeyType::DiscountCurve:
+        case RiskFactorKey::KeyType::YieldCurve:
+        case RiskFactorKey::KeyType::IndexCurve:
+        case RiskFactorKey::KeyType::FXSpot:
+        case RiskFactorKey::KeyType::EquitySpot:
+        case RiskFactorKey::KeyType::DividendYield:
+        case RiskFactorKey::KeyType::SurvivalProbability:
+        case RiskFactorKey::KeyType::RecoveryRate:
+        case RiskFactorKey::KeyType::CPIIndex:
+            spread = getDifferenceScenario(k.keytype, baseRate, scenRate);
+            break;
+        case RiskFactorKey::KeyType::None:
+        case RiskFactorKey::KeyType::SurvivalWeight:
+        case RiskFactorKey::KeyType::CreditState:
+        default:
+            QL_FAIL("absoluteToSpreadedScenario(): key type "
+                    << k << " not expected, and not covered. This is an internal error, contact dev.");
+        };
+
+        result->add(k, spread);
+    }
+
+    return result;
+}
+
 } // namespace analytics
 } // namespace ore
