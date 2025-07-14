@@ -122,7 +122,7 @@
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>
-          <FixingDays>0</FixingDays>
+          <FixingDays>1</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -193,7 +193,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsAveraged>true</IsAveraged>
-          <FixingDays>0</FixingDays>
+          <FixingDays>1</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
