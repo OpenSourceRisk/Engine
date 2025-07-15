@@ -248,7 +248,6 @@ private:
     std::string timeExtrapolation_;
     std::string strikeExtrapolation_;
     bool timeExtrapolationInVariance_;
-    std::string interpolationMethod_;
 };
 
 /*! Volatility configuration for a 2-D absolute strike volatility surface

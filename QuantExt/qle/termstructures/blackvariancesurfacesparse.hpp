@@ -61,8 +61,12 @@ public:
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
-    const QuantLib::Date& referenceDate() const override { return OptionInterpolator2d::referenceDate(); }
-    QuantLib::DayCounter dayCounter() const override { return OptionInterpolator2d::dayCounter(); }
+    const QuantLib::Date& referenceDate() const override {
+        return OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>::referenceDate();
+    }
+    QuantLib::DayCounter dayCounter() const override {
+        return OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>::dayCounter();
+    }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
