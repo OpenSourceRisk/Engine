@@ -224,6 +224,7 @@ class CommodityIndex : public Index {
         //virtual Real forecastFixing(const QuantLib::Date& fixingDate) const;
         //virtual Real pastFixing(const QuantLib::Date& fixingDate) const;
         ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expireDate = QuantLib::Date(),
+                                              const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
                                               const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::mpme) const = 0;
 };
 
@@ -234,6 +235,7 @@ class CommoditySpotIndex : public CommodityIndex {
     CommoditySpotIndex(const std::string& underlyingName, const Calendar& fixingCalendar,
                    const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+                                          const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
                                           const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
 };
 
@@ -250,6 +252,7 @@ public:
         const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
 
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+        const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
         const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
 };
 

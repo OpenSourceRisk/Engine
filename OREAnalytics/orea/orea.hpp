@@ -43,7 +43,7 @@
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
-#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/analytics/scenariogenerationanalytic.hpp>
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>

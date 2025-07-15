@@ -27,7 +27,6 @@ PaymentDiscountingEngine::PaymentDiscountingEngine(const Handle<YieldTermStructu
                                                    const Date& settlementDate, const Date& npvDate)
     : discountCurve_(discountCurve), spotFX_(spotFX), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {
-    QL_REQUIRE(!discountCurve_.empty(), "empty discount curve");
     registerWith(discountCurve_);
     if (!spotFX.empty())
         registerWith(spotFX);
@@ -64,9 +63,23 @@ void PaymentDiscountingEngine::calculate() const {
     Real NPV = 0.0;
     if (!arguments_.cashflow->hasOccurred(settlementDate, includeRefDateFlows))
         NPV = arguments_.cashflow->amount() * discountCurve_->discount(arguments_.cashflow->date());
+    results_.additionalResults["premiumAmount"] = arguments_.cashflow->amount();
+    results_.additionalResults["premiumDate"] = arguments_.cashflow->date();
+    results_.additionalResults["premiumDiscountFactor"] = discountCurve_->discount(arguments_.cashflow->date());;
 
-    if (!spotFX_.empty())
+    if (arguments_.fxIndex) {
+        auto fixingDate = arguments_.fixingDate.has_value()
+                              ? *arguments_.fixingDate
+                              : arguments_.fxIndex->fixingDate(arguments_.cashflow->date());
+        auto fxRate = arguments_.fxIndex->fixing(fixingDate);
+        NPV *= fxRate;
+        results_.additionalResults["premiumFxRate"] = fxRate;
+    } 
+    
+    if (!spotFX_.empty()) {
         NPV *= spotFX_->value();
+        results_.additionalResults["premium_fx_spot_rate"] = spotFX_->value();
+    }
 
     results_.value = NPV / discountCurve_->discount(valuationDate);
 

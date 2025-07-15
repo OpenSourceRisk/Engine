@@ -3,19 +3,18 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/scenariostatistics</Parameter>
+    <Parameter name="outputPath">Output/StressScenarioGeneration</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">market_20160205_flat_fixed_fxfwd.txt</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_amccg.xml</Parameter>
-    <Parameter name="observationModel">Disable</Parameter>
-    <Parameter name="nThreads">2</Parameter>
+    <Parameter name="portfolioFile">portfolio_stress.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
@@ -27,11 +26,13 @@
   <Analytics>
     <Analytic type="scenarioGeneration">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">simulation_scenariostatistics.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenariostatistics.csv</Parameter>
-      <Parameter name="amcPathDataOutput">Output/scenariostatistics/amcBuffer.dat</Parameter>
-      <Parameter name="outputStatistics">Y</Parameter>
-      <Parameter name="outputDistributions">N</Parameter>
+      <Parameter name="scenarioType">stress</Parameter>
+      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="simulationConfigFile">stressmarket.xml</Parameter>
+      <Parameter name="scenarioOutputFile">stress_scenarios.csv</Parameter>
+      <Parameter name="scenarioPrecision">12</Parameter>
+      <Parameter name="outputStatistics">N</Parameter>
+      <Parameter name="outputDistributions">N</Parameter>	  
     </Analytic>
   </Analytics>
 </ORE>
