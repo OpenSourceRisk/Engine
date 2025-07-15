@@ -22,6 +22,7 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/log.hpp>
 
@@ -50,28 +51,82 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                    const QuantLib::ext::shared_ptr<ore::data::Report>& report,
-                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport, const double threshold, const Size precision,
-                   const bool includePastCashflows, const CurveConfigurations& curveConfigs,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport, const double threshold,
+                   const Size precision, const bool includePastCashflows, const CurveConfigurations& curveConfigs,
                    const TodaysMarketParameters& todaysMarketParams,
-                   QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                   const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                   const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
+                   const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
 
     // run stress simulation
-
     LOG("Run Stress Test");
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
         stressData->useSpreadedTermStructures(), false, false, iborFallbackConfig, true);
 
-    Date asof = market->asofDate();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    scenarioFactory =
+    auto scenFactory =
         scenarioFactory ? scenarioFactory : QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     QuantLib::ext::shared_ptr<StressScenarioGenerator> scenarioGenerator =
         QuantLib::ext::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket,
-                                                            scenarioFactory, simMarket->baseScenarioAbsolute());
+                                                            scenFactory, simMarket->baseScenarioAbsolute());
+   
+    runStressTest(portfolio, market->asofDate(), simMarket, marketConfiguration, engineData, simMarketData->baseCcy(),
+                  scenarioGenerator, 
+        report, cfReport, threshold, precision, includePastCashflows, curveConfigs, todaysMarketParams, referenceData, 
+        iborFallbackConfig, continueOnError, scenarioReport);
+}
+
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+    const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+    const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport, const double threshold,
+    const Size precision, const bool includePastCashflows,
+    const ore::data::CurveConfigurations& curveConfigs,
+    const ore::data::TodaysMarketParameters& todaysMarketParams,
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+    const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
+
+    // run stress simulation
+    LOG("Run Stress Test");
+
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
+        true, false, false, iborFallbackConfig, true);
+
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenarioAbsolute();
+    QuantLib::ext::shared_ptr<ShiftScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<ShiftScenarioLoaderGenerator>(scenarioReader, baseScenario, simMarketData,
+                                                                 simMarket); 
+
+    runStressTest(portfolio, market->asofDate(), simMarket, marketConfiguration, engineData, simMarketData->baseCcy(),
+                  scenarioGenerator, report, cfReport, threshold, precision, includePastCashflows, curveConfigs,
+                  todaysMarketParams, referenceData, iborFallbackConfig, continueOnError, scenarioReport);
+}
+
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const Date& asof,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData, const string& baseCcy,
+                   const QuantLib::ext::shared_ptr<ShiftScenarioGenerator>& scenGenerator,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport, const double threshold,
+                   const Size precision, const bool includePastCashflows, const CurveConfigurations& curveConfigs,
+                   const TodaysMarketParameters& todaysMarketParams,
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                   const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
+    
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = scenGenerator;
+    if (scenarioReport) {
+        scenarioGenerator = QuantLib::ext::make_shared<ScenarioWriter>(scenGenerator, scenarioReport,
+                                                                       std::vector<RiskFactorKey>{}, false);
+    }
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     map<MarketContext, string> configurations;
@@ -85,20 +140,20 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     portfolio->build(factory, "stress analysis");
 
     QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
-        asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
+        asof, portfolio->ids(), vector<Date>(1, asof), scenGenerator->samples());
 
     std::vector<std::vector<std::vector<TradeCashflowReportData>>> cfCube;
     if (cfReport)
         cfCube = std::vector<std::vector<std::vector<TradeCashflowReportData>>>(
             portfolio->ids().size(),
-            std::vector<std::vector<TradeCashflowReportData>>(scenarioGenerator->samples() + 1));
+            std::vector<std::vector<TradeCashflowReportData>>(scenGenerator->samples() + 1));
 
     QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>("1,0W", NullCalendar());
     vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
-    calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(baseCcy));
     if (cfReport) {
-        calculators.push_back(QuantLib::ext::make_shared<CashflowReportCalculator>(simMarketData->baseCcy(),
-                                                                                   includePastCashflows, cfCube));
+        calculators.push_back(
+            QuantLib::ext::make_shared<CashflowReportCalculator>(baseCcy, includePastCashflows, cfCube));
     }
     ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
 
@@ -120,8 +175,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         auto index = cube->idsAndIndexes().find(tradeId);
         QL_REQUIRE(index != cube->idsAndIndexes().end(), "runStressTest(): tradeId not found in cube, internal error.");
         Real npv0 = errors.t0.find(index->second) == errors.t0.end() ? cube->getT0(index->second, 0) : Null<Real>();
-        for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
-            const string& label = scenarioGenerator->scenarios()[j]->label();
+        for (Size j = 0; j < scenGenerator->samples(); ++j) {
+            const string& label = scenGenerator->scenarios()[j]->label();
             TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
             Real npv =
                 npv0 != Null<Real>() && errors.samples.find(std::make_pair(index->second, j)) == errors.samples.end()
@@ -203,9 +258,9 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             for (auto const& t : cfCube[index->second][0])
                 baseCf[std::make_pair(t.legNo, t.cashflowNo)] = t;
 
-            for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
+            for (Size j = 0; j < scenGenerator->samples(); ++j) {
 
-                const string& label = scenarioGenerator->scenarios()[j]->label();
+                const string& label = scenGenerator->scenarios()[j]->label();
                 TLOG("Adding stress test cashflow result for trade '" << tradeId << "' and scenario #" << j << " '"
                                                                       << label << "'");
 
