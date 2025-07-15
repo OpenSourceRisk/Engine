@@ -56,21 +56,21 @@ BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianc
         variances.push_back(0.0);
     }
 
-    initialise(modDates, modStrikes, variances);
+    this->initialise(modDates, modStrikes, variances);
 }
 
 template <class StrikeInterpolation, class TimeInterpolation>
 QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
-    QuantLib::Time tb = times().back();
+    QuantLib::Time tb = this->times().back();
     if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
         return getValue(t, strike);
     }
     if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
-        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
-        return timeExtrapolatationBlackVarianceFlat(t, strike, times_, varianceSurface);
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceFlat(t, strike, this->times_, varianceSurface);
     } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
-        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return getValue(t, strike); };
-        return timeExtrapolatationBlackVarianceInVolatility(t, strike, times_, varianceSurface);
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceInVolatility(t, strike, this->times_, varianceSurface);
     } else {
         QL_FAIL("Unknown time extrapolation method");
     }
