@@ -195,12 +195,12 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         cfResults.back().payDate = arguments_.paymentDate;
         cfResults.back().legNumber = 0;
         cfResults.back().type = "ExpectedFlow";
-        cfResults.back().fixingDate = fixingDate;
-        cfResults.back().fixingValue = fxRate;
-
+        if (fixingDate != Date()){
+            cfResults.back().fixingDate = fixingDate;
+            cfResults.back().fixingValue = fxRate;
+        }
         results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
-        results_.additionalResults["settlementFxFwdDate"] = fixingDate;
         results_.additionalResults["settlementFxFwd"] = fxRate;
     }
 
