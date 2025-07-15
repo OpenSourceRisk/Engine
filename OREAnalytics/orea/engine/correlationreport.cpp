@@ -23,6 +23,7 @@
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace analytics {
@@ -31,8 +32,8 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     
     hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(timePeriods(), hisScenGen_);
     
-    ext::shared_ptr<Scenario> vSc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
-    std::vector<RiskFactorKey> deltaKeys = vSc->keys();
+    ext::shared_ptr<Scenario> sc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
+    std::vector<RiskFactorKey> deltaKeys = sc->keys();
 
     ext::shared_ptr<NPVCube>cube;
     ext::shared_ptr<CovarianceCalculator> covCalculator;
@@ -85,7 +86,17 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
         std::string name;
         QuantLib::Size index;
     };*/
-    //std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> test;
+    /*std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+    for (auto const& cor : correlationPairs_) {
+        RiskFactorKey pair1 = cor.first.first;
+        RiskFactorKey pair2 = cor.first.second;
+        CorrelationFactor corrFactor1;
+        CorrelationFactor corrFactor2;
+        std::pair<CorrelationFactor, CorrelationFactor> correlationKey = std::make_pair(corrFactor1, corrFactor2);
+        mapInstantaneousCor[correlationKey] =
+            QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
+    }
+    instantaneousCorrelation_ = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);*/
 }
 
 void CorrelationReport::writeReports(const ext::shared_ptr<Report>& report) {

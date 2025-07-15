@@ -32,19 +32,11 @@ namespace analytics {
 
 void CorrelationAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    if (inputs_->covarianceData().size() == 0) {
-        analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
-        analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
-    }
+    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+    analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
 }
 
-void CorrelationAnalyticImpl::buildDependencies() {
-    //auto sensiAnalytic =
-    //    AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
-    //if (sensiAnalytic.second)
-    //    addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
-
-}
+void CorrelationAnalyticImpl::buildDependencies() { }
 
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
@@ -60,7 +52,7 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
-    CONSOLEW("Risk: Build Portfolio for Correlation");
+    CONSOLEW("Risk: Build Parameters for Correlation");
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
@@ -88,11 +80,11 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 }
 
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-    LOG("Build trade to portfolio id mapping");
 
     QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
-    
-    LOG("Build Correlation calculator");
+    /*if (!inputs_->crossAssetModelData()->correlations().empty()) {
+    }*/
+    LOG("Build Correlation Calculator");
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
 
@@ -112,6 +104,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
             false, false, *inputs_->iborFallbackConfig());
+
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 

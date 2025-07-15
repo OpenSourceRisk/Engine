@@ -47,7 +47,6 @@ public:
     void writeReports(const QuantLib::ext::shared_ptr<Report>& report);
     void calculate(const QuantLib::ext::shared_ptr<Report>& report);
 
-
 protected:
     QuantLib::ext::shared_ptr<ScenarioReader> scenario_;
     std::string correlationMethod_;
