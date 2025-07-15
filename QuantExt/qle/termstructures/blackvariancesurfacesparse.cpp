@@ -63,7 +63,7 @@ template <class StrikeInterpolation, class TimeInterpolation>
 QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
     QuantLib::Time tb = this->times().back();
     if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
-        return getValue(t, strike);
+        return this->getValue(t, strike);
     }
     if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
         auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
