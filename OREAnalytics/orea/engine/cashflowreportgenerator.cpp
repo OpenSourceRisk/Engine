@@ -253,7 +253,7 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::TypedCashFlow> ptrTypedCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::TypedCashFlow>(ptrFlow);
-                QuantLib::ext::shared_ptr<QuantExt::FXLinkedTypedCashFlow> ptrFXLinkedTypedCf =
+                QuantLib::ext::shared_ptr<QuantExt::FXLinkedTypedCashFlow> ptrFxlTypedCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedTypedCashFlow>(ptrFlow);
 
                 Real coupon;
@@ -286,13 +286,13 @@ std::vector<TradeCashflowReportData> generateCashflowReportData(const ext::share
                     accrualStartDate = accrualEndDate = Null<Date>();
                     accruedAmount = Null<Real>();
                     flowType = ore::data::to_string(ptrTypedCf->type());
-                } else if (ptrFXLinkedTypedCf) {
+                } else if (ptrFxlTypedCf) {
                     coupon = Null<Real>();
                     accrual = Null<Real>();
                     notional = Null<Real>();
                     accrualStartDate = accrualEndDate = Null<Date>();
                     accruedAmount = Null<Real>();
-                    flowType = ore::data::to_string(ptrFXLinkedTypedCf->type());
+                    flowType = ore::data::to_string(ptrFxlTypedCf->type());
                 } else {
                     coupon = Null<Real>();
                     accrual = Null<Real>();
