@@ -1667,12 +1667,12 @@ void OREAppInputParameters::loadParameters() {
         insertAnalytic("CORRELATION");
         tmp = params_->get("correlation", "historicalScenarioFile", false);
         QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = (inputPath / tmp).generic_string();
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
         setScenarioReader(scenarioFile);
 
         tmp = params_->get("correlation", "simulationConfigFile", false);
         QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
-        string simulationConfigFile = (inputPath / tmp).generic_string();
+        string simulationConfigFile = (inputPath_ / tmp).generic_string();
         setHistVarSimMarketParamsFromFile(simulationConfigFile);
 
         tmp = params_->get("correlation", "historicalPeriod", false);
@@ -1697,7 +1697,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("correlation", "covarianceInputFile", false);
         if (tmp != "") {
-            std::string covFile = (inputPath / tmp).generic_string();
+            std::string covFile = (inputPath_ / tmp).generic_string();
             LOG("Load Correlation Data from file " << covFile);
             setCorrelationDataFromFile(covFile);
         }

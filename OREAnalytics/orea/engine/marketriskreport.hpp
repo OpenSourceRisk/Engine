@@ -163,16 +163,12 @@ public:
         //! Optional input of covariance matrix
         std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceInput_;
 
-        //! Optional input of covariance matrix
-        std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationInput_;
-
         SensiRunArgs(const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                      const QuantLib::ext::shared_ptr<ScenarioShiftCalculator>& sc,
                      QuantLib::Real pnlThres = 0.01,
-                     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> ci = {},
-                     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> cri = {})
+                     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> ci = {})
             : sensitivityStream_(ss), shiftCalculator_(sc), pnlWriteThreshold_(pnlThres),
-              covarianceInput_(ci), correlationInput_(cri) {}
+              covarianceInput_(ci) {}
     };
 
     struct FullRevalArgs {
@@ -263,8 +259,7 @@ protected:
 
     bool sensiBased_ = false;
     bool fullReval_ = false;
-    bool correlation_ = false;
-    
+
     std::string calculationCurrency_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     std::string portfolioFilter_;
@@ -281,8 +276,6 @@ protected:
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;
 
-    std::string correlationMethod_;
-
     /*! Partition of portfolio's trade IDs (and index as a pair), into groups.
      */
     std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> tradeIdGroups_;
@@ -293,8 +286,6 @@ protected:
     std::map<RiskFactorKey, QuantLib::Real> deltas_;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, QuantLib::Real> gammas_;
     QuantLib::Matrix covarianceMatrix_;
-    QuantLib::Matrix correlationMatrix_;
-    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationPairs_;
     bool writePnl_ = false;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
     QuantLib::ext::shared_ptr<QuantExt::CovarianceSalvage> salvage_ =

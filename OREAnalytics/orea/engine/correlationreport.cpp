@@ -27,23 +27,12 @@
 namespace ore {
 namespace analytics {
 
-std::vector<Real> extractLowerTriangle(const QuantLib::Matrix& corrMatrix) {
-    Size n = corrMatrix.rows();
-    std::vector<Real> result;
-    for (Size col = 0; col < n; col++) {
-        for (Size row = col+1; row<n;row++){
-            result.push_back(corrMatrix[row][col]);
-        }
-    }
-    return result;
-}
-
 void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     
     hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(timePeriods(), hisScenGen_);
     
-    auto vSc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
-    auto deltaKeys = vSc->keys();
+    ext::shared_ptr<Scenario> vSc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
+    std::vector<RiskFactorKey> deltaKeys = vSc->keys();
 
     ext::shared_ptr<NPVCube>cube;
     ext::shared_ptr<CovarianceCalculator> covCalculator;
@@ -54,12 +43,10 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     sensiPnlCalculator_->calculateSensiPnl({}, deltaKeys, cube, pnlCalculators_, covCalculator, {},
                                            false, false, false);
 
-    covarianceMatrix_ = covCalculator->covariance();
-
     DLOG("Computation of the Correlation Matrix Method = " << correlationMethod_);
     CorrelationMatrixBuilder corrMatrix;
     if (correlationMethod_ == "Pearson") {
-        // Correlation Matrix computed by default from the covariance
+        covarianceMatrix_ = covCalculator->covariance();
         correlationMatrix_ = covCalculator->correlation();
     } else if (correlationMethod_ == "KendallRank") {
         std::set<std::string> ids = cube->ids();
@@ -82,7 +69,11 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
         for (Size row = col + 1; row < deltaKeys.size(); row++) {
             RiskFactorKey a = deltaKeys[col];
             RiskFactorKey b = deltaKeys[row];
-            correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
+            //The cube Matrix has plenty of 0 values, meaning 0 correlations
+            //We filter them
+            if (correlationMatrix_[col][row] != 0) {
+                correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
+            }
         }
     }
     writeReports(report);
@@ -94,6 +85,7 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
         std::string name;
         QuantLib::Size index;
     };*/
+    //std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> test;
 }
 
 void CorrelationReport::writeReports(const ext::shared_ptr<Report>& report) {
@@ -102,15 +94,13 @@ void CorrelationReport::writeReports(const ext::shared_ptr<Report>& report) {
          .addColumn("RiskFactor2", string())
          .addColumn("Correlation", Real(), 6);
 
-    vector<Real> corrFormatted = extractLowerTriangle(correlationMatrix_);
-
     for (auto const& entry : correlationPairs_) {
         const auto& key = entry.first;
         const Real value = entry.second;
         report->next()
-            .add(ore::data::to_string(key.first))
-            .add(ore::data::to_string(key.second))
-            .add(value);
+                .add(ore::data::to_string(key.first))
+                .add(ore::data::to_string(key.second))
+                .add(value);  
     }
     report->end();
 }

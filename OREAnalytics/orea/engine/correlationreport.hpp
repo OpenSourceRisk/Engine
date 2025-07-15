@@ -27,6 +27,7 @@
 #include <qle/math/covariancesalvage.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 
 namespace ore {
 namespace analytics {
@@ -58,6 +59,7 @@ protected:
     QuantLib::Matrix correlationMatrix_;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationPairs_;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
+    QuantLib::ext::shared_ptr<InstantaneousCorrelations> instantaneousCorrelation_;
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
     std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
