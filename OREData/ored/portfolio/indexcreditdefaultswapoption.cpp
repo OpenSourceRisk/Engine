@@ -571,7 +571,7 @@ void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<strin
 
     QL_REQUIRE(refData, "Building index CDS option " << id() << " ReferenceDataManager is null.");
     QL_REQUIRE(refData->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
-               "No CreditIndex reference data for " << iCdsId);
+               "No CreditIndex constituents data for " << iCdsId);
     auto referenceData = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         refData->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
     DLOG("Got CreditIndexReferenceDatum for id " << iCdsId);

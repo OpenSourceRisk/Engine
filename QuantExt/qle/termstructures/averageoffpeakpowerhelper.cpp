@@ -66,7 +66,7 @@ void AverageOffPeakPowerHelper::init(const QuantLib::ext::shared_ptr<CommodityIn
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
-    auto indexClone = index->clone(Date(), termStructureHandle_);
+    auto indexClone = index->clone(Date(), Date(), termStructureHandle_);
 
     // While bootstrapping is happening, this price helper's price term structure handle, termStructureHandle_, will 
     // be updated multiple times. We don't want the index notified each time.

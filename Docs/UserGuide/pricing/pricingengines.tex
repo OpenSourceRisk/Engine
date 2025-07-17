@@ -1654,19 +1654,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model Black, Engine BlackIndexCdsOptionEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}
 \end{longlisting}
 
@@ -1685,19 +1685,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>LognormalAdjustedIndexSpread</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>NumericalIntegrationEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model LognormalAdjustedIndexSpread, Engine NumericalIntegrationEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}
 \end{longlisting}
 

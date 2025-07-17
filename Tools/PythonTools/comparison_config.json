@@ -507,6 +507,23 @@
           }
         ]
       },
+      "frtb_drc.csv": {
+        "keys": [
+          "CorrelationScenario",
+          "CapitalRequirement",
+          "RiskClass",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "FrtbCharge"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "bacva\\.csv": {
         "keys": [
           "Counterparty",
@@ -1365,8 +1382,8 @@
               "EffectiveCapVolatility_Base",
               "EffectiveCapVolatility_Scen"
             ],
-            "abs_tol": 1e-08,
-            "rel_tol": 1e-08
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },

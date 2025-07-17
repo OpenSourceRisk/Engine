@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesWildcardStrikes) {
     auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesExplicitStrikes) {
     auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceExplicitExpiriesWildcardStrikes) {
     auto tmSurface = QuantLib::ext::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket"
                                          << " to be of type BlackVolatilityWithATM");
-    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    auto surface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(tmSurface->surface());
     BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain"
                                          << " a surface of type BlackVarianceSurfaceSparse");
 
