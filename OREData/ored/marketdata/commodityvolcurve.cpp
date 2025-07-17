@@ -669,44 +669,39 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
+
+        // For backward compatibility, use Linear as default value for StrikeInterpolation and TimeInterpolation
+        if (vssc.strikeInterpolation() != "Cubic" && vssc.strikeInterpolation() != "Linear")
+            WLOG("Allowable values for StrikeInterpolation are Linear and Cubic. Got "
+                 << vssc.strikeInterpolation() << ". Use Linear as default value");
+        if (vssc.timeInterpolation() != "Cubic" && vssc.timeInterpolation() != "Linear")
+            WLOG("Allowable values for TimeInterpolation are Linear and Cubic. Got "
+                 << vssc.timeInterpolation() << ". Use Linear as default value");
         if (vssc.strikeInterpolation() == "Cubic") {
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ = QuantLib::ext::make_shared<
                     BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                     timeExtrapolation);
-            } else if (vssc.timeInterpolation() == "Linear") {
+            } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                         timeExtrapolation);
-            } else
-                QL_REQUIRE(vssc.timeInterpolation() == "Linear" || vssc.timeInterpolation() == "Cubic",
-                           "If either expiry or strike is wild card, TimeInterpolation must be either Linear or Cubic. "
-                           "TimeInterpolation is set to "
-                               << vssc.timeInterpolation());
-        } else if (vssc.strikeInterpolation() == "Linear") {
+            }
+        } else {
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                         timeExtrapolation);
-            } else if (vssc.timeInterpolation() == "Linear") {
+            } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                         timeExtrapolation);
-            } else
-                QL_REQUIRE(vssc.timeInterpolation() == "Linear" || vssc.timeInterpolation() == "Cubic",
-                           "If either expiry or strike is wild card, TimeInterpolation must be either Linear or Cubic. "
-                           "TimeInterpolation is set to "
-                               << vssc.timeInterpolation());
-        } else {
-            QL_REQUIRE(vssc.strikeInterpolation() == "Linear" || vssc.strikeInterpolation() == "Cubic",
-                       "If either expiry or strike is wild card, StrikeInterpolation must be either Linear or Cubic. "
-                       "StrikeInterpolation is set to "
-                           << vssc.strikeInterpolation());
-        }
+            }
+        } 
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
