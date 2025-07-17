@@ -671,6 +671,12 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
         // For backward compatibility, use Linear as default value for StrikeInterpolation and TimeInterpolation
+        if (vssc.strikeInterpolation() != "Cubic" && vssc.strikeInterpolation() != "Linear")
+            WLOG("Allowable values for StrikeInterpolation are Linear and Cubic. Got "
+                 << vssc.strikeInterpolation() << ". Use Linear as default value");
+        if (vssc.timeInterpolation() != "Cubic" && vssc.timeInterpolation() != "Linear")
+            WLOG("Allowable values for TimeInterpolation are Linear and Cubic. Got "
+                 << vssc.timeInterpolation() << ". Use Linear as default value");
         if (vssc.strikeInterpolation() == "Cubic") {
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ = QuantLib::ext::make_shared<
