@@ -58,7 +58,7 @@ public:
                              const QuantLib::Calendar& pricingLagCalendar, QuantLib::Real spread = 0.0,
                              QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
                              bool isInArrears = true, bool useFuturePrice = false, bool useFutureExpiryDate = true,
-                             QuantLib::Natural futureMonthOffset = 0,
+                             QuantLib::Integer futureMonthOffset = 0,
                              const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
                              const QuantLib::Date& paymentDateOverride = Date(),
                              const QuantLib::Date& pricingDateOverride = Date(),
@@ -74,7 +74,7 @@ public:
     
     const QuantLib::Date& pricingDate() const { return pricingDate_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
-    QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Integer futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Real periodQuantity() const override { return periodQuantity_; }
     QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
@@ -120,7 +120,7 @@ private:
     QuantLib::Date pricingDate_;
     QuantLib::Date paymentDate_;
     bool useFutureExpiryDate_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     QuantLib::Real periodQuantity_;
     QuantLib::Natural dailyExpiryOffset_;
     std::vector<std::pair<QuantLib::Date, ext::shared_ptr<CommodityIndex>>> indices_;
@@ -162,7 +162,7 @@ public:
     CommodityIndexedLeg& inArrears(bool flag = true);
     CommodityIndexedLeg& useFuturePrice(bool flag = false);
     CommodityIndexedLeg& useFutureExpiryDate(bool flag = true);
-    CommodityIndexedLeg& withFutureMonthOffset(QuantLib::Natural futureMonthOffset);
+    CommodityIndexedLeg& withFutureMonthOffset(QuantLib::Integer futureMonthOffset);
     CommodityIndexedLeg& withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
     CommodityIndexedLeg& payAtMaturity(bool flag = false);
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
@@ -191,7 +191,7 @@ private:
     bool inArrears_;
     bool useFuturePrice_;
     bool useFutureExpiryDate_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     ext::shared_ptr<FutureExpiryCalculator> calc_;
     bool payAtMaturity_;
     std::vector<QuantLib::Date> pricingDates_;

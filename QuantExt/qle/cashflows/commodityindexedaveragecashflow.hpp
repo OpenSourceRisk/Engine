@@ -54,7 +54,7 @@ public:
         const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0, bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0, const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+        QuantLib::Integer futureMonthOffset = 0, const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
         bool includeEndDate = true, bool excludeStartDate = true, bool useBusinessDays = true,
         CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
@@ -69,7 +69,7 @@ public:
         QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
-        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
+        bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0, QuantLib::Integer futureMonthOffset = 0,
         const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
         bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(), bool useBusinessDays = true,
         CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
@@ -85,7 +85,7 @@ public:
     const QuantLib::Date& endDate() const { return endDate_; }
     ext::shared_ptr<CommodityIndex> index() const { return index_; }
     QuantLib::Natural deliveryDateRoll() const { return deliveryDateRoll_; }
-    QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Integer futureMonthOffset() const { return futureMonthOffset_; }
     bool useBusinessDays() const { return useBusinessDays_; }
     CommodityQuantityFrequency quantityFrequency() const { return quantityFrequency_; }
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
@@ -147,7 +147,7 @@ private:
     QuantLib::Date paymentDate_;
     QuantLib::Calendar pricingCalendar_;
     QuantLib::Natural deliveryDateRoll_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     bool includeEndDate_;
     bool excludeStartDate_;
     std::vector<std::pair<QuantLib::Date, ext::shared_ptr<CommodityIndex>>> indices_;
@@ -188,7 +188,7 @@ public:
     CommodityIndexedAverageLeg& paymentTiming(CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming);
     CommodityIndexedAverageLeg& useFuturePrice(bool flag = false);
     CommodityIndexedAverageLeg& withDeliveryDateRoll(QuantLib::Natural deliveryDateRoll);
-    CommodityIndexedAverageLeg& withFutureMonthOffset(QuantLib::Natural futureMonthOffset);
+    CommodityIndexedAverageLeg& withFutureMonthOffset(QuantLib::Integer futureMonthOffset);
     CommodityIndexedAverageLeg&
     withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
     CommodityIndexedAverageLeg& payAtMaturity(bool flag = false);
@@ -219,7 +219,7 @@ private:
     CommodityIndexedAverageCashFlow::PaymentTiming paymentTiming_;
     bool useFuturePrice_;
     QuantLib::Natural deliveryDateRoll_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     ext::shared_ptr<FutureExpiryCalculator> calc_;
     bool payAtMaturity_;
     bool includeEndDate_;

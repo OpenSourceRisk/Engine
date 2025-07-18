@@ -1597,7 +1597,7 @@ CommodityFutureConvention::AveragingData::AveragingData()
 
 CommodityFutureConvention::AveragingData::AveragingData(const string& commodityName, const string& period,
     const string& pricingCalendar, bool useBusinessDays, const string& conventionsId,
-    Natural deliveryRollDays, Natural futureMonthOffset, Natural dailyExpiryOffset)
+    Natural deliveryRollDays, Integer futureMonthOffset, Natural dailyExpiryOffset)
     : commodityName_(commodityName), strPeriod_(period), strPricingCalendar_(pricingCalendar),
       useBusinessDays_(useBusinessDays), conventionsId_(conventionsId), deliveryRollDays_(deliveryRollDays),
       futureMonthOffset_(futureMonthOffset), dailyExpiryOffset_(dailyExpiryOffset),
@@ -1629,7 +1629,7 @@ Natural CommodityFutureConvention::AveragingData::deliveryRollDays() const {
     return deliveryRollDays_;
 }
 
-Natural CommodityFutureConvention::AveragingData::futureMonthOffset() const {
+Integer CommodityFutureConvention::AveragingData::futureMonthOffset() const {
     return futureMonthOffset_;
 }
 

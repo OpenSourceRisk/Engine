@@ -80,7 +80,7 @@ public:
 
     /*! apply a month offset to a given contract date and return the new contract date
         if the contract frequency is daily or weekly, the input contract date is not modified */
-    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Natural futureMonthOffset) = 0;
+    virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Integer futureMonthOffset) = 0;
 };
 
 } // namespace QuantExt

@@ -49,7 +49,7 @@ public:
         QuantExt::CommodityQuantityFrequency commodityQuantityFrequency =
             QuantExt::CommodityQuantityFrequency::PerCalculationPeriod,
         CommodityPayRelativeTo commodityPayRelativeTo = CommodityPayRelativeTo::CalculationPeriodEndDate,
-        QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
+        QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         const BarrierData& barrierData = {}, const std::string& fxIndex = "");
 
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
@@ -78,7 +78,7 @@ public:
     QuantLib::Spread spread() const { return spread_; }
     QuantExt::CommodityQuantityFrequency commodityQuantityFrequency() const { return commodityQuantityFrequency_; }
     CommodityPayRelativeTo commodityPayRelativeTo() const { return commodityPayRelativeTo_; }
-    QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Integer futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Natural deliveryRollDays() const { return deliveryRollDays_; }
     bool includePeriodEnd() const { return includePeriodEnd_; }
     const std::string& fxIndex() const { return fxIndex_; }
@@ -109,7 +109,7 @@ private:
     QuantLib::Spread spread_;
     QuantExt::CommodityQuantityFrequency commodityQuantityFrequency_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     QuantLib::Natural deliveryRollDays_;
     bool includePeriodEnd_;
     std::string fxIndex_;

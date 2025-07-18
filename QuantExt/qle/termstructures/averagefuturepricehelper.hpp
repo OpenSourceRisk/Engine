@@ -65,7 +65,7 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
+        QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
@@ -95,7 +95,7 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
+        QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
     //@}
@@ -126,7 +126,7 @@ private:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar,
         QuantLib::Natural deliveryDateRoll,
-        QuantLib::Natural futureMonthOffset,
+        QuantLib::Integer futureMonthOffset,
         bool useBusinessDays,
         QuantLib::Natural dailyExpiryOffset);
 

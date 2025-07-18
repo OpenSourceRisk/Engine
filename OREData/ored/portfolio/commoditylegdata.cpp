@@ -185,7 +185,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     CommodityPayRelativeTo commodityPayRelativeTo, const vector<Real>& spreads, const vector<string>& spreadDates,
     const vector<Real>& gearings, const vector<string>& gearingDates, CommodityPricingDateRule pricingDateRule,
     const string& pricingCalendar, Natural pricingLag, const vector<string>& pricingDates, bool isAveraged,
-    bool isInArrears, Natural futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
+    bool isInArrears, Integer futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
     bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
     Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, 
     QuantLib::Natural avgPricePrecision)

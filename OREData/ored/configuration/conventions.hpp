@@ -1446,7 +1446,7 @@ public:
         //! Detailed constructor
         AveragingData(const std::string& commodityName, const std::string& period, const std::string& pricingCalendar,
             bool useBusinessDays, const std::string& conventionsId = "", QuantLib::Natural deliveryRollDays = 0,
-            QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural dailyExpiryOffset =
+            QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural dailyExpiryOffset =
             QuantLib::Null<QuantLib::Natural>());
         //@}
 
@@ -1458,7 +1458,7 @@ public:
         bool useBusinessDays() const;
         const std::string& conventionsId() const;
         QuantLib::Natural deliveryRollDays() const;
-        QuantLib::Natural futureMonthOffset() const;
+        QuantLib::Integer futureMonthOffset() const;
         QuantLib::Natural dailyExpiryOffset() const;
         //@}
 
@@ -1478,7 +1478,7 @@ public:
         bool useBusinessDays_;
         std::string conventionsId_;
         QuantLib::Natural deliveryRollDays_;
-        QuantLib::Natural futureMonthOffset_;
+        QuantLib::Integer futureMonthOffset_;
         QuantLib::Natural dailyExpiryOffset_;
 
         CalculationPeriod period_;
