@@ -324,7 +324,16 @@ protected:
                                                         const string& discountCurveName,
                                                         const AssetClass& assetClass, const Date& expiryDate,
                                                         const bool useFxSpot, const std::optional<Currency>&) override {
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+        std::string delimiter = "#";
+        std::string assetNameLocal = assetName;
+        QuantLib::Date forwardDate = QuantLib::Date();
+        if (assetName.find(delimiter) != std::string::npos){
+            std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
+            bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
+            if (validDate)
+                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
+        }
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass);
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
 };
