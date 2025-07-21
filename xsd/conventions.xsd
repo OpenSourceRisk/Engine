@@ -398,7 +398,7 @@
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="UseBusinessDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="DailyExpiryOffset" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
