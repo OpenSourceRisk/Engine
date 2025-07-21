@@ -110,7 +110,7 @@ struct CrifRecord {
         // All type for aggreggation purposes
         All
     };
-    
+
     //! Product class types in SIMM plus an All type for convenience
     //! Internal methods rely on the last element being 'All'
     enum class ProductClass {
@@ -180,7 +180,7 @@ struct CrifRecord {
     std::string amountCurrency;
     mutable QuantLib::Real amount = QuantLib::Null<QuantLib::Real>();
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
-    
+
     // additional fields used exclusively by the SIMM calculator for handling amounts converted in a given result ccy
     mutable std::string resultCurrency;
     mutable QuantLib::Real amountResultCcy = QuantLib::Null<QuantLib::Real>();
