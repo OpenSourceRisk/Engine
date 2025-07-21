@@ -133,7 +133,7 @@ QuantLib::Date ConventionsBasedFutureExpiry::contractDate(const QuantLib::Date& 
 }
 
 QuantLib::Date ConventionsBasedFutureExpiry::applyFutureMonthOffset(const QuantLib::Date& contractDate,
-                                                                    Natural futureMonthOffset) {
+                                                                    Integer futureMonthOffset) {
 
     Date tmp = contractDate;
 

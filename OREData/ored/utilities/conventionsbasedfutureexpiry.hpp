@@ -46,7 +46,7 @@ public:
 
     QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override;
 
-    QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Natural futureMonthOffset) override;
+    QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Integer futureMonthOffset) override;
 
     //! \name Inspectors
     //@{
