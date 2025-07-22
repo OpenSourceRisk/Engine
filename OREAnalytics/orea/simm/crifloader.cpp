@@ -56,7 +56,7 @@ using std::vector;
 
 namespace ore {
 namespace analytics {
-   
+
 // clang-format off
 // Required headers
 map<Size, set<string>> CrifLoader::requiredHeaders = {
@@ -65,7 +65,7 @@ map<Size, set<string>> CrifLoader::requiredHeaders = {
 
 // Optional headers
 map<Size, set<string>> CrifLoader::optionalHeaders = {
-    
+
     {0,  {"tradeid", "trade_id"}},
     {2,  {"productclass", "product_class"}},
     {4,  {"qualifier"}},
@@ -83,11 +83,11 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {16, {"immodel", "im_model"}},
     {17, {"post_regulations"}},
     {18, {"collect_regulations"}},
-    {19, {"end_date"}},
-    {20, {"label_3"}},
+    {19, {"end_date", "enddate"}},
+    {20, {"label_3", "label3"}},
     {21, {"creditquality"}},
     {22, {"longshortind"}},
-    {23, {"coveredbonind"}},
+    {23, {"coveredbonind", "coveredbondind"}},
     {24, {"tranchethickness"}},
     {25, {"bb_rw"}},
     {26, {"use_cp_trade"}}
@@ -118,7 +118,7 @@ void CrifLoader::addRecordToCrif(const QuantLib::ext::shared_ptr<Crif>& crif, Cr
     }
 }
 
-void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {   
+void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
     switch (cr.riskType) {
     case RiskType::AddOnFixedAmount:
     case RiskType::AddOnNotionalFactor:
@@ -192,7 +192,7 @@ void CrifLoader::currencyOverrides(CrifRecord& cr) const {
     }
 }
 
-void CrifLoader::updateMapping(const CrifRecord& cr) const {    
+void CrifLoader::updateMapping(const CrifRecord& cr) const {
     // Update the SIMM configuration's bucket mapper if the
     // loader has set this flag
     if (updateMapper_ && !cr.isSimmParameter()) {
@@ -208,7 +208,7 @@ StringStreamCrifLoader::StringStreamCrifLoader(const QuantLib::ext::shared_ptr<S
     bool aggregateTrades, bool allowUseCounterpartyTrade, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
     : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade), eol_(eol), delim_(delim),
     quoteChar_(quoteChar), escapeChar_(escapeChar), nullString_(nullString) {
-    
+
     size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
     size_t maxIndexOptional = *boost::max_element(optionalHeaders | boost::adaptors::map_keys);
     size_t maxIndex = std::max(maxIndexRequired, maxIndexOptional);
@@ -340,7 +340,7 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
                 columnIndex_[kv.first] = i;
             }
         }
-    }    
+    }
 
     for (const auto& kv: additionalHeadersIndexMap_) {
         for (Size columnPos = 0; columnPos < headers.size(); ++columnPos) {
@@ -374,7 +374,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
             return defaultValue;
         } else {
             bool res = defaultValue;
-            
+
             const std::string& value = entries[columnIndex_[column]];
             if (value.empty())
                 return res;
@@ -394,7 +394,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
 
             return value.empty() || value == nullString_ ? QuantLib::Null<QuantLib::Real>()
                                                          : parseReal(value);
-        } 
+        }
     };
 
     string tradeId, tradeType, imModel;
@@ -430,7 +430,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
             NettingSetDetails(portfolioId, agreementType, callType, initialMarginType, legalEntityId);
         cr.productClass = parseProductClass(loadOptionalString(2));
         cr.riskType = parseRiskType(entries[columnIndex_.at(3)]);
-        
+
         // Qualifier - There are many other possible qualifier values, but we only do case-insensitive checks
         // for those with standardised values, i.e. currencies or ccy pairs
         cr.qualifier = loadOptionalString(4);

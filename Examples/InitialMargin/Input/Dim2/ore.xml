@@ -5,8 +5,8 @@
     <Parameter name="inputPath">Input/Dim2</Parameter>
     <Parameter name="outputPath">Output/Dim2</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">marketdata.csv</Parameter>
+    <Parameter name="logMask">255</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
@@ -43,6 +43,7 @@
       <!--<Parameter name="simulationConfigFile">simulation_false.xml</Parameter>-->
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeExerciseValues">Y</Parameter>
       <Parameter name="observationModel">Disable</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>

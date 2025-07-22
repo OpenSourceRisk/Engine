@@ -25,7 +25,7 @@
     <Parameter name="sensitivity">xois_eur</Parameter>
   </Markets>
   <Analytics>
-    <Analytic type="scenarioStatistics">
+    <Analytic type="scenarioGeneration">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation_scenariostatistics.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenariostatistics.csv</Parameter>

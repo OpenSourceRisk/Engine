@@ -161,6 +161,7 @@ public:
         in a given market configuration */
     std::map<MarketObject, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId,
                                                            const std::string& configuration) const;
+    std::map<std::pair<MarketObject, std::string>, std::set<string>> requiredNames(const CurveSpec::CurveType& type, const std::string& curveId) const;
     //@}
 
     void add(const CurveSpec::CurveType& type, const string& curveId, const QuantLib::ext::shared_ptr<CurveConfig>& config);    

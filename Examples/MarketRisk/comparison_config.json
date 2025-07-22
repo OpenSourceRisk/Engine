@@ -1,0 +1,24 @@
+{
+  "csv_settings": {
+    "files": {
+      "stress_scenarios.csv": {
+        "keys": [
+          "Date",
+          "Scenario"
+        ],
+        "use_cols": [
+          "Numeraire"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Numeraire"
+            ],
+            "abs_tol": 0.000001,
+            "rel_tol": 1e-6
+          }
+        ]
+      }
+    }
+  }
+}

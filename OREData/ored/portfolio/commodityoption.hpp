@@ -56,11 +56,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return true; }
-    //@}
-
     //! \name Inspectors
     //@{
     const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
