@@ -1478,7 +1478,7 @@ public:
         bool useBusinessDays_;
         std::string conventionsId_;
         QuantLib::Natural deliveryRollDays_;
-        QuantLib::Integer futureMonthOffset_;
+        QuantLib::Natural futureMonthOffset_;
         QuantLib::Natural dailyExpiryOffset_;
 
         CalculationPeriod period_;
