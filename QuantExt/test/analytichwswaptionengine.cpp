@@ -85,6 +85,7 @@
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/math/randomnumbers/boxmullergaussianrng.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/pricingengines/analytichwswaptionengine.hpp>
 #include <boost/make_shared.hpp>
 
@@ -115,19 +116,19 @@ using namespace std;
 //
 //BOOST_FIXTURE_TEST_SUITE(Anl, F)
 
-BOOST_AUTO_TEST_CASE(testUri){
+BOOST_AUTO_TEST_CASE(testPrintProcess){
     
     BOOST_TEST_MESSAGE("Initializing MC Simulation");
-    // model params
+    // Model params
     Size nFactors = 2;
-    Array kappa = {0.03, 0.05}; // mean reversion speed
+    Array kappa = {0.03, 0.05};
     Array sigma = {0.01, 0.015};
     Real flatRate = 0.02;
-    // swap params
+    // Swap params
     Real maturity = 1.0;
     Real tenor = 5.0;
     Real strike = 0.025;
-    // simulation params
+    // Simulation params
     Size nPaths = 1;
     Size nSteps = 100;
     Time dt = maturity / nSteps;
@@ -137,16 +138,16 @@ BOOST_AUTO_TEST_CASE(testUri){
     MersenneTwisterUniformRng uniRng(42);
     BoxMullerGaussianRng<MersenneTwisterUniformRng> gaussianRng(uniRng);
     
-    // logging factors
+    // Logging
     std::ofstream myfile;
     myfile.open("output.csv");
 
-    // loop through the paths
+    // Loop through paths
     for (Size p = 0; p < nPaths; ++p) {
-        Array factors(nFactors, 0.0); // keep track of each factor evolution
-        // loop through the steps
+        Array factors(nFactors, 0.0); // track of each factor evolution
+        // Loop through the steps
         for (Size s = 0; s < nSteps; ++s) {
-            // model each of the factors x each step
+            // Model each of the factors x step
             for (Size f = 0; f < nFactors; ++f) {
                 Real dw = sqrt(dt) * gaussianRng.next().value;
                 Real dx = (-kappa[f] * factors[f] * dt + sigma[f] * dw);
@@ -154,209 +155,237 @@ BOOST_AUTO_TEST_CASE(testUri){
             }
             myfile << factors[0] << "," << factors[1] << "\n";
         }
-        cout << "Hello wordl" << endl;
 
         myfile.close();
 
-        // compute the short rate at maturity
-        // todo: this can be merged with the previous step
+        // Compute the short rate at maturity
+        // TODO: this can be merged with the previous step
         Real shortRate = 0.0;
         shortRate += flatRate;
-        cout << "The short rate should be the flat rate " << flatRate << endl;
         for (Size f = 0; f < nFactors; ++f) {
             shortRate += factors[f];
         }
 
-        // compute swap value
+        // Compute swap value
         Real annuity = 0.0;
         Real floatLeg = 0.0;
 
-        cout << "Getting the deltas" << endl;
-        for (Size i = 1; i <= tenor; ++i) { // todo: review this loop
-            cout << "The delta is " << i << endl;
+        // Assumes annual payments such that deltas is time between payments
+        std::cout << "Getting the deltas" << endl;
+        for (Size i = 1; i <= tenor; ++i) { 
+            std::cout << "The delta is " << i << endl;
             Real df = exp(-shortRate * i);
             annuity += df;
             floatLeg += 0.02 * (i + maturity);
         }
-        cout << tenor << endl;
         Real fixLeg = annuity * strike;
         Real payoff = max(floatLeg - fixLeg, 0.0);
         sumPayoffs += payoff * exp(-shortRate * maturity);
     }
 
     Real expectedPayoff = sumPayoffs / nPaths;
-    cout << "The expected payoff is: " << expectedPayoff << endl;
-    cout << "Sum of payoffs: " << sumPayoffs << endl;
+    std::cout << "The expected payoff is: " << expectedPayoff << endl;
 };
 
-BOOST_AUTO_TEST_CASE(testHWEngine) {
-    Real nFactors = 4;
-
-    Array kappa = {1.18575, 0.0189524, 0.0601251, 0.0709152};
-    Matrix sigma = {{-0.0122469, 0.0105949, 0, 0}, {0, 0, -0.117401, 0.122529}};
-
-    Handle<YieldTermStructure> flatCurve(ext::make_shared<FlatForward>(0,
-        NullCalendar(), 0.02, Actual365Fixed()));
-
-    Currency currency = EURCurrency();
-
-    QuantLib::ext::shared_ptr<IrHwConstantParametrization> params =
-        QuantLib::ext::make_shared<IrHwConstantParametrization>(currency, flatCurve, sigma, kappa);
-
-    ext::shared_ptr<HwModel> model = ext::make_shared<HwModel>(params);
-
-    // discounting curve
-    Handle<YieldTermStructure> discCurve(
-        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
-    // forward (+10bp)
-    Handle<YieldTermStructure> forwardCurve1(
-        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0210, Actual365Fixed()));
-    // forward (-10bp)
-    Handle<YieldTermStructure> forwardCurve2(
-        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0190, Actual365Fixed()));
-
-    /*const QuantLib::ext::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
-        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discCurve, 0.01, 0.01);*/
-
-    // forward curve attached
-    QuantLib::ext::shared_ptr<SwapIndex> index1 =
-        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve1);
-    QuantLib::ext::shared_ptr<SwapIndex> index2 =
-        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve2);
-
-    Array times = {1.0, 5.0};
-
-    Swaption swaption1 = MakeSwaption(index1, 10 * Years, 0.02);
-    QuantLib::ext::shared_ptr<AnalyticHwSwaptionEngine> engine =
-    QuantLib::ext::make_shared<AnalyticHwSwaptionEngine>(times, swaption1, model);
-
-    cout << nFactors << endl;
-    //engine->calculate();
-    swaption1.setPricingEngine(engine);
-    swaption1.NPV();
-    // set the engine
-    // 
-    // run the NPV
-    // then adjust
-
-
-}
-
-BOOST_AUTO_TEST_CASE(testHWEngineTwo) {
-    Real nFactors = 4;
-    cout << nFactors << endl;
-    Calendar calendar = TARGET();
-    Date today(24, June, 2025);
+BOOST_AUTO_TEST_CASE(testAnalyticalvsSimulation) {
+    Date today(10, July, 2025);
     Settings::instance().evaluationDate() = today;
-    DayCounter dc = Actual365Fixed();
+    BOOST_TEST_MESSAGE("Initializing Analytical Soltuion");
 
-    Array kappa = {1.18575, 0.0189524, 0.0601251, 0.0709152};
-    Matrix sigma = {{-0.0122469, 0.0105949, 0, 0}, {0, 0, -0.117401, 0.122529}};
+    Handle<YieldTermStructure> ts(boost::make_shared<FlatForward>(today, 0.02, Actual360()));
 
-    // discounting curve
-    Handle<YieldTermStructure> discCurve(
-        QuantLib::ext::make_shared<FlatForward>(today, 0.02, dc));
-
-    Currency currency = EURCurrency();
-
-    QuantLib::ext::shared_ptr<IrHwConstantParametrization> params =
-        QuantLib::ext::make_shared<IrHwConstantParametrization>(currency, discCurve, sigma, kappa);
-
-    ext::shared_ptr<HwModel> model = ext::make_shared<HwModel>(params);
-
-    Period swaptionMaturity = 1 * Years;
-    Period swapTenor = 5 * Years;
+    Array kappa = {0.01};
+    QuantLib::Matrix sigma = {{0.01}};
     Real strike = 0.02;
-    ext::shared_ptr<SwapIndex> index = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(swapTenor, discCurve);
-    Swaption swaption = MakeSwaption(index, swaptionMaturity, strike);
-    Array times = {0.01, 0.5, 1};
-    //Array times(500);
-   /* for (int i = 0; i < 500; i++) {
-        times[i] = (i + 1) * 0.001;
-    }*/
-    QuantLib::ext::shared_ptr<AnalyticHwSwaptionEngine> engine =
-        QuantLib::ext::make_shared<AnalyticHwSwaptionEngine>(times, swaption, model);
-    swaption.setPricingEngine(engine);
-    Real price = swaption.NPV();
-    cout << "Price: " << price << endl;
-}
 
-BOOST_AUTO_TEST_CASE(testIntern) {
-    Date today = Settings::instance().evaluationDate();
-    Settings::instance().evaluationDate() = today;
+    Array sigmaLgm = {0.01}; // LGM model takes a array sigma (not a matrix)
+    
 
-    Handle<YieldTermStructure> flatCurve(boost::make_shared<FlatForward>(today, 0.02, Actual360()));
+    //Array kappa = {1.18575, 0.0189524, 0.0601251, 0.0709152};
+    //QuantLib::Matrix sigma = {{-0.0122469, 0.0105949, 0, 0}, {0, 0, -0.117401, 0.122529}};
 
-    Date start = today + 1 * Years;
-    Date end = start + 19 * Years;
-    Schedule schedule(start, end, Period(Annual), NullCalendar(), Unadjusted, Unadjusted, DateGeneration::Forward,
-                      false);
-    Real nominal = 10000000;
-    Rate fixedRate = 0.01;
-    ext::shared_ptr<IborIndex> euriborIndex = boost::make_shared<Euribor6M>(flatCurve);
-    VanillaSwap::Type swapType = VanillaSwap::Payer;
-    ext::shared_ptr<VanillaSwap> underlyingSwap = boost::make_shared<VanillaSwap>(
-        swapType, nominal, schedule, fixedRate, Actual360(), schedule, euriborIndex, 0.0, euriborIndex->dayCounter());
-    Date expiry = start - 1 * Days;
-    ext::shared_ptr<Exercise> europeanExercise(new EuropeanExercise(expiry));
-    Swaption swaption(underlyingSwap, europeanExercise);
+    // HW model
+    ext::shared_ptr<IrHwParametrization> params =
+        ext::make_shared<IrHwConstantParametrization>(EURCurrency(), ts, sigma, kappa);
+    ext::shared_ptr<HwModel> model = ext::make_shared<HwModel>(params);
 
-    Matrix sigma(1, 1, 0.01);
-    Array kappa(1, 0.01);
-    ext::shared_ptr<IrHwParametrization> irhw =
-        boost::make_shared<IrHwConstantParametrization>(EURCurrency(), flatCurve, sigma, kappa);
-    ext::shared_ptr<HwModel> hwModel = boost::make_shared<HwModel>(irhw);
+    // Underlying declaration
+    auto index = ext::make_shared<EuriborSwapIsdaFixA>(5 * Years, ts);
+    Swaption swp = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
 
-    Array times(1000);
-    for (int i = 0; i < 1000; i++) {
-        times[i] = (i + 1) * 0.001;
-    }
 
-    ext::shared_ptr<PricingEngine> hw_engine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(times, swaption, hwModel, flatCurve);
-    swaption.setPricingEngine(hw_engine);
+    // Create another swap for the LGM model (same as prev swap)
+    Swaption swpLgm = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
+   
+    // Define price engine
+    ext::shared_ptr<PricingEngine> hw_engine = boost::make_shared<AnalyticHwSwaptionEngine>(swp, model, ts);
+    
+    /*auto swpUnderlyingFixed = swpLgm.underlying()->fixedSchedule();
+    std::cout << "Print type " << typeid(swpUnderlyingFixed).name() << endl;
+    std::cout << "Print item " << swpUnderlyingFixed[0] << endl;
+    std::cout << "Print start " << swpUnderlyingFixed.startDate() << endl;
+    std::cout << "Print size " << swpUnderlyingFixed.size() << endl;*/
+    //Date startDate = swpUnderlyingFixed.startDate();
+    // cout << "Test array: " << sigmaDates[0] << endl;
 
-    // check fixedLeg_
-    const auto& fixedLeg = underlyingSwap->fixedLeg();
-    for (const auto& cf : fixedLeg) {
-        auto fixedCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(cf);
-        if (fixedCoupon) {
-            // std::cout << "This is in the test unit!!" << std::endl;
-            BOOST_CHECK_EQUAL(fixedCoupon->nominal(), nominal);
-            BOOST_CHECK_CLOSE(fixedCoupon->rate(), fixedRate, 1e-12);
-            BOOST_TEST_MESSAGE("Coupon date: " << fixedCoupon->date() << ", rate: " << fixedCoupon->rate());
-            // std::cout << "Payment Date: " << cf->date() << std::endl;
-        } else {
-            BOOST_ERROR("Expected a FixedRateCoupon but got something else.");
+    // LGM takes date array to know when to time-vary the sigma/kappa
+    // Thus, given constant params we don't vary our inputs (empty array)
+    Array sigmaDates;
+    Array kappaDates;
+
+    // Define LGM HW adaptor engine
+    auto hwAdaptor = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), ts, sigmaDates,sigmaLgm, kappaDates, kappa);
+    QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
+         QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
+
+    // Pass pricing engines
+    swp.setPricingEngine(hw_engine);
+    swpLgm.setPricingEngine(lgmEngine);
+
+    Real analyticalPrice = swp.NPV();
+    Real analyticalLgmPrice = swpLgm.NPV();
+    std::cout << "Analytical Price: " << analyticalPrice << std::endl;
+    std::cout << "The LGM adaptor price: " << analyticalLgmPrice << std::endl;
+
+
+    BOOST_TEST_MESSAGE("Initializing MC Simulation");
+    // Model params
+    //Size nFactors = 2;
+    //Array kappa = {0.03, 0.05}; // mean reversion speed
+  
+    // Swap params
+    Real maturity = 2.0;
+    Real flatRate = 0.02;
+    //Real tenor = 5.0;
+
+    // Simulation params
+    Size nPaths = 1000;
+    Size nSteps = 100;
+    Time dt = maturity / nSteps;
+    Real sumPayoffs = 0.0;
+
+    MersenneTwisterUniformRng uniRng(42);
+    BoxMullerGaussianRng<MersenneTwisterUniformRng> gaussianRng(uniRng);
+
+   const auto& fixedLeg = swp.underlying()->fixedLeg();
+   const auto& schedule = swp.underlying()->fixedSchedule();
+
+   std::vector<Time> payTimes;
+   std::vector<Real> accruals;
+   for (auto const& cf : fixedLeg) {
+       auto cpn = ext::dynamic_pointer_cast<FixedRateCoupon>(cf);
+       if (!cpn) continue;
+       //cout << ts->timeFromReference(cpn->date()) << "(Time from refencer)" << cf->date() << endl;
+       //cout << "This is accrual period: " << cpn->accrualPeriod() << endl;
+       payTimes.push_back(ts->timeFromReference(cpn->date()));
+       accruals.push_back(cpn->accrualPeriod());
+   }
+
+   Time T0 = ts->timeFromReference(schedule.startDate());
+   Time TN = ts->timeFromReference(schedule.endDate());
+
+   //cout << "This is T0: " << T0 << " and TN: " << TN << endl;
+
+   Real notional = swp.underlying()->nominal();
+   //std::cout << "This is the notional (should be 0): " << notional << std::endl;
+
+   Size nFactors = kappa.size();
+   //Size nBrownian = sigma.rows();
+   mt19937 rng(42);
+   normal_distribution<> stdNormal(0.0, 1.0);
+
+
+   // TODO: extend this to nFactors
+   auto getTheta = [](Real& t, Real& flatRate, Real& kappa, Real& sigma) {
+       return kappa * flatRate + (std::pow(sigma, 2) / (2 * kappa)) * (1 - exp(-2 * kappa * t));
+   };
+
+   // This is a simplified one factor simulation
+   for (Size path = 0; path < nPaths; ++path) {
+       Array factors(nFactors, flatRate); // TODO: this should start at 0 and not in 
+
+       for (Size step = 0; step < nSteps; ++step) {
+           Real t = step * dt;
+           Real theta = getTheta(t, flatRate, kappa[0], sigma[0][0]);
+           Real dW = stdNormal(rng) * sqrt(dt);
+           Real dr = (theta - kappa[0] * factors[0]) * dt + sigma[0][0] * dW;
+           factors += dr;
+                   
+       }
+       // THE CODE BELOW IS FOR THE MULTIFACTOR. However, for preliminary testing I'm using the above
+       // single factor loop proces
+
+       /*
+       for (Size step = 0; step < nSteps; ++step) {
+           vector<Real> dw(nBrownian);
+           for (Size j = 0; j < nBrownian; ++j) {
+               dw[j] = stdNormal(rng) * sqrt(dt);
+           }
+
+           for (Size i = 0; i < nFactors; ++i) {
+               Real diffusion = 0.0;
+               for (Size j = 0; j < nBrownian; ++j) {
+                   diffusion += sigma[j][i] * dw[j];
+               }
+               Real drift = -kappa[i] * factors[i];
+               factors[i] += drift * dt + diffusion;
+           }
+       }*/
+
+      
+        // TODO: this can be merged with the previous step
+        Real shortRate = 0.0;
+        for (Size f = 0; f < nFactors; ++f) {
+            shortRate += factors[f];
         }
+
+        Array state(1, shortRate);
+        // Calculate discount factors
+        // Compute P(t,T0) and P(t, TN)
+        //cout << "Maturity: " << maturity << ", T0: " << T0 << ", TN: " << TN << endl;
+        Real P_t_T0 = model->discountBond(maturity, T0, factors, ts);
+        //cout << "P_t_T0: " << P_t_T0 << endl;
+        Real P_t_TN = model->discountBond(maturity, TN, factors, ts);
+        // cout << "P_t_TN: " << P_t_TN << endl;
+        Real floatingPV = notional * (P_t_T0 - P_t_TN);
+
+
+        Real fixedPV = 0.0;
+        for (Size pt = 0; pt < payTimes.size(); ++pt) {
+            if (payTimes[pt] <= maturity) continue;
+            Real P_t_Ti = model->discountBond(maturity, payTimes[pt], factors, ts);
+            fixedPV += notional * strike * accruals[pt] * P_t_Ti;
+        }
+
+        Real swapPV = floatingPV - fixedPV;
+        Real payoff = max(swapPV, 0.0);
+
+        Real num_t = model->numeraire(maturity, factors, ts); // TODO this numeraire might be wrong
+        Real num_0 = 1.0;
+        sumPayoffs += payoff * num_0 / num_t;
     }
 
-    cout << "Hello I should be here " << endl;
-
-    Real npvAnalyticHw = swaption.NPV();
-
-    cout << "And the price is " << npvAnalyticHw << endl;
-
-    BOOST_TEST_MESSAGE("NPV: " << npvAnalyticHw);
-}
-
-
+    Real expectedPayoff = sumPayoffs / nPaths;
+    std::cout << "The sum payoff is: " << sumPayoffs << endl;
+    std::cout << "The expected payoff is: " << expectedPayoff << endl;
+};
 
 BOOST_AUTO_TEST_CASE(testMCSimulation) {
-    Array kappa = {1.18575, 0.0189524, 0.0601251, 0.0709152};
-    Matrix sigma = {{-0.0122469, 0.0105949, 0, 0}, {0, 0, -0.117401, 0.122529}};
-    Size nPaths = 100;
-    Time maturity = 1.0;
+    Array kappa = {0.01};
+    Matrix sigma = {{0.01}};
+    Size nPaths = 1000;
+    Time maturity = 2.0;
     Time tenor = 5.0;
     Rate strike  = 0.02;
-    //Real notinal = 1.0;
     Size nSteps = 100;
-    Time dt = 0.01;
+    Time dt = 0.02;
+    cout << "dt: " << dt << endl;
+    cout << "dt: " << maturity / nSteps << endl;
     Rate flatRate = 0.02;
 
     Size nFactors = kappa.size();
     Size nBrownian = sigma.rows();
-    cout << nFactors << " - " << nBrownian << endl;
+
     mt19937 rng(42);
     normal_distribution<> stdNormal(0.0, 1.0);
     Real sumPayoffs = 0.0;
@@ -375,23 +404,21 @@ BOOST_AUTO_TEST_CASE(testMCSimulation) {
                 for (Size j = 0; j < nBrownian; ++j) {
                     diffusion += sigma[j][i] * dw[j];
                 }
-                // review this part
+                // TODO: missing theta
                 Real drift = -kappa[i] * factors[i];
                 factors[i] += drift * dt + diffusion;
             }
         }
 
+        // Add factors
         Real rT = 0.02;
-      /*  Real rT = flatRate;
-        Rate flatRate = 0.02;*/
         for (Size i = 0; i < nFactors; ++i) {
             rT += factors[i];
         }
 
-        // swap value at exercise
+        // Swap value at exercise
         Real annuity = 0.0, floatLeg = 0.0;
         for (Size i = 1; i <= tenor; ++i) {
-            //Time Ti = maturity + i;
             DiscountFactor df = exp(-rT * i);
             annuity += df;
             floatLeg += df * flatRate;
@@ -400,11 +427,9 @@ BOOST_AUTO_TEST_CASE(testMCSimulation) {
         Real fixedLeg = strike * annuity;
         Real swapValue = floatLeg - fixedLeg;
         Real payoff = max(swapValue, 0.0);
-        // discout back to t = 0;
+        // Discout back to T0
         DiscountFactor df0T = exp(-flatRate * maturity);
         sumPayoffs += payoff * df0T;
-
-
     }
 
     Real NPV = sumPayoffs / nPaths;
