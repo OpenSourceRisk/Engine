@@ -32,8 +32,8 @@ namespace data {
 //! Perform date calculations for future contracts based on conventions
 class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
 public:
-    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 10);
-    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 10);
+    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 40);
+    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 40);
 
     QuantLib::Date nextExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                               QuantLib::Natural offset = 0, bool forOption = false) override;
