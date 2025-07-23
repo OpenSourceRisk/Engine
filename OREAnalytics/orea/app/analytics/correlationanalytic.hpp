@@ -33,16 +33,12 @@ namespace analytics {
 class CorrelationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CORRELATION";
-    static constexpr const char* sensiLookupKey = "SENSI";
     CorrelationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) { setLabel(LABEL); }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     void buildDependencies() override;
-    virtual QuantLib::ext::shared_ptr<SensitivityStream>sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-        return inputs_->sensitivityStream();
-    };
         
 protected:
     QuantLib::ext::shared_ptr<CorrelationReport> correlationReport_;

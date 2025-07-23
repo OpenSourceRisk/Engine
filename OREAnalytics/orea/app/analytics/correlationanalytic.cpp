@@ -36,12 +36,7 @@ void CorrelationAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
 }
 
-void CorrelationAnalyticImpl::buildDependencies() {
-    auto sensiAnalytic =
-        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
-    if (sensiAnalytic.second)
-        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
-}
+void CorrelationAnalyticImpl::buildDependencies() { }
 
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
@@ -86,9 +81,6 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
-    QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
-    /*if (!inputs_->crossAssetModelData()->correlations().empty()) {
-    }*/
     LOG("Build Correlation Calculator");
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
