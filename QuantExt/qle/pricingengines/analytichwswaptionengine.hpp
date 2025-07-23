@@ -9,11 +9,10 @@
 
 namespace QuantExt {
 
-class AnalyticHwSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results>,
-                                public PiecewiseConstantHelper1{
+class AnalyticHwSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results>{
 
 public:
-    AnalyticHwSwaptionEngine(const Array& t, const Swaption& swaption,
+    AnalyticHwSwaptionEngine(const Swaption& swaption,
                             const QuantLib::ext::shared_ptr<HwModel>& model,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());       
     

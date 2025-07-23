@@ -1,13 +1,13 @@
 #include <qle/pricingengines/analytichwswaptionengine.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
 #include <boost/bind/bind.hpp>
 
 namespace QuantExt {
 
-AnalyticHwSwaptionEngine::AnalyticHwSwaptionEngine(const Array& t,
-                                                    const Swaption& swaption,
+AnalyticHwSwaptionEngine::AnalyticHwSwaptionEngine( const Swaption& swaption,
                                                     const ext::shared_ptr<HwModel>&model,
                                                     const Handle<YieldTermStructure>& discountCurve)
-    : GenericEngine<Swaption::arguments, Swaption::results>(), PiecewiseConstantHelper1(t), 
+    : GenericEngine<Swaption::arguments, Swaption::results>(),
     model_(model), p_(model->parametrization()),
     c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
     swaption(swaption){
@@ -98,20 +98,31 @@ Real AnalyticHwSwaptionEngine::v() const{
     Date startDate = swaption.underlying()->fixedSchedule().startDate();
     Time T0 = c_->timeFromReference(startDate);
     
-    auto integrand = [this](Real t) -> Real {
+    auto integrand = [this](QuantLib::Real t) -> QuantLib::Real {
         Array x(p_->n(), 0.0); 
         QL_REQUIRE(p_->sigma_x(t).columns() == q(t,x).size(), "sigma_x and q arrays must be of the same size to perform element-wise multiplication");
         Array product = p_->sigma_x(t) * q(t,x);
         return std::pow(Norm2(product), 2);
     };
 
-    for (Size i = 0; i < y_->size(); ++i) {
-        y_->setParam(i, inverse(integrand(t_[i])));
-    }
-    PiecewiseConstantHelper1::update();
-    Real integral = this->int_y_sqr(T0);
+    //std::cout << "Is this a thing?" << std::endl;
+    ////std::cout << t_ << std::endl;
+    //std::cout << t_.size() << " " << y_->size() << std::endl;
+    //for (Size i = 0; i < y_->size(); ++i) {
+    //    Real ti = (i < t_.size() ? t_[i] : t_.back());
+    //    y_->setParam(i, inverse(integrand(ti)));
+    //    y_->setParam(i, inverse(integrand(t_[i])));
+    //}
+    //PiecewiseConstantHelper1::update();
+    //Real integral = this->int_y_sqr(T0);
 
-    return integral;
+    Real absoluteAccuracy = 1e-4;
+    Size maxEvaluations = 1e3;
+    SimpsonIntegral integrator(absoluteAccuracy, maxEvaluations);
+    Real v = integrator(integrand, 0.0, T0);
+
+
+    return v;
 }
 
 void AnalyticHwSwaptionEngine::calculate() const {
