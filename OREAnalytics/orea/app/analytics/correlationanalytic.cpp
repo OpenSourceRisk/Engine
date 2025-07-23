@@ -36,7 +36,12 @@ void CorrelationAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
 }
 
-void CorrelationAnalyticImpl::buildDependencies() { }
+void CorrelationAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+}
 
 void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {

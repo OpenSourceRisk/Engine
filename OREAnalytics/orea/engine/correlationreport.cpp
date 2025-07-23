@@ -28,6 +28,34 @@
 namespace ore {
 namespace analytics {
 
+std::string CorrelationReport::mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF) { 
+    std::vector<std::string> ir = {"DiscountCurve", "IndexCurve", "OptionletVolatility"};
+    std::vector<std::string> fx = {"FXSpot", "FXVolatility"};
+    std::vector<std::string> inf = {"ZeroInflationCurve"};
+    std::vector<std::string> cr = {"SurvivalProbability"};
+    std::vector<std::string> eq = {"EquitySpot", "EquityVolatility"};
+    std::vector<std::string> com = {};
+    std::vector<std::string> crstate = {};
+
+    std::unordered_map<std::string, std::vector<std::string>> mapping;
+    mapping["IR"] = ir;
+    mapping["FX"] = fx;
+    mapping["INF"] = inf;
+    mapping["CR"] = cr;
+    mapping["EQ"] = eq;
+    mapping["COM"] = com;
+    mapping["CrState"] = crstate;
+    
+    for (const auto& pair : mapping) {
+        const auto& keyMap = pair.first;
+        const auto& vec = pair.second;
+        if (std::find(vec.begin(), vec.end(), ore::data::to_string(keyF)) != vec.end()) {
+            return keyMap;
+        }
+    }
+    return "";
+}
+
 void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     
     hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(timePeriods(), hisScenGen_);
@@ -70,7 +98,7 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
         for (Size row = col + 1; row < deltaKeys.size(); row++) {
             RiskFactorKey a = deltaKeys[col];
             RiskFactorKey b = deltaKeys[row];
-            //The cube Matrix has plenty of 0 values, meaning 0 correlations
+            //The cube has plenty of 0 values, meaning 0 correlations
             //We filter them
             if (correlationMatrix_[col][row] != 0) {
                 correlationPairs_[std::make_pair(a, b)] = correlationMatrix_[col][row];
@@ -79,19 +107,15 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     }
     writeReports(report);
 
-    //InstantaneousCorrelation is std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>
-    //std::pair<CorrelationFactor, CorrelationFactor> CorrelationKey;
-    /*struct CorrelationFactor {
-        QuantExt::CrossAssetModel::AssetType type;
-        std::string name;
-        QuantLib::Size index;
-    };*/
+    // Instantaneous Correlation si a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
     /*std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
     for (auto const& cor : correlationPairs_) {
         RiskFactorKey pair1 = cor.first.first;
         RiskFactorKey pair2 = cor.first.second;
-        CorrelationFactor corrFactor1;
-        CorrelationFactor corrFactor2;
+        string asset1 = mapRiskFactorToAssetType(pair1.keytype);
+        string asset2 = mapRiskFactorToAssetType(pair2.keytype);
+        CorrelationFactor corrFactor1 {parseCamAssetType(asset1), pair1.name, pair1.index};
+        CorrelationFactor corrFactor2 {parseCamAssetType(asset2), pair2.name, pair2.index};
         std::pair<CorrelationFactor, CorrelationFactor> correlationKey = std::make_pair(corrFactor1, corrFactor2);
         mapInstantaneousCor[correlationKey] =
             QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));

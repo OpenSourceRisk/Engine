@@ -62,6 +62,7 @@ protected:
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
     std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
 };
 
 } // namespace analytics
