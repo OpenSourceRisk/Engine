@@ -34,7 +34,7 @@ std::string CorrelationReport::mapRiskFactorToAssetType(RiskFactorKey::KeyType k
     std::vector<std::string> inf = {"ZeroInflationCurve"};
     std::vector<std::string> cr = {"SurvivalProbability"};
     std::vector<std::string> eq = {"EquitySpot", "EquityVolatility"};
-    std::vector<std::string> com = {};
+    std::vector<std::string> com = {"CommodityCurve"};
     std::vector<std::string> crstate = {};
 
     std::unordered_map<std::string, std::vector<std::string>> mapping;
@@ -108,19 +108,32 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     writeReports(report);
 
     // Instantaneous Correlation si a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
-    /*std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+    std::vector<std::string> vecAssetType = {"DiscountCurve", "FXSpot", "EquitySpot", "SurvivalProbability", "ZeroInflationCurve", "CommodityCurve"};
     for (auto const& cor : correlationPairs_) {
         RiskFactorKey pair1 = cor.first.first;
         RiskFactorKey pair2 = cor.first.second;
-        string asset1 = mapRiskFactorToAssetType(pair1.keytype);
-        string asset2 = mapRiskFactorToAssetType(pair2.keytype);
-        CorrelationFactor corrFactor1 {parseCamAssetType(asset1), pair1.name, pair1.index};
-        CorrelationFactor corrFactor2 {parseCamAssetType(asset2), pair2.name, pair2.index};
-        std::pair<CorrelationFactor, CorrelationFactor> correlationKey = std::make_pair(corrFactor1, corrFactor2);
-        mapInstantaneousCor[correlationKey] =
-            QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
+        //We filter the RiskFactorKey because the instantaneous correlation only have one IR, FX, INF etc
+        if (std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair1.keytype)) !=
+                vecAssetType.end() &&
+            std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair2.keytype)) !=
+                vecAssetType.end()) {
+            //We want to exclude the combination type DiscountCurve/USD/0 and DiscountCurve/USD/1
+            //We select only those riskfactor to be mapped to an asset type
+            if (!((pair1.name == pair2.name) &&
+                    (ore::data::to_string(pair1.keytype) == ore::data::to_string(pair2.keytype)))) {
+                string asset1 = mapRiskFactorToAssetType(pair1.keytype);
+                string asset2 = mapRiskFactorToAssetType(pair2.keytype);
+                CorrelationFactor corrFactor1{parseCamAssetType(asset1), pair1.name, pair1.index};
+                CorrelationFactor corrFactor2{parseCamAssetType(asset2), pair2.name, pair2.index};
+                std::pair<CorrelationFactor, CorrelationFactor> correlationKey =
+                    std::make_pair(corrFactor1, corrFactor2);
+                mapInstantaneousCor[correlationKey] =
+                    QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
+            }
+        }
     }
-    instantaneousCorrelation_ = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);*/
+    instantaneousCorrelation_ = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);
 }
 
 void CorrelationReport::writeReports(const ext::shared_ptr<Report>& report) {
