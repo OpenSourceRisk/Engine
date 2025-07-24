@@ -515,8 +515,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 new BlackConstantVol(asof, Calendar(), callData[0], dayCounter_));
         } else {
             // create a vol surface from the calls
-            QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
-                QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
+            QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> callSurface =
+                QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(asof, calendar_, callExpiries, callStrikes, callData,
                                                                 dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                                                                 timeExtrapolation);
 
@@ -525,8 +525,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 vol_ = callSurface;
             } else {
                 // otherwise create a vol surface from puts and strip for a final surface
-                QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
-                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
+                QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> putSurface =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(asof, calendar_, putExpiries, putStrikes,
                                                                     putData, dayCounter_, flatStrikeExtrap,
                                                                     flatStrikeExtrap, timeExtrapolation);
 

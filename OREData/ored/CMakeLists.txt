@@ -1,8 +1,8 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
-configuration/bootstrapconfig.cpp
 configuration/baseltrafficlightconfig.cpp
+configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
@@ -331,6 +331,7 @@ scripting/engines/amccgcurrencyswapengine.cpp
 scripting/engines/amccgfxforwardengine.cpp
 scripting/engines/amccgfxoptionengine.cpp
 scripting/engines/amccgmultilegoptionengine.cpp
+scripting/engines/amccgpricingengine.cpp
 scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp

@@ -41,7 +41,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, const ext::shared_ptr<CommodityIndex>& index,
     Natural paymentLag, const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, Natural pricingLag,
     const Calendar& pricingLagCalendar, Real spread, Real gearing, PaymentTiming paymentTiming, bool isInArrears,
-    bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,
+    bool useFuturePrice, bool useFutureExpiryDate, Integer futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, const QuantLib::Date& paymentDateOverride,
     const QuantLib::Date& pricingDateOverride, QuantLib::Natural dailyExpiryOffset,
     const ext::shared_ptr<FxIndex>& fxIndex, const bool isAveragingWithBalanceMonth,
@@ -270,7 +270,7 @@ CommodityIndexedLeg& CommodityIndexedLeg::useFutureExpiryDate(bool flag) {
     return *this;
 }
 
-CommodityIndexedLeg& CommodityIndexedLeg::withFutureMonthOffset(Natural futureMonthOffset) {
+CommodityIndexedLeg& CommodityIndexedLeg::withFutureMonthOffset(Integer futureMonthOffset) {
     futureMonthOffset_ = futureMonthOffset;
     return *this;
 }

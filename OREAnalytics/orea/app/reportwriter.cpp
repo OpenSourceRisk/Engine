@@ -170,11 +170,6 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
-        if (!trade->hasCashflows()) {
-            DLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
         try {
 
             auto data = generateCashflowReportData(trade, baseCurrency, market, configuration, includePastCashflows);

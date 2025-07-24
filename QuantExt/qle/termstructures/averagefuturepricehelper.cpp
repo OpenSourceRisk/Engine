@@ -37,7 +37,7 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(const Handle<Quote>& price,
     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
     const Calendar& calendar,
     Natural deliveryDateRoll,
-    Natural futureMonthOffset,
+    Integer futureMonthOffset,
     bool useBusinessDays,
     Natural dailyExpiryOffset)
     : PriceHelper(price) {
@@ -51,7 +51,7 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
     const Calendar& calendar,
     Natural deliveryDateRoll,
-    Natural futureMonthOffset,
+    Integer futureMonthOffset,
     bool useBusinessDays,
     Natural dailyExpiryOffset)
     : PriceHelper(price) {
@@ -60,12 +60,12 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
 
 void AverageFuturePriceHelper::init(const QuantLib::ext::shared_ptr<CommodityIndex>& index,
     const Date& start, const Date& end, const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
-    const Calendar& calendar, Natural deliveryDateRoll, Natural futureMonthOffset,
+    const Calendar& calendar, Natural deliveryDateRoll, Integer futureMonthOffset,
     bool useBusinessDays, Natural dailyExpiryOffset) {
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
-    auto indexClone = index->clone(Date(), termStructureHandle_);
+    auto indexClone = index->clone(Date(), Date(), termStructureHandle_);
 
     // While bootstrapping is happening, this price helper's price term structure handle, termStructureHandle_, will 
     // be updated multiple times. We don't want the index notified each time.

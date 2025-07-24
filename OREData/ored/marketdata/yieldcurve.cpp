@@ -36,6 +36,7 @@
 #include <ql/time/imm.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <ql/math/interpolations/mixedinterpolation.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -170,6 +171,9 @@ buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, 
                                     LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative,
                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
         break;
+    case YieldCurve::InterpolationMethod::BackwardFlat:
+        yieldts.reset(new CurveType<QuantLib::BackwardFlat>(dates, rates, dayCounter, QuantLib::BackwardFlat()));
+        break;
 
     default:
         QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
@@ -235,6 +239,8 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic;
     else if (s == "LogMixedLinearCubicNaturalSpline")
         return YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline;
+    else if (s == "BackwardFlat")
+        return YieldCurve::InterpolationMethod::BackwardFlat;
     else if (s == "NelsonSiegel")
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
@@ -291,6 +297,8 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "KrugerLogMixedLinearCubic";
     else if (m == YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline)
         return out << "LogMixedLinearCubicNaturalSpline";
+    else if (m == YieldCurve::InterpolationMethod::BackwardFlat)
+        return out << "BackwardFlat";
     else if (m == YieldCurve::InterpolationMethod::NelsonSiegel)
         return out << "NelsonSiegel";
     else if (m == YieldCurve::InterpolationMethod::Svensson)
@@ -628,6 +636,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0))
             break;
+        case InterpolationMethod::BackwardFlat:
+            PWYC(ZeroYield, BackwardFlat, BackwardFlat())
+            break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");
         }
@@ -699,6 +710,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0))
             break;
+        case InterpolationMethod::BackwardFlat:
+            PWYC(Discount, BackwardFlat, BackwardFlat())
+            break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");
         }
@@ -769,6 +783,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                  LogMixedLinearCubic(mixedInterpolationSize, MixedInterpolation::ShareRanges,
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0))
+            break;
+        case InterpolationMethod::BackwardFlat:
+            PWYC(ForwardRate, BackwardFlat, BackwardFlat())
             break;
         default:
             QL_FAIL("Interpolation method '" << interpolationMethod_[index] << "' not recognised.");

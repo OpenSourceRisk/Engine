@@ -26,6 +26,7 @@
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
+#include <qle/termstructures/oiscapfloorhelper.hpp>
 
 namespace QuantExt {
 
@@ -38,7 +39,8 @@ class PiecewiseAtmOptionletCurve : public QuantLib::OptionletVolatilityStructure
 public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
 
-    PiecewiseAtmOptionletCurve(QuantLib::Natural settlementDays, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
+    PiecewiseAtmOptionletCurve(QuantLib::Natural settlementDays,
+                               const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
                                const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
                                bool flatFirstPeriod = true,
@@ -47,7 +49,8 @@ public:
                                const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
                                const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
                                bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
-                               const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
+                               const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
+                               const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
 
     PiecewiseAtmOptionletCurve(const QuantLib::Date& referenceDate,
                                const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
@@ -59,7 +62,8 @@ public:
                                const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
                                const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
                                bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
-                               const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
+                               const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
+                               const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
 
     //! \name Inspectors
     //@{
@@ -134,6 +138,10 @@ private:
     //! The bootstrapper
     Bootstrap<optionlet_curve> bootstrap_;
 
+    //! for OI underlyings
+    Period rateComputationPeriod_;
+    Size onCapSettlementDays_;
+
     //! The stripped optionlet curve
     QuantLib::ext::shared_ptr<optionlet_curve> curve_;
 
@@ -155,19 +163,21 @@ private:
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     QuantLib::Natural settlementDays, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
-    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod,
+    const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
-    const Bootstrap<optionlet_curve>& bootstrap)
+    const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
     : QuantLib::OptionletVolatilityStructure(settlementDays, cftvc->calendar(), cftvc->businessDayConvention(),
                                              cftvc->dayCounter()),
       cftvc_(cftvc), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap), tenors_(cftvc_->optionTenors()),
-      helpers_(tenors_.size()), quotes_(tenors_.size()) {
+      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap),
+      rateComputationPeriod_(rateComputationPeriod), onCapSettlementDays_(onCapSettlementDays),
+      tenors_(cftvc_->optionTenors()), helpers_(tenors_.size()), quotes_(tenors_.size()) {
 
     initialise(index, discount);
 
@@ -179,19 +189,21 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
-    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod,
+    const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
-    const Bootstrap<optionlet_curve>& bootstrap)
+    const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
     : QuantLib::OptionletVolatilityStructure(referenceDate, cftvc->calendar(), cftvc->businessDayConvention(),
                                              cftvc->dayCounter()),
       cftvc_(cftvc), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap), tenors_(cftvc_->optionTenors()),
-      helpers_(tenors_.size()), quotes_(tenors_.size()) {
+      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap),
+      rateComputationPeriod_(rateComputationPeriod), onCapSettlementDays_(onCapSettlementDays),
+      tenors_(cftvc_->optionTenors()), helpers_(tenors_.size()), quotes_(tenors_.size()) {
 
     initialise(index, discount);
 
@@ -286,6 +298,8 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
     // Observe the underlying cap floor term volatility curve
     registerWith(cftvc_);
 
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
+
     // If the term structure is not moving, ensure that the cap floor helpers are not moving and are set up with the
     // correct effective date relative to the reference date. Mimic logic in MakeCapFloor here.
     Date effectiveDate;
@@ -293,7 +307,7 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
         Calendar cal = index->fixingCalendar();
         Date ref = referenceDate();
         ref = cal.adjust(ref);
-        effectiveDate = cal.advance(ref, index->fixingDays() * Days);
+        effectiveDate = cal.advance(ref, (isOis ? onCapSettlementDays_ : index->fixingDays()) * Days);
     }
 
     // Number of tenors, helpers and quotes depends on whether we are interpolating on optionlet volatilities or
@@ -301,12 +315,12 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
     if (!interpOnOptionlets_) {
 
         // We are interpolating on the cap floor term volatilities
-        Period indexTenor = index->tenor();
+        Period indexTenor = isOis ? rateComputationPeriod_ : index->tenor();
         Period maxCapFloorTenor = tenors_.back();
 
-        // Add tenor of first cap floor - 2 x index tenor since first optionlet is excluded
+        // Add tenor of first cap floor - 2 x index tenor since first optionlet is excluded for ibor
         tenors_.clear();
-        tenors_.push_back(indexTenor + indexTenor);
+        tenors_.push_back(isOis ? indexTenor : indexTenor + indexTenor);
         QL_REQUIRE(maxCapFloorTenor >= tenors_.back(),
                    "First cap floor tenor, " << tenors_.back()
                                              << ", is greater than cap floor term vol surface's max tenor, "
@@ -327,9 +341,16 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
     // Initialise the quotes and helpers
     for (Size i = 0; i < tenors_.size(); i++) {
         quotes_[i] = QuantLib::ext::make_shared<SimpleQuote>(cftvc_->volatility(tenors_[i], 0.01));
-        helpers_[i] = QuantLib::ext::make_shared<CapFloorHelper>(
-            CapFloorHelper::Cap, tenors_[i], Null<Real>(), Handle<Quote>(quotes_[i]), index, discount, this->moving_,
-            effectiveDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
+        if (isOis) {
+            helpers_[i] = QuantLib::ext::make_shared<OISCapFloorHelper>(
+                CapFloorHelper::Automatic, tenors_[i], rateComputationPeriod_, Null<Real>(), Handle<Quote>(quotes_[i]),
+                QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index), discount, this->moving_, effectiveDate,
+                CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
+        } else {
+            helpers_[i] = QuantLib::ext::make_shared<CapFloorHelper>(
+                CapFloorHelper::Cap, tenors_[i], Null<Real>(), Handle<Quote>(quotes_[i]), index, discount,
+                this->moving_, effectiveDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
+        }
     }
 }
 

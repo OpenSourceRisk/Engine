@@ -31,6 +31,7 @@
 #include <ql/quote.hpp>
 #include <ql/time/date.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -200,6 +201,22 @@ inline void AverageFXLinkedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-} // namespace QuantExt
 
+class FXLinkedTypedCashFlow : public QuantExt::FXLinkedCashFlow {
+public:
+    FXLinkedTypedCashFlow(const QuantLib::Date& cashFlowDate, const QuantLib::Date& fixingDate,
+                          QuantLib::Real foreignAmount, QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+                          const QuantExt::TypedCashFlow::Type type = QuantExt::TypedCashFlow::Type::Unspecified)
+        : QuantExt::FXLinkedCashFlow(cashFlowDate, fixingDate, foreignAmount, fxIndex), type_(type) {}
+
+    //! \name Inspectors
+    //@{
+    //! Return the cashflow type
+    QuantExt::TypedCashFlow::Type type() const { return type_; }
+
+private:
+    QuantExt::TypedCashFlow::Type type_;
+};
+
+} // namespace QuantExt
 #endif

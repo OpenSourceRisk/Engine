@@ -104,6 +104,8 @@ public:
 
     virtual bool exercise() const = 0;
 
+    Real cachedExerciseValue() const { return cachedExerciseValue_; }
+  
 protected:
     bool isLong_;
     bool isPhysicalDelivery_;
@@ -118,6 +120,7 @@ protected:
     mutable QuantLib::Date exerciseDate_;
     mutable QuantLib::Date settlementDate_;
     mutable Real cachedNpv_;
+    mutable Real cachedExerciseValue_ = QuantLib::Null<Real>();
 };
 
 //! European Option Wrapper

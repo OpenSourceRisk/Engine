@@ -124,30 +124,27 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         boost::algorithm::to_lower(p1);
         fxCurvatureWeights_[i] = simmConfiguration_->curvatureWeight(CrifRecord::RiskType::FXVol, p1);
     }
-
-    // debug output
-    // std::cout << "corrIrFx             = " << corrIrFx_ << std::endl;
-    // std::cout << "irDeltaRw            = " << irDeltaRw_ << std::endl;
-    // std::cout << "irVegaRw             = " << irVegaRw_ << std::endl;
-    // std::cout << "irGamma              = " << irGamma_ << std::endl;
-    // std::cout << "irDeltaCorr          = \n" << irDeltaCorrelations_ << std::endl;
-    // std::cout << "irVegaCorr           = \n" << irVegaCorrelations_ << std::endl;
-    // std::cout << "irCurvatureScaling   = " << irCurvatureScaling_ << std::endl;
-    // std::cout << "irCurvatureWeights   = " << irCurvatureWeights_ << std::endl;
-    // std::cout << "fxDeltaRw            = " << fxDeltaRw_ << std::endl;
-    // std::cout << "fxVegaRw             = " << fxVegaRw_ << std::endl;
-    // std::cout << "fxSigma              = " << fxSigma_ << std::endl;
-    // std::cout << "fxHvr                = " << fxHvr_ << std::endl;
-    // std::cout << "fxCorr               = " << fxCorr_ << std::endl;
-    // std::cout << "fxVegaCorr           = \n" << fxVegaCorrelations_ << std::endl;
-    // std::cout << "fxCurvatureWeights   = " << fxCurvatureWeights_ << std::endl;
-    // end debug output
 }
 
-QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
-                                                  const std::vector<QuantExt::RandomVariable>& fxDelta,
-                                                  const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega) {
+void copyRandomVariable(const RandomVariable& from, QuantLib::ext::shared_ptr<QuantExt::RandomVariable> to) {
+    if (to != nullptr) {
+        QL_REQUIRE(to->size() == from.size(), "RandomVariable size mismatch");
+        for (Size i = 0; i < from.size(); ++i)
+            to->set(i, from[i]);
+    }
+}
+
+QuantExt::RandomVariable
+SimpleDynamicSimm::value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
+                         const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
+                         const std::vector<QuantExt::RandomVariable>& fxDelta,
+                         const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginIR,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginFX,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginFX,
+                         QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginFX) {
 
     // DeltaMargin_IR
 
@@ -181,6 +178,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         deltaMarginIr = sqrt(deltaMarginIr);
     }
 
+    copyRandomVariable(deltaMarginIr, deltaMarginIR);
+
     // VegaMargin_IR
 
     RandomVariable vegaMarginIr(n_, 0.0);
@@ -212,6 +211,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         vegaMarginIr = sqrt(vegaMarginIr);
     }
+
+    copyRandomVariable(vegaMarginIr, vegaMarginIR);
 
     // CurvatureMargin_IR
 
@@ -253,6 +254,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
                             RandomVariable(n_, irCurvatureScaling_);
     }
 
+    copyRandomVariable(curvatureMarginIr, curvatureMarginIR);
+
     // SIMM_IR
 
     RandomVariable imIr = deltaMarginIr + vegaMarginIr + curvatureMarginIr;
@@ -260,7 +263,6 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
     // DeltaMargin_FX
 
     RandomVariable deltaMarginFx(n_, 0.0);
-
     {
         std::vector<RandomVariable> Kb(currencies_.size(), RandomVariable(n_, 0.0));
 
@@ -277,6 +279,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         deltaMarginFx = sqrt(deltaMarginFx);
     }
+
+    copyRandomVariable(deltaMarginFx, deltaMarginFX);
 
     // VegaMargin_FX
 
@@ -309,6 +313,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
         vegaMarginFx = sqrt(vegaMarginFx);
     }
+
+    copyRandomVariable(vegaMarginFx, vegaMarginFX);
 
     // CurvatureMargin_FX
 
@@ -349,6 +355,8 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
         curvatureMarginFx = max(RandomVariable(n_, 0.0), S + lambda * sqrt(curvatureMarginFx));
     }
 
+    copyRandomVariable(curvatureMarginFx, curvatureMarginFX);
+
     // SIMM_FX
 
     RandomVariable imFx = deltaMarginFx + vegaMarginFx + curvatureMarginFx;
@@ -357,30 +365,6 @@ QuantExt::RandomVariable SimpleDynamicSimm::value(const std::vector<std::vector<
 
     RandomVariable imProductRatesFx =
         sqrt(imIr * imIr + imFx * imFx + RandomVariable(n_, 2.0 * corrIrFx_) * imIr * imFx);
-
-    // SIMM = SIMM_product = SIMM_RatesFX
-
-    // debug output
-    // std::cout << expectation(imProductRatesFx).at(0) << "," << expectation(imIr).at(0) << ","
-    //           << expectation(deltaMarginIr).at(0) << "," << expectation(vegaMarginIr).at(0) << ","
-    //           << expectation(curvatureMarginIr).at(0) << "," << expectation(imFx).at(0) << ","
-    //           << expectation(deltaMarginFx).at(0) << "," << expectation(vegaMarginFx).at(0) << ","
-    //           << expectation(curvatureMarginFx).at(0) << std::endl;
-
-    // std::cout << imProductRatesFx.at(7) << "," << imIr.at(7) << "," << deltaMarginIr.at(7) << "," << vegaMarginIr.at(7)
-    //           << "," << curvatureMarginIr.at(7) << "," << imFx.at(7) << "," << deltaMarginFx.at(7) << ","
-    //           << vegaMarginFx.at(7) << "," << curvatureMarginFx.at(7) << std::endl;
-
-    // std::cout << "SIMM_RatesFX         : " << expectation(imProductRatesFx).at(0) << std::endl;
-    // std::cout << "  SIMM_Rates         : " << expectation(imIr).at(0) << std::endl;
-    // std::cout << "    delta            : " << expectation(deltaMarginIr).at(0) << std::endl;
-    // std::cout << "    vega             : " << expectation(vegaMarginIr).at(0) << std::endl;
-    // std::cout << "    curvature        : " << expectation(curvatureMarginIr).at(0) << std::endl;
-    // std::cout << "  SIMM_FX            : " << expectation(imFx).at(0) << std::endl;
-    // std::cout << "    delta            : " << expectation(deltaMarginFx).at(0) << std::endl;
-    // std::cout << "    vega             : " << expectation(vegaMarginFx).at(0) << std::endl;
-    // std::cout << "    curvature        : " << expectation(curvatureMarginFx).at(0) << std::endl;
-    // debug debg output
 
     return imProductRatesFx;
 }
