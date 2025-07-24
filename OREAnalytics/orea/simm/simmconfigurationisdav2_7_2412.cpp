@@ -1304,7 +1304,7 @@ SimmConfiguration_ISDA_V2_7_2412::SimmConfiguration_ISDA_V2_7_2412(const QuantLi
 is the historical volatility ratio for the interest-rate risk class (see page 8 section 11(d)
 of the ISDA-SIMM-v2.7+2412 documentation).
 */
-QuantLib::Real SimmConfiguration_ISDA_V2_7_2412::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfiguration_ISDA_V2_7_2412::curvatureMarginScaling() const { return std::pow(hvr_ir_, -2.0); }
 
 void SimmConfiguration_ISDA_V2_7_2412::addLabels2(const CrifRecord::RiskType& rt, const string& label_2) {
     // Call the shared implementation
