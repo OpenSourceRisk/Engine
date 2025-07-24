@@ -814,7 +814,6 @@ void LegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Notionals")) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
-            auto valuation_date = Settings::instance().evaluationDate();
             resetStartDate_ = XMLUtils::getChildValue(fxResetNode, "StartDate", false);
             if (resetStartDate_.empty()) {
                 isNotResetXCCY_ = false;
