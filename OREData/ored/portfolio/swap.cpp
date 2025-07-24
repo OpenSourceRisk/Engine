@@ -84,15 +84,12 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         // We want to activate the FxReset when we hit the start date
         if (!legData_[i].resetStartDate().empty()) {
             requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
-            std::cout << "StartDate = " << legData_[i].resetStartDate() << " fxIndex = " << legData_[i].fxIndex()
-                      << std::endl;
             auto indexFixing = market->fxIndex(legData_[i].fxIndex());
             Real resetFixing = 1.0;
             try {
                 resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
             }   
             catch (...) { }
-            std::cout << "Fixing = " << resetFixing << std::endl;
             legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
         }
     }
