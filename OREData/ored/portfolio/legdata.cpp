@@ -923,9 +923,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
         XMLNode* resetNode = doc.allocNode("FXReset");
         if (!resetStartDate_.empty()) {
             XMLUtils::addChild(doc, resetNode, "StartDate", resetStartDate_);
-        } else {
-            XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
         }
+        XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
         XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
         XMLUtils::appendNode(notionalsNodePtr, resetNode);
