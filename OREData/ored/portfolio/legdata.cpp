@@ -823,12 +823,10 @@ void LegData::fromXML(XMLNode* node) {
                 fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
                 indices_.insert(fxIndex_); 
             } else {
-                if (valuation_date >= parseDate(resetStartDate_)) {
-                    isNotResetXCCY_ = false;
-                    foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
-                    fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
-                    indices_.insert(fxIndex_);
-                }
+                isNotResetXCCY_ = false;
+                foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
+                fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
+                indices_.insert(fxIndex_);
             }
             if (XMLUtils::getChildNode(node, "FixingDays")) {
                 WLOG("LegData::fromXML, node FixingDays has been deprecated, fixing days are "
