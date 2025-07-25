@@ -518,12 +518,14 @@ void FixingDateGetter::visit(CPICashFlow& c) {
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
     bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear;
-
-    requiredFixings_.addZeroInflationFixingDate(
-        c.baseDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
-        zeroInflationIndex->frequency(), zeroInflationIndex->availabilityLag(), c.interpolation(), c.frequency(),
-        c.date());
-
+    
+    // if no base CPI was provided we needa fixing for the base date
+    if (c.baseFixing() == Null<Real>()) {
+        requiredFixings_.addZeroInflationFixingDate(
+            c.baseDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
+            zeroInflationIndex->frequency(), zeroInflationIndex->availabilityLag(), c.interpolation(), c.frequency(),
+            c.date());
+    }
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
         zeroInflationIndex->frequency(), zeroInflationIndex->availabilityLag(), c.interpolation(), c.frequency(),
