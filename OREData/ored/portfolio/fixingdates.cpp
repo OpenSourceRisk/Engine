@@ -534,11 +534,13 @@ void FixingDateGetter::visit(CPICoupon& c) {
 
     bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear;
 
-    requiredFixings_.addZeroInflationFixingDate(
-        c.baseDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
-        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
-        c.cpiIndex()->frequency(), c.date());
-
+    // if no base CPI was provided we needa fixing for the base date
+    if (c.baseCPI() == Null<Real>()) {
+        requiredFixings_.addZeroInflationFixingDate(
+            c.baseDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
+            c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
+            c.cpiIndex()->frequency(), c.date());
+    }
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
         c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
