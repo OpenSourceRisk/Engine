@@ -56,7 +56,10 @@ public:
     //! Detailed constructor
     CommodityFixedLegData(const std::vector<QuantLib::Real>& quantities, const std::vector<std::string>& quantityDates,
                           const std::vector<QuantLib::Real>& prices, const std::vector<std::string>& priceDates,
-                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = "");
+                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = std::string(),
+                          const std::string& settlementCurrency = std::string(),
+                          const std::string& settlementFxIndex = std::string(),
+                          const std::string& settlementFixingDate = std::string());
 
     //! \name Inspectors
     //@{
@@ -66,6 +69,9 @@ public:
     const std::vector<std::string>& priceDates() const { return priceDates_; }
     CommodityPayRelativeTo commodityPayRelativeTo() const { return commodityPayRelativeTo_; }
     const std::string& tag() const { return tag_; }
+    const string& settlementCurrency() const { return settlementCurrency_; }
+    const string& settlementFxIndex() const { return settlementFxIndex_; }
+    const string& settlementFixingDate() const { return settlementFixingDate_; }
     //@}
 
     /*! \brief Set the fixed leg data quantities.
@@ -91,6 +97,9 @@ private:
     std::vector<std::string> priceDates_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
     std::string tag_;
+    std::string settlementCurrency_;
+    std::string settlementFxIndex_;
+    std::string settlementFixingDate_;
 };
 
 class CommodityFloatingLegData : public ore::data::LegAdditionalData {
@@ -109,14 +118,16 @@ public:
         const std::vector<QuantLib::Real>& spreads = {}, const std::vector<std::string>& spreadDates = {},
         const std::vector<QuantLib::Real>& gearings = {}, const std::vector<std::string>& gearingDates = {},
         CommodityPricingDateRule pricingDateRule = CommodityPricingDateRule::FutureExpiryDate,
-        const std::string& pricingCalendar = "", QuantLib::Natural pricingLag = 0,
+        const std::string& pricingCalendar = std::string(), QuantLib::Natural pricingLag = 0,
         const std::vector<std::string>& pricingDates = {}, bool isAveraged = false, bool isInArrears = true,
         QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         bool excludePeriodStart = true, QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-        bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
-        QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "",
-        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+        bool useBusinessDays = true, const std::string& tag = std::string(),
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
+        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = std::string(),
+        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+        const std::string& settlementCurrency = std::string(), const std::string& settlementFxIndex = std::string(),
+        const std::string& settlementFixingDate = std::string());
 
     //! \name Inspectors
     //@{
@@ -148,6 +159,9 @@ public:
     QuantLib::Natural lastNDays() const { return lastNDays_; }
     std::string const& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    const string& settlementCurrency() const { return settlementCurrency_; }
+    const string& settlementFxIndex() const { return settlementFxIndex_; }
+    const string& settlementFixingDate() const { return settlementFixingDate_; }
     //@}
 
     //! \name Serialisation
@@ -185,6 +199,9 @@ private:
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
+    std::string settlementCurrency_;
+    std::string settlementFxIndex_;
+    std::string settlementFixingDate_;
 };
 
 } // namespace data

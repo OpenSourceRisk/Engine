@@ -123,9 +123,14 @@ CommodityFixedLegData::CommodityFixedLegData()
 
 CommodityFixedLegData::CommodityFixedLegData(const vector<Real>& quantities, const vector<string>& quantityDates,
                                              const vector<Real>& prices, const vector<string>& priceDates,
-                                             CommodityPayRelativeTo commodityPayRelativeTo, const string& tag)
-    : LegAdditionalData(LegType::CommodityFixed, false), quantities_(quantities), quantityDates_(quantityDates), prices_(prices),
-      priceDates_(priceDates), commodityPayRelativeTo_(commodityPayRelativeTo), tag_(tag) {}
+                                             CommodityPayRelativeTo commodityPayRelativeTo, const string& tag,
+                                             const std::string& settlementCurrency,
+                                             const std::string& settlementFxIndex,
+                                             const std::string& settlementFixingDate)
+    : LegAdditionalData(LegType::CommodityFixed, false), quantities_(quantities), quantityDates_(quantityDates),
+      prices_(prices), priceDates_(priceDates), commodityPayRelativeTo_(commodityPayRelativeTo), tag_(tag),
+      settlementCurrency_(settlementCurrency), settlementFxIndex_(settlementFxIndex),
+      settlementFixingDate_(settlementFixingDate) {}
 
 void CommodityFixedLegData::setQuantities(const vector<Real>& quantities) {
     // Ensure that the quantityDates_ are cleared also.
@@ -150,6 +155,11 @@ void CommodityFixedLegData::fromXML(XMLNode* node) {
         commodityPayRelativeTo_ = parseCommodityPayRelativeTo(XMLUtils::getNodeValue(n));
     }
     tag_ = XMLUtils::getChildValue(node, "Tag", false);
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
+        settlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        settlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+    }
 }
 
 XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) const {
@@ -164,6 +174,14 @@ XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CommodityPayRelativeTo", to_string(commodityPayRelativeTo_));
     if (!tag_.empty())
         XMLUtils::addChild(doc, node, "Tag", tag_);
+    if (!settlementCurrency_.empty() || !settlementFxIndex_.empty() || !settlementFixingDate_.empty()) {
+        XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", settlementCurrency_);
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
+        if (!settlementFixingDate_.empty()) {
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
+        }
+    }
 
     return node;
 }
@@ -177,7 +195,9 @@ CommodityFloatingLegData::CommodityFloatingLegData()
       pricingLag_(0), isAveraged_(false), isInArrears_(true), futureMonthOffset_(0),
       deliveryRollDays_(0), includePeriodEnd_(true), excludePeriodStart_(true),
       hoursPerDay_(Null<Natural>()), useBusinessDays_(true), dailyExpiryOffset_(0),
-      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(""), avgPricePrecision_(QuantLib::Null<QuantLib::Natural>()) {}
+      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(std::string()),
+      avgPricePrecision_(QuantLib::Null<QuantLib::Natural>()), settlementCurrency_(std::string()),
+      settlementFxIndex_(std::string()), settlementFixingDate_(std::string()) {}
 
 CommodityFloatingLegData::CommodityFloatingLegData(
     const string& name, CommodityPriceType priceType, const vector<Real>& quantities,
@@ -186,9 +206,10 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     const vector<Real>& gearings, const vector<string>& gearingDates, CommodityPricingDateRule pricingDateRule,
     const string& pricingCalendar, Natural pricingLag, const vector<string>& pricingDates, bool isAveraged,
     bool isInArrears, Integer futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
-    bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
-    Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, 
-    QuantLib::Natural avgPricePrecision)
+    bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag, Natural dailyExpiryOffset,
+    bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, QuantLib::Natural avgPricePrecision,
+    const std::string& settlementCurrency, const std::string& settlementFxIndex,
+    const std::string& settlementFixingDate)
     : LegAdditionalData(LegType::CommodityFloating, false), name_(name), priceType_(priceType), quantities_(quantities),
       quantityDates_(quantityDates), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), spreads_(spreads), spreadDates_(spreadDates),
@@ -198,7 +219,8 @@ CommodityFloatingLegData::CommodityFloatingLegData(
       includePeriodEnd_(includePeriodEnd), excludePeriodStart_(excludePeriodStart), hoursPerDay_(hoursPerDay),
       useBusinessDays_(useBusinessDays), tag_(tag), dailyExpiryOffset_(dailyExpiryOffset),
       unrealisedQuantity_(unrealisedQuantity), lastNDays_(lastNDays), fxIndex_(fxIndex),
-      avgPricePrecision_(avgPricePrecision) {
+      avgPricePrecision_(avgPricePrecision), settlementCurrency_(settlementCurrency),
+      settlementFxIndex_(settlementFxIndex), settlementFixingDate_(settlementFixingDate) {
     indices_.insert("COMM-" + name_);
 }
 
@@ -294,7 +316,13 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
         int precision = parseInteger(XMLUtils::getNodeValue(n));
         QL_REQUIRE(precision >= 0, "CommodityFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
         avgPricePrecision_ = static_cast<QuantLib::Natural>(precision);
-    } 
+    }
+
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
+        settlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        settlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+    }
 }
 
 XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
@@ -347,6 +375,14 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
     if (avgPricePrecision_ != Null<Natural>()) {
         XMLUtils::addChild(doc, node, "AvgPricePrecision", static_cast<int>(avgPricePrecision_));
+    }
+    if (!settlementCurrency_.empty() || !settlementFxIndex_.empty() || !settlementFixingDate_.empty()) {
+        XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", settlementCurrency_);
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
+        if (!settlementFixingDate_.empty()) {
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
+        }
     }
     return node;
 }
