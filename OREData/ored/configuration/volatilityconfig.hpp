@@ -262,13 +262,13 @@ public:
 
     //! Explicit constructor
     VolatilityStrikeSurfaceConfig(const std::vector<std::string>& strikes, const std::vector<std::string>& expiries,
-        const std::string& timeInterpolation, const std::string& strikeInterpolation,
-        bool extrapolation, const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation,
-        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
-        bool timeExtrapolationInVariance = true);
+                                  const std::string& timeInterpolation, const std::string& strikeInterpolation,
+                                  bool extrapolation, const std::string& timeExtrapolation,
+                                  const std::string& strikeExtrapolation,
+                                  MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+                                  QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+                                  std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+                                  bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{

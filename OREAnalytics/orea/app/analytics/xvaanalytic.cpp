@@ -219,7 +219,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
     if (inputs_->scenarioReader()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
-        auto slg = QuantLib::ext::make_shared<ScenarioLoaderGenerator>(loader, inputs_->asof(), grid_->dates(),
+        auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
         scenarioGenerator_ = slg;
     } else {

@@ -3048,8 +3048,12 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s) {
 
+    auto scenario = s;
+    if (useSpreadedTermStructures_ && scenario->isAbsolute())
+        scenario = absoluteToSpreadedScenario(s, baseScenarioAbsolute_, parameters_);
+    
     currentScenario_ = scenario;
 
     QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
