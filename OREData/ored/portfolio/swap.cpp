@@ -81,16 +81,18 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
-        // We want to activate the FxReset when we hit the start date
+        // if StartDate < vd, get past fixing
+        // if StartDate == vs, get fixing
+        // if StartDate > vd, interpolation
         if (!legData_[i].resetStartDate().empty()) {
             requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
             auto indexFixing = market->fxIndex(legData_[i].fxIndex());
-            Real resetFixing = 1.0;
+            // First iteration fails to find past fixing even if it exists.
             try {
-                resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
+                auto resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
+                legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
             }   
-            catch (...) { }
-            legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
+            catch (...) { } 
         }
     }
 
