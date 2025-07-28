@@ -310,5 +310,17 @@ bool CompositeTrade::isExpired(const Date& d) const {
     return true;
 }
 
+std::vector<TradeCashflowReportData> CompositeTrade::cashflows(const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+    const std::string& configuration,
+    const bool includePastCashflows) const {
+    std::vector<TradeCashflowReportData> cashflows;
+    for (const auto& t : trades_) {
+		auto tradeCashflows = t->cashflows(baseCurrency, market, configuration, includePastCashflows);
+		cashflows.insert(cashflows.end(), tradeCashflows.begin(), tradeCashflows.end());
+	}
+    return cashflows;
+}
+
 } // namespace data
 } // namespace ore
