@@ -82,7 +82,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
         // if StartDate < vd, get past fixing
-        // if StartDate == vs, get fixing
+        // if StartDate == vd, get fixing
         // if StartDate > vd, interpolation
         if (!legData_[i].resetStartDate().empty()) {
             requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
