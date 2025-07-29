@@ -81,19 +81,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
-        // if StartDate < vd, get past fixing
-        // if StartDate == vd, get fixing
-        // if StartDate > vd, interpolation
-        if (!legData_[i].resetStartDate().empty()) {
-            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
-            auto indexFixing = market->fxIndex(legData_[i].fxIndex());
-            // First iteration fails to find past fixing even if it exists.
-            try {
-                auto resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
-                legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
-            }   
-            catch (...) { } 
-        }
     }
 
     /* collect currencies from fx indexing and eq names from eq indexing

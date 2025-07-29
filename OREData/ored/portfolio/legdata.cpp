@@ -2899,6 +2899,19 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
         DLOG("Building Resetting XCCY Notional leg");
         Real foreignNotional = data.foreignAmount();
+        auto indexFixing = market->fxIndex(data.fxIndex());
+        if(!data.resetStartDate().empty()){
+            Date today = Settings::instance().evaluationDate();
+            Date fxResetStartDate = parseDate(data.resetStartDate());
+            if(indexFixing->hasHistoricalFixing(fxResetStartDate)){
+                Real resetFixing = indexFixing->fixing(fxResetStartDate);
+                foreignNotional = data.notionals()[0]*resetFixing;
+            }else if(today < fxResetStartDate){
+                indexFixing->forecastFixing(fxResetStartDate);
+                Real resetFixing = indexFixing->fixing(fxResetStartDate);
+                foreignNotional = data.notionals()[0]*resetFixing;
+            }
+        }
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
         auto fxIndex =
@@ -2911,7 +2924,6 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
-
             QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[j]);
             QL_REQUIRE(c, "Expected each cashflow in FX resetting leg to be of type Coupon");
 
