@@ -22,7 +22,6 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
 #include <orea/scenario/scenariowriter.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
 
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -172,7 +171,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
         try {
 
-            auto data = generateCashflowReportData(trade, baseCurrency, market, configuration, includePastCashflows);
+            auto data = trade->cashflows(baseCurrency, market, configuration, includePastCashflows);
 
             for(auto const& d: data) {
                     report.next()

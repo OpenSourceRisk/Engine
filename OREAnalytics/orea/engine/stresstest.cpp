@@ -17,7 +17,6 @@
 */
 
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
