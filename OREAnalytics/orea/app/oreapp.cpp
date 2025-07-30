@@ -1671,9 +1671,31 @@ void OREAppInputParameters::loadParameters() {
         setScenarioReader(scenarioFile);
 
         tmp = params_->get("correlation", "simulationConfigFile", false);
-        QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
-        string simulationConfigFile = (inputPath_ / tmp).generic_string();
-        setHistVarSimMarketParamsFromFile(simulationConfigFile);
+        if (tmp != "") {
+            string simulationConfigFile = (inputPath_ / tmp).generic_string();
+            LOG("Loading scenario simulation config from file" << simulationConfigFile);
+            setScenarioSimMarketParamsFromFile(simulationConfigFile);
+        } else {
+            ALOG("Scenario Simulation market data not loaded");
+        }
+
+        tmp = params_->get("correlation", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("correlation", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
 
         tmp = params_->get("correlation", "historicalPeriod", false);
         if (tmp != "")
