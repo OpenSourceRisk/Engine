@@ -602,7 +602,7 @@ public:
     bool mporForward() const { return mporForward_; }
     const std::string& marketDataLoaderOutput() { return marketDataLoaderOutput_; }
     const std::string& marketDataLoaderInput() { return marketDataLoaderInput_; }
-    bool deriveDefaultCurves() const { return deriveDefaultCurves_; }
+    bool deriveCounterpartyDefaultCurves() const { return deriveCounterpartyDefaultCurves_; }
     const std::string& additionalMarketDataInput() const { return additionalMarketDataInput_; }
 
     /***************************
@@ -1035,7 +1035,7 @@ protected:
     bool mporForward_ = true;
     std::string marketDataLoaderOutput_;
     std::string marketDataLoaderInput_;
-    bool deriveDefaultCurves_ = false;
+    bool deriveCounterpartyDefaultCurves_ = false;
     std::string additionalMarketDataInput_;
 
     /**************
