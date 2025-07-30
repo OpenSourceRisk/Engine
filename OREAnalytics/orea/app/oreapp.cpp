@@ -1670,15 +1670,6 @@ void OREAppInputParameters::loadParameters() {
         std::string scenarioFile = (inputPath_ / tmp).generic_string();
         setScenarioReader(scenarioFile);
 
-        tmp = params_->get("correlation", "simulationConfigFile", false);
-        if (tmp != "") {
-            string simulationConfigFile = (inputPath_ / tmp).generic_string();
-            LOG("Loading scenario simulation config from file" << simulationConfigFile);
-            setScenarioSimMarketParamsFromFile(simulationConfigFile);
-        } else {
-            ALOG("Scenario Simulation market data not loaded");
-        }
-
         tmp = params_->get("correlation", "marketConfigFile", false);
         if (tmp != "") {
             string file = (inputPath_ / tmp).generic_string();

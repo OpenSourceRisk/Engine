@@ -31,7 +31,6 @@
       <Parameter name="correlation_method">Pearson</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
       <Parameter name="mporDays">10</Parameter>
