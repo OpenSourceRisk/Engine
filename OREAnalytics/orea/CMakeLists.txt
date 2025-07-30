@@ -76,7 +76,6 @@ cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
-engine/cashflowreportgenerator.cpp
 engine/correlationreport.cpp
 engine/cptycalculator.cpp
 engine/cvasensitivitycubestream.cpp
@@ -292,7 +291,6 @@ cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
-engine/cashflowreportgenerator.hpp
 engine/correlationreport.hpp
 engine/cptycalculator.hpp
 engine/cvasensitivitycubestream.hpp

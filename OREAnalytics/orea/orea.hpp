@@ -88,7 +88,6 @@
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bacvacalculator.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/correlationreport.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
