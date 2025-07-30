@@ -28,6 +28,8 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/trade.hpp>
 
+#include <qle/currencies/currencycomparator.hpp>
+
 #include <boost/any.hpp>
 
 namespace ore {
@@ -133,8 +135,9 @@ private:
     QuantLib::Size N_;
 };
 
-// TODO add more storage managers here, e.g. one that stores sensitivities suitable for a SIMM calculation
-// class SIMMSensitivityStorageManager : public SensitivityStorageManager {};
+typedef std::map<QuantLib::Currency, QuantLib::Matrix, QuantExt::CurrencyComparator> result_type_matrix;
+typedef std::map<QuantLib::Currency, std::vector<QuantLib::Real>, QuantExt::CurrencyComparator> result_type_vector;
+typedef std::map<QuantLib::Currency, QuantLib::Real, QuantExt::CurrencyComparator> result_type_scalar;
 
 } // namespace analytics
 } // namespace ore

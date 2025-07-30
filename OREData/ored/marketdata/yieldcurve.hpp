@@ -84,6 +84,7 @@ public:
         MonotonicLogMixedLinearCubic,
         KrugerLogMixedLinearCubic,
         LogMixedLinearCubicNaturalSpline,
+        BackwardFlat,       // backward-flat interpolation
         ExponentialSplines, // fitted bond curves only
         NelsonSiegel,       // fitted bond curves only
         Svensson            // fitted bond curves only

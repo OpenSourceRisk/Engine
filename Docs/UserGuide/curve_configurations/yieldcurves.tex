@@ -26,7 +26,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
 \label{lst:top_level_yc}
 \end{listing}
 
-The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled 
+The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled
 as 'Optional', then it may be excluded or included and left blank.
 \begin{itemize}
 \item CurveId: Unique identifier for the yield curve.
@@ -48,22 +48,22 @@ dates. In particular, if the curve is queried for a zero rate without specifying
 is returned has this basis. If the element is omitted or left blank, then it defaults to \emph{A365}.
 
 \item \lstinline!Tolerance! [Optional]: The tolerance used by the root finding procedure in the bootstrapping algorithm. If the
-element is omitted or left blank, then it defaults to \num[scientific-notation=true]{1.0e-12}. It is preferable to use the 
-\lstinline!Accuracy! node in the \lstinline!BootstrapConfig! node below for specifying this value. However, if this node is 
+element is omitted or left blank, then it defaults to \num[scientific-notation=true]{1.0e-12}. It is preferable to use the
+\lstinline!Accuracy! node in the \lstinline!BootstrapConfig! node below for specifying this value. However, if this node is
 explicitly supplied, it takes precedence for backwards compatibility purposes.
 
 \item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
 the element is omitted or left blank, then it defaults to \emph{True}.
 
-\item \lstinline!BootstrapConfig! [Optional]: this node holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
+\item \lstinline!BootstrapConfig! [Optional]: this node holds configuration details for the iterative bootstrap
+that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described
 in section \ref{sec:bootstrap_config} are used.
 
 \end{itemize}
 
 \begin{table}[h]
 \centering
-  \begin{tabular}{|l|l|} 
+  \begin{tabular}{|l|l|}
     \hline
     {\bfseries Variable} & {\bfseries Description} \\
     \hline
@@ -77,29 +77,30 @@ in section \ref{sec:bootstrap_config} are used.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|p{11cm}|} 
+\begin{tabular}{|l|p{11cm}|}
     \hline
     {\bfseries Method} & {\bfseries Description} \\
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
     NaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\ \hline
-    FinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
+    FinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and
                      zero first derivative at right \\ \hline
     ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
     Quadratic & Quadratic interpolation \\ \hline
     LogQuadratic & Quadratic interpolation on the natural log of the interpolation variable \\ \hline
-    LogNaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\hline
-    LogFinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
-                     zero first derivative at right \\hline
-    LogCubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\hline
-    MonotnicLogCubicSpline & Monotonic cubic spline interpolation with zero second derivative at left and right \\hline
+    LogNaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\ \hline
+    LogFinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and
+                     zero first derivative at right \\ \hline
+    LogCubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\ \hline
+    MonotnicLogCubicSpline & Monotonic cubic spline interpolation with zero second derivative at left and right \\ \hline
     Hermite & Hermite cubic spline interpolation \\ \hline
     CubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\ \hline
     DefaultLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic Kruger cubic spline \\ \hline
     MonotonicLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic natural cubic spline \\ \hline
     KrugerLogMixedLinearCubic & Mixed interpolation, first linear, then non-monotonic Kruger cubic spline \\ \hline
     LogMixedLinearCubicNaturalSpline & Mixed interpolation, first linear, then non-monotonic natural cubic spline \\ \hline
+    BackwardFlat & Backward-flat interpolation (piecewise constant, right-continuous) \\ \hline
     ExponentialSplines & Exponential Spline curve fitting, for Fitted Bond Curves only \\ \hline
     NelsonSiegel & Nelson-Siegel curve fitting, for Fitted Bond Curves only \\ \hline
     Svensson & Svensson curve fitting, for Fitted Bond Curves only \\ \hline
@@ -113,7 +114,7 @@ in section \ref{sec:bootstrap_config} are used.
 The \lstinline!Segments! node gives the zero rates, discount factors and instruments that comprise the yield curve. This
 node consists of a number of child nodes where the node name depends on the segment being described. Each node has a
 \lstinline!Type! that determines its structure. The following sections describe the type of child nodes that are
-available. Note that for all segment types below, with the exception of \lstinline!DiscountRatio! and \lstinline!AverageOIS!, the 
+available. Note that for all segment types below, with the exception of \lstinline!DiscountRatio! and \lstinline!AverageOIS!, the
 \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute indicating whether or
 not the quote is optional. Example:
 %\hrule\medskip
@@ -285,9 +286,9 @@ is against Ibor of one tenor and the other swap is against Ibor of another tenor
 node has the value \emph{Tenor Basis Two Swaps}. Again, the structure is similar to the simple segment in Listing
 \ref{lst:simple_segment} except that there are two projection curve nodes. There is a \lstinline!ProjectionCurveReceive!
 node for the index with the shorter tenor. This node holds the CurveId of a curve for projecting the floating rates on
-the receiving side. Similarly, there is a \lstinline!ProjectionCurvePay! node for the index of the pay side. The deprecated 
-values are short for receive, and long for pay. These are optional nodes. If they are left blank or omitted, then the projection 
-curve is assumed to equal the curve being bootstrapped i.e.\ the current CurveId. However, at least one of the nodes 
+the receiving side. Similarly, there is a \lstinline!ProjectionCurvePay! node for the index of the pay side. The deprecated
+values are short for receive, and long for pay. These are optional nodes. If they are left blank or omitted, then the projection
+curve is assumed to equal the curve being bootstrapped i.e.\ the current CurveId. However, at least one of the nodes
 needs to be populated to allow the bootstrap to proceed. The \lstinline!PillarChoice! node determines the bootstrap pillars
 that are used (MaturityDate, LastRelevantDate, if not given 'LastRelevantDate' is the default value).
 
@@ -389,7 +390,7 @@ For the \lstinline!Priority! and \lstinline!MinDistance! nodes see the explanati
 \subsubsection*{Zero Spread Segment}
 
 When the node name is \lstinline!ZeroSpread!, the \lstinline!Type!
-node has the only allowable value \emph{Zero Spread},  and the node has the structure shown in 
+node has the only allowable value \emph{Zero Spread},  and the node has the structure shown in
 Listing \ref{lst:zero_spread_segment}. This segment is used to build yield
 curves which are expressed as a spread over some reference yield curve.
 
@@ -762,4 +763,3 @@ so the following choice of curves will result in the desired ``CCY1-IN-CCY2'' cu
 \caption{Discount Ratio segment}
 \label{lst:discount_ratio_segment}
 \end{listing}
-

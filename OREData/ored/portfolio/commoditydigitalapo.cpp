@@ -40,7 +40,7 @@ CommodityDigitalAveragePriceOption::CommodityDigitalAveragePriceOption(
     const string& paymentCalendar, const string& paymentLag, const string& paymentConvention,
     const string& pricingCalendar, const string& paymentDate, Real gearing, Spread spread,
     CommodityQuantityFrequency commodityQuantityFrequency, CommodityPayRelativeTo commodityPayRelativeTo,
-    QuantLib::Natural futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
+    QuantLib::Integer futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
     const BarrierData& barrierData, const std::string& fxIndex)
     : Trade("CommodityDigitalAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
       strike_(strike), digitalCashPayoff_(digitalCashPayoff), currency_(currency), name_(name),
@@ -115,9 +115,10 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration;
     Currency ccy = parseCurrencyWithMinors(currency_);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -bsIndicator,
-                    ccy, engineFactory, configuration);
+                    ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(exDate, lastPremiumDate);
     maturityType_ = maturity_ == exDate ? "Exercise Date" : "Last Premium Date";
 
@@ -190,6 +191,7 @@ void CommodityDigitalAveragePriceOption::fromXML(XMLNode* node) {
     }
 
     futureMonthOffset_ = XMLUtils::getChildValueAsInt(apoNode, "FutureMonthOffset", false);
+    QL_REQUIRE(futureMonthOffset_ >= 0, "FutureMonthOffset must be positive for Commodity Digital APO.");
     deliveryRollDays_ = XMLUtils::getChildValueAsInt(apoNode, "DeliveryRollDays", false);
 
     includePeriodEnd_ = true;

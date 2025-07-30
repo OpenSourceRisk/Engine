@@ -177,8 +177,9 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, positionType == Position::Long ? 1.0 : -1.0,
-                option_.premiumData(), -bsInd, soldCcy, engineFactory,
+                option_.premiumData(), -bsInd, soldCcy, discountCurve, engineFactory,
                 fxOptBuilder->configuration(MarketContext::pricing));
 
     Settlement::Type settleType = parseSettlementType(option_.settlement());

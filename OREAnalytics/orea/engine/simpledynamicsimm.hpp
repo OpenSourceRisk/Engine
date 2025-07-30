@@ -43,7 +43,13 @@ public:
     QuantExt::RandomVariable value(const std::vector<std::vector<QuantExt::RandomVariable>>& irDelta,
                                    const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                    const std::vector<QuantExt::RandomVariable>& fxDelta,
-                                   const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega);
+                                   const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginIR = nullptr,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginIR = nullptr,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginIR = nullptr,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginFX = nullptr,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginFX = nullptr,
+                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginFX = nullptr);
 
 private:
     // input params
@@ -75,6 +81,8 @@ private:
     QuantLib::Matrix fxVegaCorrelations_;
     QuantLib::Array fxCurvatureWeights_;
 };
+
+void copyRandomVariable(const QuantExt::RandomVariable& from, QuantLib::ext::shared_ptr<QuantExt::RandomVariable> to);
 
 } // namespace analytics
 } // namespace ore

@@ -448,4 +448,20 @@
     <Index>USD-SOFR-3M</Index>
     <BMAIndex>USD-SIFMA</BMAIndex>
   </BMABasisSwap>
+  <Deposit>
+    <Id>EUR-ON-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-EONIA</Index>
+  </Deposit>
+  <Deposit>
+    <Id>EUR-ON-DEPOSIT-ESTER</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-ESTER</Index>
+  </Deposit>
+  <Deposit>
+    <Id>USD-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>USD-LIBOR</Index>
+  </Deposit>
+
 </Conventions>

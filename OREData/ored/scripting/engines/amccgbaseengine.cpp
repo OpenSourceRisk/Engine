@@ -54,8 +54,10 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {}
+                                 const std::vector<QuantLib::Date>& simulationDates,
+                                 const bool reevaluateExerciseInStickyCloseOutDateRun)
+    : modelCg_(modelCg), simulationDates_(simulationDates),
+      reevaluateExerciseInStickyCloseOutDateRun_(reevaluateExerciseInStickyCloseOutDateRun) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
@@ -436,7 +438,14 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 }
 
 void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+                                            std::vector<TradeExposure>* tradeExposure,
+                                            TradeExposureMetaInfo* tradeExposureMetaInfo) const {
+
+    QL_REQUIRE(tradeExposure, "AmcCgBaseEngine::buildComputationGraph(): tradeExposure is null, this is unexpected");
+    QL_REQUIRE(tradeExposureMetaInfo,
+               "AmcCgBaseEngine::buildComputationGraph(): tradeExposureMetaInfo is null, this is unexpected");
+
+    // build graph
 
     QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
 
@@ -483,6 +492,28 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
         relevantCurrencies_.insert(c.addCcys.begin(), c.addCcys.end());
     }
 
+    // populate trade exposure meta info
+
+    tradeExposureMetaInfo->hasVega = exercise_ != nullptr;
+    tradeExposureMetaInfo->relevantCurrencies = relevantCurrencies_;
+
+    for (auto const& ccy : relevantCurrencies_) {
+        tradeExposureMetaInfo->relevantModelParameters.insert(
+            ModelCG::ModelParameter(ModelCG::ModelParameter::Type::dsc, ccy));
+        if (ccy != modelCg_->baseCcy()) {
+            tradeExposureMetaInfo->relevantModelParameters.insert(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logFxSpot, ccy));
+        }
+        if (tradeExposureMetaInfo->hasVega) {
+            tradeExposureMetaInfo->relevantModelParameters.insert(
+                ModelCG::ModelParameter(ModelCG::ModelParameter::Type::lgm_zeta, ccy));
+            if (ccy != modelCg_->baseCcy()) {
+                tradeExposureMetaInfo->relevantModelParameters.insert(
+                    ModelCG::ModelParameter(ModelCG::ModelParameter::Type::fxbs_sigma, ccy));
+            }
+        }
+    }
+
     /* build set of relevant exercise dates and corresponding cash settlement times (if applicable) */
 
     std::set<Date> exerciseDates;
@@ -509,6 +540,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
     std::set<Date> simExDates;
     std::set_union(simDates.begin(), simDates.end(), exerciseDates.begin(), exerciseDates.end(),
                    std::inserter(simExDates, simExDates.end()));
+
+    tradeExposure->clear();
+    tradeExposure->resize(simDates.size() + 1);
 
     // create the path values
 
@@ -597,7 +631,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 }
             }
 
-            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun) {
+            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun_) {
 
                 // reuse exercise indicator from previous run on valuation dates
 
@@ -663,7 +697,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // set the npv at t0
 
-    g.setVariable(npvName() + "_0", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
+    (*tradeExposure)[0].componentPathValues = {exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]};
 
     // generate the exposure at simulation dates
 
@@ -672,8 +706,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
         // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
         for (Size counter = 0; counter < simDates.size(); ++counter) {
-            g.setVariable("_AMC_NPV_" + std::to_string(counter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
-                          pathValueUndDirty[counter]);
+            (*tradeExposure)[counter + 1].componentPathValues = {pathValueUndDirty[counter]};
+            (*tradeExposure)[counter + 1].regressors =
+                modelCg_->npvRegressors(*std::next(simDates.begin(), counter), relevantCurrencies_);
         }
 
     } else {
@@ -768,10 +803,36 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 if (rebatedExercise)
                     exercisedValue = cg_add(g, exercisedValue, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]));
 
-                g.setVariable("_AMC_NPV_" +
-                                  std::to_string(simCounter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
-                              cg_add(g, cg_mult(g, wasExercised, exercisedValue),
-                                     cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue)));
+                // set results with decomposition
+
+                // create dummy nodes to facilitate a clean recombination run starting at the components
+
+                std::size_t comp1 = g.insert({exercisedValue}, RandomVariableOpCode::None);
+                std::size_t comp2 = g.insert({futureOptionValue}, RandomVariableOpCode::None);
+
+                (*tradeExposure)[simCounter + 1].componentPathValues = {comp1, comp2};
+
+                std::size_t exercisedValueCond = createRegressionModel(
+                    comp1, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                    cg_const(g, 1.0));
+                std::size_t futureOptionValueCond = createRegressionModel(
+                    comp2, d, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; },
+                    cg_const(g, 1.0));
+
+                // we can not take max(0, futureOptionValueCond) here, because the part between startNodeRecombine
+                // to targetConditionalExpectationDerivatives is applied to derivatives, which we do not want to
+                // floor at zero
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivative =
+                    cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
+
+                // here we can take max(0, futureOptionValueCond)
+                (*tradeExposure)[simCounter + 1].targetConditionalExpectation =
+                    cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
+                           cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised),
+                                   cg_max(g, cg_const(g, 0.0), futureOptionValueCond)));
+
+                // increase counters and continue
 
                 ++simCounter;
             }
@@ -786,13 +847,11 @@ std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, con
                                                    const std::function<bool(std::size_t)>& cashflowRelevant,
                                                    const std::size_t filter) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
-    return modelCg_->npv(amount, d, filter, std::nullopt, {}, modelCg_->npvRegressors(d, relevantCurrencies()));
+    auto regressors = modelCg_->npvRegressors(d, relevantCurrencies_);
+    return modelCg_->npv(amount, d, filter, std::nullopt, {}, regressors);
 }
 
 void AmcCgBaseEngine::calculate() const {}
-
-std::set<std::string> AmcCgBaseEngine::relevantCurrencies() const { return relevantCurrencies_; }
-bool AmcCgBaseEngine::hasVega() const { return exercise_ != nullptr; }
 
 } // namespace data
 } // namespace ore

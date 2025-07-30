@@ -20,6 +20,7 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 
@@ -54,6 +55,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     res.accruals = 0.0;
     double EA = 0;
     std::vector<Date> futureExpiries;
+    std::vector<Date> optionExpiries;
     std::map<Date, Real> futureVols;
     std::vector<double> spotVariances;
     size_t n = flow->indices().size();
@@ -77,9 +79,11 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
             double K = strike == Null<Real>() ? atmUnderlyingCcy : strike;
             if (flow->useFuturePrice()) {
                 Date expiry = index->expiryDate();
+                Date optionExpiry = index->optionExpiryDate(); 
                 futureExpiries.push_back(expiry);
-                if (futureVols.count(expiry) == 0) {
-                    futureVols[expiry] = vol->blackVol(expiry, K);
+                optionExpiries.push_back(optionExpiry);
+                if (futureVols.count(optionExpiry) == 0) {
+                    futureVols[optionExpiry] = vol->blackVol(optionExpiry, K);
                 }
             } else {
                 spotVariances.push_back(vol->blackVariance(res.times.back(), K));
@@ -99,12 +103,14 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
         // References future prices
         for (Size i = 0; i < res.forwards.size(); ++i) {
             Date e_i = futureExpiries[i];
-            Volatility v_i = futureVols.at(e_i);
+            Date oe_i = optionExpiries[i];
+            Volatility v_i = futureVols.at(oe_i);
             res.futureVols.push_back(v_i);
             EA2 += res.forwards[i] * res.forwards[i] * exp(v_i * v_i * res.times[i]);
             for (Size j = 0; j < i; ++j) {
                 Date e_j = futureExpiries[j];
-                Volatility v_j = futureVols.at(e_j);
+                Date oe_j = optionExpiries[j];
+                Volatility v_j = futureVols.at(oe_j);
                 EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * res.times[j]);
             }
         }
@@ -303,6 +309,13 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
                                       matchedMoments.stdDev(), discount);
 
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
     // Add more additional results
     // Could be part of a strip so we add the value also.
     mp["effective_strike"] = effectiveStrike;
@@ -314,6 +327,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
+    mp["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
@@ -423,6 +437,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
@@ -529,6 +552,15 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+
+    std::vector<QuantExt::CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / discount;
+    cfResults.back().payDate = arguments_.flow->date();
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    results_.additionalResults["cashFlowResults"] = cfResults;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities, Matrix& outSqrtCorr,
@@ -552,23 +584,27 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
     // Initialise result with expiry date keys that are still live in the APO
     Date today = Settings::instance().evaluationDate();
     set<Date> expiryDates;
+    set<Date> optionExpiryDates;
     for (const auto& p : arguments_.flow->indices()) {
         if (p.first > today) {
             Date expiry = p.second->expiryDate();
+            Date optionExpiry = p.second->optionExpiryDate();
             // If expiry has not been encountered yet
             if (expiryDates.insert(expiry).second) {
-                outVolatilities.push_back(volStructure_->blackVol(expiry, strike));
                 Real fxRate{1.};
                 if(arguments_.flow->fxIndex())
                     fxRate = arguments_.flow->fxIndex()->fixing(expiry);
                 prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
+            if (optionExpiryDates.insert(optionExpiry).second) {
+                outVolatilities.push_back(volStructure_->blackVol(optionExpiry, strike));
+            }
         }
     }
 
     // Populate the outSqrtCorr matrix
-    vector<Date> vExpiryDates(expiryDates.begin(), expiryDates.end());
+    vector<Date> vExpiryDates(optionExpiryDates.begin(), optionExpiryDates.end());
     outSqrtCorr = Matrix(vExpiryDates.size(), vExpiryDates.size(), 1.0);
     for (Size i = 0; i < vExpiryDates.size(); i++) {
         for (Size j = 0; j < i; j++) {

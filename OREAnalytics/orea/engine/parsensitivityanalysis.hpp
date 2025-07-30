@@ -99,6 +99,8 @@ public:
 
     const ParSensitivityInstrumentBuilder::Instruments& parInstruments() const { return instruments_; }
 
+    void writeParRatesReport(ore::data::Report& report);
+
 private:
     //! Augment relevant risk factors
     void augmentRelevantRiskFactors();
@@ -139,6 +141,8 @@ private:
         by the configured relative zero rate shift size to give the par rate absolute shift size.
     */
     std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> shiftSizes_;
+    // Store the base and scenario (shifted) par rate for each risk factor key
+    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
 };
 
 //! ParSensitivityConverter class
@@ -227,6 +231,7 @@ private:
     boost::numeric::ublas::vector<QuantLib::Real> zeroShifts_;
     //! Vector of absolute par shift sizes
     boost::numeric::ublas::vector<QuantLib::Real> parShifts_;
+    std::map<ore::analytics::RiskFactorKey, std::pair<QuantLib::Real, QuantLib::Real>> parRatesBaseAndScenarioValue_;
 };
 
 //! Write par instrument sensitivity report

@@ -65,7 +65,7 @@ public:
         const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
         const bool setCalibrationInfo = false, const std::string& id = "unknown",
         BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
-        const bool allowChangingFallbacksUnderScenarios = false);
+        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false);
     //! Return calibration error
     Real error() const;
 
@@ -105,13 +105,17 @@ private:
     Real getStrike(const Size j) const;
 
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
-    const std::string configuration_;
+    std::string configuration_;
     QuantLib::ext::shared_ptr<IrLgmData> data_;
-    const Real bootstrapTolerance_;
-    const bool continueOnError_;
-    const std::string referenceCalibrationGrid_;
-    const bool setCalibrationInfo_;
-    const std::string id_;
+    Real bootstrapTolerance_;
+    bool continueOnError_;
+    std::string referenceCalibrationGrid_;
+    bool setCalibrationInfo_;
+    std::string id_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    bool allowChangingFallbacksUnderScenarios_;
+
+    bool allowModelFallbacks_ = false;
     bool requiresCalibration_ = false;
     std::string currency_; // derived from data->qualifier()
 
@@ -141,9 +145,6 @@ private:
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
-
-    bool allowChangingFallbacksUnderScenarios_;
 
     // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;
