@@ -39,10 +39,19 @@ using namespace QuantLib;
 //! Base class for FX Linked cashflows
 class FXLinked {
 public:
-    FXLinked(const Date& fixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex);
+    FXLinked(const Date& fixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
+            const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>());
     virtual ~FXLinked() {}
     Date fxFixingDate() const { return fxFixingDate_; }
-    Real foreignAmount() const { return foreignAmount_; }
+    Real foreignAmount() const {
+        if(fxResetStart_!=Null<Date>()){
+            //We get the fixing in the leg Currency, not the fxReset currency, so we flip the fixing
+            auto fxResetFixing = fxIndex_->fixing(fxResetStart_,true);
+            return domesticAmount_*(1/fxResetFixing);
+        }else{
+            return foreignAmount_;     
+        } 
+    }
     const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
 
@@ -52,6 +61,8 @@ protected:
     Date fxFixingDate_;
     Real foreignAmount_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    Date fxResetStart_;
+    Real domesticAmount_;
 };
 
 class AverageFXLinked {
@@ -102,7 +113,7 @@ protected:
 class FXLinkedCashFlow : public CashFlow, public FXLinked {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
-                     QuantLib::ext::shared_ptr<FxIndex> fxIndex);
+                     QuantLib::ext::shared_ptr<FxIndex> fxIndex, const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>());
 
     //! \name CashFlow interface
     //@{

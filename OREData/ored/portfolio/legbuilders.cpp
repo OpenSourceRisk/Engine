@@ -54,20 +54,6 @@ Leg FixedLegBuilder::buildLeg(
             j = 1;
         }
         Real foreignAmount = data.foreignAmount();
-        if(!data.resetStartDate().empty()){
-            Date today = Settings::instance().evaluationDate();
-            Date fxResetStartDate = parseDate(data.resetStartDate());
-            requiredFixings.addFixingDate(fxResetStartDate, data.fxIndex());
-            auto indexFixing = engineFactory->market()->fxIndex(data.fxIndex());
-            if(indexFixing->hasHistoricalFixing(fxResetStartDate)){
-                Real resetFixing = indexFixing->fixing(fxResetStartDate);
-                foreignAmount = data.notionals()[0]*resetFixing;
-            }else if(today < fxResetStartDate){
-                indexFixing->forecastFixing(fxResetStartDate);
-                Real resetFixing = indexFixing->fixing(fxResetStartDate);
-                foreignAmount = data.notionals()[0]*resetFixing;
-            }
-        }
         for (; j < leg.size(); ++j) {
             QuantLib::ext::shared_ptr<FixedRateCoupon> coupon =
                 QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(leg[j]);
@@ -75,7 +61,7 @@ Leg FixedLegBuilder::buildLeg(
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             QuantLib::ext::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                 QuantLib::ext::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, foreignAmount, fxIndex,
-                                                                            coupon);
+                                                                            coupon, parseDate(data.resetStartDate()), data.notionals()[0]);
             leg[j] = fxLinkedCoupon;
 
             // Add the FX fixing to the required fixings
@@ -150,19 +136,6 @@ Leg FloatingLegBuilder::buildLeg(
             j = 1;
         }
         Real foreignAmount = data.foreignAmount();
-        if(!data.resetStartDate().empty()){
-            Date today = Settings::instance().evaluationDate();
-            requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
-            auto indexFixing = engineFactory->market()->fxIndex(data.fxIndex());
-            if(indexFixing->hasHistoricalFixing(parseDate(data.resetStartDate()))){
-                Real resetFixing = indexFixing->fixing(parseDate(data.resetStartDate()));
-                foreignAmount = data.notionals()[0]*resetFixing;
-            }else if(today < parseDate(data.resetStartDate())){
-                indexFixing->forecastFixing(parseDate(data.resetStartDate()));
-                Real resetFixing = indexFixing->fixing(parseDate(data.resetStartDate()));
-                foreignAmount = data.notionals()[0]*resetFixing;
-            }
-        }
 
         // Make the necessary FX linked floating rate coupons
         for (; j < result.size(); ++j) {
@@ -172,7 +145,9 @@ Leg FloatingLegBuilder::buildLeg(
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             QuantLib::ext::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                 QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, foreignAmount,
-                                                                               fxIndex, coupon);
+                                                                               fxIndex, coupon, parseDate(data.resetStartDate()),
+                                                                            data.notionals()[0]);
+            
             // set the same pricer
             fxLinkedCoupon->setPricer(coupon->pricer());
             result[j] = fxLinkedCoupon;

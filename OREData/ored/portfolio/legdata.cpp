@@ -923,10 +923,13 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
         XMLNode* resetNode = doc.allocNode("FXReset");
         if (!resetStartDate_.empty()) {
             XMLUtils::addChild(doc, resetNode, "StartDate", resetStartDate_);
+            XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
+            XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
+        }else{
+            XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
+            XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
+            XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
         }
-        XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
-        XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
-        XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
         XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
@@ -2899,19 +2902,6 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
         DLOG("Building Resetting XCCY Notional leg");
         Real foreignNotional = data.foreignAmount();
-        auto indexFixing = market->fxIndex(data.fxIndex());
-        if(!data.resetStartDate().empty()){
-            Date today = Settings::instance().evaluationDate();
-            Date fxResetStartDate = parseDate(data.resetStartDate());
-            if(indexFixing->hasHistoricalFixing(fxResetStartDate)){
-                Real resetFixing = indexFixing->fixing(fxResetStartDate);
-                foreignNotional = data.notionals()[0]*resetFixing;
-            }else if(today < fxResetStartDate){
-                indexFixing->forecastFixing(fxResetStartDate);
-                Real resetFixing = indexFixing->fixing(fxResetStartDate);
-                foreignNotional = data.notionals()[0]*resetFixing;
-            }
-        }
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
         auto fxIndex =
@@ -2943,14 +2933,27 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 if (data.notionals().size() == 0) {
                     fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     if (data.notionalInitialExchange()) {
-                        outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
-                                                                             fxIndex);
+                        if(!data.resetStartDate().empty()){
+                            requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
+                            outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
+                                fxIndex, parseDate(data.resetStartDate()), -data.notionals()[0]);
+                        }else{
+                            outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
+                                fxIndex);
+                        }   
                     }
                     // if there is only one period we generate the cash flow at the period end
                     // only if there is a final notional exchange
                     if (leg.size() > 1 || data.notionalFinalExchange()) {
-                        inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
-                                                                            fxIndex);
+                        if(!data.resetStartDate().empty()){
+                            requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
+                            std::cout<<"Date = "<<data.resetStartDate()<<" fxName = "<<fxIndex->name()<<" fxIndex = "<<fxIndex->fixing(parseDate(data.resetStartDate()))<<std::endl;
+                            inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
+                                fxIndex, parseDate(data.resetStartDate()), data.notionals()[0]);
+                        }else{
+                            inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
+                                fxIndex);
+                        }
                     }
                 } else {
                     if (data.notionalInitialExchange()) {
@@ -2962,12 +2965,24 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                outCf =
-                    QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional, fxIndex);
+                if(!data.resetStartDate().empty()){
+                    requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
+                    outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
+                        fxIndex, parseDate(data.resetStartDate()), -data.notionals()[0]);
+                }else{
+                    outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
+                        fxIndex);
+                }
                 // we don't want a final one, unless there is notional exchange
                 if (j < leg.size() - 1 || data.notionalFinalExchange()) {
-                    inCf =
-                        QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional, fxIndex);
+                    if(!data.resetStartDate().empty()){
+                        requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
+                        inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
+                            fxIndex, parseDate(data.resetStartDate()), data.notionals()[0]);
+                    }else{
+                        inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
+                            fxIndex);
+                    }
                 }
             }
 
