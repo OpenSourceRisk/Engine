@@ -1390,7 +1390,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
         if (productModelEngines)
             productModelEngines->insert(std::make_tuple(builder->tradeTypes(), builder->model(), builder->engine()));
     } else {
-        setCouponPricer(tmpLeg, QuantLib::ext::make_shared<BlackIborCouponPricer>());
+        QuantLib::setCouponPricer(tmpLeg, QuantLib::ext::make_shared<BlackIborCouponPricer>());
     }
 
     // build naked option leg if required
