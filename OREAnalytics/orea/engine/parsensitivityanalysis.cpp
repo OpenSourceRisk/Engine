@@ -239,6 +239,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             // Populate zero and par shift size for the current risk factor
             populateShiftSizes(p.first, parRate, simMarket);
+            auto shiftSize = shiftSizes_.at(p.first).second;
+            parRatesBaseAndScenarioValue_[p.first] = std::make_pair(parRate, parRate + shiftSize);
 
         } catch (const std::exception& e) {
             QL_FAIL("could not imply quote for par helper " << p.first << ": " << e.what());
@@ -258,6 +260,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
 
     for (auto& c : instruments_.oisParCaps_) {
@@ -274,6 +278,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
 
 
@@ -294,6 +300,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
 
     LOG("Caching base scenario par rates and float vols done.");
@@ -617,6 +625,28 @@ void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real p
 
     TLOG("Zero and par shift size for risk factor '" << key << "' is (" << std::fixed << std::setprecision(12)
                                                      << zeroShiftSize << "," << parShiftSize << ")");
+}
+
+void ParSensitivityAnalysis::writeParRatesReport(ore::data::Report& report) {
+    
+    // Report headers
+    report.addColumn("ParKey", string());
+    report.addColumn("BaseParRate", double(), 12);
+    report.addColumn("ScenarioParRate", double(), 12);
+
+    // Report body
+    for (const auto& p : parRatesBaseAndScenarioValue_) {
+        RiskFactorKey key = p.first;
+        Real base = p.second.first;
+        Real scenario = p.second.second;
+
+        report.next();
+        report.add(to_string(key));
+        report.add(base);
+        report.add(scenario);
+    }
+
+    report.end();
 }
 
 set<RiskFactorKey::KeyType> ParSensitivityAnalysis::parTypes_ = {

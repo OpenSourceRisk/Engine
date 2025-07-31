@@ -297,12 +297,12 @@ recastScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
 
         auto c0 = oldCoordinates.find(k);
         auto c1 = newCoordinates.find(k);
-        QL_REQUIRE(c0 != scenario->coordinates().end(), "recastScenario(): no coordinates for "
-                                                            << k.first << "/" << k.second
-                                                            << " found in old coordinates. This is unexpected.");
-        QL_REQUIRE(c1 != scenario->coordinates().end(), "recastScenario(): no coordinates for "
-                                                            << k.first << "/" << k.second
-                                                            << " found in new coordinates. This is unexpected.");
+        QL_REQUIRE(c0 != oldCoordinates.end(), "recastScenario(): no coordinates for "
+                                                   << k.first << "/" << k.second
+                                                   << " found in old coordinates. This is unexpected.");
+        QL_REQUIRE(c1 != newCoordinates.end(), "recastScenario(): no coordinates for "
+                                                   << k.first << "/" << k.second
+                                                   << " found in new coordinates. This is unexpected.");
         QL_REQUIRE(c0->second.size() == c1->second.size(), "recastScenario(): number of dimensions in old ("
                                                                << c0->second.size() << ") and new ("
                                                                << c1->second.size() << ") coordinates for " << k.first
@@ -398,6 +398,59 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
         QL_FAIL("sanitizeScenarioValue(): key type "
                 << keyType << " not expected, and not covered. This is an internal error, contact dev.");
     };
+}
+
+QuantLib::ext::shared_ptr<Scenario>
+absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
+    const QuantLib::ext::shared_ptr<Scenario>& b,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData) {
+
+    auto result = s->clone();
+
+    for (auto const& k : s->keys()) {
+        Real scenRate = s->get(k);
+        Real baseRate = b->get(k);
+        Real spread = 0.0;
+        switch (k.keytype) {
+        case RiskFactorKey::KeyType::SwaptionVolatility:
+        case RiskFactorKey::KeyType::YieldVolatility:
+        case RiskFactorKey::KeyType::OptionletVolatility:
+        case RiskFactorKey::KeyType::FXVolatility:
+        case RiskFactorKey::KeyType::EquityVolatility:
+        case RiskFactorKey::KeyType::CDSVolatility:
+        case RiskFactorKey::KeyType::BaseCorrelation:
+        case RiskFactorKey::KeyType::ZeroInflationCurve:
+        case RiskFactorKey::KeyType::YoYInflationCurve:
+        case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+        case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+        case RiskFactorKey::KeyType::CommodityCurve:
+        case RiskFactorKey::KeyType::CommodityVolatility:
+        case RiskFactorKey::KeyType::SecuritySpread:
+        case RiskFactorKey::KeyType::Correlation:
+        case RiskFactorKey::KeyType::CPR:
+        case RiskFactorKey::KeyType::DiscountCurve:
+        case RiskFactorKey::KeyType::YieldCurve:
+        case RiskFactorKey::KeyType::IndexCurve:
+        case RiskFactorKey::KeyType::FXSpot:
+        case RiskFactorKey::KeyType::EquitySpot:
+        case RiskFactorKey::KeyType::DividendYield:
+        case RiskFactorKey::KeyType::SurvivalProbability:
+        case RiskFactorKey::KeyType::RecoveryRate:
+        case RiskFactorKey::KeyType::CPIIndex:
+            spread = getDifferenceScenario(k.keytype, baseRate, scenRate);
+            break;
+        case RiskFactorKey::KeyType::None:
+        case RiskFactorKey::KeyType::SurvivalWeight:
+        case RiskFactorKey::KeyType::CreditState:
+        default:
+            QL_FAIL("absoluteToSpreadedScenario(): key type "
+                    << k << " not expected, and not covered. This is an internal error, contact dev.");
+        };
+
+        result->add(k, spread);
+    }
+
+    return result;
 }
 
 } // namespace analytics

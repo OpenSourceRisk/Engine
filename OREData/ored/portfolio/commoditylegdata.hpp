@@ -111,7 +111,7 @@ public:
         CommodityPricingDateRule pricingDateRule = CommodityPricingDateRule::FutureExpiryDate,
         const std::string& pricingCalendar = "", QuantLib::Natural pricingLag = 0,
         const std::vector<std::string>& pricingDates = {}, bool isAveraged = false, bool isInArrears = true,
-        QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
+        QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         bool excludePeriodStart = true, QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
         QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
@@ -136,7 +136,7 @@ public:
     const std::vector<std::string>& pricingDates() const { return pricingDates_; }
     bool isAveraged() const { return isAveraged_; }
     bool isInArrears() const { return isInArrears_; }
-    QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Integer futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Natural deliveryRollDays() const { return deliveryRollDays_; }
     bool includePeriodEnd() const { return includePeriodEnd_; }
     bool excludePeriodStart() const { return excludePeriodStart_; }
@@ -173,7 +173,7 @@ private:
     std::vector<std::string> pricingDates_;
     bool isAveraged_;
     bool isInArrears_;
-    QuantLib::Natural futureMonthOffset_;
+    QuantLib::Integer futureMonthOffset_;
     QuantLib::Natural deliveryRollDays_;
     bool includePeriodEnd_;
     bool excludePeriodStart_;

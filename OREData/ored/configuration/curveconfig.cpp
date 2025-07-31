@@ -79,6 +79,16 @@ map<MarketObject, set<string>> CurveConfig::requiredNames(const std::string& con
     return result;
 }
 
+map<std::pair<MarketObject, std::string>, set<string>> CurveConfig::requiredNames() const {
+
+    if (!requiredIdsInitialized_) {
+        populateRequiredIds();
+        requiredIdsInitialized_ = true;
+    }
+
+    return requiredNames_;
+}
+
 void CurveConfig::setRequiredCurveIds(const CurveSpec::CurveType& curveType, const set<string>& ids) {
     requiredCurveIds_[curveType] = ids;
 }

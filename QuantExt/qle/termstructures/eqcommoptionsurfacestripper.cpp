@@ -135,8 +135,8 @@ void OptionSurfaceStripper::performCalculations() const {
     tmp = putSurface_->expiries();
     allExpiries.insert(tmp.begin(), tmp.end());
 
-    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> callVolSurface;
-    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> putVolSurface;
+    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> callVolSurface;
+    QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse<>> putVolSurface;
 
     // Switch based on whether surface is direct volatilities or prices to be stripped.
     QuantLib::ext::shared_ptr<PricingEngine> engine;
@@ -157,8 +157,8 @@ void OptionSurfaceStripper::performCalculations() const {
 
     } else {
         // we have variance surfaces, explicitly cast so we can look up vol later
-        callVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(callSurface_);
-        putVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(putSurface_);
+        callVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(callSurface_);
+        putVolSurface = QuantLib::ext::dynamic_pointer_cast<BlackVarianceSurfaceSparse<>>(putSurface_);
     }
 
     // Need to populate these below to feed to BlackVarianceSurfaceSparse
@@ -200,7 +200,7 @@ void OptionSurfaceStripper::performCalculations() const {
     }
 
     // Populate the variance surface.
-    volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
+    volSurface_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<>>(
         callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
         lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeExtrapolation_);
 }

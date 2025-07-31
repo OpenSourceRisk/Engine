@@ -51,6 +51,7 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
     <Price>...</Price>
   </ExerciseData>
   <PaymentData>...</PaymentData>
+  <SettlementData>...</SettlementData>
 </OptionData>
 \end{minted}
 \caption{Option data}
@@ -255,6 +256,15 @@ The second method is a set of rules that are used to generate the settlement dat
 
 \end{enumerate}
 
+\item SettlementData [Optional]: Only relevant for cash settled options. Converts the payoff into a currency different from the option's own currency. It specifies the payment currency, the FX index to perform the conversion, and the date on which the FX rate is fixed. Its XML form is shown in listing \ref{lst:settlement_data_cash_settled_options}.
+
+\begin{itemize}
+  \item \lstinline!PayCurrency!: Currency in which the option payoff will be settled.
+  \item \lstinline!FXIndex!: FX index used to convert from the option currency into the settlement currency.
+  \item \lstinline!FixingDate! [Optional]: Date on which the FX rate is taken. If omitted, the engine will use the index convention to derive the fixing date from the payment date.
+  It will subtract **FixingDays** from the payment date and adjust the resulting date for the holidays according to the fx index conventions.
+\end{itemize}
+
 \end{itemize}
 
 \begin{listing}[H]
@@ -282,5 +292,17 @@ The second method is a set of rules that are used to generate the settlement dat
 \end{minted}
 \caption{Rules based \lstinline!PaymentData!}
 \label{lst:rules_payment_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SettlementData>
+  <PayCurrency>USD</PayCurrency>
+  <FXIndex>FX-ECB-EUR-USD</FXIndex>
+  <FixingDate>2020-03-28</FixingDate>
+</SettlementData>
+\end{minted}
+\caption{SettlementData node for cash settled options}
+\label{lst:settlement_data_cash_settled_options}
 \end{listing}
 

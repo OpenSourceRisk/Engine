@@ -49,7 +49,7 @@ public:
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
                                const std::vector<Date>& amcSimDates)
-        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
+        : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmcCg_(true), amcCgModel_(amcCgModel),
           amcSimDates_(amcSimDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
@@ -119,6 +119,7 @@ protected:
 
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     bool buildingAmc_ = false;
+    bool buildingAmcCg_ = false;
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> amcCgModel_;
     const std::vector<Date> amcSimDates_, amcStickyCloseOutDates_;
@@ -165,7 +166,7 @@ protected:
     bool fullDynamicFx_, fullDynamicIr_, enforceBaseCcy_;
     Size modelSize_, timeStepsPerYear_;
     Model::Params params_;
-    bool interactive_, zeroVolatility_, continueOnCalibrationError_;
+    bool interactive_, zeroVolatility_, continueOnCalibrationError_, allowModelFallbacks_;
     std::vector<Real> calibrationMoneyness_;
     std::string referenceCalibrationGrid_;
     Real bootstrapTolerance_;

@@ -173,6 +173,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     notional_ = Null<Real>();
 
     Date today = Settings::instance().evaluationDate();
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
 
     // 5 if the swaption is exercised (as per option data / exercise data), build the cashflows that remain to be paid
 
@@ -253,7 +254,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         std::vector<Real> additionalMultipliers;
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
                                            optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), engineFactory,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
                                            engineFactory->configuration(MarketContext::pricing));
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
@@ -286,7 +287,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         std::vector<Real> additionalMultipliers;
         Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
                                            optionData_.premiumData(), positionType_ == Position::Long ? -1.0 : 1.0,
-                                           parseCurrency(npvCurrency_), engineFactory,
+                                           parseCurrency(npvCurrency_), discountCurve, engineFactory,
                                            engineFactory->configuration(MarketContext::pricing));
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
@@ -333,6 +334,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     else {
         maturity_ = exerciseBuilder_->noticeDates().back();
         maturityType_ = "Last Notice Date";
+        // cash settlement date if provided
+	for (auto d : exerciseBuilder_->settlementDates()) {
+	    if (d > maturity_) {
+                maturity_ = d;
+                maturityType_ = "Cash Settlement";
+            }
+        }
     }
 
     if (exerciseType_ != Exercise::European && settlementType_ == Settlement::Cash &&
@@ -499,7 +507,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, Position::Long ? 1.0 : -1.0,
-                                       optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_),
+                                       optionData_.premiumData(), -multiplier, parseCurrency(npvCurrency_), discountCurve,
                                        engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
@@ -670,6 +678,7 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
                 additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
         }
     }
+
     return additionalData_;
 }
 

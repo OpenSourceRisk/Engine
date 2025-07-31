@@ -68,7 +68,7 @@ void TradeGenerator::setup(string startDate) {
             startDate_ = ore::data::parseDate(startDate);
         }
 
-        catch (QuantLib::Error e) {
+        catch (const QuantLib::Error& e) {
             startDate_ = Settings::instance().evaluationDate();
         }
     
@@ -154,7 +154,7 @@ bool TradeGenerator::validateDate(string date) {
     try {
         ore::data::parseDate(date);
         return true;
-    } catch (QuantLib::Error e) {
+    } catch (const QuantLib::Error& e) {
         return false;    
     }
 }
