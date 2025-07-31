@@ -254,6 +254,12 @@ public:
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
+    // Setters for Correlation
+    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
+    void setCorrelationData(ore::data::CSVReader& reader);
+    void setCorrelationDataFromFile(const std::string& fileName);
+    void setCorrelationDataFromBuffer(const std::string& xml);
+
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
     void setExposureIncludeReferenceDateEvents(bool b) { exposureIncludeReferenceDateEvents_ = b; }
@@ -694,6 +700,12 @@ public:
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
+
+    /*************************
+     * Getters for Correlation
+     *************************/
+    const std::string& correlationMethod() const { return correlationMethod_; }
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& correlationData() const { return correlationData_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -1118,6 +1130,13 @@ protected:
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
 
+    /*****************
+     * CORRELATION analytics
+     *****************/
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData_;
+    // Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
+
     /*******************
      * EXPOSURE analytic
      *******************/
@@ -1381,7 +1400,8 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
-    std::string pnlExplainOutputFileName_;    
+    std::string pnlExplainOutputFileName_; 
+    std::string correlationOutputFileName_;
     std::string riskFactorsOutputFileName_;
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
