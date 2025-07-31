@@ -53,14 +53,14 @@ Leg FixedLegBuilder::buildLeg(
             LOG("Building FX Resettable with first domestic notional specified explicitly");
             j = 1;
         }
-        Real foreignAmount = data.foreignAmount();
+
         for (; j < leg.size(); ++j) {
             QuantLib::ext::shared_ptr<FixedRateCoupon> coupon =
                 QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(leg[j]);
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             QuantLib::ext::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon =
-                QuantLib::ext::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, foreignAmount, fxIndex,
+                QuantLib::ext::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), fxIndex,
                                                                             coupon, parseDate(data.resetStartDate()), data.notionals()[0]);
             leg[j] = fxLinkedCoupon;
 
@@ -135,7 +135,6 @@ Leg FloatingLegBuilder::buildLeg(
             LOG("Building FX Resettable with first domestic notional specified explicitly");
             j = 1;
         }
-        Real foreignAmount = data.foreignAmount();
 
         // Make the necessary FX linked floating rate coupons
         for (; j < result.size(); ++j) {
@@ -144,7 +143,7 @@ Leg FloatingLegBuilder::buildLeg(
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             QuantLib::ext::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
-                QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, foreignAmount,
+                QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(),
                                                                                fxIndex, coupon, parseDate(data.resetStartDate()),
                                                                             data.notionals()[0]);
             
