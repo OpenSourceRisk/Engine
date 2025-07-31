@@ -25,6 +25,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
+app/analytics/correlationanalytic.cpp
 app/analytics/crifanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
@@ -75,6 +76,7 @@ cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
+engine/correlationreport.cpp
 engine/cptycalculator.cpp
 engine/cvasensitivitycubestream.cpp
 engine/cvasensitivityrecord.cpp
@@ -230,6 +232,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
+app/analytics/correlationanalytic.hpp
 app/analytics/crifanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
@@ -288,6 +291,7 @@ cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
+engine/correlationreport.hpp
 engine/cptycalculator.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
