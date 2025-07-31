@@ -323,7 +323,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["exp_A_2"] = matchedMoments.EA2;
     mp["tte"] = matchedMoments.timeToExpriy();
     mp["sigma"] = matchedMoments.sigma;
-    mp["npv"] = results_.value;
+    mp["quantity"] = arguments_.quantity;
+    mp["npv"] = results_.value * (arguments_.type == Option::Call ? 1 : -1);
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
