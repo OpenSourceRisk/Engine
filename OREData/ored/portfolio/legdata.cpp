@@ -2563,7 +2563,16 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     ScheduleData scheduleData = data.schedule();
     Schedule schedule;
     scheduleBuilder.add(schedule, scheduleData);
-
+    vector<Date> paymentDates;
+    if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
     ScheduleData valuationData = eqLegData->valuationSchedule();
     Schedule valuationSchedule;
     if (valuationData.hasData())
@@ -2595,7 +2604,8 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
                   .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays)
-                  .withValuationSchedule(valuationSchedule);
+                  .withValuationSchedule(valuationSchedule)
+                  .withPaymentDates(paymentDates);
 
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
