@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(testAlternativeMC) {
     Size paths = 10000;
     Time optionTime = 2.0; // two years of option
     // NOTE: most accurate result takes place when dt = 0.004
-    Time dt = 0.05; // equals to 20 steps x year (maturity / dt = steps)
+    Time dt = 0.005; // equals to 20 steps x year (maturity / dt = steps)
     Size steps = optionTime / dt;
 
     mt19937_64 rng(42);
@@ -433,17 +433,19 @@ BOOST_AUTO_TEST_CASE(testFullPath) {
             dfs.push_back(df_T_Ti);
             SumPTs += delta * df_T_Ti;
         }
-
+        // TODO: payment dates might be incorrect
         double P_T_T0 = dfs.front();
         double P_T_TN = dfs.back();
         //double SwapRate = (P_T_T0 - P_T_TN) / SumPTs;
    
         double fixedPV = SumPTs * strike;
         double floatPV = 1 - P_T_TN;
-        double SwapVal = floatPV - fixedPV;
+        double SwapVal =  fixedPV - floatPV;
         Real payoff = max(SwapVal, 0.0);
-        if (counter < 100 && payoff > 0) {
-            cout << "Positive Payoff" << endl;
+        if (counter == 0) {
+            for (auto const& df : dfs) {
+                cout << "This is some discount factor: " << df << endl;
+            }
         }
         Real df_0_T0 = get_df(path, 0, idxExp, dt);
 
@@ -454,6 +456,7 @@ BOOST_AUTO_TEST_CASE(testFullPath) {
             cout << "P_T_T0: " << P_T_T0 << endl;
             cout << "P_T_TN: " << P_T_TN << endl;
             cout << "fixedPV: " << fixedPV << endl;
+            cout << "floatPV: " << floatPV << endl;
             cout << "SumPTs: " << SumPTs << endl;
             cout << "df_0_T0: " << df_0_T0 << endl;
         }
@@ -602,7 +605,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalvsSimulation) {
    //cout << "This is T0: " << T0 << " and TN: " << TN << endl;
 
    Real notional = swp.underlying()->nominal();
-   //std::cout << "This is the notional (should be 0): " << notional << std::endl;
+   //std::cout << "This is the notional (should be 1): " << notional << std::endl;
 
    Size nFactors = kappa.size();
    //Size nBrownian = sigma.rows();
