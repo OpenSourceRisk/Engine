@@ -158,7 +158,7 @@ void CommodityFixedLegData::fromXML(XMLNode* node) {
     if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
         settlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
         settlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
-        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", true);
     }
 }
 
@@ -178,9 +178,7 @@ XMLNode* CommodityFixedLegData::toXML(XMLDocument& doc) const {
         XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
         XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", settlementCurrency_);
         XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
-        if (!settlementFixingDate_.empty()) {
-            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
-        }
+        XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
     }
 
     return node;
@@ -321,7 +319,7 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
     if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
         settlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
         settlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
-        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+        settlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", true);
     }
 }
 
@@ -380,9 +378,7 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
         XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
         XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", settlementCurrency_);
         XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
-        if (!settlementFixingDate_.empty()) {
-            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
-        }
+        XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFixingDate_);
     }
     return node;
 }

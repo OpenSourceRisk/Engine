@@ -31,6 +31,7 @@
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 using namespace ore::data;
 using namespace QuantExt;
@@ -55,12 +56,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     check();
 
-    // Arbitrarily choose NPV currency from 1st leg. Already checked that both leg currencies equal.
-    npvCurrency_ = legData_[0].currency();
-
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
-    notionalCurrency_ = legData_[0].currency();
+    //notionalCurrency_ = legData_[0].currency();
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
@@ -163,6 +161,67 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     legs_.swap(legsTmp);
     legPayers_.swap(legPayersTmp);
     legCurrencies_.swap(legCurrenciesTmp);
+
+    // If leg has SettlementData, do the fx conversion
+    for (Size i = 0; i < legData_.size(); ++i) {
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
+        Date adjustedFixingDate;
+        if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(legData_[i].concreteLegData())) {
+            if (ld->settlementCurrency().empty() || ld->settlementCurrency() == legData_[i].currency()) {
+                continue;
+            }
+            QL_REQUIRE(!ld->settlementFxIndex().empty(),
+                       "SettlementData FX index must be provided when settlement currency is "
+                       "different from the option currency. Trade: "
+                           << id() << ".");
+            fxIndex = parseFxIndex(ld->settlementFxIndex());
+            fxIndex = buildFxIndex(ld->settlementFxIndex(), ld->settlementCurrency(), legData_[i].currency(),
+                                   engineFactory->market(), configuration);
+            Date fixingDate = parseDate(ld->settlementFixingDate());
+            adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+            requiredFixings_.addFixingDate(adjustedFixingDate, ld->settlementFxIndex());
+            //legData_[i].setCurrency(ld->settlementCurrency());
+            legCurrencies_[i] = ld->settlementCurrency();
+
+            DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
+                                                           << io::iso_date(fixingDate)
+                                                           << " added to required fixings for trade " << id());
+
+        } else if (auto ld =
+                       QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData())) {
+            if (ld->settlementCurrency().empty() || ld->settlementCurrency() == legData_[i].currency())
+                continue;
+            QL_REQUIRE(!ld->settlementFxIndex().empty(),
+                       "SettlementData FX index must be provided when settlement currency is "
+                       "different from the option currency. Trade: "
+                           << id() << ".");
+            fxIndex = parseFxIndex(ld->settlementFxIndex());
+            fxIndex = buildFxIndex(ld->settlementFxIndex(), ld->settlementCurrency(), legData_[i].currency(),
+                                   engineFactory->market(), configuration);
+            Date fixingDate = parseDate(ld->settlementFixingDate());
+            adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+            requiredFixings_.addFixingDate(adjustedFixingDate, ld->settlementFxIndex());
+            //legData_[i].setCurrency(ld->settlementCurrency());
+            legCurrencies_[i] = ld->settlementCurrency();
+
+            DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
+                                                           << io::iso_date(fixingDate)
+                                                           << " added to required fixings for trade " << id());
+        }
+        else {
+            QL_REQUIRE(legData_[i].legType() == LegType::CommodityFixed ||
+                           legData_[i].legType() == LegType::CommodityFloating,
+                       "CommoditySwap only support CommodityFixedLeg and CommodityFloatingLeg, got "
+                           << legData_[i].legType());
+        }
+
+        Leg legFxConverted;
+        for (auto& cf : legs_[i]) {
+            legFxConverted.push_back(ext::make_shared<QuantExt::FXLinkedCashFlow>(
+                cf->date(), adjustedFixingDate, cf->amount(), fxIndex));
+        }
+        legs_[i] = legFxConverted;
+    }
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
@@ -358,12 +417,26 @@ XMLNode* CommoditySwap::toXML(XMLDocument& doc) const {
     return node;
 }
 
-void CommoditySwap::check() const {
+void CommoditySwap::check() {
     QL_REQUIRE(legData_.size() >= 2, "Expected at least two commodity legs but found " << legData_.size());
-    auto ccy = legData_[0].currency();
-    for (const auto& legDatum : legData_) {
-        QL_REQUIRE(legDatum.currency() == ccy, "Cross currency commodity swaps are not supported");
+    std::string ccy = legData_[0].currency();
+    if (const auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(legData_[0].concreteLegData())) {
+        ccy = ld->settlementCurrency().empty() ? ccy : ld->settlementCurrency();
+    } else if (const auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[0].concreteLegData())) {
+        ccy = ld->settlementCurrency().empty() ? ccy : ld->settlementCurrency();
     }
+    for (const auto& legDatum : legData_) {
+        std::string legCcy = legDatum.currency();
+        if (const auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(legDatum.concreteLegData())) {
+            legCcy = ld->settlementCurrency().empty() ? legCcy : ld->settlementCurrency();
+        } else if (const auto ld =
+                       QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
+            legCcy = ld->settlementCurrency().empty() ? legCcy : ld->settlementCurrency();
+        }
+        QL_REQUIRE(legCcy == ccy, "Cross currency commodity swaps are only supported if SettlementData in all legs converts the currencies into the same currency.");
+    }
+    npvCurrency_ = ccy;
+    notionalCurrency_ = ccy;
 }
 
 void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,

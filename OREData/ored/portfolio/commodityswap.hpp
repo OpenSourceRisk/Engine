@@ -66,7 +66,7 @@ private:
     QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
 
     // Perform checks before attempting to build
-    void check() const;
+    void check();
 
     // Build a leg
     void buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef,
