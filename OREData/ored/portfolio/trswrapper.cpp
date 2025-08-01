@@ -45,7 +45,8 @@ TRSWrapper::TRSWrapper(
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
     const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
     const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
-    const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
+                       const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
+                       const bool fxConversionAtPeriodEnd)
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
       portfolioInitialPrice_(portfolioInitialPrice), portfolioId_(portfolioId),
@@ -56,7 +57,7 @@ TRSWrapper::TRSWrapper(
       additionalCashflowLeg_(additionalCashflowLeg), additionalCashflowLegPayer_(additionalCashflowLegPayer),
       additionalCashflowCurrency_(additionalCashflowCurrency), fxIndexAsset_(fxIndexAsset),
       fxIndexReturn_(fxIndexReturn), fxIndexAdditionalCashflows_(fxIndexAdditionalCashflows),
-      addFxIndices_(addFxIndices) {
+      addFxIndices_(addFxIndices), fxConversionAtPeriodEnd_(fxConversionAtPeriodEnd) {
 
     QL_REQUIRE(!paymentSchedule_.empty(), "TRSWrapper::TRSWrapper(): payment schedule must not be empty()");
 
@@ -166,6 +167,7 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->fxIndexReturn_ = fxIndexReturn_;
     a->fxIndexAdditionalCashflows_ = fxIndexAdditionalCashflows_;
     a->addFxIndices_ = addFxIndices_;
+    a->fxConversionAtPeriodEnd_ = fxConversionAtPeriodEnd_;
 }
 
 void TRSWrapper::arguments::validate() const {
@@ -247,6 +249,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             } else {
                 // The start valuation date is <= today, we determine the start value from the initial price or a
                 // historical fixing
+                Date fxDate = !arguments_.fxConversionAtPeriodEnd_ ? v0 : (endDate == Null<Date>() ? today : endDate);
                 Real s0 = 0.0, fx0 = 1.0;
                 if (nth == 0 && arguments_.initialPrice_ != Null<Real>() &&
                     v0 == arguments_.valuationSchedule_.front()) {
@@ -255,13 +258,13 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                                                           << arguments_.initialPriceCurrency_);
                         s0 = arguments_.initialPrice_ *
                              (arguments_.underlying_.size() == 1 ? arguments_.underlyingMultiplier_[i] : 1.0);
-                        fx0 = getFxConversionRate(v0, arguments_.initialPriceCurrency_, arguments_.returnCurrency_,
+                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_,
                                                   false);
                         usingInitialPrice = true;
                     }
                 } else {
                     s0 = getUnderlyingFixing(i, v0, false) * arguments_.underlyingMultiplier_[i];
-                    fx0 = getFxConversionRate(v0, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                    fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 DLOG("start value (underlying " << std::to_string(i + 1) << "): s0=" << s0 << " fx0=" << fx0 << " => "
                                                 << fx0 * s0 << " on " << v0 << " in nth current period " << nth);

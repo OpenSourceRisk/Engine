@@ -807,7 +807,7 @@
       <xs:enumeration value="BackwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
-
+  
   <xs:complexType name="commodityBasisConfig">
     <xs:all>
       <xs:element type="xs:string" name="BasePriceCurve"/>

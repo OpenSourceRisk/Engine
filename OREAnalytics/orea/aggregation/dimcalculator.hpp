@@ -68,7 +68,8 @@ public:
         //! VaR holding period in calendar days
         Size horizonCalendarDays = 14,
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
+        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+	Size dimCubeDepth = 1);
 
     virtual ~DynamicInitialMarginCalculator() {}
 

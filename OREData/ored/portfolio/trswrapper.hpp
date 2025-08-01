@@ -74,7 +74,7 @@ public:
                const std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
-               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices);
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices, const bool useTodaysFixing);
 
     //! \name Instrument interface
     //@{
@@ -106,6 +106,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    bool fxConversionAtPeriodEnd_;
 
     Date lastDate_;
 };
@@ -135,7 +136,7 @@ public:
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
-
+    bool fxConversionAtPeriodEnd_;
     void validate() const override;
 };
 

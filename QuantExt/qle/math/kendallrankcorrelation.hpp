@@ -28,18 +28,42 @@
 namespace QuantExt {
 
 template <class I1, class I2> Real kendallRankCorrelation(I1 begin1, I1 end1, I2 begin2) {
-    double sum = 0.0, n = static_cast<Real>(end1 - begin1);
-    auto w = begin2;
-    for (auto v = begin1; v != end1; ++v, ++w) {
-        auto w2 = begin2;
-        for (auto v2 = begin1; v2 != v; ++v2, ++w2) {
-            Real t = (*v2 - *v) * (*w2 - *w);
-            if (!QuantLib::close_enough(t, 0.0)) {
-                sum += t > 0.0 ? 1.0 : -1.0;
+    /*
+    https://www.sciencedirect.com/science/article/pii/S0047259X01920172/
+    tau =  (2/Pi)*arcsin(rho) <=> rho = sin(Pi*Tau/2)
+    */ 
+    Real concordant = 0.0; Real discordant = 0.0;
+    Real ties_x = 0.0; Real ties_y = 0.0;
+    auto it1_x = begin1;
+    auto it1_y = begin2;
+    for (; it1_x != end1; it1_x++, it1_y++) {
+        auto it2_x = begin1;
+        auto it2_y = begin2;
+        for (; it2_x != it1_x; it2_x++, it2_y++) {
+            const auto dx = *it1_x - *it2_x;
+            const auto dy = *it1_y - *it2_y;
+            if (QuantLib::close_enough(dx, 0.0) && QuantLib::close_enough(dy, 0.0)) {
+                // Tied in both, ignored
+                continue;
+            } else if (QuantLib::close_enough(dx, 0.0)) {
+                ties_x++;
+            }
+            else if (QuantLib::close_enough(dy, 0.0)) {
+                ties_y++;
+            } else if (dx * dy > 0.0) {
+                concordant++;
+            }
+            else if (dx * dy < 0.0) {
+                discordant++;
             }
         }
     }
-    return 2.0 * sum / (n * (n - 1));
+    Real denom = std::sqrt((concordant + discordant + ties_x) * (concordant + discordant + ties_y));
+    if (QuantLib::close_enough(denom, 0.0)) {
+        return 0.0;
+    }
+    Real tau = (concordant - discordant) / denom;
+    return std::sin(tau * M_PI / 2.0);
 }
 
 } // namespace QuantExt

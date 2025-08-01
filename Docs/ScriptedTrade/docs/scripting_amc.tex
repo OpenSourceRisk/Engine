@@ -69,3 +69,34 @@ script node (see \ref{scriptNode}):
   </StickyCloseOutStates>
 \end{minted}
 
+For AMC-CG an optional specification under the script node can be given per trade which describes the decomposition of
+the conditional expectation of the npv of the trade. The purpose of this is a more appropriate handling of options and
+path-dependent derivatives for exposure calculation, t0 xva sensitivity calculation and dynamic sensitivity
+calculation. The latter two are aad-based calculations. See also \ref{scriptNode}.
+
+The components are intermediate results given as path values. The target nodes are conditional expectations for the npv
+and its aad-based derivatives. If the Derivative node is not given, it defaults to the Value node.
+
+When aad-based derivatives for dynamic sensitivities are calculated, the component values are replaced by their
+path-derivative counterparts and the computation graph from the first node after the last component node up to and
+including the node ``Derivative'' is replayed to calculate conditional expectation of derivatives. Note: This special
+procedure to calculate derivatives does not apply to t0 xva sensitivities, which are calculated by a plain backward
+derivatives run including the conditional expectations specified for the targetValue.
+
+%% TODO add an example (bermudan swaption, tarf) how this applies in detail to
+%% - exposure calculation
+%% - T0 XVA sensi calc
+%% - dynamic sensitivities
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<AmcCg>
+  <Components>
+    <Component>exercisedValue</Component>
+    <Component>futureOptionValue</Component>
+  </Components>
+  <Target>
+    <Value>targetValue</Value>
+    <Derivative>targetDerivative</Derivative>
+  </Target>
+</AmcCg>
+\end{minted}

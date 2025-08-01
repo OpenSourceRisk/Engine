@@ -567,6 +567,13 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     if (XMLNode* ns = XMLUtils::getChildNode(node, "ConditionalExpectation")) {
         conditionalExpectationModelStates_ = XMLUtils::getChildrenValues(ns, "ModelStates", "ModelState", false);
     }
+    if (XMLNode* ns = XMLUtils::getChildNode(node, "AmcCg")) {
+        amcCgComponents_ = XMLUtils::getChildrenValues(ns, "Components", "Component");
+        if (XMLNode* t = XMLUtils::getChildNode(ns, "Target")) {
+            amcCgTargetValue_ = XMLUtils::getChildValue(t, "Value", false);
+            amcCgTargetDerivative_ = XMLUtils::getChildValue(t, "Value", false);
+        }
+    }
     if (XMLNode* peOverwrite = XMLUtils::getChildNode(node, "PricingEngineConfigOverwrite")) {
         {
         std::vector<std::string> keys;
@@ -608,6 +615,13 @@ XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(calibrations, c.toXML(doc));
     }
     XMLUtils::addChildren(doc, n, "StickyCloseOutStates", "StickyCloseOutState", stickyCloseOutStates_);
+    XMLNode* amccg = doc.allocNode("AmcCg");
+    XMLUtils::appendNode(n, amccg);
+    XMLUtils::addChildren(doc, amccg, "Components", "Component", amcCgComponents_);
+    XMLNode* target = doc.allocNode("Target");
+    XMLUtils::appendNode(amccg, target);
+    XMLUtils::addChild(doc, target, "Value", amcCgTargetValue_);
+    XMLUtils::addChild(doc, target, "Derivative", amcCgTargetDerivative_);
     XMLNode* condExp = doc.allocNode("ConditionalExpectation");
     XMLUtils::appendNode(n, condExp);
     XMLUtils::addChildren(doc, condExp, "ModelStates", "ModelState", conditionalExpectationModelStates_);

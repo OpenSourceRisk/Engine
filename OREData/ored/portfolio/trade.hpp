@@ -44,6 +44,34 @@ using ore::data::XMLSerializable;
 using QuantLib::Date;
 using std::string;
 
+struct TradeCashflowReportData {
+    QuantLib::Size cashflowNo;
+    QuantLib::Size legNo;
+    QuantLib::Date payDate;
+    std::string flowType;
+    double amount;
+    std::string currency;
+    double coupon;
+    double accrual;
+    QuantLib::Date accrualStartDate;
+    QuantLib::Date accrualEndDate;
+    double accruedAmount;
+    QuantLib::Date fixingDate;
+    double fixingValue;
+    double notional;
+    double discountFactor;
+    double presentValue;
+    double fxRateLocalBase;
+    double presentValueBase;
+    std::string baseCurrency;
+    double floorStrike;
+    double capStrike;
+    double floorVolatility;
+    double capVolatility;
+    double effectiveFloorVolatility;
+    double effectiveCapVolatility;
+};
+
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
     Derived classes should
@@ -188,13 +216,6 @@ public:
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
 
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
-        trade from being asked for its cashflows, the method can be overridden to return \c false.
-    */
-    virtual bool hasCashflows() const { return true; }
-    //@}
-
     //! Get cumulative timing spent on pricing
     boost::timer::nanosecond_type getCumulativePricingTime() const {
         return savedCumulativePricingTime_ + (instrument_ != nullptr ? instrument_->getCumulativePricingTime() : 0);
@@ -213,6 +234,12 @@ public:
     /* sets the sensitivity template for this trade */
     void setSensitivityTemplate(const EngineBuilder& builder);
     void setSensitivityTemplate(const std::string& id);
+
+    /* get the set of cashflows for the trade */
+    virtual std::vector<TradeCashflowReportData> cashflows(const std::string& baseCurrency,
+                                                           const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                           const std::string& configuration,
+                                                           const bool includePastCashflows) const;
 
 protected:
     string tradeType_; // class name of the derived class

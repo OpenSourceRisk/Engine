@@ -21,6 +21,8 @@
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dimhelper.hpp>
 #include <orea/aggregation/dynamicdeltavarcalculator.hpp>
+#include <orea/aggregation/dynamicsimmcalculator.hpp>
+#include <orea/aggregation/simmhelper.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -32,6 +34,7 @@
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/sensitivitycalculator.hpp>
+#include <orea/engine/simmsensitivitystoragemanager.hpp>
 #include <orea/engine/multistatenpvcalculator.hpp>
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -216,7 +219,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
     if (inputs_->scenarioReader()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
-        auto slg = QuantLib::ext::make_shared<ScenarioLoaderGenerator>(loader, inputs_->asof(), grid_->dates(),
+        auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
         scenarioGenerator_ = slg;
     } else {
@@ -329,11 +332,16 @@ void XvaAnalyticImpl::initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>&
             Size w = fxVegaSensitivityGrid.size();
 	    QL_REQUIRE(n + u + v + w > 0, "store sensis chosen, but sensitivity grids not set"); 
             // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
-            sensitivityStorageManager_ = QuantLib::ext::make_shared<ore::analytics::CamSensitivityStorageManager>(
-                analytic()->configurations().crossAssetModelData->currencies(), n, u, v, w, 0, sensitivities2ndOrder);
+            if (inputs_->dimModel() == "SimmAnalytic")
+                sensitivityStorageManager_ = QuantLib::ext::make_shared<ore::analytics::SimmSensitivityStorageManager>(
+                    analytic()->configurations().crossAssetModelData->currencies(), 0);
+            else
+                sensitivityStorageManager_ = QuantLib::ext::make_shared<ore::analytics::CamSensitivityStorageManager>(
+                    analytic()->configurations().crossAssetModelData->currencies(), n, u, v, w, 0,
+                    sensitivities2ndOrder);
             QL_REQUIRE(sensitivityStorageManager_, "creating sensitivity storage manager failed");
 
-	    // Create the netting set cube 
+            // Create the netting set cube 
 	    Size samples = analytic()->configurations().scenarioGeneratorData->samples();
             vector<Date> dates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
             std::set<std::string> nettingSets = getNettingSetIds(portfolio);
@@ -412,12 +420,16 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         if (inputs_->storeFlows())
             calculators.push_back(QuantLib::ext::make_shared<CashflowCalculator>(
                 inputs_->exposureBaseCurrency(), inputs_->asof(), grid_, cubeInterpreter_->mporFlowsIndex()));
+	// Ensure that the NPV calculator is executed before the exercise calculator
+	if (inputs_->storeExerciseValues())
+            calculators.push_back(QuantLib::ext::make_shared<ExerciseCalculator>(
+                inputs_->exposureBaseCurrency(), cubeInterpreter_->exerciseValueIndex()));
         if (inputs_->storeCreditStateNPVs() > 0) {
             calculators.push_back(QuantLib::ext::make_shared<MultiStateNPVCalculator>(
                 inputs_->exposureBaseCurrency(), cubeInterpreter_->creditStateNPVsIndex(),
                 inputs_->storeCreditStateNPVs()));
         }
-	if (inputs_->storeSensis()) {
+        if (inputs_->storeSensis()) {
 	    LOG("CamSensitivityStorageManager: store sensis true");
 	    QL_REQUIRE(sensitivityStorageManager_, "sensitivity storage manager not set");
             calculators.push_back(QuantLib::ext::make_shared<SensitivityCalculator>(sensitivityStorageManager_));
@@ -619,9 +631,10 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
         if (inputs_->xvaCgDynamicIM()) {
-            // cube storing dynamic IM per netting set
+            // cube storing dynamic IM per netting set (total margin, delta, vega, curvature), i.e. depth 4
+            Size imCubeDepth = 4;
             nettingSetCube_ = QuantLib::ext::make_shared<SinglePrecisionSparseNpvCube>(
-                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, 1, 0.0f);
+                inputs_->asof(), getNettingSetIds(amcPortfolio_), grid_->valuationDates(), samples_, imCubeDepth, 0.0f);
         }
 
         XvaEngineCG engine(
@@ -798,6 +811,17 @@ void XvaAnalyticImpl::runPostProcessor() {
             dimCalculator_ = QuantLib::ext::make_shared<DynamicDeltaVaRCalculator>(
                 inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, dimQuantile,
                 dimHorizonCalendarDays, dimHelper, ddvOrder, currentIM);
+	} else if (inputs_->dimModel() == "SimmAnalytic") {
+            QL_REQUIRE(nettingSetCube_ && sensitivityStorageManager_,
+                       "netting set cube or sensitivity storage manager not set - "
+                           << "is this a single-threaded classic run storing sensis?");
+            QuantLib::ext::shared_ptr<SimmHelper> simmHelper = QuantLib::ext::make_shared<SimmHelper>(
+                analytic()->configurations().crossAssetModelData->currencies(),
+		nettingSetCube_, scenarioData_, sensitivityStorageManager_, analytic()->market());
+            Size imCubeDepth = 6; // allow for total, delta, vega and curvature margin at depths 0-3, fx delta and ir delta at depths 4-5
+            dimCalculator_ = QuantLib::ext::make_shared<DynamicSimmCalculator>(
+                inputs_, analytic()->portfolio(), cube_, cubeInterpreter_, scenarioData_, simmHelper, dimQuantile,
+                dimHorizonCalendarDays, currentIM, imCubeDepth);
         } else if (inputs_->dimModel() == "DynamicIM") {
             QL_REQUIRE(nettingSetCube_ && inputs_->xvaCgDynamicIM() &&
                            inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration,
@@ -905,8 +929,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     grid_ = analytic()->configurations().scenarioGeneratorData->getGrid();
     cubeInterpreter_ = QuantLib::ext::make_shared<CubeInterpretation>(
-        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), grid_,
-        inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
+        inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(),
+        inputs_->storeExerciseValues(), grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
     if (runSimulation_) {
         LOG("XVA: Build simulation market");

@@ -164,6 +164,9 @@ public:
     const std::vector<std::string>& conditionalExpectationModelStates() const {
         return conditionalExpectationModelStates_;
     }
+    const std::vector<std::string>& amcCgComponents() const { return amcCgComponents_; }
+    const std::string& amcCgTargetValue() const { return amcCgTargetValue_; }
+    const std::string& amcCgTargetDerivative() const { return amcCgTargetDerivative_; }
     const std::map<std::string, std::string>& engineParameterOverwrite() const { return engineParameterOverwrite_; }
     const std::map<std::string, std::string>& modelParameterOverwrite() const { return modelParameterOverwrite_; }
 
@@ -177,6 +180,9 @@ private:
     std::vector<CalibrationData> calibrationSpec_;
     std::vector<std::string> stickyCloseOutStates_;
     std::vector<std::string> conditionalExpectationModelStates_;
+    std::vector<std::string> amcCgComponents_;
+    std::string amcCgTargetValue_;
+    std::string amcCgTargetDerivative_;
     std::map<std::string, std::string> engineParameterOverwrite_;
     std::map<std::string, std::string> modelParameterOverwrite_;
 };

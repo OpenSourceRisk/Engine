@@ -334,6 +334,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     else {
         maturity_ = exerciseBuilder_->noticeDates().back();
         maturityType_ = "Last Notice Date";
+        // cash settlement date if provided
+	for (auto d : exerciseBuilder_->settlementDates()) {
+	    if (d > maturity_) {
+                maturity_ = d;
+                maturityType_ = "Cash Settlement";
+            }
+        }
     }
 
     if (exerciseType_ != Exercise::European && settlementType_ == Settlement::Cash &&
@@ -671,6 +678,7 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
                 additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
         }
     }
+
     return additionalData_;
 }
 
