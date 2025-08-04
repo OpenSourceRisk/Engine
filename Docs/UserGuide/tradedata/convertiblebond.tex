@@ -184,7 +184,8 @@ The conversion ratio can be dynamically adjuted during the lifetime of a convert
 defined. On each date of the reset schedule the conversion ratio is adjusted as follows
 
 \begin{equation}\label{formula:convertible_bond_reset1}
-C^R \rightarrow \max \left\{ C^R, \min\left( \frac{N_0}{g\cdot S_t}, \frac{N_0}{f\cdot C^P_0}, \frac{N_0}{F} \right) \right\}
+C^R \rightarrow \max \left\{ C^R, \min\left( \frac{N_0}{g\cdot S_t}, \frac{N_0}{f\cdot C^P_0}, \frac{N_0}{F\cdot
+C^P_0} \right) \right\}
 \end{equation}
 
 if the stock price on the reset date falls below a threshold $T$

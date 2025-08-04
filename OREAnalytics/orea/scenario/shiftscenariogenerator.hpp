@@ -180,7 +180,7 @@ public:
     QuantLib::ext::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    const QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     const QuantLib::ext::weak_ptr<ScenarioSimMarket> simMarket_;
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios_;
@@ -190,6 +190,20 @@ protected:
     std::map<RiskFactorKey, std::string> keyToFactor_;
     // reverse map of factors to risk factor keys
     std::map<std::string, RiskFactorKey> factorToKey_;
+};
+
+// A simple scenario generator that returns scenarios from a scenario loader
+class ShiftScenarioLoaderGenerator : public ShiftScenarioGenerator {
+public:
+    ShiftScenarioLoaderGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+                                  const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                  const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket);
+
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader() const { return scenarioReader_; }
+
+private:
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
 };
 
 std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);

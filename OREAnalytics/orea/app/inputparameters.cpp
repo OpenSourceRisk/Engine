@@ -70,6 +70,21 @@ InputParameters::InputParameters() {
     loadParameters();
 }
 
+bool checkString(const std::string& obj) { return true; }
+
+std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
+                                                         bool mandatory) {
+    if (parameters_.has(analytic, param))
+        return parameters_.get(analytic, param, mandatory);
+    else
+        return std::string();
+}
+
+std::string InputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
+                                                    bool mandatory) {
+    return loadParameterString(analytic, param, mandatory);
+}
+
 void InputParameters::setAsOfDate(const std::string& s) {
     asof_ = parseDate(s);
     Settings::instance().evaluationDate() = asof_;
@@ -656,6 +671,32 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
     setCovarianceData(reader);
 }
 
+void InputParameters::setCorrelationDataFromFile(const std::string& fileName) {
+    ore::data::CSVFileReader reader(fileName, false);
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid correlation data lines from " << fileName);
+}
+
+void InputParameters::setCorrelationData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCorrelationDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCorrelationData(reader);
+}
+
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(
         fileName, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
@@ -671,12 +712,18 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
 }
 
 void InputParameters::setScenarioReader(const std::string& fileName) {
-    boost::filesystem::path baseScenarioPath(fileName);
-    QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
-    QL_REQUIRE(is_regular_file(baseScenarioPath),
-               "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
-        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+    boost::filesystem::path baseScenarioPath;
+    try {
+        boost::filesystem::path baseScenarioPath(fileName);
+        if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+            scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
+                fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+        }
+    } catch (const std::exception& e) {
+        // If the file does not exist or fails, assume it is a scenario string
+        scenarioReader_ = QuantLib::ext::make_shared<ScenarioBufferReader>(
+            fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(true));
+    }
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {
@@ -826,7 +873,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
     scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
     if (scenarioOutputName_.empty())
-        scenarioOutputName_ = params->get("scenarioStatistics", "scenarioOutputFile", false);
+        scenarioOutputName_ = params->get("scenarioGeneration", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
@@ -854,6 +901,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    correlationOutputFileName_ = params->get("correlation", "outputFileName", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
@@ -890,6 +938,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    fileNameMap_["correlation"] = correlationOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
     fileNameMap_["calibration"] = calibrationOutputFileName_;
