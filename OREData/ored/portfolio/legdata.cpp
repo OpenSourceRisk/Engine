@@ -2572,6 +2572,10 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     ScheduleBuilder scheduleBuilder;
     scheduleBuilder.add(schedule, data.schedule());
     scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    ScheduleData valuationData = eqLegData->valuationSchedule();
+    Schedule valuationSchedule;
+    if (valuationData.hasData())
+        scheduleBuilder.add(valuationSchedule, valuationData);
     scheduleBuilder.makeSchedules(openEndDateReplacement);
 
     vector<Date> paymentDates;
@@ -2586,12 +2590,6 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
         for (Size i = 0; i < paymentDates.size(); i++)
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
-    ScheduleData valuationData = eqLegData->valuationSchedule();
-    Schedule valuationSchedule;
-    if (valuationData.hasData())
-        scheduleBuilder.add(valuationSchedule, valuationData);
-
-    scheduleBuilder.makeSchedules(openEndDateReplacement);
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Equity leg must have 2 or more dates, found " << n << ".");
 
