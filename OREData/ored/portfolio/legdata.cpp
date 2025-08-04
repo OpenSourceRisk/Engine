@@ -1427,7 +1427,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
     Schedule paymentSchedule;
     Schedule schedule;
     ScheduleBuilder scheduleBuilder;
-    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(schedule, tmp);
     scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
     scheduleBuilder.makeSchedules(openEndDateReplacement);
     
