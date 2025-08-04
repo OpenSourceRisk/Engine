@@ -24,16 +24,29 @@
 #define quantext_black_variance_surface_sparse_hpp
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
 
+// Default cubic spline wrapper
+struct CubicSpline {
+    CubicSpline() = default;
+
+    template<class I1, class I2> 
+    auto interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+        auto interpolator_ = QuantLib::CubicNaturalSpline(xBegin, xEnd, yBegin);
+        return interpolator_;
+    }
+};
+
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
+template <class StrikeInterpolation = QuantLib::Linear, class TimeInterpolation = QuantLib::Linear>
 class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
-                                   public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
+                                   public OptionInterpolator2d<StrikeInterpolation, TimeInterpolation> {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
@@ -48,8 +61,12 @@ public:
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
-    const QuantLib::Date& referenceDate() const override { return OptionInterpolator2d::referenceDate(); }
-    QuantLib::DayCounter dayCounter() const override { return OptionInterpolator2d::dayCounter(); }
+    const QuantLib::Date& referenceDate() const override {
+        return OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>::referenceDate();
+    }
+    QuantLib::DayCounter dayCounter() const override {
+        return OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>::dayCounter();
+    }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
@@ -59,7 +76,14 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(QuantLib::AcyclicVisitor&) override;
+    virtual void accept(QuantLib::AcyclicVisitor& v) override {
+        using thisSurface = BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>;
+        QuantLib::Visitor<thisSurface>* v1 = dynamic_cast<QuantLib::Visitor<thisSurface>*>(&v);
+        if (v1 != 0)
+            v1->visit(*this);
+        else
+            QuantLib::BlackVarianceTermStructure::accept(v);
+    }
     //@}
 
 protected:
@@ -67,17 +91,6 @@ protected:
 
     QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
 };
-
-// inline definitions
-
-inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) {
-    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 =
-        dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
-    if (v1 != 0)
-        v1->visit(*this);
-    else
-        QuantLib::BlackVarianceTermStructure::accept(v);
-}
 } // namespace QuantExt
 
 #endif

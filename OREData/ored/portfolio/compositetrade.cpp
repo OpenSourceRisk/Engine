@@ -38,6 +38,8 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
+    legPayers_.clear();
+    legCurrencies_.clear();
 
     populateFromReferenceData(engineFactory->referenceData());
 
@@ -81,19 +83,10 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
                                      instrumentWrapper->additionalMultipliers()[i]);
         }
 
-        bool isDuplicate = false;
-        try {
-            if (instrumentWrapper->additionalResults().find("cashFlowResults") !=
-                trade->instrument()->additionalResults().end())
-                isDuplicate = true;
-        } catch (...) {
-        }
-        if (!isDuplicate) {
-            // For cashflows
-            legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
-            legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
-            legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
-        }
+        // For cashflows
+        legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
+        legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
+        legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
 
         maturity_ = std::max(maturity_, trade->maturity());
         if (maturity_ == trade->maturity())
@@ -315,6 +308,18 @@ bool CompositeTrade::isExpired(const Date& d) const {
     }
     // if we get here all the trades are expired and so is the composite
     return true;
+}
+
+std::vector<TradeCashflowReportData> CompositeTrade::cashflows(const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+    const std::string& configuration,
+    const bool includePastCashflows) const {
+    std::vector<TradeCashflowReportData> cashflows;
+    for (const auto& t : trades_) {
+		auto tradeCashflows = t->cashflows(baseCurrency, market, configuration, includePastCashflows);
+		cashflows.insert(cashflows.end(), tradeCashflows.begin(), tradeCashflows.end());
+	}
+    return cashflows;
 }
 
 } // namespace data

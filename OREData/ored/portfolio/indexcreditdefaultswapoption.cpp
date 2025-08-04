@@ -334,9 +334,10 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                                       option_.premiumData(), -indicatorLongShort, ccy, engineFactory,
-                                       configuration);
+                                       option_.premiumData(), -indicatorLongShort, ccy, discountCurve,
+                                       engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
@@ -570,7 +571,7 @@ void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<strin
 
     QL_REQUIRE(refData, "Building index CDS option " << id() << " ReferenceDataManager is null.");
     QL_REQUIRE(refData->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
-               "No CreditIndex reference data for " << iCdsId);
+               "No CreditIndex constituents data for " << iCdsId);
     auto referenceData = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         refData->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
     DLOG("Got CreditIndexReferenceDatum for id " << iCdsId);

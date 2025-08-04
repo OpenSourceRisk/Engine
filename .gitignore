@@ -67,12 +67,14 @@ Docs/UserGuide/userguide.pdf
 ##########################
 # Examples
 ##########################
-Examples/Example_?/Output/
-Examples/Example_[0-9][0-9]/Output/
+Examples/Legacy/Example_?/Output/
+Examples/Legacy/Example_[0-9][0-9]/Output/
+Examples/Academy/*/Output/
 # these are generated
-Examples/Example_26/Input/EUR_xois_portfolio.xml
-Examples/Example_26/Input/USD_xois_portfolio.xml
-Examples/Example_26/Input/ois_portfolio.xml
+Examples/Legacy/Example_26/Input/EUR_xois_portfolio.xml
+Examples/Legacy/Example_26/Input/USD_xois_portfolio.xml
+Examples/Legacy/Example_26/Input/ois_portfolio.xml
+Examples/Legacy/Example_75/amcTraining_*
 
 ##################
 # XCode files
@@ -170,6 +172,12 @@ OREData/test/ored-test-suite
 OREData/test/main.cpp
 OREAnalytics/test/orea-test-suite
 OREAnalytics/test/main.cpp
+OREAnalytics/test/[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]
+OREAnalytics/test/crossgammReport
+OREAnalytics/test/cube*.csv
+OREAnalytics/test/defaultReturnConfig.xml
+OREAnalytics/test/scenario
+OREAnalytics/test/scenario*.csv
 App/Release
 App/Debug
 App/lib

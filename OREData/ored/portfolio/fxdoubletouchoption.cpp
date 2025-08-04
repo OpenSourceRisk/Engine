@@ -174,9 +174,10 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_,
-                option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), engineFactory,
-                builder->configuration(MarketContext::pricing));
+                option_.premiumData(), isLong ? -1.0 : 1.0, parseCurrency(payoffCurrency_), discountCurve,
+                engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(

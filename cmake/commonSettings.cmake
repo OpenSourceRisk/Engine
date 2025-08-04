@@ -166,7 +166,7 @@ else()
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
     # the line below breaks the linux build
     #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
-    add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
+    #add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
     #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
     add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)

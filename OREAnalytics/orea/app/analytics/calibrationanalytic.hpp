@@ -41,7 +41,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
-    void buildCrossAssetModel(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;

@@ -135,6 +135,8 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     auto data = QuantLib::ext::make_shared<IrLgmData>();
 
@@ -224,11 +226,10 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     bool allowChangingFallbacks =
         rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
-
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks);
 
     // In some cases, we do not want to calibrate the model
     QuantLib::ext::shared_ptr<QuantExt::LGM> model;

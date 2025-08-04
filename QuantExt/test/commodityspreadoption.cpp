@@ -57,7 +57,7 @@ public:
     }
     virtual QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override { return expiryDate; }
     virtual QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate,
-                                                  Natural futureMonthOffset) override {
+                                                  Integer futureMonthOffset) override {
         return QuantLib::Date();
     }
 };

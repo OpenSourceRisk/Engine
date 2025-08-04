@@ -21,11 +21,6 @@
 namespace ore {
 namespace data {
 
-void AmcCgMultiLegOptionEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                                      const bool reevaluateExerciseInStickyCloseOutDateRun) const {
-    AmcCgBaseEngine::buildComputationGraph(stickyCloseOutDateRun, reevaluateExerciseInStickyCloseOutDateRun);
-}
-
 void AmcCgMultiLegOptionEngine::calculate() const {
     leg_ = arguments_.legs;
     currency_.clear();

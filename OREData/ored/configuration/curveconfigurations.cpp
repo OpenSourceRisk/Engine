@@ -433,10 +433,21 @@ std::map<MarketObject, std::set<string>> CurveConfigurations::requiredNames(cons
                                                                             const std::string& curveId,
                                                                             const std::string& configuration) const {
     std::map<MarketObject, std::set<string>> ids;
+    auto rns = requiredNames(type, curveId);
+    for (const auto& [mo, names] : rns) {
+        if (mo.second == configuration)
+            ids[mo.first] = names;
+	}
+    return ids;
+}
+
+std::map<std::pair<MarketObject, std::string>, std::set<string>> CurveConfigurations::requiredNames(
+    const CurveSpec::CurveType& type, const std::string& curveId) const {
+    std::map<std::pair<MarketObject, std::string>, std::set<string>> ids;
     if (type == CurveSpec::CurveType::FX) {
         auto ccyPairs = parseCurrencyPair(curveId, "");
-        ids[MarketObject::DiscountCurve].insert(ccyPairs.first.code());
-        ids[MarketObject::DiscountCurve].insert(ccyPairs.second.code());
+        ids[std::make_pair(MarketObject::DiscountCurve, Market::defaultConfiguration)].insert(ccyPairs.first.code());
+        ids[std::make_pair(MarketObject::DiscountCurve, Market::defaultConfiguration)].insert(ccyPairs.second.code());
     } else if (type == CurveSpec::CurveType::SwapIndex) {
         QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
         auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(curveId));
@@ -452,11 +463,11 @@ std::map<MarketObject, std::set<string>> CurveConfigurations::requiredNames(cons
                      conventions->get(swapCon->conventions())))
             indexName = conOisAvg->indexName();
         if (!isGenericIborIndex(indexName))
-            ids[MarketObject::IndexCurve].insert(indexName);
+            ids[std::make_pair(MarketObject::IndexCurve, Market::defaultConfiguration)].insert(indexName);
     } else if (!curveId.empty()) {
         try {
             if (auto cc = get(type, curveId))
-                ids = cc->requiredNames(configuration);
+                ids = cc->requiredNames();
         } catch (...) {
         }
     }

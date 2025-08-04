@@ -372,6 +372,13 @@ def compare_files_df(name, file_1, file_2, config=None):
             sub_df_1 = df_1[col_names].copy(deep=True)
             sub_df_2 = df_2[col_names].copy(deep=True)
 
+            if(sub_df_1.empty and sub_df_2.empty):
+                if not names:
+                    logger.warning('The columns, %s, in the files are both empty.', str(names))
+                else:
+                    logger.warning('The dataframes are empty.')
+                break
+
             comp = Compare(sub_df_1, sub_df_2, join_columns=keys, abs_tol=abs_tol, rel_tol=rel_tol,
                            df1_name='expected', df2_name='calculated')
 
@@ -389,6 +396,10 @@ def compare_files_df(name, file_1, file_2, config=None):
     sub_df_2 = df_2[rem_cols_2].copy(deep=True)
     logger.debug('The remaining columns in the first file are: %s.', str(rem_cols_1))
     logger.debug('The remaining columns in the second file are: %s.', str(rem_cols_2))
+
+    if(sub_df_1.empty and sub_df_2.empty):
+        logger.warning('The dataframes are empty.')
+        return True
 
     comp = Compare(sub_df_1, sub_df_2, join_columns=keys, df1_name='expected', df2_name='calculated')
 

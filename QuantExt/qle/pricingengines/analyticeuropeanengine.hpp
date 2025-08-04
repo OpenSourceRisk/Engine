@@ -35,12 +35,15 @@ using namespace QuantLib;
 
 class AnalyticEuropeanEngine : public QuantLib::AnalyticEuropeanEngine {
 public:
-    explicit AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp, const bool flipResults = false)
+    explicit AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
+                                    const bool flipResults = false)
         : QuantLib::AnalyticEuropeanEngine(gbsp), flipResults_(flipResults) {}
 
     AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> process,
-                           Handle<YieldTermStructure> discountCurve, const bool flipResults = false)
-        : QuantLib::AnalyticEuropeanEngine(process, discountCurve), flipResults_(flipResults) {}
+                           Handle<YieldTermStructure> discountCurve, const bool flipResults = false,
+                           ext::optional<unsigned int> spotDays = {}, ext::optional<Calendar> spotCalendar = {})
+        : QuantLib::AnalyticEuropeanEngine(process, discountCurve, spotDays, spotCalendar), flipResults_(flipResults) {}
+
     void calculate() const override;
 
 private:

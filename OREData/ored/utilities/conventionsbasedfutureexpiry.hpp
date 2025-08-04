@@ -32,8 +32,8 @@ namespace data {
 //! Perform date calculations for future contracts based on conventions
 class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
 public:
-    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 10);
-    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 10);
+    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 100);
+    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 100);
 
     QuantLib::Date nextExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                               QuantLib::Natural offset = 0, bool forOption = false) override;
@@ -46,7 +46,7 @@ public:
 
     QuantLib::Date contractDate(const QuantLib::Date& expiryDate) override;
 
-    QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Natural futureMonthOffset) override;
+    QuantLib::Date applyFutureMonthOffset(const QuantLib::Date& contractDate, Integer futureMonthOffset) override;
 
     //! \name Inspectors
     //@{
@@ -70,6 +70,10 @@ private:
 
     //! Account for prohibited expiries
     QuantLib::Date avoidProhibited(const QuantLib::Date& expiry, bool forOption) const;
+
+    //! Apply minimum business days before contract expiry for options
+    QuantLib::Date applyOptionMinBusinessDaysBefore(const QuantLib::Date& optionExpiry,
+                                              const QuantLib::Date& contractExpiry) const;
 };
 
 } // namespace data

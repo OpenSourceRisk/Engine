@@ -756,7 +756,8 @@ AMCValuationEngine::AMCValuationEngine(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cubeFactory,
     const QuantLib::ext::shared_ptr<Scenario>& offSetScenario,
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams)
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
+    const bool continueOnCalibrationError, const bool allowModelFallbacks)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
       amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput),
@@ -770,7 +771,8 @@ AMCValuationEngine::AMCValuationEngine(
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory),
-      offsetScenario_(offSetScenario), simMarketParams_(simMarketParams) {
+      offsetScenario_(offSetScenario), simMarketParams_(simMarketParams),
+      continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks) {
 #ifndef QL_ENABLE_SESSIONS
     QL_FAIL(
         "AMCValuationEngine requires a build with QL_ENABLE_SESSIONS = ON when ctor multi-threaded runs is called.");
@@ -969,7 +971,8 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
         ore::data::CrossAssetModelBuilder modelBuilder(
             market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
             configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
-            configurationFinalModel_, false, true, "", "xva/amc cam building");
+            configurationFinalModel_, false, continueOnCalibrationError_, std::string(), "xva/amc cam building", false,
+            allowModelFallbacks_);
         return std::make_pair(market, *modelBuilder.model());
     };
 
