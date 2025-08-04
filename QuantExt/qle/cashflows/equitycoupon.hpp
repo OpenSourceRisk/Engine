@@ -184,6 +184,7 @@ public:
     EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
     EquityLeg& withNotionalReset(bool);
     EquityLeg& withQuantity(Real);
+    EquityLeg& withPaymentDates(const std::vector<Date>& paymentDates);
     operator Leg() const;
 
 private:
@@ -203,6 +204,7 @@ private:
     Schedule valuationSchedule_;
     bool notionalReset_;
     Real quantity_;
+    std::vector<QuantLib::Date> paymentDates_;
 };
 
 } // namespace QuantExt

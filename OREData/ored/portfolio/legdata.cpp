@@ -1424,7 +1424,13 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
         }
     }
 
-    Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
+    Schedule paymentSchedule;
+    Schedule schedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, tmp);
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+    
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Floating (OIS) leg must have 2 or more dates, found " << n << ".");
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -1433,7 +1439,10 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
 
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    }
+    else if(!data.paymentDates().empty()) {
         BusinessDayConvention paymentDatesConvention =
             data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
         Calendar paymentDatesCalendar =
@@ -2558,18 +2567,29 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     Natural fixingDays = eqLegData->fixingDays();
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
-    ScheduleBuilder scheduleBuilder;
-
-    ScheduleData scheduleData = data.schedule();
+    Schedule paymentSchedule;
     Schedule schedule;
-    scheduleBuilder.add(schedule, scheduleData);
-
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
     ScheduleData valuationData = eqLegData->valuationSchedule();
     Schedule valuationSchedule;
     if (valuationData.hasData())
         scheduleBuilder.add(valuationSchedule, valuationData);
-
     scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    vector<Date> paymentDates;
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Equity leg must have 2 or more dates, found " << n << ".");
 
@@ -2595,7 +2615,8 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
                   .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays)
-                  .withValuationSchedule(valuationSchedule);
+                  .withValuationSchedule(valuationSchedule)
+                  .withPaymentDates(paymentDates);
 
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
