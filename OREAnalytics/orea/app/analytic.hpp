@@ -106,7 +106,7 @@ public:
                              const std::set<std::string>& runTypes = {});
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
-    virtual void buildConfigurations(const bool = false){};
+    virtual void buildConfigurations(const bool = false);
     void initialise();
     
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

@@ -20,6 +20,7 @@
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
+#include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -207,6 +208,18 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     return QuantLib::ext::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
                                              inputs_->refDataManager(),
                                              *inputs_->iborFallbackConfig());
+}
+
+
+void Analytic::buildConfigurations(const bool rebuildCongfigBuilder){ 
+    const auto& portfolio = portfolio_ ? portfolio_ : inputs_->portfolio();
+    if (inputs()->enrichIndexFixings()) {        
+        auto portfolioAnalyser = QuantLib::ext::make_shared<PortfolioAnalyser>(
+            portfolio, inputs_->pricingEngine(), inputs_->baseCurrency(),
+            configurations().curveConfig, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+
+        enrichIndexFixings(portfolio);
+    }
 }
 
 void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

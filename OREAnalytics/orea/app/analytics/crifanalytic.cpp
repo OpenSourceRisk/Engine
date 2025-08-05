@@ -183,8 +183,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     auto crifAnalytic = static_cast<CrifAnalytic*>(analytic());

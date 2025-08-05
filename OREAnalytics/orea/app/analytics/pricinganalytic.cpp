@@ -63,8 +63,6 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     // Check coverage
     for (const auto& rt : runTypes) {
         if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
@@ -72,8 +70,6 @@ void PricingAnalyticImpl::runAnalytic(
             DLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
