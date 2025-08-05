@@ -81,9 +81,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                 Date expiry = index->expiryDate();
                 Date optionExpiry = index->optionExpiryDate(); 
                 futureExpiries.push_back(expiry);
-                optionExpiries.push_back(optionExpiry);
-                if (futureVols.count(optionExpiry) == 0) {
-                    futureVols[optionExpiry] = vol->blackVol(optionExpiry, K);
+                Date volDate = optionExpiry <= today ? expiry : optionExpiry;
+                optionExpiries.push_back(volDate);
+                if (futureVols.count(volDate) == 0) {
+                    futureVols[volDate] = vol->blackVol(volDate, K);
                 }
             } else {
                 spotVariances.push_back(vol->blackVariance(res.times.back(), K));
