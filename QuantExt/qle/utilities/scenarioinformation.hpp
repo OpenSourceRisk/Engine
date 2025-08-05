@@ -51,7 +51,7 @@ public:
     const QuantLib::ext::shared_ptr<QuantExt::Scenario>& getParentScenarioAbsolute() { return parentScenarioAbsolute_; }
     const QuantLib::ext::shared_ptr<QuantExt::Scenario>& getChildScenarioAbsolute() { return childScenarioAbsolute_; }
 
-    void enable() { isEnabled_ = true; }
+    void enable(const bool b = true) { isEnabled_ = b; }
     bool isEnabled() { return isEnabled_; }
 private:
     QuantLib::ext::shared_ptr<QuantExt::Scenario> childScenarioAbsolute_;
