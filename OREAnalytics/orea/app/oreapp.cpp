@@ -877,6 +877,14 @@ void OREAppInputParameters::loadParameters() {
     if (params_->has("setup", "marketDataLoaderInput"))
         setMarketDataLoaderInput(params_->get("setup", "marketDataLoaderInput"));
 
+    tmp = params_->get("setup", "saveScenarioInformation", false);
+    if (tmp != ""){
+        bool tmpBool = ore::data::parseBool(tmp);
+        if (tmpBool){
+            ScenarioInformation::instance().enable();
+        }
+    }
+
     /*************
      * NPV
      *************/

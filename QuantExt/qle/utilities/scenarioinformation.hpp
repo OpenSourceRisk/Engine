@@ -51,9 +51,12 @@ public:
     const QuantLib::ext::shared_ptr<QuantExt::Scenario>& getParentScenarioAbsolute() { return parentScenarioAbsolute_; }
     const QuantLib::ext::shared_ptr<QuantExt::Scenario>& getChildScenarioAbsolute() { return childScenarioAbsolute_; }
 
+    void enable() { isEnabled_ = true; }
+    bool isEnabled() { return isEnabled_; }
 private:
     QuantLib::ext::shared_ptr<QuantExt::Scenario> childScenarioAbsolute_;
     QuantLib::ext::shared_ptr<QuantExt::Scenario> parentScenarioAbsolute_;
+    bool isEnabled_ = false;
 };
 
 //! scenario information setter, ensuring that the info is cleared when the setter goes out of scope
