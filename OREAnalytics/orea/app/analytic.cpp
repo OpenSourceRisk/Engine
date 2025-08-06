@@ -214,7 +214,7 @@ void Analytic::setUp() {
     if (!portfolio_)
         portfolio_ = inputs()->portfolio();
     buildConfigurations();
-    if (inputs()->enrichIndexFixings())
+    if (inputs()->enrichIndexFixings() && portfolio_)
         enrichIndexFixings(portfolio_);
 }
 
@@ -267,6 +267,7 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
 }
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
+    startTimer("buildPortfolio()");
     
     portfolio_->setBuildFailedTrades(inputs()->buildFailedTrades());
     portfolio_->reset();
