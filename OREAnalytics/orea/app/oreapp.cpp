@@ -879,9 +879,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "enableScenarioInformation", false);
     if (tmp != ""){
-        bool tmpBool = ore::data::parseBool(tmp);
-        if (tmpBool)
-            ScenarioInformation::instance().enable();
+        ScenarioInformation::instance().enable(ore::data::parseBool(tmp));
     }
 
     /*************
