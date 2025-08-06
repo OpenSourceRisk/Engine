@@ -21,6 +21,7 @@
 #include <ql/pricingengine.hpp>
 #include <ql/qldefines.hpp>
 #include <ql/time/date.hpp>
+#include <ql/instrument.hpp>
 
 namespace QuantExt {
 
