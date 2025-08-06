@@ -210,16 +210,12 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
                                              *inputs_->iborFallbackConfig());
 }
 
-
-void Analytic::buildConfigurations(const bool rebuildCongfigBuilder){ 
-    const auto& portfolio = portfolio_ ? portfolio_ : inputs_->portfolio();
-    if (inputs()->enrichIndexFixings()) {        
-        auto portfolioAnalyser = QuantLib::ext::make_shared<PortfolioAnalyser>(
-            portfolio, inputs_->pricingEngine(), inputs_->baseCurrency(),
-            configurations().curveConfig, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
-
-        enrichIndexFixings(portfolio);
-    }
+void Analytic::setUp() {
+    if (!portfolio_)
+        portfolio_ = inputs()->portfolio();
+    buildConfigurations();
+    if (inputs()->enrichIndexFixings())
+        enrichIndexFixings(portfolio_);
 }
 
 void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -271,17 +267,9 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
 }
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
-    startTimer("buildPortfolio()");
-    QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
-        
-    // create a new empty portfolio
-    portfolio_ = QuantLib::ext::make_shared<Portfolio>(inputs()->buildFailedTrades());
-
-    tmp->reset();
-    // populate with trades
-    for (const auto& [tradeId, trade] : tmp->trades())
-        // If portfolio was already provided to the analytic, make sure to only process those given trades.
-        portfolio()->add(trade);
+    
+    portfolio_->setBuildFailedTrades(inputs()->buildFailedTrades());
+    portfolio_->reset();
     
     if (market_) {
         replaceTrades();
@@ -348,11 +336,15 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
 
 void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
 
-    if (!inputs()->enrichIndexFixings())
-        return;
-
     startTimer("enrichIndexFixings()");
     QL_REQUIRE(portfolio, "portfolio cannot be empty");
+        
+    //! if the portfolio is not built, create a portfolio analyser which builds the portfolio under a dummy market
+    if (!portfolio->isBuilt()) {
+        [[maybe_unused]] auto portfolioAnalyser = QuantLib::ext::make_shared<PortfolioAnalyser>(
+            portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(), configurations().curveConfig,
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+    }
 
     auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {
         if (fallbackFixingDate > originalFixingDate) {
