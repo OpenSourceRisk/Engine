@@ -17,12 +17,31 @@
 */
 
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
+
+#include <ql/cashflows/fixedratecoupon.hpp>
+
 namespace ore {
 namespace data {
+
+template <typename T> void overwrite(const string& label, T& current, const T& ref) {
+    if (current.empty()) {
+        current = ref;
+        TLOG("overwrite field " + label + " with reference data");
+    }
+}
+
+template <> void overwrite(const string& label, string& current, const string& ref) {
+    if (current.empty()) {
+        current = ref;
+        TLOG("overwrite field " + label + " with reference data value " + ref);
+    }
+}
 
 void populateFromBondReferenceData(std::string& subType, std::string& issuerId, std::string& settlementDays,
                                    std::string& calendar, std::string& issueDate, std::string& priceQuoteMethod,
@@ -35,58 +54,19 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
-    if (subType.empty()) {
-        subType = bondRefData->bondData().subType;
-        TLOG("overwrite subType with '" << subType << "'");
-    }
-    if (issuerId.empty()) {
-        issuerId = bondRefData->bondData().issuerId;
-        TLOG("overwrite issuerId with '" << issuerId << "'");
-    }
-    if (settlementDays.empty()) {
-        settlementDays = bondRefData->bondData().settlementDays;
-        TLOG("overwrite settlementDays with '" << settlementDays << "'");
-    }
-    if (calendar.empty()) {
-        calendar = bondRefData->bondData().calendar;
-        TLOG("overwrite calendar with '" << calendar << "'");
-    }
-    if (issueDate.empty()) {
-        issueDate = bondRefData->bondData().issueDate;
-        TLOG("overwrite issueDate with '" << issueDate << "'");
-    }
-    if (priceQuoteMethod.empty()) {
-        priceQuoteMethod = bondRefData->bondData().priceQuoteMethod;
-        TLOG("overwrite priceQuoteMethod with '" << priceQuoteMethod << "'");
-    }
-    if (priceQuoteBaseValue.empty()) {
-        priceQuoteBaseValue = bondRefData->bondData().priceQuoteBaseValue;
-        TLOG("overwrite priceQuoteBaseValue with '" << priceQuoteBaseValue << "'");
-    }
-    if (creditCurveId.empty()) {
-        creditCurveId = bondRefData->bondData().creditCurveId;
-        TLOG("overwrite creditCurveId with '" << creditCurveId << "'");
-    }
-    if (creditGroup.empty()) {
-        creditGroup = bondRefData->bondData().creditGroup;
-        TLOG("overwrite creditGroup with '" << creditGroup << "'");
-    }
-    if (referenceCurveId.empty()) {
-        referenceCurveId = bondRefData->bondData().referenceCurveId;
-        TLOG("overwrite referenceCurveId with '" << referenceCurveId << "'");
-    }
-    if (incomeCurveId.empty()) {
-        incomeCurveId = bondRefData->bondData().incomeCurveId;
-        TLOG("overwrite incomeCurveId with '" << incomeCurveId << "'");
-    }
-    if (volatilityCurveId.empty()) {
-        volatilityCurveId = bondRefData->bondData().volatilityCurveId;
-        TLOG("overwrite volatilityCurveId with '" << volatilityCurveId << "'");
-    }
-    if (coupons.empty()) {
-        coupons = bondRefData->bondData().legData;
-        TLOG("overwrite coupons with " << coupons.size() << " LegData nodes");
-    }
+    overwrite("subType", subType, bondRefData->bondData().subType);
+    overwrite("issuerId", issuerId, bondRefData->bondData().issuerId);
+    overwrite("settlementDays", settlementDays, bondRefData->bondData().settlementDays);
+    overwrite("calendar", calendar, bondRefData->bondData().calendar);
+    overwrite("issueDate", issueDate, bondRefData->bondData().issueDate);
+    overwrite("priceQuoteMethod", priceQuoteMethod, bondRefData->bondData().priceQuoteMethod);
+    overwrite("priceQuoteBaseValue", priceQuoteBaseValue, bondRefData->bondData().priceQuoteBaseValue);
+    overwrite("creditCurveId", creditCurveId, bondRefData->bondData().creditCurveId);
+    overwrite("creditGroup", creditGroup, bondRefData->bondData().creditGroup);
+    overwrite("referenceCurveId", referenceCurveId, bondRefData->bondData().referenceCurveId);
+    overwrite("incomeCurveId", incomeCurveId, bondRefData->bondData().incomeCurveId);
+    overwrite("volatilityCurveId", volatilityCurveId, bondRefData->bondData().volatilityCurveId);
+    overwrite("coupons", coupons, bondRefData->bondData().legData);
     if (!startDate.empty()) {
         if (coupons.size() == 1 && coupons.front().schedule().rules().size() == 1 &&
             coupons.front().schedule().dates().size() == 0) {
@@ -122,72 +102,6 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
     }
 
     DLOG("populating bond data from reference data done.");
-}
-
-void populateFromBondFutureReferenceData(string& currency, string& contractMonth, string& deliverableGrade,
-                                         string& fairPrice, string& settlement, string& settlementDirty,
-                                         string& rootDate, string& expiryBasis, string& settlementBasis,
-                                         string& expiryLag, string& settlementLag, string& lastTrading,
-                                         string& lastDelivery, vector<string>& secList,
-                                         const ext::shared_ptr<BondFutureReferenceDatum>& bondFutureRefData) {
-    DLOG("populating data bondfuture from reference data");
-    if (currency.empty()) {
-        currency = bondFutureRefData->bondFutureData().currency;
-        TLOG("overwrite currency with '" << currency << "'");
-    }
-    if (contractMonth.empty()) {
-        contractMonth = bondFutureRefData->bondFutureData().contractMonth;
-        TLOG("overwrite contractMonth with '" << contractMonth << "'");
-    }
-    if (deliverableGrade.empty()) {
-        deliverableGrade = bondFutureRefData->bondFutureData().deliverableGrade;
-        TLOG("overwrite deliverableGrade with '" << deliverableGrade << "'");
-    }
-    if (fairPrice.empty()) {
-        fairPrice = bondFutureRefData->bondFutureData().fairPrice;
-        TLOG("overwrite fairPrice with '" << fairPrice << "'");
-    }
-    if (settlement.empty()) {
-        settlement = bondFutureRefData->bondFutureData().settlement;
-        TLOG("overwrite settlement with '" << settlement << "'");
-    }
-    if (settlementDirty.empty()) {
-        settlementDirty = bondFutureRefData->bondFutureData().settlementDirty;
-        TLOG("overwrite settlementDirty with '" << settlementDirty << "'");
-    }
-    if (rootDate.empty()) {
-        rootDate = bondFutureRefData->bondFutureData().rootDate;
-        TLOG("overwrite rootDate with '" << rootDate << "'");
-    }
-    if (expiryBasis.empty()) {
-        expiryBasis = bondFutureRefData->bondFutureData().expiryBasis;
-        TLOG("overwrite expiryBasis with '" << expiryBasis << "'");
-    }
-    if (settlementBasis.empty()) {
-        settlementBasis = bondFutureRefData->bondFutureData().settlementBasis;
-        TLOG("overwrite settlementBasis with '" << settlementBasis << "'");
-    }
-    if (expiryLag.empty()) {
-        expiryLag = bondFutureRefData->bondFutureData().expiryLag;
-        TLOG("overwrite expiryLag with '" << expiryLag << "'");
-    }
-    if (settlementLag.empty()) {
-        settlementLag = bondFutureRefData->bondFutureData().settlementLag;
-        TLOG("overwrite settlementLag with '" << settlementLag << "'");
-    }
-    if (lastTrading.empty()) {
-        lastTrading = bondFutureRefData->bondFutureData().lastTrading;
-        TLOG("overwrite lastTrading with '" << lastTrading << "'");
-    }
-    if (lastDelivery.empty()) {
-        lastDelivery = bondFutureRefData->bondFutureData().lastDelivery;
-        TLOG("overwrite lastDelivery with '" << lastDelivery << "'");
-    }
-    if (secList.empty()) {
-        secList = bondFutureRefData->bondFutureData().secList;
-        TLOG("overwrite secList ");
-    }
-    DLOG("populating bondfuture data from reference data done.");
 }
 
 Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Calendar& calendar) {
@@ -230,9 +144,8 @@ StructuredSecurityId::StructuredSecurityId(const std::string& id) : id_(id) {
     }
 }
 
-StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const std::string& futureContract,
-                                           const QuantLib::Date& expiryDate)
-    : securityId_(securityId), futureContract_(futureContract), futureExpiryDate_(futureExpiryDate) {
+StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const std::string& futureContract)
+    : securityId_(securityId), futureContract_(futureContract) {
     if (futureContract.empty()) {
         id_ = securityId_;
     } else {
@@ -241,10 +154,31 @@ StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const 
 }
 
 std::pair<QuantLib::Date, QuantLib::Date>
-BondFutureUtils::deduceBondFutureDates(const std::string& currency, const std::string& contractMonth,
-                                       const std::string& rootDateStr, const std::string& expiryBasis,
-                                       const std::string& settlementBasis, const std::string& expiryLag,
-                                       const std::string& settlementLag) {
+BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& refData) {
+    Date expiry, settlement;
+    if (!refData->bondFutureData().lastTrading.empty())
+        expiry = parseDate(refData->bondFutureData().lastTrading);
+    if (!refData->bondFutureData().lastDelivery.empty())
+        settlement = parseDate(refData->bondFutureData().lastDelivery);
+    if (expiry == Date() || settlement != Date()) {
+        auto [tmpExpiry, tmpSettlement] =
+            deduceDates(refData->bondFutureData().currency, refData->bondFutureData().contractMonth,
+                        refData->bondFutureData().rootDate, refData->bondFutureData().expiryBasis,
+                        refData->bondFutureData().settlementBasis, refData->bondFutureData().expiryLag,
+                        refData->bondFutureData().settlementLag);
+        if (expiry == Date())
+            expiry = tmpExpiry;
+        if (settlement == Date())
+            settlement = tmpSettlement;
+    }
+    return std::make_pair(expiry, settlement);
+}
+
+std::pair<QuantLib::Date, QuantLib::Date>
+BondFutureUtils::deduceDates(const std::string& currency, const std::string& contractMonth,
+                             const std::string& rootDateStr, const std::string& expiryBasis,
+                             const std::string& settlementBasis, const std::string& expiryLag,
+                             const std::string& settlementLag) {
     Month contractMonth_ql = parseMonth(contractMonth);
     Date asof = Settings::instance().evaluationDate();
     int year = asof.year();
@@ -263,7 +197,7 @@ BondFutureUtils::deduceBondFutureDates(const std::string& currency, const std::s
     else if (day == "END")
         rootDate = cal.endOfMonth(Date(1, contractMonth_ql, year), QuantLib::Preceding);
     else { // nth weekday case expected (example format 'Fri,2' for second Friday)
-        QL_REQUIRE(tokens.size() == 2, "RootDate " << rootDate_ << " unexpected");
+        QL_REQUIRE(tokens.size() == 2, "RootDate " << rootDateStr << " unexpected");
         int n = parseInteger(tokens[1]);
         Weekday day = parseWeekday(tokens[0]);
         rootDate = Date::nthWeekday(n, day, contractMonth_ql, year);
@@ -319,73 +253,43 @@ BondFutureUtils::BondFutureType BondFutureUtils::getBondFutureType(const std::st
     string val_up = boost::to_upper_copy(deliverableGrade);
 
     if (val_up == "UB" || val_up == "WN")
-        return FutureType::LongTenorUS;
+        return BondFutureUtils::BondFutureType::LongTenorUS;
     else if (val_up == "ZB" || val_up == "US")
-        return FutureType::LongTenorUS;
+        return BondFutureUtils::BondFutureType::LongTenorUS;
     else if (val_up == "TWE")
-        return FutureType::LongTenorUS;
+        return BondFutureUtils::BondFutureType::LongTenorUS;
     else if (val_up == "TN" || val_up == "UXY")
-        return FutureType::LongTenorUS;
+        return BondFutureUtils::BondFutureType::LongTenorUS;
     else if (val_up == "ZN" || val_up == "TY")
-        return FutureType::LongTenorUS;
+        return BondFutureUtils::BondFutureType::LongTenorUS;
     else if (val_up == "ZF" || val_up == "FV")
-        return FutureType::ShortTenorUS;
+        return BondFutureUtils::BondFutureType::ShortTenorUS;
     else if (val_up == "Z3N" || val_up == "3Y")
-        return FutureType::ShortTenorUS;
+        return BondFutureUtils::BondFutureType::ShortTenorUS;
     else if (val_up == "ZT" || val_up == "TU")
-        return FutureType::ShortTenorUS;
+        return BondFutureUtils::BondFutureType::ShortTenorUS;
     else
         QL_FAIL("BondFutureUtils::getBondFutureType(): FutureType " << val_up << " unkown");
 }
 
-void BondFutureUtils::checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlement) {
+void BondFutureUtils::checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlementDate) {
     Date asof = Settings::instance().evaluationDate();
     if (settlementDate < expiry)
-        QL_FAIL("BondFutureUtils::checkDates(): for " << id() << " settlement date " << io::iso_date(settlementDate)
-                                                      << " lies before expiry " << io::iso_date(expiry));
+        QL_FAIL("BondFutureUtils::checkDates(): settlement date " << io::iso_date(settlementDate)
+                                                                  << " lies before expiry " << io::iso_date(expiry));
     if (expiry < asof)
-        QL_FAIL("BondFutureUtils::checkDates(): for " << id() << " is expired, asof " << io::iso_date(asof)
-                                                      << " vs. expiry " << io::iso_date(expiry));
+        QL_FAIL("BondFutureUtils::checkDates(): asof " << io::iso_date(asof) << " vs. expiry " << io::iso_date(expiry));
     // refine + 9 * Months ...
     if (asof + 9 * Months < expiry)
-        WLOG("BondFutureUtils::checkDates(): for "
-             << id() << " expiry may be not in standard cycle of next three quarters " << io::iso_date(expiry)
-             << " vs asof " << io::iso_date(asof));
-    DLOG("BondFutureUtils::checkDates(): for " << id() << " ExpiryDate " << io::iso_date(expiry) << " SettlementDate "
-                                               << io::iso_date(settlementDate));
+        WLOG("BondFutureUtils::checkDates(): expiry may be not in standard cycle of next three quarters "
+             << io::iso_date(expiry) << " vs asof " << io::iso_date(asof));
+    DLOG("BondFutureUtils::checkDates(): expiryDate " << io::iso_date(expiry) << " SettlementDate "
+                                                      << io::iso_date(settlementDate));
 }
 
-double BondFutureUtils::conversionFactor(const BondFutureUtils::FutureType& type, const Date& futureExpiry,
-                                         const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {
-
-    QL_REQUIRE(type == LongTenorUS || type == ShortTenorUS,
-               "BondFutureUtils::conversionFactor(): type " << static_cast<int>(type) << " not supported.");
-
-    // get fixed rate
-    double coupon;
-    if (bond.bondData.coupons().size() == 1 &&
-        bond.bondData.coupons().front().concreteLegData()->legType() == LegType::Fixed) {
-        auto fixedLegData = ext::dynamic_pointer_cast<FixedLegData>(bond.bondData.coupons().front().concreteLegData());
-        QL_REQUIRE(fixedLegData, "expecting FixedLegData object");
-        if (fixedLegData->rates().size() > 1)
-            ALOG("calc conversionFactor: there is a vector of rates, took the first. sec " << sec);
-        coupon = fixedLegData->rates().front();
-    } else {
-        QL_FAIL("expected bond " << sec << " with one leg " << bond.bondData.coupons().size() << " of LegType::Fixed "
-                                 << bond.bondData.coupons().front().concreteLegData()->legType());
-    }
-    Date endDate = Date();
-    try {
-        endDate = parseDate(bond.bondData.coupons().data()->schedule().rules().data()->endDate());
-    } catch (const std::exception& e) {
-        endDate = bond.trade->maturity();
-        ALOG("endDate for conversionfactor is set to maturity, given the calendar adjustment, this can "
-             "lead to inaccuracy.")
-    }
-    conversionFactor = conversionfactor_usd(coupon, selectTypeUS(deliverableGrade_), endDate, expiry);
-    DLOG("calculated conversionFactor " << conversionFactor << " secId " << sec << " cpn " << coupon
-                                        << " deliverableGrade " << deliverableGrade_ << " secMat "
-                                        << io::iso_date(endDate) << " futureExpiry " << io::iso_date(expiry));
+namespace {
+double conversionFactorUSD(const double coupon, const BondFutureUtils::BondFutureType type, const Date& futureExpiry,
+                           const Date& bondMaturity) {
 
     // inspired by:
     // CME GROUP, Calculating U.S. Treasury Futures Conversion Factors
@@ -405,7 +309,7 @@ double BondFutureUtils::conversionFactor(const BondFutureUtils::FutureType& type
     int z = full_months % 12;
 
     // rounded down to the nearest quarter
-    if (type == FutureType::LongTenorUS) {
+    if (type == BondFutureUtils::BondFutureType::LongTenorUS) {
         int mod = z % 3;
         z -= mod;
     }
@@ -415,9 +319,9 @@ double BondFutureUtils::conversionFactor(const BondFutureUtils::FutureType& type
     if (z < 7) {
         v = z;
     } else {
-        if (type == FutureType::LongTenorUS)
+        if (type == BondFutureUtils::BondFutureType::LongTenorUS)
             v = 3.0;
-        else if (type == FutureType::ShortTenorUS)
+        else if (type == BondFutureUtils::BondFutureType::ShortTenorUS)
             v = (z - 6.0);
         else
             QL_FAIL("FutureType " << type << " unkown");
@@ -437,10 +341,20 @@ double BondFutureUtils::conversionFactor(const BondFutureUtils::FutureType& type
     // where the factor is rounded to four decimal places
     return std::round(factor * 10000) / 10000;
 }
+} // namespace
 
-static std::pair<std::string, double>
-BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory, const std::string& futureContract,
-                                 const bool noPricing) {
+double BondFutureUtils::conversionFactor(const BondFutureUtils::BondFutureType& type, const Date& futureExpiry,
+                                         const double fixedRate, const Date bondMaturity) {
+
+    QL_REQUIRE(type == LongTenorUS || type == ShortTenorUS,
+               "BondFutureUtils::conversionFactor(): type "
+                   << static_cast<int>(type) << " not supported - conversion factor has to be supplied as marketdata.");
+    return conversionFactorUSD(fixedRate, type, futureExpiry, bondMaturity);
+}
+
+std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
+                                                                const std::string& futureContract,
+                                                                const bool noPricing) {
 
     DLOG("BondFuture::identifyCtdBond called.");
 
@@ -451,31 +365,34 @@ BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFac
     QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", futureContract),
                "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << futureContract);
 
-    auto refData = engineFactory->referenceData()->getData("BondFuture", futureContract);
+    auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+        engineFactory->referenceData()->getData("BondFuture", futureContract));
 
-    for (const auto& sec : ref->deliveryBasket()) {
+    for (const auto& sec : refData->bondFutureData().deliveryBasket) {
 
         auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
                                                StructuredSecurityId(sec, futureContract));
 
-        auto f = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardEnabledBondEngine>(b.bond->pricingEngine());
-        QL_REQUIRE(f != nullptr, "BondFutureUtils::identifyCtdBond(): pricing engine does not support forward pricing");
-
         Date expiry = deduceDates(refData).first;
-        double cleanBondPriceAtExpiry = noPricing ? 100.0 : f->forwardCleanPrice(expiry);
+        double cleanBondPriceAtExpiry =
+            noPricing ? 100.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true, true);
 
         double conversionFactor;
         try {
             conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
         } catch (const std::exception& e) {
             DLOG("no conversion factor provided from market, calculate internally");
-            conversionFactor =
-                BondFutureUtils::conversionFactor(BondFutureUtils::getBondFutureType(refData->deliverableGrade), expiry,
-                                                  getFixedRate(b.bondData.coupons()), b.bondData.maturityDate());
+            QL_REQUIRE(!b.bond->cashflows().empty(), "BondFutureUtils::identifyCtdBond(): bond has no coupons");
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(b.bond->cashflows().front());
+            QL_REQUIRE(cpn, "BondFutureUtils::identifyCtdBond(): could not cast first bond coupon to FixedRateCoupon - "
+                            "can not calculate conversion factor.");
+            conversionFactor = BondFutureUtils::conversionFactor(
+                BondFutureUtils::getBondFutureType(refData->bondFutureData().deliverableGrade), expiry, cpn->rate(),
+                parseDate(b.bondData.maturityDate()));
         }
 
         // see e.g. Hull, Options, Futures and other derivatives, 7th Edition, page 134
-        double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
+        double value = cleanBondPriceAtExpiry - 1.0 * /*settlementPriceFuture **/ conversionFactor;
         DLOG("BondFuture::identifyCtdBond underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry
                                                        << " conversionFactor " << conversionFactor << " Value "
                                                        << value);
@@ -492,6 +409,57 @@ BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFac
 
     return make_pair(ctdSec, ctdCf);
 }
+
+std::pair<Date, std::string> BondFutureUtils::checkForwardBond(const std::string& securityId) {
+    Date expiry;
+    string strippedId;
+    auto pos = securityId.find("_FWDEXP_");
+    if (pos != std::string::npos) {
+        strippedId = securityId.substr(0, pos);
+        expiry = parseDate(securityId.substr(pos + 8));
+        DLOG("BondFutureUtils::checkForwardBond("
+             << securityId << ") : Forward Bond identified, strippedId = " << strippedId << ", expiry " << expiry);
+    }
+    return std::make_pair(expiry, strippedId);
+}
+
+void BondFutureUtils::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
+                                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                             const std::string& securityId) {
+    DLOG("BondFutureUtils::modifyToForwardBond called for " << securityId);
+
+    QL_REQUIRE(getBondReferenceDatumType(securityId, referenceData) == BondReferenceDatum::TYPE,
+               "BondFutureUtils::modifyToForwardBond(): not implemented for bond type "
+                   << getBondReferenceDatumType(securityId, referenceData));
+
+    // truncate legs akin to fwd bond method...
+    Leg modifiedLeg;
+    for (auto& cf : bond->cashflows()) {
+        if (!cf->hasOccurred(expiry))
+            modifiedLeg.push_back(cf);
+    }
+
+    // uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
+    QuantLib::ext::shared_ptr<QuantLib::Bond> modifiedBond = QuantLib::ext::make_shared<QuantLib::Bond>(
+        bond->settlementDays(), bond->calendar(), 1.0, bond->maturityDate(), bond->issueDate(), modifiedLeg);
+
+    // retrieve additional required information
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+
+    // Set pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << securityId);
+    modifiedBond->setPricingEngine(bondBuilder->engine(parseCurrency(data.currency()), data.creditCurveId(),
+                                                       securityId, data.referenceCurveId()));
+
+    // store modified bond
+    bond = modifiedBond;
+}
+
 
 } // namespace data
 } // namespace ore

@@ -52,10 +52,6 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
     registerWith(recoveryRate_);
     registerWith(securitySpread_);
     registerWith(incomeCurve_);
-
-    vanillaBondEngine_ = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(
-        discountCurve, defaultCurve, recoveryRate, securitySpread, 6 * Months, boost::none, incomeCurve_,
-        conditionalOnSurvival_);
 }
 
 std::string BondIndex::name() const { return "BOND-" + securityName_; }
@@ -109,15 +105,11 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
         }
     }
 
-    // for future dates or if the above did not work, assume that the bond can be priced by
-    // simply discounting its cashflows
+    // beyond that we need a forward enabled engine
 
-    if (price == Null<Real>()) {
-        auto res =
-            vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
-                                             bond_->cashflows(), boost::none, false);
-        price = res.npv;
-    }
+    price = forwardPrice(bond_, fixingDate, bond_->settlementDate(fixingDate), false, conditionalOnSurvival_);
+
+    // apply the various required adjustments to the dirty price
 
     price += bidAskAdjustment_ * bond_->notional(fixingDate);
 
@@ -144,13 +136,14 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     if (price == Null<Real>())
         return price;
 
-    // If the quoted prices are clean (or assume clean if it was not explicitly set) and return is dirty, then include accruedAmount
+    // If the quoted prices are clean (or assume clean if it was not explicitly set) and return is dirty, then include
+    // accruedAmount
     if ((quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Clean || !quotedDirtyPrices_) && dirty_ == true) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         if (fixingDate >= issueDate_)
             price += bond_->accruedAmount(bond_->settlementDate(fd)) / 100.0;
 
-    // If the quoted prices are dirty and return is clean, then remove accruedAmount
+        // If the quoted prices are dirty and return is clean, then remove accruedAmount
     } else if (quotedDirtyPrices_ == QuantLib::Bond::Price::Type::Dirty && dirty_ == false) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for clean prices");
         if (fixingDate >= issueDate_)
@@ -173,19 +166,21 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
 }
 
 BondFuturesIndex::BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate,
-                                   const boost::shared_ptr<BondIndex>& ctd)
-    : futureContract_(futureContract), futureExpiryDate_(futureExpiryDate), ctd_(ctd) {
+                                   const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd, const double conversionFactor,
+                                   const bool dirty)
+    : futureContract_(futureContract), futureExpiryDate_(futureExpiryDate), ctd_(ctd),
+      conversionFactor_(conversionFactor), dirty_(dirty) {
     registerWith(Settings::instance().evaluationDate());
     registerWith(ctd_);
     QL_DEPRECATED_DISABLE_WARNING
-    registerWith(IndexManager::instance().notifier(BondFUturesIndex::name()));
+    registerWith(IndexManager::instance().notifier(BondFuturesIndex::name()));
     QL_DEPRECATED_ENABLE_WARNING
 }
 
 std::string BondFuturesIndex::name() const {
     if (name_.empty()) {
         std::ostringstream o;
-        o << "BOND_FUTURE-" << futureContract;
+        o << "BOND_FUTURE-" << futureContract_;
         name_ = o.str();
     }
     return name_;
@@ -224,11 +219,23 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
     Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(fixingDate >= today, "BondFuturesIndex::forecastFixing(): fixingDate ("
                                         << fixingDate << ") must be >= today (" << today << ")");
-    QL_REQUIRE(bond_, "BondFuturesIndex::forecastFixing(): bond required");
-    auto bondNpvResults =
-        vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->settlementDate(expiryDate_),
-                                         bond()->cashflows(), boost::none, false);
-    return bondNpvResults.npv - bond()->accruedAmount(expiryDate_) / 100.0 * bond()->notional(expiryDate_);
+    QL_REQUIRE(ctd_, "BondFuturesIndex::forecastFixing(): bond required");
+    QL_REQUIRE(conversionFactor_ != Null<Real>(), "BondFuturesIndex::forecastFixing(): conversion factor required");
+    QL_REQUIRE(futureExpiryDate_ != Date(), "BondFuturesIndex::forecastFixing(" << QuantLib::io::iso_date(fixingDate)
+                                                                                << "): future expiry date required.");
+    // expose conditional on survival? is true the correct value?
+    Real price = forwardPrice(ctd_, futureExpiryDate_, ctd_->settlementDate(futureExpiryDate_), false, true);
+
+    if (!dirty_) {
+        price -= ctd_->accruedAmount(ctd_->settlementDate(fixingDate)) / 100.0 * ctd_->notional(fixingDate);
+    }
+
+    if (close_enough(ctd_->notional(fixingDate), 0.0))
+        price = 0.0;
+    else
+        price /= ctd_->notional(fixingDate);
+
+    return price / conversionFactor_;
 }
 
 Real BondFuturesIndex::pastFixing(const Date& fixingDate) const {
@@ -244,7 +251,7 @@ Date ConstantMaturityBondIndex::maturityDate(const Date& valueDate) const {
 Rate ConstantMaturityBondIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(bond_, "cannot forecast ConstantMaturityBondIndex fixing, because underlying bond not set");
     QL_REQUIRE(fixingDate == bondStartDate_, "bond yield fixing only available at bond start date, "
-	       << io::iso_date(fixingDate) << " != " << io::iso_date(bondStartDate_));
+                                                 << io::iso_date(fixingDate) << " != " << io::iso_date(bondStartDate_));
     return bond_->yield(dayCounter_, compounding_, frequency_, accuracy_, maxEvaluations_, guess_, priceType_);
 }
 

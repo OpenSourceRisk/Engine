@@ -170,9 +170,7 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
 Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
 
     if (expiry != Date()) {
-        auto f = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardEnabledBondEngine>(b.bond->pricingEngine());
-        QL_REQUIRE(f != nullptr, "BondSpreadImply::implySpread(): pricing engine does not support forward pricing");
-        return f->forwardCleanPrice(expiry, true) / 100.0;
+        return QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true, true) / 100.0;
     } else // this is the standaed bond case
         return b.bond->cleanPrice() / 100.0;
 }
@@ -185,7 +183,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     // checks, build bond from reference data
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
-    StructuredSecurityId structuredSecurityid(securityId);
+    StructuredSecurityId structuredSecurityId(securityId);
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, structuredSecurityId.securityId());
     Real priceAdj = price;
@@ -212,7 +210,12 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     if(auto fc = structuredSecurityId.futureContract(); !fc.empty()) {
         QL_REQUIRE(referenceDataManager->hasData("BondFuture", fc),
                    "BondSpreadImply: no reference data found for bond future contract " << fc);
-        expiry = getBondFutureExpiry(referenceDataManager, fc);
+        expiry = BondFutureUtils::deduceDates(QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+                                                  referenceDataManager->getData("BondFuture", fc)))
+                     .first;
+    } else {
+        // deprecated, derive expiry from name_FWDEXP_expiry, if security id is of that form
+        expiry = BondFutureUtils::checkForwardBond(b.securityId).first;
     }
 
     auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, &expiry](const Real s) {

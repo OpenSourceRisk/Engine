@@ -54,8 +54,8 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows,
-                                                       const Handle<YieldTermStructure>& incomeCurve = {},
-                                                       const bool conditionalOnSurvival = true)
+                                                       const Handle<YieldTermStructure>& incomeCurve,
+                                                       const bool conditionalOnSurvival)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
       includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
       conditionalOnSurvival_(conditionalOnSurvival) {
@@ -73,8 +73,9 @@ void DiscountingRiskyBondEngine::calculate() const {
 
     // the npv as of today, excluding cashflows before the settlement date
 
-    DiscountingRiskyBondEngine::BondNPVCalculationResults npvResults = calculateNpv(
-        results_.valuationDate, arguments_.settlementDate, arguments_.cashflows, includeSettlementDateFlows_);
+    DiscountingRiskyBondEngine::BondNPVCalculationResults npvResults =
+        calculateNpv(results_.valuationDate, arguments_.settlementDate, arguments_.cashflows,
+                     includeSettlementDateFlows_, conditionalOnSurvival_, true);
 
     // the results value is set to the npv as of today including the cashflows before settlement
 
@@ -98,16 +99,16 @@ void DiscountingRiskyBondEngine::calculate() const {
     }
 }
 
-Real DiscountinRiskyBondEngine::forwardNpv(const Date& forwardDate) const {
-    return calculateNpv(forwardDate, forwardDate, arguments_.cashflows, includeSettlementDateFlows_, incomeCurve_,
-                        conditionalOnSurvival_);
+Real DiscountingRiskyBondEngine::forwardPrice(const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate,
+                                              const bool clean, const bool conditionalOnSurvival) const {
+    auto res = calculateNpv(forwardDate, settlementDate, arguments_.cashflows, includeSettlementDateFlows_,
+                            conditionalOnSurvival, false);
+    return res.npv * res.compoundFactorSettlement - (clean ? res.accruedAmountSettlement : 0.0);
 }
-
 
 DiscountingRiskyBondEngine::BondNPVCalculationResults
 DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
                                          boost::optional<bool> includeSettlementDateFlows,
-                                         const Handle<YieldTermStructure>& incomeCurve,
                                          const bool conditionalOnSurvival, const bool additionalResults) const {
 
     bool includeRefDateFlows =
@@ -116,6 +117,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Real npvValue = 0.0;
     DiscountingRiskyBondEngine::BondNPVCalculationResults calculationResults;
     calculationResults.cashflowsBeforeSettlementValue = 0.0;
+    calculationResults.accruedAmountSettlement = 0.0;
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
@@ -127,12 +129,12 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     // compounding factors for npv date
-    Real dfNpv = incomeCurve.empty() ? discountCurve_->discount(npvDate) : incomeCurve->discount(npvDate);
+    Real dfNpv = incomeCurve_.empty() ? discountCurve_->discount(npvDate) : incomeCurve_->discount(npvDate);
     Real spNpv = conditionalOnSurvival ? creditCurvePtr->survivalProbability(npvDate) : 1.0;
 
     // compound factors for settlement date
     Real dfSettl =
-        incomeCurve.empty() ? discountCurve_->discount(settlementDate) : incomeCurve->discount(settlementDate);
+        incomeCurve_.empty() ? discountCurve_->discount(settlementDate) : incomeCurve_->discount(settlementDate);
     Real spSettl = creditCurvePtr->survivalProbability(settlementDate);
     if (!conditionalOnSurvival)
         spSettl /= creditCurvePtr->survivalProbability(npvDate);
@@ -140,13 +142,17 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     // effective compound factor to get settlement npv from npv date npv
     calculationResults.compoundFactorSettlement = (dfNpv * spNpv) / (dfSettl * spSettl);
 
+    // accrued amount as of settlement date
+    calculationResults.accruedAmountSettlement =
+        CashFlows::accruedAmount(cashflows, includeRefDateFlows, settlementDate);
+
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
     for (Size i = 0; i < cashflows.size(); i++) {
         QuantLib::ext::shared_ptr<CashFlow> cf = cashflows[i];
-        if (cf->hasOccurred(npvDate, includeRefDateFlows) && !includePastCashflows_)
-            continue;
-        else if(cf->hasOccurred(npvDate, includeRefDateFlows)){
+        if(cf->hasOccurred(npvDate, includeRefDateFlows)) {
+            if(!includePastCashflows_)
+                continue;
             CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
             calculationResults.cashflowResults.push_back(cfRes);
             continue;

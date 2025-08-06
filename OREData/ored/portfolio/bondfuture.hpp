@@ -45,6 +45,8 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
+    const BondData& bondData() const { return bondData_; }
+
 protected:
     void checkData();
 
@@ -52,6 +54,7 @@ private:
     std::string contractName_;
     double contractNotional_;
     std::string longShort_;
+    ore::data::BondData bondData_;
 };
 
 } // namespace data

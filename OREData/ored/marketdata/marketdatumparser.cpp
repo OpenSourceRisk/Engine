@@ -68,7 +68,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
         {"BOND", MarketDatum::InstrumentType::BOND},
-        {"BOND_FUTURE", MarketDatum::InstrumentType::BOND_OPTION},
+        {"BOND_FUTURE", MarketDatum::InstrumentType::BOND_FUTURE},
         {"BOND_OPTION", MarketDatum::InstrumentType::BOND_OPTION},
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},

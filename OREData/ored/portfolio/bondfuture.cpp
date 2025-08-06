@@ -19,10 +19,12 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondfuture.hpp>
-#include <ored/portfolio/builders/forwardbond.hpp>
+#include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <ored/portfolio/legdata.hpp>
 
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/instruments/bondfuture.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/asia.hpp>
@@ -48,34 +50,43 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-   QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", futureContract),
-               "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << futureContract);
+    bool isLong = longShort_ == "Long";
 
-    auto refData = engineFactory->referenceData()->getData("BondFuture", futureContract);
+    QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", contractName_),
+               "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << contractName_);
 
-    ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondFuture");
+    auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+        engineFactory->referenceData()->getData("BondFuture", contractName_));
+
+    auto builder = QuantLib::ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
 
     bool pricing =
         builder->globalParameters().count("Calibrate") == 0 || parseBool(builder->globalParameters().at("Calibrate"));
 
     auto [ctd, conversionFactor] = BondFutureUtils::identifyCtdBond(engineFactory, contractName_, pricing);
+    auto [expiry, settlement] = BondFutureUtils::deduceDates(refData);
 
-    auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), ctd);
-    auto instr = ext::make_shared<QuantExt::BondFuture>(b.bond, expiry, settlementDate, isPhysicallySettled,
-                                                        settlementDirty, contractNotional_);
+    auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
+                                           StructuredSecurityId(ctd, contractName_));
+    auto index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
+        contractName_, expiry, b.bond, parseBool(refData->bondFutureData().dirtyQuotation));
+    auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(index, contractNotional_, isLong, settlement,
+                                                                  refData->bondFutureData().settlement == "Physical");
 
-    instr->setPricingEngine(builder->engine(id()));
+    bondData_ = b.bondData;
+
+    instr->setPricingEngine(builder->engine(id(), refData->bondFutureData().currency, conversionFactor));
 
     setSensitivityTemplate(*builder);
-    addProductModelEngine(*fbuilder);
+    addProductModelEngine(*builder);
     instrument_.reset(new VanillaInstrument(instr, 1.0));
 
-    maturity_ = settlementDate;
+    maturity_ = settlement;
     maturityType_ = "Contract settled";
-    npvCurrency_ = currency_;
+    npvCurrency_ = refData->bondFutureData().currency;
     notional_ = contractNotional_;
-    legs_ = vector<Leg>(1, ctdUnderlying_.bond->cashflows());
-    legCurrencies_ = vector<string>(1, currency);
+    legs_ = vector<Leg>(1, b.bond->cashflows());
+    legCurrencies_ = vector<string>(1, refData->bondFutureData().currency);
     legPayers_ = vector<bool>(1, isLong);
 }
 

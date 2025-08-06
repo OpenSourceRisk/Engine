@@ -203,17 +203,17 @@ void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<Bon
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                              const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
-    string strippedSecId = BondBuilder::checkForwardBond(securityId_).second;
-    if (strippedSecId.empty())
-        strippedSecId = securityId_;
 
-    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, strippedSecId)) {
-        DLOG("could not get BondReferenceDatum for name " << strippedSecId << " leave data in trade unchanged");
+    // deprecated, to identify forward bonds and strip them down to the forward part
+    auto [expiry, effSecId] = BondFutureUtils::checkForwardBond(securityId_);
+
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, effSecId)) {
+        DLOG("could not get BondReferenceDatum for name " << effSecId << " leave data in trade unchanged");
         initialise();
         checkData();
     } else {
         auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-            referenceData->getData(BondReferenceDatum::TYPE, strippedSecId));
+            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData, startDate, endDate);
     }
@@ -361,22 +361,24 @@ double BondBuilder::Result::inflationFactor() const {
 BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
+
+    // deprecated, to identify forward bonds and strip them down to the forward part
+    auto [expiry, effSecId] = BondFutureUtils::checkForwardBond(securityId);
+
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
-
-        string strippedSecId = BondBuilder::checkForwardBond(securityId).second;
-        if (strippedSecId.empty())
-            strippedSecId = securityId;
-
-        if (referenceData && referenceData->hasData(b.first, strippedSecId)) {
-            auto tmp = b.second->build(engineFactory, referenceData, securityId);
+        if (referenceData && referenceData->hasData(b.first, effSecId)) {
+            auto tmp = b.second->build(engineFactory, referenceData, effSecId);
             tmp.builderLabel = b.first;
+            // deprecated, see above
+            if (expiry != Date())
+                BondFutureUtils::modifyToForwardBond(expiry, tmp.bond, engineFactory, referenceData, effSecId);
             return tmp;
         }
     }
 
     QL_FAIL("BondFactory: could not build bond '"
-            << securityId
+            << effSecId
             << "': no reference data given or no suitable builder registered. Check if bond is set up in the reference "
                "data and that there is a builder for the reference data type.");
 }
@@ -420,24 +422,6 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.priceQuoteBaseValue = data.priceQuoteBaseValue();
     res.quotedDirtyPrices = data.quotedDirtyPrices();
     return res;
-}
-
-std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& securityId) {
-
-    // forward bonds shall have a security id of type isin_FWDEXP_expiry
-
-    Date expiry;
-    string strippedId;
-
-    auto pos = securityId.find("_FWDEXP_");
-    if (pos != std::string::npos) {
-        strippedId = securityId.substr(0, pos);
-        expiry = parseDate(securityId.substr(pos + 8));
-        DLOG("BondBuilder::checkForwardBond : Forward Bond identified, strippedId = " << strippedId << ", expiry "
-                                                                                      << expiry);
-    }
-
-    return std::make_pair(expiry, strippedId);
 }
 
 } // namespace data

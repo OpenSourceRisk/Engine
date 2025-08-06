@@ -16,24 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
-
-#include <ql/pricingengine.hpp>
-#include <ql/qldefines.hpp>
-#include <ql/time/date.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 namespace QuantExt {
 
-struct ForwardEnabledBondEngine {
-    virtual ~ForwardEnabledBondEngine() {}
-    // npv are always w.r.t. settlementDate, excluding flows between forward and settlement date
-    QuantLib::Real virtual forwardPrice(const QuantLib::Date& forwardDate,
-                                                  const QuantLib::Date& settlementDate, const bool clean = true,
-                                                  const bool conditionalOnSurvival = true) const = 0;
-};
-
 QuantLib::Real forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument,
-                            const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate,
-                            const bool clean = true, const bool conditionalOnSurvival = true);
+                            const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate, const bool clean,
+                            const bool conditionalOnSurvival) {
+    auto engine = instrument->pricingEngine();
+    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
+    QL_REQUIRE(engine, "getForwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+    engine->reset();
+    instrument->setupArguments(engine->getArguments());
+    engine->getArguments()->validate();
+    engine->calculate();
+    return fwdEngine->forwardPrice(forwardDate, settlementDate, clean, conditionalOnSurvival);
+}
 
 } // namespace QuantExt

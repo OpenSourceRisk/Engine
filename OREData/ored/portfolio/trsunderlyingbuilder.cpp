@@ -135,12 +135,15 @@ void ForwardBondTrsUnderlyingBuilder::build(
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::ForwardBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::ForwardBond, this is unexpected");
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantExt::ForwardBond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantExt::ForwardBond, could not cast");
-    auto futuresIndex = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
-        parseDate(t->fwdMaturityDate()), t->bondData().securityId(), true, false, NullCalendar(), qlBond->underlying());
+
+    auto futuresIndex = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>("dummy", parseDate(t->fwdMaturityDate()),
+                                                                               qlBond->underlying(), false);
+
     underlyingIndex = futuresIndex;
     underlyingMultiplier = t->bondData().bondNotional();
 
@@ -149,6 +152,8 @@ void ForwardBondTrsUnderlyingBuilder::build(
     std::string name = o.str();
     name.erase(name.length() - 3);
     indexQuantities[name] = underlyingMultiplier;
+
+    futuresIndex->setName(name);
 
     Real adj = t->bondData().priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / t->bondData().priceQuoteBaseValue()

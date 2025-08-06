@@ -120,7 +120,7 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
 void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondFutureReferenceDatum::BondFutureData::fromXML(): no node given");
     currency = XMLUtils::getChildValue(node, "Currency", false);
-    deliveryBasket = getChildrenValues(node, "DeliveryBasket", "Id", false);
+    deliveryBasket = XMLUtils::getChildrenValues(node, "DeliveryBasket", "Id", false);
     deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false);
     lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false);
     lastDelivery = XMLUtils::getChildValue(node, "LastDeliveryDate", false);
@@ -142,7 +142,7 @@ XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const
     XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
     XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
     XMLUtils::addChild(doc, node, "Settlement", settlement);
-    XMLUtils::addChild(doc, node, "DirtyQuotation", settlementDirty);
+    XMLUtils::addChild(doc, node, "DirtyQuotation", dirtyQuotation);
     XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
     XMLUtils::addChild(doc, node, "RootDate", rootDate);
     XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis);

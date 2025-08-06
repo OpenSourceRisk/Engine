@@ -553,4 +553,19 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
+QuantLib::Real DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardDate,
+                                                          const QuantLib::Date& settlementDate, const bool clean,
+                                                          const bool conditionalOnSurvival) const {
+    QL_REQUIRE(forwardDate == arguments_.fwdMaturityDate,
+               "DiscountingForwardBondEngine::forwardPrice(): requested forwardDate ("
+                   << forwardDate << ") does not match instrument forward date " << arguments_.fwdMaturityDate
+                   << ". Can not calculate forwardPrice");
+    Real price = results_.forwardValue;
+    if(clean)
+        price -= QuantLib::ext::any_cast<double>(results_.additionalResults["accruedAmount"]);
+    if(!conditionalOnSurvival && !bondDefaultCurve_.empty())
+        price *= bondDefaultCurve_->survivalProbability(forwardDate);
+    return price;
+}
+
 } // namespace QuantExt

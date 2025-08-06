@@ -38,6 +38,7 @@
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
@@ -268,7 +269,6 @@ void dataBuilders() {
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
     ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
-    ORE_REGISTER_BOND_BUILDER("BondFuture", BondFutureBuilder, false)
 
     ORE_REGISTER_TRADE_BUILDER("CashPosition", CashPosition, false)
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
@@ -530,6 +530,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AsianOptionScriptedEngineBuilder, false)

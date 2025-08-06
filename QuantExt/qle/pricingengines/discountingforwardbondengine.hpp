@@ -30,6 +30,7 @@
 #include <ql/time/period.hpp>
 
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 #include <ql/tuple.hpp>
 
@@ -40,45 +41,48 @@ namespace QuantExt {
 /*!
   \ingroup engines
 */
-class DiscountingForwardBondEngine : public QuantExt::ForwardBond::engine {
-    public:
-        DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                     const Handle<YieldTermStructure>& incomeCurve,
-                                     const Handle<YieldTermStructure>& bondReferenceYieldCurve,
-                                     const Handle<Quote>& bondSpread,
-                                     const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                     const Handle<Quote>& recoveryRate, const Handle<Quote>& conversionFactor,
-                                     Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
-                                     const Date& settlementDate = Date(), const Date& npvDate = Date());
+class DiscountingForwardBondEngine : public QuantExt::ForwardBond::engine, public QuantExt::ForwardEnabledBondEngine {
+public:
+    DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                                 const Handle<YieldTermStructure>& incomeCurve,
+                                 const Handle<YieldTermStructure>& bondReferenceYieldCurve,
+                                 const Handle<Quote>& bondSpread,
+                                 const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+                                 const Handle<Quote>& recoveryRate, const Handle<Quote>& conversionFactor,
+                                 Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                 const Date& settlementDate = Date(), const Date& npvDate = Date());
 
     void calculate() const override;
+
+    const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
+    const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }
+    const Handle<YieldTermStructure>& bondReferenceYieldCurve() const { return bondReferenceYieldCurve_; }
+    const Handle<Quote>& bondSpread() const { return bondSpread_; }
+    const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve() const { return bondDefaultCurve_; }
+    const Handle<Quote>& bondRecoveryRate() const { return bondRecoveryRate_; }
+    const Handle<Quote>& conversionFactor() const { return conversionFactor_; }
+
+    QuantLib::Real forwardPrice(const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate,
+                                const bool clean = true, const bool conditionalOnSurvival = true) const override;
+
+private:
     Real calculateBondNpv(Date, Date) const;
     std::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
-                                                                  Date computeDate, Date settlementDate,
-                                                                  bool cashSettlement, Date cmpPaymentDate,
-                                                                  bool dirty, double conversionFactor) const;
-
-        const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
-        const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }
-        const Handle<YieldTermStructure>& bondReferenceYieldCurve() const { return bondReferenceYieldCurve_; }
-        const Handle<Quote>& bondSpread() const { return bondSpread_; }
-        const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve() const { return bondDefaultCurve_; }
-        const Handle<Quote>& bondRecoveryRate() const { return bondRecoveryRate_; }
-        const Handle<Quote>& conversionFactor() const { return conversionFactor_; }
-
-    private:
-        Handle<YieldTermStructure> discountCurve_;
-        Handle<YieldTermStructure> incomeCurve_;
-        Handle<YieldTermStructure> bondReferenceYieldCurve_;
-        Handle<Quote> bondSpread_;
-        Handle<DefaultProbabilityTermStructure> bondDefaultCurve_;
-        Handle<Quote> bondRecoveryRate_;
-        Handle<Quote> conversionFactor_;
-        Period timestepPeriod_;
-        boost::optional<bool> includeSettlementDateFlows_;
-        Date settlementDate_;
-        Date npvDate_;
-    };
+                                                                Date computeDate, Date settlementDate,
+                                                                bool cashSettlement, Date cmpPaymentDate, bool dirty,
+                                                                double conversionFactor) const;
+    Handle<YieldTermStructure> discountCurve_;
+    Handle<YieldTermStructure> incomeCurve_;
+    Handle<YieldTermStructure> bondReferenceYieldCurve_;
+    Handle<Quote> bondSpread_;
+    Handle<DefaultProbabilityTermStructure> bondDefaultCurve_;
+    Handle<Quote> bondRecoveryRate_;
+    Handle<Quote> conversionFactor_;
+    Period timestepPeriod_;
+    boost::optional<bool> includeSettlementDateFlows_;
+    Date settlementDate_;
+    Date npvDate_;
+};
 } // namespace QuantExt
 
 #endif

@@ -137,6 +137,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "EQUITY_OPTION";
     case MarketDatum::InstrumentType::BOND:
         return out << "BOND";
+    case MarketDatum::InstrumentType::BOND_FUTURE:
+        return out << "BOND_FUTURE";
     case MarketDatum::InstrumentType::BOND_OPTION:
         return out << "BOND_OPTION";
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION:
@@ -663,7 +665,7 @@ template <class Archive> void BondFuturePriceQuote::serialize(Archive& ar, const
 template <class Archive> void BondFutureConversionFactor::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& securityID_;
-    ar& futureConract_;
+    ar& futureContract_;
 }
 
 template <class Archive> void TransitionProbabilityQuote::serialize(Archive& ar, const unsigned int version) {

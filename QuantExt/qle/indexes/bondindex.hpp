@@ -153,7 +153,6 @@ protected:
     double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
-    QuantLib::ext::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
     bool bondIssueDateFallback_ = false;
     std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
 };
@@ -164,8 +163,9 @@ protected:
 */
 class BondFuturesIndex : public Index {
 public:
-    BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate,
-                     const boost::shared_ptr<BondIndex>& ctd);
+    BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate = Date(),
+                     const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
+                     const Real conversionFactor = Null<Real>(), const bool dirty = false);
 
     //! \name Index interface
     //@{
@@ -189,14 +189,22 @@ public:
     //! \name Inspectors
     //@{
     const std::string& futureContract() const { return futureContract_; }
-    const QuantLib::Date& expiryDate() const { return futureExpiryDate_; }
-    const QuantLib::ext::shared_ptr<BondIndex>& ctd() const { return ctd_; }
+    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd() const { return ctd_; }
+    const bool dirty() const { return dirty_; }
+    //@}
+
+    //! \name Inspectors
+    //@{
+    void setName(const std::string& name) const { name_ = name; }
     //@}
 
 private:
     std::string futureContract_;
     Date futureExpiryDate_;
-    QuantLib::ext::shared_ptr<BondIndex> ctd_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> ctd_;
+    Real conversionFactor_;
+    bool dirty_;
     mutable std::string name_;
 };
 

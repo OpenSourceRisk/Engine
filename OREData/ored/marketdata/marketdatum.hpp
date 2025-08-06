@@ -111,6 +111,7 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
+        BOND_FUTURE,
         BOND_OPTION,
         INDEX_CDS_OPTION,
         INDEX_CDS_TRANCHE,
@@ -1962,7 +1963,7 @@ public:
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<BondFuturePriceQuote>(quote_->value(), asofDate_, name_, securityID_);
+        return QuantLib::ext::make_shared<BondFuturePriceQuote>(quote_->value(), asofDate_, name_, futureContract_);
     }
 
     //! \name Inspectors
@@ -2003,6 +2004,7 @@ public:
     //@}
 private:
     string securityID_;
+    string futureContract_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -2078,5 +2080,6 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);

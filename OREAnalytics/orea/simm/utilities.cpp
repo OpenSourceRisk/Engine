@@ -509,8 +509,7 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     } else if (trade->tradeType() == "ForwardBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
     } else if (trade->tradeType() == "BondFuture") {
-        auto future = QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade);
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::Bond>(future->ctdUnderlying().trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
