@@ -180,7 +180,7 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
+    setUp();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
