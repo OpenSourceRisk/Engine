@@ -50,7 +50,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    bool isLong = longShort_ == "Long";
+    bool isLong = parsePositionType(longShort_) == QuantLib::Position::Type::Long;
 
     QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", contractName_),
                "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << contractName_);
