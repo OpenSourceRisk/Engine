@@ -103,7 +103,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const Qu
 }
 
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
-    auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
+    auto tmp = "__SECCRCRV_" + StructuredSecurityId(securityId).securityId() + "_&_" + creditCurveId + "_&_";
     return tmp;
 }
 
