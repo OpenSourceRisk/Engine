@@ -356,11 +356,6 @@ double BondFutureUtils::conversionFactor(const BondFutureUtils::BondFutureType& 
     return conversionFactorUSD(fixedRate, type, futureExpiry, bondMaturity);
 }
 
-// TODOs:
-// - get settlementPriceFuture below
-// - BOND_FUTURE fixings -> market data fixings (does both fixings.txt and from market data work then?)
-// - documentation deprecated _FWDEXP_ approach and new bond futures approach, internal security ids
-
 std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
                                                                 const std::string& futureContract,
                                                                 const bool noPricing) {
