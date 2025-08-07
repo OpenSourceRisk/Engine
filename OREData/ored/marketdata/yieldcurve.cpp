@@ -62,7 +62,6 @@
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
-#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
