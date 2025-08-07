@@ -204,11 +204,11 @@ void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<Ref
                                              const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
 
-    // deprecated, to identify forward bonds and strip them down to the forward part
-    auto [expiry, effSecId] = BondFutureUtils::checkForwardBond(securityId_);
+    StructuredSecurityId structuredSecurityId(securityId_);
 
-    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, effSecId)) {
-        DLOG("could not get BondReferenceDatum for name " << effSecId << " leave data in trade unchanged");
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, structuredSecurityId.securityId())) {
+        DLOG("could not get BondReferenceDatum for name " << structuredSecurityId.securityId()
+                                                          << " leave data in trade unchanged");
         initialise();
         checkData();
     } else {
@@ -362,23 +362,23 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
                                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
 
-    // deprecated, to identify forward bonds and strip them down to the forward part
-    auto [expiry, effSecId] = BondFutureUtils::checkForwardBond(securityId);
+    StructuredSecurityId structuredSecurityId(securityId);
 
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
-        if (referenceData && referenceData->hasData(b.first, effSecId)) {
-            auto tmp = b.second->build(engineFactory, referenceData, effSecId);
+        if (referenceData && referenceData->hasData(b.first, structuredSecurityId.securityId())) {
+            auto tmp = b.second->build(engineFactory, referenceData, securityId);
             tmp.builderLabel = b.first;
-            // deprecated, see above
-            if (expiry != Date())
-                BondFutureUtils::modifyToForwardBond(expiry, tmp.bond, engineFactory, referenceData, effSecId);
+            // deprecated representation of forward bonds
+            if (!structuredSecurityId.forwardExpiry().empty())
+                BondFutureUtils::modifyToForwardBond(parseDate(structuredSecurityId.forwardExpiry()), tmp.bond,
+                                                     engineFactory, referenceData, securityId);
             return tmp;
         }
     }
 
     QL_FAIL("BondFactory: could not build bond '"
-            << effSecId
+            << structuredSecurityId.securityId()
             << "': no reference data given or no suitable builder registered. Check if bond is set up in the reference "
                "data and that there is a builder for the reference data type.");
 }

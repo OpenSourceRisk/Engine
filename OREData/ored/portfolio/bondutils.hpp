@@ -75,7 +75,14 @@ std::string getBondReferenceDatumType(const std::string& id,
 
    ISIN:US91282CDJ71_FUTURE_TYH25
 
-   The rationale is that we need security spreads implied from bond future quotes for the bond future underlyings. */
+   The rationale is that we need security spreads implied from bond future quotes for the bond future underlyings.
+
+   Similarly, we allow for the deprecated form with a forward expiry
+
+   ISIN:US91282CDJ71_FWDEXP_2025-08-01
+
+   which was the workaround to represent futures before the proper bond future implementation.
+*/
 
 class StructuredSecurityId {
 public:
@@ -86,11 +93,13 @@ public:
     operator string() const { return id_; }
     std::string securityId() const { return securityId_; }
     std::string futureContract() const { return futureContract_; }
+    std::string forwardExpiry() const { return forwardExpiry_; }
 
 private:
     std::string id_;
     std::string securityId_;
     std::string futureContract_;
+    std::string forwardExpiry_;
 };
 
 struct BondFutureUtils {
@@ -113,9 +122,6 @@ struct BondFutureUtils {
 
     static std::pair<std::string, double> identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
                                                           const std::string& futureContract, const bool pricing = true);
-
-    //! deprecated, split a security id of the form name_FWDEXP_YYYY-MM-DD to name and expiry
-    static std::pair<Date, string> checkForwardBond(const std::string& securityId);
 
     //! deprecated, strip a bond to cashflows after given expiry (throws for non-vanilla bonds)
     static void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,

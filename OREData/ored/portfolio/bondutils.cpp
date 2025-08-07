@@ -135,21 +135,25 @@ std::string getBondReferenceDatumType(const std::string& id,
 }
 
 StructuredSecurityId::StructuredSecurityId(const std::string& id) : id_(id) {
-    std::size_t ind = id_.find("_FUTURE_");
-    if (ind == std::string::npos) {
-        securityId_ = id_;
-    } else {
+    if (std::size_t ind = id_.find("_FUTURE_"); ind != std::string::npos) {
         securityId_ = id_.substr(0, ind);
         futureContract_ = id_.substr(ind + 8);
+    } else if (std::size_t ind = id_.find("_FWDEXP_"); ind != std::string::npos) {
+        securityId_ = id_.substr(0, ind);
+        forwardExpiry_ = id_.substr(ind + 8);
+    } else {
+        securityId_ = id_;
     }
 }
 
 StructuredSecurityId::StructuredSecurityId(const std::string& securityId, const std::string& futureContract)
     : securityId_(securityId), futureContract_(futureContract) {
-    if (futureContract.empty()) {
-        id_ = securityId_;
-    } else {
+    if (!futureContract.empty()) {
         id_ = securityId_ + "_FUTURE_" + futureContract_;
+    } else if (!forwardExpiry_.empty()) {
+        id_ = securityId_ + "_FWDEXP_" + forwardExpiry_;
+    } else {
+        id_ = securityId_;
     }
 }
 
@@ -410,30 +414,23 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
     return make_pair(ctdSec, ctdCf);
 }
 
-std::pair<Date, std::string> BondFutureUtils::checkForwardBond(const std::string& securityId) {
-    Date expiry;
-    string strippedId;
-    auto pos = securityId.find("_FWDEXP_");
-    if (pos != std::string::npos) {
-        strippedId = securityId.substr(0, pos);
-        expiry = parseDate(securityId.substr(pos + 8));
-        DLOG("BondFutureUtils::checkForwardBond("
-             << securityId << ") : Forward Bond identified, strippedId = " << strippedId << ", expiry " << expiry);
-    } else {
-        strippedId = securityId;
-    }
-    return std::make_pair(expiry, strippedId);
-}
-
 void BondFutureUtils::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                              const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                              const std::string& securityId) {
     DLOG("BondFutureUtils::modifyToForwardBond called for " << securityId);
 
-    QL_REQUIRE(getBondReferenceDatumType(securityId, referenceData) == BondReferenceDatum::TYPE,
+    StructuredSecurityId structuredSecurityId(securityId);
+
+    QL_REQUIRE(!structuredSecurityId.forwardExpiry().empty(),
+               "BondFutureUtils::modifyToForwardBond(): no forward expiry found in '" << securityId << "'");
+    QL_REQUIRE(structuredSecurityId.futureContract().empty(),
+               "BondFutureUtils::modifyToForwardBond(): should not be called for future-specific securities ("
+                   << securityId << ")");
+
+    QL_REQUIRE(getBondReferenceDatumType(structuredSecurityId.securityId(), referenceData) == BondReferenceDatum::TYPE,
                "BondFutureUtils::modifyToForwardBond(): not implemented for bond type "
-                   << getBondReferenceDatumType(securityId, referenceData));
+                   << getBondReferenceDatumType(structuredSecurityId.securityId(), referenceData));
 
     // truncate legs akin to fwd bond method...
     Leg modifiedLeg;

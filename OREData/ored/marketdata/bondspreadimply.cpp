@@ -185,7 +185,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
 
     StructuredSecurityId structuredSecurityId(securityId);
 
-    auto b = BondFactory::instance().build(engineFactory, referenceDataManager, structuredSecurityId.securityId());
+    auto b = BondFactory::instance().build(engineFactory, referenceDataManager, structuredSecurityId);
     Real priceAdj = price;
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
@@ -207,15 +207,16 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
     DLOG("effective market price  = " << priceAdj * inflationFactor * adj);
 
     Date expiry;
-    if(auto fc = structuredSecurityId.futureContract(); !fc.empty()) {
-        QL_REQUIRE(referenceDataManager->hasData("BondFuture", fc),
-                   "BondSpreadImply: no reference data found for bond future contract " << fc);
-        expiry = BondFutureUtils::deduceDates(QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-                                                  referenceDataManager->getData("BondFuture", fc)))
+    if (!structuredSecurityId.futureContract().empty()) {
+        QL_REQUIRE(referenceDataManager->hasData("BondFuture", structuredSecurityId.futureContract()),
+                   "BondSpreadImply: no reference data found for bond future contract "
+                       << structuredSecurityId.futureContract());
+        expiry = BondFutureUtils::deduceDates(
+                     QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+                         referenceDataManager->getData("BondFuture", structuredSecurityId.futureContract())))
                      .first;
-    } else {
-        // deprecated, derive expiry from name_FWDEXP_expiry, if security id is of that form
-        expiry = BondFutureUtils::checkForwardBond(b.securityId).first;
+    } else if (!structuredSecurityId.forwardExpiry().empty()) {
+        expiry = parseDate(structuredSecurityId.forwardExpiry());
     }
 
     auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, &expiry](const Real s) {
