@@ -3015,9 +3015,11 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
     LOG("building base scenario done");
 
-    scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
-    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
-    scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    if (ScenarioInformation::instance().isEnabled()) {
+        scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    }
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
