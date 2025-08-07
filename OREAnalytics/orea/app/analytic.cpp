@@ -213,8 +213,10 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
 void Analytic::setUp() {
     if (!portfolio_) {
         portfolio_ = QuantLib::ext::make_shared<Portfolio>();
-        for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
-            portfolio_->add(trade);
+        if (inputs()->portfolio()) {
+            for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+                portfolio_->add(trade);
+        }
     }
     buildConfigurations();
     if (inputs()->enrichIndexFixings() && portfolio_)
