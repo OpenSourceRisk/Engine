@@ -358,8 +358,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
             /* If discount curve is not the curve being built, look for it in the map that is passed in. */
             string discountCurveID = curveConfig_.back()->discountCurveID();
-            std::cout<<"discountCurveId="<<discountCurveID<<std::endl;
-            std::cout<<"curveName="<<cs->name()<<std::endl;
             if (discountCurveID != curveConfig_.back()->curveID() && !discountCurveID.empty()) {
                 discountCurveID = yieldCurveKey(currency_.back(), discountCurveID, asofDate_);
                 auto it = requiredYieldCurveHandles_.find(discountCurveID);
@@ -1424,7 +1422,7 @@ void YieldCurve::buildDiscountRatioCurve(const std::size_t index) {
     QL_REQUIRE(curveSegments_[index].size() == 1, "A discount ratio curve must contain exactly one segment");
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::DiscountRatio,
                "The curve segment is not of type 'DiscountRatio'.");
-               
+
     QuantLib::ext::shared_ptr<DiscountRatioYieldCurveSegment> segment =
         QuantLib::ext::dynamic_pointer_cast<DiscountRatioYieldCurveSegment>(curveSegments_[index][0]);
 
