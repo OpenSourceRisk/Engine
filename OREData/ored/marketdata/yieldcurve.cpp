@@ -1424,6 +1424,7 @@ void YieldCurve::buildDiscountRatioCurve(const std::size_t index) {
     QL_REQUIRE(curveSegments_[index].size() == 1, "A discount ratio curve must contain exactly one segment");
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::DiscountRatio,
                "The curve segment is not of type 'DiscountRatio'.");
+               
     QuantLib::ext::shared_ptr<DiscountRatioYieldCurveSegment> segment =
         QuantLib::ext::dynamic_pointer_cast<DiscountRatioYieldCurveSegment>(curveSegments_[index][0]);
 
