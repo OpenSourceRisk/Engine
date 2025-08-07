@@ -419,6 +419,8 @@ std::pair<Date, std::string> BondFutureUtils::checkForwardBond(const std::string
         expiry = parseDate(securityId.substr(pos + 8));
         DLOG("BondFutureUtils::checkForwardBond("
              << securityId << ") : Forward Bond identified, strippedId = " << strippedId << ", expiry " << expiry);
+    } else {
+        strippedId = securityId;
     }
     return std::make_pair(expiry, strippedId);
 }
