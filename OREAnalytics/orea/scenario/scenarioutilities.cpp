@@ -20,6 +20,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/deltascenario.hpp>
 #include <ored/utilities/log.hpp>
 #include <set>
 namespace ore {
@@ -207,8 +208,15 @@ QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext:
     result->setNumeraire(targetScenarioNumeraire);
     result->setAbsolute(s->isAbsolute());
 
-    for (auto const& k : s->keys()) {
-        result->add(k, addDifferenceToScenario(k.keytype, s->get(k), d->get(k)));
+    //keep delta_keys and loop over them
+    if (auto delta = QuantLib::ext::dynamic_pointer_cast<DeltaScenario>(d)){
+        for (auto const& k : delta->delta_keys()) { 
+            result->add(k, addDifferenceToScenario(k.keytype, s->get(k), d->get(k)));
+        }
+    } else {
+        for (auto const& k : s->keys()) { 
+            result->add(k, addDifferenceToScenario(k.keytype, s->get(k), d->get(k)));
+        }
     }
 
     return result;
