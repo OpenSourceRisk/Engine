@@ -213,7 +213,7 @@ void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<Ref
         checkData();
     } else {
         auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
+            referenceData->getData(BondReferenceDatum::TYPE, structuredSecurityId.securityId()));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData, startDate, endDate);
     }
