@@ -223,14 +223,14 @@ public:
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
-                    const std::map<QuantLib::Date, double>& historicalFixings = {})
+                    const std::map<QuantLib::Date, double>& historicalFixings = {}, const ScheduleData& valuationSchedule = ScheduleData())
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
           isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
           lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
-          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings) {
+          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings), valuationSchedule_(valuationSchedule) {
         indices_.insert(index_);
     }
 
@@ -260,6 +260,7 @@ public:
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
     const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
+    ScheduleData valuationSchedule() const { return valuationSchedule_; }
     //@}
 
     //! \name Modifiers
@@ -303,6 +304,7 @@ private:
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
     std::map<QuantLib::Date, double> historicalFixings_;
+    ScheduleData valuationSchedule_;
 };
 
 //! Serializable CPI Leg Data
@@ -812,6 +814,7 @@ public:
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
     ScheduleData valuationSchedule() const { return valuationSchedule_; }
+    ScheduleData paymentSchedule() const { return paymentSchedule_; }
     const string& eqCurrency() const { return eqCurrency_; }
     const string& fxIndex() const { return fxIndex_; }
     bool notionalReset() const { return notionalReset_; }
@@ -832,6 +835,7 @@ private:
     bool notionalReset_ = false;
     Natural fixingDays_ = 0;
     ScheduleData valuationSchedule_;
+    ScheduleData paymentSchedule_;
     string eqCurrency_ = "";
     string fxIndex_ = "";
     Real quantity_;
@@ -935,6 +939,7 @@ public:
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
     const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
+    const ScheduleData& valuationSchedule() const { return valuationSchedule_; }
     //@}
 
     //! \name modifiers
@@ -992,6 +997,7 @@ private:
     string lastPeriodDayCounter_;
     ScheduleData paymentSchedule_;
     bool strictNotionalDates_ = false;
+    ScheduleData valuationSchedule_;
 };
 
 //! \name Utilities for building QuantLib Legs

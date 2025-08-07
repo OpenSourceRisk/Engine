@@ -1176,8 +1176,10 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     Schedule fixingSchedule;
     Schedule resetSchedule;
     Schedule paymentSchedule;
+    Schedule valuationSchedule;
     ScheduleBuilder scheduleBuilder;
     scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(valuationSchedule, data.valuationSchedule());
     scheduleBuilder.add(fixingSchedule, floatData->fixingSchedule());
     scheduleBuilder.add(resetSchedule, floatData->resetSchedule());
     scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
@@ -1436,7 +1438,7 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-
+    
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
     if (!paymentSchedule.empty()) {
