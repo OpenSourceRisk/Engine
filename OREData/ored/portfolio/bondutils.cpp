@@ -356,6 +356,11 @@ double BondFutureUtils::conversionFactor(const BondFutureUtils::BondFutureType& 
     return conversionFactorUSD(fixedRate, type, futureExpiry, bondMaturity);
 }
 
+// TODOs:
+// - get settlementPriceFuture below
+// - BOND_FUTURE fixings -> market data fixings (does both fixings.txt and from market data work then?)
+// - documentation deprecated _FWDEXP_ approach and new bond futures approach, internal security ids
+
 std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::shared_ptr<EngineFactory>& engineFactory,
                                                                 const std::string& futureContract,
                                                                 const bool noPricing) {
@@ -377,6 +382,9 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
         auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
                                                StructuredSecurityId(sec, futureContract));
 
+        Real settlementPriceFuture =
+            engineFactory->market()->securityPrice(StructuredSecurityId(sec, futureContract))->value();
+
         Date expiry = deduceDates(refData).first;
         double cleanBondPriceAtExpiry =
             noPricing ? 100.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true, true);
@@ -396,7 +404,7 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
         }
 
         // see e.g. Hull, Options, Futures and other derivatives, 7th Edition, page 134
-        double value = cleanBondPriceAtExpiry - 1.0 * /*settlementPriceFuture **/ conversionFactor;
+        double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
         DLOG("BondFuture::identifyCtdBond underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry
                                                        << " conversionFactor " << conversionFactor << " Value "
                                                        << value);

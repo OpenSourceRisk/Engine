@@ -17,14 +17,19 @@
 */
 
 #include <ored/configuration/conventions.hpp>
+
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
+
+#include <ored/portfolio/bondutils.hpp>
+
 #include <qle/indexes/fxindex.hpp>
+
 #include <ql/time/imm.hpp>
 
 #include <boost/algorithm/string.hpp>
