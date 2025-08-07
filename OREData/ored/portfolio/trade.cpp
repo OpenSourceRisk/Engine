@@ -743,6 +743,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                 Real presentValueBase = Null<Real>();
                 Real fxRateLocalCcy = Null<Real>();
                 Real fxRateLocalBase = Null<Real>();
+                Real fxRateCcyBase = Null<Real>();
                 Real floorStrike = Null<Real>();
                 Real capStrike = Null<Real>();
                 Real floorVolatility = Null<Real>();
@@ -759,9 +760,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     if (effectiveAmount != Null<Real>())
                         presentValue = discountFactor * effectiveAmount;
                     try {
-                        fxRateLocalBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
+                        fxRateCcyBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
                         fxRateLocalCcy = market->fxRate(ccy + npvCurrency_, configuration)->value();
-                        presentValueBase = presentValue * fxRateLocalCcy * fxRateLocalBase;
+                        fxRateLocalBase = fxRateCcyBase  * fxRateLocalCcy;
+                        presentValueBase = presentValue * fxRateLocalBase;
                     } catch (...) {
                     }
 
