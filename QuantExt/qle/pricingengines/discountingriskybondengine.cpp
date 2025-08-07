@@ -99,11 +99,11 @@ void DiscountingRiskyBondEngine::calculate() const {
     }
 }
 
-Real DiscountingRiskyBondEngine::forwardPrice(const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate,
+Real DiscountingRiskyBondEngine::forwardPrice(const QuantLib::Date& npvDate, const QuantLib::Date& settlementDate,
                                               const bool clean, const bool conditionalOnSurvival) const {
-    auto res = calculateNpv(forwardDate, settlementDate, arguments_.cashflows, includeSettlementDateFlows_,
+    auto res = calculateNpv(npvDate, settlementDate, arguments_.cashflows, includeSettlementDateFlows_,
                             conditionalOnSurvival, false);
-    return res.npv * res.compoundFactorSettlement - (clean ? res.accruedAmountSettlement : 0.0);
+    return res.npv - (clean ? res.accruedAmountSettlement : 0.0) / res.compoundFactorSettlement;
 }
 
 DiscountingRiskyBondEngine::BondNPVCalculationResults

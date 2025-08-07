@@ -27,10 +27,9 @@ namespace QuantExt {
 
 struct ForwardEnabledBondEngine {
     virtual ~ForwardEnabledBondEngine() {}
-    // npv are always w.r.t. settlementDate, excluding flows between forward and settlement date
-    QuantLib::Real virtual forwardPrice(const QuantLib::Date& forwardDate,
-                                                  const QuantLib::Date& settlementDate, const bool clean = true,
-                                                  const bool conditionalOnSurvival = true) const = 0;
+    // npv w.r.t. npvDate, excluding flows between forward and settlement date
+    QuantLib::Real virtual forwardPrice(const QuantLib::Date& npvDate, const QuantLib::Date& settlementDate,
+                                        const bool clean = true, const bool conditionalOnSurvival = true) const = 0;
 };
 
 QuantLib::Real forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument,

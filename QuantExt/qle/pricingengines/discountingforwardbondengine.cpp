@@ -553,18 +553,20 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
-QuantLib::Real DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardDate,
+QuantLib::Real DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& npvDate,
                                                           const QuantLib::Date& settlementDate, const bool clean,
                                                           const bool conditionalOnSurvival) const {
-    QL_REQUIRE(forwardDate == arguments_.fwdMaturityDate,
-               "DiscountingForwardBondEngine::forwardPrice(): requested forwardDate ("
-                   << forwardDate << ") does not match instrument forward date " << arguments_.fwdMaturityDate
-                   << ". Can not calculate forwardPrice");
-    Real price = results_.forwardValue;
-    if(clean)
+    Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
+    QL_REQUIRE(settlementDate == bondSettlementDate,
+               "DiscountingForwardBondEngine::forwardPrice(): settlement date ("
+                   << settlementDate << ") must match bond settlement date from forward calculation ("
+                   << bondSettlementDate);
+    Real price = QuantLib::ext::any_cast<double>(results_.additionalResults["forwardForwardBondValue"]);
+    if (clean)
         price -= QuantLib::ext::any_cast<double>(results_.additionalResults["accruedAmount"]);
-    if(!conditionalOnSurvival && !bondDefaultCurve_.empty())
-        price *= bondDefaultCurve_->survivalProbability(forwardDate);
+    price *= bondReferenceYieldCurve_->discount(settlementDate) / bondReferenceYieldCurve_->discount(npvDate);
+    if (!conditionalOnSurvival && !bondDefaultCurve_.empty())
+        price *= bondDefaultCurve_->survivalProbability(npvDate);
     return price;
 }
 
