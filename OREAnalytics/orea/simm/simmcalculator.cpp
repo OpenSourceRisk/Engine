@@ -920,18 +920,43 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
     map<string, QuantLib::Real> bucketMargins;
 
     bool riskClassIsFX = rt == RiskType::FX || rt == RiskType::FXVol;
+    auto simmbucketmapper = simmConfiguration_->bucketMapper();
 
     // precomputed
     map<std::pair<std::string, std::string>, vector<CrifRecord>> crifByQualifierAndBucket;
     map<std::string, vector<CrifRecord>> crifByBucket;
 
-    // Find the set of buckets and associated qualifiers for the netting set details, product class and risk type
-    map<string, set<string>> buckets;
+    //We want to find how many different buckets a qualifier has
+    std::unordered_map<std::string, std::unordered_set<string>> qualifierBuckets;
+    std::unordered_map<std::string, int> nbQualiferBucket;
     auto pIt = crif.filterBy(nettingSetDetails, pc, rt);
     for (auto sit = pIt.first; sit != pIt.second; sit++) {
         CrifRecord it = sit->toCrifRecord();
-        buckets[it.bucket].insert(it.qualifier);
-        crifByQualifierAndBucket[std::make_pair(it.qualifier, it.bucket)].push_back(it);
+        // We extract qualifier and bucket to have <qualifier,set<bucket>>
+        qualifierBuckets[it.qualifier].insert(it.bucket);
+    }
+    // Now, count number of unique buckets per qualifier
+    // Meaning we want to detect if we have situation like "None" having multiple buckets
+    for (const auto& pair : qualifierBuckets) {
+        nbQualiferBucket[pair.first] = pair.second.size();
+    }
+
+    // Find the set of buckets and associated qualifiers for the netting set details, product class and risk type
+    map<string, set<string>> buckets;
+    for (auto sit = pIt.first; sit != pIt.second; sit++) {
+        CrifRecord it = sit->toCrifRecord();
+        
+        // Check if the pair(key, bucket) (already) exists
+        string qualifierToUse = it.qualifier;
+
+        //If a Qualifier has more than one bucket, we transform the qualifier Name and add the related bucket
+        if (nbQualiferBucket[qualifierToUse]>1) {
+            qualifierToUse = it.qualifier + "_" + it.bucket;
+            simmbucketmapper->addMapping(rt, qualifierToUse, it.bucket);
+        }
+
+        buckets[it.bucket].insert(qualifierToUse);
+        crifByQualifierAndBucket[std::make_pair(qualifierToUse, it.bucket)].push_back(it);
         crifByBucket[it.bucket].push_back(it);
     }
 
@@ -952,7 +977,6 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
     // Loop over the buckets
     for (const auto& kv : buckets) {
         string bucket = kv.first;
-
         // Initialise sumWeightedSensis here to ensure it is not empty in the later calculations
         sumWeightedSensis[bucket] = 0.0;
 
@@ -960,7 +984,6 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
         map<string, QuantLib::Real> concentrationRisk;
 
         for (const auto& qualifier : kv.second) {
-
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && qualifier == calcCcy) {
                 if (!quiet_) {
@@ -973,11 +996,16 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
 
             // Pair of iterators to start and end of sensitivities with current qualifier
             auto pQualifier = crifByQualifierAndBucket[std::make_pair(qualifier, bucket)];
-
             // One pass to get the concentration risk for this qualifier
             for (auto it = pQualifier.begin(); it != pQualifier.end(); ++it) {
                 // Get the sigma value if applicable - returns 1.0 if not applicable
-                QuantLib::Real sigma = simmConfiguration_->sigma(rt, it->qualifier, it->label1, calcCcy);
+                string sigmaQualifier;
+                if(nbQualiferBucket[it->qualifier]>1){
+                    sigmaQualifier = it->qualifier + "_" + bucket;
+                }else{
+                    sigmaQualifier = it->qualifier;
+                }
+                QuantLib::Real sigma = simmConfiguration_->sigma(rt, sigmaQualifier, it->label1, calcCcy);
                 concentrationRisk[qualifier] += it->amountResultCcy * sigma * hvr;
             }
             // Divide by the concentration risk threshold
@@ -993,6 +1021,13 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
         // Pair of iterators to start and end of sensitivities within current bucket
         auto pBucket = crifByBucket[bucket];
         for (auto itOuter = pBucket.begin(); itOuter != pBucket.end(); ++itOuter) {
+            std::string outerQualifier;
+            if(nbQualiferBucket[itOuter->qualifier]>1){
+                outerQualifier = itOuter->qualifier + "_" + bucket;
+            }else{
+                outerQualifier = itOuter->qualifier;
+            }
+
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && itOuter->qualifier == calcCcy) {
                 if (!quiet_) {
@@ -1003,20 +1038,27 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
                 continue;
             }
             // Risk weight i.e. $RW_k$ from SIMM docs
-            QuantLib::Real rwOuter = simmConfiguration_->weight(rt, itOuter->qualifier, itOuter->label1, calcCcy);
+            QuantLib::Real rwOuter = simmConfiguration_->weight(rt, outerQualifier, itOuter->label1, calcCcy);
             // Get the sigma value if applicable - returns 1.0 if not applicable
-            QuantLib::Real sigmaOuter = simmConfiguration_->sigma(rt, itOuter->qualifier, itOuter->label1, calcCcy);
+            QuantLib::Real sigmaOuter = simmConfiguration_->sigma(rt, outerQualifier, itOuter->label1, calcCcy);
             // Weighted sensitivity i.e. $WS_{k}$ from SIMM docs
             QuantLib::Real wsOuter =
-                rwOuter * (itOuter->amountResultCcy * sigmaOuter * hvr) * concentrationRisk[itOuter->qualifier];
+                rwOuter * (itOuter->amountResultCcy * sigmaOuter * hvr) * concentrationRisk[outerQualifier];
             // Get concentration risk for outer qualifier
-            QuantLib::Real outerConcentrationRisk = concentrationRisk.at(itOuter->qualifier);
+            QuantLib::Real outerConcentrationRisk = concentrationRisk.at(outerQualifier);
+
             // Update weighted sensitivity sum
             sumWeightedSensis[bucket] += wsOuter;
             // Add diagonal element to bucket margin
             bucketMargin[bucket] += wsOuter * wsOuter;
             // Add the cross elements to the bucket margin
             for (auto itInner = pBucket.begin(); itInner != itOuter; ++itInner) {
+                std::string innerQualifier;
+                if(nbQualiferBucket[itInner->qualifier]>1){
+                    innerQualifier = itInner->qualifier + "_" + bucket;
+                }else{
+                    innerQualifier = itInner->qualifier;
+                }
                 // Do not include Risk_FX components in the calculation currency in the SIMM calculation
                 if (rt == RiskType::FX && itInner->qualifier == calcCcy) {
                     if (!quiet_) {
@@ -1028,22 +1070,22 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
                 }
                 // Correlation, $\rho_{k,l}$ in the SIMM docs
                 QuantLib::Real corr =
-                    simmConfiguration_->correlation(rt, itOuter->qualifier, itOuter->label1, itOuter->label2, rt,
-                                                    itInner->qualifier, itInner->label1, itInner->label2, calcCcy);
+                    simmConfiguration_->correlation(rt, outerQualifier, itOuter->label1, itOuter->label2, rt,
+                                                    innerQualifier, itInner->label1, itInner->label2, calcCcy);
                 // $f_{k,l}$ from the SIMM docs
-                QuantLib::Real f = std::min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
-                                   std::max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
+                QuantLib::Real f = std::min(outerConcentrationRisk, concentrationRisk.at(innerQualifier)) /
+                                   std::max(outerConcentrationRisk, concentrationRisk.at(innerQualifier));
                 // Add cross element to delta margin
-                QuantLib::Real sigmaInner = simmConfiguration_->sigma(rt, itInner->qualifier, itInner->label1, calcCcy);
-                QuantLib::Real rwInner = simmConfiguration_->weight(rt, itInner->qualifier, itInner->label1, calcCcy);
+                QuantLib::Real sigmaInner = simmConfiguration_->sigma(rt, innerQualifier, itInner->label1, calcCcy);
+                QuantLib::Real rwInner = simmConfiguration_->weight(rt, innerQualifier, itInner->label1, calcCcy);
                 QuantLib::Real wsInner =
-                    rwInner * (itInner->amountResultCcy * sigmaInner * hvr) * concentrationRisk[itInner->qualifier];
+                    rwInner * (itInner->amountResultCcy * sigmaInner * hvr) * concentrationRisk[innerQualifier];
                 bucketMargin[bucket] += 2 * corr * f * wsOuter * wsInner;
             }
             // For FX risk class, results are broken down by qualifier, i.e. currency, instead of bucket, which is not
             // used for Risk_FX
             if (riskClassIsFX)
-                bucketMargins[itOuter->qualifier] += wsOuter;
+                bucketMargins[outerQualifier] += wsOuter;
         }
 
         // Finally have the value of $K_b$
