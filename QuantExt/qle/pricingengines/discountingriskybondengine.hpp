@@ -69,8 +69,8 @@ public:
     void calculate() const override;
 
     //! ForwardEnabledBondEngine interface
-    Real forwardPrice(const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate, const bool clean = true,
-                      const bool conditionalOnSurvival = true) const override;
+    std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+                                       const bool conditionalOnSurvival = true) const override;
 
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };

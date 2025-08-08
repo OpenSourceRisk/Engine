@@ -20,9 +20,9 @@
 
 namespace QuantExt {
 
-QuantLib::Real forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument,
-                            const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate, const bool clean,
-                            const bool conditionalOnSurvival) {
+std::pair<QuantLib::Real, QuantLib::Real>
+forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
+             const QuantLib::Date& settlementDate, const bool conditionalOnSurvival) {
     auto engine = instrument->pricingEngine();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
     QL_REQUIRE(engine, "getForwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
@@ -30,7 +30,7 @@ QuantLib::Real forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument
     instrument->setupArguments(engine->getArguments());
     engine->getArguments()->validate();
     engine->calculate();
-    return fwdEngine->forwardPrice(forwardDate, settlementDate, clean, conditionalOnSurvival);
+    return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival);
 }
 
 } // namespace QuantExt

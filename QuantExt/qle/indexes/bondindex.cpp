@@ -107,8 +107,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
     // beyond that we need a forward enabled engine
 
-    price = forwardPrice(bond_, bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate), false,
-                         conditionalOnSurvival_);
+    price = forwardPrice(bond_, fixingDate, bond_->settlementDate(fixingDate), conditionalOnSurvival_).second;
 
     // apply the various required adjustments to the dirty price
 
@@ -225,8 +224,7 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(futureExpiryDate_ != Date(), "BondFuturesIndex::forecastFixing(" << QuantLib::io::iso_date(fixingDate)
                                                                                 << "): future expiry date required.");
     // expose conditional on survival? is true the correct value?
-    Real price = forwardPrice(ctd_, ctd_->settlementDate(futureExpiryDate_), ctd_->settlementDate(futureExpiryDate_),
-                              false, true);
+    Real price = forwardPrice(ctd_, futureExpiryDate_, ctd_->settlementDate(futureExpiryDate_), true).second;
 
     if (!dirty_) {
         price -= ctd_->accruedAmount(ctd_->settlementDate(fixingDate)) / 100.0 * ctd_->notional(fixingDate);

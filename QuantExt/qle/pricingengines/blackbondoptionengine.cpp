@@ -67,8 +67,9 @@ void BlackBondOptionEngine::calculate() const {
         }
     }
 
-    Real fwdNpv = forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
-                               false, true);
+    Real fwdNpv =
+        forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate), true)
+            .first;
 
     Real knockOutProbability = defaultCurve_.empty() ? 0.0 : 1.0 - defaultCurve_->survivalProbability(exerciseDate);
 

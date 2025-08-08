@@ -382,7 +382,7 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
 
         Date expiry = deduceDates(refData).first;
         double cleanBondPriceAtExpiry =
-            noPricing ? 100.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true, true);
+            noPricing ? 100.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true).second;
 
         double conversionFactor;
         try {

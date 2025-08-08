@@ -553,21 +553,25 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
-QuantLib::Real DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& npvDate,
-                                                          const QuantLib::Date& settlementDate, const bool clean,
-                                                          const bool conditionalOnSurvival) const {
+std::pair<QuantLib::Real, QuantLib::Real>
+DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+                                           const bool conditionalOnSurvival) const {
     Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
     QL_REQUIRE(settlementDate == bondSettlementDate,
                "DiscountingForwardBondEngine::forwardPrice(): settlement date ("
                    << settlementDate << ") must match bond settlement date from forward calculation ("
                    << bondSettlementDate);
     Real price = QuantLib::ext::any_cast<double>(results_.additionalResults["forwardForwardBondValue"]);
-    if (clean)
-        price -= QuantLib::ext::any_cast<double>(results_.additionalResults["accruedAmount"]);
-    price *= bondReferenceYieldCurve_->discount(settlementDate) / bondReferenceYieldCurve_->discount(npvDate);
-    if (!conditionalOnSurvival && !bondDefaultCurve_.empty())
-        price *= bondDefaultCurve_->survivalProbability(npvDate);
-    return price;
+    Real settlDsc = incomeCurve_->discount(settlementDate) / incomeCurve_->discount(forwardNpvDate);
+    Real settlSp = 1.0;
+    Real conditionalDefault = 1.0;
+    if(!bondDefaultCurve_.empty()) {
+        settlSp = bondDefaultCurve_->survivalProbability(settlementDate) / bondDefaultCurve_->survivalProbability(forwardNpvDate);
+        if(!conditionalOnSurvival) {
+            conditionalDefault = bondDefaultCurve_->survivalProbability(forwardNpvDate);
+        }
+    }
+    return std::make_pair(price * conditionalDefault, price * conditionalDefault / settlDsc / settlSp);
 }
 
 } // namespace QuantExt

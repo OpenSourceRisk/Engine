@@ -62,8 +62,9 @@ public:
     const Handle<Quote>& bondRecoveryRate() const { return bondRecoveryRate_; }
     const Handle<Quote>& conversionFactor() const { return conversionFactor_; }
 
-    QuantLib::Real forwardPrice(const QuantLib::Date& forwardDate, const QuantLib::Date& settlementDate,
-                                const bool clean = true, const bool conditionalOnSurvival = true) const override;
+    std::pair<QuantLib::Real, QuantLib::Real> forwardPrice(const QuantLib::Date& forwardNpvDate,
+                                                           const QuantLib::Date& settlementDate,
+                                                           const bool conditionalOnSurvival = true) const override;
 
 private:
     Real calculateBondNpv(Date, Date) const;
