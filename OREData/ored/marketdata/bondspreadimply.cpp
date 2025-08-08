@@ -169,7 +169,9 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
 
 Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
     if (expiry != Date()) {
-        return QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true).second / b.bond->notional();
+        return QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true).second /
+                   b.bond->notional() -
+               b.bond->accruedAmount(b.bond->settlementDate(expiry)) / 100.0;
     } else // this is the standaed bond case
         return b.bond->cleanPrice() / 100.0;
 }
