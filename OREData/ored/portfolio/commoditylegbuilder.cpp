@@ -599,12 +599,21 @@ Leg CommodityFloatingLegBuilder::buildLeg(
                        << commFutureConv->contractFrequency() << ")");
     }
 
-    if (!floatingLegData->fxIndex().empty()) { // build the fxIndex for daily average conversion
-        auto underlyingCcy = priceCurve->currency().code();
-        auto npvCurrency = data.currency();
-        if (underlyingCcy != npvCurrency) // only need an FX Index if currencies differ
-            fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCurrency, underlyingCcy, engineFactory->market(),
+    std::string underlyingCcy = priceCurve->currency().code();
+    std::string npvCcy = data.currency();
+    // only need an FX Index if currencies differ
+    if (underlyingCcy != npvCcy) {
+        // build the fxIndex for daily average conversion
+        if (!floatingLegData->fxIndex().empty())
+            fxIndex = buildFxIndex(floatingLegData->fxIndex(), npvCcy, underlyingCcy, engineFactory->market(),
                                    engineFactory->configuration(MarketContext::pricing));
+        // Check if settlementData exist. If yes, store the foreign currency into legdata for fx conversion
+        else if (!data.settlementFxIndex().empty())
+            floatingLegData->setForeignCurrency(underlyingCcy);
+        else
+            QL_REQUIRE(underlyingCcy == npvCcy, "When no SettlementData or FXIndex provided, commodity underlying "
+                                                "curve currency must be the same as leg currency. Leg currency: "
+                                                    << npvCcy << ", Commodity underlying currency: " << underlyingCcy);
     }
 
     if (isCashFlowAveraged) {

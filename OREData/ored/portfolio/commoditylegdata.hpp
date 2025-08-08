@@ -56,10 +56,7 @@ public:
     //! Detailed constructor
     CommodityFixedLegData(const std::vector<QuantLib::Real>& quantities, const std::vector<std::string>& quantityDates,
                           const std::vector<QuantLib::Real>& prices, const std::vector<std::string>& priceDates,
-                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = std::string(),
-                          const std::string& settlementCurrency = std::string(),
-                          const std::string& settlementFxIndex = std::string(),
-                          const std::string& settlementFixingDate = std::string());
+                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = std::string());
 
     //! \name Inspectors
     //@{
@@ -68,10 +65,8 @@ public:
     const std::vector<QuantLib::Real>& prices() const { return prices_; }
     const std::vector<std::string>& priceDates() const { return priceDates_; }
     CommodityPayRelativeTo commodityPayRelativeTo() const { return commodityPayRelativeTo_; }
+    const std::string& foreignCurrency() const { return foreignCurrency_; }
     const std::string& tag() const { return tag_; }
-    const string& settlementCurrency() const { return settlementCurrency_; }
-    const string& settlementFxIndex() const { return settlementFxIndex_; }
-    const string& settlementFixingDate() const { return settlementFixingDate_; }
     //@}
 
     /*! \brief Set the fixed leg data quantities.
@@ -83,6 +78,7 @@ public:
         quantities from the corresponding floating leg of the swap after that leg has been built.
     */
     void setQuantities(const std::vector<QuantLib::Real>& quantities);
+    void setForeignCurrency(const std::string foreignCurrency);
 
     //! \name Serialisation
     //@{
@@ -96,10 +92,8 @@ private:
     std::vector<QuantLib::Real> prices_;
     std::vector<std::string> priceDates_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
+    std::string foreignCurrency_;
     std::string tag_;
-    std::string settlementCurrency_;
-    std::string settlementFxIndex_;
-    std::string settlementFixingDate_;
 };
 
 class CommodityFloatingLegData : public ore::data::LegAdditionalData {
@@ -125,9 +119,7 @@ public:
         bool useBusinessDays = true, const std::string& tag = std::string(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = std::string(),
-        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
-        const std::string& settlementCurrency = std::string(), const std::string& settlementFxIndex = std::string(),
-        const std::string& settlementFixingDate = std::string());
+        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -159,10 +151,10 @@ public:
     QuantLib::Natural lastNDays() const { return lastNDays_; }
     std::string const& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
-    const string& settlementCurrency() const { return settlementCurrency_; }
-    const string& settlementFxIndex() const { return settlementFxIndex_; }
-    const string& settlementFixingDate() const { return settlementFixingDate_; }
+    std::string foreignCurrency() const { return foreignCurrency_; }
     //@}
+
+    void setForeignCurrency(std::string foreignCurrency);
 
     //! \name Serialisation
     //@{
@@ -199,9 +191,7 @@ private:
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
-    std::string settlementCurrency_;
-    std::string settlementFxIndex_;
-    std::string settlementFixingDate_;
+    std::string foreignCurrency_;
 };
 
 } // namespace data

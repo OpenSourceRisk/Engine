@@ -887,6 +887,11 @@ void LegData::fromXML(XMLNode* node) {
             indexing_.back().fromXML(i);
         }
     }
+    if (auto tmp = XMLUtils::getChildNode(node, "SettlementData")) {
+        settlementFxIndex_ = XMLUtils::getChildValue(tmp, "FXIndex", true);
+        settlementFxFixingDate_ = XMLUtils::getChildValue(tmp, "FixingDate", false);
+    
+    }
 
     lastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
 
@@ -978,6 +983,13 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
 
     if (!lastPeriodDayCounter_.empty())
         XMLUtils::addChild(doc, node, "LastPeriodDayCounter", lastPeriodDayCounter_);
+
+    if (!settlementFxIndex_.empty()) {
+        XMLNode* settlementDataNode = doc.allocNode("SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
+        if (!settlementFxFixingDate_.empty())
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFxFixingDate_);
+    }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
     return node;

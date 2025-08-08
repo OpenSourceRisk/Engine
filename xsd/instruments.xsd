@@ -854,6 +854,14 @@
       <xs:element ref="legDataType" minOccurs="0"/>
       <xs:element type="xs:boolean" name="StrictNotionalDates" minOccurs="0"/>
       <xs:element type="scheduleData" name="PaymentSchedule" minOccurs="0"/>
+	  <xs:element name="SettlementData" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="FXIndex"/>
+            <xs:element type="xs:string" name="FixingDate" minOccurs="0" maxOccurs="1"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 
