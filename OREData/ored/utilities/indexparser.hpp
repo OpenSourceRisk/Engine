@@ -119,6 +119,12 @@ bool isEquityIndex(const std::string& indexName);
 */
 bool isCommodityIndex(const std::string& indexName);
 
+//! Return true if the \p indexName is that of a BondFuturesIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isBondFuturesIndex(const std::string& indexName);
+
 /*! Return true if the \p indexName is that of an GenericIndex, otherwise false
     \ingroup utilities
 */

@@ -441,7 +441,6 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
 bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
 pair<bool, QuantLib::ext::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName) {
-
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
@@ -473,6 +472,15 @@ bool isEquityIndex(const string& indexName) {
 bool isCommodityIndex(const string& indexName) {
     try {
         parseCommodityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isBondFuturesIndex(const string& indexName) {
+    try {
+        parseBondFuturesIndex(indexName);
     } catch (...) {
         return false;
     }
