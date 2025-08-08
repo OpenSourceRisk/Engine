@@ -927,8 +927,8 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
     map<std::string, vector<CrifRecord>> crifByBucket;
 
     //We want to find how many different buckets a qualifier has
-    std::unordered_map<std::string, std::unordered_set<string>> qualifierBuckets;
-    std::unordered_map<std::string, int> nbQualiferBucket;
+    std::map<std::string, std::set<string>> qualifierBuckets;
+    std::map<std::string, int> nbQualiferBucket;
     auto pIt = crif.filterBy(nettingSetDetails, pc, rt);
     for (auto sit = pIt.first; sit != pIt.second; sit++) {
         CrifRecord it = sit->toCrifRecord();
@@ -977,6 +977,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
     // Loop over the buckets
     for (const auto& kv : buckets) {
         string bucket = kv.first;
+
         // Initialise sumWeightedSensis here to ensure it is not empty in the later calculations
         sumWeightedSensis[bucket] = 0.0;
 
@@ -984,6 +985,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
         map<string, QuantLib::Real> concentrationRisk;
 
         for (const auto& qualifier : kv.second) {
+
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && qualifier == calcCcy) {
                 if (!quiet_) {
@@ -996,6 +998,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
 
             // Pair of iterators to start and end of sensitivities with current qualifier
             auto pQualifier = crifByQualifierAndBucket[std::make_pair(qualifier, bucket)];
+
             // One pass to get the concentration risk for this qualifier
             for (auto it = pQualifier.begin(); it != pQualifier.end(); ++it) {
                 // Get the sigma value if applicable - returns 1.0 if not applicable
