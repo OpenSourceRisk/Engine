@@ -928,6 +928,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
 
     //We want to find how many different buckets a qualifier has
     std::map<std::string, std::set<string>> qualifierBuckets;
+    std::map<std::pair<std::string,std::string>,std::string> mapQualifier;
     std::map<std::string, int> nbQualiferBucket;
     auto pIt = crif.filterBy(nettingSetDetails, pc, rt);
     for (auto sit = pIt.first; sit != pIt.second; sit++) {
@@ -954,6 +955,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
             qualifierToUse = it.qualifier + "_" + it.bucket;
             simmbucketmapper->addMapping(rt, qualifierToUse, it.bucket);
         }
+        mapQualifier[{it.qualifier,it.bucket}] = qualifierToUse;
 
         buckets[it.bucket].insert(qualifierToUse);
         crifByQualifierAndBucket[std::make_pair(qualifierToUse, it.bucket)].push_back(it);
@@ -1002,12 +1004,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
             // One pass to get the concentration risk for this qualifier
             for (auto it = pQualifier.begin(); it != pQualifier.end(); ++it) {
                 // Get the sigma value if applicable - returns 1.0 if not applicable
-                string sigmaQualifier;
-                if(nbQualiferBucket[it->qualifier]>1){
-                    sigmaQualifier = it->qualifier + "_" + bucket;
-                }else{
-                    sigmaQualifier = it->qualifier;
-                }
+                string sigmaQualifier = mapQualifier[{it->qualifier, it->bucket}];
                 QuantLib::Real sigma = simmConfiguration_->sigma(rt, sigmaQualifier, it->label1, calcCcy);
                 concentrationRisk[qualifier] += it->amountResultCcy * sigma * hvr;
             }
@@ -1024,13 +1021,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
         // Pair of iterators to start and end of sensitivities within current bucket
         auto pBucket = crifByBucket[bucket];
         for (auto itOuter = pBucket.begin(); itOuter != pBucket.end(); ++itOuter) {
-            std::string outerQualifier;
-            if(nbQualiferBucket[itOuter->qualifier]>1){
-                outerQualifier = itOuter->qualifier + "_" + bucket;
-            }else{
-                outerQualifier = itOuter->qualifier;
-            }
-
+            std::string outerQualifier = mapQualifier[{itOuter->qualifier, itOuter->bucket}];
             // Do not include Risk_FX components in the calculation currency in the SIMM calculation
             if (rt == RiskType::FX && itOuter->qualifier == calcCcy) {
                 if (!quiet_) {
@@ -1056,12 +1047,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::margin(const NettingSetD
             bucketMargin[bucket] += wsOuter * wsOuter;
             // Add the cross elements to the bucket margin
             for (auto itInner = pBucket.begin(); itInner != itOuter; ++itInner) {
-                std::string innerQualifier;
-                if(nbQualiferBucket[itInner->qualifier]>1){
-                    innerQualifier = itInner->qualifier + "_" + bucket;
-                }else{
-                    innerQualifier = itInner->qualifier;
-                }
+                std::string innerQualifier = mapQualifier[{itInner->qualifier, itInner->bucket}];
                 // Do not include Risk_FX components in the calculation currency in the SIMM calculation
                 if (rt == RiskType::FX && itInner->qualifier == calcCcy) {
                     if (!quiet_) {
