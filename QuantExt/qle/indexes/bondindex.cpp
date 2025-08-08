@@ -107,7 +107,9 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
     // beyond that we need a forward enabled engine
 
-    price = forwardPrice(bond_, fixingDate, bond_->settlementDate(fixingDate), conditionalOnSurvival_).second;
+    if (price == Null<Real>()) {
+        price = forwardPrice(bond_, fixingDate, bond_->settlementDate(fixingDate), conditionalOnSurvival_).second;
+    }
 
     // apply the various required adjustments to the dirty price
 
