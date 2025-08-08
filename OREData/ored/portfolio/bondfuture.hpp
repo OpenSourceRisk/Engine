@@ -45,7 +45,9 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
+    //! available after build() was called
     const BondData& bondData() const { return bondData_; }
+    const QuantLib::ext::shared_ptr<BondFutureReferenceDatum>& referenceDatum() const { return refData_; }
 
 protected:
     void checkData();
@@ -55,6 +57,7 @@ private:
     double contractNotional_;
     std::string longShort_;
     ore::data::BondData bondData_;
+    QuantLib::ext::shared_ptr<BondFutureReferenceDatum> refData_;
 };
 
 } // namespace data

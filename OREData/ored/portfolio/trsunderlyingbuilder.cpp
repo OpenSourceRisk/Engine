@@ -16,20 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityposition.hpp>
-#include <ored/portfolio/trsunderlyingbuilder.hpp>
-#include <qle/indexes/compositeindex.hpp>
-
-#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/trsunderlyingbuilder.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/cashflows/bondtrscashflow.hpp>
+#include <qle/indexes/compositeindex.hpp>
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/instruments/bondfuture.hpp>
 
 namespace ore {
 namespace data {
@@ -118,6 +119,47 @@ void BondTrsUnderlyingBuilder::build(
         creditRiskCurrency = t->bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(),t->bondData().hasCreditRisk());
+    creditQualifierMapping[t->bondData().creditCurveId()] =
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
+}
+
+void BondFutureTrsUnderlyingBuilder::build(
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates, 
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
+    Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::string& assetCurrency, std::string& creditRiskCurrency,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+        getFxIndex,
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(underlying);
+    QL_REQUIRE(t, "could not cast to ore::data::BondFuture, this is unexpected");
+
+    auto qlBondFuture = QuantLib::ext::dynamic_pointer_cast<QuantExt::BondFuture>(underlying->instrument()->qlInstrument());
+    QL_REQUIRE(qlBondFuture, "expected QuantExt::BondFUture, could not cast");
+
+    underlyingIndex = qlBondFuture->index();
+    underlyingMultiplier = qlBondFuture->contractNotional();
+
+    indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
+
+    assetCurrency = t->referenceDatum()->bondFutureData().currency;
+
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+
+    returnLegs.push_back(QuantExt::BondTRSLeg(valuationDates, paymentDates, underlyingMultiplier, underlyingIndex, fxIndex)
+                             .withInitialPrice(initialPrice));
+
+    if (!t->bondData().creditCurveId().empty())
+        creditRiskCurrency = t->bondData().currency();
+    creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }

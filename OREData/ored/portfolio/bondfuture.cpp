@@ -56,7 +56,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(engineFactory->referenceData()->hasData("BondFuture", contractName_),
                "BondFutureUtils::identifyCtdBond(): no bond future reference data found for " << contractName_);
 
-    auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+    refData_ = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
         engineFactory->referenceData()->getData("BondFuture", contractName_));
 
     auto builder = QuantLib::ext::dynamic_pointer_cast<BondFutureEngineBuilder>(engineFactory->builder("BondFuture"));
@@ -65,18 +65,18 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
         builder->globalParameters().count("Calibrate") == 0 || parseBool(builder->globalParameters().at("Calibrate"));
 
     auto [ctd, conversionFactor] = BondFutureUtils::identifyCtdBond(engineFactory, contractName_, pricing);
-    auto [expiry, settlement] = BondFutureUtils::deduceDates(refData);
+    auto [expiry, settlement] = BondFutureUtils::deduceDates(refData_);
 
     auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
                                            StructuredSecurityId(ctd, contractName_));
     auto index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
-        contractName_, expiry, b.bond, parseBool(refData->bondFutureData().dirtyQuotation));
+        contractName_, expiry, b.bond, parseBool(refData_->bondFutureData().dirtyQuotation));
     auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(index, contractNotional_, isLong, settlement,
-                                                                  refData->bondFutureData().settlement == "Physical");
+                                                                  refData_->bondFutureData().settlement == "Physical");
 
     bondData_ = b.bondData;
 
-    instr->setPricingEngine(builder->engine(id(), refData->bondFutureData().currency, conversionFactor));
+    instr->setPricingEngine(builder->engine(id(), refData_->bondFutureData().currency, conversionFactor));
 
     requiredFixings_.addFixingDate(index->futureExpiryDate(), IndexNameTranslator::instance().oreName(index->name()),
                                    settlement);
@@ -87,10 +87,10 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     maturity_ = settlement;
     maturityType_ = "Contract settled";
-    npvCurrency_ = refData->bondFutureData().currency;
+    npvCurrency_ = refData_->bondFutureData().currency;
     notional_ = contractNotional_;
     legs_ = vector<Leg>(1, b.bond->cashflows());
-    legCurrencies_ = vector<string>(1, refData->bondFutureData().currency);
+    legCurrencies_ = vector<string>(1, refData_->bondFutureData().currency);
     legPayers_ = vector<bool>(1, isLong);
 }
 

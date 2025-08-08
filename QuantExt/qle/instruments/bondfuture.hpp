@@ -49,7 +49,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const QuantLib::ext::shared_ptr<QuantExt::BondFuturesIndex>& index() { return index_; }
+    const QuantLib::ext::shared_ptr<QuantExt::BondFuturesIndex>& index() const { return index_; }
+    QuantLib::Real contractNotional() const { return contractNotional_; }
     //@}
 
 private:

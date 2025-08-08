@@ -558,6 +558,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder, false)
 
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Bond", BondTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondFuture", BondFutureTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ForwardBond", ForwardBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityPosition", EquityPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("CommodityPosition", CommodityPositionTrsUnderlyingBuilder, false)
