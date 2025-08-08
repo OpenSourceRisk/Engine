@@ -22,6 +22,7 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bondfuture.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/bondfuture.hpp>
@@ -76,6 +77,9 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     bondData_ = b.bondData;
 
     instr->setPricingEngine(builder->engine(id(), refData->bondFutureData().currency, conversionFactor));
+
+    requiredFixings_.addFixingDate(index->futureExpiryDate(), IndexNameTranslator::instance().oreName(index->name()),
+                                   settlement);
 
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
