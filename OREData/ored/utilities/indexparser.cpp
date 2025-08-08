@@ -714,7 +714,11 @@ QuantLib::ext::shared_ptr<BondFuturesIndex> parseBondFuturesIndex(const string& 
 
     /* We can not derive the future expiry date without reference data, but for some use cases like setting
        historical fixings, the contract name is enough */
-    return QuantLib::ext::make_shared<BondFuturesIndex>(contractName);
+    auto index = QuantLib::ext::make_shared<BondFuturesIndex>(contractName);
+
+    IndexNameTranslator::instance().add(index->name(), name);
+
+    return index;
 }
 
 QuantLib::ext::shared_ptr<ConstantMaturityBondIndex> parseConstantMaturityBondIndex(const string& name) {
