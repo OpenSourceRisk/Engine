@@ -610,10 +610,6 @@ Leg CommodityFloatingLegBuilder::buildLeg(
         // Check if settlementData exist. If yes, store the foreign currency into legdata for fx conversion
         else if (!data.settlementFxIndex().empty())
             floatingLegData->setForeignCurrency(underlyingCcy);
-        else
-            QL_REQUIRE(underlyingCcy == npvCcy, "When no SettlementData or FXIndex provided, commodity underlying "
-                                                "curve currency must be the same as leg currency. Leg currency: "
-                                                    << npvCcy << ", Commodity underlying currency: " << underlyingCcy);
     }
 
     if (isCashFlowAveraged) {
