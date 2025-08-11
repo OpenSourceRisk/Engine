@@ -320,8 +320,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     }
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
-        Real fixedRate =
-            ibor->fixingDate() <= today_ ? (ibor->rate() - ibor->spread()) / ibor->gearing() : Null<Real>();
+        Real fixedRate = ibor->fixingDate() <= today_ ? ibor->iborIndex()->fixing(ibor->fixingDate()) : Null<Real>();
         Size indexCcyIdx = model_->ccyIndex(ibor->index()->currency());
         Real simTime = time(ibor->fixingDate());
         if (ibor->fixingDate() > today_) {
