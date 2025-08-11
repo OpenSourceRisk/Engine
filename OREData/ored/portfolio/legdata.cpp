@@ -814,8 +814,9 @@ void LegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Notionals")) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
-            auto valuation_date = Settings::instance().evaluationDate();
+            // auto valuation_date = Settings::instance().evaluationDate();
             resetStartDate_ = XMLUtils::getChildValue(fxResetNode, "StartDate", false);
+            std::cout<<resetStartDate_;
             if (resetStartDate_.empty()) {
                 isNotResetXCCY_ = false;
                 foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
@@ -823,12 +824,10 @@ void LegData::fromXML(XMLNode* node) {
                 fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
                 indices_.insert(fxIndex_); 
             } else {
-                if (valuation_date >= parseDate(resetStartDate_)) {
-                    isNotResetXCCY_ = false;
-                    foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
-                    fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
-                    indices_.insert(fxIndex_);
-                }
+                isNotResetXCCY_ = false;
+                foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
+                fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
+                indices_.insert(fxIndex_);
             }
             if (XMLUtils::getChildNode(node, "FixingDays")) {
                 WLOG("LegData::fromXML, node FixingDays has been deprecated, fixing days are "

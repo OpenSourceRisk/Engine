@@ -29,10 +29,10 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(const QuantLib::ext::sh
                                                          QuantLib::Settlement::Method settlementMethod,
                                                          const Real barrierLevel, Barrier::Type barrierType,
                                                          Exercise::Type barrierStyle,
-                                                         const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
+                                                         const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const int strictBarrier)
     : Option(ext::shared_ptr<Payoff>(), exercise), flow_(flow), quantity_(quantity), strikePrice_(strikePrice),
       type_(type), settlementType_(delivery), settlementMethod_(settlementMethod), fxIndex_(fxIndex),
-      barrierLevel_(barrierLevel), barrierType_(barrierType), barrierStyle_(barrierStyle) {
+      barrierLevel_(barrierLevel), barrierType_(barrierType), barrierStyle_(barrierStyle), strictBarrier_(strictBarrier) {
     flow_->alwaysForwardNotifications();
     registerWith(flow_);
     if (fxIndex_)
@@ -91,12 +91,13 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->exercise = exercise_;
     arguments->flow = flow_;
     arguments->fxIndex = fxIndex_;
+    arguments->strictBarrier = strictBarrier_;
 }
 
 CommodityAveragePriceOption::arguments::arguments()
     : quantity(0.0), strikePrice(0.0), effectiveStrike(0.0), type(Option::Call), fxIndex(nullptr),
       settlementType(Settlement::Physical), settlementMethod(Settlement::PhysicalOTC), barrierLevel(Null<Real>()),
-      barrierType(Barrier::DownIn), barrierStyle(Exercise::American) {}
+      barrierType(Barrier::DownIn), barrierStyle(Exercise::American), strictBarrier(0) {}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");
