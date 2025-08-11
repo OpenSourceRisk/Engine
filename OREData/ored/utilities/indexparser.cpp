@@ -704,7 +704,9 @@ QuantLib::ext::shared_ptr<Index> parseBondIndex(const string& name) {
     // Create and return the required future index
     QuantLib::ext::shared_ptr<Index> index;
     if (expiry != Date()) {
-        index = QuantLib::ext::make_shared<BondFuturesIndex>(bondName, expiry);
+        auto tmp = QuantLib::ext::make_shared<BondFuturesIndex>(bondName, expiry);
+        tmp->setName("BOND-" + bondName + "-" + ore::data::to_string(expiry).substr(0, 7));
+        index = tmp;
     } else {
         index= QuantLib::ext::make_shared<BondIndex>(bondName);
     }
