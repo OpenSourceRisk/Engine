@@ -70,7 +70,8 @@ public:
 
     //! ForwardEnabledBondEngine interface
     std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
-                                       const bool conditionalOnSurvival = true) const override;
+                                       const bool conditionalOnSurvival = true,
+                                       std::vector<CashFlowResults>* const cfResults = nullptr) const override;
 
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
@@ -95,7 +96,7 @@ protected:
           otherwise the npv is including the default probability between today and the npvDate
         - If an incomeCurve is given, this is used to compound the npv from today to the npvDate, otherwise the curve
           built in the engine as discount curve + security Spread is used. */
-    BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
+    BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate,
                                            boost::optional<bool> includeSettlementDateFlows,
                                            const bool conditionalOnSurvival, const bool additionalResults) const;
 

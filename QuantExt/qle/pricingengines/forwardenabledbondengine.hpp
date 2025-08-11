@@ -18,23 +18,26 @@
 
 #pragma once
 
+#include <qle/instruments/cashflowresults.hpp>
+
+#include <ql/instrument.hpp>
 #include <ql/pricingengine.hpp>
 #include <ql/qldefines.hpp>
 #include <ql/time/date.hpp>
-#include <ql/instrument.hpp>
 
 namespace QuantExt {
 
 struct ForwardEnabledBondEngine {
     virtual ~ForwardEnabledBondEngine() {}
-    // forwardNpv and settlement
-    std::pair<QuantLib::Real, QuantLib::Real> virtual forwardPrice(const QuantLib::Date& forwardNpvDate,
-                                                                   const QuantLib::Date& settlementDate,
-                                                                   const bool conditionalOnSurvival = true) const = 0;
+    // forwardNpv and settlement, do not call directly but via forwardPrice() function below
+    std::pair<QuantLib::Real, QuantLib::Real> virtual forwardPrice(
+        const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+        const bool conditionalOnSurvival = true, std::vector<CashFlowResults>* const cfResults = nullptr) const = 0;
 };
 
 std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
-             const QuantLib::Date& settlementDate, const bool conditionalOnSurvival = true);
+             const QuantLib::Date& settlementDate, const bool conditionalOnSurvival = true,
+             std::vector<CashFlowResults>* const cfResults = nullptr);
 
 } // namespace QuantExt

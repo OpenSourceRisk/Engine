@@ -555,7 +555,8 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
 
 std::pair<QuantLib::Real, QuantLib::Real>
 DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
-                                           const bool conditionalOnSurvival) const {
+                                           const bool conditionalOnSurvival,
+                                           std::vector<CashFlowResults>* const cfResults) const {
     Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
     QL_REQUIRE(settlementDate == bondSettlementDate,
                "DiscountingForwardBondEngine::forwardPrice(): settlement date ("
@@ -570,6 +571,12 @@ DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate,
         if(!conditionalOnSurvival) {
             conditionalDefault = bondDefaultCurve_->survivalProbability(forwardNpvDate);
         }
+    }
+
+    if(cfResults != nullptr) {
+        auto tmp = results_.additionalResults["cashFlowResults"];
+        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
+        *cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
     }
     return std::make_pair(price * conditionalDefault, price * conditionalDefault / settlDsc / settlSp);
 }

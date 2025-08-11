@@ -22,7 +22,8 @@ namespace QuantExt {
 
 std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
-             const QuantLib::Date& settlementDate, const bool conditionalOnSurvival) {
+             const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
+             std::vector<CashFlowResults>* cfResults) {
     auto engine = instrument->pricingEngine();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(engine);
     QL_REQUIRE(engine, "getForwardPrice(): engine attached to instrument is null");
@@ -31,7 +32,7 @@ forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, 
     instrument->setupArguments(engine->getArguments());
     engine->getArguments()->validate();
     engine->calculate();
-    return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival);
+    return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, cfResults);
 }
 
 } // namespace QuantExt

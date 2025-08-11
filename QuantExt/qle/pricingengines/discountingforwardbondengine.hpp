@@ -25,6 +25,8 @@
 #ifndef quantext_discounting_forward_bond_engine_hpp
 #define quantext_discounting_forward_bond_engine_hpp
 
+#include <qle/instruments/cashflowresults.hpp>
+
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
@@ -62,9 +64,10 @@ public:
     const Handle<Quote>& bondRecoveryRate() const { return bondRecoveryRate_; }
     const Handle<Quote>& conversionFactor() const { return conversionFactor_; }
 
-    std::pair<QuantLib::Real, QuantLib::Real> forwardPrice(const QuantLib::Date& forwardNpvDate,
-                                                           const QuantLib::Date& settlementDate,
-                                                           const bool conditionalOnSurvival = true) const override;
+    std::pair<QuantLib::Real, QuantLib::Real>
+    forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+                 const bool conditionalOnSurvival = true,
+                 std::vector<CashFlowResults>* const cfResults = nullptr) const override;
 
 private:
     Real calculateBondNpv(Date, Date) const;

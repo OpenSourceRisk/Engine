@@ -57,19 +57,14 @@ void BlackBondOptionEngine::calculate() const {
     QL_REQUIRE(!underlyingReferenceCurve_.empty(), "BlackBondOptionEngine::calculate(): empty reference curve");
 
     std::vector<CashFlowResults> cfResults;
+    Real fwdNpv = forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
+                               true, &cfResults)
+                      .first;
 
-    if (auto cfRes = arguments_.underlying->additionalResults().find("cashFlowResults");
-        cfRes != arguments_.underlying->additionalResults().end()) {
-        cfResults = boost::any_cast<std::vector<CashFlowResults>>(cfRes->second);
-        for (auto& cfRes : cfResults) {
-            cfRes.legNumber = 0;
-            cfRes.type = "Underlying_Bond__" + cfRes.type;
-        }
+    for (auto& cfRes : cfResults) {
+        cfRes.legNumber = 0;
+        cfRes.type = "Underlying_Bond__" + cfRes.type;
     }
-
-    Real fwdNpv =
-        forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate), true)
-            .first;
 
     Real knockOutProbability = defaultCurve_.empty() ? 0.0 : 1.0 - defaultCurve_->survivalProbability(exerciseDate);
 
