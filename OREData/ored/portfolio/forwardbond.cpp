@@ -153,6 +153,12 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     maturityType_ = "Bond Cashflow Date";
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
+    auto bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder_bd);
+    QL_REQUIRE(bondBuilder, "ForwardBond::build(): could not cast builder to BondEngineBuilder: " << id());
+
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(),
+                                               bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
         payoff ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
@@ -163,9 +169,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    QuantLib::ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
-    QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
+    auto fwdBondBuilder = QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
+    QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());
 
     // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
