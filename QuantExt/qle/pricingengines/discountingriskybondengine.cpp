@@ -45,8 +45,9 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
     incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
-                         ? discountCurve
+                         ? incomeCurve_
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
     registerWith(discountCurve_);
@@ -68,8 +69,9 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
     incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
-                         ? discountCurve
+                         ? incomeCurve_
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
     registerWith(discountCurve_);
@@ -143,12 +145,11 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     // compounding factors for npv date
-    Real dfNpv = incomeCurve_.empty() ? discountCurve_->discount(npvDate) : incomeCurve_->discount(npvDate);
+    Real dfNpv = incomeCurve_->discount(npvDate);
     Real spNpv = conditionalOnSurvival ? creditCurvePtr->survivalProbability(npvDate) : 1.0;
 
     // compound factors for settlement date
-    Real dfSettl =
-        incomeCurve_.empty() ? discountCurve_->discount(settlementDate) : incomeCurve_->discount(settlementDate);
+    Real dfSettl = incomeCurve_->discount(settlementDate);
     Real spSettl = creditCurvePtr->survivalProbability(settlementDate);
     if (!conditionalOnSurvival)
         spSettl /= creditCurvePtr->survivalProbability(npvDate);
