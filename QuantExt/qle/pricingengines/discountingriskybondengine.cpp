@@ -47,9 +47,9 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
     incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
-                         ? incomeCurve_
-                         : Handle<YieldTermStructure>(
-                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
+                       ? incomeCurve_
+                       : Handle<YieldTermStructure>(
+                             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, securitySpread));
     registerWith(discountCurve_);
     registerWith(incomeCurve_);
     registerWith(defaultCurve_);
@@ -71,9 +71,9 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
     incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
-                         ? incomeCurve_
-                         : Handle<YieldTermStructure>(
-                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
+                       ? incomeCurve_
+                       : Handle<YieldTermStructure>(
+                             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, securitySpread));
     registerWith(discountCurve_);
     registerWith(incomeCurve_);
     registerWith(securitySpread_);
