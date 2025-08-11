@@ -347,7 +347,7 @@ void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Por
         
     //! if the portfolio is not built, create a portfolio analyser which builds the portfolio under a dummy market
     if (!portfolio->isBuilt()) {
-        [[maybe_unused]] auto portfolioAnalyser = QuantLib::ext::make_shared<PortfolioAnalyser>(
+        [[maybe_unused]] PortfolioAnalyser portfolioAnalyser(
             portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(), configurations().curveConfig,
             inputs_->refDataManager(), *inputs_->iborFallbackConfig());
     }
