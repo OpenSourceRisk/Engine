@@ -227,7 +227,7 @@ PathData getPathData(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>&
 
             for (Size k = 0; k < nStates; ++k) {
                 for (Size j = 0; j < data.pathTimes.size(); ++j) {
-                    data.paths[j][k].set(i, path[gridIndexInPath[k]][gridIndexInPath[j + 1]]);
+                    data.paths[j][k].set(i, path[k][gridIndexInPath[j + 1]]);
                 }
             }
         }
