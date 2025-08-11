@@ -58,6 +58,8 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Real level = barrier_.levels()[0].value();
     Date start = ore::data::parseDate(startDate_);
     Real rebate = barrier_.rebate();
+    int strictBarrier = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
+
     QL_REQUIRE(rebate >= 0, "rebate must be non-negative");
 
     QL_REQUIRE(level > 0.0 && level != Null<Real>(), "Invalid level " << level);
@@ -189,7 +191,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
         barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate,
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy, start,
         fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(), fxIndexLows,
-        fxIndexHighs);
+        fxIndexHighs, strictBarrier);
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days)) {

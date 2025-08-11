@@ -94,7 +94,7 @@ protected:
     bool isModelDependent() const;
 
     /*! Check barriers on given (log-)price */
-    bool barrierTriggered(const Real price, const bool logPrice) const;
+    bool barrierTriggered(const Real price, const bool logPrice, const int strictBarrier) const;
 
     /*! Check whether option is alive depending on whether barrier was triggered */
     bool alive(const bool barrierTriggered) const;
