@@ -36,16 +36,21 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
     const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread, Period timestepPeriod,
     boost::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
-    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival)
+    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival, const bool spreadOnIncome)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
       includePastCashflows_(includePastCashflows), incomeCurve_(incomeCurve),
-      conditionalOnSurvival_(conditionalOnSurvival) {
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
     discountCurve_ = securitySpread_.empty()
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
+                         ? discountCurve
+                         : Handle<YieldTermStructure>(
+                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
     registerWith(discountCurve_);
+    registerWith(incomeCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
     registerWith(securitySpread_);
@@ -55,15 +60,20 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows,
                                                        const Handle<YieldTermStructure>& incomeCurve,
-                                                       const bool conditionalOnSurvival)
+                                                       const bool conditionalOnSurvival, const bool spreadOnIncome)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
       includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
-      conditionalOnSurvival_(conditionalOnSurvival) {
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
     discountCurve_ = securitySpread_.empty()
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
+                         ? discountCurve
+                         : Handle<YieldTermStructure>(
+                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, securitySpread));
     registerWith(discountCurve_);
+    registerWith(incomeCurve_);
     registerWith(securitySpread_);
 }
 
