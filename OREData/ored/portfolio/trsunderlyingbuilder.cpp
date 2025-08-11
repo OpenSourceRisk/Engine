@@ -184,7 +184,7 @@ void ForwardBondTrsUnderlyingBuilder::build(
     QL_REQUIRE(qlBond, "expected QuantExt::ForwardBond, could not cast");
 
     auto futuresIndex = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>("dummy", parseDate(t->fwdMaturityDate()),
-                                                                               qlBond->underlying(), false);
+                                                                               qlBond->underlying(), 1.0, false);
 
     underlyingIndex = futuresIndex;
     underlyingMultiplier = t->bondData().bondNotional();
