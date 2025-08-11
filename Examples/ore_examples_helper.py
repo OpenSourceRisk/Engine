@@ -82,7 +82,7 @@ class OreExample(object):
                 elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
                     self.ore_exe = "..\\..\\build\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\App\\ore.exe"):
-                    self.ore_exe = "..\..\\..\\build\\App\\ore.exe"
+                    self.ore_exe = "..\\..\\..\\build\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\ore\\App\\ore.exe"):
                     self.ore_exe = "..\\..\\..\\build\\ore\\App\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\..\\build\\ore\\App\\ore.exe"):
