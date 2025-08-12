@@ -39,7 +39,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
 
-    underlyingIndices_ = portfolio_->underlyingIndices();
+    underlyingIndices_ = portfolio_->underlyingIndices(referenceData);
 
     // Build Dependency Market
     market_ = QuantLib::ext::make_shared<DependencyMarket>(baseCcy, true, curveConfigs, iborFallbackConfig,

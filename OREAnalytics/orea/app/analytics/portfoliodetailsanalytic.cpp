@@ -84,7 +84,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> uiReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     uiReport->addColumn("AssetType", string()).addColumn("Indices", string());
-    for (const auto& ui : portfolioAnalyser_->underlyingIndices()) {
+    for (const auto& ui : portfolioAnalyser_->underlyingIndices(inputs_->refDataManager())) {
         string indices;
         for (const auto& s : ui.second)
             indices += indices.empty() ? s : "|" + s;
