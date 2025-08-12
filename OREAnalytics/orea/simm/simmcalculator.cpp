@@ -104,6 +104,9 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
 
     // We loop over the crif to extract (qualifier,bucket) per risk type
     for (SlimCrifRecordContainer::iterator it = crif->begin(); it != crif->end(); it++) {
+        if (it->riskType() == RiskType::Empty || it->riskType() == RiskType::FX || it->getBucket()=="") {
+            continue;
+        }
         qualifierBuckets[it->riskType()][it->getQualifier()].insert(it->getBucket());
     }
     // Now, count number of unique buckets per qualifier per risk type
