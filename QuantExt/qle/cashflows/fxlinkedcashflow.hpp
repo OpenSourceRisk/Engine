@@ -46,6 +46,7 @@ public:
     Real foreignAmount() const {
         if(fxResetStart_!=Null<Date>()){
             //We get the fixing in the leg Currency, not the fxReset currency, so we flip the fixing
+            QL_REQUIRE(domesticAmount_!=Null<Real>(), "domesticAmount/Notional Required when fxResetStart Date exist.");
             auto fxResetFixing = fxIndex_->fixing(fxResetStart_,true);
             return domesticAmount_*(1/fxResetFixing);
         }else{
