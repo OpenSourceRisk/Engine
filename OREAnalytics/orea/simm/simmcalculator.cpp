@@ -99,7 +99,6 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
 
     timer_.start("Cleaning up CRIF input");
     std::map<RiskType,std::map<std::string, std::set<string>>> qualifierBuckets;
-    std::map<std::pair<std::string,std::string>,std::string> mapQualifier;
     std::map<RiskType,std::map<std::string, int>> nbQualiferBucket;
     auto simmbucketmapper = simmConfiguration_->bucketMapper();
 
@@ -161,8 +160,9 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
         if (nbQualiferBucket[riskType][qualifierToUse]>1) {
             qualifierToUse = it->getQualifier() + "_" + it->getBucket();
             simmbucketmapper->addMapping(riskType, qualifierToUse, it->getBucket());
+            ore::data::StructuredTradeWarningMessage(it->getTradeId(), "simmcalculator", "Qualifier Name Changed for risk type "+ore::data::to_string(riskType)+ " From "+ it->getQualifier() + " To " + qualifierToUse, 
+                                                    "A qualifier for a same risk type has different buckets within the CRIF.");
             it->setQualifier(qualifierToUse);
-            StructuredTradeWarningMessage(it->getTradeId(),"simmcalculator","Qualifier Name Changed", "A qualifier for a same risk type has different buckets within the CRIF.");
         }
     }
 
