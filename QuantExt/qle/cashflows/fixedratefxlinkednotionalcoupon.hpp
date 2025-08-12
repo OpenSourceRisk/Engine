@@ -36,7 +36,8 @@ class FixedRateFXLinkedNotionalCoupon : public FixedRateCoupon, public FXLinked 
 public:
     //! FloatingRateFXLinkedNotionalCoupon
     FixedRateFXLinkedNotionalCoupon(const QuantLib::Date& fxFixingDate, QuantLib::Real foreignAmount,
-        QuantLib::ext::shared_ptr<FxIndex> fxIndex, const QuantLib::ext::shared_ptr<FixedRateCoupon>& underlying);
+        QuantLib::ext::shared_ptr<FxIndex> fxIndex, const QuantLib::ext::shared_ptr<FixedRateCoupon>& underlying,
+        const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>());
     
     //! \name FXLinked interface
     //@{
