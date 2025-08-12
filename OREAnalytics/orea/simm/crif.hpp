@@ -110,7 +110,7 @@ public:
     void setTradeId(const std::string& value);
     void setTradeType(const std::string& value);
     void setNettingSetDetails(const ore::data::NettingSetDetails& value);
-    void setQualifier(const std::string& value);
+    void setQualifier(const std::string& value) const;
     void setBucket(const std::string& value);
     void setLabel1(const std::string& value);
     void setLabel2(const std::string& value);
@@ -325,7 +325,7 @@ private:
     int tradeId_;
     int tradeType_;
     int nettingSetDetails_;
-    int qualifier_;
+    mutable int qualifier_;
     int bucket_;
     int label1_;
     int label2_;

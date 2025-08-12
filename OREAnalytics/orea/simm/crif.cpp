@@ -875,7 +875,7 @@ void SlimCrifRecord::setNettingSetDetails(const ore::data::NettingSetDetails& va
     nettingSetDetails_ = crif_.lock()->updateNettingSetDetailsIndex(value);
 }
 
-void SlimCrifRecord::setQualifier(const string& value) { qualifier_ = crif_.lock()->updateQualifierIndex(value); }
+void SlimCrifRecord::setQualifier(const string& value) const { qualifier_ = crif_.lock()->updateQualifierIndex(value); }
 
 void SlimCrifRecord::setBucket(const string& value) { bucket_ = crif_.lock()->updateBucketIndex(value); }
 
