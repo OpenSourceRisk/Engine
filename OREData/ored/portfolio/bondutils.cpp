@@ -164,7 +164,8 @@ BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& 
         expiry = parseDate(refData->bondFutureData().lastTrading);
     if (!refData->bondFutureData().lastDelivery.empty())
         settlement = parseDate(refData->bondFutureData().lastDelivery);
-    if (expiry == Date() || settlement != Date()) {
+    if (expiry == Date() || settlement == Date()) {
+        try {
         auto [tmpExpiry, tmpSettlement] =
             deduceDates(refData->bondFutureData().currency, refData->bondFutureData().contractMonth,
                         refData->bondFutureData().rootDate, refData->bondFutureData().expiryBasis,
@@ -174,6 +175,9 @@ BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& 
             expiry = tmpExpiry;
         if (settlement == Date())
             settlement = tmpSettlement;
+        } catch(const std::exception& e) {
+            QL_FAIL("BondFutureUtils::deduceDates(): failed to deduce dates for contract '" << refData->id() << "'");
+        }
     }
     return std::make_pair(expiry, settlement);
 }
@@ -183,7 +187,11 @@ BondFutureUtils::deduceDates(const std::string& currency, const std::string& con
                              const std::string& rootDateStr, const std::string& expiryBasis,
                              const std::string& settlementBasis, const std::string& expiryLag,
                              const std::string& settlementLag) {
-    Month contractMonth_ql = parseMonth(contractMonth);
+    Month contractMonth_ql;
+    QL_REQUIRE(tryParse(contractMonth, contractMonth_ql,
+                        std::function<QuantLib::Month(const std::string&)>(
+                            [](const std::string& s) { return parseMonth(s); })),
+               "BondFutureUtils::deduceDates(): can not parse month '" << contractMonth << "'");
     Date asof = Settings::instance().evaluationDate();
     int year = asof.year();
     if (asof.month() > contractMonth_ql)
@@ -201,7 +209,7 @@ BondFutureUtils::deduceDates(const std::string& currency, const std::string& con
     else if (day == "END")
         rootDate = cal.endOfMonth(Date(1, contractMonth_ql, year), QuantLib::Preceding);
     else { // nth weekday case expected (example format 'Fri,2' for second Friday)
-        QL_REQUIRE(tokens.size() == 2, "RootDate " << rootDateStr << " unexpected");
+        QL_REQUIRE(tokens.size() == 2, "BondFutureUtils::deduceDates(): RootDate " << rootDateStr << " unexpected");
         int n = parseInteger(tokens[1]);
         Weekday day = parseWeekday(tokens[0]);
         rootDate = Date::nthWeekday(n, day, contractMonth_ql, year);
@@ -235,7 +243,7 @@ BondFutureUtils::deduceDates(const std::string& currency, const std::string& con
         expiry = cal.advance(rootDate, expiryLag_ql, bdc_expiry);
         settlementDate = cal.advance(rootDate, settlementLag_ql, bdc_settle);
     } else {
-        QL_FAIL("expected either expiry or settlement or both to start with root");
+        QL_FAIL("BondFutureUtils::deduceDates(): expected either expiry or settlement or both to start with root");
     }
 
     return std::make_pair(expiry, settlementDate);
@@ -360,7 +368,7 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
                                                                 const std::string& futureContract,
                                                                 const bool noPricing) {
 
-    DLOG("BondFuture::identifyCtdBond called.");
+    DLOG("BondFutureUtils::identifyCtdBond() called.");
 
     double lowestValue = QL_MAX_REAL;
     string ctdSec;
@@ -386,7 +394,8 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
 
         double conversionFactor;
         try {
-            conversionFactor = engineFactory->market()->conversionFactor(sec)->value();
+            conversionFactor =
+                engineFactory->market()->conversionFactor(StructuredSecurityId(sec, futureContract))->value();
         } catch (const std::exception& e) {
             DLOG("no conversion factor provided from market, calculate internally");
             QL_REQUIRE(!b.bond->cashflows().empty(), "BondFutureUtils::identifyCtdBond(): bond has no coupons");
@@ -400,19 +409,19 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
 
         // see e.g. Hull, Options, Futures and other derivatives, 7th Edition, page 134
         double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
-        DLOG("BondFuture::identifyCtdBond underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry
-                                                       << " conversionFactor " << conversionFactor << " Value "
-                                                       << value);
+        DLOG("underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry << " conversionFactor "
+                           << conversionFactor << " Value " << value);
         if (value < lowestValue) {
             lowestValue = value;
             ctdSec = sec;
             ctdCf = conversionFactor;
+            DLOG("last underlying is new cheapeast bond");
         }
     }
 
     QL_REQUIRE(!ctdSec.empty(), "BondFutureUtils::identifyCtdBond(): no ctd bond found.");
 
-    DLOG("BondFuture::identifyCtdBond -- selected ctd bond for " << futureContract << " is " << ctdSec);
+    DLOG("BondFutureUtils::identifyCtdBond() finished, selected ctd bond for " << futureContract << " is " << ctdSec);
 
     return make_pair(ctdSec, ctdCf);
 }

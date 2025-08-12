@@ -64,13 +64,15 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     bool pricing =
         builder->globalParameters().count("Calibrate") == 0 || parseBool(builder->globalParameters().at("Calibrate"));
 
-    auto [ctd, conversionFactor] = BondFutureUtils::identifyCtdBond(engineFactory, contractName_, pricing);
+    auto [ctd, conversionFactor] = BondFutureUtils::identifyCtdBond(engineFactory, contractName_, !pricing);
     auto [expiry, settlement] = BondFutureUtils::deduceDates(refData_);
 
     auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
                                            StructuredSecurityId(ctd, contractName_));
     auto index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
-        contractName_, expiry, b.bond, parseBool(refData_->bondFutureData().dirtyQuotation));
+        contractName_, expiry, b.bond,
+        refData_->bondFutureData().dirtyQuotation.empty() ? false
+                                                          : parseBool(refData_->bondFutureData().dirtyQuotation));
     auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(index, contractNotional_, isLong, settlement,
                                                                   refData_->bondFutureData().settlement == "Physical");
 
@@ -78,8 +80,8 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
 
     instr->setPricingEngine(builder->engine(id(), refData_->bondFutureData().currency, conversionFactor));
 
-    requiredFixings_.addFixingDate(index->futureExpiryDate(), IndexNameTranslator::instance().oreName(index->name()),
-                                   settlement);
+    Date today = Settings::instance().evaluationDate();
+    requiredFixings_.addFixingDate(today, IndexNameTranslator::instance().oreName(index->name()), settlement);
 
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
@@ -118,7 +120,7 @@ BondFuture::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManag
         auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
             referenceDataManager->getData("BondFuture", contractName_));
         for (const auto& sec : refData->bondFutureData().deliveryBasket) {
-            result[AssetClass::BOND].insert(sec);
+            result[AssetClass::BOND].insert(StructuredSecurityId(sec, contractName_));
         }
     }
     return result;
