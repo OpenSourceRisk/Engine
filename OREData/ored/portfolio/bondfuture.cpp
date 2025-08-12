@@ -114,13 +114,12 @@ XMLNode* BondFuture::toXML(XMLDocument& doc) const {
 std::map<AssetClass, std::set<std::string>>
 BondFuture::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
-    QL_REQUIRE(referenceDataManager, "BondFuture::underlyingIndices(): no reference data manager given.");
-    QL_REQUIRE(referenceDataManager->hasData("BondFuture", contractName_),
-               "BondFuture::underlyingIndices(): no bond future reference data found for " << contractName_);
-    auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-        referenceDataManager->getData("BondFuture", contractName_));
-    for (const auto& sec : refData->bondFutureData().deliveryBasket) {
-        result[AssetClass::BOND].insert(sec);
+    if (referenceDataManager && referenceDataManager->hasData("BondFuture", contractName_)) {
+        auto refData = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            referenceDataManager->getData("BondFuture", contractName_));
+        for (const auto& sec : refData->bondFutureData().deliveryBasket) {
+            result[AssetClass::BOND].insert(sec);
+        }
     }
     return result;
 }
