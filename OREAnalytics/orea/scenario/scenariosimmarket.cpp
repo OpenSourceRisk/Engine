@@ -3056,13 +3056,14 @@ void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::
     
     currentScenario_ = scenario;
 
-    QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
-    if (!currentScenario_->isAbsolute())
-        currentScenarioAbsolute =
-            addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
-
-    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
-    scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    if (ScenarioInformation::instance().isEnabled()){
+        QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+        if (!currentScenario_->isAbsolute())
+            currentScenarioAbsolute =
+                addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    }
 
     // 1 handle delta scenario
 

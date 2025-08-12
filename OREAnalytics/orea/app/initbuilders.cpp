@@ -40,6 +40,7 @@
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
@@ -68,6 +69,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("IM_SCHEDULE", {}, IMScheduleAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARAMETRIC_VAR", {}, ParametricVarAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARCONVERSION", {}, ParConversionAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("CORRELATION", {}, CorrelationAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL", {}, PnlAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL_EXPLAIN", {}, PnlExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PORTFOLIO_DETAILS", {}, PortfolioDetailsAnalytic, false);

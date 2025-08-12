@@ -56,7 +56,7 @@ public:
     //! Detailed constructor
     CommodityFixedLegData(const std::vector<QuantLib::Real>& quantities, const std::vector<std::string>& quantityDates,
                           const std::vector<QuantLib::Real>& prices, const std::vector<std::string>& priceDates,
-                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = "");
+                          CommodityPayRelativeTo commodityPayRelativeTo, const std::string& tag = std::string());
 
     //! \name Inspectors
     //@{
@@ -65,6 +65,7 @@ public:
     const std::vector<QuantLib::Real>& prices() const { return prices_; }
     const std::vector<std::string>& priceDates() const { return priceDates_; }
     CommodityPayRelativeTo commodityPayRelativeTo() const { return commodityPayRelativeTo_; }
+    const std::string& foreignCurrency() const { return foreignCurrency_; }
     const std::string& tag() const { return tag_; }
     //@}
 
@@ -77,6 +78,7 @@ public:
         quantities from the corresponding floating leg of the swap after that leg has been built.
     */
     void setQuantities(const std::vector<QuantLib::Real>& quantities);
+    void setForeignCurrency(const std::string foreignCurrency);
 
     //! \name Serialisation
     //@{
@@ -90,6 +92,7 @@ private:
     std::vector<QuantLib::Real> prices_;
     std::vector<std::string> priceDates_;
     CommodityPayRelativeTo commodityPayRelativeTo_;
+    std::string foreignCurrency_;
     std::string tag_;
 };
 
@@ -109,13 +112,13 @@ public:
         const std::vector<QuantLib::Real>& spreads = {}, const std::vector<std::string>& spreadDates = {},
         const std::vector<QuantLib::Real>& gearings = {}, const std::vector<std::string>& gearingDates = {},
         CommodityPricingDateRule pricingDateRule = CommodityPricingDateRule::FutureExpiryDate,
-        const std::string& pricingCalendar = "", QuantLib::Natural pricingLag = 0,
+        const std::string& pricingCalendar = std::string(), QuantLib::Natural pricingLag = 0,
         const std::vector<std::string>& pricingDates = {}, bool isAveraged = false, bool isInArrears = true,
         QuantLib::Integer futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         bool excludePeriodStart = true, QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-        bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
-        QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "",
+        bool useBusinessDays = true, const std::string& tag = std::string(),
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
+        QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = std::string(),
         QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
@@ -148,7 +151,10 @@ public:
     QuantLib::Natural lastNDays() const { return lastNDays_; }
     std::string const& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    std::string foreignCurrency() const { return foreignCurrency_; }
     //@}
+
+    void setForeignCurrency(std::string foreignCurrency);
 
     //! \name Serialisation
     //@{
@@ -185,6 +191,7 @@ private:
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
+    std::string foreignCurrency_;
 };
 
 } // namespace data

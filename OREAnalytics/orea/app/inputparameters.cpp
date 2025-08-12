@@ -671,6 +671,32 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
     setCovarianceData(reader);
 }
 
+void InputParameters::setCorrelationDataFromFile(const std::string& fileName) {
+    ore::data::CSVFileReader reader(fileName, false);
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid correlation data lines from " << fileName);
+}
+
+void InputParameters::setCorrelationData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCorrelationDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCorrelationData(reader);
+}
+
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(
         fileName, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
@@ -875,6 +901,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    correlationOutputFileName_ = params->get("correlation", "outputFileName", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
@@ -911,6 +938,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    fileNameMap_["correlation"] = correlationOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
     fileNameMap_["calibration"] = calibrationOutputFileName_;

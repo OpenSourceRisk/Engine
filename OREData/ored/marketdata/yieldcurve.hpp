@@ -155,7 +155,7 @@ private:
     void buildZeroCurve(const std::size_t index);
     void buildZeroSpreadedCurve(const std::size_t index);
     //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
-    void buildDiscountRatioCurve(const std::size_t index);
+    void buildDiscountRatioCurve(const std::size_t index, const CurveConfigurations& curveConfigs);
     //! Build a yield curve that uses QuantLib::FittedBondCurve
     void buildFittedBondCurve(const std::size_t index);
     //! Build a yield curve that uses QuantExt::WeightedYieldTermStructure

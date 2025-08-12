@@ -65,7 +65,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     isResetting_ = false;
     allLegsAreSimmPlainVanillaIrLegs_ = true;
     
-    Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -87,6 +86,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
             auto indexFixing = market->fxIndex(legData_[i].fxIndex());
             Real resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
+            std::cout<<" foreignAmount = "<< resetFixing * legData_[i].notionals()[0] << std::endl;
             legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
         }
     }

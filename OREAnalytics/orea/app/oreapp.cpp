@@ -877,6 +877,11 @@ void OREAppInputParameters::loadParameters() {
     if (params_->has("setup", "marketDataLoaderInput"))
         setMarketDataLoaderInput(params_->get("setup", "marketDataLoaderInput"));
 
+    tmp = params_->get("setup", "enableScenarioInformation", false);
+    if (tmp != ""){
+        ScenarioInformation::instance().enable(ore::data::parseBool(tmp));
+    }
+
     /*************
      * NPV
      *************/
@@ -1656,6 +1661,63 @@ void OREAppInputParameters::loadParameters() {
             setCrossAssetModelDataFromFile(configFile);
         } else {
             ALOG("Simulation model data not loaded");
+        }
+    }
+
+    /*************
+    * Correlation
+    *************/
+    tmp = params_->get("correlation", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CORRELATION");
+        tmp = params_->get("correlation", "historicalScenarioFile", false);
+        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
+        setScenarioReader(scenarioFile);
+
+        tmp = params_->get("correlation", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("correlation", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+        tmp = params_->get("correlation", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("correlation", "correlation_method", false);
+        if (tmp != "")
+            setCorrelationMethod(tmp);
+
+        tmp = params_->get("correlation", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("correlation", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("correlation", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+
+        tmp = params_->get("correlation", "covarianceInputFile", false);
+        if (tmp != "") {
+            std::string covFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Correlation Data from file " << covFile);
+            setCorrelationDataFromFile(covFile);
         }
     }
 

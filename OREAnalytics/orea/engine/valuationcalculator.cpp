@@ -248,7 +248,7 @@ void CashflowReportCalculator::calculate(const QuantLib::ext::shared_ptr<Trade>&
     QL_REQUIRE(dateIndex == 0, "CashflowReportCalculator::calculate(): date ("
                                    << dateIndex << ") not allowed for this calculator. Expected 0.");
     cfCube_[tradeIndex][sample + 1] =
-        generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
+        trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
 }
 
 void CashflowReportCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -256,7 +256,7 @@ void CashflowReportCalculator::calculateT0(const QuantLib::ext::shared_ptr<Trade
                                            QuantLib::ext::shared_ptr<NPVCube>& outputCube,
                                            QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) {
     cfCube_[tradeIndex][0] =
-        generateCashflowReportData(trade, baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
+        trade->cashflows(baseCcyCode_, simMarket, Market::defaultConfiguration, includePastCashflows_);
 }
 
 } // namespace analytics

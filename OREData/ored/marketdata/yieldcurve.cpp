@@ -416,7 +416,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                 buildZeroSpreadedCurve(index);
             } else if (type == YieldCurveSegment::Type::DiscountRatio) {
                 DLOG("Building discount ratio yield curve " << curveSpec_[index]);
-                buildDiscountRatioCurve(index);
+                buildDiscountRatioCurve(index, curveConfigs);
             } else if (type == YieldCurveSegment::Type::FittedBond) {
                 DLOG("Building FittedBondCurve " << curveSpec_[index]);
                 buildFittedBondCurve(index);
@@ -1418,7 +1418,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
 }
 
-void YieldCurve::buildDiscountRatioCurve(const std::size_t index) {
+void YieldCurve::buildDiscountRatioCurve(const std::size_t index, const CurveConfigurations& curveConfigs) {
     QL_REQUIRE(curveSegments_[index].size() == 1, "A discount ratio curve must contain exactly one segment");
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::DiscountRatio,
                "The curve segment is not of type 'DiscountRatio'.");
@@ -1427,6 +1427,11 @@ void YieldCurve::buildDiscountRatioCurve(const std::size_t index) {
         QuantLib::ext::dynamic_pointer_cast<DiscountRatioYieldCurveSegment>(curveSegments_[index][0]);
 
     // Find the underlying curves in the reference curves
+    if(curveConfigs.hasYieldCurveConfig(segment->baseCurveId())){
+        std::string baseCurveIdCcy = curveConfigs.yieldCurveConfig(segment->baseCurveId())->currency();
+        QL_REQUIRE(segment->baseCurveCurrency()==baseCurveIdCcy,"discountingIndex "<< segment->baseCurveId()<<" is inconsistent with baseCurrency "<<segment->baseCurveCurrency());  
+    }
+
     auto baseCurve = getYieldCurve(index, segment->baseCurveCurrency(), segment->baseCurveId());
     auto numCurve = getYieldCurve(index, segment->numeratorCurveCurrency(), segment->numeratorCurveId());
     auto denCurve = getYieldCurve(index, segment->denominatorCurveCurrency(), segment->denominatorCurveId());

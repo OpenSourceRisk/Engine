@@ -25,7 +25,6 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/dategrid.hpp>
