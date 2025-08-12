@@ -49,6 +49,10 @@ public:
     const BondData& bondData() const { return bondData_; }
     const QuantLib::ext::shared_ptr<BondFutureReferenceDatum>& referenceDatum() const { return refData_; }
 
+    //! Add underlying Bond names
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 protected:
     void checkData();
 
