@@ -38,9 +38,9 @@ void DiscountingBondFutureEngine::calculate() const {
     Date today = Settings::instance().evaluationDate();
     Date priceDate = std::min(arguments_.index->futureExpiryDate(), today);
     Real strike = arguments_.index->fixing(priceDate, false);
-    Real bond = arguments_.index->fixing(priceDate, true);
+    Real fwd = arguments_.index->fixing(priceDate, true);
 
-    results_.value = discountCurve_->discount(arguments_.futureSettlement) * (bond - strike) *
+    results_.value = discountCurve_->discount(arguments_.futureSettlement) * (fwd - strike) *
                      conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
 
     std::vector<CashFlowResults> cashFlowResults;
@@ -54,11 +54,10 @@ void DiscountingBondFutureEngine::calculate() const {
 
     CashFlowResults bondFlow;
     bondFlow.payDate = arguments_.futureSettlement;
-    bondFlow.amount =
-        bond * conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
+    bondFlow.amount = fwd * conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
     bondFlow.type = "BondValueFlow";
     bondFlow.fixingDate = arguments_.index->futureExpiryDate();
-    bondFlow.fixingValue = bond;
+    bondFlow.fixingValue = fwd;
     cashFlowResults.push_back(bondFlow);
 
     results_.additionalResults["cashFlowResults"] = cashFlowResults;
