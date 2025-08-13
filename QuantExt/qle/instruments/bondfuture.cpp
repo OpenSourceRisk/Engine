@@ -27,7 +27,9 @@ namespace QuantExt {
 BondFuture::BondFuture(const QuantLib::ext::shared_ptr<QuantExt::BondFuturesIndex>& index, const Real contractNotional,
                        const bool isLong, const QuantLib::Date& futureSettlement, const bool physicalSettlement)
     : index_(index), contractNotional_(contractNotional), isLong_(isLong), futureSettlement_(futureSettlement),
-      physicalSettlement_(physicalSettlement) {}
+      physicalSettlement_(physicalSettlement) {
+    registerWith(index_);
+}
 
 bool BondFuture::isExpired() const {
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
