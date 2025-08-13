@@ -70,8 +70,12 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
 
     switch (ct) {
     case CurveSpec::CurveType::Yield: {
-        auto cc = curveConfigs->yieldCurveConfig(name);
-        cs = new YieldCurveSpec(cc->currency(), name);
+        string ccy;
+        if (curveConfigs->hasYieldCurveConfig(name))
+            ccy = curveConfigs->yieldCurveConfig(name)->currency();
+        else
+            ccy = name.substr(0, 3); // assume the first 3 chars are the currency code
+        cs = new YieldCurveSpec(ccy, name);
         break;
     }
     case CurveSpec::CurveType::FX: {
