@@ -121,6 +121,7 @@ BondFuture::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManag
             referenceDataManager->getData("BondFuture", contractName_));
         for (const auto& sec : refData->bondFutureData().deliveryBasket) {
             result[AssetClass::BOND].insert(StructuredSecurityId(sec, contractName_));
+            result[AssetClass::BOND].insert(sec);
         }
     }
     return result;
