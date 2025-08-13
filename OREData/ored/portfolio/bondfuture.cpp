@@ -70,7 +70,7 @@ void BondFuture::build(const ext::shared_ptr<EngineFactory>& engineFactory) {
     auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
                                            StructuredSecurityId(ctd, contractName_));
     auto index = QuantLib::ext::make_shared<QuantExt::BondFuturesIndex>(
-        contractName_, expiry, b.bond,
+        contractName_, expiry, b.bond, conversionFactor,
         refData_->bondFutureData().dirtyQuotation.empty() ? false
                                                           : parseBool(refData_->bondFutureData().dirtyQuotation));
     auto instr = QuantLib::ext::make_shared<QuantExt::BondFuture>(index, contractNotional_, isLong, settlement,
