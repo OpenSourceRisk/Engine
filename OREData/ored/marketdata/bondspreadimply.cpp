@@ -135,10 +135,15 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
     for (auto const& sec : securities) {
         auto storedSpread = generatedSpreads.find(sec.first);
         if (storedSpread == generatedSpreads.end()) {
+            Real conversionFactor = 1.0;
+            try {
+                conversionFactor = market->conversionFactor(sec.first)->value();
+            } catch (...) {
+            }
             try {
                 auto impliedSpread = QuantLib::ext::make_shared<SecuritySpreadQuote>(
                     implySpread(sec.first, sec.second->price()->value(), referenceDataManager, engineFactory,
-                                spreadImplyMarket->spreadQuote(sec.first), configuration),
+                                spreadImplyMarket->spreadQuote(sec.first), conversionFactor, configuration),
                     market->asofDate(), "BOND/YIELD_SPREAD/" + sec.first, sec.first);
                 generatedSpreads[sec.first] = impliedSpread;
                 LOG("spread imply succeded for security " << sec.first << ", got " << std::setprecision(10)
@@ -179,12 +184,28 @@ Real getPrice(const BondBuilder::Result& b, const Date& expiry) {
 Real BondSpreadImply::implySpread(const std::string& securityId, const Real price,
                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                  const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
+                                  const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote,
+                                  const Real conversionFactor, const std::string& configuration) {
 
     // checks, build bond from reference data
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     StructuredSecurityId structuredSecurityId(securityId);
+
+    Date expiry;
+    bool futureDirty = false;
+    if (!structuredSecurityId.futureContract().empty()) {
+        QL_REQUIRE(referenceDataManager->hasData("BondFuture", structuredSecurityId.futureContract()),
+                   "BondSpreadImply: no reference data found for bond future contract "
+                       << structuredSecurityId.futureContract());
+        auto refDatum = QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
+            referenceDataManager->getData("BondFuture", structuredSecurityId.futureContract()));
+        expiry = BondFutureUtils::deduceDates(refDatum).first;
+        if (!refDatum->bondFutureData().dirtyQuotation.empty())
+            futureDirty = parseBool(refDatum->bondFutureData().dirtyQuotation);
+    } else if (!structuredSecurityId.forwardExpiry().empty()) {
+        expiry = parseDate(structuredSecurityId.forwardExpiry());
+    }
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, structuredSecurityId);
     Real priceAdj = price;
@@ -195,38 +216,28 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real pric
 
     Real inflationFactor = b.inflationFactor();
 
-    if (b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty) {
+    if (expiry == Date() && b.quotedDirtyPrices == QuantLib::Bond::Price::Type::Dirty) {
         priceAdj -= b.bond->accruedAmount(b.bond->settlementDate()) / 100.0;
+    } else if (expiry != Date() && futureDirty) {
+        priceAdj -= b.bond->accruedAmount(b.bond->settlementDate(expiry)) / 100.0;
     }
 
-    DLOG("implySpread for securityId " << securityId << ":");
     DLOG("settlement date         = " << QuantLib::io::iso_date(b.bond->settlementDate()));
     DLOG("market quote            = " << priceAdj);
     DLOG("accrueds                = " << b.bond->accruedAmount());
     DLOG("inflation factor        = " << inflationFactor);
     DLOG("price quote method adj  = " << adj);
-    DLOG("effective market price  = " << priceAdj * inflationFactor * adj);
+    DLOG("conversion factor       = " << conversionFactor);
+    DLOG("effective market price  = " << priceAdj * inflationFactor * adj * conversionFactor);
+    DLOG("future/fwd epiry        = " << (expiry == Date() ? "na" : ore::data::to_string(expiry)));
 
-    Date expiry;
-    if (!structuredSecurityId.futureContract().empty()) {
-        QL_REQUIRE(referenceDataManager->hasData("BondFuture", structuredSecurityId.futureContract()),
-                   "BondSpreadImply: no reference data found for bond future contract "
-                       << structuredSecurityId.futureContract());
-        expiry = BondFutureUtils::deduceDates(
-                     QuantLib::ext::dynamic_pointer_cast<BondFutureReferenceDatum>(
-                         referenceDataManager->getData("BondFuture", structuredSecurityId.futureContract())))
-                     .first;
-    } else if (!structuredSecurityId.forwardExpiry().empty()) {
-        expiry = parseDate(structuredSecurityId.forwardExpiry());
-    }
-
-    auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, &expiry](const Real s) {
+    auto targetFunction = [&b, &spreadQuote, priceAdj, adj, inflationFactor, conversionFactor, &expiry](const Real s) {
         spreadQuote->setValue(s);
         if (b.modelBuilder != nullptr)
             b.modelBuilder->recalibrate();
         Real c = getPrice(b, expiry);
         TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
-        return c - priceAdj * inflationFactor * adj;
+        return c - priceAdj * inflationFactor * adj * conversionFactor;
     };
 
     // edge case: bond has a zero settlement value -> skip spread imply
