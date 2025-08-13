@@ -81,14 +81,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
-        // We want to activate the FxReset when we hit the start date
-        if (!legData_[i].resetStartDate().empty()) {
-            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
-            auto indexFixing = market->fxIndex(legData_[i].fxIndex());
-            Real resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
-            std::cout<<" foreignAmount = "<< resetFixing * legData_[i].notionals()[0] << std::endl;
-            legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
-        }
     }
 
     /* collect currencies from fx indexing and eq names from eq indexing
