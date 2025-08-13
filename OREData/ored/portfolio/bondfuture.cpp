@@ -106,10 +106,12 @@ void BondFuture::fromXML(XMLNode* node) {
 }
 
 XMLNode* BondFuture::toXML(XMLDocument& doc) const {
-    XMLNode* node = doc.allocNode("BondFutureData");
-    XMLUtils::addChild(doc, node, "ContractName", contractName_);
-    XMLUtils::addChild(doc, node, "ContractNotional", contractNotional_);
-    XMLUtils::addChild(doc, node, "LongShort", longShort_);
+    XMLNode* node = Trade::toXML(doc);
+    XMLNode* node2 = doc.allocNode("BondFutureData");
+    XMLUtils::addChild(doc, node2, "ContractName", contractName_);
+    XMLUtils::addChild(doc, node2, "ContractNotional", contractNotional_);
+    XMLUtils::addChild(doc, node2, "LongShort", longShort_);
+    XMLUtils::appendNode(node, node2);
     return node;
 }
 
