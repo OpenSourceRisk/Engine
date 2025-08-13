@@ -91,9 +91,12 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "IssueDate", issueDate);
     XMLUtils::addChild(doc, node, "PriceQuoteMethod", priceQuoteMethod);
     XMLUtils::addChild(doc, node, "PriceQuoteBaseValue", priceQuoteBaseValue);
-    XMLUtils::addChild(doc, node, "SubType", subType);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
+    XMLUtils::addChild(doc, node, "SubType", subType);
+    if (quotedDirtyPrices)
+        XMLUtils::addChild(doc, node, "PriceType",
+                           *quotedDirtyPrices == QuantLib::Bond::Price::Type::Clean ? "Clean" : "Dirty");
     return node;
 }
 
