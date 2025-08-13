@@ -191,6 +191,7 @@ public:
     const std::string& futureContract() const { return futureContract_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
     const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd() const { return ctd_; }
+    Real conversionFactor() const { return conversionFactor_; }
     const bool dirty() const { return dirty_; }
     //@}
 
