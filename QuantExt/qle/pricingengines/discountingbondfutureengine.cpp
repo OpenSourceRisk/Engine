@@ -28,33 +28,37 @@ namespace QuantExt {
 
 DiscountingBondFutureEngine::DiscountingBondFutureEngine(const Handle<YieldTermStructure>& discountCurve,
                                                          const Handle<Quote>& conversionFactor)
-    : discountCurve_(discountCurve), conversionFactor_(conversionFactor) {}
+    : discountCurve_(discountCurve), conversionFactor_(conversionFactor) {
+    registerWith(discountCurve_);
+    registerWith(conversionFactor_);
+}
 
 void DiscountingBondFutureEngine::calculate() const {
 
     Date today = Settings::instance().evaluationDate();
-    Real strike = arguments_.index->fixing(std::min(arguments_.index->futureExpiryDate(), today));
-    Real forwardBondPrice = arguments_.index->fixing(arguments_.index->futureExpiryDate());
+    Date priceDate = std::min(arguments_.index->futureExpiryDate(), today);
+    Real strike = arguments_.index->fixing(priceDate, false);
+    Real bond = arguments_.index->fixing(priceDate, true);
 
-    results_.value = discountCurve_->discount(arguments_.futureSettlement) *
-                     (forwardBondPrice * conversionFactor_->value() - strike) * (arguments_.isLong ? 1.0 : -1.0) *
-                     arguments_.contractNotional;
+    results_.value = discountCurve_->discount(arguments_.futureSettlement) * (bond - strike) *
+                     conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
 
     std::vector<CashFlowResults> cashFlowResults;
 
     CashFlowResults strikeFlow;
     strikeFlow.payDate = arguments_.futureSettlement;
-    strikeFlow.amount = strike * (arguments_.isLong ? -1.0 : 1.0) * arguments_.contractNotional;
+    strikeFlow.amount =
+        strike * conversionFactor_->value() * (arguments_.isLong ? -1.0 : 1.0) * arguments_.contractNotional;
     strikeFlow.type = "StrikeFlow";
     cashFlowResults.push_back(strikeFlow);
 
     CashFlowResults bondFlow;
     bondFlow.payDate = arguments_.futureSettlement;
     bondFlow.amount =
-        forwardBondPrice * conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
+        bond * conversionFactor_->value() * (arguments_.isLong ? 1.0 : -1.0) * arguments_.contractNotional;
     bondFlow.type = "BondValueFlow";
     bondFlow.fixingDate = arguments_.index->futureExpiryDate();
-    bondFlow.fixingValue = forwardBondPrice;
+    bondFlow.fixingValue = bond;
     cashFlowResults.push_back(bondFlow);
 }
 
