@@ -60,6 +60,8 @@ void DiscountingBondFutureEngine::calculate() const {
     bondFlow.fixingDate = arguments_.index->futureExpiryDate();
     bondFlow.fixingValue = bond;
     cashFlowResults.push_back(bondFlow);
+
+    results_.additionalResults["cashFlowResults"] = cashFlowResults;
 }
 
 } // namespace QuantExt
