@@ -281,7 +281,7 @@ BondFutureUtils::BondFutureType BondFutureUtils::getBondFutureType(const std::st
     else if (val_up == "ZT" || val_up == "TU")
         return BondFutureUtils::BondFutureType::ShortTenorUS;
     else
-        QL_FAIL("BondFutureUtils::getBondFutureType(): FutureType " << val_up << " unkown");
+        QL_FAIL("BondFutureUtils::getBondFutureType(): FutureType '" << val_up << "' unkown");
 }
 
 void BondFutureUtils::checkDates(const QuantLib::Date& expiry, const QuantLib::Date& settlementDate) {
@@ -336,7 +336,7 @@ double conversionFactorUSD(const double coupon, const BondFutureUtils::BondFutur
         else if (type == BondFutureUtils::BondFutureType::ShortTenorUS)
             v = (z - 6.0);
         else
-            QL_FAIL("FutureType " << type << " unkown");
+            QL_FAIL("FutureType '" << type << "' unkown");
     }
 
     double a = 1.0 / std::pow(1.03, v / 6.0);
@@ -382,15 +382,24 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
 
     for (const auto& sec : refData->bondFutureData().deliveryBasket) {
 
-        auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(),
-                                               StructuredSecurityId(sec, futureContract));
+        auto b = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), sec);
 
         Real settlementPriceFuture =
             engineFactory->market()->securityPrice(StructuredSecurityId(sec, futureContract))->value();
 
         Date expiry = deduceDates(refData).first;
-        double cleanBondPriceAtExpiry =
-            noPricing ? 100.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true).second;
+        double bondPriceAtExpiry =
+            noPricing ? 1.0 : QuantExt::forwardPrice(b.bond, expiry, b.bond->settlementDate(expiry), true).second;
+
+        if (refData->bondFutureData().dirtyQuotation.empty() || !parseBool(refData->bondFutureData().dirtyQuotation)) {
+            bondPriceAtExpiry -=
+                b.bond->accruedAmount(b.bond->settlementDate(expiry)) / 100.0 * b.bond->notional(expiry);
+        }
+
+        if (close_enough(b.bond->notional(expiry), 0.0))
+            bondPriceAtExpiry = 0.0;
+        else
+            bondPriceAtExpiry /= b.bond->notional(expiry);
 
         double conversionFactor;
         try {
@@ -402,20 +411,27 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
             auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(b.bond->cashflows().front());
             QL_REQUIRE(cpn, "BondFutureUtils::identifyCtdBond(): could not cast first bond coupon to FixedRateCoupon - "
                             "can not calculate conversion factor.");
+            try {
             conversionFactor = BondFutureUtils::conversionFactor(
                 BondFutureUtils::getBondFutureType(refData->bondFutureData().deliverableGrade), expiry, cpn->rate(),
                 parseDate(b.bondData.maturityDate()));
+            } catch (const std::exception& e) {
+                QL_FAIL("BondFutureUtils::identifyCtdBond(): conversion factor for "
+                        << sec << " in future contract " << futureContract
+                        << " could not be retrieved from market data and can not be calculated (" << e.what()
+                        << "). Add conversion factor to market data or check why it can not be calculated.");
+            }
         }
 
         // see e.g. Hull, Options, Futures and other derivatives, 7th Edition, page 134
-        double value = cleanBondPriceAtExpiry - settlementPriceFuture * conversionFactor;
-        DLOG("underlying " << sec << " cleanBondPriceAtExpiry " << cleanBondPriceAtExpiry << " conversionFactor "
-                           << conversionFactor << " Value " << value);
+        double value = bondPriceAtExpiry - settlementPriceFuture * conversionFactor;
+        DLOG(sec << " bondPriceAtExpiry " << bondPriceAtExpiry << " settlementPriceFuture " << settlementPriceFuture
+                 << " conversionFactor " << conversionFactor << " -> value " << value);
         if (value < lowestValue) {
             lowestValue = value;
             ctdSec = sec;
             ctdCf = conversionFactor;
-            DLOG("last underlying is new cheapeast bond");
+            DLOG("this underlying is new cheapeast bond");
         }
     }
 
