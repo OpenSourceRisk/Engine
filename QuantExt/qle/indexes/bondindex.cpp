@@ -229,13 +229,14 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
     Real price = forwardPrice(ctd_, futureExpiryDate_, ctd_->settlementDate(futureExpiryDate_), true).second;
 
     if (!dirty_) {
-        price -= ctd_->accruedAmount(ctd_->settlementDate(fixingDate)) / 100.0 * ctd_->notional(fixingDate);
+        price -=
+            ctd_->accruedAmount(ctd_->settlementDate(futureExpiryDate_)) / 100.0 * ctd_->notional(futureExpiryDate_);
     }
 
-    if (close_enough(ctd_->notional(fixingDate), 0.0))
+    if (close_enough(ctd_->notional(futureExpiryDate_), 0.0))
         price = 0.0;
     else
-        price /= ctd_->notional(fixingDate);
+        price /= ctd_->notional(futureExpiryDate_);
 
     return price / conversionFactor_;
 }
