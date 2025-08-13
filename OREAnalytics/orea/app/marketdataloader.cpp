@@ -196,7 +196,7 @@ void MarketDataLoader::populateFixings(
     // check and warn any missing fixings - only warn for mandatory fixings
     for (const auto& [indexName, fixingDates] : fixings_) {
         for (const auto& [d, mandatory] :fixingDates) {
-            if (mandatory && !loader_->hasFixing(indexName, d)) {
+            if (mandatory.first && !loader_->hasFixing(indexName, d)) {
                 string fixingErr = "";
                 if (isFxIndex(indexName)) {
                     auto fxInd = parseFxIndex(indexName);
@@ -208,7 +208,13 @@ void MarketDataLoader::populateFixings(
                         fixingErr = ", error: " + ore::data::to_string(e.what());
                     }
                 }
-                StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID.")
+                if (mandatory.second.size() > 0) {
+                    fixingErr += ", for tradeIds ";
+                    for (const auto t : mandatory.second) {
+                        fixingErr += t + " ";
+                    }
+				}
+                StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID" + fixingErr)
                     .log();
             }
         }

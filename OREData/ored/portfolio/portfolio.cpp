@@ -255,7 +255,7 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
         auto fixings = t.second->fixings(settlementDate);
         for (const auto& [index, fixingDates] : fixings) {
             if (!fixingDates.empty()) {
-                result[index].addDates(fixingDates);
+                result[index].addDates(fixingDates, t.first);
             }
         }
     }
