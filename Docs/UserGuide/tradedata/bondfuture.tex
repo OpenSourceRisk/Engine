@@ -14,21 +14,23 @@ A bondfuture is set up using a {\tt BondFutureData} block as shown below and the
   \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{true}) or short (\emph{false}) position.
 \end{itemize}
 
-The corresponding reference data is shown in listing \ref{lst:bondfuturerefdata}.
+The corresponding reference data is shown in listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
 
 \begin{itemize}
   \item Currency: The currency in which the future is denominated. Allowable values: See Table \ref{tab:currency}.
-  \item DeliveryBasket: A list of eligible securities/bond identifiers.
-  Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix
-  \item DeliverableGrade: The deliverable graded restricting the deliverable underlyings. This is used for calculation of the conversion factor.
-  Allowable values are: \emph{ZT, Z3N, ZF, ZN, TN, TWE, ZB, UB} (CME) or the equivalent \emph{TU, 3Y, FV, TY, UXY, US, TWE, WN} (Bloomberg)
-  \item LastTradingDate: The expiry date of the future
-  \item LastDeliveryDate: The settlement date of the future
+  \item DeliveryBasket: A list of eligible securities/bond identifiers. Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix
   \item Settlement [Optional]: Cash or Physical. Optional, defaults to Physcial.
   \item DirtyQuotation [Optional]: Whether the market quote of the future price is dirty (true) or clean (false, default if not specified).
 \end{itemize}
 
-The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived from the following set of fields:
+The last trading (expiry) and last delivery (settlement) date of the future can be given explicitly:
+
+\begin{itemize}
+  \item LastTradingDate: The expiry date of the future
+  \item LastDeliveryDate: The settlement date of the future
+\end{itemize}
+
+Alternatively, these dates can be derived from the following set of fields:
 
 \begin{itemize}
   \item ContractMonth: specifies the delivery month. Allowable values are written English calendar month or its three letter abbreviation, e.g. "January" or "Jan".
@@ -42,6 +44,13 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
   Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period.
   \item SettlementLag: Period (positive/negative) which will be added/subtracted from the SettlementBasis, to arrive at the settlement date.
   Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period.
+\end{itemize}
+
+Finally, the conversion factor can be given in the market data or it can be deduced internally, which requires the following field to be filled:
+
+\begin{itemize}
+  \item DeliverableGrade: The deliverable graded restricting the deliverable underlyings. This is used for calculation of the conversion factor.
+  Allowable values are: \emph{ZT, Z3N, ZF, ZN, TN, TWE, ZB, UB} (CME) or the equivalent \emph{TU, 3Y, FV, TY, UXY, US, TWE, WN} (Bloomberg)
 \end{itemize}
 
 \begin{listing}[H]
@@ -61,16 +70,9 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
 \begin{listing}[H]
   %\hrule\medskip
   \begin{minted}[fontsize=\footnotesize]{xml}
-    <BondFutureReferenceData>
+    <BondFutureReferenceData id="TYU25">
+      <!-- should always be specified --
       <Currency>USD</Currency>
-      <FairPrice>false</FairPrice>
-      <ContractMonth>Mar</ContractMonth>
-      <DeliverableGrade>ZN</DeliverableGrade>
-      <RootDate>End</RootDate>
-      <ExpiryBasis>Settlement</ExpiryBasis>
-      <SettlementBasis>Root</SettlementBasis>
-      <ExpiryLag>-7D</ExpiryLag>
-      <SettlementLag>0D</SettlementLag>
       <DeliveryBasket>
         <SecurityId>ISIN:US91282CDJ71</SecurityId>
         <SecurityId>ISIN:US91282CEP23</SecurityId>
@@ -81,6 +83,20 @@ The latter two {\tt LastTradingDate} and {\tt LastDeliveryDate} can be derived f
         <SecurityId>ISIN:US91282CMM00</SecurityId>
         <SecurityId>ISIN:US91282CMR96</SecurityId>
       </DeliveryBasket>
+      <Settlement>Physical</Settlement>
+      <DirtyQuotation>false</DirtyQuotation>
+      <!-- LastTradingDate, LastDeliveryDate can be specified explicitly -->
+      <LastTradingDate>2025-09-19</LastTradingDate>
+      <LastDeliveryDate>2025-09-30</LastDeliveryDate>
+      <!-- only required if LastTradingDate, LastDeliveryDate is not given -->
+      <ContractMonth>Mar</ContractMonth>
+      <RootDate>End</RootDate>
+      <ExpiryBasis>Settlement</ExpiryBasis>
+      <SettlementBasis>Root</SettlementBasis>
+      <ExpiryLag>-7D</ExpiryLag>
+      <SettlementLag>0D</SettlementLag>
+      <!-- only required if conversion factor is not given as market data -->
+      <DeliverableGrade>ZN</DeliverableGrade>
     </BondFutureReferenceData>
   \end{minted}
   \caption{BondFutureReferenceData}
