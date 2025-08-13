@@ -19,6 +19,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondposition.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/equityoptionposition.hpp>
 #include <ored/portfolio/equityposition.hpp>
 #include <ored/portfolio/forwardbond.hpp>
@@ -144,7 +145,7 @@ void BondFutureTrsUnderlyingBuilder::build(
     QL_REQUIRE(qlBondFuture, "expected QuantExt::BondFUture, could not cast");
 
     underlyingIndex = qlBondFuture->index();
-    underlyingMultiplier = qlBondFuture->contractNotional();
+    underlyingMultiplier = qlBondFuture->contractNotional() * qlBondFuture->index()->conversionFactor();
 
     indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
 
@@ -158,8 +159,10 @@ void BondFutureTrsUnderlyingBuilder::build(
 
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
-    creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
+    creditQualifierMapping[securitySpecificCreditCurveName(
+        StructuredSecurityId(t->bondData().securityId()).securityId(), t->bondData().creditCurveId())] =
+        SimmCreditQualifierMapping(StructuredSecurityId(t->bondData().securityId()).securityId(),
+                                   t->bondData().creditGroup(), t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }
