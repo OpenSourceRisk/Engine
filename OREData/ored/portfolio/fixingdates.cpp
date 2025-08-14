@@ -170,7 +170,8 @@ void RequiredFixings::FixingDates::addDate(const QuantLib::Date& date,
 void RequiredFixings::FixingDates::addDates(const FixingDates& dates, const std::string& tradeId) {
     for (const auto& [d, man] : dates) {
         auto tIds = man.second;
-        tIds.insert(tradeId);
+        if (!tradeId.empty())
+            tIds.insert(tradeId);
         addDate(d, man.first, tIds);
     }
 }

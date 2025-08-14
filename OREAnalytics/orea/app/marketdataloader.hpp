@@ -36,11 +36,8 @@ typedef std::map<std::string, RequiredFixings::FixingDates> FixingMap;
 class StructuredFixingWarningMessage : public StructuredMessage {
 public:
     StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
-                                   const std::string& exceptionType, const std::string& exceptionWhat)
-        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat,
-                            std::map<std::string, std::string>({{"exceptionType", exceptionType},
-                                                                {"fixingId", fixingId},
-                                                                {"fixingDate", ore::data::to_string(fixingDate)}})) {}
+                                   const std::string& exceptionType, const std::string& exceptionWhat,
+                                   const std::set<std::string>& tradeIds = {});
 };
 
 class MarketDataLoaderImpl {

@@ -26,8 +26,28 @@
 using namespace ore::data;
 using QuantExt::OptionPriceSurface;
 
+namespace {
+std::string joinTradeIds(const std::set<std::string>& tradeIds) {
+    std::ostringstream oss;
+    for (auto it = tradeIds.begin(); it != tradeIds.end(); ++it) {
+        if (it != tradeIds.begin())
+            oss << ", ";
+        oss << *it;
+    }
+    return oss.str();
+}
+}
+
 namespace ore {
 namespace analytics {
+
+StructuredFixingWarningMessage::StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
+                               const std::string& exceptionType, const std::string& exceptionWhat,
+                               const std::set<std::string>& tradeIds)
+        : StructuredMessage(Category::Warning, Group::Fixing, exceptionWhat,
+                            std::map<std::string, std::string>({
+    {"exceptionType", exceptionType}, {"fixingId", fixingId}, { "fixingDate", ore::data::to_string(fixingDate) },
+                                                            {"tradeIds", joinTradeIds(tradeIds)}})) {}
 
 // Additional quotes for fx fixings, add fixing quotes with USD and EUR to the list of fixings
 // requested in order to triangulate missing fixings
@@ -200,21 +220,17 @@ void MarketDataLoader::populateFixings(
                 string fixingErr = "";
                 if (isFxIndex(indexName)) {
                     auto fxInd = parseFxIndex(indexName);
-                    try { 
-                        if(fxInd->fixingCalendar().isBusinessDay(d))
+                    try {
+                        if (fxInd->fixingCalendar().isBusinessDay(d))
                             fxInd->fixing(d);
                         break;
                     } catch (const std::exception& e) {
                         fixingErr = ", error: " + ore::data::to_string(e.what());
                     }
                 }
-                if (mandatory.second.size() > 0) {
-                    fixingErr += ", for tradeIds ";
-                    for (const auto t : mandatory.second) {
-                        fixingErr += t + " ";
-                    }
-				}
-                StructuredFixingWarningMessage(indexName, d, "Missing fixing", "Could not find required fixing ID" + fixingErr)
+                StructuredFixingWarningMessage(indexName, d, "Missing fixing",
+                                                               "Could not find required fixing ID" + fixingErr,
+                                                               mandatory.second)
                     .log();
             }
         }
