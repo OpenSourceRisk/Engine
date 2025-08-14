@@ -173,7 +173,7 @@ void CrifAnalyticImpl::setUpConfigurations() {
 
 void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-    QL_REQUIRE(analytic()->portfolio() || inputs_->portfolio(), "CrifAnalytic::run: No portfolio loaded.");
+    QL_REQUIRE(analytic()->portfolio(), "CrifAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("CRIF: Build Market");
     analytic()->buildMarket(loader);
@@ -182,8 +182,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     CONSOLEW("CRIF: Build Portfolio");
     analytic()->buildPortfolio();
     CONSOLE("OK");
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 

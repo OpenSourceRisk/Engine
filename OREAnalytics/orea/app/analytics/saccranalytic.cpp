@@ -53,8 +53,6 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     analytic()->buildMarket(loader);
     analytic()->buildPortfolio();
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     auto marketConfig = inputs_->marketConfig("pricing");
     // For the additional results and cashflows, we do not take them from the CRIF analytic/s since we need these
     // for validation for all trades regardless of the CalculateIMAmount flag of each netting set
