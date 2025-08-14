@@ -92,7 +92,6 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolconstantspread.cpp
 testsuite.cpp
-swaptioncreation.cpp
 analytichwswaptionengine.cpp
 transitionmatrix.cpp)
 
