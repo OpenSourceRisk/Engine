@@ -237,7 +237,6 @@ BOOST_AUTO_TEST_CASE(testDualCurve) {
 
     swaption1.setPricingEngine(engine_a);
     swaption1.NPV();
-
     std::vector<Real> fixedAmountCorrections1a = swaption1.result<std::vector<Real> >("fixedAmountCorrections");
     Real fixedAmountCorrectionSettlement1a = swaption1.result<Real>("fixedAmountCorrectionSettlement");
     swaption2.setPricingEngine(engine_a);
