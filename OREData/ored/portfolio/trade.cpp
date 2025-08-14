@@ -392,7 +392,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI =
                                 QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
                                                             cpic->observationLag(), cpic->observationInterpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICoupon baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                              << ".")
                         }
@@ -407,7 +407,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
                                                                   cpicf->baseDate() + cpicf->observationLag(),
                                                                   cpicf->observationLag(), cpicf->interpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICashFlow baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                                << ".")
                         }

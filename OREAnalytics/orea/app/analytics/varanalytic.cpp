@@ -58,8 +58,6 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     setVarReport(loader);
     QL_REQUIRE(varReport_, "No Var Report created");
     

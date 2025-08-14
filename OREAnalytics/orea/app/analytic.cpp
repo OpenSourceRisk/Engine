@@ -20,6 +20,7 @@
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
+#include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -179,7 +180,7 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
+    setUp();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
@@ -207,6 +208,19 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     return QuantLib::ext::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
                                              inputs_->refDataManager(),
                                              *inputs_->iborFallbackConfig());
+}
+
+void Analytic::setUp() {
+    if (!portfolio_) {
+        portfolio_ = QuantLib::ext::make_shared<Portfolio>();
+        if (inputs()->portfolio()) {
+            for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+                portfolio_->add(trade);
+        }
+    }
+    buildConfigurations();
+    if (inputs()->enrichIndexFixings() && portfolio_)
+        enrichIndexFixings(portfolio_);
 }
 
 void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -259,16 +273,9 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
     startTimer("buildPortfolio()");
-    QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
-        
-    // create a new empty portfolio
-    portfolio_ = QuantLib::ext::make_shared<Portfolio>(inputs()->buildFailedTrades());
-
-    tmp->reset();
-    // populate with trades
-    for (const auto& [tradeId, trade] : tmp->trades())
-        // If portfolio was already provided to the analytic, make sure to only process those given trades.
-        portfolio()->add(trade);
+    
+    portfolio_->setBuildFailedTrades(inputs()->buildFailedTrades());
+    portfolio_->reset();
     
     if (market_) {
         replaceTrades();
@@ -335,11 +342,15 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
 
 void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
 
-    if (!inputs()->enrichIndexFixings())
-        return;
-
     startTimer("enrichIndexFixings()");
     QL_REQUIRE(portfolio, "portfolio cannot be empty");
+        
+    //! if the portfolio is not built, create a portfolio analyser which builds the portfolio under a dummy market
+    if (!portfolio->isBuilt()) {
+        PortfolioAnalyser(
+            portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(), configurations().curveConfig,
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+    }
 
     auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {
         if (fallbackFixingDate > originalFixingDate) {
