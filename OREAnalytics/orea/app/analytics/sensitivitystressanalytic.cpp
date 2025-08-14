@@ -117,6 +117,7 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                 auto newAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false).second;
                 newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
                 newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+                newAnalytic->setPortfolio(analytic()->portfolio());
                 auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
                 sensitivityImpl->setOffsetScenario(scenario);
                 sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
