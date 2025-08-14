@@ -21,14 +21,18 @@
 namespace QuantExt {
 
 BondTRSCashFlow::BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                                 const Real bondNotional, const QuantLib::ext::shared_ptr<BondIndex>& bondIndex,
+                                 const Real bondNotional, const QuantLib::ext::shared_ptr<Index>& index,
                                  const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
-    : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, bondIndex, initialPrice, fxIndex)  {}
+    : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, index, initialPrice, fxIndex)  {}
 
 const Real BondTRSCashFlow::notional(Date date) const {
-    auto bondIndex = ext::dynamic_pointer_cast<BondIndex>(index_);
-    QL_REQUIRE(bondIndex, "BondTRSCashFlow::notional index must be a BondIndex");
-    return bondIndex->bond()->notional(fixingStartDate_); 
+    if (auto bondIndex = ext::dynamic_pointer_cast<BondIndex>(index_)) {
+        return bondIndex->bond()->notional(fixingStartDate_);
+    } else if (auto bondFuturesIndex = ext::dynamic_pointer_cast<BondFuturesIndex>(index_)) {
+        return bondFuturesIndex->ctd()->notional(fixingStartDate_);
+    } else {
+        QL_FAIL("BondTRSCashFlow:: notional index must be a BondIndex or BondFuturesIndex");
+    }
 }
 
 void BondTRSCashFlow::setFixingStartDate(QuantLib::Date fixingDate) { 
@@ -37,9 +41,9 @@ void BondTRSCashFlow::setFixingStartDate(QuantLib::Date fixingDate) {
 }
 
 BondTRSLeg::BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-                       const Real bondNotional, const QuantLib::ext::shared_ptr<BondIndex>& bondIndex,
+                       const Real bondNotional, const QuantLib::ext::shared_ptr<Index>& index,
                        const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
-    : valuationDates_(valuationDates), paymentDates_(paymentDates), bondNotional_(bondNotional), bondIndex_(bondIndex),
+    : valuationDates_(valuationDates), paymentDates_(paymentDates), bondNotional_(bondNotional), index_(index),
       fxIndex_(fxIndex) {}
 
 BondTRSLeg& BondTRSLeg::withInitialPrice(Real initialPrice) {
@@ -50,11 +54,11 @@ BondTRSLeg& BondTRSLeg::withInitialPrice(Real initialPrice) {
 BondTRSLeg::operator Leg() const {
     Leg leg;
     Real initialPrice;
-
-    for (Size i = 0; i < valuationDates_.size() - 1; ++i) {
+   for (Size i = 0; i < valuationDates_.size() - 1; ++i) {
         initialPrice = i == 0 ? initialPrice_ : Null<Real>();
-        leg.push_back(QuantLib::ext::make_shared<BondTRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
-                                                          bondNotional_, bondIndex_, initialPrice, fxIndex_));
+        leg.push_back(QuantLib::ext::make_shared<BondTRSCashFlow>(paymentDates_[i], valuationDates_[i],
+                                                                  valuationDates_[i + 1], bondNotional_, index_,
+                                                                  initialPrice, fxIndex_));
     }
     return leg;
 }

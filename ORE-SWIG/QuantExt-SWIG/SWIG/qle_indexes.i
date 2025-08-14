@@ -86,22 +86,20 @@ class BondIndex : public Index {
 };
 
 %shared_ptr(BondFuturesIndex)
-class BondFuturesIndex : public BondIndex {
+class BondFuturesIndex : public Index {
     public:
-        BondFuturesIndex(
-            const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
-            const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-            const ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
-            const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-            const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
-            const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
-            const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(), 
-	        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
-            const QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar,
-            const double priceQuoteBaseValue = 1.0);
+        BondFuturesIndex(const std::string& futureContract, const QuantLib::Date& futureExpiryDate = Date(),
+                         const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
+                         const QuantLib::Real conversionFactor = QuantLib::Null<QuantLib::Real>(),
+                         const bool dirty = false);
         std::string name() const;
         Rate forecastFixing(const Date& fixingDate) const;
-        const QuantLib::Date& expiryDate() const;
+        const QuantLib::Date& futureExpiryDate() const;
+
+        const std::string& futureContract() const;
+        const QuantLib::Date& futureExpiryDate() const;
+        const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd();
+        const bool dirty() const;
 };
 
 %shared_ptr(ConstantMaturityBondIndex)

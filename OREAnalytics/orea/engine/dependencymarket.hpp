@@ -74,7 +74,6 @@ public:
                                                                         const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditCurve> defaultCurve(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> recoveryRate(const std::string&, const std::string&) const override;
-    virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditVolCurve> cdsVol(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::BaseCorrelationTermStructure> baseCorrelation(const std::string&,
                                                                                      const std::string&) const override;
@@ -99,6 +98,9 @@ public:
                                                                                const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::EquityIndex2> equityCurve(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> securitySpread(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::Quote> securityPrice(const std::string&, const std::string&) const override;
+
     virtual QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string&,
                                                                                const std::string&) const override;
     QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string&, const std::string&) const override;

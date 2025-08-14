@@ -50,7 +50,8 @@ indices.
   types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
     \begin{itemize}
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
-  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. To represent a TRS on a Bond Futures position a ForwardBond underlying is used.
+  \item BondFuture: See \ref{ss:bondfuture}, the trade data is given in a BondFuture sub node.
+  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. Deprecated way of representing bond future trs, consider using BondFuture as the underlying.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub

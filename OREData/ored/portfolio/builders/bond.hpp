@@ -45,15 +45,15 @@ namespace data {
 \ingroup builders
 */
 
-class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&,
+class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
                                                              const string&, const string&> {
 protected:
     BondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
-    virtual string keyImpl(const Currency& ccy, const string& creditCurveId,
-                           const string& securityId, const string& referenceCurveId) override {
-        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
+    virtual string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+                           const string& referenceCurveId, const string& incomeCurveId) override {
+        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
     }
 };
 
@@ -68,12 +68,24 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const string& securityId,
-                                                        const string& referenceCurveId) override {
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override {
 
         string tsperiodStr = engineParameter("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
+
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
+
+        Handle<YieldTermStructure> income;
+        try {
+            income = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
+                                         configuration(MarketContext::pricing));
+        } catch (...) {
+            // fallback on ref curve
+            income = yts;
+        }
+
         Handle<DefaultProbabilityTermStructure> dpts;
         // credit curve may not always be used. If credit curve ID is empty proceed without it
         if (!creditCurveId.empty())
@@ -101,7 +113,9 @@ protected:
         bool includePastCashflows =
             parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
-        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
+            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true,
+            parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")));
     }
 };
 
@@ -117,8 +131,9 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const string& securityId,
-                                                        const string& referenceCurveId) override {
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override {
         string tsperiodStr = engineParameter("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
@@ -199,7 +214,8 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                                 const string& securityId,
-                                                                const string& referenceCurveId) override;
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,

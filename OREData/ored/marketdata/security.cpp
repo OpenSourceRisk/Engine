@@ -69,7 +69,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get conversion factor
         string conversionFactor = config->conversionFactor();
-        if (!conversionFactor.empty() && loader.has(conversionFactor,asof)) {
+        if (!conversionFactor.empty() && loader.has(conversionFactor, asof)) {
             QuantLib::ext::shared_ptr<BondFutureConversionFactor> q =
                 QuantLib::ext::dynamic_pointer_cast<BondFutureConversionFactor>(loader.get(conversionFactor, asof));
             QL_REQUIRE(q, "Failed to cast " << conversionFactor << " to BondFutureConversionFactor");

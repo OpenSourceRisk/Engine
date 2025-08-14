@@ -441,7 +441,6 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
 bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
 pair<bool, QuantLib::ext::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName) {
-
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
@@ -473,6 +472,15 @@ bool isEquityIndex(const string& indexName) {
 bool isCommodityIndex(const string& indexName) {
     try {
         parseCommodityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isBondFuturesIndex(const string& indexName) {
+    try {
+        parseBondFuturesIndex(indexName);
     } catch (...) {
         return false;
     }
@@ -662,7 +670,7 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
     }
 }
 
-QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
+QuantLib::ext::shared_ptr<Index> parseBondIndex(const string& name) {
     // Make sure the prefix is correct
     string prefix = name.substr(0, 5);
     QL_REQUIRE(prefix == "BOND-", "A bond index string must start with 'BOND-' but got " << prefix);
@@ -694,13 +702,32 @@ QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
     }
 
     // Create and return the required future index
-    QuantLib::ext::shared_ptr<BondIndex> index;
+    QuantLib::ext::shared_ptr<Index> index;
     if (expiry != Date()) {
-        index= QuantLib::ext::make_shared<BondFuturesIndex>(expiry, bondName);
+        auto tmp = QuantLib::ext::make_shared<BondFuturesIndex>(bondName, expiry);
+        tmp->setName("BOND-" + bondName + "-" + ore::data::to_string(expiry).substr(0, 7));
+        index = tmp;
     } else {
         index= QuantLib::ext::make_shared<BondIndex>(bondName);
     }
     IndexNameTranslator::instance().add(index->name(), name);
+    return index;
+}
+
+QuantLib::ext::shared_ptr<BondFuturesIndex> parseBondFuturesIndex(const string& name) {
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 12);
+    QL_REQUIRE(prefix == "BOND_FUTURE-", "A bond futures index string must start with 'BOND_FUTURE-' but got " << prefix);
+
+    // Now take the remainder of the string representing the contract name
+    string contractName = name.substr(12);
+
+    /* We can not derive the future expiry date without reference data, but for some use cases like setting
+       historical fixings, the contract name is enough */
+    auto index = QuantLib::ext::make_shared<BondFuturesIndex>(contractName);
+
+    IndexNameTranslator::instance().add(index->name(), name);
+
     return index;
 }
 
@@ -850,6 +877,12 @@ QuantLib::ext::shared_ptr<Index> parseIndex(const string& s) {
     if (!ret_idx) {
         try {
             ret_idx = parseBondIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseBondFuturesIndex(s);
         } catch (...) {
         }
     }

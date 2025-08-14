@@ -43,6 +43,7 @@
 #include <ored/portfolio/compositetrade.hpp>
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -507,6 +508,8 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondTRS>(trade));
     } else if (trade->tradeType() == "ForwardBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
+    } else if (trade->tradeType() == "BondFuture") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
