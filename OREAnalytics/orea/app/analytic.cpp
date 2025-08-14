@@ -324,8 +324,8 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
                                            const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                            const std::string& excludeRegex) {
 
-    auto securities = BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader,
-                                                          true, excludeRegex);
+    auto securities =
+        BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader, true, excludeRegex);
 
     if (!securities.empty()) {
         // always continue on error and always use lazy market building

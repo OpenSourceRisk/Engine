@@ -370,7 +370,11 @@ Handle<Quote> DependencyMarket::recoveryRate(const string& name, const string&) 
 }
 
 Handle<Quote> DependencyMarket::conversionFactor(const string& name, const string& config) const {
-    addRiskFactor(RiskFactorKey::KeyType::ConversionFactor, name);
+    addMarketObject(MarketObject::Security, name, config);
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+}
+
+Handle<Quote> DependencyMarket::securityPrice(const string& name, const string& config) const {
     addMarketObject(MarketObject::Security, name, config);
     return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 }
