@@ -1,5 +1,5 @@
 #TradeId,ScenarioLabel,Base NPV,Scenario NPV,Sensitivity
-CDS,xccy_basis_per,-64058.63,-64996.71,-938.08
+CDS,xccy_basis_per,-64058.63,-64116.91,-58.28
 CDS,cds_spread_par,-64058.63,-40203.77,23854.86
 CDS,cds_spread_zero,-64058.63,-49830.74,14227.90
 CDS,eur_ester_par,-64058.63,-63725.85,332.78
@@ -20,8 +20,8 @@ EUR6MSwap,eur6m_zero,5924803.71,7615306.91,1690503.20
 EUR6MSwap,eur6m_no_caplet,5924803.71,8055907.11,2131103.40
 EUR6MSwap,eur_ester_zero,5924803.71,5867078.77,-57724.94
 EUR6MSwap,eur_ester_par_and_FX,5924803.71,5847515.87,-77287.84
-XccySwap,xccy_basis_per,268883.09,-1002635.22,-1271518.32
-XccySwap,eur_ester_par,268883.09,1184696.63,915813.54
+XccySwap,xccy_basis_per,268883.09,373842.20,104959.10
+XccySwap,eur_ester_par,268883.09,1184696.53,915813.43
 XccySwap,xccy_basis_zero,268883.09,1954584.28,1685701.18
 XccySwap,eur_ester_zero,268883.09,29452.27,-239430.83
-XccySwap,eur_ester_par_and_FX,268883.09,230969.04,-37914.05
+XccySwap,eur_ester_par_and_FX,268883.09,230968.94,-37914.16

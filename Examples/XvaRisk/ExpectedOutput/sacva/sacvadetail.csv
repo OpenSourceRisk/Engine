@@ -1,9 +1,9 @@
 #NettingSetId,RiskType,Bucket,MarginType,RiskFactor,CvaType,Sensitivity,RiskWeight
-,InterestRate,EUR,Delta,1Y,CvaAggregate,-1112543.3467,0.0111
+,InterestRate,EUR,Delta,1Y,CvaAggregate,-1112554.0596,0.0111
 ,InterestRate,EUR,Delta,1Y,CvaHedge,0.0000,0.0111
 ,InterestRate,EUR,Delta,5Y,CvaAggregate,5236861.8145,0.0074
 ,InterestRate,EUR,Delta,5Y,CvaHedge,0.0000,0.0074
-,InterestRate,USD,Delta,1Y,CvaAggregate,-1120628.8421,0.0111
+,InterestRate,USD,Delta,1Y,CvaAggregate,-960113.9473,0.0111
 ,InterestRate,USD,Delta,1Y,CvaHedge,0.0000,0.0111
 ,InterestRate,USD,Delta,5Y,CvaAggregate,4924848.3044,0.0074
 ,InterestRate,USD,Delta,5Y,CvaHedge,0.0000,0.0074
@@ -19,11 +19,11 @@
 ,CreditCounterparty,2,Delta,CPTY_A/1Y,CvaHedge,0.0000,0.0500
 ,CreditCounterparty,2,Delta,CPTY_A/5Y,CvaAggregate,9618892.5561,0.0500
 ,CreditCounterparty,2,Delta,CPTY_A/5Y,CvaHedge,0.0000,0.0500
-CPTY_A,InterestRate,EUR,Delta,1Y,CvaAggregate,-1112543.3467,0.0111
+CPTY_A,InterestRate,EUR,Delta,1Y,CvaAggregate,-1112554.0596,0.0111
 CPTY_A,InterestRate,EUR,Delta,1Y,CvaHedge,0.0000,0.0111
 CPTY_A,InterestRate,EUR,Delta,5Y,CvaAggregate,5236861.8145,0.0074
 CPTY_A,InterestRate,EUR,Delta,5Y,CvaHedge,0.0000,0.0074
-CPTY_A,InterestRate,USD,Delta,1Y,CvaAggregate,-1120628.8421,0.0111
+CPTY_A,InterestRate,USD,Delta,1Y,CvaAggregate,-960113.9473,0.0111
 CPTY_A,InterestRate,USD,Delta,1Y,CvaHedge,0.0000,0.0111
 CPTY_A,InterestRate,USD,Delta,5Y,CvaAggregate,4924848.3044,0.0074
 CPTY_A,InterestRate,USD,Delta,5Y,CvaHedge,0.0000,0.0074
