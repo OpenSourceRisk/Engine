@@ -379,7 +379,7 @@ void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Por
             vector<Real> fixingsToAdd;
 
             for(const auto& [date, mandatory] : dates) {
-                if (mandatory && date != inputs()->asof()) {
+                if (mandatory.first && date != inputs()->asof()) {
                     auto tmp = std::pair<Date,Real>(date, Null<Real>());
 
                     if (timeSeries[date] != Null<Real>())
