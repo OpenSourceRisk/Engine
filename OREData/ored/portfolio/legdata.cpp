@@ -1608,6 +1608,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1632,6 +1633,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                   .withPaymentDayCounter(dc)
                   .withPaymentCalendar(paymentCalendar)
                   .withPaymentAdjustment(bdc)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withGearings(gearings);
 
     // try to set the rate computation period based on the schedule tenor
