@@ -82,6 +82,7 @@
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="futureDateGenerationRule" name="DateGenerationRule" minOccurs="0" maxOccurs="1"/>
       <xs:element type="overnightIndexFutureNettingType" name="OvernightIndexFutureNettingType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
