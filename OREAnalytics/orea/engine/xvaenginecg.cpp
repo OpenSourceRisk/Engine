@@ -307,7 +307,9 @@ void XvaEngineCG::buildCgPartB() {
         if (!closeOutDates_.empty()) {
 
             if (!stickyCloseOutDates_.empty()) {
+                model_->useStickyCloseOutDates(true);
                 engine->buildComputationGraph(true, &tradeExposure, &metaInfo);
+                model_->useStickyCloseOutDates(false);
                 for (auto& t : tradeExposure)
                     t.multiplier = multiplier;
             }
