@@ -9,4 +9,4 @@ services:
       context: ../
       dockerfile: Docker/Dockerfile-ORE-Dependencies
       args:
-        - debian_tag=${DEBIAN_TAG}
+        - DEBIAN_TAG=${DEBIAN_TAG}
