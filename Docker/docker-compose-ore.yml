@@ -12,3 +12,4 @@ services:
         - debian_tag=${DEBIAN_TAG}
         - cmake_build_type=${CMAKE_BUILD_TYPE}
         - num_cores=${NUM_CORES}
+        - ORE_BUILD_VERSION=${ORE_BUILD_VERSION}

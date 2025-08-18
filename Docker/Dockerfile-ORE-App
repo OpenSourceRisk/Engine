@@ -1,27 +1,21 @@
-ARG ore_version=latest
-ARG test_tag=latest
-ARG cmake_build_type=Release
+#ARG TEST_TAG=latest
+ARG CMAKE_BUILD_TYPE=Release
+ARG ORE_HELPER_TAG
+ARG ORE_VERSION
 
-FROM env_ore:${ore_version} as env_ore
-FROM env_ore_test:${test_tag}
+FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
+FROM ${DOCKER_REPO}ore-helper:${ORE_HELPER_TAG}
 
-COPY Examples /ore/Examples
-COPY Tools /ore/Tools
-COPY xsd /ore/xsd
-COPY OREData/test /ore/OREData/test
-COPY OREAnalytics/test /ore/OREAnalytics/test
-
-RUN mkdir /ore/App
+RUN mkdir -p /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
-COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 
+#COPY --from=env_ore /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=env_ore /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
+COPY --from=env_ore /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
 RUN true
-
 COPY --from=env_ore /usr/local/lib /usr/local/lib
-
-RUN cd /ore \
-  && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
+COPY --from=env_ore /usr/include/boost/ /usr/include/boost
 
 WORKDIR /ore
 ENV LD_LIBRARY_PATH=/usr/local/lib:./

@@ -1,31 +1,30 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
-ARG ore_version=latest
-FROM env_ore:${ore_version}
+ARG ORE_VERSION
+ARG ORE_HELPER_TAG
+
+FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
+FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as env_oreswig
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build OREPlus"
 
+COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=env_ore /usr/local/lib /usr/local/lib
+COPY --from=env_ore /usr/local/include /usr/local/include
+
 # Install SWIG and python3
 RUN apt-get update && apt-get upgrade -y \
-  && apt-get install -f -y swig python3-dev clang \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get install -f -y swig python3-dev
 
 WORKDIR /swig
 
 COPY ore/cmake ./cmake
 COPY ore/ORE-SWIG/CMakeLists.txt ./ORE-SWIG/CMakeLists.txt
-#COPY ore/ORE-SWIG/__init__.py ./ORE-SWIG/__init__.py
-#COPY ore/ORE-SWIG/Examples ./ORE-SWIG/Examples
-#COPY ore/Examples/ORE-Python ./ORE-SWIG/Examples
 COPY ore/ORE-SWIG/test ./ORE-SWIG/test
 COPY ore/ORE-SWIG/OREAnalytics-SWIG ./ORE-SWIG/OREAnalytics-SWIG
 COPY ore/ORE-SWIG/OREData-SWIG ./ORE-SWIG/OREData-SWIG
 COPY ore/ORE-SWIG/QuantExt-SWIG ./ORE-SWIG/QuantExt-SWIG
 COPY ore/ORE-SWIG/QuantLib-SWIG ./ORE-SWIG/QuantLib-SWIG
-
-#ENV PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/ \
-#    PYTHON_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/python3.9
 
 RUN find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';'
 WORKDIR /swig/ORE-SWIG
@@ -40,4 +39,16 @@ RUN mv /swig/ORE-SWIG/build.release/ORE.py oreswig \
 
 ENV PYTHONPATH=/oreswig
 
-WORKDIR /swig/Examples
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
+
+COPY --from=env_oreswig /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=env_oreswig /usr/local/lib /usr/local/lib
+COPY --from=env_oreswig /usr/local/include /usr/local/include
+COPY --from=env_oreswig /usr/local/bin/ /usr/local/bin
+WORKDIR /
+RUN mkdir oreswig
+COPY --from=env_oreswig /oreswig /oreswig
+
+RUN ldconfig
+	
+CMD bash
