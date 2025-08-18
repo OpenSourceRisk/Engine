@@ -1904,8 +1904,9 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 // Create a Overnight index future helper
                 Date startDate, endDate;
                 std::pair<Date, Date> startEndDate;
-                startEndDate = getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
-                                                       futureQuote->tenor(), futureConvention->dateGenerationRule());
+                startEndDate =
+                    getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(), futureQuote->tenor(),
+                                            futureConvention->dateGenerationRule(), futureConvention->calendar());
                 startDate = startEndDate.first;
                 endDate = startEndDate.second;
 
