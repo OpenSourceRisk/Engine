@@ -298,6 +298,7 @@ portfolio/referencedatafactory.cpp
 portfolio/riskparticipationagreement.cpp
 portfolio/schedule.cpp
 portfolio/scriptedtrade.cpp
+portfolio/strikeresettableoption.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
 portfolio/tarf.cpp
@@ -707,6 +708,7 @@ portfolio/riskparticipationagreement.hpp
 portfolio/schedule.hpp
 portfolio/scriptedtrade.hpp
 portfolio/simmcreditqualifiermapping.hpp
+portfolio/strikeresettableoption.hpp
 portfolio/structuredconfigurationerror.hpp
 portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp

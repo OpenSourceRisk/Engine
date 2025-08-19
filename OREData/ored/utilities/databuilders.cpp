@@ -207,6 +207,7 @@
 #include <ored/portfolio/rainbowoption.hpp>
 #include <ored/portfolio/riskparticipationagreement.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/portfolio/strikeresettableoption.hpp>
 #include <ored/portfolio/tarf.hpp>
 #include <ored/portfolio/windowbarrieroption.hpp>
 #include <ored/portfolio/worstofbasketswap.hpp>
@@ -378,6 +379,9 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityOutperformanceOption", EquityOutperformanceOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityPairwiseVarianceSwap", EqPairwiseVarSwap, false)
     ORE_REGISTER_TRADE_BUILDER("FxPairwiseVarianceSwap", FxPairwiseVarSwap, false)
+    ORE_REGISTER_TRADE_BUILDER("EquityStrikeResettableOption", EquityStrikeResettableOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxStrikeResettableOption", FxStrikeResettableOption, false)
+    ORE_REGISTER_TRADE_BUILDER("CommodityStrikeResettableOption", CommodityStrikeResettableOption, false)
 
     ORE_REGISTER_TRADE_BUILDER("BalanceGuaranteedSwap", BalanceGuaranteedSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CallableSwap", CallableSwap, false)
