@@ -93,7 +93,8 @@ void XvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
     analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
 
-    if(inputs_->correlationData().size()>0){
+    if(analytic()->configurations().crossAssetModelData!=nullptr && inputs_->correlationData().size()>0){
+        TLOG("Parse Correlation Matrix as Cross Asset Model Data Instantaneous Correlation.");
         auto correlationData = inputs_->correlationData();
         // Instantaneous Correlation si a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
         std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
