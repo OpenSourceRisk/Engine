@@ -51,6 +51,34 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
+std::string XvaAnalyticImpl::mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF) {
+    std::vector<std::string> ir = {"DiscountCurve", "IndexCurve", "OptionletVolatility"};
+    std::vector<std::string> fx = {"FXSpot", "FXVolatility"};
+    std::vector<std::string> inf = {"ZeroInflationCurve"};
+    std::vector<std::string> cr = {"SurvivalProbability"};
+    std::vector<std::string> eq = {"EquitySpot", "EquityVolatility"};
+    std::vector<std::string> com = {"CommodityCurve"};
+    std::vector<std::string> crstate = {};
+
+    std::unordered_map<std::string, std::vector<std::string>> mapping;
+    mapping["IR"] = ir;
+    mapping["FX"] = fx;
+    mapping["INF"] = inf;
+    mapping["CR"] = cr;
+    mapping["EQ"] = eq;
+    mapping["COM"] = com;
+    mapping["CrState"] = crstate;
+
+    for (const auto& pair : mapping) {
+        const auto& keyMap = pair.first;
+        const auto& vec = pair.second;
+        if (std::find(vec.begin(), vec.end(), ore::data::to_string(keyF)) != vec.end()) {
+            return keyMap;
+        }
+    }
+    return "";
+}
+
 /******************************************************************************
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
  ******************************************************************************/
@@ -61,6 +89,38 @@ void XvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
     analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
     analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+
+    if(inputs_->correlationData().size()>0){
+        auto correlationData = inputs_->correlationData();
+        // Instantaneous Correlation si a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
+        std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+        std::vector<std::string> vecAssetType = {"DiscountCurve", "FXSpot", "EquitySpot", "SurvivalProbability", "ZeroInflationCurve", "CommodityCurve"};
+        for (auto const& cor : correlationData) {
+            RiskFactorKey pair1 = cor.first.first;
+            RiskFactorKey pair2 = cor.first.second;
+            //We filter the RiskFactorKey because the instantaneous correlation only have one IR, FX, INF etc
+            if (std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair1.keytype)) !=
+                    vecAssetType.end() &&
+                std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair2.keytype)) !=
+                    vecAssetType.end()) {
+                //We want to exclude the combination type DiscountCurve/USD/0 and DiscountCurve/USD/1
+                //We select only those riskfactor to be mapped to an asset type
+                if (!((pair1.name == pair2.name) &&
+                        (ore::data::to_string(pair1.keytype) == ore::data::to_string(pair2.keytype)))) {
+                    string asset1 = mapRiskFactorToAssetType(pair1.keytype);
+                    string asset2 = mapRiskFactorToAssetType(pair2.keytype);
+                    CorrelationFactor corrFactor1{parseCamAssetType(asset1), pair1.name, pair1.index};
+                    CorrelationFactor corrFactor2{parseCamAssetType(asset2), pair2.name, pair2.index};
+                    std::pair<CorrelationFactor, CorrelationFactor> correlationKey =
+                        std::make_pair(corrFactor1, corrFactor2);
+                    mapInstantaneousCor[correlationKey] =
+                        QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
+                }
+            }
+        }
+        instantaneousCorrelation_ = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);
+        analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation_);
+    }
 }
 
 void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {

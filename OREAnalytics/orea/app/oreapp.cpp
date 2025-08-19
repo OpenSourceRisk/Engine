@@ -1713,11 +1713,11 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMporOverlappingPeriods(parseBool(tmp));
 
-        tmp = params_->get("correlation", "covarianceInputFile", false);
+        tmp = params_->get("correlation", "correlationInputFile", false);
         if (tmp != "") {
-            std::string covFile = (inputPath_ / tmp).generic_string();
-            LOG("Load Correlation Data from file " << covFile);
-            setCorrelationDataFromFile(covFile);
+            std::string corrFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Correlation Data from file " << corrFile);
+            setCorrelationDataFromFile(corrFile);
         }
     }
 
@@ -2627,6 +2627,13 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "firstMporCollateralAdjustment", false);
     if (tmp != "") {
         setfirstMporCollateralAdjustment(parseBool(tmp));
+    }
+
+    tmp = params_->get("xva", "correlationInputFile", false);
+    if (tmp != "") {
+        std::string corrFile = (inputPath_ / tmp).generic_string();
+        LOG("Loading correlation from file" << corrFile);
+        setCorrelationDataFromFile(corrFile);
     }
 
     /*************
