@@ -159,6 +159,7 @@ XMLNode* StrikeResettableOption::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(node, tradeNode);
     XMLUtils::addChild(doc, tradeNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, tradeNode, "OptionType", optionType_);
+    XMLUtils::addChild(doc, tradeNode, "Currency", currency_);
     XMLUtils::addChild(doc, tradeNode, "Strike", strike_);
     XMLUtils::addChild(doc, tradeNode, "ResetStrike", resetStrike_);
     XMLUtils::addChild(doc, tradeNode, "Quantity", quantity_);
