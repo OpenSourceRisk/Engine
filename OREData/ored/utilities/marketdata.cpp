@@ -299,7 +299,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
 // will have to split the date into month and year in caller.  are there any utilities to do this?
 // Is the FutureConvention rule available from caller?
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
-                                              FutureConvention::DateGenerationRule rule) { 
+                                              FutureConvention::DateGenerationRule rule, const Calendar& calendar) {
     // Create a Overnight index future helper
     Date startDate, endDate;
     if (rule == FutureConvention::DateGenerationRule::IMM) {
@@ -308,8 +308,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
         startDate = IMM::nextDate(refStart, false);
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-        endDate = Date(1, expiryMonth, expiryYear) + 1 * Months;
-        startDate = endDate - tenor;
+        endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
+        startDate = calendar.adjust(endDate - tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }
