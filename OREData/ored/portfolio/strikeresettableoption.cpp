@@ -80,13 +80,8 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
 
     // set script
     
-    script_[""] = ScriptedTradeScriptData(script, "Option",
-                                          {{"InitialStrike", "InitialStrike"},
-                                           {"ResetStrike", "ResetStrike"},
-                                           {"FinalStrike", "strike"},
-                                           {"payoffAmount", "payoff"},
-                                           {"TriggerPrice", "TriggerPrice"}},
-                                          {});
+    script_[""] =
+        ScriptedTradeScriptData(script, "Option", {{"FinalStrike", "strike"}, {"payoffAmount", "payoff"}}, {});
 
     // build trade
 
@@ -143,10 +138,6 @@ void StrikeResettableOption::fromXML(XMLNode* node) {
     QL_REQUIRE(observationNode, "No observation dates provided");
     observationDates_.fromXML(observationNode);
 
-    /*XMLNode* premiumNode = XMLUtils::getChildNode(tradeDataNode, "PremiumData");
-    if (premiumNode)
-        premiumData_.fromXML(premiumNode);*/
-
     premium_ = XMLUtils::getChildValue(tradeDataNode, "Premium", false);
     premiumDate_ = XMLUtils::getChildValue(tradeDataNode, "PremiumDate", false);
 
@@ -173,12 +164,8 @@ XMLNode* StrikeResettableOption::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(tradeNode, underlying_->toXML(doc));
 
     XMLNode* observationNode = observationDates_.toXML(doc);
-    XMLUtils::setNodeName(doc, observationNode, "StrikeObservationDates");
+    XMLUtils::setNodeName(doc, observationNode, "ObservationDates");
     XMLUtils::appendNode(tradeNode, observationNode);
-
-    //XMLNode* premiumNode = premiumData_.toXML(doc);
-    //XMLUtils::setNodeName(doc, premiumNode, "PremiumData");
-    //XMLUtils::appendNode(tradeNode, premiumNode);
 
     XMLUtils::addChild(doc, tradeNode, "Premium", premium_);
     XMLUtils::addChild(doc, tradeNode, "PremiumDate", premiumDate_);
