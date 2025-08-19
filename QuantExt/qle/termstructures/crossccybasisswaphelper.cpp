@@ -39,7 +39,7 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
     boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
     boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
-    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates)
+    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -53,7 +53,7 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
       isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
       flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged),
-      telescopicValueDates_(telescopicValueDates) {
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -164,32 +164,11 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
-
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        if (flatIndexGiven_) {
-            Size numCashflows = swap_->leg(0).size();
-            if (numCashflows > 2) {
-                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[numCashflows - 2]);
-                Date fixingValueDate = spreadIndex_->valueDate(lastFloating->fixingDate());
-                Date endValueDate = spreadIndex_->maturityDate(fixingValueDate);
-                latestDate_ = std::max(latestDate_, endValueDate);
-            }
-        }
-        if (spreadIndexGiven_) {
-            Size numCashflows = swap_->leg(1).size();
-            if (numCashflows > 2) {
-                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[numCashflows - 2]);
-                Date fixingValueDate = flatIndex_->valueDate(lastFloating->fixingDate());
-                Date endValueDate = flatIndex_->maturityDate(fixingValueDate);
-                latestDate_ = std::max(latestDate_, endValueDate);
-            }
-        }
-    }
+    maturityDate_ = swap_->maturityDate();
+    latestRelevantDate_ = determineLatestRelevantDate(
+        swap_->legs(), {termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure(),
+                        termStructureHandle_ != foreignCcyIndex_->forwardingTermStructure()});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {

@@ -69,7 +69,8 @@ public:
         boost::optional<Size> rateCutoff = boost::none, boost::optional<bool> isAveraged = boost::none,
         boost::optional<bool> flatIncludeSpread = boost::none, boost::optional<Period> flatLookback = boost::none,
         boost::optional<Size> flatFixingDays = boost::none, boost::optional<Size> flatRateCutoff = boost::none,
-        boost::optional<bool> flatIsAveraged = boost::none, const bool telescopicValueDates = false);
+        boost::optional<bool> flatIsAveraged = boost::none, const bool telescopicValueDates = false,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -135,6 +136,7 @@ protected:
     RelinkableHandle<YieldTermStructure> spreadDiscountRLH_;
 
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 

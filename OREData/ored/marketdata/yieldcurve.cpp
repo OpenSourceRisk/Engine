@@ -2824,8 +2824,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
-                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true/*,
-                    segment->pillarChoice()*/));
+                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true,
+                    segment->pillarChoice()));
             } else { // the quote is for a cross currency basis swap with a resetting notional
                 bool resetsOnFlatLeg = basisSwapConvention->flatIndexIsResettable();
                 // the convention here is to call the resetting leg the "domestic leg",
