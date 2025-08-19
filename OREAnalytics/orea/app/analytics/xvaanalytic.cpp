@@ -52,13 +52,16 @@ namespace ore {
 namespace analytics {
 
 std::string XvaAnalyticImpl::mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF) {
-    std::vector<std::string> ir = {"DiscountCurve", "IndexCurve", "OptionletVolatility"};
+    std::vector<std::string> ir = {"DiscountCurve", "IndexCurve", "OptionletVolatility",
+                                    "SwaptionVolatility", "YieldVolatility"};
     std::vector<std::string> fx = {"FXSpot", "FXVolatility"};
-    std::vector<std::string> inf = {"ZeroInflationCurve"};
-    std::vector<std::string> cr = {"SurvivalProbability"};
-    std::vector<std::string> eq = {"EquitySpot", "EquityVolatility"};
-    std::vector<std::string> com = {"CommodityCurve"};
-    std::vector<std::string> crstate = {};
+    std::vector<std::string> inf = {"CPIIndex", "ZeroInflationCurve","YoYInflationCurve",
+                                    "YoYInflationCapFloorVolatility", "YoYInflationCapFloorVolatility"};
+    std::vector<std::string> cr = {"SurvivalProbability", "SurvivalWeight", "RecoveryRate",
+                                   "CDSVolatility", "SecuritySpread", "CPR"};
+    std::vector<std::string> eq = {"EquitySpot", "EquityVolatility", "DividendYield"};
+    std::vector<std::string> com = {"CommodityCurve", "CommodityVolatility"};
+    std::vector<std::string> crstate = {"CreditState"};
 
     std::unordered_map<std::string, std::vector<std::string>> mapping;
     mapping["IR"] = ir;
