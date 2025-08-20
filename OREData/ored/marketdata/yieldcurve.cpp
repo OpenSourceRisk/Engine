@@ -2184,8 +2184,6 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
         onIndexGiven = true;
     }
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "Average OIS segment does not support pillar choice " << segment->pillarChoice());
     auto averageOisQuoteIDs = averageOisSegment->quotes();
     for (Size i = 0; i < averageOisQuoteIDs.size(); i += 2) {
         // we are assuming i = spread, i+1 = rate
@@ -2222,7 +2220,7 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                     averageOisConvention->fixedCalendar(), averageOisConvention->fixedConvention(),
                     averageOisConvention->fixedPaymentConvention(), onIndex, onIndexGiven,
                     averageOisConvention->onTenor(), basisQuote->quote(), averageOisConvention->rateCutoff(),
-                    discountCurve_[index], discountCurveGiven_[index], true));
+                    discountCurve_[index], discountCurveGiven_[index], true, segment->pillarChoice()));
 
                 instruments.push_back(averageOisHelper);
             }
