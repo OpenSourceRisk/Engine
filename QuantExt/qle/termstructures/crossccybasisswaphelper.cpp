@@ -15,13 +15,14 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/utilities/null_deleter.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
-
-#include <boost/make_shared.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 
@@ -165,9 +166,9 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
-    latestRelevantDate_ = determineLatestRelevantDate(
-        swap_->legs(), {termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure(),
-                        termStructureHandle_ != foreignCcyIndex_->forwardingTermStructure()});
+    latestRelevantDate_ =
+        determineLatestRelevantDate(swap_->legs(), {termStructureHandle_ == spreadIndex_->forwardingTermStructure(),
+                                                    termStructureHandle_ != flatIndex_->forwardingTermStructure()});
     latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
