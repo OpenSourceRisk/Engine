@@ -433,8 +433,7 @@ class Crif : public QuantLib::ext::enable_shared_from_this<Crif> {
 public:
     enum class CrifType { Empty, Frtb, Simm };
     Crif() = default;
-    friend class SlimCrifRecord;
-    friend class SimmCalculator;
+
     CrifType type() const { return type_; }
 
     void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
