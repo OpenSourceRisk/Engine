@@ -28,7 +28,7 @@
 namespace QuantExt {
 
 QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& legs,
-                                           const std::vector<bool>& includeIndexEstimationEndDate);
+                                           const std::vector<bool>& includeIndexEstimationEndDate = {});
 
 QuantLib::Date determinePillarDate(const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& maturityDate,
                                    const QuantLib::Date& latestRelevantDate);
