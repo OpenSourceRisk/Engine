@@ -110,7 +110,7 @@ public:
     void setTradeId(const std::string& value);
     void setTradeType(const std::string& value);
     void setNettingSetDetails(const ore::data::NettingSetDetails& value);
-    void setQualifier(const std::string& value) const;
+    void setQualifier(const std::string& value);
     void setBucket(const std::string& value);
     void setLabel1(const std::string& value);
     void setLabel2(const std::string& value);
@@ -325,7 +325,7 @@ private:
     int tradeId_;
     int tradeType_;
     int nettingSetDetails_;
-    mutable int qualifier_;
+    int qualifier_;
     int bucket_;
     int label1_;
     int label2_;
@@ -433,7 +433,8 @@ class Crif : public QuantLib::ext::enable_shared_from_this<Crif> {
 public:
     enum class CrifType { Empty, Frtb, Simm };
     Crif() = default;
-
+    friend class SlimCrifRecord;
+    friend class SimmCalculator;
     CrifType type() const { return type_; }
 
     void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
@@ -445,14 +446,16 @@ public:
 
     void clear();
 
+    void insert(const SlimCrifRecord& record) { records_.insert(record); }
+
     void updateIndex(CrifRecord& record);
 
     SlimCrifRecordContainer::nth_index<0>::type::iterator begin() { return records_.begin(); }
     SlimCrifRecordContainer::nth_index<0>::type::iterator end() { return records_.end(); }
     SlimCrifRecordContainer::nth_index<0>::type::iterator find(const SlimCrifRecord& r) { return records_.find(r); }
 
-    SlimCrifRecordContainer::nth_index<0>::type::const_iterator begin() const { return records_.cbegin(); }
-    SlimCrifRecordContainer::nth_index<0>::type::const_iterator end() const { return records_.cend(); }
+    SlimCrifRecordContainer::nth_index<0>::type::const_iterator cbegin() const { return records_.cbegin(); }
+    SlimCrifRecordContainer::nth_index<0>::type::const_iterator cend() const { return records_.cend(); }
     SlimCrifRecordContainer::nth_index<0>::type::const_iterator find(const SlimCrifRecord& r) const { return records_.find(r); }
 
     //! Find first element

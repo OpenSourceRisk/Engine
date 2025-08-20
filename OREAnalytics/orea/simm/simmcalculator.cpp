@@ -116,10 +116,11 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
             nbQualiferBucket[riskType.first][qualifBucket.first] = qualifBucket.second.size();
         }
     }
-
+    auto copyCrif = QuantLib::ext::make_shared<ore::analytics::Crif>();
     for (SlimCrifRecordContainer::iterator it = crif->begin(); it != crif->end(); it++) {
         // Remove empty
         if (it->riskType() == RiskType::Empty) {
+            copyCrif->insert(*it);
             continue;
         }
         // Remove Schedule-only CRIF records
@@ -130,6 +131,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
                                                          "Skipping over Schedule CRIF record")
                     .log();
             }
+            copyCrif->insert(*it);
             continue;
         }
 
@@ -165,7 +167,11 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
             simmbucketmapper->addMapping(riskType, qualifierToUse, it->getBucket());
             ore::data::StructuredTradeWarningMessage(it->getTradeId(), "simmcalculator", "Qualifier Name Changed for risk type "+ore::data::to_string(riskType)+ " From "+ it->getQualifier() + " To " + qualifierToUse, 
                                                     "A qualifier for a same risk type has different buckets within the CRIF.");
-            it->setQualifier(qualifierToUse);
+            SlimCrifRecord recordCopy = *it;
+            recordCopy.setQualifier(qualifierToUse);
+            copyCrif->insert(recordCopy);
+        }else{
+            copyCrif->insert(*it);
         }
     }
 
@@ -176,7 +182,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
         LOG("SimmCalculator: Splitting up original CRIF records into their respective collect/post regulations");
     }
 
-    splitCrifByRegulationsAndPortfolios(enforceIMRegulations, crif);
+    splitCrifByRegulationsAndPortfolios(enforceIMRegulations, copyCrif);
 
     cleanDuplicateRegulations();
 
