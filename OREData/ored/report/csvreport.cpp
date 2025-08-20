@@ -58,7 +58,7 @@ public:
                 fprintf(fp_, "%.*e", rounding_.precision(), d);
             } else {
                 Real r = rounding_(d);
-                fprintf(fp_, "%.*e", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
+                fprintf(fp_, "%.*f", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
             }
         }
     }
