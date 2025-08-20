@@ -445,14 +445,16 @@ public:
 
     void clear();
 
+    void insert(const SlimCrifRecord& record) { records_.insert(record); }
+
     void updateIndex(CrifRecord& record);
 
     SlimCrifRecordContainer::nth_index<0>::type::iterator begin() { return records_.begin(); }
     SlimCrifRecordContainer::nth_index<0>::type::iterator end() { return records_.end(); }
     SlimCrifRecordContainer::nth_index<0>::type::iterator find(const SlimCrifRecord& r) { return records_.find(r); }
 
-    SlimCrifRecordContainer::nth_index<0>::type::const_iterator begin() const { return records_.cbegin(); }
-    SlimCrifRecordContainer::nth_index<0>::type::const_iterator end() const { return records_.cend(); }
+    SlimCrifRecordContainer::nth_index<0>::type::const_iterator cbegin() const { return records_.cbegin(); }
+    SlimCrifRecordContainer::nth_index<0>::type::const_iterator cend() const { return records_.cend(); }
     SlimCrifRecordContainer::nth_index<0>::type::const_iterator find(const SlimCrifRecord& r) const { return records_.find(r); }
 
     //! Find first element
