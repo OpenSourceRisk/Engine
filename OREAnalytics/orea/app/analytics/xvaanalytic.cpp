@@ -645,7 +645,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
-            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
+            inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
             "xva analytic");
@@ -659,6 +660,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             engine.setDynamicIMOutputCube(nettingSetCube_);
         }
         engine.run();
+
+        if (engine.dynamicImRegressionReport())
+            analytic()->addReport(LABEL, "xvacg-regression", engine.dynamicImRegressionReport());
 
     } else {
 
@@ -914,7 +918,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
-            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
+            inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
             "xva analytic");
@@ -924,6 +929,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         analytic()->addReport(LABEL, "xvacg-exposure", engine.exposureReport());
         if (inputs_->xvaCgSensiScenarioData())
             analytic()->addReport(LABEL, "xvacg-cva-sensi-scenario", engine.sensiReport());
+        if(engine.dynamicImRegressionReport())
+            analytic()->addReport(LABEL, "xvacg-regression", engine.dynamicImRegressionReport());
         return;
     }
 
@@ -1202,7 +1209,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 postProcess_->exportDimCube(*dimCubeReport);
                 analytic()->addReport(LABEL, "dim_cube", dimCubeReport);
 
-	// Generate DIM regression reports
+                // Generate DIM regression reports
                 vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
                 for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                     auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
