@@ -925,12 +925,6 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
 
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size k = 0; k < im[i + 1].size(); ++k) {
-                // // convention in the output cube is im deflated by numeraire
-                // dynamicIMOutputCube_->set(im[i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 0);
-                // dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second,
-                // i, k, 1); dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k],
-                // nidx->second, i, k, 2); dynamicIMOutputCube_->set(dynamicCurvatureIM_[ns][i + 1][k] /
-                // values_[asdNumeraire_[i]][k], nidx->second, i, k, 3);
                 dynamicIMOutputCube_->set(im[i + 1][k], nidx->second, i, k, 0);
                 dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k], nidx->second, i, k, 1);
                 dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k], nidx->second, i, k, 2);
