@@ -38,8 +38,10 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec, char quoteChar = '\0', char sep =',', const string& nullString = "#N/A")
-        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), quoteChar_(quoteChar), sep_(sep), null_(nullString) {}
+    ReportTypePrinter(FILE* fp, int prec, bool scientific, char quoteChar = '\0', char sep = ',',
+                      const string& nullString = "#N/A")
+        : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), scientific_(scientific), quoteChar_(quoteChar),
+          sep_(sep), null_(nullString) {}
 
     void operator()(const Size i) const {
         if (i == QuantLib::Null<Size>()) {
@@ -52,8 +54,12 @@ public:
         if (d == QuantLib::Null<Real>() || !std::isfinite(d)) {
             fprintNull();
         } else {
-            Real r = rounding_(d);
-            fprintf(fp_, "%.*f", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
+            if(scientific_) {
+                fprintf(fp_, "%.*e", rounding_.precision(), d);
+            } else {
+                Real r = rounding_(d);
+                fprintf(fp_, "%.*e", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
+            }
         }
     }
     void operator()(const string& s) const { fprintString(s); }
@@ -102,6 +108,7 @@ private:
 
     FILE* fp_;
     QuantLib::Rounding rounding_;
+    bool scientific_;
     char quoteChar_;
     char sep_;
     string null_;
@@ -149,11 +156,11 @@ void CSVFileReport::flush() {
     fflush(fp_);
 }
 
-Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
+Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision, bool scientific) {
     checkIsOpen("addColumn(" + name + ")");
     columnTypes_.push_back(rt);
     headers_.push_back(name);
-    printers_.push_back(ReportTypePrinter(fp_, precision, quoteChar_, sep_, nullString_));
+    printers_.push_back(ReportTypePrinter(fp_, precision, scientific, quoteChar_, sep_, nullString_));
     if (i_ == 0 && commentCharacter_)
         fprintf(fp_, "#");
     if (i_ > 0)
