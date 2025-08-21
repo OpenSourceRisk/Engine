@@ -2383,15 +2383,13 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
 
             // Create a tenor basis swap helper if we do.
             Period basisSwapTenor = basisSwapQuote->maturity();
-            QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper(
-                new BasisTwoSwapHelper(
-                    basisSwapQuote->quote(), basisSwapTenor, basisSwapConvention->calendar(),
-                    basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
-                    basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
-                    basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
-                    basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
-                    shortIndexGiven, discountCurve_[index], discountCurveGiven_[index]),
-                segment->pillarChoice());
+            QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper(new BasisTwoSwapHelper(
+                basisSwapQuote->quote(), basisSwapTenor, basisSwapConvention->calendar(),
+                basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
+                basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
+                basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
+                basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
+                shortIndexGiven, discountCurve_[index], discountCurveGiven_[index], segment->pillarChoice()));
 
             instruments.push_back(basisSwapHelper);
         }
