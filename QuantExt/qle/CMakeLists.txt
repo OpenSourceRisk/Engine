@@ -432,6 +432,7 @@ utilities/commodity.cpp
 utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
+utilities/ratehelpers.cpp
 utilities/time.cpp)
 
 # hpp files, this list is maintained manually
@@ -1049,6 +1050,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp

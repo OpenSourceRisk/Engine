@@ -43,7 +43,8 @@ public:
                          const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec = true,
                          const bool includeSpread = false, const Period& payFrequency = Period(),
                          const Period& recFrequency = Period(), const bool telescopicValueDates = false,
-                         const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
+                         const QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
+                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::Choice::LastRelevantDate);
 
     //! \name RateHelper interface
     //@{
@@ -74,6 +75,8 @@ protected:
     Period recFrequency_;
     bool telescopicValueDates_;
     QuantExt::SubPeriodsCoupon1::Type type_;
+    QuantLib::Pillar::Choice pillarChoice_;
+
     bool automaticDiscountRelinkableHandle_;
 
     QuantLib::ext::shared_ptr<TenorBasisSwap> swap_;
