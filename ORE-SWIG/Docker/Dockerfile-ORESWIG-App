@@ -1,7 +1,7 @@
 ARG ORE_VERSION
-ARG ORE_HELPER_TAG
+ARG ORE_HELPER_VERSION
 FROM ${DOCKER_REPO}env_oreswig:${ORE_VERSION} as env_oreswig
-FROM ${DOCKER_REPO}ore-helper:${ORE_HELPER_TAG}
+FROM ${DOCKER_REPO}ore-helper:${ORE_HELPER_VERSION}
 
 RUN pip3 install --break-system-packages jupyter xmldiff numpy scipy ipywidgets && \
     rm -rf ~/.cache/pip

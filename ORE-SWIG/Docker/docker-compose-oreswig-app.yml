@@ -8,4 +8,5 @@ services:
       dockerfile: ore/ORE-SWIG/Docker/Dockerfile-ORESWIG-App
       args:
         - ORE_VERSION=${ORE_TAG}
+        - ORE_HELPER_VERSION=${ORE_HELPER_VERSION}
         - DEBIAN_TAG=${DEBIAN_TAG}

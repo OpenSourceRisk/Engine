@@ -1,6 +1,6 @@
 # syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG ORE_VERSION
-ARG ORE_HELPER_TAG
+ARG ORE_BUILD_VERSION
 
 FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as env_oreswig
@@ -39,6 +39,7 @@ RUN mv /swig/ORE-SWIG/build.release/ORE.py oreswig \
 
 ENV PYTHONPATH=/oreswig
 
+ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 COPY --from=env_oreswig /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
