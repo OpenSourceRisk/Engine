@@ -147,8 +147,6 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     maturityDate_ = swap_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!foreignIndexGiven_, !domesticIndexGiven_});
     latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
-
-    std::cout << "mat " << maturityDate_ << " lr " << latestRelevantDate_ << " pill " << pillarDate_ << std::endl;
 }
 
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
