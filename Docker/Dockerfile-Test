@@ -1,27 +1,23 @@
-ARG debian_tag
-FROM debian:${debian_tag}
-
-USER root
+ARG DEBIAN_TAG
+ARG DOCKER_REPO
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive \
-  apt-get install -y --no-install-recommends \  
-  apt-transport-https ca-certificates curl gnupg git zip less vim dos2unix python3 python3-pip libxml2-utils xsltproc \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \  
+  ca-certificates dos2unix python3 python3-pip python3.13-venv libxml2-utils xsltproc \
   -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+  && update-ca-certificates \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN sh -c 'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg' \
-  && sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null' \
-  && apt-get update \
-  && apt-get install -f -y docker-ce-cli \ 
-  -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
- 
-RUN pip3 install --break-system-packages \
-    matplotlib pandas pytest pytest-xdist pytest-timeout datacompy lxml python-dotenv requests jsondiff xmlschema clang-format xmldiff openpyxl && \
-    rm -rf ~/.cache/pip
 
-CMD bash
-  
+# Create and activate virtual environment
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# Install Python packages inside the virtual environment
+RUN pip3 install  --break-system-packages \
+    matplotlib pandas pytest pytest-xdist pytest-timeout datacompy jsondiff lxml xmldiff \
+    && rm -rf ~/.cache/pip
+
+CMD bash 

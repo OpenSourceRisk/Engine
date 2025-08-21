@@ -10,3 +10,4 @@ services:
       dockerfile: Docker/Dockerfile-ORE-App
       args:
         - ORE_VERSION=${ORE_TAG}
+        - ORE_HELPER_VERSION=${ORE_HELPER_VERSION}
