@@ -28,11 +28,6 @@ namespace QuantExt {
 
 QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& legs,
                                            const std::vector<bool>& includeIndexEstimationEndDate) {
-
-    QL_REQUIRE(includeIndexEstimationEndDate.empty() || includeIndexEstimationEndDate.size() == legs.size(),
-               "determineLatestRelevantDate(): legs size (" << legs.size()
-                                                            << ") must match includeIndexEstimationEndDate size ("
-                                                            << includeIndexEstimationEndDate.size() << ").");
     QuantLib::Size legNo = 0;
     QuantLib::Date result = QuantLib::Date::minDate();
     for (auto const& l : legs) {
@@ -41,7 +36,7 @@ QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& leg
                 result = std::max(result, d->accrualEndDate());
             }
             result = std::max(result, c->date());
-            if (includeIndexEstimationEndDate.empty() || includeIndexEstimationEndDate[legNo]) {
+            if (includeIndexEstimationEndDate.size() <= legNo || includeIndexEstimationEndDate[legNo]) {
                 if (auto d = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(c)) {
                     result = std::max(result, d->fixingEndDate());
                 }
