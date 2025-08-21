@@ -2127,14 +2127,12 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
             Period swapTenor = swapQuote->term();
             QuantLib::ext::shared_ptr<RateHelper> swapHelper;
             if (swapConvention->hasSubPeriod()) {
-                QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-                           "Subperiod Swap segment does not support pillar choice " << segment->pillarChoice());
                 swapHelper = QuantLib::ext::make_shared<SubPeriodsSwapHelper>(
                     swapQuote->quote(), swapTenor, Period(swapConvention->fixedFrequency()),
                     swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(),
                     swapConvention->fixedConvention(), Period(swapConvention->floatFrequency()),
                     swapConvention->index(), swapConvention->index()->dayCounter(), discountCurve_[index],
-                    swapConvention->subPeriodsCouponType());
+                    swapConvention->subPeriodsCouponType(), swapSegment->pillarChoice());
             } else {
                 swapHelper = QuantLib::ext::make_shared<SwapRateHelper>(
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
@@ -2286,8 +2284,6 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
         payIndexGiven = true;
     }
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "Tenor basis swap segment does not support pillar choice " << segment->pillarChoice());
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -2309,7 +2305,7 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                 receiveIndexGiven, discountCurveGiven_[index], basisSwapConvention->spreadOnRec(),
                 basisSwapConvention->includeSpread(), basisSwapConvention->payFrequency(),
                 basisSwapConvention->receiveFrequency(), telescopicValueDates,
-                basisSwapConvention->subPeriodsCouponType()));
+                basisSwapConvention->subPeriodsCouponType(), segment->pillarChoice()));
 
             instruments.push_back(basisSwapHelper);
         }
@@ -2374,8 +2370,6 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
         longIndexGiven = true;
     }
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "Tenor basis two swap segment does not support pillar choice " << segment->pillarChoice());
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -2389,13 +2383,15 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
 
             // Create a tenor basis swap helper if we do.
             Period basisSwapTenor = basisSwapQuote->maturity();
-            QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper(new BasisTwoSwapHelper(
-                basisSwapQuote->quote(), basisSwapTenor, basisSwapConvention->calendar(),
-                basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
-                basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
-                basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
-                basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
-                shortIndexGiven, discountCurve_[index], discountCurveGiven_[index]));
+            QuantLib::ext::shared_ptr<RateHelper> basisSwapHelper(
+                new BasisTwoSwapHelper(
+                    basisSwapQuote->quote(), basisSwapTenor, basisSwapConvention->calendar(),
+                    basisSwapConvention->longFixedFrequency(), basisSwapConvention->longFixedConvention(),
+                    basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
+                    basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
+                    basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
+                    shortIndexGiven, discountCurve_[index], discountCurveGiven_[index]),
+                segment->pillarChoice());
 
             instruments.push_back(basisSwapHelper);
         }
@@ -2438,9 +2434,6 @@ void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::
     }
     tmpIndex = tmpIndex->clone(indexCurve);
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "BMA swap segment does not support pillar choice " << segment->pillarChoice());
-
     auto bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i], asofDate_);
@@ -2458,7 +2451,7 @@ void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::
                 bmaBasisSwapConvention->indexSettlementDays(), bmaBasisSwapConvention->indexPaymentPeriod(),
                 bmaBasisSwapConvention->indexConvention(), tmpIndex, bmaBasisSwapConvention->indexPaymentCalendar(),
                 bmaBasisSwapConvention->indexPaymentConvention(), bmaBasisSwapConvention->indexPaymentLag(),
-                bmaBasisSwapConvention->overnightLockoutDays(), discountCurve_[index]));
+                bmaBasisSwapConvention->overnightLockoutDays(), discountCurve_[index], segment->pillarChoice()));
         }
     }
 }
@@ -2942,8 +2935,6 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
     }
 
     // Create the helpers
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "XCcy fix-float basis segment does not support pillar choice " << segment->pillarChoice());
     auto quoteIds = swapSegment->quotes();
     for (Size i = 0; i < quoteIds.size(); i++) {
 
@@ -2963,8 +2954,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(),
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
-                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(),
-                    swapConvention->eom());
+                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
+                    segment->pillarChoice());
             } else {
                 bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
                 helper = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
@@ -2972,7 +2963,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    resetsOnFloatLeg);
+                    resetsOnFloatLeg, segment->pillarChoice());
             }
             instruments.push_back(helper);
         }

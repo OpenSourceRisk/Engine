@@ -78,21 +78,11 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
             domesticCcyIndex_ = domesticCcyIndex_->clone(termStructureHandle_);
             domesticCcyIndex_->unregisterWith(termStructureHandle_);
         }
-        // if we have both index and discounting curve on foreign leg,
-        // check foreignCcyFxFwdRateCurve and link it to foreign discount curve if empty
-        // (we are bootstrapping on domestic leg in this instance, so foreign leg needs to be fully determined
-        if (foreignCcyFxFwdRateCurve_.empty())
-            foreignCcyFxFwdRateCurve_ = foreignCcyDiscountCurve_;
     } else if (domesticIndexGiven_ && domesticDiscountCurveGiven_) {
         if (!foreignIndexGiven_) {
             foreignCcyIndex_ = foreignCcyIndex_->clone(termStructureHandle_);
             foreignCcyIndex_->unregisterWith(termStructureHandle_);
         }
-        // if we have both index and discounting curve on domestic leg,
-        // check domesticCcyFxFwdRateCurve and link it to domestic discount curve if empty
-        // (we are bootstrapping on foreign leg in this instance, so domestic leg needs to be fully determined
-        if (domesticCcyFxFwdRateCurve_.empty())
-            domesticCcyFxFwdRateCurve_ = domesticCcyDiscountCurve_;
     } else {
         QL_FAIL("Need one leg of the cross currency basis swap to "
                 "have all of its curves.");
@@ -155,10 +145,10 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
-    latestRelevantDate_ = determineLatestRelevantDate(
-        swap_->legs(), {termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure(),
-                        termStructureHandle_ != foreignCcyIndex_->forwardingTermStructure()});
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!foreignIndexGiven_, !domesticIndexGiven_});
     latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+
+    std::cout << "mat " << maturityDate_ << " lr " << latestRelevantDate_ << " pill " << pillarDate_ << std::endl;
 }
 
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

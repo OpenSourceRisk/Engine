@@ -166,10 +166,9 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
-    latestRelevantDate_ =
-        determineLatestRelevantDate(swap_->legs(), {termStructureHandle_ == spreadIndex_->forwardingTermStructure(),
-                                                    termStructureHandle_ != flatIndex_->forwardingTermStructure()});
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!spreadIndexGiven_, !flatIndexGiven_});
     latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    std::cout << "mat " << maturityDate_ << " lr " << latestRelevantDate_ << " pill " << pillarDate_ << std::endl;
 }
 
 void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
