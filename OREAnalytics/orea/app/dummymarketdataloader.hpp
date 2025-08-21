@@ -45,7 +45,7 @@ public:
         std::vector<std::pair<std::pair<std::string, std::string>, bool>> fxgs;
         for (const auto& [name, fixingDates] : fixings()) {
             for (const auto& [date, mandatory] : fixingDates)
-                fxgs.push_back(std::make_pair(std::make_pair(ore::data::to_string(date), name), mandatory));
+                fxgs.push_back(std::make_pair(std::make_pair(ore::data::to_string(date), name), mandatory.first));
         }
         return fxgs;
     }

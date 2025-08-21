@@ -376,6 +376,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     Real barrierLevel = Null<Real>();
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
+    int strictBarrier = 0;
     if (barrierData_.initialized()) {
         QL_REQUIRE(!barrierData_.overrideTriggered(),
                    "CommodityAveragePriceOption::build(): OverrideTriggered not supported by this instrument type.");
@@ -387,13 +388,16 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
             QL_REQUIRE(barrierStyle == Exercise::European || barrierStyle == Exercise::American,
                        "Commodity APO: Expected 'European' or 'American' as barrier style");
         }
+        if (barrierData_.strictComparison()) {
+            strictBarrier = boost::lexical_cast<int>(barrierData_.strictComparison().value());
+        }
     }
 
     // Create the APO instrument
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
     auto apo = QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOption>(
         apoFlow, exercise, apoFlow->periodQuantity(), strike_, parseOptionType(optionData_.callPut()),
-        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex);
+        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex, strictBarrier);
 
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);

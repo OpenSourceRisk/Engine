@@ -271,6 +271,9 @@ public:
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
     void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
+    void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) {
+        xvaCgRegressionReportTimeStepsDynamicIM_ = s;
+    }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
@@ -720,6 +723,9 @@ public:
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
     double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
+    const std::vector<Size>& xvaCgRegressionReportTimeStepsDynamicIM() const {
+        return xvaCgRegressionReportTimeStepsDynamicIM_;
+    }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
@@ -1147,6 +1153,7 @@ protected:
     Size xvaCgRegressionOrder_ = 4;
     double xvaCgRegressionVarianceCutoff_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
+    std::vector<Size> xvaCgRegressionReportTimeStepsDynamicIM_;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;

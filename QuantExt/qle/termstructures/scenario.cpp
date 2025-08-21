@@ -101,8 +101,6 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "Correlation";
     case RiskFactorKey::KeyType::CPR:
         return out << "CPR";
-    case RiskFactorKey::KeyType::ConversionFactor:
-        return out << "ConversionFactor";
     default:
         return out << "?";
     }
@@ -234,8 +232,6 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::Correlation;
     else if (str == "CPR")
         return RiskFactorKey::KeyType::CPR;
-    else if (str == "ConversionFactor")
-        return RiskFactorKey::KeyType::ConversionFactor;
 
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }

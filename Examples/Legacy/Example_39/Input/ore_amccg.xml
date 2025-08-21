@@ -58,9 +58,12 @@
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
       <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
       <!-- enable dynamic IM -->
+
       <Parameter name="xvaCgDynamicIM">true</Parameter>
       <!-- calculate dynamic IM on each nth time step -->
       <Parameter name="xvaCgDynamicIMStepSize">10</Parameter>
+      <!-- write an optional regression details report on these time steps -->
+      <!-- <Parameter name="xvaCgRegressionReportTimeStepsDynamicIM">10,11</Parameter> -->
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->

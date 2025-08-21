@@ -32,20 +32,26 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                       const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& recoveryRate,
-                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows,
-                                                       const bool includePastCashflows)
+DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
+    const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+    const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread, Period timestepPeriod,
+    boost::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
+    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival, const bool spreadOnIncome)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
-      includePastCashflows_(includePastCashflows) {
-    discountCurve_ =
-        securitySpread_.empty()
-            ? discountCurve
-            : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+      includePastCashflows_(includePastCashflows), incomeCurve_(incomeCurve),
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
+    discountCurve_ = securitySpread_.empty()
+                         ? discountCurve
+                         : Handle<YieldTermStructure>(
+                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
+    incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
+                       ? incomeCurve_
+                       : Handle<YieldTermStructure>(
+                             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, securitySpread));
     registerWith(discountCurve_);
+    registerWith(incomeCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
     registerWith(securitySpread_);
@@ -53,14 +59,23 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
+                                                       boost::optional<bool> includeSettlementDateFlows,
+                                                       const Handle<YieldTermStructure>& incomeCurve,
+                                                       const bool conditionalOnSurvival, const bool spreadOnIncome)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
-    discountCurve_ =
-        securitySpread_.empty()
-            ? discountCurve
-            : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+      includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
+    discountCurve_ = securitySpread_.empty()
+                         ? discountCurve
+                         : Handle<YieldTermStructure>(
+                               QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    incomeCurve_ = incomeCurve.empty() ? discountCurve_ : incomeCurve;
+    incomeCurve_ = securitySpread_.empty() || !spreadOnIncome_
+                       ? incomeCurve_
+                       : Handle<YieldTermStructure>(
+                             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, securitySpread));
     registerWith(discountCurve_);
+    registerWith(incomeCurve_);
     registerWith(securitySpread_);
 }
 
@@ -71,7 +86,7 @@ void DiscountingRiskyBondEngine::calculate() const {
     // the npv as of today, excluding cashflows before the settlement date
 
     DiscountingRiskyBondEngine::BondNPVCalculationResults npvResults = calculateNpv(
-        results_.valuationDate, arguments_.settlementDate, arguments_.cashflows, includeSettlementDateFlows_);
+        results_.valuationDate, arguments_.settlementDate, includeSettlementDateFlows_, conditionalOnSurvival_, true);
 
     // the results value is set to the npv as of today including the cashflows before settlement
 
@@ -95,10 +110,20 @@ void DiscountingRiskyBondEngine::calculate() const {
     }
 }
 
+std::pair<Real, Real> DiscountingRiskyBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate,
+                                                               const QuantLib::Date& settlementDate,
+                                                               const bool conditionalOnSurvival,
+                                                               std::vector<CashFlowResults>* const cfResults) const {
+    auto res = calculateNpv(forwardNpvDate, settlementDate, includeSettlementDateFlows_, conditionalOnSurvival,
+                            cfResults != nullptr);
+    if (cfResults != nullptr)
+        *cfResults = res.cashflowResults;
+    return std::make_pair(res.npv + res.cashflowsBeforeSettlementValue, res.npv * res.compoundFactorSettlement);
+}
+
 DiscountingRiskyBondEngine::BondNPVCalculationResults
-DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
+DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate,
                                          boost::optional<bool> includeSettlementDateFlows,
-                                         const Handle<YieldTermStructure>& incomeCurve,
                                          const bool conditionalOnSurvival, const bool additionalResults) const {
 
     bool includeRefDateFlows =
@@ -107,23 +132,24 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Real npvValue = 0.0;
     DiscountingRiskyBondEngine::BondNPVCalculationResults calculationResults;
     calculationResults.cashflowsBeforeSettlementValue = 0.0;
+    calculationResults.accruedAmountSettlement = 0.0;
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
     // captured within security spread)
     QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
-        defaultCurve_.empty() ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
-                              : defaultCurve_.currentLink();
+        defaultCurve_.empty()
+            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
+            : defaultCurve_.currentLink();
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     // compounding factors for npv date
-    Real dfNpv = incomeCurve.empty() ? discountCurve_->discount(npvDate) : incomeCurve->discount(npvDate);
+    Real dfNpv = incomeCurve_->discount(npvDate);
     Real spNpv = conditionalOnSurvival ? creditCurvePtr->survivalProbability(npvDate) : 1.0;
 
     // compound factors for settlement date
-    Real dfSettl =
-        incomeCurve.empty() ? discountCurve_->discount(settlementDate) : incomeCurve->discount(settlementDate);
+    Real dfSettl = incomeCurve_->discount(settlementDate);
     Real spSettl = creditCurvePtr->survivalProbability(settlementDate);
     if (!conditionalOnSurvival)
         spSettl /= creditCurvePtr->survivalProbability(npvDate);
@@ -131,13 +157,17 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     // effective compound factor to get settlement npv from npv date npv
     calculationResults.compoundFactorSettlement = (dfNpv * spNpv) / (dfSettl * spSettl);
 
+    // accrued amount as of settlement date
+    calculationResults.accruedAmountSettlement =
+        CashFlows::accruedAmount(arguments_.cashflows, includeRefDateFlows, settlementDate);
+
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
-    for (Size i = 0; i < cashflows.size(); i++) {
-        QuantLib::ext::shared_ptr<CashFlow> cf = cashflows[i];
-        if (cf->hasOccurred(npvDate, includeRefDateFlows) && !includePastCashflows_)
-            continue;
-        else if(cf->hasOccurred(npvDate, includeRefDateFlows)){
+    for (Size i = 0; i < arguments_.cashflows.size(); i++) {
+        QuantLib::ext::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
+        if (cf->hasOccurred(npvDate, includeRefDateFlows)) {
+            if (!includePastCashflows_ || !additionalResults)
+                continue;
             CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
             calculationResults.cashflowResults.push_back(cfRes);
             continue;
@@ -196,7 +226,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         return calculationResults;
     }
 
-    if (cashflows.size() > 1 && numCoupons == 0) {
+    if (arguments_.cashflows.size() > 1 && numCoupons == 0) {
         QL_FAIL("DiscountingRiskyBondEngine does not support bonds with multiple cashflows but no coupons");
     }
 
@@ -204,8 +234,9 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
        maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
        to bonds with 1 cashflow, identified as a final redemption payment.
     */
-    if (cashflows.size() == 1) {
-        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(cashflows[0]);
+    if (arguments_.cashflows.size() == 1) {
+        QuantLib::ext::shared_ptr<Redemption> redemption =
+            QuantLib::ext::dynamic_pointer_cast<Redemption>(arguments_.cashflows[0]);
         if (redemption) {
             Date startDate = npvDate;
             while (startDate < redemption->date()) {

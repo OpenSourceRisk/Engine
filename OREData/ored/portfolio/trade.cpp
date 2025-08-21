@@ -392,7 +392,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI =
                                 QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
                                                             cpic->observationLag(), cpic->observationInterpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICoupon baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                              << ".")
                         }
@@ -407,7 +407,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
                                                                   cpicf->baseDate() + cpicf->observationLag(),
                                                                   cpicf->observationLag(), cpicf->interpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICashFlow baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                                << ".")
                         }
@@ -558,9 +558,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
     // add cashflows from trade legs, if no cashflows were added so far or if a leg is marked as mandatory for cashflows
 
     bool haveEngineCashflows = !result.empty();
-
     for (size_t i = 0; i < legs().size(); i++) {
-
         Trade::LegCashflowInclusion cashflowInclusion = Trade::LegCashflowInclusion::IfNoEngineCashflows;
         if (auto incl = legCashflowInclusion().find(i); incl != legCashflowInclusion().end()) {
             cashflowInclusion = incl->second;
@@ -743,7 +741,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                 Real discountFactor = Null<Real>();
                 Real presentValue = Null<Real>();
                 Real presentValueBase = Null<Real>();
+                Real fxRateLocalCcy = Null<Real>();
                 Real fxRateLocalBase = Null<Real>();
+                Real fxRateCcyBase = Null<Real>();
                 Real floorStrike = Null<Real>();
                 Real capStrike = Null<Real>();
                 Real floorVolatility = Null<Real>();
@@ -760,7 +760,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     if (effectiveAmount != Null<Real>())
                         presentValue = discountFactor * effectiveAmount;
                     try {
-                        fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
+                        fxRateCcyBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
+                        fxRateLocalCcy = market->fxRate(ccy + npvCurrency_, configuration)->value();
+                        fxRateLocalBase = fxRateCcyBase  * fxRateLocalCcy;
                         presentValueBase = presentValue * fxRateLocalBase;
                     } catch (...) {
                     }
@@ -892,7 +894,6 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
             }
         }
     }
-
     return result;
 
 }

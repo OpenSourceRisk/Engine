@@ -82,61 +82,41 @@ class RequiredFixings {
 public:    
     class FixingDates {
     public:
+        typedef std::map<QuantLib::Date, std::pair<bool, std::set<std::string>>> fixingMap;
+
         FixingDates() = default;
 
-        FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory) { addDates(dates, mandatory); }
+        FixingDates(const std::set<QuantLib::Date>& dates, const bool mandatory, const std::set<std::string>& tradeIds = {}) { addDates(dates, mandatory, tradeIds); }
 
-        FixingDates(const std::map<QuantLib::Date, bool>& dates) : data_(dates){}
+        FixingDates(const fixingMap& dates) : data_(dates) {}
 
         void clear() { data_.clear(); }
 
-        void addDate(const QuantLib::Date& date, const bool mandatory) {
-            auto exits = data_.find(date);
-            if (exits == data_.end() || exits->second == false) {
-                data_[date] = mandatory;
-            }
-        }
+        void addDate(const QuantLib::Date& date, const bool mandatory, const std::set<std::string>& tradeIds = {});
+        void addDate(const QuantLib::Date& date, const std::pair<bool, std::set<std::string>>& ids);
+        void addDates(const FixingDates& dates, const std::string& tradeId = std::string());
+        void addDates(const FixingDates& dates, bool mandatory, const std::set<std::string>& tradeIds = {});
+        void addDates(const std::set<QuantLib::Date>& dates, bool mandatory,
+                      const std::set<std::string>& tradeIds = {});
 
-        void addDates(const FixingDates& dates) {
-            for (const auto& [d, man] : dates) {
-                addDate(d, man);
-            }
-        }
-
-        void addDates(const FixingDates& dates, bool mandatory) {
-            for (const auto& [d, _] : dates) {
-                addDate(d, mandatory);
-            }
-        }
-
-        void addDates(const std::set<QuantLib::Date>& dates, bool mandatory) {
-            for (const QuantLib::Date& d : dates) {
-                addDate(d, mandatory);
-            }
-        }
-
-        FixingDates filterByDate(const QuantLib::Date& before) const {
-            std::map<QuantLib::Date, bool> results;
-            for (const auto& [d, mandatory] : data_) {
-                if (d < before) {
-                    results.insert({d,mandatory});
-                }
-            }
-            return FixingDates(results);
-        }
+        FixingDates filterByDate(const QuantLib::Date& before) const;
         
         //! Iterrator for range-base forloop
-        std::map<QuantLib::Date, bool>::const_iterator begin() const {return data_.begin();}
-        std::map<QuantLib::Date, bool>::const_iterator end() const {return data_.end();}
+        fixingMap::const_iterator begin() const {
+            return data_.begin();
+        }
+        fixingMap::const_iterator end() const {
+            return data_.end();
+        }
        
         size_t size() const { return data_.size(); }
 
         bool empty() const { return data_.empty(); }
 
-        const std::map<QuantLib::Date, bool>& data() const { return data_; }
+        const fixingMap& data() const { return data_; }
 
     private:
-        std::map<QuantLib::Date, bool> data_;
+        fixingMap data_;
     };
 
 

@@ -54,7 +54,8 @@ private:
     static Real implySpread(const std::string& securityId, const Real price,
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
+                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const Real conversionFactor,
+                            const std::string& configuration);
 };
 
 } // namespace data
