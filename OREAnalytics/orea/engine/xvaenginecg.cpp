@@ -1351,27 +1351,30 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                 args[0] = &pathIrDelta[ccy][b];
-                tmpIrDelta[b] = condExp(args, "irDelta_" + ore::data::to_string(irDeltaTerms[b]));
+                tmpIrDelta[b] =
+                    condExp(args, "irDelta_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irDeltaTerms[b]));
             }
 
             // ir vega (including par conversion)
 
             for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                 args[0] = &pathIrVega[ccy][b];
-                tmpIrVega[b] = condExp(args, "irVega_" + ore::data::to_string(irVegaTerms[b]));
+                tmpIrVega[b] =
+                    condExp(args, "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
             }
 
             if (ccy > 0) {
 
                 // fx delta
                 args[0] = &pathFxDelta[ccy - 1];
-                tmpFxDelta = condExp(args, "fxDelta");
+                tmpFxDelta = condExp(args, "fxDelta" + model_->currencies()[ccy]);
 
                 // fx vega (including par conversion)
 
                 for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                     args[0] = &pathFxVega[ccy - 1][b];
-                    tmpFxVega[b] = condExp(args, "fxVega_" + ore::data::to_string(fxVegaTerms[b]));
+                    tmpFxVega[b] = condExp(args, "fxVega_" + model_->currencies()[ccy] + "_" +
+                                                     ore::data::to_string(fxVegaTerms[b]));
                 }
             }
 
@@ -1442,26 +1445,30 @@ void XvaEngineCG::calculateDynamicIM() {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrDeltaC[comp][ccy][b];
                     tmpIrDelta[b] = dynamicImCombineComponents(compDer, tradeId, i,
-                                                               "irDelta_" + ore::data::to_string(irDeltaTerms[b])) *
+                                                               "irDelta_" + model_->currencies()[ccy] + "_" +
+                                                                   ore::data::to_string(irDeltaTerms[b])) *
                                     RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                 }
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrVegaC[comp][ccy][b];
                     tmpIrVega[b] = dynamicImCombineComponents(compDer, tradeId, i,
-                                                              "irVega_" + ore::data::to_string(irVegaTerms[b])) *
+                                                              "irVega_" + model_->currencies()[ccy] + "_" +
+                                                                  ore::data::to_string(irVegaTerms[b])) *
                                    RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                 }
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
-                    tmpFxDelta = dynamicImCombineComponents(compDer, tradeId, i, "fxDelta") *
-                                 RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
+                    tmpFxDelta =
+                        dynamicImCombineComponents(compDer, tradeId, i, "fxDelta" + model_->currencies()[ccy]) *
+                        RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
                         tmpFxVega[b] = dynamicImCombineComponents(compDer, tradeId, i,
-                                                                  "fxVega_" + ore::data::to_string(fxVegaTerms[b])) *
+                                                                  "fxVega_" + model_->currencies()[ccy] + "_" +
+                                                                      ore::data::to_string(fxVegaTerms[b])) *
                                        RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                     }
                 }
@@ -1716,7 +1723,7 @@ void XvaEngineCG::generateDynamicImRegressionReport() {
     dynamicImRegressionReport_->end();
 
     DLOG("XvaEngineCG: dynamic im regression report written.");
-} 
+}
 
 void XvaEngineCG::cleanUpAfterCalcs() {
     values_.clear();
