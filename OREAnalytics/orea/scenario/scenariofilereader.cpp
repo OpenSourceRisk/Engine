@@ -81,11 +81,10 @@ QuantLib::ext::shared_ptr<ore::analytics::Scenario> ScenarioCSVReader::scenario(
 }
 
 ScenarioFileReader::~ScenarioFileReader() {
-    // Close the file
-    auto file = QuantLib::ext::dynamic_pointer_cast<CSVFileReader>(reader_);
-    QL_REQUIRE(file, "ScenarioCSVReader: reader is not a CSVFileReader");
-    file->close();
-    LOG("The file has been closed");
+    if(auto file = QuantLib::ext::dynamic_pointer_cast<CSVFileReader>(reader_)) {
+        file->close();
+        LOG("The file has been closed");
+    }
 }
 
 } // namespace analytics

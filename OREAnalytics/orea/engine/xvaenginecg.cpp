@@ -97,7 +97,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
                          const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
-                         const Real regressionVarianceCutoff, const bool tradeLevelBreakDown, const bool useRedBlocks,
+                         const Real regressionVarianceCutoff, const bool tradeLevelBreakDown,
+                         const std::vector<Size>& regressionReportTimeStepsDynamicIM, const bool useRedBlocks,
                          const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool continueOnCalibrationError,
@@ -109,7 +110,8 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
       enableDynamicIM_(enableDynamicIM), dynamicIMStepSize_(dynamicIMStepSize), regressionOrder_(regressionOrder),
       regressionVarianceCutoff_(regressionVarianceCutoff), tradeLevelBreakDown_(tradeLevelBreakDown),
-      useRedBlocks_(useRedBlocks), useExternalComputeDevice_(useExternalComputeDevice),
+      regressionReportTimeStepsDynamicIM_(regressionReportTimeStepsDynamicIM), useRedBlocks_(useRedBlocks),
+      useExternalComputeDevice_(useExternalComputeDevice),
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
@@ -917,17 +919,12 @@ void XvaEngineCG::populateDynamicIMOutputCube() {
 
         // dynamicIMOutputCube_->setT0(im[0].at(0), 0);
         dynamicIMOutputCube_->setT0(im[0].at(0), nidx->second, 0);
-	dynamicIMOutputCube_->setT0(dynamicDeltaIM_[ns][0].at(0), nidx->second, 1);
-	dynamicIMOutputCube_->setT0(dynamicVegaIM_[ns][0].at(0), nidx->second, 2);
-	dynamicIMOutputCube_->setT0(dynamicCurvatureIM_[ns][0].at(0), nidx->second, 3);
+        dynamicIMOutputCube_->setT0(dynamicDeltaIM_[ns][0].at(0), nidx->second, 1);
+        dynamicIMOutputCube_->setT0(dynamicVegaIM_[ns][0].at(0), nidx->second, 2);
+        dynamicIMOutputCube_->setT0(dynamicCurvatureIM_[ns][0].at(0), nidx->second, 3);
 
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size k = 0; k < im[i + 1].size(); ++k) {
-                // // convention in the output cube is im deflated by numeraire
-                // dynamicIMOutputCube_->set(im[i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 0);
-                // dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 1);
-                // dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 2);
-                // dynamicIMOutputCube_->set(dynamicCurvatureIM_[ns][i + 1][k] / values_[asdNumeraire_[i]][k], nidx->second, i, k, 3);
                 dynamicIMOutputCube_->set(im[i + 1][k], nidx->second, i, k, 0);
                 dynamicIMOutputCube_->set(dynamicDeltaIM_[ns][i + 1][k], nidx->second, i, k, 1);
                 dynamicIMOutputCube_->set(dynamicVegaIM_[ns][i + 1][k], nidx->second, i, k, 2);
@@ -1096,7 +1093,8 @@ void XvaEngineCG::dynamicImAddToConvertedSensis(
 }
 
 RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
-                                                       const std::size_t tradeId, const std::size_t timeStep) {
+                                                       const std::size_t tradeId, const std::size_t timeStep,
+                                                       const std::string& label) {
 
     std::size_t nComponents = tradeExposureValuation_[tradeId][timeStep].componentPathValues.size();
 
@@ -1119,12 +1117,47 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
         tmp[tradeExposureValuation_[tradeId][timeStep].componentPathValues[c]] = *componentDerivatives[c];
     }
 
-    // combine the components
+    // init keep nodes
 
     std::vector<bool> keepNodes(g->size(), false);
     keepNodes[endNode] = true;
 
+    // identify regression report nodes (if requested) and set the nodes to be kept for reporting
+
+    std::vector<Size> regressionReportNpvNodes;
+    std::vector<std::vector<Size>> regressionReportArguments;
+
+    if (std::find(regressionReportTimeStepsDynamicIM_.begin(), regressionReportTimeStepsDynamicIM_.end(), timeStep) !=
+        regressionReportTimeStepsDynamicIM_.end()) {
+        regressionReportNpvNodes = tradeExposureValuation_[tradeId][timeStep].targetConditionalExpDerivativeNpvNodes;
+        for (auto const n : regressionReportNpvNodes) {
+            keepNodes[n] = true;
+            regressionReportArguments.push_back(g->predecessors(n));
+            for (auto const m : regressionReportArguments.back())
+                keepNodes[m] = true;
+        }
+    }
+
+    // combine the components
+
     forwardEvaluation(*g, tmp, ops_, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode + 1);
+
+    // populate regression report data (if requested)
+
+    for (Size i = 0; i < regressionReportNpvNodes.size(); ++i) {
+        if (close_enough_all(tmp[regressionReportArguments[i][0]],
+                             RandomVariable(tmp[regressionReportArguments[i][0]].size(), 0.0)))
+            continue;
+        std::vector<RandomVariable> rv;
+        rv.push_back(tmp[endNode]);
+        rv.push_back(tmp[regressionReportArguments[i][0]]);
+        for (Size j = 2; j < regressionReportArguments[i].size(); ++j)
+            rv.push_back(tmp[regressionReportArguments[i][j]]);
+        dynamicImRegressionReportData_.push_back(
+            {timeStep, *std::next(portfolio_->ids().begin(), tradeId) + "_" + std::to_string(i), label, rv});
+    }
+
+    // return the conditional expectation
 
     return tmp[endNode];
 }
@@ -1210,7 +1243,6 @@ void XvaEngineCG::calculateDynamicIM() {
         keepNodesDerivatives[n] = true;
     }
 
-    
     for (std::size_t i = 0; i < valuationDates_.size() + 1; i += dynamicIMStepSize_) {
 
         Date valDate = i == 0 ? model_->referenceDate() : valuationDates_[i - 1];
@@ -1235,14 +1267,14 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
-	// additional IM calculator results
-	auto deltaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	auto vegaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	auto curvatureMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	auto deltaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	auto vegaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	auto curvatureMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-	
+        // additional IM calculator results
+        auto deltaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+        auto vegaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+        auto curvatureMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+        auto deltaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+        auto vegaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+        auto curvatureMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
+
         for (auto const& [parameterGroup, exposureNode] : dynamicImInfo_[i].plainTradeSumGrouped) {
 
             // init derivatives container
@@ -1284,10 +1316,24 @@ void XvaEngineCG::calculateDynamicIM() {
 
         auto regressorGroups = dynamicImInfo_[i].plainTradeRegressorGroups;
 
-        auto condExp = [this, &regressorGroups](const std::vector<const RandomVariable*>& args) {
-            return randomVariableOpConditionalExpectation(model_->size(), regressionOrder_,
-                                                          QuantLib::LsmBasisSystem::Monomial, regressionVarianceCutoff_,
-                                                          regressorGroups, usePythonIntegration_, args);
+        auto condExp = [this, &regressorGroups, i](const std::vector<const RandomVariable*>& args,
+                                                   const std::string& label) {
+            auto result = randomVariableOpConditionalExpectation(
+                model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, regressionVarianceCutoff_,
+                regressorGroups, usePythonIntegration_, args);
+
+            if (std::find(regressionReportTimeStepsDynamicIM_.begin(), regressionReportTimeStepsDynamicIM_.end(), i) !=
+                    regressionReportTimeStepsDynamicIM_.end() &&
+                !close_enough_all(*args[0], RandomVariable(args[0]->size(), 0.0))) {
+                std::vector<RandomVariable> rv;
+                rv.push_back(result);
+                rv.push_back(*args[0]);
+                for (Size i = 2; i < args.size(); ++i)
+                    rv.push_back(*args[i]);
+                dynamicImRegressionReportData_.push_back({i, "PlainTrades", label, rv});
+            }
+
+            return result;
         };
 
         // first entry is populated below with each regressand
@@ -1305,27 +1351,30 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                 args[0] = &pathIrDelta[ccy][b];
-                tmpIrDelta[b] = condExp(args);
+                tmpIrDelta[b] =
+                    condExp(args, "irDelta_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irDeltaTerms[b]));
             }
 
             // ir vega (including par conversion)
 
             for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                 args[0] = &pathIrVega[ccy][b];
-                tmpIrVega[b] = condExp(args);
+                tmpIrVega[b] =
+                    condExp(args, "irVega_" + model_->currencies()[ccy] + "_" + ore::data::to_string(irVegaTerms[b]));
             }
 
             if (ccy > 0) {
 
                 // fx delta
                 args[0] = &pathFxDelta[ccy - 1];
-                tmpFxDelta = condExp(args);
+                tmpFxDelta = condExp(args, "fxDelta" + model_->currencies()[ccy]);
 
                 // fx vega (including par conversion)
 
                 for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                     args[0] = &pathFxVega[ccy - 1][b];
-                    tmpFxVega[b] = condExp(args);
+                    tmpFxVega[b] = condExp(args, "fxVega_" + model_->currencies()[ccy] + "_" +
+                                                     ore::data::to_string(fxVegaTerms[b]));
                 }
             }
 
@@ -1395,24 +1444,31 @@ void XvaEngineCG::calculateDynamicIM() {
                 for (std::size_t b = 0; b < irDeltaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrDeltaC[comp][ccy][b];
-                    tmpIrDelta[b] = dynamicImCombineComponents(compDer, tradeId, i) *
+                    tmpIrDelta[b] = dynamicImCombineComponents(compDer, tradeId, i,
+                                                               "irDelta_" + model_->currencies()[ccy] + "_" +
+                                                                   ore::data::to_string(irDeltaTerms[b])) *
                                     RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                 }
                 for (std::size_t b = 0; b < irVegaTerms.size(); ++b) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathIrVegaC[comp][ccy][b];
-                    tmpIrVega[b] = dynamicImCombineComponents(compDer, tradeId, i) *
+                    tmpIrVega[b] = dynamicImCombineComponents(compDer, tradeId, i,
+                                                              "irVega_" + model_->currencies()[ccy] + "_" +
+                                                                  ore::data::to_string(irVegaTerms[b])) *
                                    RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                 }
                 if (ccy > 0) {
                     for (std::size_t comp = 0; comp < nComponents; ++comp)
                         compDer[comp] = &pathFxDeltaC[comp][ccy - 1];
-                    tmpFxDelta = dynamicImCombineComponents(compDer, tradeId, i) *
-                                 RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
+                    tmpFxDelta =
+                        dynamicImCombineComponents(compDer, tradeId, i, "fxDelta" + model_->currencies()[ccy]) *
+                        RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                     for (std::size_t b = 0; b < fxVegaTerms.size(); ++b) {
                         for (std::size_t comp = 0; comp < nComponents; ++comp)
                             compDer[comp] = &pathFxVegaC[comp][ccy - 1][b];
-                        tmpFxVega[b] = dynamicImCombineComponents(compDer, tradeId, i) *
+                        tmpFxVega[b] = dynamicImCombineComponents(compDer, tradeId, i,
+                                                                  "fxVega_" + model_->currencies()[ccy] + "_" +
+                                                                      ore::data::to_string(fxVegaTerms[b])) *
                                        RandomVariable(model_->size(), tradeExposureValuation_[tradeId][i].multiplier);
                     }
                 }
@@ -1436,10 +1492,9 @@ void XvaEngineCG::calculateDynamicIM() {
         // set results for this valuation date
 
         for (auto const& n : nettingSetIds) {
-            dynamicIM_[n][i] =
-	      imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta, conditionalFxVega,
-				 deltaMarginIr, vegaMarginIr, curvatureMarginIr,
-				 deltaMarginFx, vegaMarginFx, curvatureMarginFx);
+            dynamicIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
+                                                  conditionalFxVega, deltaMarginIr, vegaMarginIr, curvatureMarginIr,
+                                                  deltaMarginFx, vegaMarginFx, curvatureMarginFx);
             if (deltaMarginIr && deltaMarginFx)
                 dynamicDeltaIM_[n][i] = *deltaMarginIr + *deltaMarginFx;
             if (vegaMarginIr && vegaMarginFx)
@@ -1449,7 +1504,7 @@ void XvaEngineCG::calculateDynamicIM() {
 
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
-		dynamicDeltaIM_[n][j] = dynamicDeltaIM_[n][i];
+                dynamicDeltaIM_[n][j] = dynamicDeltaIM_[n][i];
                 dynamicVegaIM_[n][j] = dynamicVegaIM_[n][i];
                 dynamicCurvatureIM_[n][j] = dynamicCurvatureIM_[n][i];
             }
@@ -1628,6 +1683,48 @@ void XvaEngineCG::generateSensiReports() {
     ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 1E-6);
 }
 
+void XvaEngineCG::generateDynamicImRegressionReport() {
+    if (regressionReportTimeStepsDynamicIM_.empty())
+        return;
+
+    DLOG("XvaEngineCG: write dynamic im regression report.");
+
+    Size maxNumRegressors = 0;
+    for (auto const& [timeStep, trade, sensi, v] : dynamicImRegressionReportData_) {
+        maxNumRegressors = std::max(maxNumRegressors, std::max<Size>(2, v.size()) - 2);
+    }
+
+    dynamicImRegressionReport_ = QuantLib::ext::make_shared<InMemoryReport>();
+    dynamicImRegressionReport_->addColumn("TimeStep", Size())
+        .addColumn("Trade", string())
+        .addColumn("Sensitivity", string())
+        .addColumn("Path", Size());
+    for (Size i = 0; i < maxNumRegressors; ++i) {
+        dynamicImRegressionReport_->addColumn("regressor_" + std::to_string(i), double(), 10, true);
+    }
+    dynamicImRegressionReport_->addColumn("regressand", double(), 10, true);
+    dynamicImRegressionReport_->addColumn("model", double(), 10, true);
+
+    for (auto const& [timeStep, trade, sensi, v] : dynamicImRegressionReportData_) {
+        if (v.size() >= 2) {
+            for (Size path = 0; path < v.front().size(); ++path) {
+                dynamicImRegressionReport_->next().add(timeStep).add(trade).add(sensi).add(path);
+                for (Size r = 2; r < v.size(); ++r) {
+                    dynamicImRegressionReport_->add(v[r][path]);
+                }
+                for (Size r = v.size() - 2; r < maxNumRegressors; ++r) {
+                    dynamicImRegressionReport_->add(Null<Real>());
+                }
+                dynamicImRegressionReport_->add(v[1][path]);
+                dynamicImRegressionReport_->add(v[0][path]);
+            }
+        }
+    }
+    dynamicImRegressionReport_->end();
+
+    DLOG("XvaEngineCG: dynamic im regression report written.");
+}
+
 void XvaEngineCG::cleanUpAfterCalcs() {
     values_.clear();
     dynamicIMDerivatives_.clear();
@@ -1746,9 +1843,9 @@ void XvaEngineCG::run() {
 
     if (enableDynamicIM_) {
         calculateDynamicIM();
+        populateDynamicIMOutputCube();
+        generateDynamicImRegressionReport();
     }
-
-    populateDynamicIMOutputCube();
 
     updateProgress(4, 5);
 
