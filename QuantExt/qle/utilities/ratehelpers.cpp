@@ -21,6 +21,7 @@
 */
 
 #include <qle/utilities/ratehelpers.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 
 #include <ql/cashflows/iborcoupon.hpp>
 
@@ -38,6 +39,8 @@ QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& leg
             result = std::max(result, c->date());
             if (includeIndexEstimationEndDate.size() <= legNo || includeIndexEstimationEndDate[legNo]) {
                 if (auto d = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(c)) {
+                    result = std::max(result, d->fixingEndDate());
+                } else if (auto d = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c)) {
                     result = std::max(result, d->fixingEndDate());
                 }
             }
