@@ -171,7 +171,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         fundingLegData_.notionals() = std::vector<Real>(1, 1.0);
         fundingLegData_.notionalDates() = std::vector<std::string>();
 
-        // reset flag that told us to pull the indexing information from the equity leg
+        // reset flag that told us to pull the indexing information from the return leg
         fundingLegData_.indexingFromAssetLeg() = false;
     }
 
