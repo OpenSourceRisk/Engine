@@ -557,6 +557,7 @@ std::pair<QuantLib::Real, QuantLib::Real>
 DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
                                            const bool conditionalOnSurvival,
                                            std::vector<CashFlowResults>* const cfResults) const {
+    calculate();
     Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
     QL_REQUIRE(settlementDate == bondSettlementDate,
                "DiscountingForwardBondEngine::forwardPrice(): settlement date ("

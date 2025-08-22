@@ -24,7 +24,9 @@ std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
              const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
              std::vector<CashFlowResults>* cfResults) {
-    instrument->NPV(); // trigger calculate()
+    instrument->pricingEngine()->reset();
+    instrument->setupArguments(instrument->pricingEngine()->getArguments());
+    instrument->pricingEngine()->getArguments()->validate();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
     QL_REQUIRE(fwdEngine, "forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
     return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, cfResults);
