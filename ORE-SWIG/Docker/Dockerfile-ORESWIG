@@ -13,7 +13,7 @@ LABEL Description="Build OREPlus"
 #COPY --from=env_ore /usr/local/include /usr/local/include
 
 # Install SWIG and python3
-apt-get update \
+RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
     swig python3-dev cmake ninja-build clang \
