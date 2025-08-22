@@ -36,8 +36,9 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // clang-format off
 
     static const std::string script =
-        "NUMBER payoff, strike, d;\n"
+        "NUMBER payoff, strike, d, notional;\n"
         "\n"
+        "notional = Quantity * ResetStrike;\n"
         "strike = InitialStrike;\n"
         "\n"
         "FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
@@ -80,8 +81,12 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
 
     // set script
     
-    script_[""] =
-        ScriptedTradeScriptData(script, "Option", {{"FinalStrike", "strike"}, {"payoffAmount", "payoff"}}, {});
+    script_[""] = ScriptedTradeScriptData(script, "Option",
+                                          {{"FinalStrike", "strike"},
+                                           {"payoffAmount", "payoff"},
+                                           {"currentNotional", "notional"},
+                                           {"notionalCurrency", "Currency"}},
+                                          {});
 
     // build trade
 
