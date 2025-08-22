@@ -59,7 +59,6 @@ public:
         offsetSimMarketParams_ = offsetSimMarketParams;
     }
     void buildDependencies() override;
-    void feedCorrelationToCAM();
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
@@ -85,6 +84,7 @@ protected:
 
     Matrix creditStateCorrelationMatrix() const;
     std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
+    void feedCorrelationToCAM();
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;
@@ -108,8 +108,6 @@ protected:
     bool runSimulation_ = false;
     bool runXva_ = false;
     bool runPFE_ = false;
-
-    QuantLib::ext::shared_ptr<InstantaneousCorrelations> instantaneousCorrelation_;
 };
 
 static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE", "PFE"};

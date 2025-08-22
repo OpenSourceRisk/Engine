@@ -22,7 +22,6 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -33,7 +32,7 @@ namespace analytics {
 
 void CorrelationAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();    
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
 }
 
@@ -91,9 +90,6 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
 
     auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
 
-    
-    
-    
     std::string configuration = inputs_->marketConfig("simulation");
     
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -115,8 +111,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
                                                                 analytic()->configurations().simMarketParams);
         
     correlationReport_ = ext::make_shared<CorrelationReport>(inputs_->scenarioReader(),
-            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator); 
-
+            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator);
 }
 
 } //namespace analytics

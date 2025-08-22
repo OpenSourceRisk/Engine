@@ -124,8 +124,8 @@ void XvaAnalyticImpl::feedCorrelationToCAM(){
             }
         }
     }
-    instantaneousCorrelation_ = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);
-    analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation_);
+    QuantLib::ext::shared_ptr<InstantaneousCorrelations> instantaneousCorrelation = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);
+    analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation);
 }
 
 void XvaAnalyticImpl::setUpConfigurations() {
@@ -294,7 +294,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
-    if (inputs_->scenarioReader()) {
+    if (inputs_->scenarioReader()&&!inputs_->useCorrelationAnalytic()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
         auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
@@ -961,8 +961,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         corrAnalytic->runAnalytic(loader,{"CORRELATION"});
         auto reports = corrAnalytic->reports();
         auto corrReports = reports.at("CORRELATION");
-        QL_REQUIRE(corrReports.find("correlation") != corrReports.end(),
-               "xVA: No correlation report found");
+        QL_REQUIRE(corrReports.find("correlation") != corrReports.end(), "xVA: No correlation report found");
         auto corrReport = corrReports.at("correlation");
         auto correlationReport = QuantLib::ext::make_shared<InMemoryReport>(*corrReport);
         if(correlationReport){
