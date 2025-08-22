@@ -5,6 +5,8 @@ ARG ORE_BUILD_VERSION
 FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as env_oreswig
 
+ARG NUM_CORES
+
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build OREPlus"
 
@@ -31,7 +33,7 @@ WORKDIR /swig/ORE-SWIG
 RUN mkdir build.release
 WORKDIR /swig/ORE-SWIG/build.release
 RUN cmake -Wno-dev .. -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DORE_ENABLE_OPENCL=ON
-RUN cmake --build . --config Release
+RUN cmake --build . --config Release -- -j ${NUM_CORES}
 WORKDIR /
 RUN mkdir oreswig
 RUN mv /swig/ORE-SWIG/build.release/ORE.py oreswig \
