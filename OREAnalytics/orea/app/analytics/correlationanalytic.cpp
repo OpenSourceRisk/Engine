@@ -22,6 +22,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -89,16 +90,22 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
     }    
 
     auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
-        
-    auto scenarios = buildHistoricalScenarioGenerator(
-            inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
-            analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-            defaultReturnConfig, inputs_->mporOverlappingPeriods());
 
+    
+    
+    
+    std::string configuration = inputs_->marketConfig("simulation");
+    
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
-            *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
-            false, false, *inputs_->iborFallbackConfig());
+        analytic()->market(), analytic()->configurations().simMarketParams,
+        QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
+        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
+        inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, nullptr);
+    
+    auto scenarios = buildHistoricalScenarioGenerator(
+        inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+        analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
+        defaultReturnConfig, inputs_->mporOverlappingPeriods());
 
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
@@ -108,7 +115,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
                                                                 analytic()->configurations().simMarketParams);
         
     correlationReport_ = ext::make_shared<CorrelationReport>(inputs_->scenarioReader(),
-            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator);
+            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator); 
 
 }
 
