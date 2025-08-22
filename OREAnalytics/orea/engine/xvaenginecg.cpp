@@ -1150,7 +1150,8 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
             continue;
         std::vector<RandomVariable> rv;
         rv.push_back(tmp[endNode] * RandomVariable(tmp[endNode].size(), multiplier));
-        rv.push_back(tmp[regressionReportArguments[i][0]]);
+        rv.push_back(tmp[regressionReportArguments[i][0]] *
+                     RandomVariable(tmp[regressionReportArguments[i][0]].size(), multiplier));
         for (Size j = 2; j < regressionReportArguments[i].size(); ++j)
             rv.push_back(tmp[regressionReportArguments[i][j]]);
         dynamicImRegressionReportData_.push_back(
