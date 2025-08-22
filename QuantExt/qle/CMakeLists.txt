@@ -753,6 +753,7 @@ models/gaussianlhplossmodel.hpp
 models/homogeneouspooldef.hpp
 models/hullwhitebucketing.hpp
 models/hwconstantparametrization.hpp
+models/hwpiecewiseparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
 models/infdkparametrization.hpp
