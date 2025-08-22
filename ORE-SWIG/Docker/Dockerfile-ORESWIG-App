@@ -16,6 +16,9 @@ COPY --from=env_oreswig /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 RUN true
 COPY --from=env_oreswig /usr/local/lib /usr/local/lib
 
+ENV PYTHONPATH=/oreswig/pythonlib
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
 # Set env variable to run the ore examples with the python interface instead of the executable
 ENV ORE_EXAMPLES_USE_PYTHON=1
 
