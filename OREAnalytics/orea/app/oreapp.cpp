@@ -1974,6 +1974,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
 
+        tmp = params_->get("simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false);
+        if (!tmp.empty())
+            setXvaCgRegressionReportTimeStepsDynamicIM(parseListOfValues<Size>(tmp, parseInteger));
+
         tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
         if (!tmp.empty())
             setXvaCgUseRedBlocks(parseBool(tmp));

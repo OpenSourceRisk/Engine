@@ -170,6 +170,10 @@
       <xs:element type="knockOutSwapData" name="KnockOutSwapData"/>
       <xs:element type="LPISwapData" name="LPISwapData"/>
       <xs:element type="cashPositionData" name="CashPositionData"/>
+	  <xs:element type="strikeResettableOptionData" name="StrikeResettableOptionData"/>
+	  <xs:element type="strikeResettableOptionData2" name="EquityStrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData2" name="FxStrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData2" name="CommodityStrikeResettableOptionData"/>
     </xs:choice>
   </xs:group>
 
@@ -1328,6 +1332,9 @@
       <xs:enumeration value="CommodityRainbowOption"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
+	  <xs:enumeration value="CommodityStrikeResettableOption"/>
+	  <xs:enumeration value="FxStrikeResettableOption"/>
+	  <xs:enumeration value="EquityStrikeResettableOption"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -3252,6 +3259,25 @@
       <xs:element type="stFreeStyleCurrency" name="Currency"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="strikeResettableOptionData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+	  <xs:element type="stFreeStyleOptionType" name="OptionType"/>
+	  <xs:element type="stFreeStyleCurrency" name="Currency"/>
+      <xs:element type="stFreeStyleNumber" name="Strike"/>
+	  <xs:element type="stFreeStyleNumber" name="ResetStrike"/>
+      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+	  <xs:element type="stFreeStyleNumber" name="TriggerType"/>
+	  <xs:element type="stFreeStyleNumber" name="TriggerPrice"/>
+	  <xs:element type="stFreeStyleIndex" name="Underlying"/>
+	  <xs:element type="stFreeStyleEvent" name="ExpiryDate"/>
+	  <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+	  <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+	  <xs:element type="stFreeStyleNumber" name="Premium"/>
+	  <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="scriptedTradeData">
     <xs:sequence>
@@ -4496,6 +4522,32 @@
       <xs:element type="date" name="SettlementDate"/>
       <xs:element type="scheduleData" name="StrikeObservationDates"/>
       <xs:element type="underlying" name="Underlying"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="strikeResettableOptionData2">
+    <xs:all>
+      <xs:element type="longShort" name="LongShort"/>
+	  <xs:element type="optionType" name="OptionType"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="ResetStrike"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element name="TriggerType">
+	    <xs:simpleType>
+		  <xs:restriction base="xs:string">
+		    <xs:enumeration value="Up"/>
+		    <xs:enumeration value="Down"/>
+		  </xs:restriction>
+	    </xs:simpleType>
+	  </xs:element>
+      <xs:element type="xs:float" name="TriggerPrice"/>
+	  <xs:element type="underlying" name="Underlying"/>
+	  <xs:element type="date" name="ExpiryDate"/>
+	  <xs:element type="date" name="SettlementDate"/>
+      <xs:element type="xs:float" name="Premium"/>
+      <xs:element type="date" name="PremiumDate"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
     </xs:all>
   </xs:complexType>
 

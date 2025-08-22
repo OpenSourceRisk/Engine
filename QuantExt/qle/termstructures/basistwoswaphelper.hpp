@@ -48,7 +48,8 @@ public:
                        bool longMinusShort, bool shortIndexGiven,
                        // Discount curve
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                       bool discountCurveGiven = false);
+                       bool discountCurveGiven = false,
+                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
 
     //! \name RateHelper interface
     //@{
@@ -89,6 +90,7 @@ protected:
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
     bool discountCurveGiven_;
+    QuantLib::Pillar::Choice pillarChoice_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
 

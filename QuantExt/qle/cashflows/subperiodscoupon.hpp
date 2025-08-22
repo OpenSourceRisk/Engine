@@ -73,6 +73,8 @@ public:
     //! the date when the coupon is fully determined
     Date fixingDate() const override { return fixingDates_.back(); }
     //@}
+    //! End of the deposit period underlying the last coupon fixing
+    const Date& fixingEndDate() const;
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
@@ -84,6 +86,7 @@ private:
     mutable std::vector<Rate> fixings_;
     Size numPeriods_;
     std::vector<Time> accrualFractions_;
+    Date fixingEndDate_;
 };
 
 //! helper class building a sequence of sub-period coupons

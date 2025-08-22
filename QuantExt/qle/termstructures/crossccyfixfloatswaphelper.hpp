@@ -47,7 +47,8 @@ public:
                                const QuantLib::DayCounter& fixedDayCount,
                                const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
-                               const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false);
+                               const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
+                               const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
 
     //! \name Observer interface
     //@{
@@ -89,6 +90,7 @@ private:
     QuantLib::Handle<QuantLib::YieldTermStructure> floatDiscount_;
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
+    QuantLib::Pillar::Choice pillarChoice_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
