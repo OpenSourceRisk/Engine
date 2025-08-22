@@ -99,6 +99,7 @@
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/swap/euriborswap.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
+#include <ql/time/daycounters/thirty360.hpp>
 
 
 using namespace QuantLib;
@@ -116,6 +117,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
      */
 
     // Setup test parameters
+    Calendar cal = TARGET();
     Date today(10, July, 2025);
     Settings::instance().evaluationDate() = today;
 
@@ -133,9 +135,20 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
         ext::make_shared<HwModel>(params, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
     // Create swaption and underlying swap
-    auto index = ext::make_shared<EuriborSwapIsdaFixA>(5 * Years, ts);
-    Swaption swap = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
-    Swaption swpLgm = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
+    Date startDate = cal.advance(today, 2 * Days);
+    Date exerciseDate = cal.advance(startDate, 2 * Years);
+    Date maturityDate = cal.advance(exerciseDate, 5 * Years);
+    Handle<YieldTermStructure> curve(ts);
+    auto index2 = ext::make_shared<Euribor6M>(curve);
+
+    Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following, DateGeneration::Forward, false);
+    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following, DateGeneration::Forward, false);
+    auto underlying = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule,
+        0.02, Thirty360(Thirty360::BondBasis), floatSchedule, index2, 0.02, Actual360());
+    
+    auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+    auto swaptionHw = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
+    auto swaptionLgm = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
 
     // Setup MC parameters
     // Testing a 2y5y payer swaption
@@ -158,7 +171,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
     Real sumPayoffs = 0.0;
 
     // Extract swap payment times
-    const auto& fixedLeg = swap.underlying()->fixedLeg();
+    const auto& fixedLeg = swaptionHw->underlying()->fixedLeg();
     vector<Time> payTimes;
     vector<Real> accruals; // deltas (time between payments)
     for (auto const& cf : fixedLeg) {
@@ -251,17 +264,17 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
 
     auto hwAdaptor = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), ts, sigmaDates,
                                                                                           sigmaLgm, kappaDates, kappa);
-    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(swap, model);
+    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
         QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
     
-    
-    swap.setPricingEngine(analyticEngine);
-    swpLgm.setPricingEngine(lgmEngine);
+ 
+    swaptionHw->setPricingEngine(analyticEngine);
+    swaptionLgm->setPricingEngine(lgmEngine);
 
-    Real analyticPrice = swap.NPV();
-    Real lgmPrice = swpLgm.NPV();
 
+    Real analyticPrice = swaptionHw->NPV();
+    Real lgmPrice = swaptionLgm->NPV();
 
     cout << "MC Price: " << mcPrice << endl;
     cout << "Analytic Price: " << analyticPrice << endl;
@@ -274,6 +287,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
      */
 
     // Setup parameters
+    Calendar cal = TARGET();
     Date today(10, July, 2025);
     Settings::instance().evaluationDate() = today;
 
@@ -287,10 +301,24 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
     ext::shared_ptr<HwModel> model =
         ext::make_shared<HwModel>(params, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
-   // Underlying and swaption declaration
-    auto index = ext::make_shared<EuriborSwapIsdaFixA>(5 * Years, ts);
-    Swaption swap = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
-    Swaption swpLgm = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
+   // Create swaption and underlying swap
+    Date startDate = cal.advance(today, 2 * Days);
+    Date exerciseDate = cal.advance(startDate, 2 * Years);
+    Date maturityDate = cal.advance(exerciseDate, 5 * Years);
+    Handle<YieldTermStructure> curve(ts);
+    auto index2 = ext::make_shared<Euribor6M>(curve);
+
+    Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
+                           DateGeneration::Forward, false);
+    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
+                           DateGeneration::Forward, false);
+    auto underlying =
+        ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
+                                      floatSchedule, index2, 0.02, Actual360());
+
+    auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+    auto swaptionHw = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
+    auto swaptionLgm = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
 
     // MC parameters
     Size paths = 10000;
@@ -311,7 +339,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
     Real sumPayoffs = 0.0;
 
     // Extract payment dates
-    const auto& fixedLeg = swap.underlying()->fixedLeg();
+    const auto& fixedLeg = swaptionHw->underlying()->fixedLeg();
     vector<Time> payTimes;
     vector<Real> accruals; // deltas (time between payments)
     for (auto const& cf : fixedLeg) {
@@ -394,13 +422,15 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
 
     auto hwAdaptor = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), ts, sigmaDates,
                                                                                           sigmaLgm, kappaDates, kappa);
-    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(swap, model);
+    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
         QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
-    swpLgm.setPricingEngine(lgmEngine);
-    swap.setPricingEngine(analyticEngine);
-    Real analyticPrice = swap.NPV();
-    Real lgmPrice = swpLgm.NPV();
+    
+    swaptionHw->setPricingEngine(analyticEngine);
+    swaptionLgm->setPricingEngine(lgmEngine);
+
+    Real analyticPrice = swaptionHw->NPV();
+    Real lgmPrice = swaptionLgm->NPV();
 
     cout << "MC Price: " << mcPrice << endl;
     cout << "Analytic Price: " << analyticPrice << endl;
@@ -410,6 +440,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
 BOOST_AUTO_TEST_CASE(testBuildinMethods) {
 
     // Setup test parameters
+    Calendar cal = TARGET();
     Date today(10, July, 2025);
     Settings::instance().evaluationDate() = today;
 
@@ -430,21 +461,36 @@ BOOST_AUTO_TEST_CASE(testBuildinMethods) {
                                                                                           sigmaLgm, kappaDates, kappa);
     ext::shared_ptr<HwModel> model = ext::make_shared<HwModel>(params,IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
-    // Underlying and swaption declaration
-    auto index = ext::make_shared<EuriborSwapIsdaFixA>(5 * Years, ts);
-    Swaption swp = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
-    Swaption swpLgm = MakeSwaption(index, 2 * Years, strike).withUnderlyingType(VanillaSwap::Payer);
+    // Create swaption and underlying swap
+    Date startDate = cal.advance(today, 2 * Days);
+    Date exerciseDate = cal.advance(startDate, 2 * Years);
+    Date maturityDate = cal.advance(exerciseDate, 5 * Years);
+    Handle<YieldTermStructure> curve(ts);
+    auto index2 = ext::make_shared<Euribor6M>(curve);
 
-    ext::shared_ptr<PricingEngine> hwEngine = boost::make_shared<AnalyticHwSwaptionEngine>(swp, model, ts);
+    Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
+                           DateGeneration::Forward, false);
+    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
+                           DateGeneration::Forward, false);
+    auto underlying =
+        ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
+                                      floatSchedule, index2, 0.02, Actual360());
+
+    auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+    auto swaptionHw = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
+    auto swaptionLgm = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
+
+    ext::shared_ptr<PricingEngine> hwEngine = boost::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model, ts);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
          QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
 
     // Pass pricing engines
-    swp.setPricingEngine(hwEngine);
-    swpLgm.setPricingEngine(lgmEngine);
+    swaptionHw->setPricingEngine(hwEngine);
+    swaptionLgm->setPricingEngine(lgmEngine);
 
-    Real analyticalPrice = swp.NPV();
-    Real analyticalLgmPrice = swpLgm.NPV();
+
+    Real analyticalPrice = swaptionHw->NPV();
+    Real analyticalLgmPrice = swaptionLgm->NPV();
 
 
 
@@ -463,8 +509,8 @@ BOOST_AUTO_TEST_CASE(testBuildinMethods) {
     MersenneTwisterUniformRng uniRng(42);
     BoxMullerGaussianRng<MersenneTwisterUniformRng> gaussianRng(uniRng);
 
-   const auto& fixedLeg = swp.underlying()->fixedLeg();
-   const auto& schedule = swp.underlying()->fixedSchedule();
+   const auto& fixedLeg = swaptionHw->underlying()->fixedLeg();
+   const auto& schedule = swaptionLgm->underlying()->fixedSchedule();
 
    std::vector<Time> payTimes;
    std::vector<Real> accruals;
