@@ -1,22 +1,22 @@
-# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
 ARG ORE_VERSION
 ARG ORE_BUILD_VERSION
 
 FROM ${DOCKER_REPO}env_ore:${ORE_VERSION} as env_ore
-FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as env_oreswig
 
 ARG NUM_CORES
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Build OREPlus"
 
-COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-COPY --from=env_ore /usr/local/lib /usr/local/lib
-COPY --from=env_ore /usr/local/include /usr/local/include
+#COPY --from=env_ore /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+#COPY --from=env_ore /usr/local/lib /usr/local/lib
+#COPY --from=env_ore /usr/local/include /usr/local/include
 
 # Install SWIG and python3
 RUN apt-get update && apt-get upgrade -y \
-  && apt-get install -f -y swig python3-dev
+  && apt-get install -f -y swig python3-dev cmake ninja-build clang\
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /swig
 
