@@ -54,6 +54,7 @@ COPY --from=orebuild /usr/local/bin/ /usr/local/bin
 COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
 COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
 COPY --from=orebuild /usr/include/boost/ /usr/include/boost
+COPY --from=orebuild /usr/include/CL /usr/include/CL
 
 RUN ldconfig
 
