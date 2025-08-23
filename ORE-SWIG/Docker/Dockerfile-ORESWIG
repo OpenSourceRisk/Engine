@@ -1,4 +1,4 @@
-# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
+# syntax = docker/dockerfile:1.2
 ARG ORE_VERSION
 ARG ORE_BUILD_VERSION
 
