@@ -35,7 +35,12 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 
 There can be alternative versions of each block each labeled with a unique identifier (e.g. Discount curve block with ID
 'default', discount curve block with ID 'ois', another one with ID 'xois', etc). The purpose of these IDs will be
-explained at the end of this section. We now discuss each block's layout.
+explained at the end of this section. The ID 'default' has a special significance, being the default block that is taken by 
+ORE if no other ID is specified in the market configurations (see end of this section), however beware that this doesn't apply
+to the dependency mechanism that collects curves before building other curves that depend on them (especially when using a lazyMarketBuilding parameter being set). 
+In this case you'd need to add the 'default' block to the market configuration as suggested for the {\tt IndexForwardingCurvesId} in the examples at the end of this section.
+
+We now discuss each block's layout.
 
 \subsubsection{Discounting Curves} 
 
@@ -459,15 +464,19 @@ the {\tt todaysmarket.xml} file:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Configuration id="default">
   <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+  <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
 </Configuration>
 <Configuration id="collateral_inccy">
   <DiscountingCurvesId>ois</DiscountingCurvesId>
+  <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
 </Configuration>
 <Configuration id="collateral_eur">
   <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+  <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
 </Configuration>
 <Configuration id="libor">
   <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
+  <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
 </Configuration>
 \end{minted}
 \caption{Market configurations}
