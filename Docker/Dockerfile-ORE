@@ -45,5 +45,18 @@ RUN mkdir -p html \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && rm -rf ore
 
+ARG DEBIAN_TAG
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
+
+COPY --from=orebuild /usr/local/include /usr/local/include
+COPY --from=orebuild /usr/local/lib/ /usr/local/lib
+COPY --from=orebuild /usr/local/bin/ /usr/local/bin
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
+COPY --from=orebuild /usr/include/boost/ /usr/include/boost
+COPY --from=orebuild /usr/include/CL /usr/include/CL
+
+RUN ldconfig
+
 CMD bash
 
