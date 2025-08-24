@@ -51,7 +51,7 @@ RUN mkdir -p html \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && mkdir oreswig \
   && mv /ore/build.ore/ORE-SWIG/ORE.py oreswig \
-  && mv /swig/ORE-SWIG/build.release/_OREP.so oreswig \
+  && mv /ore/build.ore/ORE-SWIG/_OREP.so oreswig \
   && rm -rf ore
 
 ARG DEBIAN_TAG
