@@ -48,8 +48,7 @@ WORKDIR /
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
-  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
-  && rm -rf ore
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle 
 
 
 CMD bash
