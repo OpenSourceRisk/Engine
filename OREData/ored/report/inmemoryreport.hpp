@@ -67,8 +67,7 @@ public:
     size_t columnPosition(const std::string& columnName) {
         auto it = headersMap_.find(columnName);
         QL_REQUIRE(it != headersMap_.end(), "Invalid column name " << columnName);
-        auto t = it->second;
-        return t;
+        return it->second;
     }  
 private:
     Size i_;
