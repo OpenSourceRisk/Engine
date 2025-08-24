@@ -16,8 +16,11 @@ COPY --from=env_ore /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-g
 RUN true
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 COPY --from=env_ore /usr/include/boost/ /usr/include/boost
+COPY --from=env_ore /oreswig /oreswig
 
 WORKDIR /ore
+
+ENV PYTHONPATH=/oreswig/pythonlib
 ENV LD_LIBRARY_PATH=/usr/local/lib:./
 
 CMD bash
