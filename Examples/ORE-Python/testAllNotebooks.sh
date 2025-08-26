@@ -9,23 +9,29 @@ notebook_dir="./Notebooks"
 
 mkdir -p "tmp"
 
-for dir in $(find $notebook_dir -type d); do
 
-    if [[ $(basename "$dir") == "Input" || $(basename "$dir") == "Output" ||  $(basename "$dir") == "Notebooks" || $(basename "$dir") == "ExpectedOutput" ]]; then
-        continue
-    fi
+find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --halt soon,fail=1 '
+    echo "Running {}"
+    jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {})
+'
 
-    relative_dir=${dir#$notebook_dir/}
+
+#for dir in $(find $notebook_dir -type d); do
+#    if [[ $(basename "$dir") == "Input" || $(basename "$dir") == "Output" ||  $(basename "$dir") == "Notebooks" || $(basename "$dir") == "ExpectedOutput" ]]; then
+#        continue
+#    fi
+
+#    relative_dir=${dir#$notebook_dir/}
 
     # Loop over all ipynb files in the current subdirectory
-    for file in "$dir"/*.ipynb; do
+#    for file in "$dir"/*.ipynb; do
         # Run nbconvert on the current ipynb file
-        if test -f "$file"; then
-            jupyter nbconvert --execute "$file" --to notebook   --output-dir="./tmp" --output=$(basename "$file")
-            return_code=$?
-            if [ $return_code -gt $status ]; then
-                    status=$return_code
-            fi
+#        if test -f "$file"; then
+#            jupyter nbconvert --execute "$file" --to notebook   --output-dir="./tmp" --output=$(basename "$file")
+#            return_code=$?
+#            if [ $return_code -gt $status ]; then
+#                    status=$return_code
+#            fi
 
             #if [[ $(basename "$file") == "progress.ipynb" ]]; then
             #    continue
@@ -53,13 +59,13 @@ for dir in $(find $notebook_dir -type d); do
             #if [ $output_status -gt $status ]; then
             #    status=$compare_status
             #fi
-        fi
-    done
-done
+#        fi
+#    done
+#done
 
 # run .ipynb not in Notebooks directory
 # cannot compare QuasiMonteCarloMethods notebooks - there is no 'expected output' due to the use of random generators
-jupyter nbconvert --execute "./Notebooks/QuasiMonteCarloMethods.ipynb" --to notebook   --output-dir="./tmp" --output="QuasiMonteCarloMethods"
+#jupyter nbconvert --execute "./Notebooks/QuasiMonteCarloMethods.ipynb" --to notebook   --output-dir="./tmp" --output="QuasiMonteCarloMethods"
 
 # clean up
 rm -d -rf ./tmp
