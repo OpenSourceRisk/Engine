@@ -59,7 +59,6 @@ protected:
     QuantLib::Matrix correlationMatrix_;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationPairs_;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
-    QuantLib::ext::shared_ptr<InstantaneousCorrelations> instantaneousCorrelation_;
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
     std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }

@@ -1730,11 +1730,6 @@ void OREAppInputParameters::loadParameters() {
         insertAnalytic("EXPOSURE");
     }
 
-    tmp = params_->get("simulation", "generateCorrelations", false);
-    if (!tmp.empty()) {
-        generateCorrelations_ = parseBool(tmp);
-    }
-
     tmp = params_->get("simulation", "includeTodaysCashFlows", false);
     if (tmp != "")
         setExposureIncludeTodaysCashFlows(ore::data::parseBool(tmp));
