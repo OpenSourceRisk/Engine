@@ -7,13 +7,21 @@ compare_status=0
 expected_dir="./ExpectedResults"
 notebook_dir="./Notebooks"
 
+tmp_status_file=$(mktemp)
+
 mkdir -p "tmp"
 
 
-find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --halt soon,fail=1 '
-    echo "Running {}"
-    jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {})
-'
+find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --joblog "$tmp_status_file" '
+      echo "Running {}"
+      jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {})
+  '
+
+
+status=$(awk 'NR>1 { if ($7 > max) max=$7 } END { print max+0 }' "$tmp_status_file")
+echo "Highest exit code: $status"
+
+rm "$tmp_status_file"
 
 
 #for dir in $(find $notebook_dir -type d); do
