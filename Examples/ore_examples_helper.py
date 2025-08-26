@@ -28,8 +28,7 @@ def get_list_of_legacy_examples():
     return ["Legacy/Example_11",
             "Legacy/Example_45",
             "Legacy/Example_71",
-            "Legacy/Example_76
-            "
+            "Legacy/Example_76"
             ]
 
 def get_list_of_new_examples():
