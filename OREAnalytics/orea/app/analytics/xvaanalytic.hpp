@@ -84,7 +84,7 @@ protected:
 
     Matrix creditStateCorrelationMatrix() const;
     std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
-    void feedCorrelationToCAM(const std::string& fileName = Null<string>());
+    void feedCorrelationToCAM(const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = {});
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;

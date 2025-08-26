@@ -46,6 +46,7 @@ public:
 
     void writeReports(const QuantLib::ext::shared_ptr<Report>& report);
     void calculate(const QuantLib::ext::shared_ptr<Report>& report);
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& correlationData() {return correlationPairs_;}
 
 protected:
     QuantLib::ext::shared_ptr<ScenarioReader> scenario_;

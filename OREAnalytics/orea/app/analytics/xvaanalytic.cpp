@@ -41,6 +41,7 @@
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -94,20 +95,11 @@ void XvaAnalyticImpl::buildDependencies() {
     }
 }
 
-void XvaAnalyticImpl::feedCorrelationToCAM(const std::string& fileName){
+void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData){
     DLOG("Parse Correlation Matrix as Cross Asset Model Data Instantaneous Correlation.");
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData;
-    if(!fileName.empty()){
-        ore::data::CSVFileReader reader(fileName, true);
-        std::vector<std::string> dummy;
-        while (reader.next()) {
-            correlationData[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                           *parseRiskFactorKey(reader.get(1), dummy))] =
-                                           ore::data::parseReal(reader.get(2));
-        }
-    }else{
-        correlationData = inputs_->correlationData();
-    }
+    correlationData = !corrData.empty()?corrData:inputs_->correlationData();
+
     QL_REQUIRE(correlationData.size()>0," No Correlations.");
     // Instantaneous Correlation is a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
     std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
@@ -975,15 +967,10 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if(inputs_->generateCorrelations()){
         auto corrAnalytic = dependentAnalytic(corrLookupKey);
         corrAnalytic->runAnalytic(loader,{"CORRELATION"});
-        auto reports = corrAnalytic->reports();
-        auto corrReports = reports.at("CORRELATION");
-        QL_REQUIRE(corrReports.find("correlation") != corrReports.end(), "xVA: No correlation report found");
-        auto corrReport = corrReports.at("correlation");
-        boost::shared_ptr<ore::data::InMemoryReport> correlationReport = QuantLib::ext::make_shared<InMemoryReport>(*corrReport);
-        path xvaReportPath = inputs_->resultsPath() / "correlation.csv";
-        correlationReport->toFile(xvaReportPath.string(), ',', false, inputs_->csvQuoteChar(),
-                                  inputs_->reportNaString());
-        feedCorrelationToCAM(xvaReportPath.string());
+        auto cai = static_cast<CorrelationAnalyticImpl*>(corrAnalytic->impl().get());
+        auto corrReportObject = cai->correlationReport();
+        const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = corrReportObject->correlationData();
+        feedCorrelationToCAM(corrData);
     }
 
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
