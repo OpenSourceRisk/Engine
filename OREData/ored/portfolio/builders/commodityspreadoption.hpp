@@ -68,12 +68,26 @@ protected:
             market_->commodityVolatility(shortIndex->underlyingName(), configuration(MarketContext::pricing));
         Real beta = 0;
         Handle<QuantExt::CorrelationTermStructure> rho{nullptr};
-        auto param = engineParameters_.find("beta");
-        if (param != engineParameters_.end())
-            beta = parseReal(param->second);
-        else {
-            ALOG("Missing engine parameter 'beta' for " << model() << " " << EngineBuilder::engine()
-                                                        << ", using default value " << beta);
+        bool calendarSpread = longIndex->underlyingName() == shortIndex->underlyingName();
+        
+        auto betaStr = engineParameter("beta", {longIndex->underlyingName(), shortIndex->underlyingName()}, false, "0.0");
+        beta = parseReal(betaStr);
+
+
+        std::vector<string> volatilityQualifiers;
+
+        if (calendarSpread) {
+            volatilityQualifiers.push_back(longIndex->underlyingName());
+        } else {
+            std::string pair = longIndex->underlyingName() + "#" + shortIndex->underlyingName();
+            std::string pairReverse = shortIndex->underlyingName() + "#" + longIndex->underlyingName();
+            volatilityQualifiers.push_back(pair);
+            volatilityQualifiers.push_back(pairReverse);
+        }
+        bool useBachelierModel = false;
+        std::string volType = engineParameter("volatility", volatilityQualifiers, false, "lognormal");
+        if (volType == "normal") {
+            useBachelierModel = true;
         }
         if(longIndex->underlyingName() == shortIndex->underlyingName()){ // calendar spread option
             rho = Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0,QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
@@ -82,7 +96,7 @@ protected:
                                                   configuration(MarketContext::pricing));
 
         }
-        return QuantLib::ext::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, rho, beta);
+        return QuantLib::ext::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, rho, beta, useBachelierModel);
     }
 };
 }
