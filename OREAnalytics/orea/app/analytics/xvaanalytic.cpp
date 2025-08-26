@@ -86,7 +86,7 @@ std::string XvaAnalyticImpl::mapRiskFactorToAssetType(RiskFactorKey::KeyType key
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
  ******************************************************************************/
 void XvaAnalyticImpl::buildDependencies() {
-    if(inputs_->useCorrelationAnalytic()){
+    if(inputs_->generateCorrelations()){
         auto correlationAnalytic =
                 AnalyticFactory::instance().build("CORRELATION", inputs_, analytic()->analyticsManager(), false);
             if (correlationAnalytic.second)
@@ -94,10 +94,22 @@ void XvaAnalyticImpl::buildDependencies() {
     }
 }
 
-void XvaAnalyticImpl::feedCorrelationToCAM(){
+void XvaAnalyticImpl::feedCorrelationToCAM(const std::string& fileName){
     DLOG("Parse Correlation Matrix as Cross Asset Model Data Instantaneous Correlation.");
-    auto correlationData = inputs_->correlationData();
-    // Instantaneous Correlation si a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData;
+    if(!fileName.empty()){
+        ore::data::CSVFileReader reader(fileName, true);
+        std::vector<std::string> dummy;
+        while (reader.next()) {
+            correlationData[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                           *parseRiskFactorKey(reader.get(1), dummy))] =
+                                           ore::data::parseReal(reader.get(2));
+        }
+    }else{
+        correlationData = inputs_->correlationData();
+    }
+    QL_REQUIRE(correlationData.size()>0," No Correlations.");
+    // Instantaneous Correlation is a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
     std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
     std::vector<std::string> vecAssetType = {"DiscountCurve", "FXSpot", "EquitySpot", "SurvivalProbability", "ZeroInflationCurve", "CommodityCurve"};
     for (auto const& cor : correlationData) {
@@ -294,7 +306,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
-    if (inputs_->scenarioReader()&&!inputs_->useCorrelationAnalytic()) {
+    if (inputs_->scenarioReader()&&!inputs_->generateCorrelations()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
         auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
@@ -960,21 +972,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
-    if(inputs_->useCorrelationAnalytic()){
+    if(inputs_->generateCorrelations()){
         auto corrAnalytic = dependentAnalytic(corrLookupKey);
         corrAnalytic->runAnalytic(loader,{"CORRELATION"});
         auto reports = corrAnalytic->reports();
         auto corrReports = reports.at("CORRELATION");
         QL_REQUIRE(corrReports.find("correlation") != corrReports.end(), "xVA: No correlation report found");
         auto corrReport = corrReports.at("correlation");
-        auto correlationReport = QuantLib::ext::make_shared<InMemoryReport>(*corrReport);
-        if(correlationReport){
-            path xvaReportPath = inputs_->resultsPath() / "correlation.csv";
-            correlationReport->toFile(xvaReportPath.string(), ',', false, inputs_->csvQuoteChar(),
-                                       inputs_->reportNaString());
-            inputs_->setCorrelationDataFromFile(xvaReportPath.string());
-            feedCorrelationToCAM();
-        }
+        boost::shared_ptr<ore::data::InMemoryReport> correlationReport = QuantLib::ext::make_shared<InMemoryReport>(*corrReport);
+        path xvaReportPath = inputs_->resultsPath() / "correlation.csv";
+        correlationReport->toFile(xvaReportPath.string(), ',', false, inputs_->csvQuoteChar(),
+                                  inputs_->reportNaString());
+        feedCorrelationToCAM(xvaReportPath.string());
     }
 
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));

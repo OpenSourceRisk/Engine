@@ -1730,9 +1730,9 @@ void OREAppInputParameters::loadParameters() {
         insertAnalytic("EXPOSURE");
     }
 
-    tmp = params_->get("simulation", "useCorrelationAnalytic", false);
+    tmp = params_->get("simulation", "generateCorrelations", false);
     if (!tmp.empty()) {
-        useCorrelationAnalytic_ = parseBool(tmp);
+        generateCorrelations_ = parseBool(tmp);
     }
 
     tmp = params_->get("simulation", "includeTodaysCashFlows", false);
@@ -1758,9 +1758,9 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA");
 
-    tmp = params_->get("xva", "useCorrelationAnalytic", false);
+    tmp = params_->get("xva", "generateCorrelations", false);
     if (!tmp.empty()) {
-        useCorrelationAnalytic_ = parseBool(tmp);
+        generateCorrelations_ = parseBool(tmp);
     }
 
     tmp = params_->get("pfe", "active", false);
@@ -2388,7 +2388,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     tmp = params_->get("xva", "marketConfigFile", false);
-    if (tmp != "" && useCorrelationAnalytic_) {
+    if (tmp != "" && generateCorrelations_) {
         string file = (inputPath_ / tmp).generic_string();
         LOG("Loading sensitivity scenario sim market parameters from file" << file);
         setSensiSimMarketParamsFromFile(file);
@@ -2396,7 +2396,7 @@ void OREAppInputParameters::loadParameters() {
         WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
     }
     tmp = params_->get("xva", "sensitivityConfigFile", false);
-    if (tmp != "" && useCorrelationAnalytic_) {
+    if (tmp != "" && generateCorrelations_) {
         string file = (inputPath_ / tmp).generic_string();
         LOG("Load sensitivity scenario data from file" << file);
         setSensiScenarioDataFromFile(file);
@@ -2404,19 +2404,19 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Sensitivity scenario data not loaded");
     }
     tmp = params_->get("xva", "historicalScenarioFile", false);
-    if (tmp != "" && useCorrelationAnalytic_) {
+    if (tmp != "" && generateCorrelations_) {
         std::string scenarioFile = (inputPath_ / tmp).generic_string();
         setScenarioReader(scenarioFile);
     }
 
     tmp = params_->get("xva", "historicalPeriod", false);
-    if (tmp != "" && useCorrelationAnalytic_)
+    if (tmp != "" && generateCorrelations_)
         setBenchmarkVarPeriod(tmp);
     tmp = params_->get("xva", "mporDays", false);
     if (tmp != "")
         setMporDays(parseInteger(tmp));
     tmp = params_->get("xva", "mporCalendar", false);
-    if (tmp != "" && useCorrelationAnalytic_)
+    if (tmp != "" && generateCorrelations_)
         setMporCalendar(tmp);
 
     tmp = params_->get("xva", "flipViewXVA", false);
