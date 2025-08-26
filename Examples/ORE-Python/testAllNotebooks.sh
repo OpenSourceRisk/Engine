@@ -14,16 +14,24 @@ mkdir -p "tmp"
 # Disable Python output buffering
 export PYTHONUNBUFFERED=1
 
-find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --joblog "$tmp_status_file" --ungroup '
-      echo "Running {}"
-      jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {}) 2>&1
-  '
 
+for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
+    echo "Running $notebook"
+    jupyter nbconvert --execute "$notebook" \
+        --to notebook \
+        --output-dir="./tmp" \
+        --output="$(basename "$notebook")" &
+    pids+=($!)
+done
 
-status=$(awk 'NR>1 { if ($7 > max) max=$7 } END { print max+0 }' "$tmp_status_file")
-echo "Highest exit code: $status"
-
-rm "$tmp_status_file"
+# Wait for all background jobs and collect exit codes
+for pid in "${pids[@]}"; do
+    wait "$pid"
+    code=$?
+    if (( code > status )); then
+        status=$code
+    fi
+done
 
 
 #for dir in $(find $notebook_dir -type d); do
