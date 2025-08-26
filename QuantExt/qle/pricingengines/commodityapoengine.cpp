@@ -42,11 +42,61 @@ QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn
 QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
 QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
 
+double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate, double forward, double strike, double ttm, bool useBlackModel) {
+    double blackVol = vol->blackVol(volDate, strike, true);
+    if (useBlackModel){
+        return blackVol;
+    }
+    double blackPrice = blackFormula(Option::Call, forward, strike, blackVol, ttm);
+    return bachelierBlackFormulaImpliedVol(Option::Call, strike, forward, ttm, blackPrice);
+}
+
+double
+calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<double>& futureVols, const std::vector<Date>& futureExpiries,
+                       const std::vector<Time>& pricingTimes,
+                       const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
+                       bool useBlackModel = true) {
+    double EA2 = 0.0;
+    for (Size i = 0; i < forwards.size(); ++i) {
+        Date e_i = futureExpiries[i];
+        Volatility v_i = futureVols[i];
+        EA2 +=
+            useBlackModel ? forwards[i] * forwards[i] * exp(v_i * v_i * pricingTimes[i]) : v_i * v_i * pricingTimes[i];
+        for (Size j = 0; j < i; ++j) {
+            Date e_j = futureExpiries[j];
+            Volatility v_j = futureVols[j];
+            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] * exp(rho(e_i, e_j) * v_j * v_j * pricingTimes[j])
+                                 : 2 * rho(e_i, e_j) * v_i * v_j * pricingTimes[j];
+        }
+    }
+    return EA2;
+}
+
+double calcEA2Spot(const std::vector<double>& forwards, const std::vector<double>& spotVariances, bool useBlackModel){
+    double EA2 = 0.0;
+    for (Size i = 0; i < forwards.size(); ++i) {
+        EA2 += useBlackModel ? forwards[i] * forwards[i] * exp(spotVariances[i]) : spotVariances[i];
+        for (Size j = 0; j < i; ++j) {
+            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] *  exp(spotVariances[j]) : 2.0 * spotVariances[j];
+        }
+    }
+    return EA2;
+}
+
+double calcualteSigma(const double EA, const double EA2, const double ttm, bool useBlackModel) {
+    if (useBlackModel) {
+        double s = EA2 / (EA * EA);
+        return s < 1.0 || QuantLib::close_enough(s, 1.0) ? 0.0 : std::sqrt(std::log(s) / ttm);
+    }
+    double s = EA2 - EA * EA;
+    return s < 0.0 || QuantLib::close_enough(s, 0.0) ? 0.0 : std::sqrt(s / ttm);
+}
+
 MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike, const QuantLib::Date& exerciseDate) {
+    QuantLib::Real strike, const QuantLib::Date& exerciseDate, bool useBlackModel) {
     Date today = Settings::instance().evaluationDate();
     MomentMatchingResults res;
     auto optionExerciseDate = exerciseDate == Date() ? flow->lastPricingDate() : exerciseDate;
@@ -84,11 +134,14 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                 Date volDate = optionExpiry <= today ? expiry : optionExpiry;
                 optionExpiries.push_back(volDate);
                 if (futureVols.count(volDate) == 0) {
-                    futureVols[volDate] = vol->blackVol(volDate, K);
+                    futureVols[volDate] = getBlackOrBachelierVol(vol, volDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
                 }
+                res.futureVols.push_back(futureVols[volDate]);
             } else {
-                spotVariances.push_back(vol->blackVariance(res.times.back(), K));
-                res.spotVols.push_back(std::sqrt(spotVariances.back() / res.times.back()));
+                auto tte = res.times.back();
+                auto spotVol = getBlackOrBachelierVol(vol, pricingDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
+                res.spotVols.push_back(spotVol);
+                spotVariances.push_back(spotVol * spotVol * tte);
             }
             EA += res.forwards.back();
         }
@@ -98,32 +151,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
 
     res.forward = EA;
 
-    double EA2 = 0.0;
-
-    if (flow->useFuturePrice()) {
-        // References future prices
-        for (Size i = 0; i < res.forwards.size(); ++i) {
-            Date e_i = futureExpiries[i];
-            Date oe_i = optionExpiries[i];
-            Volatility v_i = futureVols.at(oe_i);
-            res.futureVols.push_back(v_i);
-            EA2 += res.forwards[i] * res.forwards[i] * exp(v_i * v_i * res.times[i]);
-            for (Size j = 0; j < i; ++j) {
-                Date e_j = futureExpiries[j];
-                Date oe_j = optionExpiries[j];
-                Volatility v_j = futureVols.at(oe_j);
-                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * res.times[j]);
-            }
-        }
-    } else {
-        // References spot prices
-        for (Size i = 0; i < res.forwards.size(); ++i) {
-            EA2 += res.forwards[i] * res.forwards[i] * exp(spotVariances[i]);
-            for (Size j = 0; j < i; ++j) {
-                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(spotVariances[j]);
-            }
-        }
-    }
+    double EA2 = flow->useFuturePrice() ? calcEA2FutureContracts(res.forwards, res.futureVols, futureExpiries,
+                                                                 res.times, rho, useBlackModel)
+                                        : calcEA2Spot(res.forwards, spotVariances, useBlackModel);
+    
     EA2 /= std::pow(static_cast<double>(n), 2.0);
     res.EA2 = EA2;
 
@@ -133,21 +164,15 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     // Calculate value
     if (!res.times.empty()) {
         res.tn = res.times.back();
-        double s = EA2 / (EA * EA);
-        // if future vol = 0 for all dates, then EA2 = EA*EA, but
-        // due to numerical precision EA2 can be actually less than EA*EA 
-        if (s < 1.0 || QuantLib::close_enough(s, 1)) {
-            res.sigma = 0.0;
-        } else {
-            res.sigma = std::sqrt(std::log(s) / res.tn);
-        }
+        res.sigma = calcualteSigma(EA, EA2, res.tn, useBlackModel);
     } else {
         res.tn = 0;
         res.sigma = 0;
     }
     return res;
 }
-} // namespace CommodityAveragePriceOptionMomementMatching
+
+}// namespace CommodityAveragePriceOptionMomementMatching
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,

@@ -41,8 +41,8 @@ namespace QuantExt {
 CommoditySpreadOptionAnalyticalEngine::CommoditySpreadOptionAnalyticalEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort,
-    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta)
-    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta) {
+    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta, bool useBachelierModel)
+    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta), useBachelierModel_(useBachelierModel) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volTSLongAsset_);
@@ -107,7 +107,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
         results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
 
-    } else if (effectiveStrike + F2 * w2 < 0) {
+    } else if (effectiveStrike + F2 * w2 < 0 && !useBachelierModel_) {
         // Effective strike can be become negative if accrueds large enough
         if (arguments_.type == Option::Call) {
             results_.value = df * arguments_.quantity * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
@@ -119,16 +119,22 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
         sigma1 = sigma1 * std::sqrt(obsTime1 / tte);
         sigma2 = sigma2 * std::sqrt(obsTime2 / tte);
         correlation = rho();
-        // KirkFormula
-        Y = (F2 * w2 + effectiveStrike);
-        Z = w1 * F1 / Y;
-        sigmaY = sigma2 * F2 * w2 / Y;
+        if(useBachelierModel_){
+            sigma = std::sqrt(w1 * w1 * sigma1 * sigma1 + w2 * w2 * sigma2 * sigma2 -
+                                        2.0 * w1 * w2 * correlation * sigma1 * sigma2);
+            results_.value = bachelierBlackFormula(arguments_.type, w1 * F1 - w2 * F2, effectiveStrike, sigma * std::sqrt(tte), df) * arguments_.quantity;
+        } else {
+            // KirkFormula
+            Y = (F2 * w2 + effectiveStrike);
+            Z = w1 * F1 / Y;
+            sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
+            sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
 
-        stdDev = sigma * sqrt(tte);
+            stdDev = sigma * sqrt(tte);
 
-        results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+            results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+        }
     }
 
     // Calendar spread adjustment if observation period is before the exercise date
@@ -200,6 +206,11 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
                         ? vol->blackVol(cf->pricingDate(), atmUnderlyingCurrency, true)
                         : 0.0;
+        // Convert sigma to normal if needed, since we looking at ATM vols, we can use a closed formula.
+        if (useBachelierModel_ && res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
+            double blackPrice = blackFormula(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency, res.sigma * std::sqrt(res.tn), 1.0);
+            res.sigma = blackPrice * sqrt(2.0 * M_PI / res.tn);
+        }
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);
@@ -209,7 +220,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
                       std::placeholders::_2, vol),
-            Null<Real>(), exerciseDate);
+            Null<Real>(), exerciseDate, !useBachelierModel_);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
