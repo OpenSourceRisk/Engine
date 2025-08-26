@@ -209,7 +209,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         // Convert sigma to normal if needed, since we looking at ATM vols, we can use a closed formula.
         if (useBachelierModel_ && res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
             double blackPrice = blackFormula(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency, res.sigma * std::sqrt(res.tn), 1.0);
-            res.sigma = blackPrice * sqrt(2.0 * M_PI / res.tn);
+            res.sigma = bachelierBlackFormulaImpliedVol(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency, res.tn, blackPrice);
         }
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
