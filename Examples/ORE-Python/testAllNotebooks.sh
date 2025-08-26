@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 status=0
 return_code=0
 output_status=0
@@ -11,10 +11,12 @@ tmp_status_file=$(mktemp)
 
 mkdir -p "tmp"
 
+# Disable Python output buffering
+export PYTHONUNBUFFERED=1
 
-find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --joblog "$tmp_status_file" '
+find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/' | parallel --joblog "$tmp_status_file" --ungroup '
       echo "Running {}"
-      jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {})
+      jupyter nbconvert --execute {} --to notebook --output-dir="./tmp" --output=$(basename {}) 2>&1
   '
 
 
@@ -76,5 +78,5 @@ rm "$tmp_status_file"
 #jupyter nbconvert --execute "./Notebooks/QuasiMonteCarloMethods.ipynb" --to notebook   --output-dir="./tmp" --output="QuasiMonteCarloMethods"
 
 # clean up
-rm -d -rf ./tmp
+#rm -d -rf ./tmp
 exit $status
