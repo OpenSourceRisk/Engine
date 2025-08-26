@@ -1061,7 +1061,7 @@ F_e := E( f_e | \mathcal{F}_t )
 at $t = t_{sim}$ using an appropriate regression analysis. We set the trade exposure $T$ at $t_{sim}$ to
 
 \begin{equation}\label{aad:calc3}
-T := E_i V_e + \max( (1 - E_i) F_e , 0 )
+T := E_i V_e + 1_{F_e > 0} (1 - E_i) F_e
 \end{equation}
 
 where $i$ is determined such that $E_i$ is the relevant exercise indicator (set $i=0$ and $E_0 := 0$ if $t_{sim} <
@@ -1089,8 +1089,8 @@ to recombine these to the derivative of $T$
 Note on indicator derivatives: We do not consider non-trivial indicator derivatives of $E_i$ since this is an indicator
 of {\em past} exercise. The treatment of derivatives for {\em future} exercise indicators that are implicit in the
 calculation of $F_e$ are not detailled here, we refer to the known result that such indicators do not require
-differentiation. Finally, we do not consider derivatives of $1_{F_e > 0}$ because this indicator reflects regression
-model artifcats only.
+differentiation, see e.g. the discussion in \cite{piterbarg_deltas_callable_libor_exotics}, section 10. Finally, we do
+not consider derivatives of $1_{F_e > 0}$ because this indicator reflects regression model artifcats only.
 
 Note on decomposition: One may ask why we do not directly consider the path value $T'$ of the exotic trade, i.e.
 
@@ -1104,7 +1104,7 @@ $$
 \frac{\partial T'}{\partial m} = E_i \frac{\partial v_e}{\partial m} + (1- E_i) \frac{\partial f_e}{\partial m}
 $$
 
-and then take the conditional expectation, which would be more consistent with the plan vanilla case and much simpler in
+and then take the conditional expectation, which would be more consistent with the plan vanilla trades and much simpler in
 terms of implementation. However, this would not allow to floor $F_e$ at zero as in \ref{aad:calc3} and - much more
 importantly - this would also require to include regressors to properly determine all past exercise decisions.
 
