@@ -12,10 +12,18 @@ pids=()
 # Run notebooks in parallel using papermill
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
     echo "Running $notebook"
-    output_path="$output_dir/$(basename "$notebook")"
-    papermill "$notebook" "$output_path" &
+    notebook_dirname=$(dirname "$notebook")
+    notebook_basename=$(basename "$notebook")
+    output_path="$output_dir/$notebook_basename"
+    
+    (
+        cd "$notebook_dirname" || exit
+        papermill "$notebook_basename" "$output_path"
+    ) &
+    
     pids+=($!)
 done
+
 
 # Wait for all background jobs and collect exit codes
 for pid in "${pids[@]}"; do
