@@ -27,8 +27,8 @@ for pid in "${pids[@]}"; do
 done
 
 echo "Highest exit code: $status"
+#rm -d -rf ./tmp
 exit $status
-
 
 #expected_dir="./ExpectedResults"
 #return_code=0
@@ -86,5 +86,3 @@ exit $status
 #jupyter nbconvert --execute "./Notebooks/QuasiMonteCarloMethods.ipynb" --to notebook   --output-dir="./tmp" --output="QuasiMonteCarloMethods"
 
 # clean up
-#rm -d -rf ./tmp
-exit $status
