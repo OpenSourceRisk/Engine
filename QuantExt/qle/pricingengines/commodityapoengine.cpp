@@ -48,8 +48,9 @@ double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStruct
     if (!useBachelierModel) {
         return blackVol;
     }
-    double blackPrice = blackFormula(Option::Call, strike, forward, blackVol * sqrt(ttm));
-    return bachelierBlackFormulaImpliedVol(Option::Call, strike, forward, ttm, blackPrice);
+    Option::Type optionType = strike >= forward ? Option::Call : Option::Put;
+    double blackPrice = blackFormula(optionType, strike, forward, blackVol * sqrt(ttm));
+    return bachelierBlackFormulaImpliedVol(optionType, strike, forward, ttm, blackPrice);
 }
 
 double
@@ -68,7 +69,7 @@ calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<do
             Volatility v_j = futureVols[j];
             double corr = rho(e_i, e_j);
             EA2 += useBachelierModel ? 2 * corr * v_i * v_j * pricingTimes[j]
-                                     : 2 * forwards[i] * forwards[j] * exp(corr * v_j * v_j * pricingTimes[j]);
+                                     : 2 * forwards[i] * forwards[j] * exp(corr * v_i * v_j * pricingTimes[j]);
         }
     }
     return EA2;

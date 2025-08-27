@@ -79,26 +79,22 @@ protected:
         Handle<QuantExt::CorrelationTermStructure> rho{nullptr};
         bool calendarSpread = longIndex->underlyingName() == shortIndex->underlyingName();
 
-        auto betaStr =
-            engineParameter("beta", {longIndex->underlyingName(), shortIndex->underlyingName()}, false, "0.0");
-        beta = parseReal(betaStr);
+        beta = parseReal(
+            engineParameter("beta", {longIndex->underlyingName(), shortIndex->underlyingName()}, false, "0.0"));
 
         std::vector<string> volatilityQualifiers;
 
         if (calendarSpread) {
             volatilityQualifiers.push_back(longIndex->underlyingName());
         } else {
-            std::string pair = longIndex->underlyingName() + "#" + shortIndex->underlyingName();
-            std::string pairReverse = shortIndex->underlyingName() + "#" + longIndex->underlyingName();
+            std::string pair = longIndex->underlyingName() + "_" + shortIndex->underlyingName();
+            std::string pairReverse = shortIndex->underlyingName() + "_" + longIndex->underlyingName();
             volatilityQualifiers.push_back(pair);
             volatilityQualifiers.push_back(pairReverse);
         }
-        bool useBachelierModel = false;
-        std::string volType = engineParameter("volatility", volatilityQualifiers, false, "lognormal");
-        if (volType == "normal") {
-            useBachelierModel = true;
-        }
-        if (longIndex->underlyingName() == shortIndex->underlyingName()) { // calendar spread option
+        bool useBachelierModel = modelParameter("Volatility", volatilityQualifiers, false, "lognormal") == "normal";
+
+        if (calendarSpread) {
             rho = Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
                 0, QuantLib::NullCalendar(), 1.0, QuantLib::Actual365Fixed()));
         } else {

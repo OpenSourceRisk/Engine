@@ -207,16 +207,11 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         }
         double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
-        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
-                        ? vol->blackVol(cf->pricingDate(), atmUnderlyingCurrency, true)
-                        : 0.0;
-        // Convert sigma to normal if needed, since we looking at ATM vols, we can use a closed formula.
-        if (useBachelierModel_ && res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
-            double blackPrice = blackFormula(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency,
-                                             res.sigma * std::sqrt(res.tn), 1.0);
-            res.sigma = bachelierBlackFormulaImpliedVol(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency,
-                                                        res.tn, blackPrice);
-        }
+        res.sigma =
+            res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
+                ? CommodityAveragePriceOptionMomementMatching::getBlackOrBachelierVol(
+                      vol, pricingDate, atmUnderlyingCurrency, atmUnderlyingCurrency, res.tn, useBachelierModel_)
+                : 0.0;
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);

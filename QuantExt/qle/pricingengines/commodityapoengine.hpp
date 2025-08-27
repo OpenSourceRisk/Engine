@@ -35,6 +35,11 @@ namespace QuantExt {
 
 namespace CommodityAveragePriceOptionMomementMatching {
 
+//! Take a Black (lognormal) Termstructure and return the lognormal or normal vol depending on the flag
+// useBachelierModel = true. If the useBachelierModel flag is set, the lognormal vol is converted to a normal vol.
+double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate,
+                              double forward, double strike, double ttm, bool useBachelierModel);
+
 // Return the atm forward - accruals and the volatility of
 struct MomentMatchingResults {
     Time tn;
