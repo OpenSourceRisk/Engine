@@ -266,10 +266,12 @@ void dataBuilders() {
     ORE_REGISTER_REFERENCE_DATUM("Equity", EquityReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("BondBasket", BondBasketReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("ConvertibleBond", ConvertibleBondReferenceDatum, false)
+    ORE_REGISTER_REFERENCE_DATUM("CallableBond", CallableBondReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CBO", CboReferenceDatum, false)
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
     ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
+    ORE_REGISTER_BOND_BUILDER("CallableBond", CallableBondBuilder, false)
 
     ORE_REGISTER_TRADE_BUILDER("CashPosition", CashPosition, false)
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
@@ -341,6 +343,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityOptionPosition", EquityOptionPosition, false)
     ORE_REGISTER_TRADE_BUILDER("Ascot", Ascot, false)
     ORE_REGISTER_TRADE_BUILDER("ConvertibleBond", ConvertibleBond, false)
+    ORE_REGISTER_TRADE_BUILDER("CallableBond", CallableBond, false)
 
     ORE_REGISTER_TRADE_BUILDER("ScriptedTrade", ScriptedTrade, false)
     ORE_REGISTER_TRADE_BUILDER("Autocallable_01", Autocallable_01, false)
@@ -532,6 +535,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CallbleBondLgmFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)
