@@ -148,6 +148,14 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="callableBondReferenceDatum">
+    <xs:all>
+      <xs:element type="bondReferenceDatum" name="BondData"/>
+      <xs:element type="callableBondCallData" name="CallData" minOccurs="0"/>
+      <xs:element type="callableBondCallData" name="PutData" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="referenceDatum">
     <xs:sequence>
       <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded" />

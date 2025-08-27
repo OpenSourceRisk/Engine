@@ -107,6 +107,7 @@ instruments/bondoption.cpp
 instruments/bondrepo.cpp
 instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
+instruments/callablebond.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
@@ -295,6 +296,7 @@ pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
+pricingengines/fdmcallablebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
@@ -611,6 +613,7 @@ instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
+instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
 instruments/cashsettledeuropeanoption.hpp
@@ -854,6 +857,7 @@ pricingengines/discretizedconvertible.hpp
 pricingengines/fdblackscholesvanillaengine.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
+pricingengines/fdmcallablebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
