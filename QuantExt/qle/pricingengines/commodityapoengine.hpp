@@ -65,7 +65,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
     QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date(),
-    bool useBlackModel = true);
+    bool useBachelierModel = false);
 
 } // namespace CommodityAveragePriceOptionMomementMatching
 

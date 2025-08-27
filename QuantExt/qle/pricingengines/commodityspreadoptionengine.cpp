@@ -226,7 +226,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
                       std::placeholders::_2, vol),
-            Null<Real>(), exerciseDate, !useBachelierModel_);
+            Null<Real>(), exerciseDate, useBachelierModel_);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
