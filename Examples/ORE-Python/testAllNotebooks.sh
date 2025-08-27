@@ -14,7 +14,7 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
     echo "Running $notebook"
     notebook_dirname=$(dirname "$notebook")
     notebook_basename=$(basename "$notebook")
-    output_path="$output_dir/$notebook_basename"
+    output_path="$(realpath "$output_dir")/$notebook_basename"
     
     (
         cd "$notebook_dirname" || exit
