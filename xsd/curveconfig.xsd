@@ -397,6 +397,7 @@
         </xs:all>
           </xs:complexType>
         </xs:element>
+        <xs:element type="xs:double" name="ScalingFactor" minOccurs="0"/>
       </xs:all>
     </xs:complexType>
       </xs:element>
