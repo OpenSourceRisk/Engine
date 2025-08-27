@@ -145,7 +145,7 @@ void CapFloorVolCurve::buildProxyCurve(
 
     capletVol_ = QuantLib::ext::make_shared<ProxyOptionletVolatility>(
         Handle<OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
-        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
+        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod(), config.proxyScalingFactor());
 }
 
 void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -990,7 +990,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                     // Store the vols into a map to sort the wildcard tenors
                     atmCapFloorVols[cfq->term()] = cfq->quote()->value();
                 }
-            }   
+            }
         }
     }
     vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
@@ -1012,7 +1012,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                                                                     << config.curveID());
         }
     }
-    std::map<Date, Date> tenorMap; 
+    std::map<Date, Date> tenorMap;
     if (includeAtm) {
         // Check if all tenor for atm quotes exists
         if (!atmWildcardTenor) {
@@ -1302,7 +1302,7 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
         return QuantLib::ext::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(config.settleDays(), config.calendar(),
             config.businessDayConvention(), tenors, strikes, vols,
             config.dayCounter(), config.interpolationMethod());
-    }        
+    }
 }
 
 QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve>
