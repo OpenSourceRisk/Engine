@@ -970,7 +970,10 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         auto cai = static_cast<CorrelationAnalyticImpl*>(corrAnalytic->impl().get());
         auto corrReportObject = cai->correlationReport();
         const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = corrReportObject->correlationData();
+        QL_REQUIRE(!corrData.empty(),"generateCorrelations returned empty Correlations");
         feedCorrelationToCAM(corrData);
+        auto report = corrAnalytic->reports().at("CORRELATION").at("correlation");
+        analytic()->addReport(LABEL,"correlation",report);
     }
 
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
