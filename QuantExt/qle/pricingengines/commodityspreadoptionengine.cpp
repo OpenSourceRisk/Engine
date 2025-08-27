@@ -42,7 +42,8 @@ CommoditySpreadOptionAnalyticalEngine::CommoditySpreadOptionAnalyticalEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort,
     const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta, bool useBachelierModel)
-    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta), useBachelierModel_(useBachelierModel) {
+    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta),
+      useBachelierModel_(useBachelierModel) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volTSLongAsset_);
@@ -118,11 +119,14 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     } else {
         sigma1 = sigma1 * std::sqrt(obsTime1 / tte);
         sigma2 = sigma2 * std::sqrt(obsTime2 / tte);
+
         correlation = rho();
-        if(useBachelierModel_){
+        if (useBachelierModel_) {
             sigma = std::sqrt(w1 * w1 * sigma1 * sigma1 + w2 * w2 * sigma2 * sigma2 -
-                                        2.0 * w1 * w2 * correlation * sigma1 * sigma2);
-            results_.value = bachelierBlackFormula(arguments_.type, w1 * F1 - w2 * F2, effectiveStrike, sigma * std::sqrt(tte), df) * arguments_.quantity;
+                              2.0 * w1 * w2 * correlation * sigma1 * sigma2);
+            stdDev = sigma * std::sqrt(tte);
+            results_.value = bachelierBlackFormula(arguments_.type, effectiveStrike, w1 * F1 - w2 * F2, stdDev, df) *
+                             arguments_.quantity;
         } else {
             // KirkFormula
             Y = (F2 * w2 + effectiveStrike);
@@ -174,7 +178,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
-   
+
     vector<CashFlowResults> cfResults;
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / df;
@@ -182,7 +186,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
-    mp["cashFlowResults"] =  cfResults;
+    mp["cashFlowResults"] = cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -208,8 +212,10 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
                         : 0.0;
         // Convert sigma to normal if needed, since we looking at ATM vols, we can use a closed formula.
         if (useBachelierModel_ && res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
-            double blackPrice = blackFormula(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency, res.sigma * std::sqrt(res.tn), 1.0);
-            res.sigma = bachelierBlackFormulaImpliedVol(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency, res.tn, blackPrice);
+            double blackPrice = blackFormula(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency,
+                                             res.sigma * std::sqrt(res.tn), 1.0);
+            res.sigma = bachelierBlackFormulaImpliedVol(Option::Call, atmUnderlyingCurrency, atmUnderlyingCurrency,
+                                                        res.tn, blackPrice);
         }
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());

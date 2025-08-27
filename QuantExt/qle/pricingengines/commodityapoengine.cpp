@@ -42,18 +42,19 @@ QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn
 QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
 QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
 
-double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate, double forward, double strike, double ttm, bool useBlackModel) {
+double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate,
+                              double forward, double strike, double ttm, bool useBlackModel) {
     double blackVol = vol->blackVol(volDate, strike, true);
-    if (useBlackModel){
+    if (useBlackModel) {
         return blackVol;
     }
-    double blackPrice = blackFormula(Option::Call, forward, strike, blackVol, ttm);
+    double blackPrice = blackFormula(Option::Call, strike, forward, blackVol * sqrt(ttm));
     return bachelierBlackFormulaImpliedVol(Option::Call, strike, forward, ttm, blackPrice);
 }
 
 double
-calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<double>& futureVols, const std::vector<Date>& futureExpiries,
-                       const std::vector<Time>& pricingTimes,
+calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<double>& futureVols,
+                       const std::vector<Date>& futureExpiries, const std::vector<Time>& pricingTimes,
                        const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
                        bool useBlackModel = true) {
     double EA2 = 0.0;
@@ -65,19 +66,20 @@ calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<do
         for (Size j = 0; j < i; ++j) {
             Date e_j = futureExpiries[j];
             Volatility v_j = futureVols[j];
-            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] * exp(rho(e_i, e_j) * v_j * v_j * pricingTimes[j])
-                                 : 2 * rho(e_i, e_j) * v_i * v_j * pricingTimes[j];
+            double corr = rho(e_i, e_j);
+            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] * exp(corr * v_j * v_j * pricingTimes[j])
+                                 : 2 * corr * v_i * v_j * pricingTimes[j];
         }
     }
     return EA2;
 }
 
-double calcEA2Spot(const std::vector<double>& forwards, const std::vector<double>& spotVariances, bool useBlackModel){
+double calcEA2Spot(const std::vector<double>& forwards, const std::vector<double>& spotVariances, bool useBlackModel) {
     double EA2 = 0.0;
     for (Size i = 0; i < forwards.size(); ++i) {
         EA2 += useBlackModel ? forwards[i] * forwards[i] * exp(spotVariances[i]) : spotVariances[i];
         for (Size j = 0; j < i; ++j) {
-            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] *  exp(spotVariances[j]) : 2.0 * spotVariances[j];
+            EA2 += useBlackModel ? 2 * forwards[i] * forwards[j] * exp(spotVariances[j]) : 2.0 * spotVariances[j];
         }
     }
     return EA2;
@@ -88,8 +90,7 @@ double calcualteSigma(const double EA, const double EA2, const double ttm, bool 
         double s = EA2 / (EA * EA);
         return s < 1.0 || QuantLib::close_enough(s, 1.0) ? 0.0 : std::sqrt(std::log(s) / ttm);
     }
-    double s = EA2 - EA * EA;
-    return s < 0.0 || QuantLib::close_enough(s, 0.0) ? 0.0 : std::sqrt(s / ttm);
+    return sqrt(EA2 / ttm);
 }
 
 MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
@@ -129,17 +130,19 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
             double K = strike == Null<Real>() ? atmUnderlyingCcy : strike;
             if (flow->useFuturePrice()) {
                 Date expiry = index->expiryDate();
-                Date optionExpiry = index->optionExpiryDate(); 
+                Date optionExpiry = index->optionExpiryDate();
                 futureExpiries.push_back(expiry);
                 Date volDate = optionExpiry <= today ? expiry : optionExpiry;
                 optionExpiries.push_back(volDate);
                 if (futureVols.count(volDate) == 0) {
-                    futureVols[volDate] = getBlackOrBachelierVol(vol, volDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
+                    futureVols[volDate] =
+                        getBlackOrBachelierVol(vol, volDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
                 }
                 res.futureVols.push_back(futureVols[volDate]);
             } else {
                 auto tte = res.times.back();
-                auto spotVol = getBlackOrBachelierVol(vol, pricingDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
+                auto spotVol =
+                    getBlackOrBachelierVol(vol, pricingDate, atmUnderlyingCcy, K, res.times.back(), useBlackModel);
                 res.spotVols.push_back(spotVol);
                 spotVariances.push_back(spotVol * spotVol * tte);
             }
@@ -154,7 +157,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     double EA2 = flow->useFuturePrice() ? calcEA2FutureContracts(res.forwards, res.futureVols, futureExpiries,
                                                                  res.times, rho, useBlackModel)
                                         : calcEA2Spot(res.forwards, spotVariances, useBlackModel);
-    
+
     EA2 /= std::pow(static_cast<double>(n), 2.0);
     res.EA2 = EA2;
 
@@ -172,7 +175,7 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     return res;
 }
 
-}// namespace CommodityAveragePriceOptionMomementMatching
+} // namespace CommodityAveragePriceOptionMomementMatching
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
@@ -250,9 +253,9 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
         }
         // Update accrued where pricing date is on or before today
         Real fxRate{1.};
-        if(arguments_.fxIndex)
-            fxRate=arguments_.fxIndex->fixing(kv.first);
-        lastFixing = fxRate*kv.second->fixing(kv.first);
+        if (arguments_.fxIndex)
+            fxRate = arguments_.fxIndex->fixing(kv.first);
+        lastFixing = fxRate * kv.second->fixing(kv.first);
         if (arguments_.barrierStyle == Exercise::American)
             barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
     }
@@ -260,7 +263,7 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
     if (arguments_.barrierStyle == Exercise::European)
         barrierTriggered = this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
 
-    if(barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
+    if (barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
         results_.value = 0.0;
         return false;
     }
@@ -268,7 +271,8 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
     return true;
 }
 
-bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice, const int strictBarrier) const {
+bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice,
+                                                             const int strictBarrier) const {
     if (arguments_.barrierLevel == Null<Real>())
         return false;
     Real tmp = logPrice ? logBarrier_ : arguments_.barrierLevel;
@@ -283,7 +287,7 @@ bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, c
             return price > tmp;
         } else {
             return price >= tmp;
-        }  
+        }
     }
     return false;
 }
@@ -311,7 +315,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["payment_date"] = arguments_.flow->date();
     mp["accrued"] = arguments_.accrued;
     mp["discount"] = discount;
-    if(arguments_.fxIndex)
+    if (arguments_.fxIndex)
         mp["FXIndex"] = arguments_.fxIndex->name();
 
     // If not model dependent, return early.
@@ -327,12 +331,13 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     QL_REQUIRE(effectiveStrike > 0.0, "calculateSpot: expected effectiveStrike to be positive");
 
     // Valuation date
-    
+
     auto matchedMoments = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
         arguments_.flow, *volStructure_,
-        std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1, std
-                  ::placeholders::_2), effectiveStrike);
-     
+        std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1,
+                  std ::placeholders::_2),
+        effectiveStrike);
+
     if (arguments_.flow->useFuturePrice()) {
         mp["futureVols"] = matchedMoments.futureVols;
     } else {
@@ -340,9 +345,9 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     }
 
     // Populate results
-    results_.value = arguments_.quantity * arguments_.flow->gearing() *
-                         blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
-                                      matchedMoments.stdDev(), discount);
+    results_.value =
+        arguments_.quantity * arguments_.flow->gearing() *
+        blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(), matchedMoments.stdDev(), discount);
 
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
@@ -417,11 +422,11 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
         fwdStdDev[i] = sqrt(expHalfFwdVar[i]);
         expHalfFwdVar[i] = exp(-expHalfFwdVar[i] / 2.0);
         Real fxRate{1.};
-        if(arguments_.flow->fxIndex())
-            fxRate = arguments_.flow->fxIndex()->fixing(dates[i+1]);
+        if (arguments_.flow->fxIndex())
+            fxRate = arguments_.flow->fxIndex()->fixing(dates[i + 1]);
         fwdRatio[i] = fxRate * arguments_.flow->index()->fixing(dates[i + 1]);
         if (i > 0) {
-            if(arguments_.flow->fxIndex())
+            if (arguments_.flow->fxIndex())
                 fxRate = arguments_.flow->fxIndex()->fixing(dates[i]);
             fwdRatio[i] /= (fxRate * arguments_.flow->index()->fixing(dates[i]));
         }
@@ -628,9 +633,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
             // If expiry has not been encountered yet
             if (expiryDates.insert(expiry).second) {
                 Real fxRate{1.};
-                if(arguments_.flow->fxIndex())
+                if (arguments_.flow->fxIndex())
                     fxRate = arguments_.flow->fxIndex()->fixing(expiry);
-                prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
+                prices.push_back(fxRate * p.second->fixing(today)); // check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
             if (optionExpiryDates.insert(optionExpiry).second) {
