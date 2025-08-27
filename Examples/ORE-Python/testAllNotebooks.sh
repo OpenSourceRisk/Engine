@@ -1,43 +1,20 @@
 #!/bin/bash
+
 status=0
-return_code=0
-output_status=0
-compare_status=0
-
-expected_dir="./ExpectedResults"
 notebook_dir="./Notebooks"
+output_dir="./tmp"
 
-tmp_status_file=$(mktemp)
-
-mkdir -p "tmp"
-
-# Disable Python output buffering
+mkdir -p "$output_dir"
 export PYTHONUNBUFFERED=1
 
-MAX_JOBS=4
-job_count=0
+pids=()
 
+# Run notebooks in parallel using papermill
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
     echo "Running $notebook"
-    jupyter nbconvert --execute "$notebook" \
-        --to notebook \
-        --output-dir="./tmp" \
-        --output="$(basename "$notebook")" &
+    output_path="$output_dir/$(basename "$notebook")"
+    papermill "$notebook" "$output_path" &
     pids+=($!)
-    ((job_count++))
-
-    if (( job_count >= MAX_JOBS )); then
-        for pid in "${pids[@]}"; do
-            wait "$pid"
-            code=$?
-            if (( code > status )); then
-                status=$code
-            fi
-        done
-        pids=()
-        job_count=0
-    fi
-
 done
 
 # Wait for all background jobs and collect exit codes
@@ -49,7 +26,14 @@ for pid in "${pids[@]}"; do
     fi
 done
 
+echo "Highest exit code: $status"
+exit $status
 
+
+#expected_dir="./ExpectedResults"
+#return_code=0
+#output_status=0
+#compare_status=0
 #for dir in $(find $notebook_dir -type d); do
 #    if [[ $(basename "$dir") == "Input" || $(basename "$dir") == "Output" ||  $(basename "$dir") == "Notebooks" || $(basename "$dir") == "ExpectedOutput" ]]; then
 #        continue
