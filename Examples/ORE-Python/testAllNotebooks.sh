@@ -14,6 +14,8 @@ mkdir -p "tmp"
 # Disable Python output buffering
 export PYTHONUNBUFFERED=1
 
+MAX_JOBS=4
+job_count=0
 
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
     echo "Running $notebook"
@@ -22,6 +24,20 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
         --output-dir="./tmp" \
         --output="$(basename "$notebook")" &
     pids+=($!)
+    ((job_count++))
+
+    if (( job_count >= MAX_JOBS )); then
+        for pid in "${pids[@]}"; do
+            wait "$pid"
+            code=$?
+            if (( code > status )); then
+                status=$code
+            fi
+        done
+        pids=()
+        job_count=0
+    fi
+
 done
 
 # Wait for all background jobs and collect exit codes
