@@ -2555,9 +2555,10 @@ Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
 
 Engine description:
 
-BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
-approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
-resp. the intra-asset correlation between two future contracts is parametrized as
+BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Bachelier model or the Kirk
+approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two different commodities are
+taken from correlation termstructure and the the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
+is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -2568,8 +2569,28 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item beta: the parameter ``beta'' in the correlation parametrization
+\item volatility [optional]: Selects the pricing model. If omitted, defaults to Kirk approximation.
+    \begin{itemize}
+        \item \textbf{normal}: Use Bachelier model
+        \item \textbf{lognormal}: Use Kirk approximation
+    \end{itemize}
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
+
+You can set \texttt{beta} and \texttt{volatility} for each underlying or spread pair individually:
+\begin{itemize}
+    \item \texttt{beta\_NYMEX:CL} sets beta for WTI calendar spreads.
+    \item For spreads between two different underlyings, use \texttt{volatility_underlying1#underlying2} as the parameter name.
+\end{itemize}
+
+Example configuration:
+\begin{itemize}
+    \item NYMEX:CL calendar spreads use the Bachelier model (\texttt{volatility = normal}) with beta 3.05.
+    \item All other calendar spreads use the Kirk approximation (\texttt{volatility = lognormal}) with beta 2.05.
+    \item Spreads between NYMEX:CL and ICE:B also use the Bachelier model.
+    \item All other spread pairs default to use the Kirk approximation.
+\end{itemize}
+
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2579,6 +2600,9 @@ The parameters have the following meaning:
     <Engine>CommoditySpreadOptionEngine</Engine>
     <EngineParameters>
         <Parameter name="beta">2.05</Parameter>
+        <Parameter name="beta_NYMEX:CL">3.05</Parameter>
+        <Parameter name="volatility_NYMEX:CL">normal</Parameter>
+        <Parameter name="volatility_NYMEX:CL#ICE:B">normal</Parameter>
         <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
     </Product>
