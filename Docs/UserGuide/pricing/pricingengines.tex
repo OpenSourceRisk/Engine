@@ -3894,6 +3894,40 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: BondFuture}
+%--------------------------------------------------------
+
+Used by trade type: BondFuture
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingBondFutureEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingBondFutureEngine builds a DiscountingBondFutureEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_BondFuture_DiscountedCashflows_DiscountingBondFutureEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFuture">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondFutureEngine</Engine>
+    <EngineParameters/>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFuture, Model DiscountedCashflows, Engine BondFutureEngine}
+\label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingBondFutureEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: EquityVarianceSwap, CommodityVarianceSwap, FxVarianceSwap}
 %--------------------------------------------------------
 

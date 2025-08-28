@@ -41,7 +41,7 @@ namespace QuantExt {
 CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, const Date& paymentDate,
     const ext::shared_ptr<CommodityIndex>& index, const Calendar& pricingCalendar, QuantLib::Real spread,
-    QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
+    QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Integer futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset,
     bool unrealisedQuantity, const boost::optional<pair<Calendar, Real>>& offPeakPowerData,
@@ -60,7 +60,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, Natural paymentLag, Calendar paymentCalendar,
     BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
     const Calendar& pricingCalendar, QuantLib::Real spread, QuantLib::Real gearing, PaymentTiming paymentTiming,
-    bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
+    bool useFuturePrice, Natural deliveryDateRoll, Integer futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
@@ -381,7 +381,7 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withDeliveryDateRoll(Nat
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFutureMonthOffset(Natural futureMonthOffset) {
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFutureMonthOffset(Integer futureMonthOffset) {
     futureMonthOffset_ = futureMonthOffset;
     return *this;
 }

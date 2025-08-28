@@ -34,8 +34,8 @@ using ore::data::CommodityFutureConvention;
 %shared_ptr(ConventionsBasedFutureExpiry)
 class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
   public:
-    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 10);
-    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 10);
+    ConventionsBasedFutureExpiry(const std::string& commName, QuantLib::Size maxIterations = 100);
+    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention, QuantLib::Size maxIterations = 100);
 
     QuantLib::Date nextExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                               QuantLib::Natural offset = 0, bool forOption = false) override;

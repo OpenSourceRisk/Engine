@@ -935,6 +935,8 @@ public:
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
     const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
+    const string& settlementFxIndex() const { return settlementFxIndex_; }
+    const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
     //@}
 
     //! \name modifiers
@@ -992,6 +994,8 @@ private:
     string lastPeriodDayCounter_;
     ScheduleData paymentSchedule_;
     bool strictNotionalDates_ = false;
+    string settlementFxIndex_;
+    string settlementFxFixingDate_;
 };
 
 //! \name Utilities for building QuantLib Legs

@@ -27,6 +27,8 @@
 #include <ql/index.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <optional>
+
 namespace QuantExt {
 
 /*! Vanilla cash settled European options allowing for deferred payment and automatic exercise.

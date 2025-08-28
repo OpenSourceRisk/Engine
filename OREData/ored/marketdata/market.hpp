@@ -230,8 +230,6 @@ public:
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<Quote> recoveryRate(const string&,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<Quote> conversionFactor(const string&,
-                                           const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name (Index) CDS Option volatilities
@@ -300,10 +298,14 @@ public:
     //! InCcy configuration label
     static const string inCcyConfiguration;
 
-    //! \name BondSpreads
+    //! \name security spreads, security conversion factors and prices
     //@{
     virtual Handle<Quote> securitySpread(const string& securityID,
                                          const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<Quote> conversionFactor(const string&,
+                                           const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<Quote> securityPrice(const string&,
+                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Commodity price curves and indices

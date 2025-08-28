@@ -948,6 +948,7 @@ CrifRecord SlimCrifRecord::toCrifRecord() const {
         cr.coveredBondInd = getCoveredBondInd();
         cr.trancheThickness = getTrancheThickness();
         cr.bb_rw = getBbRw();
+        cr.endDate = getEndDate();
     }
 
     cr.resultCurrency = getResultCurrency();

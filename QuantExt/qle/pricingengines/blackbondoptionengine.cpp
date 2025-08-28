@@ -56,19 +56,16 @@ void BlackBondOptionEngine::calculate() const {
 
     QL_REQUIRE(!underlyingReferenceCurve_.empty(), "BlackBondOptionEngine::calculate(): empty reference curve");
 
-    auto fwdBondEngine = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(
-        underlyingReferenceCurve_, defaultCurve_, recoveryRate_, securitySpread_, timestepPeriod_);
-    auto bondNpvResults = fwdBondEngine->calculateNpv(exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
-                                              arguments_.underlying->cashflows());
-    
-    for (auto& cfRes : bondNpvResults.cashflowResults) {
+    std::vector<CashFlowResults> cfResults;
+    Real fwdNpv = forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
+                               true, &cfResults)
+                      .first;
+
+    for (auto& cfRes : cfResults) {
         cfRes.legNumber = 0;
         cfRes.type = "Underlying_Bond__" + cfRes.type;
     }
-    
-    Real fwdNpv = bondNpvResults.npv;
 
-   
     Real knockOutProbability = defaultCurve_.empty() ? 0.0 : 1.0 - defaultCurve_->survivalProbability(exerciseDate);
 
     // adjust forward if option does not knock out (option is on the recovery value if bond defaults before expiry)
@@ -148,10 +145,10 @@ void BlackBondOptionEngine::calculate() const {
     optionFlow.discountFactor = discountCurve_->discount(exerciseDate);
     optionFlow.presentValue = optionValue;
 
-    bondNpvResults.cashflowResults.push_back(optionFlow);
+    cfResults.push_back(optionFlow);
 
     results_.additionalResults["knockOutProbability"] = knockOutProbability;
-    results_.additionalResults["cashFlowResults"] = bondNpvResults.cashflowResults;
+    results_.additionalResults["cashFlowResults"] = cfResults;
     results_.additionalResults["CashStrike"] = cashStrike;
     results_.additionalResults["FwdCashPrice"] = fwdNpv;
     results_.additionalResults["PriceVol"] = fwdPriceVol;

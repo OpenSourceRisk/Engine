@@ -98,8 +98,8 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
-                                              QuantLib::Period tenor,
-                                              FutureConvention::DateGenerationRule rule);
+                                              QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
+                                              const QuantLib::Calendar& calendar);
 
 Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
 

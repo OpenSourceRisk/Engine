@@ -102,6 +102,7 @@ instruments/ascot.cpp
 instruments/averageois.cpp
 instruments/balanceguaranteedswap.cpp
 instruments/bondbasket.cpp
+instruments/bondfuture.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
 instruments/bondtotalreturnswap.cpp
@@ -276,6 +277,7 @@ pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
+pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -293,6 +295,7 @@ pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
+pricingengines/forwardenabledbondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
@@ -429,6 +432,7 @@ utilities/commodity.cpp
 utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
+utilities/ratehelpers.cpp
 utilities/time.cpp)
 
 # hpp files, this list is maintained manually
@@ -602,6 +606,7 @@ instruments/ascot.hpp
 instruments/averageois.hpp
 instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
+instruments/bondfuture.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
@@ -831,6 +836,7 @@ pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
+pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -848,6 +854,7 @@ pricingengines/discretizedconvertible.hpp
 pricingengines/fdblackscholesvanillaengine.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
+pricingengines/forwardenabledbondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
@@ -1043,6 +1050,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp

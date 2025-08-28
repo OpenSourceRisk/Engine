@@ -675,6 +675,43 @@ ScenarioSimMarket::ScenarioSimMarket(
                     } catch (const std::exception& e) {
                         DLOG("skipping this object: " << e.what());
                     }
+
+                    try {
+                        DLOG("Adding security conversion factor " << name << " from configuration " << configuration);
+                        Real v = initMarket->conversionFactor(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security price " << name << " from configuration " << configuration);
+                        Real v = initMarket->securityPrice(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
                 }
                 break;
 
@@ -1276,7 +1313,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        DLOG("Adding recovery rate " << name << " from configuration " << configuration);
                         Real v = initMarket->recoveryRate(name, configuration)->value();
                         auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
                         if(useSpreadedTermStructures_) {
@@ -2847,36 +2884,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::ConversionFactor:
-                for (const auto& name : param.second.second) {
-                    bool simDataWritten = false;
-                    try {
-                        DLOG("Adding ConversionFactor " << name << " from configuration " << configuration);
-                        Real v;
-                        try {
-                            v = initMarket->conversionFactor(name, configuration)->value();
-                        } catch (...) {
-                            DLOG("ConversionFactor " << name << " uses default value of 1.0.");
-                            v = 1.0;
-                        }
-
-                        auto q = QuantLib::ext::make_shared<SimpleQuote>(v);
-                        conversionFactors_.insert(
-                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
-
-                        if (param.second.first) // is set to false within ScenarioSimMarketParameters::fromXML
-                            simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
-                                               std::forward_as_tuple(q));
-
-                        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
-                        simDataWritten = true;
-                    } catch (const std::exception& e) {
-                        processException(e, name, param.first, simDataWritten);
-                        gotException = true;
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::SurvivalWeight:
                 // nothing to do, these are written to asd
                 break;
@@ -3008,9 +3015,11 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
     LOG("building base scenario done");
 
-    scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
-    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
-    scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    if (ScenarioInformation::instance().isEnabled()) {
+        scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    }
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
@@ -3048,17 +3057,22 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s) {
 
+    auto scenario = s;
+    if (useSpreadedTermStructures_ && scenario->isAbsolute())
+        scenario = absoluteToSpreadedScenario(s, baseScenarioAbsolute_, parameters_);
+    
     currentScenario_ = scenario;
 
-    QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
-    if (!currentScenario_->isAbsolute())
-        currentScenarioAbsolute =
-            addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
-
-    scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
-    scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    if (ScenarioInformation::instance().isEnabled()){
+        QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+        if (!currentScenario_->isAbsolute())
+            currentScenarioAbsolute =
+                addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    }
 
     // 1 handle delta scenario
 

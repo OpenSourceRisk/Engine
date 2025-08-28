@@ -11,9 +11,18 @@ A Knock Out Swap is a Swap with one Fixed and one Floating leg, where the Swap i
 The meanings and allowable values in this block are as follows:
 
 \begin{itemize}
-\item BarrierData: This node specifies the barrier Type and Level. The Type must be \emph{UpAndOut} or
-  \emph{DownAndOut}. Exactly one Level must be specified. All other values of the barrier data block are not relevant. \\
-  Allowable values: See \ref{ss:barrier_data}.
+\item BarrierData: This node specifies the barrier components. All other values of the barrier data block are not relevant. \\
+See \ref{ss:barrier_data}.
+  \begin{itemize}
+    \item Type: The barrier type (allowed values are \emph{UpAndOut}, \emph{DownAndOut})
+    \item Levels: Exactly one barrier level must be given.
+    \item StrictComparison [Optional]: \emph{0}, \emph{1}. Defaults to \emph{0}. Determines how the barrier is checked as per: 
+    
+     \emph{0}: the barrier checks use $<=$, $>=$ to check Out-barriers.
+
+     \emph{1}: the barrier checks use strict comparison $<$ and $>$ for Out-barriers.
+
+  \end{itemize}
 
 \item BarrierStartDate: The barrier is monitored on all floating leg fixing dates that are on or after the barrier start date. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.

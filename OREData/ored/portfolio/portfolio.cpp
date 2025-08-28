@@ -42,6 +42,7 @@ void Portfolio::clear() {
 }
 
 void Portfolio::reset() {
+    isBuilt_ = false;
     LOG("Reset portfolio of size " << trades_.size());
     for (auto [id, t] : trades_)
         t->reset();
@@ -174,6 +175,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             .log();
     }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
+    isBuilt_ = true;
 }
 
 Date Portfolio::maturity() const {
@@ -219,6 +221,7 @@ void Portfolio::add(const QuantLib::ext::shared_ptr<Trade>& trade) {
     QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     underlyingIndicesCache_.clear();
     trades_[trade->id()] = trade;
+    isBuilt_ = false;
 }
 
 bool Portfolio::has(const string& id) { return trades_.find(id) != trades_.end(); }
@@ -255,7 +258,7 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
         auto fixings = t.second->fixings(settlementDate);
         for (const auto& [index, fixingDates] : fixings) {
             if (!fixingDates.empty()) {
-                result[index].addDates(fixingDates);
+                result[index].addDates(fixingDates, t.first);
             }
         }
     }

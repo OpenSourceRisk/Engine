@@ -100,6 +100,7 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     auto conLegData = legData_.concreteLegData();
     commLegData_ = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
     QL_REQUIRE(commLegData_, "CommodityOptionStrip leg data should be of type CommodityFloating");
+    QL_REQUIRE(commLegData_->futureMonthOffset() >= 0, "FutureMonthOffset must be positive.");
     if(!commLegData_->fxIndex().empty())
         fxIndex_= commLegData_->fxIndex();
     // Build the commodity floating leg data

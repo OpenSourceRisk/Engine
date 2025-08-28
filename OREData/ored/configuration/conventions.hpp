@@ -315,13 +315,14 @@ public:
     //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
     FutureConvention(const string& id, const string& index,
                      const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                     const DateGenerationRule dateGeneration);
+                     const DateGenerationRule dateGeneration, const string& calendar);
     //@}
     //! \name Inspectors
     //@{
     QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
+    QuantLib::Calendar calendar() const { return calendar_; }
     //@}
 
     //! Serialisation
@@ -333,8 +334,10 @@ public:
 
 private:
     string strIndex_;
+    string strCalendar_;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
+    QuantLib::Calendar calendar_;
 };
 
 //! Container for storing Forward rate Agreement conventions

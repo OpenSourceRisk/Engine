@@ -148,6 +148,9 @@ public:
     virtual std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
                                        const bool mandatory = true, const std::string& defaultValue = "") const;
 
+    /*! return global parameters */
+    const std::map<std::string, std::string> globalParameters() const { return globalParameters_; }
+
 protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
