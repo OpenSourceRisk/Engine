@@ -91,9 +91,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
                 fxNotional = market->fxRate(trade->notionalCurrency() + baseCurrency, configuration)->value();
             Real npv = 0;
-            if(trade->notional()!=0){
+            try{
                 npv = trade->instrument()->NPV();
-            }
+            }catch(...){ }
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
             report.next()
