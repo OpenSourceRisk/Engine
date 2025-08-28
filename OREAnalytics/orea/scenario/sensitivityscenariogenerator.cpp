@@ -82,6 +82,21 @@ bool vectorEqual(const vector<Real>& v_1, const vector<Real>& v_2) {
     return (v_1.size() == v_2.size() && std::equal(v_1.begin(), v_1.end(), v_2.begin(), close));
 }
 
+bool vectorSubset(const vector<Real>& v_1, const vector<Real>& v_2) { 
+    std::unordered_set<int> setA;
+    // Use iterator to populate setA
+    for (auto it = v_1.begin(); it != v_1.end(); ++it) {
+        setA.insert(*it);
+    }
+
+    for (auto it = v_2.begin(); it != v_2.end(); ++it) {
+        if (setA.find(*it) == setA.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void SensitivityScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
 
@@ -2256,7 +2271,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         }
 
         // Can we store a valid shift size?
-        bool validShiftSize = vectorEqual(times, shiftTimes);
+        bool validShiftSize = vectorSubset(times, shiftTimes);
 
         // Generate the scenarios for each shift
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
@@ -2280,7 +2295,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
                 }
 
                 // Possibly store valid shift size
-                if (validShiftSize && j == k) {
+                if (validShiftSize && shiftTimes[j] == times[k]) {
                     storeShiftData(key, basePrices[k], shiftedPrices[k]);
                 }
             }
