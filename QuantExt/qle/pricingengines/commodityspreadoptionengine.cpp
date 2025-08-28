@@ -41,8 +41,9 @@ namespace QuantExt {
 CommoditySpreadOptionAnalyticalEngine::CommoditySpreadOptionAnalyticalEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort,
-    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta)
-    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta) {
+    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta, bool useBachelierModel)
+    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta),
+      useBachelierModel_(useBachelierModel) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volTSLongAsset_);
@@ -107,7 +108,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
         results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
 
-    } else if (effectiveStrike + F2 * w2 < 0) {
+    } else if (effectiveStrike + F2 * w2 < 0 && !useBachelierModel_) {
         // Effective strike can be become negative if accrueds large enough
         if (arguments_.type == Option::Call) {
             results_.value = df * arguments_.quantity * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
@@ -118,17 +119,26 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     } else {
         sigma1 = sigma1 * std::sqrt(obsTime1 / tte);
         sigma2 = sigma2 * std::sqrt(obsTime2 / tte);
+
         correlation = rho();
-        // KirkFormula
-        Y = (F2 * w2 + effectiveStrike);
-        Z = w1 * F1 / Y;
-        sigmaY = sigma2 * F2 * w2 / Y;
+        if (useBachelierModel_) {
+            sigma = std::sqrt(w1 * w1 * sigma1 * sigma1 + w2 * w2 * sigma2 * sigma2 -
+                              2.0 * w1 * w2 * correlation * sigma1 * sigma2);
+            stdDev = sigma * std::sqrt(tte);
+            results_.value = bachelierBlackFormula(arguments_.type, effectiveStrike, w1 * F1 - w2 * F2, stdDev, df) *
+                             arguments_.quantity;
+        } else {
+            // KirkFormula
+            Y = (F2 * w2 + effectiveStrike);
+            Z = w1 * F1 / Y;
+            sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
+            sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
 
-        stdDev = sigma * sqrt(tte);
+            stdDev = sigma * sqrt(tte);
 
-        results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+            results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+        }
     }
 
     // Calendar spread adjustment if observation period is before the exercise date
@@ -168,7 +178,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
-   
+
     vector<CashFlowResults> cfResults;
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / df;
@@ -176,7 +186,7 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     cfResults.back().legNumber = 0;
     cfResults.back().type = "ExpectedFlow";
 
-    mp["cashFlowResults"] =  cfResults;
+    mp["cashFlowResults"] = cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
@@ -197,9 +207,11 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         }
         double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
-        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
-                        ? vol->blackVol(cf->pricingDate(), atmUnderlyingCurrency, true)
-                        : 0.0;
+        res.sigma =
+            res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
+                ? CommodityAveragePriceOptionMomementMatching::getBlackOrBachelierVol(
+                      vol, pricingDate, atmUnderlyingCurrency, atmUnderlyingCurrency, res.tn, useBachelierModel_)
+                : 0.0;
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);
@@ -209,7 +221,7 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
                       std::placeholders::_2, vol),
-            Null<Real>(), exerciseDate);
+            Null<Real>(), exerciseDate, useBachelierModel_);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
