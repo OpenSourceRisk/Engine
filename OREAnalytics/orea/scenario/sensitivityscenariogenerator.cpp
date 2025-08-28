@@ -83,18 +83,13 @@ bool vectorEqual(const vector<Real>& v_1, const vector<Real>& v_2) {
 }
 
 bool vectorSubset(const vector<Real>& v_1, const vector<Real>& v_2) { 
-    std::unordered_set<int> setA;
-    // Use iterator to populate setA
-    for (auto it = v_1.begin(); it != v_1.end(); ++it) {
-        setA.insert(*it);
-    }
+    std::set<Real> s_1(v_1.begin(), v_1.end());
+    std::set<Real> s_2(v_2.begin(), v_2.end());
+    std::vector<Real> diff;
 
-    for (auto it = v_2.begin(); it != v_2.end(); ++it) {
-        if (setA.find(*it) == setA.end()) {
-            return false;
-        }
-    }
-    return true;
+    // s1 - s2: if result is empty, then s2 ⊆ s1
+    std::set_difference(s_2.begin(), s_2.end(), s_1.begin(), s_1.end(), std::back_inserter(diff));
+    return diff.empty();
 }
 
 void SensitivityScenarioGenerator::generateScenarios() {
