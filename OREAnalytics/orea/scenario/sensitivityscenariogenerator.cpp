@@ -2291,6 +2291,8 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
 
                 // Possibly store valid shift size
                 if (validShiftSize && shiftTimes[j] == times[k]) {
+                    // store values with shift tenor index
+                    RiskFactorKey key(RFType::CommodityCurve, name, j);
                     storeShiftData(key, basePrices[k], shiftedPrices[k]);
                 }
             }
