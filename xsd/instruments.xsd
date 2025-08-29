@@ -92,6 +92,7 @@
       <xs:element type="varianceDispersionSwapData" name="VarianceDispersionSwapData"/>
       <xs:element type="kikoVarianceSwapData" name="KIKOVarianceSwapData"/>
       <xs:element type="corridorVarianceSwapData" name="CorridorVarianceSwapData"/>
+      <xs:element type="indexedCorridorVarianceSwapData" name="IndexedCorridorVarianceSwapData"/>
       <xs:element type="kikoCorridorVarianceSwapData" name="KIKOCorridorVarianceSwapData"/>
       <xs:element type="corridorVarianceDispersionSwapData" name="CorridorVarianceDispersionSwapData"/>
       <xs:element type="koCorridorVarianceDispersionSwapData" name="KOCorridorVarianceDispersionSwapData"/>
@@ -3087,6 +3088,25 @@
       <xs:element type="stFreeStyleNumber" name="UpperBarrierLevel"/>
       <xs:element type="stFreeStyleNumber" name="LowerBarrierLevel"/>
       <xs:element type="stFreeStyleBool" name="CountBothObservations"/>
+      <xs:element type="stFreeStyleBool" name="AccrualAdjustment"/>
+      <xs:element type="stFreeStyleNumber" name="Cap"/>
+      <xs:element type="stFreeStyleNumber" name="Floor"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="indexedCorridorVarianceSwapData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleNumber" name="Strike"/>
+      <xs:element type="stFreeStyleNumber" name="Notional"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleIndex" name="CorridorIndex"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleBool" name="SquaredPayoff"/>
+      <xs:element type="stFreeStyleNumber" name="UpperBarrierLevel"/>
+      <xs:element type="stFreeStyleNumber" name="LowerBarrierLevel"/>
       <xs:element type="stFreeStyleBool" name="AccrualAdjustment"/>
       <xs:element type="stFreeStyleNumber" name="Cap"/>
       <xs:element type="stFreeStyleNumber" name="Floor"/>
