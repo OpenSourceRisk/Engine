@@ -131,6 +131,7 @@
 #include <ored/portfolio/bestentryoption.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondbasket.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -140,6 +141,7 @@
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
@@ -317,6 +319,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
+#include <ored/portfolio/strikeresettableoption.hpp>
 #include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>

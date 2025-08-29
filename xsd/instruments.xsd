@@ -41,6 +41,7 @@
       <xs:element type="cliquetOptionData" name="EquityCliquetOptionData"/>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
+      <xs:element type="bondFutureData" name="BondFutureData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
@@ -169,6 +170,10 @@
       <xs:element type="knockOutSwapData" name="KnockOutSwapData"/>
       <xs:element type="LPISwapData" name="LPISwapData"/>
       <xs:element type="cashPositionData" name="CashPositionData"/>
+	  <xs:element type="strikeResettableOptionData" name="StrikeResettableOptionData"/>
+	  <xs:element type="strikeResettableOptionData2" name="EquityStrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData2" name="FxStrikeResettableOptionData"/>
+      <xs:element type="strikeResettableOptionData2" name="CommodityStrikeResettableOptionData"/>
     </xs:choice>
   </xs:group>
 
@@ -379,6 +384,34 @@
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bondFutureData">
+    <xs:all>
+      <xs:element type="xs:string" name="ContractName"/>
+      <xs:element type="xs:string" name="ContractNotional"/>
+      <xs:element type="xs:string" name="LongShort"/>
+      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ContractMonth" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="DeliverableGrade" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="FairPrice" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="Settlement" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementDirty" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="RootDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryBasis" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementBasis" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryLag" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementLag" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastTradingDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastDeliveryDate" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="deliveryBasket" name="DeliveryBasket" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="deliveryBasket">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="varianceSwapData">
@@ -1252,6 +1285,7 @@
       <xs:enumeration value="CommodityVarianceSwap"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
+      <xs:enumeration value="BondFuture"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="Failed"/>
@@ -1298,6 +1332,9 @@
       <xs:enumeration value="CommodityRainbowOption"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
+	  <xs:enumeration value="CommodityStrikeResettableOption"/>
+	  <xs:enumeration value="FxStrikeResettableOption"/>
+	  <xs:enumeration value="EquityStrikeResettableOption"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -3222,6 +3259,25 @@
       <xs:element type="stFreeStyleCurrency" name="Currency"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="strikeResettableOptionData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+	  <xs:element type="stFreeStyleOptionType" name="OptionType"/>
+	  <xs:element type="stFreeStyleCurrency" name="Currency"/>
+      <xs:element type="stFreeStyleNumber" name="Strike"/>
+	  <xs:element type="stFreeStyleNumber" name="ResetStrike"/>
+      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+	  <xs:element type="stFreeStyleNumber" name="TriggerType"/>
+	  <xs:element type="stFreeStyleNumber" name="TriggerPrice"/>
+	  <xs:element type="stFreeStyleIndex" name="Underlying"/>
+	  <xs:element type="stFreeStyleEvent" name="ExpiryDate"/>
+	  <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+	  <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+	  <xs:element type="stFreeStyleNumber" name="Premium"/>
+	  <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="scriptedTradeData">
     <xs:sequence>
@@ -4466,6 +4522,32 @@
       <xs:element type="date" name="SettlementDate"/>
       <xs:element type="scheduleData" name="StrikeObservationDates"/>
       <xs:element type="underlying" name="Underlying"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="strikeResettableOptionData2">
+    <xs:all>
+      <xs:element type="longShort" name="LongShort"/>
+	  <xs:element type="optionType" name="OptionType"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="ResetStrike"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element name="TriggerType">
+	    <xs:simpleType>
+		  <xs:restriction base="xs:string">
+		    <xs:enumeration value="Up"/>
+		    <xs:enumeration value="Down"/>
+		  </xs:restriction>
+	    </xs:simpleType>
+	  </xs:element>
+      <xs:element type="xs:float" name="TriggerPrice"/>
+	  <xs:element type="underlying" name="Underlying"/>
+	  <xs:element type="date" name="ExpiryDate"/>
+	  <xs:element type="date" name="SettlementDate"/>
+      <xs:element type="xs:float" name="Premium"/>
+      <xs:element type="date" name="PremiumDate"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
     </xs:all>
   </xs:complexType>
 

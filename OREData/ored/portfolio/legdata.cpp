@@ -1608,6 +1608,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1632,6 +1633,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                   .withPaymentDayCounter(dc)
                   .withPaymentCalendar(paymentCalendar)
                   .withPaymentAdjustment(bdc)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withGearings(gearings);
 
     // try to set the rate computation period based on the schedule tenor
@@ -2869,9 +2871,9 @@ void applyIndexing(Leg& leg, const LegData& data, const QuantLib::ext::shared_pt
                                             tmp->fixingCalendar());
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
-                QuantLib::ext::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());
-                QL_REQUIRE(!(QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(bi)),
-                           "BondFuture Legs are not yet supported");
+                QuantLib::ext::shared_ptr<BondIndex> bi =
+                    QuantLib::ext::dynamic_pointer_cast<BondIndex>(parseBondIndex(indexing.index()));
+                QL_REQUIRE(bi, "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
                 BondIndexBuilder bondIndexBuilder(bondData.securityId(), indexing.indexIsDirty(),
                                                   indexing.indexIsRelative(), parseCalendar(indexing.fixingCalendar()),

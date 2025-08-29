@@ -826,6 +826,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
 
+                (*tradeExposure)[simCounter + 1].targetConditionalExpDerivativeNpvNodes = {exercisedValueCond,
+                                                                                           futureOptionValueCond};
+
                 // here we can take max(0, futureOptionValueCond)
                 (*tradeExposure)[simCounter + 1].targetConditionalExpectation =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),

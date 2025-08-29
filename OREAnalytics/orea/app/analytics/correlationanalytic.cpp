@@ -56,8 +56,6 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     setCorrelationReport(loader);
 
     QL_REQUIRE(correlationReport_, "No Correlation Report created");

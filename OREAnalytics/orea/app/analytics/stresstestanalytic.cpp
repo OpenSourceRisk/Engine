@@ -62,8 +62,6 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
     analytic()->modifyPortfolio();

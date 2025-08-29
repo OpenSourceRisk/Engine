@@ -109,6 +109,13 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
         valueDates_ = {valueStart, tmpEndDate};
     }
 
+    // Legs with LastRecentPeriod can generate coupons with start date which is a holiday
+    // in the index fixing calendar
+    // Previous fixing date will be used in calculation of compoundFactor
+    if (valueDates_.front() != valueStart) {
+        valueDates_.insert(valueDates_.begin(), valueStart);
+    }
+
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
         // contains at least two dates and enough periods to cover rate cutoff
