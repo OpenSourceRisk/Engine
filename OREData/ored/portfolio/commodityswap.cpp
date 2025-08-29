@@ -298,13 +298,18 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["gearing[" + label + "]"] = indexedAvgFlow->gearing();
                     additionalData_["spread[" + label + "]"] = indexedAvgFlow->spread();
                     std::vector<Real> priceVec;
+                    std::vector<Real> weightsVector;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
+                    const auto& weights = indexedAvgFlow->weights();
                     for (const auto& kv : indexedAvgFlow->indices()) {
                         indexVec.push_back(kv.second->name());
                         indexExpiryVec.push_back(kv.second->expiryDate());
                         pricingDateVec.push_back(kv.first);
                         priceVec.push_back(kv.second->fixing(kv.first));
+                        auto weight = weights.find(kv.first); 
+                        // Add null for missing weight, dont throw here
+                        weightsVector.push_back(weight != weights.end() ? weight->second : Null<Real>());
                     }
                     additionalData_["index[" + label + "]"] = indexVec;
                     additionalData_["indexExpiry[" + label + "]"] = indexExpiryVec;
@@ -312,6 +317,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["averagePrice[" + label + "]"] = indexedAvgFlow->fixing();
                     additionalData_["pricingDate[" + label + "]"] = pricingDateVec;
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedAvgFlow->date());
+                    additionalData_["weights[" + label + "]"] = weightsVector;
                 }
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;
