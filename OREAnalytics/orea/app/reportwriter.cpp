@@ -880,18 +880,17 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
         .addColumn("Factor", string())
         .addColumn("BaseValue", double(), 8)
         .addColumn("ShiftSize", double(), 8);
-    report.next();
+
     for (auto const& [key, shift] : shiftSizes) {
+        report.next();
         std::string keyStr = "na", factorStr = "na";
         Real baseValue = Null<Real>();
-        //keyStr = ore::data::to_string(key);
-        if (auto it = keyToFactor.find(key); it != keyToFactor.end()){
+        keyStr = ore::data::to_string(key);
+        if (auto it = keyToFactor.find(key); it != keyToFactor.end())
             factorStr = it->second;
-            keyStr = ore::data::to_string(key);
-            baseValue = baseValues.at(key);
-            report.add(keyStr).add(factorStr).add(baseValue).add(shift);
-            report.next();
-        }
+        if (auto it = baseValues.find(key); it != baseValues.end())
+            baseValue = it->second;
+        report.add(keyStr).add(factorStr).add(baseValue).add(shift);
     }
 
     report.end();
