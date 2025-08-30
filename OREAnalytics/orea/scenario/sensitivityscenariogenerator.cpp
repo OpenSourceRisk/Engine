@@ -2069,7 +2069,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
 
                         // Possibly store valid shift size
                         if (validShiftSize && volExpiryTimes[jj] == shiftExpiryTimes[j] &&
-                            volStrikes[k] == shiftStrikes[k]) {
+                            volStrikes[kk] == shiftStrikes[k]) {
                             storeShiftData(key, volData[jj][kk], shiftedVolData[jj][kk]);
                         }
                     }
