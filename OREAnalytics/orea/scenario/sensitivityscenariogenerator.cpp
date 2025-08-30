@@ -86,7 +86,6 @@ bool vectorSubset(const vector<Real>& v_1, const vector<Real>& v_2) {
     std::set<Real> s_1(v_1.begin(), v_1.end());
     std::set<Real> s_2(v_2.begin(), v_2.end());
     std::set<Real> diff;
-    // s1 - s2: if result is empty, then s2 ⊆ s1
     std::set_difference(s_2.begin(), s_2.end(), s_1.begin(), s_1.end(), std::inserter(diff, diff.begin()));
     return diff.empty();
 }
