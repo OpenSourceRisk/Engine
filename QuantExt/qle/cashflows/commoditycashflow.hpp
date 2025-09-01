@@ -95,6 +95,11 @@ public:
     // Return the price fixing
     virtual QuantLib::Real fixing() const = 0;
 
+    void update() override {
+        notifyObservers();
+        LazyObject::update();
+    }
+
     //! \name Visitability
     //@{
     void accept(QuantLib::AcyclicVisitor& v) override;

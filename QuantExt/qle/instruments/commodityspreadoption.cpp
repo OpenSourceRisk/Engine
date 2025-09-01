@@ -95,4 +95,17 @@ void CommoditySpreadOption::arguments::validate() const {
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
 
+void CommoditySpreadOption::deepUpdate() {
+    // Update the underlying cash flows
+    longAssetFlow_->deepUpdate();
+    shortAssetFlow_->deepUpdate();
+    update();
+}
+
+void CommoditySpreadOption::alwaysForwardNotifications() {
+    longAssetFlow_->alwaysForwardNotifications();
+    shortAssetFlow_->alwaysForwardNotifications();
+    LazyObject::alwaysForwardNotifications();
+}
+
 } // namespace QuantExt
