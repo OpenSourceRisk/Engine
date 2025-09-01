@@ -285,7 +285,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the fair swap rate
 
-    Real atmForward = -floatingNpv / fixedBps;
+    Real atmForward = close_enough(fixedBps, 0.0) ? 0.0 : -floatingNpv / fixedBps;
 
     // determine the spread correction
 
@@ -344,7 +344,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Real delta = 0.0, vega = 0.0;
     Option::Type optionType = fixedBps > 0 ? Option::Put : Option::Call;
 
-    if (close_enough(annuity, 0.0)||std::isnan(annuity)) {
+    if (close_enough(annuity, 0.0)) {
         npv_ = 0.0;
     } else if (volatility_->volatilityType() == ShiftedLognormal) {
         npv_ = blackFormula(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity, displacement);
