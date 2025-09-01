@@ -319,6 +319,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
+#include <ored/portfolio/strikeresettableoption.hpp>
 #include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>

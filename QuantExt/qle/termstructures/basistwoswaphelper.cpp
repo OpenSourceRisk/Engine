@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
@@ -35,13 +37,15 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
                                        const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
                                        bool shortIndexGiven,
                                        // Discount curve
-                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven)
+                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
+                                       const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
       longFixedFrequency_(longFixedFrequency), longFixedConvention_(longFixedConvention),
       longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), longIndexGiven_(longIndexGiven),
       shortFixedFrequency_(shortFixedFrequency), shortFixedConvention_(shortFixedConvention),
       shortFixedDayCount_(shortFixedDayCount), shortIndex_(shortIndex), longMinusShort_(longMinusShort),
-      shortIndexGiven_(shortIndexGiven), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven) {
+      shortIndexGiven_(shortIndexGiven), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
+      pillarChoice_(pillarChoice) {
 
     QL_REQUIRE(longIndex_->tenor() >= shortIndex_->tenor(),
                "Tenor of longIndex should be at least tenor of shortIndex.");
@@ -90,26 +94,11 @@ void BasisTwoSwapHelper::initializeDates() {
                      .withFloatingLegCalendar(calendar_);
 
     earliestDate_ = std::min(longSwap_->startDate(), shortSwap_->startDate());
-    latestDate_ = std::max(longSwap_->maturityDate(), shortSwap_->maturityDate());
-
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
-            Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-        if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
-            Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = longIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-    }
+    maturityDate_ = std::max(longSwap_->maturityDate(), shortSwap_->maturityDate());
+    latestRelevantDate_ =
+        std::max(determineLatestRelevantDate(shortSwap_->legs(), {!shortIndexGiven_, !shortIndexGiven_}),
+                 determineLatestRelevantDate(longSwap_->legs(), {!longIndexGiven_, !longIndexGiven_}));
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {

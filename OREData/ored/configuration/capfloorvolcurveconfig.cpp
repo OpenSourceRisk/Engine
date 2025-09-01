@@ -87,11 +87,12 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const std::string& curveID, const std::string& curveDescription, const std::string& proxySourceCurveId,
     const std::string& proxySourceIndex, const std::string& proxyTargetIndex,
-    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod)
+    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod,
+    double proxyScalingFactor)
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
       proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
       proxySourceRateComputationPeriod_(proxySourceRateComputationPeriod),
-      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {}
+      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod), proxyScalingFactor_(proxyScalingFactor) {}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
@@ -117,6 +118,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetRateComputationPeriod_ = rateComputationPeriod_ =
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
         onCapSettlementDays_ = parseInteger(XMLUtils::getChildValue(target, "ONCapSettlementDays", false, "0"));
+
+        proxyScalingFactor_ = XMLUtils::getChildValueAsDouble(p, "ScalingFactor", false, 1.0);
 
     } else {
         // read in quote-based config
@@ -276,6 +279,8 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, source, "RateComputationPeriod", proxySourceRateComputationPeriod_);
         if (proxyTargetRateComputationPeriod_ != 0 * Days)
             XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyTargetRateComputationPeriod_);
+        if (proxyScalingFactor_ != 1.0)
+            XMLUtils::addChild(doc, proxy, "ScalingFactor", proxyScalingFactor_);
     } else {
         // write out quote based config
         XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));

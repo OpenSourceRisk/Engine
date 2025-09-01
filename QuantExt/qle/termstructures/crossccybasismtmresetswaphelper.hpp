@@ -70,7 +70,8 @@ public:
         boost::optional<bool> domesticIncludeSpread = boost::none,
         boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
         boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
-        const bool telescopicValueDates = false);
+        const bool telescopicValueDates = false,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -132,6 +133,7 @@ protected:
     RelinkableHandle<YieldTermStructure> domesticCcyFxFwdRateCurveRLH_;
 
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 
