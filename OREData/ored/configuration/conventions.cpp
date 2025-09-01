@@ -32,6 +32,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace QuantLib;
@@ -2850,10 +2851,10 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         add(convention);
         used_.insert(id);
     } catch (exception& e) {
-        WLOG("Convention '" << id << "' could not be built: " << e.what());
-        QL_FAIL("Convention '" << id << "' could not be built: " << e.what());
+        auto err = "Convention '" + id + "' could not be built.";
+        StructuredConventionErrorMessage(id, err, e.what()).log();
+        QL_FAIL(err << e.what());
     }
-
     return convention;
 }
 
