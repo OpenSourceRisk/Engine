@@ -178,6 +178,7 @@
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/callablebond.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashposition.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
@@ -421,6 +422,7 @@
 #include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
+#include <qle/pricingengines/fdlgmcallablebondengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>

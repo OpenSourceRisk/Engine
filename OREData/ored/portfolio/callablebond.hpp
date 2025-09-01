@@ -24,7 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/referencedatamanager.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 namespace ore {
 namespace data {
@@ -52,7 +52,7 @@ public:
         const std::vector<std::string>& includeAccrualDates() const { return includeAccrualDates_; }
 
         void fromXML(ore::data::XMLNode* node) override;
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     private:
         bool initialised_;
@@ -80,7 +80,7 @@ public:
     const CallabilityData& putData() const { return putData_; }
 
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     void populateFromBondReferenceData(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
 
@@ -102,7 +102,7 @@ public:
 
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
@@ -117,10 +117,9 @@ private:
 };
 
 struct CallableBondBuilder : public BondBuilder {
-    static BondBuilderRegister<CallableBondBuilder> reg_;
-    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                         const std::string& securityId) const override;
+    Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                 const std::string& securityId) const override;
 };
 
 } // namespace data

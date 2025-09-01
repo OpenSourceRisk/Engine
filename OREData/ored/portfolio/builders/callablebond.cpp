@@ -23,7 +23,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <qle/pricingengines/fdlgmcallabebondengine.hpp>
+#include <qle/pricingengines/fdlgmcallablebondengine.hpp>
 
 #include <ql/time/date.hpp>
 

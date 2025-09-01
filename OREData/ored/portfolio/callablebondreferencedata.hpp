@@ -56,7 +56,7 @@ public:
         : ReferenceDatum(TYPE, id), bondData_(bondData), callData_(callData), putData_(putData) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const BondReferenceDatum::BondData& bondData() const { return bondData_; }
     const CallableBondData::CallabilityData& callData() const { return callData_; }

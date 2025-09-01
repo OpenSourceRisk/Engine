@@ -21,6 +21,8 @@
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/callablebond.hpp>
+#include <ored/portfolio/callablebond.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -97,7 +99,7 @@ void CallableBondData::CallabilityData::fromXML(XMLNode* node) {
     initialised_ = true;
 }
 
-XMLNode* CallableBondData::CallabilityData::toXML(XMLDocument& doc) {
+XMLNode* CallableBondData::CallabilityData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::appendNode(node, dates_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Styles", "Style", styles_, "startDate", styleDates_);
@@ -123,7 +125,7 @@ void CallableBondData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CallableBondData::toXML(XMLDocument& doc) {
+XMLNode* CallableBondData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CallableBondData");
     XMLUtils::appendNode(node, bondData_.toXML(doc));
     if (callData_.initialised())
@@ -139,7 +141,7 @@ void CallableBond::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* CallableBond::toXML(XMLDocument& doc) {
+XMLNode* CallableBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;

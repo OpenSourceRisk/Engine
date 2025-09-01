@@ -31,7 +31,7 @@ namespace QuantExt {
 
 class FdLgmCallableBondEngine : public CallableBond::engine {
 public:
-    explicit FdLgmCallableBondEngine(
+    FdLgmCallableBondEngine(
         const Handle<LGM>& model,
         const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),

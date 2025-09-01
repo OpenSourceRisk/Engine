@@ -36,7 +36,7 @@ void CallableBondReferenceDatum::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CallableBondReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CallableBondReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node0 = ReferenceDatum::toXML(doc);
     XMLNode* node = XMLUtils::addChild(doc, node0, "CallableBondReferenceData");
     XMLUtils::appendNode(node, bondData_.toXML(doc));

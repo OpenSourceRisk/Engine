@@ -43,6 +43,7 @@
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/callablebond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -106,6 +107,7 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cashposition.hpp>
@@ -535,7 +537,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(CallbleBondLgmFDEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmFdEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)
