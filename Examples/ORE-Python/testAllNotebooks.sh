@@ -22,9 +22,16 @@ running=0
 # Run notebooks in parallel using papermill
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
     echo "Running $notebook"
+
     notebook_dirname=$(dirname "$notebook")
     notebook_basename=$(basename "$notebook")
-    output_path="$(realpath "$output_dir")/$notebook_basename"
+    notebook_name="${notebook_basename%.ipynb}"
+
+    # Create a unique output directory for this notebook
+    notebook_output_dir="$output_dir/$notebook_name"
+    mkdir -p "$notebook_output_dir"
+
+    output_path="$(realpath "$notebook_output_dir")/$notebook_basename"
     
     (
         cd "$notebook_dirname" || exit
