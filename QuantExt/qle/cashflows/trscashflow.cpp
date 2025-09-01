@@ -25,7 +25,7 @@ TRSCashFlow::TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, c
                                  const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : paymentDate_(paymentDate), fixingStartDate_(fixingStartDate), fixingEndDate_(fixingEndDate),
       notional_(notional), index_(index), initialPrice_(initialPrice), fxIndex_(fxIndex) {
-    //QL_REQUIRE(!index->relative(), "TRSCashFlow: index should not use relative prices");
+    registerWith(index_);
     registerWith(fxIndex_);
 }
 

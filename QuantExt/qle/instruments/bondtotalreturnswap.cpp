@@ -35,10 +35,9 @@ BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex
       bondCurrency_(bondCurrency), valuationDates_(valuationDates), paymentDates_(paymentDates) {
 
     QL_REQUIRE(bondIndex, "BondTRS: no bond index given");
-    registerWith(bondIndex);
 
-    if (fxIndex_ != nullptr)
-        registerWith(fxIndex_);
+    registerWith(bondIndex);
+    registerWith(fxIndex_);
 
     if (!fundingCurrency_.empty() && !bondCurrency_.empty()) {
         // do we require an fx index for conversion ...
@@ -57,6 +56,7 @@ BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex
         for (auto const& c : l)
             registerWith(c);
     }
+
     QL_REQUIRE(valuationDates.size() > 1, "valuation dates size > 1 required");
 
     returnLeg_ =
