@@ -617,6 +617,7 @@
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>

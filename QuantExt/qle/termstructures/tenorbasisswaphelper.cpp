@@ -16,27 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/indexes/ibor/libor.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/utilities/null_deleter.hpp>
 
-#include <qle/termstructures/tenorbasisswaphelper.hpp>
 namespace QuantExt {
 
-TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
-                                           const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
-                                           const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex,
-                                           const Handle<YieldTermStructure>& discountingCurve, const bool payIndexGiven,
-                                           const bool receiveIndexGiven, const bool discountingGiven,
-                                           const bool spreadOnRec, const bool includeSpread, const Period& payFrequency,
-                                           const Period& recFrequency, const bool telescopicValueDates,
-                                           const QuantExt::SubPeriodsCoupon1::Type type)
+TenorBasisSwapHelper::TenorBasisSwapHelper(
+    Handle<Quote> spread, const Period& swapTenor, const QuantLib::ext::shared_ptr<IborIndex>& payIndex,
+    const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex, const Handle<YieldTermStructure>& discountingCurve,
+    const bool payIndexGiven, const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec,
+    const bool includeSpread, const Period& payFrequency, const Period& recFrequency, const bool telescopicValueDates,
+    const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
       payIndexGiven_(payIndexGiven), receiveIndexGiven_(receiveIndexGiven), discountingGiven_(discountingGiven),
       spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
       recFrequency_(recFrequency), telescopicValueDates_(telescopicValueDates), type_(type),
-      discountHandle_(discountingCurve) {
+      pillarChoice_(pillarChoice), discountHandle_(discountingCurve) {
 
     /* depending on the given curves we proceed as outlined in the following table
 
@@ -145,26 +145,12 @@ void TenorBasisSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
 
-    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(payIndexGiven_ ? swap_->recLeg().back()
-                                                                               : swap_->payLeg().back());
-
-    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
-        /* Subperiods coupons do not have a par approximation either... */
-        if (QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
-            Date fixingValueDate = receiveIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = receiveIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-    } else {
-        /* May need to adjust latestDate_ if you are projecting libor based
-        on tenor length rather than from accrual date to accrual date. */
-        Date fixingValueDate = receiveIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = receiveIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate); 
-    }
+    latestRelevantDate_ = determineLatestRelevantDate(
+        swap_->legs(), {(spreadOnRec_ && payIndexGiven_) || (!spreadOnRec_ && !payIndexGiven_),
+                        (spreadOnRec_ && !payIndexGiven_) || (!spreadOnRec_ && payIndexGiven_)});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {

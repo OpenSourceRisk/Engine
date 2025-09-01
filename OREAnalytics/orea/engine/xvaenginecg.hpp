@@ -176,7 +176,7 @@ private:
                                        std::vector<std::vector<RandomVariable>>& conditionalFxVega);
     RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
                                               const std::size_t tradeId, const std::size_t timeStep,
-                                              const std::string& label);
+                                              const std::string& label, const double multiplier);
 
     // set via additional methods
 

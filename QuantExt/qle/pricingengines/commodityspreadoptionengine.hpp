@@ -45,7 +45,8 @@ public:
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSLongAsset,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset,
                                           const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho,
-                                          Real beta = 0.0);
+                                          Real beta = 0.0,
+                                          bool useBachelierModel = false);
     void calculate() const override;
 
 private:
@@ -77,6 +78,7 @@ protected:
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_;
     const QuantLib::Handle<QuantExt::CorrelationTermStructure> rho_;
     QuantLib::Real beta_;
+    bool useBachelierModel_;
 };
 
 } // namespace QuantExt

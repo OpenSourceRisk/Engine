@@ -1,7 +1,31 @@
 \subsubsection{Commodity Spread Option}
 \label{pricing:com_spread_option}
 
-European Commodity Spread Options are priced using the Kirk approximation described in Section 2.9.2 of \cite{Clark_2014}.
+European Commodity Spread Options are priced using the Kirk approximation described in Section 2.9.2 of \cite{Clark_2014} or using the Bachelier model.
+
+\textbf{Bachelier Model}
+
+We assume that the spot commodity prices $S^1$ and $S^2$ follow two correlated Arithemtic Brownian motions.
+
+The payoff on payment date for a long commodity spread option with quantity $N$ and strike $K$ is then given by
+
+\begin{equation}
+\left[ \omega \left( S_1(T) - S_2(T) - K \right) \right]^{+} N
+\end{equation}
+
+$S_1(T)$ and $S_2(T)$ are both normal distributed, the difference $Z(T)=S_1(T) -S_2(T)$ is also normally distributed, with variance 
+
+$\sigma^2  = \sigma_1^2 + \sigma_2^2 - 2 \rho \sigma_1 \sigma_2$. 
+
+The payoff becomes 
+
+\begin{equation}
+\left[ \omega \left( Z(T) - K \right) \right]^{+} N
+\end{equation}
+
+We can then use the Bachelier formula to compute the option price. See Bachelier Model, Section \ref{sec:models}, for more details.
+
+\textbf{Kirk Approximation}
 
 We assume that the spot commodity prices $S^1$ and $S^2$ follows two correlated Geometric 
 Brownian Motion:

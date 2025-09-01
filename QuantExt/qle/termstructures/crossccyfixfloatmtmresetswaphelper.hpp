@@ -53,17 +53,15 @@ namespace QuantExt {
 class CrossCcyFixFloatMtMResetSwapHelper : public RelativeDateRateHelper {
 public:
     CrossCcyFixFloatMtMResetSwapHelper(
-        const QuantLib::Handle<QuantLib::Quote>& rate,
-        const QuantLib::Handle<QuantLib::Quote>& spotFx, QuantLib::Natural settlementDays,
-        const QuantLib::Calendar& paymentCalendar,
+        const QuantLib::Handle<QuantLib::Quote>& rate, const QuantLib::Handle<QuantLib::Quote>& spotFx,
+        QuantLib::Natural settlementDays, const QuantLib::Calendar& paymentCalendar,
         QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
         const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
-        QuantLib::BusinessDayConvention fixedConvention,
-        const QuantLib::DayCounter& fixedDayCount,
+        QuantLib::BusinessDayConvention fixedConvention, const QuantLib::DayCounter& fixedDayCount,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
-        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, 
-        bool resetsOnFloatLeg = true);
+        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, bool resetsOnFloatLeg = true,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -99,6 +97,7 @@ protected:
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
     bool resetsOnFloatLeg_;
+    QuantLib::Pillar::Choice pillarChoice_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 
