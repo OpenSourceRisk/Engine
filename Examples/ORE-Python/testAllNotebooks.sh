@@ -7,7 +7,17 @@ output_dir="./tmp"
 mkdir -p "$output_dir"
 export PYTHONUNBUFFERED=1
 
+# 🧹 Clean up zombie Jupyter kernel processes
+echo "🔍 Checking for zombie Jupyter kernel processes..."
+for pid in $(ps aux | grep '[j]upyter' | awk '{print $2}'); do
+    echo "⚠️ Killing zombie Jupyter process PID $pid"
+    kill -9 "$pid"
+done
+
 pids=()
+
+MAX_PARALLEL=4
+running=0
 
 # Run notebooks in parallel using papermill
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
@@ -22,6 +32,13 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
     ) &
     
     pids+=($!)
+	((running+=1))
+
+    if (( running >= MAX_PARALLEL )); then
+        wait -n
+        ((running-=1))
+    fi
+
 done
 
 
