@@ -25,6 +25,7 @@
 #include <orea/app/analytic.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 
 namespace ore {
 namespace analytics {
@@ -32,6 +33,7 @@ namespace analytics {
 class XvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA";
+    static constexpr const char* corrLookupKey = "CORRELATION";
 
     explicit XvaAnalyticImpl(
         const QuantLib::ext::shared_ptr<InputParameters>& inputs,
@@ -56,6 +58,7 @@ public:
         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
         offsetSimMarketParams_ = offsetSimMarketParams;
     }
+    void buildDependencies() override;
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
@@ -80,6 +83,8 @@ protected:
     void runPostProcessor();
 
     Matrix creditStateCorrelationMatrix() const;
+    std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
+    void feedCorrelationToCAM(const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = {});
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;
