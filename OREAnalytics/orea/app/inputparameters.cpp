@@ -672,7 +672,7 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
 }
 
 void InputParameters::setCorrelationDataFromFile(const std::string& fileName) {
-    ore::data::CSVFileReader reader(fileName, false);
+    ore::data::CSVFileReader reader(fileName, true);
     std::vector<std::string> dummy;
     while (reader.next()) {
         correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
