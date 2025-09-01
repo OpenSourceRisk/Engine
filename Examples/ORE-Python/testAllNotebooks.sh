@@ -9,6 +9,9 @@ export PYTHONUNBUFFERED=1
 
 pids=()
 
+MAX_PARALLEL=4
+running=0
+
 # Run notebooks in parallel using papermill
 for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Input|Output|ExpectedOutput)/'); do
     echo "Running $notebook"
@@ -22,6 +25,13 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
     ) &
     
     pids+=($!)
+	((running+=1))
+
+    if (( running >= MAX_PARALLEL )); then
+        wait -n
+        ((running-=1))
+    fi
+
 done
 
 
