@@ -202,6 +202,7 @@ def is_gz_file(filepath):
         return test_f.read(2) == b'\x1f\x8b'
 
 def wait_for_gzip_ready(filepath, retries=5, delay=1):
+    import gzip
     """Wait until a gzip file is fully written and readable."""
     for attempt in range(retries):
         try:
