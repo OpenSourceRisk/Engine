@@ -296,7 +296,6 @@ pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
-pricingengines/fdlgmcallablebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
@@ -319,6 +318,7 @@ pricingengines/midpointindexcdsengine.cpp
 pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -857,7 +857,6 @@ pricingengines/discretizedconvertible.hpp
 pricingengines/fdblackscholesvanillaengine.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
-pricingengines/fdlgmcallablebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
@@ -880,6 +879,7 @@ pricingengines/midpointindexcdsengine.hpp
 pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
