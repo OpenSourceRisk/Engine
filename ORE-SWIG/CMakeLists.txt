@@ -6,6 +6,7 @@ cmake_policy(SET CMP0086 NEW)
 
 project(ORE-SWIG)
 
+set(CMAKE_SWIG_FLAGS "-fastdispatch")
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(${PROJECT_SOURCE_DIR}/../cmake/commonSettings.cmake)
