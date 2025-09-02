@@ -422,7 +422,6 @@
 #include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
-#include <qle/pricingengines/fdlgmcallablebondengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
@@ -445,6 +444,7 @@
 #include <qle/pricingengines/nullamccalculator.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
