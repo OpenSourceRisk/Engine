@@ -182,7 +182,8 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             qlinstr->setPricingEngine(fxBuilder->engine(boughtCcy,soldCcy));
             auto configuration = fxBuilder->configuration(MarketContext::pricing);
 
-            maturity_ = paymentDate;
+            maturity_ = expiryDate_;
+            isSettled_ = today<paymentDate_? false : true;
             maturityType_ = "Payment Date";
             Position::Type positionType = parsePositionType(option_.longShort());
             Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

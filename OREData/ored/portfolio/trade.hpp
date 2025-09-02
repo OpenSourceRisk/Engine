@@ -188,6 +188,8 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
+    const bool& isSettled() const { return isSettled_; }
+
     const string& maturityType() const { return maturityType_; }
 
     virtual bool isExpired(const Date& d) const {
@@ -258,6 +260,7 @@ protected:
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
     std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngine_;
+    bool isSettled_ = true;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
