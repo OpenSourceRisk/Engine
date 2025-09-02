@@ -19,11 +19,12 @@
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/portfolio/builders/callablebond.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <qle/pricingengines/fdlgmcallablebondengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 
 #include <ql/time/date.hpp>
 
@@ -32,18 +33,12 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std::string& id, const std::string& ccy,
-                                                                       const std::string& securityId,
-                                                                       const QuantLib::Date& maturity,
-                                                                       const bool generateAdditionalResults) {
+boost::shared_ptr<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
+                                                                     const QuantLib::Date& maturityDate) {
 
-    auto useSwaptionVolatility = parseBool(modelParameter("UseSwaptionVolatility"));
-    QL_REQUIRE(
-        useSwaptionVolatility,
-        "CallableBondLgmFdEngineBuilder::model(): UseSwaptionVolatility = false is not supported at the moment.");
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
-    std::vector<std::string> calibrationGrid = parseListOfValues(modelParameter("CalibrationGrid", {}, false, ""));
+    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", {}, true, "");
 
     Real lambda = parseReal(modelParameter("Reversion", {ccy}));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
@@ -56,6 +51,11 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
+
+    auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
 
     auto data = boost::make_shared<IrLgmData>();
 
@@ -73,7 +73,7 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std
     // compute horizon shift
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturityDate) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
@@ -89,13 +89,37 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std
     data->volatilityType() = volatilityType;
     data->calibrationType() = calibration;
     data->shiftHorizon() = shiftHorizon;
+    data->floatSpreadMapping() = floatSpreadMapping;
+
+    std::vector<Date> effExpiries;
+    std::vector<Real> effStrikes;
+    std::vector<Date> effMaturities;
+
+    DateGrid grid(referenceCalibrationGrid);
+    std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
+                 [&maturityDate](const Date& d) { return d < maturityDate; });
+    effMaturities.resize(effExpiries.size(), maturityDate);
+    effStrikes.resize(effExpiries.size(), Null<Real>());
 
     if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
-        data->optionExpiries() = calibrationGrid;
-        data->optionTerms() = std::vector<std::string>(calibrationGrid.size(), ore::data::to_string(maturity));
-        data->optionStrikes().resize(calibrationGrid.size(), "ATM");
+
+        vector<string> expiryDates, termDates;
+        for (Size i = 0; i < effExpiries.size(); ++i) {
+            expiryDates.push_back(to_string(effExpiries[i]));
+            termDates.push_back(to_string(effMaturities[i]));
+        }
+        data->optionExpiries() = expiryDates;
+        data->optionTerms() = termDates;
+        data->optionStrikes().resize(expiryDates.size(), "ATM");
+        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
+            calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
+            for (Size i = 0; i < effExpiries.size(); ++i) {
+                if (effStrikes[i] != Null<Real>())
+                    data->optionStrikes()[i] = std::to_string(effStrikes[i]);
+            }
+        }
         if (calibration == CalibrationType::Bootstrap) {
             DLOG("Calibrate piecewise alpha");
             data->calibrationType() = CalibrationType::Bootstrap;
@@ -118,14 +142,26 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std
             QL_FAIL("choice of calibration type invalid");
     }
 
+    bool generateAdditionalResults = false;
+    auto p = globalParameters_.find("GenerateAdditionalResults");
+    if (p != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(p->second);
+    }
+
     // Build and calibrate model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib =
-        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
-                                       continueOnCalibrationError, std::string(), generateAdditionalResults);
+
+    auto rt = globalParameters_.find("RunType");
+    bool allowChangingFallbacks =
+        rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+
+    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
+        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+        referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+        allowChangingFallbacks, allowModelFallbacks);
 
     // In some cases, we do not want to calibrate the model
-    boost::shared_ptr<QuantExt::LGM> model;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
     if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
         DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
         model = calib->model();
@@ -140,62 +176,83 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmFdEngineBuilder::model(const std
     return model;
 }
 
-boost::shared_ptr<QuantExt::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
-    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
-    const std::string& securityId, const std::string& referenceCurveId, const QuantLib::Date& maturityDate) {
+template <class... Args>
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::string& ccy,
+                                         const std::string& creditCurveId, const std::string& securityId,
+                                         const std::string& referenceCurveId, const std::string& incomeCurveId,
+                                         const QuantLib::Date& maturityDate, Args... args) {
 
-    std::string config = this->configuration(ore::data::MarketContext::pricing);
+    std::string marketConfig = configuration(ore::data::MarketContext::pricing);
 
     // get reference curve, default curve, recovery and spread
 
-    Handle<YieldTermStructure> referenceCurve = market_->yieldCurve(referenceCurveId, config);
+    Handle<YieldTermStructure> referenceCurve = market_->yieldCurve(referenceCurveId, marketConfig);
+
     Handle<DefaultProbabilityTermStructure> defaultCurve;
     if (!creditCurveId.empty())
-        defaultCurve = securitySpecificCreditCurve(market_, securityId, creditCurveId, config)->curve();
+        defaultCurve = securitySpecificCreditCurve(market_, securityId, creditCurveId, marketConfig)->curve();
+
+    Handle<YieldTermStructure> incomeCurve = referenceCurve;
+    if (!incomeCurveId.empty())
+        incomeCurve = market_->yieldCurve(incomeCurveId, marketConfig);
+
     Handle<Quote> recovery;
     try {
-        recovery = market_->recoveryRate(securityId, config);
+        recovery = market_->recoveryRate(securityId, marketConfig);
     } catch (...) {
         WLOG("security specific recovery rate not found for security ID "
              << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
         if (!creditCurveId.empty())
-            recovery = market_->recoveryRate(creditCurveId, config);
+            recovery = market_->recoveryRate(creditCurveId, marketConfig);
     }
+
     Handle<Quote> spread;
     try {
-        spread = market_->securitySpread(securityId, config);
+        spread = market_->securitySpread(securityId, marketConfig);
     } catch (...) {
-    }
-
-    if (!hasCreditRisk) {
-        defaultCurve = Handle<DefaultProbabilityTermStructure>();
-    }
-
-    // check if add results are to be generated
-
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
     }
 
     // get LGM model
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, ccy, securityId, maturityDate, generateAdditionalResults);
+    auto lgm = model(id, ccy, maturityDate);
 
-    // get pricing engine config
+    // return engine
 
-    bool mesherIsStatic = parseBool(engineParameter("MesherIsStatic", {}, true));
-    Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear", {}, true));
-    Size stateGridPoints = parseInteger(engineParameter("StateGridPoints", {}, true));
-    Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon", {}, true));
-    Real mesherScaling = parseReal(engineParameter("MesherScaling", {}, true));
+    Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear"));
 
-    // build engine
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
+        Handle<QuantExt::LGM>(lgm), args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve,
+        incomeCurve, recovery);
+}
 
-    return boost::make_shared<QuantExt::FdLgmCallableBondEngine>(
-        Handle<QuantExt::LGM>(lgm), referenceCurve, spread, defaultCurve, recovery, mesherIsStatic, timeStepsPerYear,
-        stateGridPoints, mesherEpsilon, mesherScaling, generateAdditionalResults);
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
+    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
+    const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
+
+    QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
+    Size stateGridPoints = parseInteger(engineParameter("StateGridPoints"));
+    Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
+    Real mesherEpsilon = parseReal(engineParameter("MesherEpsilon"));
+
+    std::string marketConfig = configuration(ore::data::MarketContext::pricing);
+    Real maxTime = market_->yieldCurve(referenceCurveId, marketConfig)->timeFromReference(maturityDate);
+
+    return makeEngine(id, ccy, creditCurveId, securityId, referenceCurveId, incomeCurveId, maturityDate, maxTime,
+                      scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon);
+}
+
+QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmGridEngineBuilder::engineImpl(
+    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
+    const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
+
+    Real sy = parseReal(engineParameter("sy"));
+    Size ny = parseInteger(engineParameter("ny"));
+    Real sx = parseReal(engineParameter("sx"));
+    Size nx = parseInteger(engineParameter("nx"));
+
+    return makeEngine(id, ccy, creditCurveId, securityId, referenceCurveId, incomeCurveId, maturityDate, sy, ny, sx,
+                      nx);
 }
 
 } // namespace data

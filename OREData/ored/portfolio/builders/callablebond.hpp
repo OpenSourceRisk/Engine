@@ -33,32 +33,55 @@ namespace data {
 
 class CallableBondEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<std::string, const std::string&, const std::string&,
-                                                    const std::string&, const bool, const std::string&,
+                                                    const std::string&, const std::string&, const std::string&,
                                                     const std::string&, const QuantLib::Date&> {
 protected:
     CallableBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"CallableBond"}) {}
 
     std::string keyImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
-                        const bool hasCreditRisk, const std::string& securityId, const std::string& referenceCurveId,
-                        const QuantLib::Date& maturityDate) override {
+                        const std::string& securityId, const std::string& referenceCurveId,
+                        const std::string& incomeCurveId, const QuantLib::Date& maturityDate) override {
         return id;
     }
 };
 
-//! LGM1F model for rates, credit is deterministic
-class CallableBondLgmFdEngineBuilder : public CallableBondEngineBuilder {
+class CallableBondLgmEngineBuilder : public CallableBondEngineBuilder {
 public:
-    CallableBondLgmFdEngineBuilder() : CallableBondEngineBuilder("LGM", "FD") {}
+    explicit CallableBondLgmEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("LGM", engine) {}
 
 protected:
-    boost::shared_ptr<QuantExt::LGM> model(const std::string& id, const std::string& ccy, const std::string& securityId,
-                                           const QuantLib::Date& maturity, const bool generateAdditionalResults);
-    boost::shared_ptr<QuantExt::PricingEngine> engineImpl(const std::string& id, const std::string& ccy,
-                                                          const std::string& creditCurveId, const bool hasCreditRisk,
-                                                          const std::string& securityId,
-                                                          const std::string& referenceCurveId,
-                                                          const QuantLib::Date& maturityDate) override;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model(const std::string& id, const std::string& ccy,
+                                                   const QuantLib::Date& maturityDate);
+
+    // Args cover a list of FD resp. Grid engine parameters
+    template <class... Args>
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    makeEngine(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate, Args... args);
+};
+
+class CallableBondLgmFdEngineBuilder : public CallableBondLgmEngineBuilder {
+public:
+    CallableBondLgmFdEngineBuilder() : CallableBondLgmEngineBuilder("FD") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+};
+
+class CallableBondLgmGridEngineBuilder : public CallableBondLgmEngineBuilder {
+public:
+    CallableBondLgmGridEngineBuilder() : CallableBondLgmEngineBuilder("Grid") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
 };
 
 } // namespace data

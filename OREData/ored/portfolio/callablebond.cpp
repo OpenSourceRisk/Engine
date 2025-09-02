@@ -233,8 +233,8 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
         qlUnderlyingBond->settlementDays(), qlUnderlyingBond->calendar(), qlUnderlyingBond->issueDate(),
         qlUnderlyingBondCoupons, callData, putData);
     qlInstr->setPricingEngine(builder->engine(id(), data_.bondData().currency(), data_.bondData().creditCurveId(),
-                                              data_.bondData().hasCreditRisk(), data_.bondData().securityId(),
-                                              data_.bondData().referenceCurveId(), lastDate));
+                                              data_.bondData().securityId(), data_.bondData().referenceCurveId(),
+                                              data_.bondData().incomeCurveId(), lastDate));
 
     // set up other trade member variables
 
