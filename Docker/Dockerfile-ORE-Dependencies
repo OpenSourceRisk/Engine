@@ -20,6 +20,8 @@ RUN apt-get update \
     ccache \
     libeigen3-dev \
     clang \
+    swig \
+    python3-dev \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
