@@ -22,19 +22,47 @@
 
 namespace QuantExt {
 
-FdLgmCallableBondEngine::FdLgmCallableBondEngine(const Handle<LGM>& model,
-                                                 const Handle<QuantLib::YieldTermStructure>& discountingCurve,
-                                                 const Handle<QuantLib::Quote>& discountingSpread,
-                                                 const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
-                                                 const Handle<QuantLib::Quote>& recoveryRate, const bool mesherIsStatic,
-                                                 const Size timeStepsPerYear, const Size stateGridPoints,
-                                                 const Real mesherEpsilon, const Real mesherScaling,
-                                                 const bool generateAdditionalResults)
-    : model_(model), discountingCurve_(discountingCurve), discountingSpread_(discountingSpread),
-      creditCurve_(creditCurve), recoveryRate_(recoveryRate), mesherIsStatic_(mesherIsStatic),
-      timeStepsPerYear_(timeStepsPerYear), stateGridPoints_(stateGridPoints), mesherEpsilon_(mesherEpsilon),
-      mesherScaling_(mesherScaling), generateAdditionalResults_(generateAdditionalResults) {}
+NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
+    const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Size americanExerciseTimeStepsPerYear,
+    const Handle<QuantLib::YieldTermStructure>& discountingCurve, const Handle<QuantLib::Quote>& discountingSpread,
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    : solver_(solver), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
+      discountingCurve_(discountingCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
+      recoveryRate_(recoveryRate) {}
 
-void FdLgmCallableBondEngine::calculate() const {}
+NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
+    const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
+    const Size americanExerciseTimeStepsPerYear, const Handle<QuantLib::YieldTermStructure>& discountingCurve,
+    const Handle<QuantLib::Quote>& discountingSpread,
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
+                                       americanExerciseTimeStepsPerYear, discountingCurve, discountingSpread,
+                                       creditCurve, recoveryRate) {
+    registerWith(solver_->model());
+    registerWith(discountingCurve_);
+    reigstierWith(discountingSpread_);
+    registerWith(creditCurve_);
+    registerWith(recoveryRate_);
+}
+
+NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
+    const Handle<LGM>& model, const Real maxTime, const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints,
+    const Size timeStepsPerYear, const Real mesherEpsilon, const Size americanExerciseTimeStepsPerYear,
+    const Handle<QuantLib::YieldTermStructure>& discountingCurve, const Handle<QuantLib::Quote>& discountingSpread,
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints,
+                                                                               timeStpesPerYear, mesherEpsilon),
+                                       americanExerciseTimeStepsPerYear, discountingCurve, discountingSpread,
+                                       creditCurve, recoveryRate) {
+    registerWith(solver_->model());
+    registerWith(discountingCurve_);
+    reigstierWith(discountingSpread_);
+    registerWith(creditCurve_);
+    registerWith(recoveryRate_);
+}
+
+void NumericLgmCallableBondEngine::calculate() const {
+
+}
 
 } // namespace QuantExt

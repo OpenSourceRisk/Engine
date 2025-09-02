@@ -29,34 +29,60 @@
 
 namespace QuantExt {
 
-class FdLgmCallableBondEngine : public CallableBond::engine {
+class NumericLgmCallableBondEngineBase {
 public:
-    FdLgmCallableBondEngine(
-        const Handle<LGM>& model,
+    NumericLgmCallableBondEngineBase(
+        const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Size americanExerciseTimeStepsPerYear = 24,
         const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool mesherIsStatic = false,
-        const Size timeStepsPerYear = 24, const Size stateGridPoints = 100, const Real mesherEpsilon = 1E-4,
-        const Real mesherScaling = 1.5, const bool generateAdditionalResults = true);
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
 
-private:
-    void calculate() const override;
-
-    Handle<LGM> model_;
+protected:
+    // inputs set in ctor
+    QuantLib::ext::shared_ptr<LgmBackwardSolver> solver_;
+    Size americanExerciseTimeStepsPerYear_;
     Handle<QuantLib::YieldTermStructure> discountingCurve_;
     Handle<QuantLib::Quote> discountingSpread_;
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
-    bool mesherIsStatic_;
-    Size timeStepsPerYear_;
-    Size stateGridPoints_;
-    Real mesherEpsilon_;
-    Real mesherScaling_;
-    bool generateAdditionalResults_;
 
-    mutable boost::shared_ptr<Fdm1dMesher> mesher_;
+    // inputs set by derived classes
+    mutable std::vector<Leg> legs_;
+    mutable std::vector<bool> payer_;
+    mutable std::vector<Currency> currency_;
+
+    // outputs
+    mutable Real npv_, underlyingBondNpv_;
+    mutable std::map<std::string, boost::any> additionalResults_;
+
+    void calculate() const;
+};
+
+class NumericLgmCallableBondEngine : public CallableBond::engine {
+public:
+    NumericLgmCallableBondEngine(
+        const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
+        const Size americanExerciseTimeStepsPerYear = 24,
+        const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
+        const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
+        const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
+            Handle<QuantLib::DefaultProbabilityTermStructure>(),
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+    NumericLgmCallableBondEngine(
+        const Handle<LGM>& model, , const Real maxTime = 50.0,
+        const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(), const Size stateGridPoints = 64,
+        const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
+        const Size americanExerciseTimeStepsPerYear = 24,
+        const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
+        const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
+        const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
+            Handle<QuantLib::DefaultProbabilityTermStructure>(),
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+
+private:
+    void calculate() const override;
 };
 
 } // namespace QuantExt
