@@ -150,6 +150,121 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: CallableBond}
+%--------------------------------------------------------
+
+Used by trade type: CallableBond
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/Grid
+\item LGM/FD
+\end{itemize}
+
+Engine description:
+
+LGM/Grid builds a NumericLgmCallableBondEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_CallableBond_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBOnd">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine Grid}
+\label{lst:peconfig_CallableBond_LGM_Grid}
+\end{longlisting}
+
+LGM/FD builds a NumericLgmCallableBondEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_CallableBond_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBond">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="StateGridPoints">64</Parameter>
+        <Parameter name="TimeStepsPerYear">24</Parameter>
+        <Parameter name="MesherEpsilon">1E-4</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine FD}
+\label{lst:peconfig_CallableBond_LGM_FD}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: ConvertibleBond}
 %--------------------------------------------------------
 
@@ -361,7 +476,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaptionEngine}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_EuropeanSwaption_LGM_Grid}
 
@@ -592,7 +707,7 @@ Available Model/Engine pairs:
 
 Engine description:
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_BermudanSwaption_LGM_Grid}
 
@@ -852,7 +967,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_AmericanSwaption_LGM_FD}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and American exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_AmericanSwaption_LGM_Grid}. Not recommended due to inferior performance.
 
