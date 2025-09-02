@@ -95,6 +95,8 @@ public:
         return offPeakPowerData_;
     }
 
+    const std::map<QuantLib::Date, QuantLib::Real>& weights() const { return weights_; }
+
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
         averaging does not reference future contract settlement prices, i.e. \c useFirstFuture() is \c false, the

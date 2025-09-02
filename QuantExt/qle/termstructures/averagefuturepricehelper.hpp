@@ -67,7 +67,8 @@ public:
         QuantLib::Natural deliveryDateRoll = 0,
         QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
-        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData = boost::none);
 
     /*! \param price             The average price.
         \param index             The commodity index. Used to convey the commodity's name and calendar. The underlying 
@@ -87,6 +88,8 @@ public:
         \param dailyExpiryOffset If set to \c Null<Natural>(), this is ignored. If set to a positive integer, it is
                                  the number of business days on the \c index calendar to offset each daily expiry date
                                  on each pricing date.
+        \param offPeakPowerData  Optional data for off-peak power averaging futures. Contains the Holiday calendar number of offpeak hours on a workday.
+                                 Used for compute the average hourly price from the daily price fixings.
     */
     AverageFuturePriceHelper(QuantLib::Real price,
         const QuantLib::ext::shared_ptr<CommodityIndex>& index,
@@ -97,7 +100,8 @@ public:
         QuantLib::Natural deliveryDateRoll = 0,
         QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
-        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
+        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData = boost::none);
     //@}
 
     //! \name PriceHelper interface
@@ -128,7 +132,8 @@ private:
         QuantLib::Natural deliveryDateRoll,
         QuantLib::Integer futureMonthOffset,
         bool useBusinessDays,
-        QuantLib::Natural dailyExpiryOffset);
+        QuantLib::Natural dailyExpiryOffset,
+        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData);
 
     QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;
