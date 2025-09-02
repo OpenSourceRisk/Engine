@@ -180,6 +180,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use
@@ -199,6 +201,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -229,6 +232,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -250,6 +255,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
@@ -544,6 +550,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -565,6 +573,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
         <EngineParameters>
@@ -723,6 +732,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -742,6 +753,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -772,6 +784,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -793,6 +807,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
