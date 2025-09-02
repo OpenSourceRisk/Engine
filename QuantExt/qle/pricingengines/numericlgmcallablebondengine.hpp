@@ -22,8 +22,8 @@
 
 #include <qle/instruments/callablebond.hpp>
 #include <qle/models/lgm.hpp>
-
-#include <ql/methods/finitedifferences/meshers/fdm1dmesher.hpp>
+#include <qle/models/lgmconvolutionsolver2.hpp>
+#include <qle/models/lgmfdsolver.hpp>
 
 #include <ql/termstructures/defaulttermstructure.hpp>
 
@@ -33,19 +33,21 @@ class NumericLgmCallableBondEngineBase {
 public:
     NumericLgmCallableBondEngineBase(
         const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Size americanExerciseTimeStepsPerYear = 24,
-        const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& referenceCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
 
 protected:
     // inputs set in ctor
     QuantLib::ext::shared_ptr<LgmBackwardSolver> solver_;
     Size americanExerciseTimeStepsPerYear_;
-    Handle<QuantLib::YieldTermStructure> discountingCurve_;
+    Handle<QuantLib::YieldTermStructure> referenceCurve_;
     Handle<QuantLib::Quote> discountingSpread_;
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve_;
+    Handle<QuantLib::YieldTermStructure> incomeCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
 
     // inputs set by derived classes
@@ -60,25 +62,27 @@ protected:
     void calculate() const;
 };
 
-class NumericLgmCallableBondEngine : public CallableBond::engine {
+class NumericLgmCallableBondEngine : public CallableBond::engine, public NumericLgmCallableBondEngineBase {
 public:
     NumericLgmCallableBondEngine(
         const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
         const Size americanExerciseTimeStepsPerYear = 24,
-        const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& referenceCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
     NumericLgmCallableBondEngine(
-        const Handle<LGM>& model, , const Real maxTime = 50.0,
+        const Handle<LGM>& model, const Real maxTime = 50.0,
         const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(), const Size stateGridPoints = 64,
         const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
         const Size americanExerciseTimeStepsPerYear = 24,
-        const Handle<QuantLib::YieldTermStructure>& discountingCurve = Handle<QuantLib::YieldTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& referenceCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& discountingSpread = Handle<QuantLib::Quote>(),
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
+        const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
 
 private:

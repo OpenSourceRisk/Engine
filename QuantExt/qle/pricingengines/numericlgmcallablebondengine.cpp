@@ -18,51 +18,54 @@
 
 /*! \file fdlgmcallablebondengine.hpp */
 
-#include <qle/pricingengines/fdlgmcallablebondengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 
 namespace QuantExt {
 
 NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
     const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Size americanExerciseTimeStepsPerYear,
-    const Handle<QuantLib::YieldTermStructure>& discountingCurve, const Handle<QuantLib::Quote>& discountingSpread,
-    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
     : solver_(solver), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
-      discountingCurve_(discountingCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
-      recoveryRate_(recoveryRate) {}
+      referenceCurve_(referenceCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
+      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate) {}
 
 NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
-    const Size americanExerciseTimeStepsPerYear, const Handle<QuantLib::YieldTermStructure>& discountingCurve,
+    const Size americanExerciseTimeStepsPerYear, const Handle<QuantLib::YieldTermStructure>& referenceCurve,
     const Handle<QuantLib::Quote>& discountingSpread,
-    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
-    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(model, sy, ny, sx, nx),
-                                       americanExerciseTimeStepsPerYear, discountingCurve, discountingSpread,
-                                       creditCurve, recoveryRate) {
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(*model, sy, ny, sx, nx),
+                                       americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
+                                       incomeCurve, recoveryRate) {
     registerWith(solver_->model());
-    registerWith(discountingCurve_);
-    reigstierWith(discountingSpread_);
+    registerWith(referenceCurve_);
+    registerWith(discountingSpread_);
     registerWith(creditCurve_);
+    registerWith(incomeCurve_);
     registerWith(recoveryRate_);
 }
 
 NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<LGM>& model, const Real maxTime, const QuantLib::FdmSchemeDesc scheme, const Size stateGridPoints,
     const Size timeStepsPerYear, const Real mesherEpsilon, const Size americanExerciseTimeStepsPerYear,
-    const Handle<QuantLib::YieldTermStructure>& discountingCurve, const Handle<QuantLib::Quote>& discountingSpread,
-    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve, const Handle<QuantLib::Quote>& recoveryRate)
-    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(model, maxTime, scheme, stateGridPoints,
-                                                                               timeStpesPerYear, mesherEpsilon),
-                                       americanExerciseTimeStepsPerYear, discountingCurve, discountingSpread,
-                                       creditCurve, recoveryRate) {
+    const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(*model, maxTime, scheme, stateGridPoints,
+                                                                               timeStepsPerYear, mesherEpsilon),
+                                       americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
+                                       incomeCurve, recoveryRate) {
     registerWith(solver_->model());
-    registerWith(discountingCurve_);
-    reigstierWith(discountingSpread_);
+    registerWith(referenceCurve_);
+    registerWith(discountingSpread_);
     registerWith(creditCurve_);
+    registerWith(incomeCurve_);
     registerWith(recoveryRate_);
 }
 
-void NumericLgmCallableBondEngine::calculate() const {
-
-}
+void NumericLgmCallableBondEngine::calculate() const {}
 
 } // namespace QuantExt
