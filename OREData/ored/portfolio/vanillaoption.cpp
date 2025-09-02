@@ -59,6 +59,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     maturity_ = expiryDate_;
     maturityType_ = "Expiry Date";
     if (paymentDate_ != Null<Date>()) {
+        if(tradeType_!="FxOption"){
+            maturity_ = paymentDate_;
+        }
         maturityType_ = "Payment Date";
     }
     // Exercise

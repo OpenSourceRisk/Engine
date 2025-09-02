@@ -152,7 +152,6 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         forwardDate_ = paymentDate;
         paymentDate_ = paymentDate;
-
         if (expiryDate_ <= today) {
 
             // option is expired, build an fx forward representing the physical underlying if exercised or null if not
@@ -183,7 +182,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             auto configuration = fxBuilder->configuration(MarketContext::pricing);
 
             maturity_ = expiryDate_;
-            isSettled_ = today<paymentDate_? false : true;
+            lastRelevantDate_ = today<paymentDate_? paymentDate_ : expiryDate_;
             maturityType_ = "Payment Date";
             Position::Type positionType = parsePositionType(option_.longShort());
             Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

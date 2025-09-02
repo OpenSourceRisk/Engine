@@ -112,7 +112,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
-        if (((*it).second->isExpired(asof))&&((*it).second->isSettled())) {
+        if ((*it).second->isExpired(asof)) {
             std::ostringstream maturityDate;
             maturityDate << (*it).second->maturity();
             string maturityType = (*it).second->maturityType().empty()
