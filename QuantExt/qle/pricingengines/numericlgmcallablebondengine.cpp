@@ -31,6 +31,12 @@ NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
       referenceCurve_(referenceCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
       incomeCurve_(incomeCurve), recoveryRate_(recoveryRate) {}
 
+void NumericLgmCallableBondEngineBase::calculate() const {
+
+
+
+}
+
 NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
     const Size americanExerciseTimeStepsPerYear, const Handle<QuantLib::YieldTermStructure>& referenceCurve,
@@ -66,6 +72,37 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     registerWith(recoveryRate_);
 }
 
-void NumericLgmCallableBondEngine::calculate() const {}
+std::pair<Real, Real> NumericLgmCallableBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate,
+                                                                 const QuantLib::Date& settlementDate,
+                                                                 const bool conditionalOnSurvival,
+                                                                 std::vector<CashFlowResults>* const cfResults) const {
+
+    npvDate_ = forwardNpvDate;
+    settlementDate_ = settlementDate;
+    conditionalOnSurvival_ = true;
+    cfResults_ = cfResults;
+    instrArgs_ = &arguments_;
+
+    calculate();
+
+    return std::make_pair(npv_, settlementValue_);
+}
+
+void NumericLgmCallableBondEngine::calculate() const {
+    std::vector<CashFlowResults> cfResults;
+
+    npvDate_ = referenceCurve_->referenceDate();
+    settlementDate_ = arguments_.settlementDate;
+    conditionalOnSurvival_ = false; // does not matter, since npvDate_ = today
+    cfResults_ = &cfResults;
+    instrArgs_ = &arguments_;
+
+    NumericLgmCallableBondEngineBase::calculate();
+
+    results_.value = npv_;
+    results_.settlementValue = settlementValue_;
+    results_.additionalResults = additionalResults_;
+    results_.additionalResults["cashFlowResults"] = cfResults;
+}
 
 } // namespace QuantExt

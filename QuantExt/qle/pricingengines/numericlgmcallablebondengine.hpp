@@ -21,9 +21,11 @@
 #pragma once
 
 #include <qle/instruments/callablebond.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmconvolutionsolver2.hpp>
 #include <qle/models/lgmfdsolver.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 #include <ql/termstructures/defaulttermstructure.hpp>
 
@@ -50,19 +52,23 @@ protected:
     Handle<QuantLib::YieldTermStructure> incomeCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
 
-    // inputs set by derived classes
-    mutable std::vector<Leg> legs_;
-    mutable std::vector<bool> payer_;
-    mutable std::vector<Currency> currency_;
+    // inputs set for calculation in derived classes
+    mutable Date npvDate_;
+    mutable Date settlementDate_;
+    mutable bool conditionalOnSurvival_;
+    mutable std::vector<CashFlowResults>* cfResults_;
+    mutable CallableBond::arguments* instrArgs_;
 
     // outputs
-    mutable Real npv_, underlyingBondNpv_;
+    mutable Real npv_, settlementValue_;
     mutable std::map<std::string, boost::any> additionalResults_;
 
     void calculate() const;
 };
 
-class NumericLgmCallableBondEngine : public CallableBond::engine, public NumericLgmCallableBondEngineBase {
+class NumericLgmCallableBondEngine : public CallableBond::engine,
+                                     public NumericLgmCallableBondEngineBase,
+                                     public QuantExt::ForwardEnabledBondEngine {
 public:
     NumericLgmCallableBondEngine(
         const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
@@ -84,6 +90,11 @@ public:
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+
+    //! ForwardEnabledBondEngine interface
+    std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+                                       const bool conditionalOnSurvival = true,
+                                       std::vector<CashFlowResults>* const cfResults = nullptr) const override;
 
 private:
     void calculate() const override;
