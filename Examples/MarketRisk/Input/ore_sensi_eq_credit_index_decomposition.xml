@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/Sensi_CR_decomp</Parameter>
+    <Parameter name="outputPath">Output/Sensi_index_decomposition</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
@@ -13,7 +13,8 @@
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine_decomposition.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_cr_decomp.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_index_decomp.xml</Parameter>
+    <Parameter name="referenceDataFile">reference_data_index_decomposition.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>

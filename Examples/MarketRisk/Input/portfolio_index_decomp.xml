@@ -5,7 +5,7 @@
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
       <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <IndexCreditDefaultSwapData>
       <CreditCurveId>CPTY_D</CreditCurveId>
@@ -37,9 +37,9 @@
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
             <Rule>CDS2015</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <EndOfMonth />
+            <FirstDate />
+            <LastDate />
           </Rules>
         </ScheduleData>
       </LegData>
@@ -73,7 +73,7 @@
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
       <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <CdoData>
       <Qualifier>CDXIG</Qualifier>
@@ -107,9 +107,9 @@
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
             <Rule>CDS2015</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <EndOfMonth />
+            <FirstDate />
+            <LastDate />
           </Rules>
         </ScheduleData>
       </LegData>
@@ -138,13 +138,13 @@
       </BasketData>
     </CdoData>
   </Trade>
-    <!-- 6M expiry option on 5Y Index CDS -->
+  <!-- 6M expiry option on 5Y Index CDS -->
   <Trade id="INDEX_CDS_OPTION">
     <TradeType>IndexCreditDefaultSwapOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
       <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <IndexCreditDefaultSwapOptionData>
       <Strike>0.0060</Strike>
@@ -163,7 +163,7 @@
         <SettlesAccrual>Y</SettlesAccrual>
         <PaysAtDefaultTime>Y</PaysAtDefaultTime>
         <ProtectionStart>20160804</ProtectionStart>
-        <UpfrontDate/>
+        <UpfrontDate />
         <UpfrontFee>0.0</UpfrontFee>
         <LegData>
           <LegType>Fixed</LegType>
@@ -188,9 +188,9 @@
               <Convention>F</Convention>
               <TermConvention>F</TermConvention>
               <Rule>CDS2015</Rule>
-              <EndOfMonth/>
-              <FirstDate/>
-              <LastDate/>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
             </Rules>
           </ScheduleData>
         </LegData>
@@ -220,4 +220,77 @@
       </IndexCreditDefaultSwapData>
     </IndexCreditDefaultSwapOptionData>
   </Trade>
+  <Trade id="EqSwap_STOXX_decomp">
+    <TradeType>EquitySwap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields>
+        <index_decomposition>true</index_decomposition>
+      </AdditionalFields>
+    </Envelope>
+    <EquitySwapData>
+      <LegData>
+        <Payer>true</Payer>
+        <LegType>Floating</LegType>
+        <Currency>EUR</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>A360</DayCounter>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <Spreads>
+            <Spread>0.005</Spread>
+          </Spreads>
+          <FixingDays>2</FixingDays>
+          <IsInArrears>false</IsInArrears>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2017-02-05</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>EUR</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <Payer>false</Payer>
+        <LegType>Equity</LegType>
+        <Currency>EUR</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>A360</DayCounter>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <EquityLegData>
+          <ReturnType>Total</ReturnType>
+          <Underlying>
+            <Type>Equity</Type>
+            <Name>SP5E</Name>
+          </Underlying>
+          <InitialPrice>2937.36</InitialPrice>
+          <NotionalReset>false</NotionalReset>
+          <FixingDays>2</FixingDays>
+        </EquityLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2017-02-05</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>EUR</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </EquitySwapData>
+  </Trade>
+
 </Portfolio>

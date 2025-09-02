@@ -55,19 +55,46 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
     : ss_(ss), baseCurrency_(baseCurrency), refDataManager_(refDataManager), curveConfigs_(curveConfigs),
       ssd_(scenarioData), todaysMarket_(todaysMarket) {
     reset();
-
-    std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights;
-
     for (const auto& [tradeId, trade] : portfolio->trades()) {
-        bool decompose = false;
+        bool decomposeCredit = false;
         std::map<string, double> sensitivityDecompositionWeights;
-        
-        decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decompose);
-        if (decompose) {
+        const map<string, string>& additionalFields = trade->envelope().additionalFields();
+        auto itAddFields = additionalFields.find("index_decomposition");
+        bool decomposeEquityCommodities = false;
+
+        if (itAddFields != additionalFields.end() && !itAddFields->second.empty()) {
+            try {
+                decomposeEquityCommodities = parseBool(itAddFields->second);
+            } catch (const std::exception& e) {
+                StructuredAnalyticsWarningMessage("DecomposedSensitivityStream",
+                                                  "index_decomposition field parse error",
+                                                  "Cannot parse index_decomposition field for trade: " + tradeId +
+                                                      ". Continuing without decomposition.")
+                    .log();
+            }
+            if (decomposeEquityCommodities) {
+                eqComDecompositionTradeIds_.insert(tradeId);
+            }
+        }
+        if (decomposeEquityCommodities &&
+            (trade->tradeType() == "TotalReturnSwap" || trade->tradeType() == "ContractForDifference")) {
+            std::map<std::string, double> decompositionIndexQuanities;
+            for (const auto& [datum, value] : trade->additionalData()) {
+                if (!value.empty() && boost::starts_with(datum, "underlying_quantity_")) {
+                    decompositionIndexQuanities[datum.substr(20)] = boost::any_cast<double>(value);
+                }
+            }
+            if (!decompositionIndexQuanities.empty()) {
+                currencyHedgedIndexQuantities_[tradeId] = decompositionIndexQuanities;
+            }
+        }
+
+        decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decomposeCredit);
+        if (decomposeCredit) {
             defaultRiskDecompositionWeights_[tradeId] = sensitivityDecompositionWeights;
         }
     }
-    decompose_ = !defaultRiskDecompositionWeights_.empty();
+    decompose_ = !defaultRiskDecompositionWeights_.empty() || !eqComDecompositionTradeIds_.empty();
 }
 
 //! Returns the next SensitivityRecord in the stream after filtering

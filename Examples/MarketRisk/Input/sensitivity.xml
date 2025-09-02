@@ -393,6 +393,18 @@
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </EquitySpot>
+    <EquitySpot equity="SP5E">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
+    <EquitySpot equity="SPXE">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
+    <EquitySpot equity="Lufthansa">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
   </EquitySpots>
   
   <EquityVolatilities>

@@ -116,6 +116,10 @@
   <EquityCurves id="default">
       <EquityCurve name="FTSE">Equity/GBP/FTSE</EquityCurve>
       <EquityCurve name="SPX">Equity/USD/SPX</EquityCurve>
+      <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+      <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+      <EquityCurve name="SX5E">Equity/EUR/SX5E</EquityCurve>
+      <EquityCurve name="SP5E">Equity/USD/SP5E</EquityCurve>
   </EquityCurves>
 
   <EquityVolatilities id="default">
