@@ -41,6 +41,11 @@ RandomVariable randomVariableOpConditionalExpectation(const Size size, const Siz
     if (regressor.empty())
         return expectation(*args[0]);
 
+    QL_REQUIRE(!args.empty(), "randomVariableOpConditionalExpectation(): args are empty.");
+
+    if (args[0]->deterministic())
+        return *args[0];
+
     bool trivialRegressorGroups =
         regressorGroups.empty() || (regressorGroups.size() == 1 && regressorGroups.begin()->size() == regressor.size());
 
