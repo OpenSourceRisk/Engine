@@ -601,6 +601,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
     QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     AD ad;
     QuantLib::ext::shared_ptr<CommodityIndex> index;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> underlyingConvention;
     QuantLib::ext::shared_ptr<FutureExpiryCalculator> uFec;
     if (type == PST::AveragingFuture || type == PST::AveragingSpot || type == PST::AveragingOffPeakPower) {
 
@@ -625,7 +626,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
             QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
                 " not of expected type CommodityFutureConvention.");
             uFec = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
-
+            underlyingConvention = uConvention;
             if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
                 QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
                     " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
@@ -719,9 +720,13 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                     end, uFec, peakIndex, peakCalendar, peakHoursPerDay);
             } else {
                 TLOG("Building average future price helper from quote, " << quote->name() << ".");
+                boost::optional<std::pair<Calendar, Real>> offPeakPowerData;
+                if (const auto& oppid = underlyingConvention->offPeakPowerIndexData()) {
+                    offPeakPowerData = make_pair(oppid->peakCalendar(), oppid->offPeakHours());
+                }
                 helper = QuantLib::ext::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
                     ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
-                    ad.dailyExpiryOffset());
+                    ad.dailyExpiryOffset(), offPeakPowerData);
             }
 
             // Only add to instruments if an instrument with the same pillar date is not there already.
