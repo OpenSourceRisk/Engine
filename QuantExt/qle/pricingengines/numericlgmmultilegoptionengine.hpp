@@ -37,12 +37,6 @@ public:
 
     static bool instrumentIsHandled(const MultiLegOption& m, std::vector<std::string>& messages);
 
-protected:
-    static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                                    const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
-                                    const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
-                                    std::vector<std::string>& messages);
-
     struct CashflowInfo {
         bool isPartOfUnderlying(const Real optionTime) const;
         bool canBeEstimated(const Real optionTime) const;
@@ -62,7 +56,18 @@ protected:
             calculator_; // always a valid function
     };
 
-    CashflowInfo buildCashflowInfo(const Size i, const Size j) const;
+    static CashflowInfo
+    buildCashflowInfo(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& c, const QuantLib::Real payrec,
+                      const std::function<QuantLib::Real(const QuantLib::Date&)>& timeFromReference,
+                      const QuantLib::Exercise::Type exerciseType, const bool midCouponExercise,
+                      const QuantLib::Period& noticePeriod, const QuantLib::Calendar& noticeCalendar,
+                      const QuantLib::BusinessDayConvention noticeConvention, const std::string& cashflowDescription);
+
+protected:
+    static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
+                                    const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
+                                    const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
+                                    std::vector<std::string>& messages);
 
     void calculate() const;
 
