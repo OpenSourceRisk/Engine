@@ -68,10 +68,6 @@ public:
 
     bool isCalendarSpread() const;
 
-    //! \name LazyObject interface
-    //@{
-    void alwaysForwardNotifications() override;
-    //@}
     //! \name Observable interface
     //@{
     void deepUpdate() override;

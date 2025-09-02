@@ -44,10 +44,10 @@ CommoditySpreadOption::CommoditySpreadOption(const QuantLib::ext::shared_ptr<Com
     QL_REQUIRE(ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(shortAssetFlow_) ||
                    QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(shortAssetFlow_),
                "Expect commodity floating cashflows");
-    if (longAssetFxIndex_)
-        registerWith(longAssetFxIndex_);
-    if (shortAssetFxIndex_)
-        registerWith(shortAssetFxIndex_);
+    longAssetFlow_->alwaysForwardNotifications();
+    shortAssetFlow_->alwaysForwardNotifications();
+    registerWith(longAssetFxIndex_);
+    registerWith(shortAssetFxIndex_);
     if (paymentDate_ == Date()) {
         paymentDate_ = std::max(longAssetFlow_->date(), shortAssetFlow_->date());
     }
@@ -100,12 +100,6 @@ void CommoditySpreadOption::deepUpdate() {
     longAssetFlow_->deepUpdate();
     shortAssetFlow_->deepUpdate();
     update();
-}
-
-void CommoditySpreadOption::alwaysForwardNotifications() {
-    longAssetFlow_->alwaysForwardNotifications();
-    shortAssetFlow_->alwaysForwardNotifications();
-    LazyObject::alwaysForwardNotifications();
 }
 
 } // namespace QuantExt
