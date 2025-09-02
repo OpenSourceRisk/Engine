@@ -64,7 +64,7 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
 
         if (itAddFields != additionalFields.end() && !itAddFields->second.empty()) {
             try {
-                decomposeEquityCommodities = parseBool(itAddFields->second);
+                decomposeEquityCommodities = ore::data::parseBool(itAddFields->second);
             } catch (const std::exception& e) {
                 StructuredAnalyticsWarningMessage("DecomposedSensitivityStream",
                                                   "index_decomposition field parse error",
