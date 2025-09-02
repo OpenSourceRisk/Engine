@@ -68,6 +68,11 @@ public:
 
     bool isCalendarSpread() const;
 
+    //! \name Observable interface
+    //@{
+    void deepUpdate() override;
+    //@}
+
 private:
     // arguments
     QuantLib::ext::shared_ptr<CommodityCashFlow> longAssetFlow_;
