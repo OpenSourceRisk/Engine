@@ -24,6 +24,8 @@
 #pragma once
 
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
 
 namespace ore {
 namespace data {
@@ -71,6 +73,14 @@ class CommodityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBu
 public:
     CommodityAmericanOptionBAWEngineBuilder()
         : AmericanOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}
+};
+
+class CommodityAmericanFDScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    CommodityAmericanFDScriptedEngineBuilder() : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"CommodityOptionAmerican"}){}
+    QuantLib::ext::shared_ptr<ore::data::Trade>
+    build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
 };
 
 } // namespace data

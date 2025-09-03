@@ -293,6 +293,22 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
+    // Use delegating engine
+    if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder)) {
+        delegatingBuilderTrade_ = db->build(this, engineFactory);
+        QL_REQUIRE(delegatingBuilderTrade_, "DelegatingEngineBuilder failed for trade type" << tradeTypeBuilder);
+
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
+
+        return;
+    }
+
     if (sameCcy) {
         QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
             QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
@@ -350,5 +366,14 @@ void VanillaOptionTrade::setNotionalAndCurrencies() {
     // the following is correct for vanilla (sameCcy = true) and quanto (sameCcy = false)
     notionalCurrency_ = ccy.code();
 }
+
+QuantLib::Real VanillaOptionTrade::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string VanillaOptionTrade::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
 } // namespace data
 } // namespace ore
