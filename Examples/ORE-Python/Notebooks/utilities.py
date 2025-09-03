@@ -201,6 +201,21 @@ def is_gz_file(filepath):
     with open(filepath, 'rb') as test_f:
         return test_f.read(2) == b'\x1f\x8b'
 
+def wait_for_gzip_ready(filepath, retries=5, delay=1):
+    import gzip
+    """Wait until a gzip file is fully written and readable."""
+    for attempt in range(retries):
+        try:
+            with gzip.open(filepath, 'rt') as f:
+                for _ in f:
+                    pass
+            print(f"✅ Gzip file is ready after {attempt + 1} attempt(s).")
+            return
+        except EOFError:
+            print(f"⏳ Gzip file not ready (attempt {attempt + 1}/{retries}), retrying...")
+            time.sleep(delay)
+    raise RuntimeError(f"❌ Gzip file {filepath} is not readable after {retries} retries.")
+
 def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
     import gzip
     import csv

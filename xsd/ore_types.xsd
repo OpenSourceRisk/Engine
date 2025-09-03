@@ -501,6 +501,7 @@
       <xs:enumeration value="NelsonSiegel"/>
       <xs:enumeration value="Svensson"/>
       <xs:enumeration value="BackwardFlat"/>
+      <xs:enumeration value="ForwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
 
