@@ -245,6 +245,9 @@ def read_scenario_data(gzFileName):
     return list(dateSet), list(sampleSet), list(keySet), data_rows
 
 def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
+    import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
+
     dates, samples, keys, data_rows = read_scenario_data(gzFileName)
     if data_rows is None:
         print("Failed to read scenario data. Aborting plot.")
