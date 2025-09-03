@@ -35,7 +35,7 @@ namespace data {
     "       END;\n"
     "   END;\n"
     "   Option = Option * Quantity * LongShort;\n"
-    "   Option = Option - LongShort * PremiumAmount;\n";  // maybe the last line needs to be removed? Premium is handled separately
+    "   Option = Option - LongShort * PremiumAmount;\n";
 
 QuantLib::ext::shared_ptr<ore::data::Trade>
     CommodityAmericanFDScriptedEngineBuilder::build(const Trade* trade,
@@ -47,9 +47,10 @@ QuantLib::ext::shared_ptr<ore::data::Trade>
                                             "cast to ore::data::CommodityOption. Contact dev.");
 
     // Build a ScriptedTrade with inline scripts
+    Date today = Settings::instance().evaluationDate();
     std::vector<ScriptedTradeEventData> events = {ScriptedTradeEventData(
         "ExerciseDates", ScheduleData(ScheduleRules(
-                             to_string(Settings::instance().evaluationDate()), commodityOption->option().exerciseDates()[0],
+                             to_string(today), commodityOption->option().exerciseDates()[0],
                                                     "1D", commodityOption->currency(), "F", "F", "Forward")))};
 
     std::vector<ScriptedTradeValueTypeData> numbers =
@@ -73,7 +74,7 @@ QuantLib::ext::shared_ptr<ore::data::Trade>
     std::vector<ScriptedTradeValueTypeData> dayCounter;
 
     std::map<std::string, ScriptedTradeScriptData> script = {
-        {"CommodityOptionAmerican", ScriptedTradeScriptData(commodity_american_fd_script, "Option",
+        {"", ScriptedTradeScriptData(commodity_american_fd_script, "Option",
                                     {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCcy"}}, {})}
     };
 
