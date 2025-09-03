@@ -62,6 +62,9 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
             QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future "
                                  << "expiry calculator when using first future");
             Date expiry = calc->expiryDate(pricingDate_, futureMonthOffset_);
+            QL_REQUIRE(expiry != Null<Date>(), "CommodityIndexedCashflow needs a valid contract month, found no "
+                                               "valid contract for pricing / contract date "
+                                                   << io::iso_date(pricingDate_));
             if (dailyExpiryOffset_ != Null<Natural>()) {
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
@@ -137,6 +140,9 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using "
                              << "the future settlement price as reference price");
         expiry = calc->expiryDate(contractDate, futureMonthOffset_);
+        QL_REQUIRE(expiry != Null<Date>(), "CommodityIndexedCashflow needs a valid contract month, found no "
+                                               "valid contract for contract date "
+                                                   << io::iso_date(contractDate));
         if (dailyExpiryOffset_ != Null<Natural>()) {
             expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
         }
