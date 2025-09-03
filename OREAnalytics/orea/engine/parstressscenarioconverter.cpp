@@ -320,16 +320,18 @@ ParStressScenarioConverter::ParStressScenarioConverter(
       simMarketParams_(simMarketParams), sensiScenarioData_(sensiScenarioData), simMarket_(simMarket),
       parInstruments_(parInstruments), useSpreadedTermStructure_(useSpreadedTermStructure) {}
 
-ore::analytics::StressTestScenarioData::StressTestData
+ParStressScenarioConverter::ConversionResults 
 ParStressScenarioConverter::convertScenario(const StressTestScenarioData::StressTestData& parStressScenario) const {
-
+    ConversionResults results;
     if (!parStressScenario.containsParShifts()) {
-        return parStressScenario;
+        results.updatedScenario = parStressScenario;
+        return results;
     }
 
     if (!scenarioCanBeConverted(parStressScenario)) {
         WLOG("Can not convert scenario " << parStressScenario.label << " Skip it and apply all shifts as zero shifts.");
-        return parStressScenario;
+        results.updatedScenario = parStressScenario;
+        return results;
     }
 
     simMarket_->reset();
@@ -409,12 +411,16 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
     simMarket_->applyScenario(zeroSimMarketScenario);
     DLOG("ParStressConverter: Implied Scenario");
     DLOG("parInstrument;fairRate;targetFairRate;zeroBaseValue;shift");
+    
+    results.updatedScenario = zeroStressScenario;
     for (const auto& rfKey : relevantParKeys) {
-        DLOG(rfKey << ";" << impliedParRate(rfKey) << ";" << targets[rfKey] << ";" << baseScenarioValues[rfKey] << ";"
+        double shiftedParRate = impliedParRate(rfKey);
+        results.parRateScenarioData.push_back({rfKey, fairRates[rfKey], shiftedParRate});
+        DLOG(rfKey << ";" << shiftedParRate << ";" << targets[rfKey] << ";" << baseScenarioValues[rfKey] << ";"
                    << shifts[rfKey]);
     }
     simMarket_->reset();
-    return zeroStressScenario;
+    return results;
 }
 
 double ParStressScenarioConverter::maturityTime(const RiskFactorKey& rfKey) const {
