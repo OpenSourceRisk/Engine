@@ -39,6 +39,8 @@ public:
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
     void buildDependencies() override;
+
+    const QuantLib::ext::shared_ptr<CorrelationReport>& correlationReport() {return correlationReport_;}
         
 protected:
     QuantLib::ext::shared_ptr<CorrelationReport> correlationReport_;
