@@ -987,7 +987,7 @@
           }
         ]
       },
-      "stres_scenario_par_rates\\.csv": {
+      "stress_scenario_par_rates\\.csv": {
         "keys": [
           "Scenario",
           "ParKey"
