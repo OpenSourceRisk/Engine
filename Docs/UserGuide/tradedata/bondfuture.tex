@@ -1,12 +1,18 @@
 \subsubsection{Bondfuture}
 \label{ss:bondfuture}
 
-Akin to the forward bond, a bondfuture is a contract that establishes an agreement to buy or sell (determined by LongInForward)
-an underlying bond at a future point in time (expiry) at an agreed price (strike amount). In contrast to the forward bond, the
-underlying bond is selected by the contract seller picked from a list of eligible securities (DeliveryBasket). By its nature
-this particular security is called the "cheapest to deliver" (CTD).
+\ifdefined\IncludePayoff{{\bf Payoff}
 
-A bondfuture is set up using a {\tt BondFutureData} block as shown below and the trade type is \emph{BondFuture}, see \ref{lst:bondfuturetradedata}.
+A bond future is a contract that establishes an agreement to buy or sell an underlying bond at a future point in time
+(expiry) at an agreed price (strike amount). The underlying bond can be selected by the contract seller from a list of
+eligible securities and is called "cheapest to deliver" (CTD). The bond is exchanged with a cash payment determined as
+the future settlement price multiplied by a conversion factor that is specific to the CTD bond and which compensates for
+the different yields of the bonds in the underlying basket.
+
+{\bf Input}}\fi
+
+A bondfuture is set up using a {\tt BondFutureData} block as shown below and the trade type is \emph{BondFuture},
+see \ref{lst:bondfuturetradedata}.
 
 \begin{itemize}
   \item ContractName: This ID defines both: which bond future reference datum to take and security specific spread to be used for pricing.
@@ -14,7 +20,8 @@ A bondfuture is set up using a {\tt BondFutureData} block as shown below and the
   \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{true}) or short (\emph{false}) position.
 \end{itemize}
 
-The corresponding reference data is shown in listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
+Although it is not part of the trade representation, we also explain the corresponding reference data, which is shown in
+listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
 
 \begin{itemize}
   \item Currency: The currency in which the future is denominated. Allowable values: See Table \ref{tab:currency}.
@@ -71,7 +78,7 @@ Finally, the conversion factor can be given in the market data or it can be dedu
   %\hrule\medskip
   \begin{minted}[fontsize=\footnotesize]{xml}
     <BondFutureReferenceData id="TYU25">
-      <!-- should always be specified --
+      <!-- should always be specified -->
       <Currency>USD</Currency>
       <DeliveryBasket>
         <SecurityId>ISIN:US91282CDJ71</SecurityId>
