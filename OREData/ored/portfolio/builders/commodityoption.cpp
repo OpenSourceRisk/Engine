@@ -31,13 +31,11 @@ namespace data {
     "   FOR d IN(SIZE(ExerciseDates), 1, -1) DO\n"
     "       Option = NPV(Option, ExerciseDates[d]);\n" 
     "       Payoff = NPV(OptionType * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d]);\n "
-    //"       Payoff = PAY(OptionType * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d], ExerciseDates[d], PayCcy);\n"
     "       IF Payoff > Option THEN\n"
     "           Option = Payoff;\n"
     "       END;\n"
     "   END;\n"
     "   Option = Option * Quantity * LongShort;\n";
-    //"   Option = Option - LongShort * PremiumAmount;\n";
 
 QuantLib::ext::shared_ptr<ore::data::Trade>
     CommodityAmericanFDScriptedEngineBuilder::build(const Trade* trade,
@@ -62,8 +60,6 @@ QuantLib::ext::shared_ptr<ore::data::Trade>
                                                         commodityOption->option().exerciseDates()[0], "1D",
                                                         "WeekendsOnly", "F", "F", "Forward"))));
 
-    //double premiumAmount = commodityOption->option().premiumData().premiumData()[0].amount;
-
     std::vector<ScriptedTradeValueTypeData> numbers = {
         ScriptedTradeValueTypeData("Number", "Strike", std::to_string(commodityOption->strike().value())),
         ScriptedTradeValueTypeData("Number", "Quantity", std::to_string(commodityOption->quantity())),
@@ -71,12 +67,11 @@ QuantLib::ext::shared_ptr<ore::data::Trade>
                                    commodityOption->option().longShort() == "Long" ? "1.0" : "-1.0"),
         ScriptedTradeValueTypeData("Number", "OptionType",
                                    commodityOption->option().callPut() == "Call" ? "1.0" : "-1.0"),
-        ScriptedTradeValueTypeData("Number", "PremiumAmount",
-                                   std::to_string(commodityOption->option().premiumData().premiumData()[0].amount))
     };
-
+    std::string underlyingStr = commodityOption->asset();
+    std::replace(underlyingStr.begin(), underlyingStr.end(), '#', '-');
     std::vector<ScriptedTradeValueTypeData> indices = {
-        ScriptedTradeValueTypeData("Index", "Underlying", "COMM-" + commodityOption->asset())
+        ScriptedTradeValueTypeData("Index", "Underlying", "COMM-" + underlyingStr)
     };
 
     std::vector<ScriptedTradeValueTypeData> currencies = {
