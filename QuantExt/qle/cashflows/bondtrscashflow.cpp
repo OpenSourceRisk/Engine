@@ -22,8 +22,9 @@ namespace QuantExt {
 
 BondTRSCashFlow::BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                                  const Real bondNotional, const QuantLib::ext::shared_ptr<Index>& index,
-                                 const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
-    : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, index, initialPrice, fxIndex)  {}
+                                 const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex,
+                                 const int fxFixingDays)
+    : TRSCashFlow(paymentDate, fixingStartDate, fixingEndDate, bondNotional, index, initialPrice, fxIndex, fxFixingDays)  {}
 
 const Real BondTRSCashFlow::notional(Date date) const {
     if (auto bondIndex = ext::dynamic_pointer_cast<BondIndex>(index_)) {
@@ -40,6 +41,15 @@ void BondTRSCashFlow::setFixingStartDate(QuantLib::Date fixingDate) {
     fixingStartDate_ = fixingDate; 
 }
 
+void BondTRSCashFlow::accept(AcyclicVisitor& v) {
+    Visitor<BondTRSCashFlow>* v1 = dynamic_cast<Visitor<BondTRSCashFlow>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        TRSCashFlow::accept(v);
+}
+
+
 BondTRSLeg::BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
                        const Real bondNotional, const QuantLib::ext::shared_ptr<Index>& index,
                        const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
@@ -51,6 +61,11 @@ BondTRSLeg& BondTRSLeg::withInitialPrice(Real initialPrice) {
     return *this;
 }
 
+BondTRSLeg& BondTRSLeg::withFxFixingDays(int fxFixingDays) {
+    fxFixingDays_ = fxFixingDays;
+    return *this;
+}
+
 BondTRSLeg::operator Leg() const {
     Leg leg;
     Real initialPrice;
@@ -58,7 +73,7 @@ BondTRSLeg::operator Leg() const {
         initialPrice = i == 0 ? initialPrice_ : Null<Real>();
         leg.push_back(QuantLib::ext::make_shared<BondTRSCashFlow>(paymentDates_[i], valuationDates_[i],
                                                                   valuationDates_[i + 1], bondNotional_, index_,
-                                                                  initialPrice, fxIndex_));
+                                                                  initialPrice, fxIndex_, fxFixingDays_));
     }
     return leg;
 }

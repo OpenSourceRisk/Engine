@@ -40,12 +40,19 @@ class BondTRSCashFlow : public TRSCashFlow {
 public:
     BondTRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                     const Real bondNotional, const QuantLib::ext::shared_ptr<Index>& index,
-                    const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+                    const Real initialPrice = Null<Real>(), 
+                    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                    const int fxFixingDays = 0);
 
     const Real notional(Date date) const override;
     const Real notional() const override { return TRSCashFlow::notional(); };
 
     void setFixingStartDate(QuantLib::Date fixingDate);
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&) override;
+    //@}
 };
 
 //! helper class building a sequence of bond trs cashflows
@@ -56,6 +63,7 @@ public:
     BondTRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const Real bondNotional,
                const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
     BondTRSLeg& withInitialPrice(Real);
+    BondTRSLeg& withFxFixingDays(int);
     operator Leg() const;
 
 private:
@@ -65,6 +73,7 @@ private:
     QuantLib::ext::shared_ptr<Index> index_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real initialPrice_ = QuantLib::Null<QuantLib::Real>();
+    int fxFixingDays_ = 0;
 };
 
 } // namespace QuantExt

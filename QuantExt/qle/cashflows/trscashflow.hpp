@@ -39,7 +39,8 @@ class TRSCashFlow : public CashFlow {
 public:
     TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                 const Real notional, const QuantLib::ext::shared_ptr<Index>& Index,
-                const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
+                const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
+                const int fxFixingDays = 0);
 
     //! \name CashFlow interface
     //@{
@@ -60,6 +61,7 @@ public:
     Real fxEnd() const;
     Real assetStart() const;
     Real assetEnd() const;
+    int fxIndexFixingDays() const { return fxFixingDays_; }
     //@}
 
     //! \name Observer interface
@@ -78,6 +80,7 @@ protected:
     QuantLib::ext::shared_ptr<Index> index_;
     Real initialPrice_ = QuantLib::Null<Real>();
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    int fxFixingDays_ = 0;
 };
 
 //! helper class building a sequence of trs cashflows
@@ -88,6 +91,7 @@ public:
     TRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const Real notional,
                const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
     TRSLeg& withInitialPrice(Real);
+    TRSLeg& withFxFixingDays(int);
     operator Leg() const;
 
 private:
@@ -97,6 +101,7 @@ private:
     QuantLib::ext::shared_ptr<Index> index_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real initialPrice_;
+    int fxFixingDays_ = 0;
 };
 
 } // namespace QuantExt
