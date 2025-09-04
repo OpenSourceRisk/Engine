@@ -84,6 +84,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
 
     Real T = timeFromReference(c->date());
 
+    info.payDate = c->date();
+
     if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
         bool done = false;
         if (exerciseType == Exercise::American) {

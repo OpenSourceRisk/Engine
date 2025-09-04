@@ -45,6 +45,7 @@ public:
         Real couponRatio(const Real time) const;
         RandomVariable pv(const LgmVectorised& lgm, const Real t, const RandomVariable& state,
                           const Handle<YieldTermStructure>& discountCurve) const;
+        Date payDate;                                    // always filled
         Real couponStartTime_ = Null<Real>();            // filled for classes derived from Coupon
         Real couponEndTime_ = Null<Real>();              // filled for classes derived from Coupon
         Real belongsToUnderlyingMaxTime_ = Null<Real>(); // this is always filled
