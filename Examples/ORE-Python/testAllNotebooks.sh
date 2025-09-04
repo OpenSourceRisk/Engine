@@ -25,10 +25,10 @@ for notebook in $(find "$notebook_dir" -type f -name "*.ipynb" | grep -Ev '/(Inp
 
     notebook_dirname=$(dirname "$notebook")
     notebook_basename=$(basename "$notebook")
-    notebook_name="${notebook_basename%.ipynb}"
+    parent_folder=$(basename "$(dirname "$notebook")")
 
     # Create a unique output directory for this notebook
-    notebook_output_dir="$output_dir/$notebook_name"
+    notebook_output_dir="$output_dir/$parent_folder"
     mkdir -p "$notebook_output_dir"
 
     output_path="$(realpath "$notebook_output_dir")/$notebook_basename"
