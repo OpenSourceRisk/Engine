@@ -294,6 +294,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
@@ -855,6 +856,7 @@ pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdblackscholesvanillaengine.hpp
+pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp

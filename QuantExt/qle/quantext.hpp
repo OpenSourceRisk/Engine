@@ -420,6 +420,7 @@
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
 #include <qle/pricingengines/discretizedconvertible.hpp>
 #include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/fdcallablebondevents.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
