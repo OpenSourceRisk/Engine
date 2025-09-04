@@ -24,24 +24,13 @@
 
 namespace QuantExt {
 
-namespace {
-std::string getDateStr(const Date& d) {
-    std::ostringstream os;
-    os << QuantLib::io::iso_date(d);
-    return os.str();
-}
-} // namespace
-
-FdCallableBondEvents::FdCallableBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                                                 const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
-                                                 const QuantLib::ext::shared_ptr<FxIndex>& fxConversion)
-    : today_(today), dc_(dc), N0_(N0), equity_(equity), fxConversion_(fxConversion) {}
+FdCallableBondEvents::FdCallableBondEvents(const Date& today, const DayCounter& dc) : today_(today), dc_(dc) {}
 
 Real FdCallableBondEvents::time(const Date& d) const { return dc_.yearFraction(today_, d); }
 
 void FdCallableBondEvents::registerBondCashflow(
-    const QuantLib::ext::shared_ptr<NumericLgmMultiionEngineBase::CashflowInfo>& c) {
-    if (c->date() > today_) {
+    const QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>& c) {
+    if (c->payDate > today_) {
         registeredBondCashflows_.push_back(c);
         times_.insert(time(c->payDate));
     }
@@ -78,11 +67,11 @@ Date FdCallableBondEvents::nextExerciseDate(const Date& d,
 void FdCallableBondEvents::processBondCashflows() {
     lastRedemptionDate_ = Date::minDate();
     for (auto const& c : registeredBondCashflows_) {
-        if (c.couponStartTime == Null<Real>())
+        if (c->couponStartTime_ == Null<Real>())
             lastRedemptionDate_ = std::max(lastRedemptionDate_, c->payDate);
     }
     for (auto const& d : registeredBondCashflows_) {
-        bool isRedemption = d.couponStartTime == Null<Real>();
+        bool isRedemption = d->couponStartTime_ == Null<Real>();
         Size index = grid_.index(time(d->payDate));
         hasBondCashflow_[index] = true;
         associatedDate_[index] = d->payDate;
@@ -93,8 +82,8 @@ void FdCallableBondEvents::processBondCashflows() {
     }
 }
 
-void FdCallableBondEvents::processExerciseData(const std::vector<CallableBond2::CallabilityData>& sourceData,
-                                                  std::vector<bool>& targetFlags, std::vector<CallData>& targetData) {
+void FdCallableBondEvents::processExerciseData(const std::vector<CallableBond::CallabilityData>& sourceData,
+                                               std::vector<bool>& targetFlags, std::vector<CallData>& targetData) {
     for (auto const& c : sourceData) {
         if (c.exerciseDate <= today_ && c.exerciseType == CallableBond::CallabilityData::ExerciseType::OnThisDate)
             continue;
@@ -119,14 +108,7 @@ void FdCallableBondEvents::processExerciseData(const std::vector<CallableBond2::
         }
         for (Size i = indexStart; i <= indexEnd; ++i) {
             targetFlags[i] = true;
-            targetData[i] = CallData{c.price,
-                                     c.priceType,
-                                     c.includeAccrual,
-                                     c.isSoft,
-                                     c.softTriggerRatio,
-                                     c.softTriggerM,
-                                     c.softTriggerN,
-                                     std::function<Real(Real, Real)>()};
+            targetData[i] = CallData{c.price, c.priceType, c.includeAccrual};
         }
     }
 }
@@ -140,8 +122,8 @@ void FdCallableBondEvents::finalise(const TimeGrid& grid) {
     hasCall_.resize(grid.size(), false);
     hasPut_.resize(grid.size(), false);
 
-    bondCashflow_.resize(grid.size(), 0.0);
-    bondFinalRedemption_.resize(grid.size(), 0.0);
+    bondCashflow_.resize(grid.size(), {});
+    bondFinalRedemption_.resize(grid.size(), {});
     callData_.resize(grid.size());
     putData_.resize(grid.size());
 
@@ -152,14 +134,6 @@ void FdCallableBondEvents::finalise(const TimeGrid& grid) {
     processBondCashflows();
     processExerciseData(registeredCallData_, hasCall_, callData_);
     processExerciseData(registeredPutData_, hasPut_, putData_);
-
-    // checks
-
-    Size lastRedemptionIndex = grid_.index(time(lastRedemptionDate_));
-    for (Size k = lastRedemptionIndex + 1; k < grid_.size(); ++k) {
-        QL_REQUIRE(!hasConversion(k) && !hasMandatoryConversion(k),
-                   "FdCallableBondEvents: conversion right after last bond redemption flow not allowed");
-    }
 }
 
 bool FdCallableBondEvents::hasBondCashflow(const Size i) const { return hasBondCashflow_.at(i); }
@@ -175,13 +149,9 @@ FdCallableBondEvents::getBondFinalRedemption(const Size i) const {
     return bondFinalRedemption_.at(i);
 }
 
-const FdCallableBondEvents::CallData& FdCallableBondEvents::getCallData(const Size i) const {
-    return callData_.at(i);
-}
+const FdCallableBondEvents::CallData& FdCallableBondEvents::getCallData(const Size i) const { return callData_.at(i); }
 
-const FdCallableBondEvents::CallData& FdCallableBondEvents::getPutData(const Size i) const {
-    return putData_.at(i);
-}
+const FdCallableBondEvents::CallData& FdCallableBondEvents::getPutData(const Size i) const { return putData_.at(i); }
 
 Date FdCallableBondEvents::getAssociatedDate(const Size i) const { return associatedDate_.at(i); }
 

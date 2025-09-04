@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <qle/instruments/convertiblebond2.hpp>
+#include <qle/instruments/callablebond.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -43,14 +44,14 @@ public:
         bool includeAccrual;
     };
 
-    FdCallableBondEvents(const Date& today, const DayCounter& dc, const Real N0);
+    FdCallableBondEvents(const Date& today, const DayCounter& dc);
 
     // The intended workflow is as follows:
 
     // 1 register events describing the callable bond features and cashflows
-    void registerBondCashflow(const QuantLib::ext::shared_ptr<NumericLgmMultiionEngineBase::CashflowInfo>& c);
-    void registerCall(const ConvertibleBond2::CallabilityData& c);
-    void registerPut(const ConvertibleBond2::CallabilityData& c);
+    void registerBondCashflow(const QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>& c);
+    void registerCall(const CallableBond::CallabilityData& c);
+    void registerPut(const CallableBond::CallabilityData& c);
 
     // 2 get the times associated to the events, i.e. the mandatory times for the PDE grid
     const std::set<Real>& times() const;
@@ -72,20 +73,17 @@ public:
 
     Date getAssociatedDate(const Size i) const; // null if no date is associated
 
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
-
 private:
     Date nextExerciseDate(const Date& d, const std::vector<CallableBond::CallabilityData>& data) const;
 
     Real time(const Date& d) const;
 
     void processBondCashflows();
-    void processExerciseData(const std::vector<ConvertibleBond2::CallabilityData>& sourceData,
+    void processExerciseData(const std::vector<CallableBond::CallabilityData>& sourceData,
                              std::vector<bool>& targetFlags, std::vector<CallData>& targetData);
 
     Date today_;
     DayCounter dc_;
-    Real N0_;
 
     std::set<Real> times_;
     TimeGrid grid_;
@@ -94,21 +92,18 @@ private:
     Date lastRedemptionDate_;
 
     // the registered events (before finalise())
-    std::vector<const QuantLib::ext::shared_ptr<NumericLgmMultiionEngineBase::CashflowInfo>> registeredBondCashflows_;
-    std::vector<ConvertibleBond2::CallabilityData> registeredCallData_, registeredPutData_;
+    std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> registeredBondCashflows_;
+    std::vector<CallableBond::CallabilityData> registeredCallData_, registeredPutData_;
 
     // per time index i flags to indicate events
     std::vector<bool> hasBondCashflow_, hasCall_, hasPut_;
 
     // per time index the data associated to events
-    std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_,
+    std::vector<std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>> bondCashflow_,
         bondFinalRedemption_;
     std::vector<CallData> callData_, putData_;
 
     std::vector<Date> associatedDate_;
-
-    // additional results provided by the event processor
-    std::map<std::string, boost::any> additionalResults_;
 };
 
 } // namespace QuantExt
