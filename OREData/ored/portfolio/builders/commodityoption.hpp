@@ -25,7 +25,6 @@
 
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/scriptedtrade.hpp>
 
 namespace ore {
 namespace data {
