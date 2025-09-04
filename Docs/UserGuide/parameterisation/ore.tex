@@ -748,6 +748,7 @@ shows a typical configuration for sensitivity calculation.
    <Parameter name="outputJacobi">Y</Parameter>
    <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
    <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+   <Parameter name="decomposeIndexSensitivities">Y</Parameter>
  </Analytic>
 </Analytics>
 \end{minted}
@@ -778,6 +779,7 @@ The parameters have the following interpretation:
 \item {\tt outputJacobi}: If set to Y, then the relevant Jacobi and inverse Jacobi matrix is written to a file, see below
 \item {\tt jacobiOutputFile}: Output file name for the Jacobi matrix
 \item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
+\item {\tt decomposeIndexSensitivities}: Decompose Index CDS sensitivities into index constituent sensitivities
 \end{itemize}
 
 The conversion of ``raw'' to ``par'' sensitivities, embedded above, can also be performed as a

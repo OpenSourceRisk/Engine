@@ -12,6 +12,6 @@ print("+------------------------------------------------------+")
 
 
 oreex.print_headline("Run ORE for Sensitivity with credit index decomposition")
-oreex.run("Input/ore_sensi_credit_index_decomposition.xml")
+oreex.run("Input/ore_sensi_eq_credit_index_decomposition.xml")
 
 
