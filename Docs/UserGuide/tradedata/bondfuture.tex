@@ -1,26 +1,40 @@
-\subsubsection{Bondfuture}
+\subsubsection{Bond Future}
 \label{ss:bondfuture}
 
-Akin to the forward bond, a bondfuture is a contract that establishes an agreement to buy or sell (determined by LongInForward)
+Akin to the forward bond, a BondFuture is a contract that establishes an agreement to buy or sell (determined by LongInForward)
 an underlying bond at a future point in time (expiry) at an agreed price (strike amount). In contrast to the forward bond, the
 underlying bond is selected by the contract seller picked from a list of eligible securities (DeliveryBasket). By its nature
 this particular security is called the "cheapest to deliver" (CTD).
 
-A bondfuture is set up using a {\tt BondFutureData} block as shown below and the trade type is \emph{BondFuture}, see \ref{lst:bondfuturetradedata}.
+A BondFuture can be used both as a stand alone trade (TradeType:
+\emph{BondFuture}) or as a trade component ({\tt BondFutureData}) used within the
+\emph{TotalReturnSwap} (Generic TRS) trade type. See listing \ref{lst:bondfuturetradedata}, and listing \ref{lst:trsdata35} for a BondFuture used within a TRS. 
+
 
 \begin{itemize}
   \item ContractName: This ID defines both: which bond future reference datum to take and security specific spread to be used for pricing.
+  
+  Allowable values: A string identifying the contract name, supported in the market data configuration.
   \item ContractNotional: The notional of the position, expressed in the currency of the bond.
-  \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{true}) or short (\emph{false}) position.
+  
+  Allowable values: A non-negative real number.
+  \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{L}) or short (\emph{S}) position.
+
+  Allowable values: \emph{Long}, \emph{L}, or \emph{Short}, \emph{S}
 \end{itemize}
+
 
 The corresponding reference data is shown in listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
 
 \begin{itemize}
-  \item Currency: The currency in which the future is denominated. Allowable values: See Table \ref{tab:currency}.
-  \item DeliveryBasket: A list of eligible securities/bond identifiers. Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix
-  \item Settlement [Optional]: Cash or Physical. Optional, defaults to Physcial.
-  \item DirtyQuotation [Optional]: Whether the market quote of the future price is dirty (true) or clean (false, default if not specified).
+  \item Currency: The currency in which the future is denominated. 
+  
+  Allowable values: See Table \ref{tab:currency}.
+  \item DeliveryBasket: A list of eligible securities/bond identifiers. 
+  
+  Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix
+  \item Settlement [Optional]: \emph{Cash} or \emph{Physical}. Optional, defaults to \emph{Physical}.
+  \item DirtyQuotation [Optional]: Whether the market quote of the future price is dirty (\emph{true}) or clean (\emph{false}, default if not specified).
 \end{itemize}
 
 The last trading (expiry) and last delivery (settlement) date of the future can be given explicitly:
@@ -33,17 +47,24 @@ The last trading (expiry) and last delivery (settlement) date of the future can 
 Alternatively, these dates can be derived from the following set of fields:
 
 \begin{itemize}
-  \item ContractMonth: specifies the delivery month. Allowable values are written English calendar month or its three letter abbreviation, e.g. "January" or "Jan".
+  \item ContractMonth: specifies the delivery month. 
+  
+  Allowable values are written English calendar month or its three letter abbreviation, e.g. \emph{January} or \emph{Jan}.
   \item RootDate: used to calculate the day of the month.
-  Allowable values are "first" for the beginning of the month, "end" for month end or nth weekday (e.g. "Monday,3" for third Monday of the month).
+
+  Allowable values are \emph{first} for the beginning of the month, \emph{end} for month end or nth weekday (e.g. \emph{Monday,3} for third Monday of the month).
   \item ExpiryBasis: used to set the basis for the expiry derivation.
-  Allowable values are "ROOT" for the above root date as start date, "SETTLEMENT" for the settlement date as a start date
+
+  Allowable values are \emph{ROOT} for the above root date as start date, \emph{SETTLEMENT} for the settlement date as a start date
   \item SettlementBasis: used to set the basis for the settlement date derivation.
-  Allowable values are "ROOT" for the above root date as start date, "EXPIRY" for the expiry date as a start date
+
+  Allowable values are \emph{ROOT} for the above root date as start date, \emph{EXPIRY} for the expiry date as a start date
   \item ExpiryLag: Period (positive/negative) which will be added/subtracted from the ExpiryBasis, to arrive at the expiry date.
-  Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period.
+
+  Allowable values are any combination of integers and \emph{D} for days, \emph{M} for months or \emph{Y} for years, e.g. \emph{3D} means a 3-day period.
   \item SettlementLag: Period (positive/negative) which will be added/subtracted from the SettlementBasis, to arrive at the settlement date.
-  Allowable values are any combination of integers and D for days, M for months or Y for years, e.g. 3D means a 3-day period.
+
+  Allowable values are any combination of integers and \emph{D} for days, \emph{M} for months or \emph{Y} for years, e.g. \emph{3D} means a 3-day period.
 \end{itemize}
 
 Finally, the conversion factor can be given in the market data or it can be deduced internally, which requires the following field to be filled:
