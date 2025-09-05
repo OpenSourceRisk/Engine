@@ -40,7 +40,7 @@ public:
     TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                 const Real notional, const QuantLib::ext::shared_ptr<Index>& Index,
                 const Real initialPrice = Null<Real>(), const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr,
-                const int fxFixingDays = 0);
+                const bool applyFXIndexFixingDays = false);
 
     //! \name CashFlow interface
     //@{
@@ -57,11 +57,13 @@ public:
     const QuantLib::ext::shared_ptr<Index>& index() const { return index_; }
     const Real initialPrice() const { return initialPrice_; }
     const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    Date fxFixingStartDate() const;
+    Date fxFixingEndDate() const;
     Real fxStart() const;
     Real fxEnd() const;
     Real assetStart() const;
     Real assetEnd() const;
-    int fxIndexFixingDays() const { return fxFixingDays_; }
+    bool applyFXIndexFixingDays() const { return applyFXIndexFixingDays_; }
     //@}
 
     //! \name Observer interface
@@ -80,7 +82,7 @@ protected:
     QuantLib::ext::shared_ptr<Index> index_;
     Real initialPrice_ = QuantLib::Null<Real>();
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
-    int fxFixingDays_ = 0;
+    bool applyFXIndexFixingDays_ = false;
 };
 
 //! helper class building a sequence of trs cashflows
@@ -91,7 +93,7 @@ public:
     TRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const Real notional,
                const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex = nullptr);
     TRSLeg& withInitialPrice(Real);
-    TRSLeg& withFxFixingDays(int);
+    TRSLeg& withApplyFXIndexFixingDays(bool);
     operator Leg() const;
 
 private:
@@ -101,7 +103,7 @@ private:
     QuantLib::ext::shared_ptr<Index> index_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real initialPrice_;
-    int fxFixingDays_ = 0;
+    bool applyFXIndexFixingDays_ = false;
 };
 
 } // namespace QuantExt

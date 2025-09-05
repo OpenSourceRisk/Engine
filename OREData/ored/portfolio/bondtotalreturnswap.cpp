@@ -195,7 +195,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         bondIndex, bondData_.bondNotional(), effectiveInitialPrice,
         std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg}, payTotalReturnLeg_, valuationDates, paymentDates,
         fxIndex, payBondCashFlowsImmediately_, parseCurrency(fundingLegData_.currency()),
-        parseCurrency(bondData_.currency()), fxFixingDays_);
+        parseCurrency(bondData_.currency()), applyFxIndexFixingDays_);
     DLOG("After bondTRS");
     QuantLib::ext::shared_ptr<BondTRSEngineBuilder> trsBondBuilder =
         QuantLib::ext::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
@@ -282,7 +282,7 @@ void BondTRS::fromXML(XMLNode* node) {
     XMLNode* fxt = XMLUtils::getChildNode(bondTRSDataNode, "FXTerms");
     if (fxt) {
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
-        fxFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays", false, 0);
+        applyFxIndexFixingDays_ = XMLUtils::getChildValueAsBool(fxt, "ApplyFXIndexFixingDays", false, false);
     }
     payBondCashFlowsImmediately_ =
         XMLUtils::getChildValueAsBool(bondTRSDataNode, "PayBondCashFlowsImmediately", false, false);
@@ -326,8 +326,8 @@ XMLNode* BondTRS::toXML(XMLDocument& doc) const {
     if (!fxIndex_.empty()) {
         XMLNode* fxNode = doc.allocNode("FXTerms");
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
-        if (fxFixingDays_ > 0)
-            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", fxFixingDays_);
+        if (applyFxIndexFixingDays_ > 0)
+            XMLUtils::addChild(doc, fxNode, "ApplyFXIndexFixingDays", applyFxIndexFixingDays_);
         XMLUtils::appendNode(trsDataNode, fxNode);
     }
 
