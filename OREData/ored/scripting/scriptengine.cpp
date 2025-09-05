@@ -385,13 +385,9 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
-            Real t = boost::get<RandomVariable>(ref.first).time();
-            boost::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), boost::get<RandomVariable>(right),
                                           boost::get<RandomVariable>(ref.first));
             boost::get<RandomVariable>(ref.first).updateDeterministic();
-            if (boost::get<RandomVariable>(ref.first).time() == Null<Real>())
-                boost::get<RandomVariable>(ref.first).setTime(t);
         }
         TRACE("assign( " << v->name << "[" << (ref.second + 1) << "] ) := " << ref.first << " ("
                          << valueTypeLabels.at(right.which()) << ") using filter " << filter.top(),

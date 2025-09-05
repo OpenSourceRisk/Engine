@@ -889,16 +889,14 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match x size (" << x.size() << ")");
     QL_REQUIRE(f.size() == y.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match y size (" << y.size() << ")");
-    x.checkTimeConsistencyAndUpdate(y.time());
     if (f.deterministic()) {
         if (f.at(0))
             return x;
         else {
-            RandomVariable tmp(y);
-            tmp.setTime(x.time());
-            return tmp;
+            return y;
         }
     }
+    x.checkTimeConsistencyAndUpdate(y.time());
     resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
