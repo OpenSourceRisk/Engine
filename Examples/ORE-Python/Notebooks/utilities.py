@@ -1,5 +1,7 @@
 import sys, time, math
 import pandas as pd
+import gzip
+import csv
 
 def checkErrorsAndRunTime(app):
     errors = app.getErrors()
@@ -216,76 +218,62 @@ def wait_for_gzip_ready(filepath, retries=5, delay=1):
             time.sleep(delay)
     raise RuntimeError(f"❌ Gzip file {filepath} is not readable after {retries} retries.")
 
-def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
-    import gzip
-    import csv
-    dateSet = set()
+def read_scenario_data(gzFileName):
+    dateSet = set([0])  # scenario data file starts with date = 1, does NOT contain t0
     sampleSet = set()
     keySet = set()
-    # scenario data file starts with date = 1, i.e. does NOT contain t0
-    dateSet.add(0)
+    data_rows = []
 
-    if is_gz_file(gzFileName):
-        file = gzip.open(gzFileName, mode='rt')
-    else:
-        file = open(gzFileName)        
-    
-    reader = csv.reader(file, delimiter = ',', quotechar="'")
-    for row in reader:
-        if (not row[0].startswith('#')):
-            #print("data", row)
-            date = int(row[0])
-            sample = int(row[1])
-            key = int(row[2])
-            value = float(row[3])
-            dateSet.add(int(date))
-            sampleSet.add(int(sample))
-            keySet.add(int(key))
+    try:
+        open_func = gzip.open if is_gz_file(gzFileName) else open
+        with open_func(gzFileName, mode='rt') as file:
+            reader = csv.reader(file, delimiter=',', quotechar="'")
+            for row in reader:
+                if not row[0].startswith('#'):
+                    date = int(row[0])
+                    sample = int(row[1])
+                    key = int(row[2])
+                    value = float(row[3])
+                    dateSet.add(date)
+                    sampleSet.add(sample)
+                    keySet.add(key)
+                    data_rows.append((date, sample, key, value))
+    except EOFError as e:
+        print(f"Error reading gzip file: {e}")
+        return None, None, None, None
 
-    file.close()
+    return list(dateSet), list(sampleSet), list(keySet), data_rows
 
-    print("dates:  ", len(dateSet))
-    print("samples:", len(sampleSet))
-    print("keys:   ", len(keySet))
-
-    dates = list(dateSet)
-    values = []
-    for i in range(0, len(sampleSet)):
-        values.append([0] * len(dateSet))
-
-    if is_gz_file(gzFileName):
-        file = gzip.open(gzFileName, mode='rt')
-    else:
-        file = open(gzFileName)        
-
-    reader = csv.reader(file, delimiter = ',', quotechar="'")
-    for row in reader:
-        if (not row[0].startswith('#')):
-            date = int(row[0])
-            sample = int(row[1])
-            key = int(row[2])
-            value = float(row[3])
-            if key == keyNumber:
-                values[sample][date] = value
-                # FIXME: copy to the left for now
-                if date == 1:
-                    values[sample][0] = fixing
-
-    file.close()
-
+def plotScenarioDataPaths(gzFileName, keyNumber, numberOfPaths, fixing):
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
+
+    dates, samples, keys, data_rows = read_scenario_data(gzFileName)
+    if data_rows is None:
+        print("Failed to read scenario data. Aborting plot.")
+        return
+
+    print("dates:  ", len(dates))
+    print("samples:", len(samples))
+    print("keys:   ", len(keys))
+
+    values = [[0] * len(dates) for _ in range(len(samples))]
+
+    for date, sample, key, value in data_rows:
+        if key == keyNumber:
+            values[sample][date] = value
+            if date == 1:
+                values[sample][0] = fixing
 
     fig = plt.figure(figsize=(12, 5))
     gs = GridSpec(nrows=1, ncols=1)
     ax0 = fig.add_subplot(gs[0, 0])
 
-    for p in range(1, numberOfPaths+1):
+    for p in range(1, numberOfPaths + 1):
         ax0.plot(dates, values[p], label='')
         ax0.set(xlabel='Time', ylabel='Rate')
         ax0.set_title('Selected Market Data Paths')
-        #ax0.legend()
-    
+
     plt.show()
 
 def getStateScenarios(gzFileName, keyNumber, dateIndex):
