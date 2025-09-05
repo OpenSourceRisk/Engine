@@ -385,6 +385,8 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
+            // disable check in assignments
+            boost::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), boost::get<RandomVariable>(right),
                                           boost::get<RandomVariable>(ref.first));
             boost::get<RandomVariable>(ref.first).updateDeterministic();
