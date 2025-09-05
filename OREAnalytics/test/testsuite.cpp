@@ -50,8 +50,6 @@ using ore::test::setupTestLogging;
 #include <qle/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_timer
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_chrono

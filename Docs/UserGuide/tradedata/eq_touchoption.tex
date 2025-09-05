@@ -91,6 +91,7 @@ The relevant fields in the \lstinline!OptionData! node for an EquityTouchOption 
 
 \item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 Level specified in BarrierData should be quoted in the same currency as the underlying Equity spot price.
+StrictComparison [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 
 \item PayoffCurrency: The payoff currency of the Equity Touch Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot price.   
 

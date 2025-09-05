@@ -24,10 +24,11 @@ namespace ore {
 namespace analytics {
 
 CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withCloseOutLag,
+				       const bool withExerciseValue,
                                        const QuantLib::ext::shared_ptr<DateGrid>& dateGrid,
                                        const Size storeCreditStateNPVs, const bool flipViewXVA)
-    : storeFlows_(storeFlows), withCloseOutLag_(withCloseOutLag), dateGrid_(dateGrid),
-      storeCreditStateNPVs_(storeCreditStateNPVs), flipViewXVA_(flipViewXVA) {
+    : storeFlows_(storeFlows), withCloseOutLag_(withCloseOutLag), withExerciseValue_(withExerciseValue),
+      dateGrid_(dateGrid), storeCreditStateNPVs_(storeCreditStateNPVs), flipViewXVA_(flipViewXVA) {
 
     // determine required cube depth and layout
 
@@ -37,6 +38,10 @@ CubeInterpretation::CubeInterpretation(const bool storeFlows, const bool withClo
     if (withCloseOutLag_) {
         closeOutDateNpvIndex_ = requiredCubeDepth_++;
         QL_REQUIRE(dateGrid_ != nullptr, "CubeInterpretation: dateGrid is required when withCloseOutLag is true");
+    }
+
+    if (withExerciseValue_) {
+        exerciseValueIndex_ = requiredCubeDepth_++;
     }
 
     if (storeFlows_) {
@@ -54,6 +59,8 @@ bool CubeInterpretation::storeFlows() const { return storeFlows_; }
 
 bool CubeInterpretation::withCloseOutLag() const { return withCloseOutLag_; }
 
+bool CubeInterpretation::withExerciseValue() const { return withExerciseValue_; }
+
 Size CubeInterpretation::storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
 
 const QuantLib::ext::shared_ptr<DateGrid>& CubeInterpretation::dateGrid() const { return dateGrid_; }
@@ -64,6 +71,7 @@ Size CubeInterpretation::requiredNpvCubeDepth() const { return requiredCubeDepth
 
 Size CubeInterpretation::defaultDateNpvIndex() const { return defaultDateNpvIndex_; }
 Size CubeInterpretation::closeOutDateNpvIndex() const { return closeOutDateNpvIndex_; }
+Size CubeInterpretation::exerciseValueIndex() const { return exerciseValueIndex_; }
 Size CubeInterpretation::mporFlowsIndex() const { return mporFlowsIndex_; }
 Size CubeInterpretation::creditStateNPVsIndex() const { return creditStateNPVsIndex_; }
 
@@ -89,6 +97,11 @@ Real CubeInterpretation::getCloseOutNpv(const QuantLib::ext::shared_ptr<NPVCube>
                getCloseOutAggregationScenarioData(data, AggregationScenarioDataType::Numeraire, dateIdx, sampleIdx);
     else
         return getGenericValue(cube, tradeIdx, dateIdx + 1, sampleIdx, defaultDateNpvIndex_);
+}
+
+Real CubeInterpretation::getExerciseValue(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
+                                       Size sampleIdx) const {
+    return getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, exerciseValueIndex_);
 }
 
 Real CubeInterpretation::getMporPositiveFlows(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,

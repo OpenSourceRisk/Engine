@@ -86,7 +86,8 @@ ParStressTestConverter::ParStressTestConverter(
       iborFallbackConfig_(iborFallbackConfig) {}
 
 QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestConverter::convertStressScenarioData(
-    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData) const {
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressTestData,
+    const QuantLib::ext::shared_ptr<ore::data::Report>& parRateScenarioReport) const {
     // Exit early if we have dont have any par stress shifts in any scenario
     if (!stressTestData->hasScenarioWithParShifts()) {
         LOG("ParStressConverter: No scenario with par shifts found, use it as is");
@@ -116,13 +117,15 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
     ParStressScenarioConverter converter(asof_, dependencyGraph, simMarketParams_, sensiScenarioData_, simMarket,
                                          parAnalysis->parInstruments(), stressTestData->useSpreadedTermStructures());
 
+    std::map<std::string, std::vector<ParStressScenarioConverter::ParRateScenarioData>> reportData;
     for (const auto& scenario : stressTestData->data()) {
         DLOG("ParStressConverter: Scenario" << scenario.label);
         if (scenario.containsParShifts()) {
             try {
                 LOG("ParStressConverter: Scenario " << scenario.label << " Convert par shifts to zero shifts");
                 auto convertedScenario = converter.convertScenario(scenario);
-                results->setData(convertedScenario);
+                results->setData(convertedScenario.updatedScenario);
+                reportData[scenario.label] = std::move(convertedScenario.parRateScenarioData);
             } catch (const std::exception& e) {
                 StructuredAnalyticsWarningMessage("ParStressConversion", "ScenarioConversionFailed",
                                                   "Skip Scenario " + scenario.label + ", got :" + e.what())
@@ -133,6 +136,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
             results->setData(scenario);
         }
     }
+    writeParRateScenarioReport(reportData, parRateScenarioReport);
     return results;
 }
 
@@ -173,6 +177,30 @@ ParStressTestConverter::computeParSensitivity(const std::set<RiskFactorKey::KeyT
     LOG("ParStressConverter: Compute ParInstrumentSensitivities");
     parAnalysis->computeParInstrumentSensitivities(simMarket);
     return {simMarket, parAnalysis};
+}
+
+void ParStressTestConverter::writeParRateScenarioReport(
+    const std::map<std::string, std::vector<ParStressScenarioConverter::ParRateScenarioData>>& reportData,
+    const QuantLib::ext::shared_ptr<ore::data::Report>& outputReport) const {
+    if (outputReport == nullptr) {
+        return;
+    }
+    // Write Header
+    outputReport->addColumn("Scenario", string());
+    outputReport->addColumn("ParKey", string());
+    outputReport->addColumn("BaseParRate", double(), 12);
+    outputReport->addColumn("ScenarioParRate", double(), 12);
+    // Write data
+    for (const auto& [scenarioLabel, scenarioData] : reportData) {
+        for (const auto& [key, baseParRate, shiftedParRate] : scenarioData) {
+            outputReport->next();
+            outputReport->add(scenarioLabel);
+            outputReport->add(to_string(key));
+            outputReport->add(baseParRate);
+            outputReport->add(shiftedParRate);
+        }
+    }
+    outputReport->end();
 }
 
 } // namespace analytics

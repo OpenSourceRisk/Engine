@@ -29,6 +29,7 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 namespace ore {
 namespace analytics {
@@ -74,7 +75,8 @@ public:
                             const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                             const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
                             const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
-                            const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
+                            const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr,
+                            boost::optional<bool> useSpreadedTermStructuresOverride = boost::none);
     //! Default destructor
     ~StressScenarioGenerator() {}
 
@@ -96,10 +98,16 @@ private:
     void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, QuantLib::ext::shared_ptr<Scenario>& scenario);
     void addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& data,
                                       QuantLib::ext::shared_ptr<Scenario>& scenario);
+    template<class StressTestShifts> 
+    map<string, QuantLib::ext::shared_ptr<StressTestShifts>>
+    populateShiftData(const map<string, QuantLib::ext::shared_ptr<StressTestShifts>>& stressTestShifts,
+                      const vector<Wildcard>& wildcardKeys,
+                      RiskFactorKey::KeyType keyType) const;
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressData_;
     QuantLib::ext::shared_ptr<ScenarioFactory> stressScenarioFactory_;
     QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
+    bool useSpreadedTermStructures_ = true;
 };
 } // namespace analytics
 } // namespace ore

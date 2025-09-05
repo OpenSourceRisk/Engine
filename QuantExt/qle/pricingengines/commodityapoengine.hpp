@@ -35,6 +35,11 @@ namespace QuantExt {
 
 namespace CommodityAveragePriceOptionMomementMatching {
 
+//! Take a Black (lognormal) Termstructure and return the lognormal or normal vol depending on the flag
+// useBachelierModel = true. If the useBachelierModel flag is set, the lognormal vol is converted to a normal vol.
+double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate,
+                              double forward, double strike, double ttm, bool useBachelierModel);
+
 // Return the atm forward - accruals and the volatility of
 struct MomentMatchingResults {
     Time tn;
@@ -64,7 +69,8 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date());
+    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date(),
+    bool useBachelierModel = false);
 
 } // namespace CommodityAveragePriceOptionMomementMatching
 
@@ -94,7 +100,7 @@ protected:
     bool isModelDependent() const;
 
     /*! Check barriers on given (log-)price */
-    bool barrierTriggered(const Real price, const bool logPrice) const;
+    bool barrierTriggered(const Real price, const bool logPrice, const int strictBarrier) const;
 
     /*! Check whether option is alive depending on whether barrier was triggered */
     bool alive(const bool barrierTriggered) const;

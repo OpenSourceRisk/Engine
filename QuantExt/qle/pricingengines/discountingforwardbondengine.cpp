@@ -303,15 +303,18 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
 
     if (cashSettlement) {
         forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
         results_.additionalResults["incomeCompoundingDate"] = bondSettlementDate;
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
     } else {
         forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(settlementDate);
         results_.additionalResults["incomeCompoundingDate"] = settlementDate;
+        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(settlementDate);
     }
 
     results_.additionalResults["spotForwardBondValue"] = spotValue;
     results_.additionalResults["forwardForwardBondValue"] = forwardBondValue;
-    results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
 
     results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
     results_.additionalResults["forwardSettlementDate"] = settlementDate;
@@ -319,6 +322,12 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     results_.additionalResults["bondNotionalSettlementDate"] =
         bd->notional(bondSettlementDate) * arguments_.bondNotional;
     results_.additionalResults["accruedAmount"] = accruedAmount;
+
+    // apply conversion factor for future calcs
+
+    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
+    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
+    forwardBondValue /= conversionFactor;
 
     // Subtract strike at maturity. Regarding accrual (i.e. strike is given clean vs dirty) there are two
     // cases: long or short.
@@ -356,7 +365,7 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
         effectivePayoff = QuantLib::ext::make_shared<ForwardBondTypePayoff>(
             (*arguments_.longInForward) ? Position::Long : Position::Short,
             arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
-        
+
         results_.additionalResults["dv01"] = dv01;
         results_.additionalResults["modifiedDuration"] = modDur;
         results_.additionalResults["yield"] = yield;
@@ -366,13 +375,6 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
     }
-
-    // apply conversion factor for future calcs
-
-    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
-    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
-    forwardContractForwardValue /= conversionFactor;
-
     // forwardContractPresentValue adjusted for potential default before computeDate:
     forwardContractPresentValue =
         forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *
@@ -549,6 +551,34 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     forwardContractPresentValue += fwdBondRecovery;
 
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
+}
+
+std::pair<QuantLib::Real, QuantLib::Real>
+DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
+                                           const bool conditionalOnSurvival,
+                                           std::vector<CashFlowResults>* const cfResults) const {
+    Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
+    QL_REQUIRE(settlementDate == bondSettlementDate,
+               "DiscountingForwardBondEngine::forwardPrice(): settlement date ("
+                   << settlementDate << ") must match bond settlement date from forward calculation ("
+                   << bondSettlementDate);
+    Real price = QuantLib::ext::any_cast<double>(results_.additionalResults["forwardForwardBondValue"]);
+    Real settlDsc = incomeCurve_->discount(settlementDate) / incomeCurve_->discount(forwardNpvDate);
+    Real settlSp = 1.0;
+    Real conditionalDefault = 1.0;
+    if(!bondDefaultCurve_.empty()) {
+        settlSp = bondDefaultCurve_->survivalProbability(settlementDate) / bondDefaultCurve_->survivalProbability(forwardNpvDate);
+        if(!conditionalOnSurvival) {
+            conditionalDefault = bondDefaultCurve_->survivalProbability(forwardNpvDate);
+        }
+    }
+
+    if(cfResults != nullptr) {
+        auto tmp = results_.additionalResults["cashFlowResults"];
+        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
+        *cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
+    }
+    return std::make_pair(price * conditionalDefault, price * conditionalDefault / settlDsc / settlSp);
 }
 
 } // namespace QuantExt

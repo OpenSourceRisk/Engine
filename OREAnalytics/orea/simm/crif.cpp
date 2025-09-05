@@ -1145,6 +1145,7 @@ CrifRecord SlimCrifRecord::toCrifRecord() const {
         cr.saccrLabel2 = saccrLabel2_;
         cr.saccrLabel3 = saccrLabel3_;
         cr.saccrEndDate = saccrEndDate_;
+        cr.endDate = getEndDate();
     }
 
     cr.resultCurrency = getResultCurrency();

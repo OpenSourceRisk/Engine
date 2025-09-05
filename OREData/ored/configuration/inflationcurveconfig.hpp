@@ -101,7 +101,7 @@ public:
     vector<double>& overrideSeasonalityFactors() { return overrideSeasonalityFactors_; }
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     vector<string> swapQuotes_;
     string nominalTermStructure_;

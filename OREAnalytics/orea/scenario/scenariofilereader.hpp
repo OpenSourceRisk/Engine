@@ -34,15 +34,15 @@ namespace ore {
 namespace analytics {
 
 //! Class for reading  scenarios from a csv file
-class ScenarioFileReader : public ScenarioReader {
+class ScenarioCSVReader : public ScenarioReader {
 public:
     /*! Constructor where \p filename gives the path to the file from which to
         read the scenarios and \p scenarioFactory is a factory for building Scenarios
     */
-    ScenarioFileReader(const std::string& fileName,
+    ScenarioCSVReader(const QuantLib::ext::shared_ptr<ore::data::CSVReader>& reader,
                                  const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory);
     //! Destructor
-    ~ScenarioFileReader() override;
+    ~ScenarioCSVReader() override{};
     //! Return true if there is another Scenario to read and move to it
     bool next() override;
     //! Return the current scenario's date if reader is still valid and `Null<Date>()` otherwise
@@ -50,15 +50,29 @@ public:
     //! Return the current scenario if reader is still valid and `nullptr` otherwise
     QuantLib::ext::shared_ptr<Scenario> scenario() const override;
 
-private:
+protected:
     //! Scenario factory
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
     //! Handle on the csv file
-    ore::data::CSVFileReader file_;
+    QuantLib::ext::shared_ptr<ore::data::CSVReader> reader_;
     //! The risk factor keys of the scenarios in the file
     std::vector<RiskFactorKey> keys_;
     //! Flag indicating if the reader has no more scenarios to read
     bool finished_;
+};
+
+class ScenarioFileReader : public ScenarioCSVReader {
+public:
+    ScenarioFileReader(const std::string& file, const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory) :
+        ScenarioCSVReader(QuantLib::ext::make_shared<ore::data::CSVFileReader>(file, true), scenarioFactory){}
+
+    ~ScenarioFileReader() override;
+};
+
+class ScenarioBufferReader : public ScenarioCSVReader {
+public:
+    ScenarioBufferReader(const std::string& buffer, const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory)
+        : ScenarioCSVReader(QuantLib::ext::make_shared<ore::data::CSVBufferReader>(buffer, true), scenarioFactory){}
 };
 
 } // namespace analytics

@@ -163,9 +163,10 @@ void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFa
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, quantity_ * bsInd, option_.premiumData(), -bsInd, ccy,
-                    engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+                    discountCurve, engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(qlInstrument, quantity_ * bsInd, additionalInstruments, additionalMultipliers));

@@ -1,12 +1,10 @@
 include(CheckCXXCompilerFlag)
-if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-    include(CheckLinkerFlag)
-endif()
+include(CheckLinkerFlag)
 
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
-set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
+set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
 
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
@@ -142,8 +140,11 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
+
+    # use flat namespace to fix symbol lookup issues and align with linux more closely
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
     endif()
 
     if(QL_USE_PCH)
@@ -165,7 +166,7 @@ else()
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
     # the line below breaks the linux build
     #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
-    add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
+    #add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
     #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
     add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)

@@ -148,6 +148,9 @@ public:
     virtual std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
                                        const bool mandatory = true, const std::string& defaultValue = "") const;
 
+    /*! return global parameters */
+    const std::map<std::string, std::string> globalParameters() const { return globalParameters_; }
+
 protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
@@ -311,7 +314,7 @@ class LegBuilder {
 public:
     LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&,
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          RequiredFixings& requiredFixings, const string& configuration,
                          const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
                          const bool attachPricer = true,

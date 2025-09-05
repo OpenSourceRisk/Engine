@@ -60,12 +60,12 @@ The relevant fields in the \lstinline!OptionData! node for an IndexCDSOption are
 
 
 \item
-\lstinline!IndexCreditDefaultSwapData!: A node defining the underlying index CDS as described in Section \ref{ss:indexcds}. Note that the \lstinline!StartDate! in the \lstinline!Scheduledata! in the premium leg in the \lstinline!IndexCreditDefaultSwapData! should be the date on which the underlying CDS is entered into if the option is exercised (as opposed to the inception date of the underlying index CDS series). Under standard terms, the \lstinline!StartDate! would be equal to the \lstinline!ExerciseDate! but it can also be on a date after the \lstinline!ExerciseDate!, but not on a date before the  \lstinline!ExerciseDate!, unless Rule is \emph{CDS2015} or \emph{CDS} and \lstinline!StartDate! is set at the start of the full IMM period that the \lstinline!ExerciseDate! falls into. 
+\lstinline!IndexCreditDefaultSwapData!: A node defining the underlying index CDS as described in Section \ref{ss:indexcds}. Note that the \lstinline!StartDate! in the \lstinline!Scheduledata! in the premium leg in the \lstinline!IndexCreditDefaultSwapData! should be the date on which the underlying CDS is entered into if the option is exercised (as opposed to the inception date of the underlying index CDS series). Under standard terms, the \lstinline!StartDate! would be equal to the \lstinline!ExerciseDate! plus one day, but it can also be on a later date, but not on a date before or on the \lstinline!ExerciseDate!, unless Rule is \emph{CDS2015} or \emph{CDS} and \lstinline!StartDate! is set at the start of the full IMM period that the \lstinline!ExerciseDate! falls into. 
 
 The \lstinline!TradeDate! and \lstinline!ProtectionStart! on the underlying CDS do not need to be populated. If omitted, which is recommended, the \lstinline!TradeDate! and \lstinline!ProtectionStart! on the underlying CDS default as follows:
 
- \lstinline!TradeDate! = max (option \lstinline!ExerciseDate!, underlying schedule \lstinline!StartDate!) \\
- \lstinline!ProtectionStart! = max (option \lstinline!ExerciseDate!, underl. schedule \lstinline!StartDate!)
+ \lstinline!TradeDate! = max (option \lstinline!ExerciseDate!, underlying schedule \lstinline!StartDate! - 1) \\
+ \lstinline!ProtectionStart! = max (option \lstinline!ExerciseDate! + 1, underl. schedule \lstinline!StartDate!)
 
 Note that the  cash settlement date for the underlying swap upfront premium is set to the underlying \lstinline!TradeDate! with defaults as above, plus 3 business days. 
 

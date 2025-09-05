@@ -106,6 +106,7 @@ private:
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
     std::string baseCcy_;
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    ore::data::IborFallbackConfig iborFallbackConfig_;
     std::string baseCcyDiscountCurve_;
 };
 

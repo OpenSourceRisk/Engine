@@ -81,6 +81,7 @@ in listing \ref{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine
 The parameters have the following meaning:
 
 \begin{itemize}
+\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
@@ -90,7 +91,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="Bond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+    </ModelParameters>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
@@ -366,7 +369,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -418,7 +421,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -469,7 +472,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -551,7 +554,7 @@ details.
 %--------------------------------------------------------
 
 \label{sec:EuropeanSwaption_ns_pt}
-A pricing product type very similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
+A pricing product type similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
 
 The ``NonStandard'' product type accessed here represents the case of swaptions that do not fullfill
 the standard case of a fixed-against-floating swaption. 
@@ -597,7 +600,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -646,7 +649,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -696,7 +699,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -806,7 +809,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -857,7 +860,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -906,7 +909,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -1651,19 +1654,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model Black, Engine BlackIndexCdsOptionEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}
 \end{longlisting}
 
@@ -1682,19 +1685,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>LognormalAdjustedIndexSpread</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>NumericalIntegrationEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model LognormalAdjustedIndexSpread, Engine NumericalIntegrationEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}
 \end{longlisting}
 
@@ -2550,11 +2553,21 @@ Used by trade type: CommoditySpreadOption
 
 Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
 
+Model Parameters:
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to Kirk approximation.
+    \begin{itemize}
+        \item \textbf{normal}: Use Bachelier model
+        \item \textbf{lognormal}: Use Kirk approximation
+    \end{itemize}
+\end{itemize}
+
 Engine description:
 
-BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
-approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
-resp. the intra-asset correlation between two future contracts is parametrized as
+BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Bachelier model or the Kirk
+approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two different commodities are
+taken from correlation termstructure and the the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
+is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -2568,14 +2581,33 @@ The parameters have the following meaning:
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
+You can set \texttt{beta} and \texttt{volatility} for each underlying or spread pair individually:
+\begin{itemize}
+    \item \texttt{beta\_NYMEX:CL} sets beta for WTI calendar spreads.
+    \item For spreads between two different underlyings, use \texttt{volatility\_underlying1\_underlying2} as the parameter name.
+\end{itemize}
+
+Example configuration:
+\begin{itemize}
+    \item NYMEX:CL calendar spreads use the Bachelier model (\texttt{Volatility = normal}) with beta 3.05.
+    \item All other calendar spreads use the Kirk approximation (\texttt{Volatility = lognormal}) with beta 2.05.
+    \item Spreads between NYMEX:CL and ICE:B also use the Bachelier model.
+    \item All other spread pairs default to use the Kirk approximation.
+\end{itemize}
+
+
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="CommoditySpreadOption">
     <Model>BlackScholes</Model>
-    <ModelParameters/>
+    <ModelParameters>
+        <Parameter name="Volatility_NYMEX:CL">normal</Parameter>
+        <Parameter name="Volatility_NYMEX:CL_ICE:B">normal</Parameter>
+    </ModelParameters>
     <Engine>CommoditySpreadOptionEngine</Engine>
     <EngineParameters>
         <Parameter name="beta">2.05</Parameter>
+        <Parameter name="beta_NYMEX:CL">3.05</Parameter>
         <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
     </Product>
@@ -3865,6 +3897,7 @@ in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardB
 The parameters have the following meaning:
 
 \begin{itemize}
+\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
@@ -3874,7 +3907,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+    </ModelParameters>
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
@@ -3885,6 +3920,40 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product ForwardBond, Model DiscountedCashflows, Engine DiscountingForwardBondEngine}
 \label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardBondEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: BondFuture}
+%--------------------------------------------------------
+
+Used by trade type: BondFuture
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingBondFutureEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingBondFutureEngine builds a DiscountingBondFutureEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_BondFuture_DiscountedCashflows_DiscountingBondFutureEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFuture">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondFutureEngine</Engine>
+    <EngineParameters/>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFuture, Model DiscountedCashflows, Engine BondFutureEngine}
+\label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingBondFutureEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -5242,6 +5311,10 @@ In addition to product specific settings there is also a block with global param
 \item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item AllowModelFallbacks: If set to true a missing market object during the build of a model will not cause the build
+  to fail. Instead, a fallback will be used. For example, if a volatility surface is missing during the build of the LGM
+  or CAM model, a zero volatility surface might be used as a fallback and the calculation continues. Optional, defaults
+  to false.
 \item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
   only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
   true.

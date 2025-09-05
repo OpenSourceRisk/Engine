@@ -124,6 +124,12 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     MEM_LOG;
 
     parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
+    if (writeReports) {
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        sensiReports["crif_scenario_par_rates"] = parScenarioRatesReport;
+    }
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
     auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
@@ -167,7 +173,7 @@ void CrifAnalyticImpl::setUpConfigurations() {
 
 void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-    QL_REQUIRE(analytic()->portfolio() || inputs_->portfolio(), "CrifAnalytic::run: No portfolio loaded.");
+    QL_REQUIRE(analytic()->portfolio(), "CrifAnalytic::run: No portfolio loaded.");
 
     CONSOLEW("CRIF: Build Market");
     analytic()->buildMarket(loader);
@@ -176,8 +182,6 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     CONSOLEW("CRIF: Build Portfolio");
     analytic()->buildPortfolio();
     CONSOLE("OK");
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
@@ -247,7 +251,7 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalysis> sensiAnalysis;
     if (portfolioSimmExemptions->size() > 0) {
         LOG("Begin sensitivity and par sensitivity analysis");
-	CONSOLEW("CRIF: Run Sensitivity");
+        CONSOLEW("CRIF: Run Sensitivity");
         auto res = computeSensitivities(sensiAnalysis, inputs_, analytic(), portfolioSimmExemptions, true);
         ss = res.first;
         sensiReports = res.second;
@@ -255,19 +259,22 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
         // Store sensitivity reports
         if (sensiReports.find("crif_scenario") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_scenario", sensiReports.at("crif_scenario"));
+            analytic()->addReport(LABEL, "crif_scenario", sensiReports.at("crif_scenario"));
         if (sensiReports.find("crif_sensitivity") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_sensitivity", sensiReports.at("crif_sensitivity"));
+            analytic()->addReport(LABEL, "crif_sensitivity", sensiReports.at("crif_sensitivity"));
         if (sensiReports.find("crif_sensitivity_config") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_sensitivity_config", sensiReports.at("crif_sensitivity_config"));
+            analytic()->addReport(LABEL, "crif_sensitivity_config", sensiReports.at("crif_sensitivity_config"));
         if (sensiReports.find("crif_par_sensitivity") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_par_sensitivity", sensiReports.at("crif_par_sensitivity"));
+            analytic()->addReport(LABEL, "crif_par_sensitivity", sensiReports.at("crif_par_sensitivity"));
         if (sensiReports.find("crif_par_conversion_matrix") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_par_conversion_matrix", sensiReports.at("crif_par_conversion_matrix"));
+            analytic()->addReport(LABEL, "crif_par_conversion_matrix", sensiReports.at("crif_par_conversion_matrix"));
         if (sensiReports.find("crif_par_conversion_matrix_inverse") != sensiReports.end())
-	    analytic()->addReport(LABEL, "crif_par_conversion_matrix_inverse", sensiReports.at("crif_par_conversion_matrix_inverse"));
+            analytic()->addReport(LABEL, "crif_par_conversion_matrix_inverse",
+                                  sensiReports.at("crif_par_conversion_matrix_inverse"));
+        if (sensiReports.find("crif_scenario_par_rates") != sensiReports.end())
+            analytic()->addReport(LABEL, "crif_scenario_par_rates", sensiReports.at("crif_scenario_par_rates"));
 
-	CONSOLE("OK");
+        CONSOLE("OK");
     }
 
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration = inputs_->getSimmConfiguration();

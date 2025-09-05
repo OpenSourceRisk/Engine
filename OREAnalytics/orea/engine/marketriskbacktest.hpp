@@ -82,16 +82,18 @@ public:
         //! Post side trade IDs to be considered in the backtest. Other trades' PnLs will be removed from the total PnL
         std::set<std::string> postTradeIds_ = {};
 
+        const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLight_;
+
         //! Confidence levels that feed in to defining the stop light bounds
         std::vector<QuantLib::Real> ragLevels_ = {0.95, 0.9999};
         BacktestArgs(
             ore::data::TimePeriod btPeriod, ore::data::TimePeriod bmPeriod,
             QuantLib::Real conf = 0.99, QuantLib::Real exThres = 0.01, 
             bool tdc = false, const std::set<std::string>& callTradeIds = {},
-            const std::set<std::string>& postTradeIds = {})
+            const std::set<std::string>& postTradeIds = {}, const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight = nullptr)
             : backtestPeriod_(btPeriod), benchmarkPeriod_(bmPeriod),
               confidence_(conf), exceptionThreshold_(exThres),
-              tradeDetailIncludeAllColumns_(tdc), callTradeIds_(callTradeIds), postTradeIds_(postTradeIds) {}
+              tradeDetailIncludeAllColumns_(tdc), callTradeIds_(callTradeIds), postTradeIds_(postTradeIds), baselTrafficLight_(baselTrafficLight) {}
     };
 
     //! Used to pass information
@@ -167,6 +169,8 @@ protected:
     ore::analytics::TradePnLStore foTradePnls_, tradePnls_, sensiTradePnls_;
     std::set<std::string> callTradeIds_;
     std::set<std::string> postTradeIds_;
+
+    std::map<int, ore::data::BaselTrafficLightData::ObservationData> baselTrafficLightMatrix_;
 
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size>> summaryColumns() = 0;
     virtual const std::vector<std::tuple<std::string, ore::data::Report::ReportType, QuantLib::Size, bool>> detailColumns() = 0;

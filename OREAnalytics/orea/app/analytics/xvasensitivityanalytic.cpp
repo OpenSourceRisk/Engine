@@ -378,7 +378,7 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
-                                       inputs_->sensiThreshold());
+                                       inputs_->xvaSensiThreshold());
         analytic()->addReport(label(), "xva_zero_sensitivity_" + to_string(valueAdjustment), zeroSensiReport);
     }
     LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
@@ -398,6 +398,11 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
     auto scenarioGenerator = buildScenarioGenerator(simMarket, true);
 
     parAnalysis->computeParInstrumentSensitivities(simMarket);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+    analytic()->addReport(label(), "scenario_par_rates", parScenarioRatesReport);
 
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
@@ -445,7 +450,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
+                                       inputs_->xvaSensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);
     }
 }

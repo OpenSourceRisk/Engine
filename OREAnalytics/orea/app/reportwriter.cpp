@@ -22,7 +22,6 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
 #include <orea/scenario/scenariowriter.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
 
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -170,14 +169,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
-        if (!trade->hasCashflows()) {
-            DLOG("cashflow for " << trade->tradeType() << " " << trade->id() << " skipped");
-            continue;
-        }
-
         try {
 
-            auto data = generateCashflowReportData(trade, baseCurrency, market, configuration, includePastCashflows);
+            auto data = trade->cashflows(baseCurrency, market, configuration, includePastCashflows);
 
             for(auto const& d: data) {
                     report.next()
@@ -1076,7 +1070,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
     vector<std::regex> regexes;
     regexes.reserve(regexStrs.size());
-    for (auto regexStr : regexStrs) {
+    for (const auto& regexStr : regexStrs) {
         regexes.push_back(regex(regexStr));
     }
 
@@ -1090,7 +1084,7 @@ void ReportWriter::writeMarketData(Report& report, const QuantLib::ext::shared_p
 
         // This could be slow
         for (const auto& regex : regexes) {
-            if (regex_match(mdName, regex)) {
+            if (std::regex_match(mdName, regex)) {
                 addMarketDatum(report, *md, loader->actualDate());
                 break;
             }
@@ -1461,8 +1455,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     // Add the headers to the report
 
     bool hasRegulations = false;
-    for (const auto& scr : simmData) {
-        CrifRecord cr = scr.toCrifRecord();
+    for (auto scr = simmData.cbegin(); scr != simmData.cend();scr++) {
+        CrifRecord cr = scr->toCrifRecord();
         if (!cr.collectRegulations.empty() || !cr.postRegulations.empty()) {
             hasRegulations = true;
             break;
@@ -1491,8 +1485,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .addColumn("post_regulations", string());
 
     // Write the report body by looping over the netted CRIF records
-    for (const auto& scr : simmData) {
-        CrifRecord cr = scr.toCrifRecord();
+    for (auto scr = simmData.cbegin(); scr != simmData.cend();scr++) {
+        CrifRecord cr = scr->toCrifRecord();
 
         // Skip to next netted CRIF record if 'AmountUSD' is negligible
         if (close_enough(cr.amountUsd, 0.0))

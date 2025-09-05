@@ -501,6 +501,7 @@
       <xs:enumeration value="NelsonSiegel"/>
       <xs:enumeration value="Svensson"/>
       <xs:enumeration value="BackwardFlat"/>
+      <xs:enumeration value="ForwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -902,6 +903,15 @@
             <xs:element type="xs:float" name="Amount"/>
             <xs:element type="extendedCurrencyCode" name="Currency"/>
             <xs:element type="date" name="PayDate"/>
+            <xs:element name="SettlementData" minOccurs="0">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element type="currencyCode" name="PayCurrency"/>
+                  <xs:element type="xs:string" name="FXIndex"/>
+                  <xs:element type="xs:string" name="FixingDate" minOccurs="0" maxOccurs="1" />
+                </xs:all>
+              </xs:complexType>
+            </xs:element>
           </xs:all>
         </xs:complexType>
       </xs:element>

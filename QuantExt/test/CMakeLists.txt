@@ -73,6 +73,7 @@ mclgmswaptionengine.cpp
 multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
+overnightindexedcoupon.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp
 piecewiseoptionletcurve.cpp

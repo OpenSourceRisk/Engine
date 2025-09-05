@@ -18,16 +18,19 @@
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dynamiccreditxvacalculator.hpp>
 #include <orea/aggregation/dynamicdeltavarcalculator.hpp>
+#include <orea/aggregation/dynamicsimmcalculator.hpp>
 #include <orea/aggregation/exposureallocator.hpp>
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/aggregation/simmhelper.hpp>
 #include <orea/aggregation/staticcreditxvacalculator.hpp>
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/crifanalytic.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
@@ -40,7 +43,7 @@
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
-#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/analytics/scenariogenerationanalytic.hpp>
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
@@ -85,7 +88,7 @@
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bacvacalculator.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
-#include <orea/engine/cashflowreportgenerator.hpp>
+#include <orea/engine/correlationreport.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
 #include <orea/engine/cvasensitivityrecord.hpp>
@@ -127,6 +130,7 @@
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/simmsensitivitystoragemanager.hpp>
 #include <orea/engine/simpledynamicsimm.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>

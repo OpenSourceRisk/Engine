@@ -48,5 +48,14 @@ public:
               std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"curveId", curveId}})) {}
 };
 
+class StructuredConventionErrorMessage : public StructuredMessage {
+public:
+    StructuredConventionErrorMessage(const std::string& curveId, const std::string& exceptionType,
+                                  const std::string& exceptionWhat)
+        : StructuredMessage(
+              Category::Warning, Group::Convention, exceptionWhat,
+              std::map<std::string, std::string>({{"exceptionType", exceptionType}, {"conventionId", curveId}})) {}
+};
+
 } // namespace data
 } // namespace ore

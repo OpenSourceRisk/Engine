@@ -24,7 +24,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 #include <map>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
@@ -441,7 +441,6 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
 bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
 pair<bool, QuantLib::ext::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName) {
-
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
@@ -473,6 +472,15 @@ bool isEquityIndex(const string& indexName) {
 bool isCommodityIndex(const string& indexName) {
     try {
         parseCommodityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isBondFuturesIndex(const string& indexName) {
+    try {
+        parseBondFuturesIndex(indexName);
     } catch (...) {
         return false;
     }
@@ -662,10 +670,7 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
     }
 }
 
-QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
-    static boost::mutex mutex_;
-    boost::lock_guard<boost::mutex> lock(mutex_);
-
+QuantLib::ext::shared_ptr<Index> parseBondIndex(const string& name) {
     // Make sure the prefix is correct
     string prefix = name.substr(0, 5);
     QL_REQUIRE(prefix == "BOND-", "A bond index string must start with 'BOND-' but got " << prefix);
@@ -681,7 +686,7 @@ QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
     // Check for form NAME-YYYY-MM-DD
     if (nameWoPrefix.size() > 10) {
         string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}-\\d{2}"))) {
             expiry = parseDate(test);
             bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
         }
@@ -690,20 +695,39 @@ QuantLib::ext::shared_ptr<BondIndex> parseBondIndex(const string& name) {
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
     if (expiry == Date() && nameWoPrefix.size() > 7) {
         string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}"))) {
             expiry = parseDate(test + "-01");
             bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
         }
     }
 
     // Create and return the required future index
-    QuantLib::ext::shared_ptr<BondIndex> index;
+    QuantLib::ext::shared_ptr<Index> index;
     if (expiry != Date()) {
-        index= QuantLib::ext::make_shared<BondFuturesIndex>(expiry, bondName);
+        auto tmp = QuantLib::ext::make_shared<BondFuturesIndex>(bondName, expiry);
+        tmp->setName("BOND-" + bondName + "-" + ore::data::to_string(expiry).substr(0, 7));
+        index = tmp;
     } else {
         index= QuantLib::ext::make_shared<BondIndex>(bondName);
     }
     IndexNameTranslator::instance().add(index->name(), name);
+    return index;
+}
+
+QuantLib::ext::shared_ptr<BondFuturesIndex> parseBondFuturesIndex(const string& name) {
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 12);
+    QL_REQUIRE(prefix == "BOND_FUTURE-", "A bond futures index string must start with 'BOND_FUTURE-' but got " << prefix);
+
+    // Now take the remainder of the string representing the contract name
+    string contractName = name.substr(12);
+
+    /* We can not derive the future expiry date without reference data, but for some use cases like setting
+       historical fixings, the contract name is enough */
+    auto index = QuantLib::ext::make_shared<BondFuturesIndex>(contractName);
+
+    IndexNameTranslator::instance().add(index->name(), name);
+
     return index;
 }
 
@@ -736,8 +760,6 @@ QuantLib::ext::shared_ptr<ConstantMaturityBondIndex> parseConstantMaturityBondIn
 QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
                                                                 const Handle<PriceTermStructure>& ts,
                                                                 const Calendar& cal, const bool enforceFutureIndex) {
-    static boost::mutex mutex_;
-
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
     if (hasPrefix) {
@@ -756,24 +778,18 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
     // Check for form NAME-YYYY-MM-DD
     if (commName.size() > 10) {
         string test = commName.substr(commName.size() - 10);
-        {
-            boost::lock_guard<boost::mutex> lock(mutex_);
-            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
-                expiry = parseDate(test);
-                commName = commName.substr(0, commName.size() - test.size() - 1);
-            }
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            expiry = parseDate(test);
+            commName = commName.substr(0, commName.size() - test.size() - 1);
         }
     }
 
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
     if (expiry == Date() && commName.size() > 7) {
         string test = commName.substr(commName.size() - 7);
-        {
-            boost::lock_guard<boost::mutex> lock(mutex_);
-            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
-                expiry = parseDate(test + "-01");
-                commName = commName.substr(0, commName.size() - test.size() - 1);
-            }
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}"))) {
+            expiry = parseDate(test + "-01");
+            commName = commName.substr(0, commName.size() - test.size() - 1);
         }
     }
 
@@ -861,6 +877,12 @@ QuantLib::ext::shared_ptr<Index> parseIndex(const string& s) {
     if (!ret_idx) {
         try {
             ret_idx = parseBondIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseBondFuturesIndex(s);
         } catch (...) {
         }
     }

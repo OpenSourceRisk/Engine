@@ -90,4 +90,10 @@ void ForwardBond::arguments::validate() const {
     QL_REQUIRE(lockRate == Null<Real>() || longInForward, "if lockRate is given, longInForward must be given as well");
 }
 
+Real ForwardBond::forwardValue() const {
+    calculate();
+    QL_REQUIRE(forwardValue_ != Null<Real>(), "forwardValue not provided");
+    return forwardValue_;
+}
+
 } // namespace QuantExt

@@ -72,6 +72,8 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::CoterminalATM;
     else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
         return CalibrationStrategy::CoterminalDealStrike;
+    else if (boost::algorithm::to_upper_copy(s) == "DELTAGAMMAADJUSTED")
+        return CalibrationStrategy::DeltaGammaAdjusted;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
         return CalibrationStrategy::UnderlyingATM;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
@@ -79,7 +81,7 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationStrategy::None;
     else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
+        QL_FAIL("calibration strategy '" << s << "' not recognized.");
 }
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
@@ -87,6 +89,8 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
         oss << "CoterminalAtm";
     else if (type == CalibrationStrategy::CoterminalDealStrike)
         oss << "CoterminalDealStrike";
+    else if (type == CalibrationStrategy::DeltaGammaAdjusted)
+        oss << "DeltaGammaAdjusted";
     else if (type == CalibrationStrategy::UnderlyingATM)
         oss << "UnderlyingAtm";
     else if (type == CalibrationStrategy::UnderlyingDealStrike)

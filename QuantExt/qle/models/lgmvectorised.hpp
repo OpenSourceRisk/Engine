@@ -67,6 +67,14 @@ public:
                                     const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
                                     const bool localCapFloor, const bool nakedOption, const Time t,
                                     const RandomVariable& x) const;
+    RandomVariable compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
+                                    const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
+                                    const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
+                                    const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
+                                    const bool localCapFloor, const bool nakedOption,
+                                    const std::vector<Time>& simTime,
+                                    const std::vector<Size>& simIdx,
+                                    const std::function<const RandomVariable*(Size)>& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
@@ -76,6 +84,14 @@ public:
                                   const Real gearing, const Period lookback, Real cap, Real floor,
                                   const bool localCapFloor, const bool nakedOption, const Time t,
                                   const RandomVariable& x) const;
+    RandomVariable averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
+                                  const std::vector<Date>& valueDates, const std::vector<Real>& dt,
+                                  const Natural rateCutoff, const bool includeSpread, const Real spread,
+                                  const Real gearing, const Period lookback, Real cap, Real floor,
+                                  const bool localCapFloor, const bool nakedOption,
+                                  const std::vector<Time>& simTime,
+                                  const std::vector<Size>& simIdx,
+                                  const std::function<const RandomVariable*(Size)>& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */

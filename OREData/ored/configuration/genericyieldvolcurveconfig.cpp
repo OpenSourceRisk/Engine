@@ -93,11 +93,9 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     if (qualifier_.empty()) {
         qualifier_ = ccyFromSwapIndexBase(proxyTargetSwapIndexBase_);
     }
-
-    populateRequiredCurveIds();
 }
 
-void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+void GenericYieldVolatilityCurveConfig::populateRequiredIds() const {
     if (!shortSwapIndexBase_.empty())
         requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
     if (!swapIndexBase_.empty())
@@ -304,7 +302,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
-    populateRequiredCurveIds();
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {

@@ -1,7 +1,7 @@
 #NettingSet,RiskFactor,ShiftType,ShiftSize,Currency,BaseCva,Delta
-CPTY_A,InterestRate/Delta/EUR/1Y,Absolute,0.000100,EUR,60197.28,16.2044
+CPTY_A,InterestRate/Delta/EUR/1Y,Absolute,0.000100,EUR,60197.28,16.2034
 CPTY_A,InterestRate/Delta/EUR/5Y,Absolute,0.000100,EUR,60197.28,-92.6304
-CPTY_A,InterestRate/Delta/USD/1Y,Absolute,0.000100,EUR,60197.28,-14.0241
+CPTY_A,InterestRate/Delta/USD/1Y,Absolute,0.000100,EUR,60197.28,2.0273
 CPTY_A,InterestRate/Delta/USD/5Y,Absolute,0.000100,EUR,60197.28,53.7061
 CPTY_A,InterestRate/Delta/EUR/1Y,Absolute,0.000100,EUR,60197.28,-127.4588
 CPTY_A,InterestRate/Delta/EUR/5Y,Absolute,0.000100,EUR,60197.28,616.3166

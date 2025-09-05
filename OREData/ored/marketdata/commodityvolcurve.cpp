@@ -670,8 +670,38 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
-        volatility_ = QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(
-            asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, timeExtrapolation);
+        // For backward compatibility, use Linear as default value for StrikeInterpolation and TimeInterpolation
+        if (vssc.strikeInterpolation() != "Cubic" && vssc.strikeInterpolation() != "Linear")
+            WLOG("Allowable values for StrikeInterpolation are Linear and Cubic. Got "
+                 << vssc.strikeInterpolation() << ". Use Linear as default value");
+        if (vssc.timeInterpolation() != "Cubic" && vssc.timeInterpolation() != "Linear")
+            WLOG("Allowable values for TimeInterpolation are Linear and Cubic. Got "
+                 << vssc.timeInterpolation() << ". Use Linear as default value");
+        if (vssc.strikeInterpolation() == "Cubic") {
+            if (vssc.timeInterpolation() == "Cubic") {
+                volatility_ = QuantLib::ext::make_shared<
+                    BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
+                    asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                    timeExtrapolation);
+            } else {
+                volatility_ =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
+                        asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                        timeExtrapolation);
+            }
+        } else {
+            if (vssc.timeInterpolation() == "Cubic") {
+                volatility_ =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
+                        asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                        timeExtrapolation);
+            } else {
+                volatility_ =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
+                        asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                        timeExtrapolation);
+            }
+        } 
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 

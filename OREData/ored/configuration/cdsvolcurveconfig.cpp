@@ -44,7 +44,6 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const 
                "CDSVolatilityCurveConfig: " << curveId
                                             << " specifies different number of terms / curves (built via constructor)");
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 const QuantLib::ext::shared_ptr<VolatilityConfig>& CDSVolatilityCurveConfig::volatilityConfig() const {
@@ -156,7 +155,6 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -223,7 +221,7 @@ void CDSVolatilityCurveConfig::populateQuotes() {
     }
 }
 
-void CDSVolatilityCurveConfig::populateRequiredCurveIds() {
+void CDSVolatilityCurveConfig::populateRequiredIds() const {
     if (auto vc = QuantLib::ext::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
         requiredCurveIds_[CurveSpec::CurveType::CDSVolatility].insert(vc->cdsVolatilityCurve());
     }

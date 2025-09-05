@@ -59,6 +59,9 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "BondTRS: bond type " << bondType << " is not supported. Consider using TotalReturnSwap.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     additionalData_["underlyingSecurityId"] = bondData_.securityId();
@@ -168,7 +171,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         fundingLegData_.notionals() = std::vector<Real>(1, 1.0);
         fundingLegData_.notionalDates() = std::vector<std::string>();
 
-        // reset flag that told us to pull the indexing information from the equity leg
+        // reset flag that told us to pull the indexing information from the return leg
         fundingLegData_.indexingFromAssetLeg() = false;
     }
 

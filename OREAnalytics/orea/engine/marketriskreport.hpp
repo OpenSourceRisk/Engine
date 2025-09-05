@@ -29,6 +29,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/scenario/scenariofilter.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 
 #include <vector>
 

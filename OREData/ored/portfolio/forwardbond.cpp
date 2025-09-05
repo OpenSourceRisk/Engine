@@ -17,6 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -62,6 +63,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
+               "ForwardBond: bond type " << bondType << " is not supported.");
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
@@ -75,6 +79,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
     Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
+
+    std::string openEndDateStr = builder_fwd->modelParameter("OpenEndDateReplacement", {}, false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
     Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
@@ -130,7 +137,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         auto configuration = builder_bd->configuration(MarketContext::pricing);
         auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
         leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
-                                   QuantLib::Date(), false, true, &productModelEngines);
+                                   openEndDateReplacement, false, true, &productModelEngines);
         separateLegs.push_back(leg);
         addProductModelEngine(productModelEngines);
     }
@@ -146,6 +153,12 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     maturityType_ = "Bond Cashflow Date";
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
+    auto bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder_bd);
+    QL_REQUIRE(bondBuilder, "ForwardBond::build(): could not cast builder to BondEngineBuilder: " << id());
+
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(),
+                                               bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
         payoff ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
@@ -156,13 +169,14 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    QuantLib::ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
-    QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
+    auto fwdBondBuilder = QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
+    QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());
 
+    // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
-        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
-        bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
+        id(), currency, bondData_.securityId(), envelope().additionalField("discount_curve", false, std::string()),
+        bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(),
+        settlementDirty, Real()));
 
     setSensitivityTemplate(*fwdBondBuilder);
     addProductModelEngine(*fwdBondBuilder);
