@@ -19,6 +19,8 @@
 /*! \file fdlgmcallablebondengine.hpp */
 
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+#include <qle/pricingengines/fdcallablebondevents.hpp>
 
 namespace QuantExt {
 
@@ -33,7 +35,117 @@ NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
 
 void NumericLgmCallableBondEngineBase::calculate() const {
 
+    // 0 if there are no cashflows in the underlying bond, we do not calculate anyything
 
+    if (instrArgs_->cashflows.empty())
+        return;
+
+    // 1 build the cashflow info
+
+    enum class CashflowStatus { Open, Cached, Done };
+
+    std::vector<NumericLgmMultiLegOptionEngine::CashflowInfo> cashflows;
+    std::vector<CashflowStatus> cashflowStatus;
+
+    for (Size i = 0; i < instrArgs_->cashflows.size(); ++i) {
+        cashflows.push_back(NumericLgmMultiLegOptionEngine::buildCashflowInfo(
+            instrArgs_->cashflows[i], 1.0,
+            [this](const Date& d) {
+                return solver_->model()->parametrization()->termStructure()->timeFromReference(d);
+            },
+            Exercise::Type::American, true, 0 * Days, NullCalendar(), Unadjusted, "cashflow " + std::to_string(i)));
+        cashflowStatus.push_back(CashflowStatus::Open);
+    }
+
+    // 2 set up events
+
+    Date today = Settings::instance().evaluationDate();
+    FdCallableBondEvents events(today, solver_->model()->parametrization()->termStructure()->dayCounter());
+
+    // 2a bond cashflows
+
+    for (Size i = 0; i < cashflows.size(); ++i) {
+        if (cashflows[i].payDate > today) {
+            events.registerBondCashflow(cashflows[i]);
+        }
+    }
+
+    // 2b call and put data
+
+    for (auto const& c : instrArgs_->callData) {
+        events.registerCall(c);
+    }
+    for (auto const& c : instrArgs_->putData) {
+        events.registerPut(c);
+    }
+
+    // 3 set up time grid
+
+    QL_REQUIRE(!events.times().empty(),
+               "NumericLgmCallableBondEngine: internal error, times are empty");
+
+    Size effectiveTimeStepsPerYear;
+    if(events.hasAmericanExercise())
+        effectiveTimeStepsPerYear = std::max(americanExerciseTimeStepsPerYear_, solver_->timeStepsPerYear());
+    else
+        effectiveTimeStepsPerYear = solver_->timeStepsPerYear();
+
+    TimeGrid grid;
+    if (effectiveTimeStepsPerYear == 0) {
+        grid = TimeGrid(events.times().begin(), events.times().end());
+    } else {
+        Size steps = std::max<Size>(std::lround(effectiveTimeStepsPerYear * (*events.times().rbegin()) + 0.5), 1);
+        grid = TimeGrid(events.times().begin(), events.times().end(), steps);
+    }
+
+    // 4 finalize event processor
+
+    events.finalise(grid);
+
+    // 5 set up functions accrualFraction(t), notional(t)
+
+    Real N0 = instrArgs_->notionals.front();
+    std::vector<Real> notionalTimes = {0.0};
+    std::vector<Real> notionals = {N0};
+    std::vector<Real> couponAccrualStartTimes, couponAccrualEndTimes, couponPayTimes;
+    for (auto const& c : instrArgs_->cashflows) {
+        if (c->date() <= today)
+            continue;
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
+            if (!QuantLib::close_enough(cpn->nominal(), notionals.back())) {
+                notionalTimes.push_back(solver_->model()->parametrization()->termStructure()->timeFromReference(c->date()));
+                notionals.push_back(cpn->nominal());
+            }
+            couponAccrualStartTimes.push_back(
+                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->accrualStartDate()));
+            couponAccrualEndTimes.push_back(
+                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->accrualEndDate()));
+            couponPayTimes.push_back(
+                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->date()));
+        }
+    }
+
+    [[maybe_unused]] auto notional = [&notionalTimes, &notionals](const Real t) {
+        auto cn = std::upper_bound(notionalTimes.begin(), notionalTimes.end(), t,
+                                   [](Real s, Real t) { return s < t && !QuantLib::close_enough(s, t); });
+        return notionals[std::max<Size>(std::distance(notionalTimes.begin(), cn), 1) - 1];
+    };
+
+    [[maybe_unused]] auto accrualFraction = [&couponPayTimes, &couponAccrualStartTimes, &couponAccrualEndTimes](const Real t) {
+        Real accrualFraction = 0.0;
+        auto f = std::upper_bound(couponPayTimes.begin(), couponPayTimes.end(), t,
+                                  [](Real s, Real t) { return s < t && !QuantLib::close_enough(s, t); });
+        if (f != couponPayTimes.end()) {
+            Size i = std::distance(couponPayTimes.begin(), f);
+            if (t > couponAccrualStartTimes[i]) {
+                accrualFraction =
+                    (t - couponAccrualStartTimes[i]) / (couponAccrualEndTimes[i] - couponAccrualStartTimes[i]);
+            }
+        }
+        return accrualFraction;
+    };
+
+    
 
 }
 
