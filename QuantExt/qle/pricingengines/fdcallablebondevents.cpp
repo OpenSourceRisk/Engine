@@ -28,11 +28,10 @@ FdCallableBondEvents::FdCallableBondEvents(const Date& today, const DayCounter& 
 
 Real FdCallableBondEvents::time(const Date& d) const { return dc_.yearFraction(today_, d); }
 
-void FdCallableBondEvents::registerBondCashflow(
-    const QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>& c) {
-    if (c->payDate > today_) {
+void FdCallableBondEvents::registerBondCashflow(const NumericLgmMultiLegOptionEngineBase::CashflowInfo& c) {
+    if (c.payDate > today_) {
         registeredBondCashflows_.push_back(c);
-        times_.insert(time(c->payDate));
+        times_.insert(time(c.payDate));
     }
 }
 
@@ -67,15 +66,15 @@ Date FdCallableBondEvents::nextExerciseDate(const Date& d,
 void FdCallableBondEvents::processBondCashflows() {
     lastRedemptionDate_ = Date::minDate();
     for (auto const& c : registeredBondCashflows_) {
-        if (c->couponStartTime_ == Null<Real>())
-            lastRedemptionDate_ = std::max(lastRedemptionDate_, c->payDate);
+        if (c.couponStartTime_ == Null<Real>())
+            lastRedemptionDate_ = std::max(lastRedemptionDate_, c.payDate);
     }
     for (auto const& d : registeredBondCashflows_) {
-        bool isRedemption = d->couponStartTime_ == Null<Real>();
-        Size index = grid_.index(time(d->payDate));
+        bool isRedemption = d.couponStartTime_ == Null<Real>();
+        Size index = grid_.index(time(d.payDate));
         hasBondCashflow_[index] = true;
-        associatedDate_[index] = d->payDate;
-        if (isRedemption && d->payDate == lastRedemptionDate_)
+        associatedDate_[index] = d.payDate;
+        if (isRedemption && d.payDate == lastRedemptionDate_)
             bondFinalRedemption_[index].push_back(d);
         else
             bondCashflow_[index].push_back(d);
@@ -93,6 +92,7 @@ void FdCallableBondEvents::processExerciseData(const std::vector<CallableBond::C
         if (c.exerciseType == CallableBond::CallabilityData::ExerciseType::OnThisDate) {
             indexEnd = indexStart;
         } else if (c.exerciseType == CallableBond::CallabilityData::ExerciseType::FromThisDateOn) {
+            hasAmericanExercise_ = true;
             Date nextDate = nextExerciseDate(c.exerciseDate, sourceData);
             QL_REQUIRE(nextDate != Null<Date>(),
                        "FdCallableBondEvents::processExerciseData(): internal error: did not find a next exercise "
@@ -140,11 +140,11 @@ bool FdCallableBondEvents::hasBondCashflow(const Size i) const { return hasBondC
 bool FdCallableBondEvents::hasCall(const Size i) const { return hasCall_.at(i); }
 bool FdCallableBondEvents::hasPut(const Size i) const { return hasPut_.at(i); }
 
-std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>
+std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>
 FdCallableBondEvents::getBondCashflow(const Size i) const {
     return bondCashflow_.at(i);
 }
-std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>
+std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>
 FdCallableBondEvents::getBondFinalRedemption(const Size i) const {
     return bondFinalRedemption_.at(i);
 }
@@ -154,5 +154,7 @@ const FdCallableBondEvents::CallData& FdCallableBondEvents::getCallData(const Si
 const FdCallableBondEvents::CallData& FdCallableBondEvents::getPutData(const Size i) const { return putData_.at(i); }
 
 Date FdCallableBondEvents::getAssociatedDate(const Size i) const { return associatedDate_.at(i); }
+
+bool FdCallableBondEvents::hasAmericanExercise() const { return hasAmericanExercise_; }
 
 } // namespace QuantExt

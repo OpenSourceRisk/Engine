@@ -49,7 +49,7 @@ public:
     // The intended workflow is as follows:
 
     // 1 register events describing the callable bond features and cashflows
-    void registerBondCashflow(const QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>& c);
+    void registerBondCashflow(const NumericLgmMultiLegOptionEngineBase::CashflowInfo& c);
     void registerCall(const CallableBond::CallabilityData& c);
     void registerPut(const CallableBond::CallabilityData& c);
 
@@ -64,14 +64,13 @@ public:
     bool hasCall(const Size i) const;
     bool hasPut(const Size i) const;
 
-    std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>
-    getBondCashflow(const Size i) const;
-    std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>
-    getBondFinalRedemption(const Size i) const;
+    std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondCashflow(const Size i) const;
+    std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondFinalRedemption(const Size i) const;
     const CallData& getCallData(const Size i) const;
     const CallData& getPutData(const Size i) const;
 
     Date getAssociatedDate(const Size i) const; // null if no date is associated
+    bool hasAmericanExercise() const; // at least on "from this date on" call data
 
 private:
     Date nextExerciseDate(const Date& d, const std::vector<CallableBond::CallabilityData>& data) const;
@@ -92,18 +91,19 @@ private:
     Date lastRedemptionDate_;
 
     // the registered events (before finalise())
-    std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> registeredBondCashflows_;
+    std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> registeredBondCashflows_;
     std::vector<CallableBond::CallabilityData> registeredCallData_, registeredPutData_;
 
     // per time index i flags to indicate events
     std::vector<bool> hasBondCashflow_, hasCall_, hasPut_;
 
     // per time index the data associated to events
-    std::vector<std::vector<QuantLib::ext::shared_ptr<NumericLgmMultiLegOptionEngineBase::CashflowInfo>>> bondCashflow_,
-        bondFinalRedemption_;
+    std::vector<std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_, bondFinalRedemption_;
     std::vector<CallData> callData_, putData_;
 
     std::vector<Date> associatedDate_;
+
+    bool hasAmericanExercise_ = false;
 };
 
 } // namespace QuantExt
