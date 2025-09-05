@@ -31,7 +31,7 @@ namespace data {
     "   FOR d IN(SIZE(ExerciseDates), 1, -1) DO\n"
     "       IF ExerciseDates[d] > TODAY THEN"
     "           Option = NPV(Option, ExerciseDates[d]);\n" 
-    "           Payoff = PAY(OptionType * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d], ExerciseDates[d], PayCcy); END;\n"
+    "           Payoff = PAY(OptionType * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d], ExerciseDates[d], PayCcy);\n"
     "           IF Payoff > 0 AND Payoff > Option THEN\n"
     "               Option = Payoff;\n"
     "           END;\n"
