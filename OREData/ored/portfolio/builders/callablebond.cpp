@@ -219,7 +219,7 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
 
     // return engine
 
-    Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear"));
+    Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
         Handle<QuantExt::LGM>(lgm), args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve,
