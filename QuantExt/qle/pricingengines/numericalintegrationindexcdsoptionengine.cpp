@@ -188,7 +188,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real forwardPriceExclFep = 1.0 - underlyingNpv / arguments_.swap->notional() /
                                              (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
-        Real forwardPrice = forwardPriceExclFep - fep() / arguments_.swap->notional() / discTradeCollToExercise;
+        Real forwardPrice = forwardPriceExclFep - unrealisedFep() / arguments_.swap->notional() / discTradeCollToExercise;
 
         // the default-adjusted index value Vc using a continuous annuity
 

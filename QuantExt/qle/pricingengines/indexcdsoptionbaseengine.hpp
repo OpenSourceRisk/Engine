@@ -70,6 +70,8 @@ protected:
 
     //! Calculate the discounted value of the front end protection.
     QuantLib::Real fep() const;
+    QuantLib::Real unrealizedFep() const;
+    QuantLib::Real realizedFep() const;
 
     //! Store inputs
     std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> probabilities_;
