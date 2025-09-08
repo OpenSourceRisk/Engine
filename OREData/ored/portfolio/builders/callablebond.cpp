@@ -34,7 +34,8 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
-                                                                     const QuantLib::Date& maturityDate) {
+                                                                     const QuantLib::Date& maturityDate,
+                                                                     const bool generateAdditionalResults) {
 
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
@@ -142,12 +143,6 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::
             QL_FAIL("choice of calibration type invalid");
     }
 
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
     // Build and calibrate model
     DLOG("Build LGM model");
 
@@ -213,9 +208,17 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
     } catch (...) {
     }
 
+    // determine whether add results should be generated
+
+    bool generateAdditionalResults = false;
+    auto p = globalParameters_.find("GenerateAdditionalResults");
+    if (p != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(p->second);
+    }
+
     // get LGM model
 
-    auto lgm = model(id, ccy, maturityDate);
+    auto lgm = model(id, ccy, maturityDate, generateAdditionalResults);
 
     // return engine
 
@@ -223,7 +226,7 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
         Handle<QuantExt::LGM>(lgm), args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve,
-        incomeCurve, recovery);
+        incomeCurve, recovery, generateAdditionalResults);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
