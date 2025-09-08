@@ -259,7 +259,7 @@ The unrealized FEP adjusted forward price $F_{p,u}$ is calculated as
 F_{p,u} = 1- \frac{\text{NPV}}{N_{vd} \cdot P_{*}(0,t_e)} - \frac{\text{FEP}_u}{N_{vd}}
 \end{equation}
 
-The unrealized FEP adjusted forward spread $S_{p,u}$ modeled as a lognormal variable
+The unrealized FEP adjusted forward spread $S_{p,u}$ is modeled as a lognormal variable
 
 \begin{equation}\label{pricing:cr_indexcdsoption_Sp2}
 S_{p,u}(x) = m e^{-\frac{1}{2} \sigma^2 t_e + x \sigma \sqrt{t_e}}
@@ -285,12 +285,18 @@ a = \int_{t_e}^{t_m} e^{-\int_{t_e}^u (r + \lambda) ds} du
 
 with interest rate $r$ and instantaneous hazard rate $\lambda$. We set $r$ to the average interest rate over the time
 interval $[t_e, t_m]$ from option expiry to underlying maturity and appxoimate $\lambda$ by the usual ``credit
-triangle'' $S/(1-R)$ where $R$ is the index recovery rate (used to bootstrap the index CDS curve). This yields
+triangle'' $\lambda \approx S_{p,u}/(1-R)$ where $R$ is the index recovery rate (used to bootstrap the index CDS
+curve). This yields
+
+\begin{equation}
+a = \left(t_m-t_e\right) \frac{1 - e^{-w}}{w}
+\end{equation}
+
+with
 
 \begin{eqnarray}
+w &=& \left(\frac{S_{p,u}}{1-R} + r_A \right) \cdot (t_m-t_e) \\
 r_A &=& \frac{\ln \left( \frac{P_{*}(0,t_m)}{P_{*}(t_e)} \right)}{t_e-t_m} \\
-w &=& \left(\frac{S}{1-R} + r \right) \cdot (t_m-t_e) \\
-a &=& \left(t_m-t_e\right) \frac{1 - e^{-w}}{w}
 \end{eqnarray}
 
 For small $w$, $|w| < 10^{-6}$ we use an expansion to compute $a$ to avoid numerical problems due to $a$ being close to
@@ -300,11 +306,11 @@ $0/0$:
 a = (t_m-t_e) \left(1 - \frac{1}{2}w+\frac{1}{6}w^2-\frac{1}{24}w^3\right)
 \end{eqnarray}
 
-The free parameter $m$ from \ref{pricing:cr_indexcdsoption_Sp2} is calibrated to $F_p$
+The free parameter $m$ from \ref{pricing:cr_indexcdsoption_Sp2} is calibrated to $F_{p,u}$
 (see \ref{pricing:cr_indexcdsoption_fep_adjusted_forward}) by solving
 
 \begin{equation}
-\int_{-\infty}^{\infty} V_c(x,m) \, \phi(x) \, dx = 1 - F_p
+\int_{-\infty}^{\infty} V_c(x,m) \, \phi(x) \, dx = 1 - F_{p,u}
 \end{equation}
 
 for $m$ numerically. The integration is carried out using the Simpson method with integration bounds $-10 < x < 10$
