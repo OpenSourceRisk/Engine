@@ -139,6 +139,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         type_ = Type::HazardRate;
     } else if (type == "Price") {
         type_ = Type::Price;
+    } else if (type == "SpreadConvCDS") {
+        type_ = Type::SpreadConvCDS;
     } else if (type == "Benchmark") {
         type_ = Type::Benchmark;
     } else if (type == "MultiSection") {
