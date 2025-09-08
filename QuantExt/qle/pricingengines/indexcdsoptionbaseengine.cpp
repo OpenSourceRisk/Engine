@@ -124,6 +124,7 @@ void IndexCdsOptionBaseEngine::calculate() const {
         results_.additionalResults["unrealisedFEP"] = unrealizedFep_ / dfe;
         results_.additionalResults["realisedFEP"] = realizedFep_ / dfe;
         results_.additionalResults["discountedFEP"] = totalFep_;
+        results_.additionalResults["FEP"] = totalFep_ / dfe;
     }
 
     // call engine-specific calculation
