@@ -40,7 +40,8 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const bool generateAdditionalResults = true);
 
 protected:
     // inputs set in ctor
@@ -51,6 +52,7 @@ protected:
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve_;
     Handle<QuantLib::YieldTermStructure> incomeCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
+    bool generateAdditionalResults_;
 
     // inputs set for calculation in derived classes
     mutable Date npvDate_;
@@ -78,7 +80,8 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const bool generateAdditionalResults = true);
     NumericLgmCallableBondEngine(
         const Handle<LGM>& model, const Real maxTime = 50.0,
         const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(), const Size stateGridPoints = 64,
@@ -89,7 +92,8 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>());
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const bool generateAdditionalResults = true);
 
     //! ForwardEnabledBondEngine interface
     std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,

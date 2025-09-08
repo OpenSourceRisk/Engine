@@ -18,20 +18,36 @@
 
 /*! \file fdlgmcallablebondengine.hpp */
 
+#include <qle/pricingengines/fdcallablebondevents.hpp>
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/fdcallablebondevents.hpp>
+#include <qle/termstructures/effectivebonddiscountcurve.hpp>
+
+#include <ql/termstructures/credit/flathazardrate.hpp>
 
 namespace QuantExt {
+
+namespace {
+// get amount to be paid on call (or put) exercise dependent on outstanding notional and call details
+Real getCallPriceAmount(const FdCallableBondEvents::CallData& cd, Real notional, Real accruals) {
+    Real price = cd.price * notional;
+    if (cd.priceType == CallableBond::CallabilityData::PriceType::Clean)
+        price += accruals;
+    if (!cd.includeAccrual)
+        price -= accruals;
+    return price;
+}
+} // namespace
 
 NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
     const QuantLib::ext::shared_ptr<LgmBackwardSolver>& solver, const Size americanExerciseTimeStepsPerYear,
     const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
-    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
+    const bool generateAdditionalResults)
     : solver_(solver), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
       referenceCurve_(referenceCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
-      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate) {}
+      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate), generateAdditionalResults_(generateAdditionalResults) {}
 
 void NumericLgmCallableBondEngineBase::calculate() const {
 
@@ -40,7 +56,23 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     if (instrArgs_->cashflows.empty())
         return;
 
-    // 1 build the cashflow info
+    // 1 set effective discount, income and credit curve
+
+    QL_REQUIRE(!referenceCurve_.empty(), "NumericLgmCallableBondEngineBase::calculate(): reference curve is empty. "
+                                         "Check reference data and errors from curve building.");
+
+    auto effCreditCurve =
+        creditCurve_.empty()
+            ? Handle<DefaultProbabilityTermStructure>(
+                  QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate_, 0.0, referenceCurve_->dayCounter()))
+            : creditCurve_;
+
+    auto effIncomeCurve = incomeCurve_.empty() ? referenceCurve_ : incomeCurve_;
+
+    auto effDiscountCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<EffectiveBondDiscountCurve>(
+        referenceCurve_, creditCurve_, discountingSpread_, recoveryRate_));
+
+    // 2 build the cashflow info
 
     enum class CashflowStatus { Open, Cached, Done };
 
@@ -57,12 +89,12 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         cashflowStatus.push_back(CashflowStatus::Open);
     }
 
-    // 2 set up events
+    // 3 set up events
 
     Date today = Settings::instance().evaluationDate();
     FdCallableBondEvents events(today, solver_->model()->parametrization()->termStructure()->dayCounter());
 
-    // 2a bond cashflows
+    // 3a bond cashflows
 
     for (Size i = 0; i < cashflows.size(); ++i) {
         if (cashflows[i].payDate > today) {
@@ -70,7 +102,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         }
     }
 
-    // 2b call and put data
+    // 3b call and put data
 
     for (auto const& c : instrArgs_->callData) {
         events.registerCall(c);
@@ -79,13 +111,12 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         events.registerPut(c);
     }
 
-    // 3 set up time grid
+    // 4 set up time grid
 
-    QL_REQUIRE(!events.times().empty(),
-               "NumericLgmCallableBondEngine: internal error, times are empty");
+    QL_REQUIRE(!events.times().empty(), "NumericLgmCallableBondEngine: internal error, times are empty");
 
     Size effectiveTimeStepsPerYear;
-    if(events.hasAmericanExercise())
+    if (events.hasAmericanExercise())
         effectiveTimeStepsPerYear = std::max(americanExerciseTimeStepsPerYear_, solver_->timeStepsPerYear());
     else
         effectiveTimeStepsPerYear = solver_->timeStepsPerYear();
@@ -98,24 +129,26 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         grid = TimeGrid(events.times().begin(), events.times().end(), steps);
     }
 
-    // 4 finalize event processor
+    // 5 finalize event processor
 
     events.finalise(grid);
 
-    // 5 set up functions accrualFraction(t), notional(t)
+    // 6 set up functions accrualFraction(t), notional(t)
 
     Real N0 = instrArgs_->notionals.front();
     std::vector<Real> notionalTimes = {0.0};
     std::vector<Real> notionals = {N0};
-    std::vector<Real> couponAccrualStartTimes, couponAccrualEndTimes, couponPayTimes;
+    std::vector<Real> couponAmounts, couponAccrualStartTimes, couponAccrualEndTimes, couponPayTimes;
     for (auto const& c : instrArgs_->cashflows) {
         if (c->date() <= today)
             continue;
         if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
             if (!QuantLib::close_enough(cpn->nominal(), notionals.back())) {
-                notionalTimes.push_back(solver_->model()->parametrization()->termStructure()->timeFromReference(c->date()));
+                notionalTimes.push_back(
+                    solver_->model()->parametrization()->termStructure()->timeFromReference(c->date()));
                 notionals.push_back(cpn->nominal());
             }
+            couponAmounts.push_back(cpn->amount());
             couponAccrualStartTimes.push_back(
                 solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->accrualStartDate()));
             couponAccrualEndTimes.push_back(
@@ -125,39 +158,178 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         }
     }
 
-    [[maybe_unused]] auto notional = [&notionalTimes, &notionals](const Real t) {
+    auto notional = [&notionalTimes, &notionals](const Real t) {
         auto cn = std::upper_bound(notionalTimes.begin(), notionalTimes.end(), t,
                                    [](Real s, Real t) { return s < t && !QuantLib::close_enough(s, t); });
         return notionals[std::max<Size>(std::distance(notionalTimes.begin(), cn), 1) - 1];
     };
 
-    [[maybe_unused]] auto accrualFraction = [&couponPayTimes, &couponAccrualStartTimes, &couponAccrualEndTimes](const Real t) {
-        Real accrualFraction = 0.0;
-        auto f = std::upper_bound(couponPayTimes.begin(), couponPayTimes.end(), t,
-                                  [](Real s, Real t) { return s < t && !QuantLib::close_enough(s, t); });
-        if (f != couponPayTimes.end()) {
-            Size i = std::distance(couponPayTimes.begin(), f);
-            if (t > couponAccrualStartTimes[i]) {
-                accrualFraction =
-                    (t - couponAccrualStartTimes[i]) / (couponAccrualEndTimes[i] - couponAccrualStartTimes[i]);
+    auto accrual = [&couponAmounts, &couponPayTimes, &couponAccrualStartTimes, &couponAccrualEndTimes](const Real t) {
+        Real accruals = 0.0;
+        for (Size i = 0; i < couponAmounts.size(); ++i) {
+            if (couponPayTimes[i] > t && t > couponAccrualStartTimes[i]) {
+                accruals += (t - couponAccrualStartTimes[i]) / (couponAccrualEndTimes[i] - couponAccrualStartTimes[i]) *
+                            couponAmounts[i];
             }
         }
-        return accrualFraction;
+        return accruals;
     };
+
+    // 7 set bounday value at last grid point
+
+    RandomVariable value(solver_->gridSize(), 0.0);
+
+    // 8 determine fwd cutoff point for forward price calculation
+
+    Real t_fwd_cutoff = solver_->model()->parametrization()->termStructure()->timeFromReference(npvDate_);
+
+    // 9 perform the backward pricing using the backward solver
+
+    LgmVectorised lgmv(solver_->model()->parametrization());
+
+    for (Size i = grid.size() - 1; i > 0; --i) {
+
+        // 7.1 we will roll back from t_i = t_from to t_{i-1} = t_to in this step
+
+        Real t_from = grid[i];
+        Real t_to = grid[i - 1];
+
+        if (t_from > t_fwd_cutoff) {
+
+            // 7.2 handle call, put on t_i (assume put overrides call, should both be exercised)
+
+            if (events.hasCall(i)) {
+                Real c = getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from));
+                value = min(RandomVariable(solver_->gridSize(), c), value);
+            }
+
+            if (events.hasPut(i)) {
+                Real c = getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from));
+                value = max(RandomVariable(solver_->gridSize(), c), value);
+            }
+
+            // 7.3 handle bond cashflows on t_i
+
+            if (events.hasBondCashflow(i)) {
+
+                for (auto const& f : events.getBondCashflow(i)) {
+                    value += f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                    if (cfResults_)
+                        cfResults_->push_back(
+                            standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
+                }
+
+                for (auto const& f : events.getBondCashflow(i)) {
+                    value += f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                    if (cfResults_)
+                        cfResults_->push_back(
+                            standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
+                }
+            }
+        }
+
+        // 7.4 roll back from t_i to t_{i-1}
+
+        solver_->rollback(value, t_from, t_to, 1);
+    }
+
+    // 10 set the result values
+
+    npv_ = value.at(0) / effIncomeCurve->discount(npvDate_);
+    if (conditionalOnSurvival_)
+        npv_ /= effCreditCurve->survivalProbability(npvDate_);
+
+    settlementValue_ = npv_ / effIncomeCurve->discount(settlementDate_) /
+                       effCreditCurve->survivalProbability(settlementDate_) *
+                       effCreditCurve->survivalProbability(settlementDate_);
+
+    // 11 set additional results if requested
+
+    if (!generateAdditionalResults_)
+        return;
+
+    // 11.1 additional results from lgm model
+
+    additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
+
+    // 11.2 event table
+
+    constexpr Size width = 12;
+    std::ostringstream header;
+    header << std::left << "|" << std::setw(width) << "time"
+           << "|" << std::setw(width) << "date"
+           << "|" << std::setw(width) << "notional"
+           << "|" << std::setw(width) << "accrual"
+           << "|" << std::setw(width) << "flow"
+           << "|" << std::setw(width) << "call"
+           << "|" << std::setw(width) << "put"
+           << "|" << std::setw(width) << "referenceDiscount"
+           << "|" << std::setw(width) << "survivalProb"
+           << "|" << std::setw(width) << "securitySpreadDiscount"
+           << "|" << std::setw(width) << "effectiveDiscount"
+           << "|";
+
+    additionalResults_["event_00001"] = header.str();
+
+    Size counter = 0;
+    for (Size i = 0; i < grid.size(); ++i) {
+        std::ostringstream dateStr, bondFlowStr, callStr, putStr;
+
+        if (events.getAssociatedDate(i) != Null<Date>()) {
+            dateStr << QuantLib::io::iso_date(events.getAssociatedDate(i));
+        }
+
+        Real flow = 0.0;
+        for (auto const& f : events.getBondCashflow(i))
+            flow += f.qlCf->amount();
+        for (auto const& f : events.getBondFinalRedemption(i))
+            flow += f.qlCf->amount();
+        if (!QuantLib::close_enough(flow, 0.0))
+            bondFlowStr << flow;
+
+        if (events.hasCall(i)) {
+            const auto& cd = events.getCallData(i);
+            callStr << "@" << cd.price;
+        }
+
+        if (events.hasPut(i)) {
+            const auto& cd = events.getPutData(i);
+            putStr << "@" << cd.price;
+        }
+
+        Real refDisc = referenceCurve_->discount(grid[i]);
+        Real survProb = effCreditCurve->survivalProbability(grid[i]);
+        Real secDisc = discountingSpread_.empty() ? 1.0 : std::exp(-discountingSpread_->value() * grid[i]);
+        Real effDisc = effDiscountCurve->discount(grid[i]);
+
+        std::ostringstream eventDescription;
+        eventDescription << std::left << "|" << std::setw(width) << grid[i] << "|" << std::setw(width) << dateStr.str()
+                         << "|" << std::setw(width) << notional(grid[i]) << "|" << std::setw(width) << accrual(grid[i])
+                         << "|" << std::setw(width) << bondFlowStr.str() << "|" << std::setw(width) << callStr.str()
+                         << "|" << std::setw(width) << putStr.str() << "|" << std::setw(width) << refDisc << "|"
+                         << std::setw(width) << survProb << "|" << std::setw(width) << secDisc << "|"
+                         << std::setw(width) << effDisc << "|";
+        std::string label = "0000" + std::to_string(counter++);
+        additionalResults_["event_" + label.substr(label.size() - 5)] = eventDescription.str();
+        // do not log more than 100k events, unlikely that this is ever necessary
+        if (counter >= 100000)
+            break;
+    }
 
     
 
-}
+} // NumericLgmCallableBondEngineBase::calculate()
 
 NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<LGM>& model, const Real sy, const Size ny, const Real sx, const Size nx,
     const Size americanExerciseTimeStepsPerYear, const Handle<QuantLib::YieldTermStructure>& referenceCurve,
     const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
-    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
+    const bool generateAdditionalResults)
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(*model, sy, ny, sx, nx),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate) {
+                                       incomeCurve, recoveryRate, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);
@@ -171,11 +343,12 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Size timeStepsPerYear, const Real mesherEpsilon, const Size americanExerciseTimeStepsPerYear,
     const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
-    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate)
+    const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
+    const bool generateAdditionalResults)
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(*model, maxTime, scheme, stateGridPoints,
                                                                                timeStepsPerYear, mesherEpsilon),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate) {
+                                       incomeCurve, recoveryRate, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);
