@@ -87,6 +87,8 @@ protected:
 
     //! Store the underlying index CDS notional(s) during calculation.
     mutable std::vector<QuantLib::Real> notionals_;
+
+    mutable QuantLib::Real unrealizedFep_, realizedFep_, totalFep_;
 };
 
 } // namespace QuantExt

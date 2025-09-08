@@ -108,7 +108,7 @@ void IndexCdsOptionBaseEngine::calculate() const {
     // calculate FEP
 
     const Date& exerciseDate = arguments_.exercise->dates().front();
-    Real dfe = discountTradeCollateral_->discount(exerciseDate):
+    Real dfe = discountTradeCollateral_->discount(exerciseDate);
 
     realizedFep_ = dfe * arguments_.realisedFep;
 
@@ -117,13 +117,13 @@ void IndexCdsOptionBaseEngine::calculate() const {
         ufep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
     }
 
-    unreadlizedFep_ = ufep * dfe;
+    unrealizedFep_ = ufep * dfe;
     totalFep_ = realizedFep_ + unrealizedFep_;
 
     if (generateAdditionalResults_) {
         results_.additionalResults["unrealisedFEP"] = unrealizedFep_ / dfe;
         results_.additionalResults["realisedFEP"] = realizedFep_ / dfe;
-        result_.additionalResults["discountedFEP"] = totalFep_;
+        results_.additionalResults["discountedFEP"] = totalFep_;
     }
 
     // call engine-specific calculation
