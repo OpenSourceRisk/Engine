@@ -178,6 +178,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     // 7 set bounday value at last grid point
 
     RandomVariable value(solver_->gridSize(), 0.0);
+    RandomVariable valueStripped(solver_->gridSize(), 0.0);
 
     // 8 determine fwd cutoff point for forward price calculation
 
@@ -213,14 +214,20 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (events.hasBondCashflow(i)) {
 
                 for (auto const& f : events.getBondCashflow(i)) {
-                    value += f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                    auto tmp = f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                    value += tmp;
+                    if (generateAdditionalResults_)
+                        valueStripped += tmp;
                     if (cfResults_)
                         cfResults_->push_back(
                             standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
                 }
 
-                for (auto const& f : events.getBondCashflow(i)) {
-                    value += f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                for (auto const& f : events.getBondFinalRedemption(i)) {
+                    auto tmp = f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                    value += tmp;
+                    if (generateAdditionalResults_)
+                        valueStripped += tmp;
                     if (cfResults_)
                         cfResults_->push_back(
                             standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
@@ -230,7 +237,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
         // 7.4 roll back from t_i to t_{i-1}
 
-        solver_->rollback(value, t_from, t_to, 1);
+        value = solver_->rollback(value, t_from, t_to, 1);
+        if (generateAdditionalResults_)
+            valueStripped = solver_->rollback(valueStripped, t_from, t_to, 1);
     }
 
     // 10 set the result values
@@ -252,7 +261,20 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
     additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
-    // 11.2 event table
+    // 11.2 stripped underlying bond, and call / put option
+
+    Real npvStripped = valueStripped.at(0) / effIncomeCurve->discount(npvDate_);
+    if (conditionalOnSurvival_)
+        npvStripped /= effCreditCurve->survivalProbability(npvDate_);
+    Real settlementValueStripped = npvStripped / effIncomeCurve->discount(settlementDate_) /
+                                   effCreditCurve->survivalProbability(settlementDate_) *
+                                   effCreditCurve->survivalProbability(settlementDate_);
+
+    additionalResults_["strippedBondNpv"] = npvStripped;
+    additionalResults_["strippedBondSettlementValue"] = settlementValueStripped;
+    additionalResults_["callPutValue"] = settlementValueStripped - settlementValue_;
+
+    // 11.3 event table
 
     constexpr Size width = 12;
     std::ostringstream header;
@@ -263,13 +285,13 @@ void NumericLgmCallableBondEngineBase::calculate() const {
            << "|" << std::setw(width) << "flow"
            << "|" << std::setw(width) << "call"
            << "|" << std::setw(width) << "put"
-           << "|" << std::setw(width) << "referenceDiscount"
-           << "|" << std::setw(width) << "survivalProb"
-           << "|" << std::setw(width) << "securitySpreadDiscount"
-           << "|" << std::setw(width) << "effectiveDiscount"
+           << "|" << std::setw(width) << "refDsc"
+           << "|" << std::setw(width) << "survProb"
+           << "|" << std::setw(width) << "secSprdDsc"
+           << "|" << std::setw(width) << "effDsc"
            << "|";
 
-    additionalResults_["event_00001"] = header.str();
+    additionalResults_["event_0000!"] = header.str();
 
     Size counter = 0;
     for (Size i = 0; i < grid.size(); ++i) {
@@ -315,8 +337,6 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         if (counter >= 100000)
             break;
     }
-
-    
 
 } // NumericLgmCallableBondEngineBase::calculate()
 
