@@ -135,18 +135,6 @@ XMLNode* CallableBondData::toXML(XMLDocument& doc) const {
     return node;
 }
 
-void CallableBond::fromXML(XMLNode* node) {
-    Trade::fromXML(node);
-    originalData_.fromXML(XMLUtils::getChildNode(node, "CallableBondData"));
-    data_ = originalData_;
-}
-
-XMLNode* CallableBond::toXML(XMLDocument& doc) const {
-    XMLNode* node = Trade::toXML(doc);
-    XMLUtils::appendNode(node, originalData_.toXML(doc));
-    return node;
-}
-
 void CallableBondData::populateFromBondReferenceData(
     const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
 
@@ -172,6 +160,18 @@ void CallableBondData::populateFromBondReferenceData(
             putData_ = bondRefData->putData();
         }
     }
+}
+
+void CallableBond::fromXML(XMLNode* node) {
+    Trade::fromXML(node);
+    originalData_.fromXML(XMLUtils::getChildNode(node, "CallableBondData"));
+    data_ = originalData_;
+}
+
+XMLNode* CallableBond::toXML(XMLDocument& doc) const {
+    XMLNode* node = Trade::toXML(doc);
+    XMLUtils::appendNode(node, originalData_.toXML(doc));
+    return node;
 }
 
 std::map<AssetClass, std::set<std::string>>
@@ -235,6 +235,9 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     qlInstr->setPricingEngine(builder->engine(id(), data_.bondData().currency(), data_.bondData().creditCurveId(),
                                               data_.bondData().securityId(), data_.bondData().referenceCurveId(),
                                               data_.bondData().incomeCurveId(), lastDate));
+
+    setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // set up other trade member variables
 
