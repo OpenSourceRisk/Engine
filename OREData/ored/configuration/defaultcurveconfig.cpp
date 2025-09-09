@@ -203,7 +203,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         // Read the optional start date
         string d = XMLUtils::getChildValue(node, "StartDate", false);
         if (d != "") {
-            if (type_ == Type::SpreadCDS || type_ == Type::Price) {
+            if (type_ == Type::SpreadCDS || type_ == Type::Price || type_ == Type::SpreadConvCDS) {
                 startDate_ = parseDate(d);
             } else {
                 WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price'");
@@ -232,9 +232,11 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
 XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Configuration");
     XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
-    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price) {
+    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price || type_ == Type::SpreadConvCDS) {
         if (type_ == Type::SpreadCDS) {
             XMLUtils::addChild(doc, node, "Type", "SpreadCDS");
+        } else if (type_ == Type::SpreadConvCDS){
+            XMLUtils::addChild(doc, node, "Type", "SpreadConvCDS");
         } else if (type_ == Type::HazardRate) {
             XMLUtils::addChild(doc, node, "Type", "HazardRate");
         } else {
