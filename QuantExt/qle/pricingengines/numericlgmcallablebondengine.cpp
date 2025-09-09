@@ -24,6 +24,7 @@
 #include <qle/termstructures/effectivebonddiscountcurve.hpp>
 
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -44,10 +45,11 @@ NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
     const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
-    const bool generateAdditionalResults)
+    const bool spreadOnIncome, const bool generateAdditionalResults)
     : solver_(solver), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
       referenceCurve_(referenceCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
-      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate), generateAdditionalResults_(generateAdditionalResults) {}
+      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate), spreadOnIncome_(spreadOnIncome),
+      generateAdditionalResults_(generateAdditionalResults) {}
 
 void NumericLgmCallableBondEngineBase::calculate() const {
 
@@ -68,6 +70,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             : creditCurve_;
 
     auto effIncomeCurve = incomeCurve_.empty() ? referenceCurve_ : incomeCurve_;
+    if (spreadOnIncome_ && !discountingSpread_.empty())
+        effIncomeCurve = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(effIncomeCurve, discountingSpread_));
 
     auto effDiscountCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<EffectiveBondDiscountCurve>(
         referenceCurve_, creditCurve_, discountingSpread_, recoveryRate_));
@@ -346,10 +351,10 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
-    const bool generateAdditionalResults)
+    const bool spreadOnIncome, const bool generateAdditionalResults)
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(*model, sy, ny, sx, nx),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate, generateAdditionalResults) {
+                                       incomeCurve, recoveryRate, spreadOnIncome, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);
@@ -364,11 +369,11 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
-    const bool generateAdditionalResults)
+    const bool spreadOnIncome, const bool generateAdditionalResults)
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(*model, maxTime, scheme, stateGridPoints,
                                                                                timeStepsPerYear, mesherEpsilon),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate, generateAdditionalResults) {
+                                       incomeCurve, recoveryRate, spreadOnIncome, generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);

@@ -85,6 +85,7 @@ The parameters have the following meaning:
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \end{itemize}
 
 \begin{longlisting}
@@ -99,6 +100,7 @@ The parameters have the following meaning:
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="IncludePastCashflows">true</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -185,6 +187,7 @@ The parameters have the following meaning:
 \item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -211,6 +214,7 @@ The parameters have the following meaning:
         <Parameter name="ny">30</Parameter>
         <Parameter name="sx">5.0</Parameter>
         <Parameter name="nx">30</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_FD</Parameter>
     </EngineParameters>
 </Product>
@@ -240,6 +244,7 @@ The parameters have the following meaning:
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -265,6 +270,7 @@ The parameters have the following meaning:
         <Parameter name="StateGridPoints">64</Parameter>
         <Parameter name="TimeStepsPerYear">24</Parameter>
         <Parameter name="MesherEpsilon">1E-4</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4026,8 +4032,8 @@ The parameters have the following meaning:
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}

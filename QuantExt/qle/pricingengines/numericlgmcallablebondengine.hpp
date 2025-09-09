@@ -40,7 +40,7 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
         const bool generateAdditionalResults = true);
 
 protected:
@@ -52,6 +52,7 @@ protected:
     Handle<QuantLib::DefaultProbabilityTermStructure> creditCurve_;
     Handle<QuantLib::YieldTermStructure> incomeCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
+    bool spreadOnIncome_;
     bool generateAdditionalResults_;
 
     // inputs set for calculation in derived classes
@@ -80,7 +81,7 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
         const bool generateAdditionalResults = true);
     NumericLgmCallableBondEngine(
         const Handle<LGM>& model, const Real maxTime = 50.0,
@@ -92,7 +93,7 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(),
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
         const bool generateAdditionalResults = true);
 
     //! ForwardEnabledBondEngine interface

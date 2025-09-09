@@ -226,7 +226,8 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
         Handle<QuantExt::LGM>(lgm), args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve,
-        incomeCurve, recovery, generateAdditionalResults);
+        incomeCurve, recovery, parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")),
+        generateAdditionalResults);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
