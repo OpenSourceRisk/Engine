@@ -27,6 +27,7 @@
       <xs:element type="cboReferenceDatum" name="CboReferenceData"/>
       <xs:element type="bondFutureReferenceDatum" name="BondFutureReferenceData"/>
       <xs:element type="convertibleBondReferenceDatum" name="ConvertibleBondReferenceData"/>
+      <xs:element type="callableBondReferenceDatum" name="CallableBondReferenceData"/>
       <xs:element type="bondBasketData" name="BondBasketData"/>
       <xs:element type="referenceDatum" name="CreditReferenceData"/>
       <xs:element type="equityReferenceDatum" name="EquityReferenceData"/>
