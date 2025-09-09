@@ -347,7 +347,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     ALOG("current notional could not be determined for trade " << id()
                                                                                << ", set to zero: " << e.what());
                 }
-                additionalData_["currentNotional_boop![" + legID + "]"] = currentNotional;
+                additionalData_["currentNotional[" + legID + "]"] = currentNotional;
 
                 Real rate = 0;
                 try {
