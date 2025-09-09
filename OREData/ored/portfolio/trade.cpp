@@ -327,8 +327,9 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
         // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
+        if (coupon->accrualEndDate() > asof) {
             Real flowAmount = 0.0;
             try {
                 flowAmount = flow->amount();
@@ -337,7 +338,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            //QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -346,7 +347,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     ALOG("current notional could not be determined for trade " << id()
                                                                                << ", set to zero: " << e.what());
                 }
-                additionalData_["currentNotional[" + legID + "]"] = currentNotional;
+                additionalData_["currentNotional_boop![" + legID + "]"] = currentNotional;
 
                 Real rate = 0;
                 try {
