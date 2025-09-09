@@ -264,6 +264,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             // Build the default curve of the requested type
             switch (config.second.type()) {
             case DefaultCurveConfig::Config::Type::SpreadCDS:
+            case DefaultCurveConfig::Config::Type::SpreadConvCDS:
             case DefaultCurveConfig::Config::Type::Price:
                 buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
                 break;
@@ -308,7 +309,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     LOG("Start building default curve of type SpreadCDS for curve " << curveID);
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Config::Type::SpreadCDS ||
-                   config.type() == DefaultCurveConfig::Config::Type::Price,
+                config.type() == DefaultCurveConfig::Config::Type::Price ||
+                config.type() == DefaultCurveConfig::Config::Type::SpreadConvCDS,
                "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS/Price");
     QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: recovery rate needed to build SpreadCDS curve");
 
@@ -377,6 +379,38 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                                                  : QuantExt::CreditDefaultSwap::atPeriodEnd;
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
+        for (auto quote : quotes) {
+            try {
+                if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
+                     cdsConv->rule() == DateGeneration::OldCDS) &&
+                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
+                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    WLOG("DefaultCurve:: SKIP cds with term "
+                         << quote.term << " because cds maturity (" << io::iso_date(maturity)
+                         << ") is <= T + 1 (T =" << io::iso_date(asof)
+                         << "), but by standard conventioons the first CDS payment is the next IMM payment"
+                            "date strictly after T + 1.");
+                    continue;
+                };
+                helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
+                    quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                runningSpread = config.runningSpread();
+                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
+            } catch (exception& e) {
+                if (quote.term == Period(0, Months)) {
+                    WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
+                                                                                    << asof);
+                } else {
+                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " << curveID
+                                                                          << " for asof date " << asof
+                                                                          << ", with error: " << e.what());
+                }
+            }
+        }
+    }else if(config.type() == DefaultCurveConfig::Config::Type::SpreadConvCDS){
+        // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||

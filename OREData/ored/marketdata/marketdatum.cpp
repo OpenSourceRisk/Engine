@@ -111,6 +111,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "HAZARD_RATE";
     case MarketDatum::InstrumentType::RECOVERY_RATE:
         return out << "RECOVERY_RATE";
+    case MarketDatum::InstrumentType::ASSUMED_RECOVERY_RATE:
+        return out << "ASSUMED_RECOVERY_RATE";
     case MarketDatum::InstrumentType::SWAPTION:
         return out << "SWAPTION";
     case MarketDatum::InstrumentType::CAPFLOOR:
@@ -459,6 +461,14 @@ template <class Archive> void RecoveryRateQuote::serialize(Archive& ar, const un
     ar& docClause_;
 }
 
+template <class Archive> void AssumedRecoveryRateQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& underlyingName_;
+    ar& seniority_;
+    ar& ccy_;
+    ar& docClause_;
+}
+
 template <class Archive> void SwaptionQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
@@ -707,6 +717,8 @@ template void HazardRateQuote::serialize(boost::archive::binary_oarchive& ar, co
 template void HazardRateQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void RecoveryRateQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void RecoveryRateQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void AssumedRecoveryRateQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void AssumedRecoveryRateQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void SwaptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void SwaptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void SwaptionShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -788,6 +800,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CrossCcyFixFloatSwapQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CdsQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::HazardRateQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::RecoveryRateQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AssumedRecoveryRateQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwaptionQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwaptionShiftQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondOptionQuote);
