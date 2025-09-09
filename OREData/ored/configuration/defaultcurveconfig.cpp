@@ -206,7 +206,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
             if (type_ == Type::SpreadCDS || type_ == Type::Price || type_ == Type::SpreadConvCDS) {
                 startDate_ = parseDate(d);
             } else {
-                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price'");
+                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price' or 'SpreadConvCDS'");
             }
         }
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
