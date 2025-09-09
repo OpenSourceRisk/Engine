@@ -46,7 +46,7 @@ or equities, CFDs on an underlying basket of EquityPositions, proprietary indice
 indices.
 
 \begin{itemize}
-\item The {\tt UnderlyingData} block specifies one or more underlyings, which can be a trades of one of the following
+\item The {\tt UnderlyingData} block specifies one or more underlyings, which can be a trade of one of the following
   types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
     \begin{itemize}
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
@@ -380,7 +380,7 @@ indices.
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap with equity basket underlying}
+\caption{Generic Total Return Swap with Equity Basket underlying}
 \label{lst:trsdata2}
 \end{listing}
 
@@ -401,8 +401,30 @@ indices.
     </TotalReturnSwapData>
   </Trade>
 \end{minted}
-\caption{Generic Total Return Swap with bond basket underlying}
+\caption{Generic Total Return Swap with Bond Basket underlying}
 \label{lst:trsdata3}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>BondFuture</TradeType>
+          <BondFutureData>
+            <ContractName>TYH25</ContractName>
+            <ContractNotional>100000000</ContractNotional>
+            <LongShort>L</LongShort>
+          </BondFutureData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap with Bond Future underlying}
+\label{lst:trsdata35}
 \end{listing}
 
 \begin{listing}[H]

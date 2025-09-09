@@ -192,7 +192,11 @@ public:
 
     virtual bool isExpired(const Date& d) const {
         ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-        return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
+        if(lastRelevantDate_!=Null<Date>()){
+            return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(d, inc);
+        }else{
+            return QuantLib::detail::simple_event(maturity_).hasOccurred(d, inc);
+        } 
     }
 
     const string& issuer() const { return issuer_; }
@@ -258,6 +262,7 @@ protected:
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
     std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngine_;
+    Date lastRelevantDate_ = Null<Date>();
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;

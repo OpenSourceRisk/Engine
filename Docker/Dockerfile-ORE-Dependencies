@@ -1,0 +1,27 @@
+# syntax = docker/dockerfile:1.2
+ARG DEBIAN_TAG
+FROM ${DOCKER_TAG}debian:${DEBIAN_TAG}
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive \
+  apt-get install -y --no-install-recommends \
+    build-essential \
+    libbz2-dev \
+    autoconf \
+    libtool \
+    cmake \
+    ninja-build \
+    zlib1g-dev \
+    opencl-headers \
+    ocl-icd-opencl-dev \
+    libboost-all-dev \
+    doxygen \
+    graphviz \
+    ccache \
+    libeigen3-dev \
+    clang \
+    swig \
+    python3-dev \
+    -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
