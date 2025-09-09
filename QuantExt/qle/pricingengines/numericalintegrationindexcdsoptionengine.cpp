@@ -287,9 +287,9 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["volatility"] = volatility;
             results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
-            results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
+            results_.additionalResults["unrealizedFepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
-            results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
+            results_.additionalResults["unrealizedFepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
             results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
             results_.additionalResults["avgRate_te_tm"] = averageInterestRate;
             results_.additionalResults["exerciseBoundary"] =
