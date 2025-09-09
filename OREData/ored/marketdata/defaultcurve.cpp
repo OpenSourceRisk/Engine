@@ -264,7 +264,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             // Build the default curve of the requested type
             switch (config.second.type()) {
             case DefaultCurveConfig::Config::Type::SpreadCDS:
-            case DefaultCurveConfig::Config::Type::SpreadConvCDS:
+            case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
             case DefaultCurveConfig::Config::Type::Price:
                 buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
                 break;
@@ -310,7 +310,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Config::Type::SpreadCDS ||
                 config.type() == DefaultCurveConfig::Config::Type::Price ||
-                config.type() == DefaultCurveConfig::Config::Type::SpreadConvCDS,
+                config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS,
                "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS/Price");
     QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: recovery rate needed to build SpreadCDS curve");
 
@@ -409,7 +409,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    }else if(config.type() == DefaultCurveConfig::Config::Type::SpreadConvCDS){
+    }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
