@@ -577,6 +577,7 @@ void dataBuilders() {
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityOptionPosition", EquityOptionPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondPosition", BondPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Derivative", DerivativeTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("CallableBond", CallableBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ConvertibleBond", ConvertibleBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("CBO", CBOTrsUnderlyingBuilder, false)
 

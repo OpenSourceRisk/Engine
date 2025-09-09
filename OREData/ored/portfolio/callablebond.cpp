@@ -183,6 +183,73 @@ CallableBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& r
     return result;
 }
 
+void CallableBondTrsUnderlyingBuilder::build(
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying,
+    const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
+    std::map<std::string, double>& indexQuantities,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::string& assetCurrency, std::string& creditRiskCurrency,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+        getFxIndex,
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::CallableBond>(underlying);
+    QL_REQUIRE(t, "could not cast to ore::data::CallableBond, this is unexpected");
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
+    QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
+
+    BondIndexBuilder bondIndexBuilder(t->bondData().securityId(), true, false, NullCalendar(), true, engineFactory);
+    underlyingIndex = bondIndexBuilder.bondIndex();
+
+    underlyingIndex = bondIndexBuilder.bondIndex();
+    underlyingMultiplier = t->data().bondData().bondNotional();
+
+    indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
+    if (initialPrice != Null<Real>())
+        initialPrice = qlBond->notional(valuationDates.front()) * bondIndexBuilder.priceAdjustment(initialPrice);
+
+    assetCurrency = t->data().bondData().currency();
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    auto returnLeg = makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, initialPrice, fxIndex);
+
+    // add required bond and fx fixings for bondIndex
+    returnLegs.push_back(returnLeg);
+    bondIndexBuilder.addRequiredFixings(fixings, returnLeg);
+
+    creditRiskCurrency = t->data().bondData().currency();
+    creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
+    creditQualifierMapping[t->bondData().creditCurveId()] =
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
+}
+
+void CallableBondTrsUnderlyingBuilder::updateUnderlying(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData, QuantLib::ext::shared_ptr<Trade>& underlying,
+    const std::string& parentId) const {
+
+    /* If the underlying is a bond, but the security id is actually pointing to reference data of a non-vanilla bond
+       flavour like a convertible bond, callable bond, etc., we change the underlying to that non-vanilla bond flavour
+       here on the fly. This way we can reference a bond from a TRS without knowing its flavour. */
+
+    if (underlying->tradeType() == "Bond") {
+        auto bond = QuantLib::ext::dynamic_pointer_cast<ore::data::Bond>(underlying);
+        QL_REQUIRE(bond, "TRS::build(): internal error, could not cast underlying trade to bond");
+        if (refData != nullptr && refData->hasData(CallableBondReferenceDatum::TYPE, bond->bondData().securityId())) {
+            DLOG("Underlying trade type is bond, but security id '"
+                 << bond->bondData().securityId()
+                 << "' points to convertible bond in ref data, so we change the underlying trade type accordingly.");
+            underlying = QuantLib::ext::make_shared<CallableBond>(Envelope(), CallableBondData(bond->bondData()));
+            underlying->id() = parentId + "_underlying";
+        }
+    }
+}
+
+
 void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("CallableBond::build() called for trade " << id());
 
@@ -253,10 +320,11 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
 BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                                const boost::shared_ptr<ReferenceDataManager>& referenceData,
                                                const std::string& securityId) const {
+    static long id = 0;
     CallableBondData data(BondData(securityId, 1.0));
     data.populateFromBondReferenceData(referenceData);
     ore::data::CallableBond bond(Envelope(), data);
-    bond.id() = "CallableBondBuilder_" + securityId;
+    bond.id() = "CallableBondBuilder_" + securityId + "_" + std::to_string(id++);
     bond.build(engineFactory);
 
     QL_REQUIRE(bond.instrument(), "CallableBondBuilder: constructed bond is null, this is unexpected");

@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/trsunderlyingbuilder.hpp>
 
 namespace ore {
 namespace data {
@@ -114,6 +115,24 @@ public:
 private:
     CallableBondData originalData_;
     mutable CallableBondData data_;
+};
+
+struct CallableBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
+    void
+    build(const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying,
+          const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
+          const std::string& fundingCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+          QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
+          std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+          Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+          const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+              const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+              const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+              getFxIndex,
+           const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
+    void updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData, QuantLib::ext::shared_ptr<Trade>& underlying,
+                          const std::string& parentId) const override;
 };
 
 struct CallableBondBuilder : public BondBuilder {
