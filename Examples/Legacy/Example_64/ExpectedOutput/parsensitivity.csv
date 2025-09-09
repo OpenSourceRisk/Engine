@@ -22,10 +22,10 @@ Bond_FormulaBased,true,DiscountCurve/EUR/25/10Y,0.000100,,0.000000,EUR,10727794.
 Bond_FormulaBased,true,DiscountCurve/EUR/26/12Y,0.000100,,0.000000,EUR,10727794.49,60.19,#N/A
 Bond_FormulaBased,true,DiscountCurve/EUR/27/15Y,0.000100,,0.000000,EUR,10727794.49,48.66,#N/A
 Bond_FormulaBased,true,DiscountCurve/EUR/28/20Y,0.000100,,0.000000,EUR,10727794.49,13.45,#N/A
-Bond_FormulaBased,true,DiscountCurve/USD/0/3M,0.000100,,0.000000,EUR,10727794.49,0.16,#N/A
-Bond_FormulaBased,true,DiscountCurve/USD/1/6M,0.000100,,0.000000,EUR,10727794.49,0.01,#N/A
-Bond_FormulaBased,true,DiscountCurve/USD/2/9M,0.000100,,0.000000,EUR,10727794.49,-0.02,#N/A
-Bond_FormulaBased,true,DiscountCurve/USD/3/12M,0.000100,,0.000000,EUR,10727794.49,-0.02,#N/A
+Bond_FormulaBased,true,DiscountCurve/USD/0/3M,0.000100,,0.000000,EUR,10727794.49,-0.13,#N/A
+Bond_FormulaBased,true,DiscountCurve/USD/1/6M,0.000100,,0.000000,EUR,10727794.49,-0.01,#N/A
+Bond_FormulaBased,true,DiscountCurve/USD/2/9M,0.000100,,0.000000,EUR,10727794.49,0.01,#N/A
+Bond_FormulaBased,true,DiscountCurve/USD/3/12M,0.000100,,0.000000,EUR,10727794.49,0.02,#N/A
 Bond_FormulaBased,true,DiscountCurve/USD/4/2Y,0.000100,,0.000000,EUR,10727794.49,-0.03,#N/A
 Bond_FormulaBased,true,DiscountCurve/USD/5/3Y,0.000100,,0.000000,EUR,10727794.49,-0.08,#N/A
 Bond_FormulaBased,true,DiscountCurve/USD/6/4Y,0.000100,,0.000000,EUR,10727794.49,-0.05,#N/A

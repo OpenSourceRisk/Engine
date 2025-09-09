@@ -150,9 +150,14 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
     'IMM' applies to SOFR-3M futures for example. 'FirstDayOfMonth' on the other hand means that the end date of the
     future is set to the first day in the month following the future's expiry month and the start date is set to the
     first day of the month lying $n$ months before the end date's month where $n$ is the number of months of the
-    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. This tenor is
+    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. For 'FirstDayOfMonth'
+    the start and end date are adjusted to the next business day w.r.t. roll convention 'following' and the overnight
+    index calendar - or if given the calendar given in the field 'Calendar'. This tenor is
     derived from the market quote, see \ref{ss:market_data_oi_index_future_prices}.
   \end{itemize}
+\item Calendar: Only applicable to overnight index futures with date generation rule 'FirstDayOfMonth'. Overwrites the
+    calendar used to adjust the start and end date of the future. Optional, if not given, the overnight index publishing
+    calendar will be used to adjust the future start and end date.
 \item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be 'Compounding' (which is also the
   default value if no value is given) or 'Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
   are averaging the daily overnight fixings over the calculation period of the future.
@@ -208,6 +213,7 @@ Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_so
     <Id>USD-SOFR-1M-FUTURES</Id>
     <Index>USD-SOFR</Index>
     <DateGenerationRule>FirstDayOfMonth</DateGenerationRule>
+    <Calendar>CME</Calendar>
     <OvernightIndexFutureNettingType>Averaging</OvernightIndexFutureNettingType>
   </Future>
 \end{minted}

@@ -1,0 +1,116 @@
+\subsubsection{Strike Resettable Option}
+\label{input:strikeresettableoption}
+
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+The Strike Resettable Option is an option on a single underlying. The strike of the option can be reset to a new strike if the undelying price reach a certain level on observation dates.
+
+On the option expiry date, if the strike reset event has been triggered, the payoff of the option is given by:
+\begin{align*}
+	\text{Quantity} \times \text{OptionType} \times \text{max}\left(0, \text{LongShort} \times (Index_{Final} - K_{Reset})\right).
+\end{align*}
+If the strike reset event is not triggered, the payoff is given by
+\begin{align*}
+	\text{Quantity} \times \text{OptionType} \times \text{max}\left(0, \text{LongShort} \times (Index_{Final} - K_{Initial})\right).
+\end{align*}
+Here, $Index_{Final}$ is the underlying index value on the option expiry date.
+
+{\bf Input}}\fi
+
+Strike Resettable Options are defined using one of the trade types \emph{FxStrikeResettableOption}, \emph{EquityStrikeResettableOption},
+\emph{CommodityStrikeResettableOption} depending on the underlying asset class and an associated node FxStrikeResettableOptionData,
+EquityStrikeResettableOptionData, CommodityStrikeResettableOptionData. Listing \ref{lst:strikeresettableoption_data} shows an
+example for an Equity Underlying. For a more detailed description of the computation of the payoff of this option, please see the product description. The nodes have the following meaning:
+
+\begin{itemize}
+\item Underlying: The underlying definition. Note that for FX underlyings the order of the currencies defines the
+  observed underlying value, i.e. for EUR-USD the domestic currency is USD (the observed value is e.g. $1.2$ USD per
+  EUR) while for USD-EUR the domestic currency is EUR (the observed value is e.g. $0.8$ EUR per USD).
+
+  Allowable Values: See \ref{ss:underlying}
+
+\item LongShort: Denotes whether the payoff is computed relative to the holder or seller of the option.  
+
+  Allowable Values: \emph{Long}, \emph{Short}.
+  
+\item OptionType: Denotes whether the option is a call option or put option.  
+
+  Allowable Values: \emph{Call}, \emph{Put}.
+
+\item Currency: The payment currency.
+
+  Allowable Values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+  
+\item Strike: The initial strike value used to compute the payoff of the option.
+  Allowable Values: any real number
+  
+\item ResetStrike: The new strike value if the trigger event occured used to compute the payoff of the option.
+  Allowable Values: any real number
+  
+\item TriggerType: Determine the direction of the trigger event. If \emph{Up}, the trigger event occurs when the underlying value is above the \lstinline!TriggerPrice! on any \lstinline!ObservationDates!. If \emph{Down}, the trigger event occurs when the underlying value is below the \lstinline!TriggerPrice! on any \lstinline!ObservationDates!.
+
+  Allowable Values: \emph{Up}, \emph{Down}
+  
+\item TriggerPrice: Determine the value of the underlying for a trigger event. 
+
+  Allowable Values: any real number
+  
+\item ExpiryDate: The date on which the option expires and the payoff is computed.
+
+  Allowable Values: any valid date before the SettlementDate
+
+\item SettlementDate: The date on which the option payoff is settled. The SettlementDate is used unadjusted
+  as given. 
+
+  Allowable Values: any valid date greater or equal to the exercise date.
+
+\item Premium: The option premium. Defaults to $0$.
+
+  Allowable Values: any real number.
+
+\item PremiumDate: The date on which the option premium is paid.
+
+  Allowable Values: any valid date.
+
+\item ObservationDates: The set of dates on which the underlying index level is observed to determine whether the strike reset event is triggered or not.
+
+  Allowable Values: any valid dates schedule (see \ref{ss:schedule_data}).
+
+
+
+
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <EquityStrikeResettableOptionData>
+		<LongShort>Long</LongShort>
+		<OptionType>Put</OptionType>
+		<Currency>USD</Currency>
+		<Strike>3500</Strike>
+		<ResetStrike>3650</ResetStrike>
+		<Quantity>10000</Quantity>
+		<TriggerType>Up</TriggerType>
+		<TriggerPrice>4000</TriggerPrice>
+		<SettlementDate>2021-06-25</SettlementDate>
+		<ExpiryDate>2021-06-21</ExpiryDate>
+		<PremiumDate>2021-06-25</PremiumDate>
+		<Premium>100</Premium>
+		<Underlying>
+			<Type>Equity</Type>
+			<Name>RIC:.SPX</Name>
+		</Underlying>
+		<ObservationDates>
+			<Dates>
+				<Dates>
+					<Date>2021-04-26</Date>
+					<Date>2021-05-24</Date>
+					<Date>2021-06-21</Date>
+				</Dates>
+			</Dates>
+		</ObservationDates>
+	</EquityStrikeResettableOptionData>
+\end{minted}
+\caption{Strike Resettable Option data (Equity Underlying)}
+\label{lst:strikeresettableoption_data}
+\end{listing}

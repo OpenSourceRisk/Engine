@@ -32,6 +32,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
+#include <ql/math/interpolations/forwardflatinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <qle/math/flatextrapolation.hpp>
@@ -158,6 +159,8 @@ template <template <class> class CurveType, typename... Args> void CommodityCurv
          commodityPriceCurve_ = QuantLib::ext::make_shared<CurveType<QuantExt::HermiteFlat>>(args...);
     } else if (interpolationMethod_ == "BackwardFlat") {
         commodityPriceCurve_ = QuantLib::ext::make_shared<CurveType<QuantLib::BackwardFlat>>(args...);
+    } else if (interpolationMethod_ == "ForwardFlat") {
+        commodityPriceCurve_ = QuantLib::ext::make_shared<CurveType<QuantLib::ForwardFlat>>(args...);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }

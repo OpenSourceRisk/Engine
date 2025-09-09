@@ -53,7 +53,7 @@ CamAmcBondEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
-        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
         parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
         parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
         parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
@@ -62,8 +62,8 @@ CamAmcBondEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId,
-                                    const string& securityId, const string& referenceCurveId) {
+CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+                                    const string& referenceCurveId, const string& incomeCurveId) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 

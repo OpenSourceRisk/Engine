@@ -361,7 +361,7 @@
 			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1_FWDEXP_20251220</SpreadQuote>
 			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1_FWDEXP_20251220</RecoveryRateQuote>
 			<PriceQuote>BOND/PRICE/SECURITY_1_FWDEXP_20251220</PriceQuote>
-			<ConversionFactor>BOND/CONVERSION_FACTOR/SECURITY_1_FWDEXP_20251220</ConversionFactor>
+			<ConversionFactor>BOND_FUTURE/CONVERSION_FACTOR/SECURITY_1/DUMMY_FUTURE_FWDEXP_20251220</ConversionFactor>
 		</Security>
 		<Security>
 			<CurveId>SECURITY_1_cutted</CurveId>

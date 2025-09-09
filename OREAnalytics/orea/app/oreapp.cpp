@@ -877,6 +877,11 @@ void OREAppInputParameters::loadParameters() {
     if (params_->has("setup", "marketDataLoaderInput"))
         setMarketDataLoaderInput(params_->get("setup", "marketDataLoaderInput"));
 
+    tmp = params_->get("setup", "enableScenarioInformation", false);
+    if (tmp != ""){
+        ScenarioInformation::instance().enable(ore::data::parseBool(tmp));
+    }
+
     /*************
      * NPV
      *************/
@@ -1708,11 +1713,11 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMporOverlappingPeriods(parseBool(tmp));
 
-        tmp = params_->get("correlation", "covarianceInputFile", false);
+        tmp = params_->get("correlation", "correlationInputFile", false);
         if (tmp != "") {
-            std::string covFile = (inputPath_ / tmp).generic_string();
-            LOG("Load Correlation Data from file " << covFile);
-            setCorrelationDataFromFile(covFile);
+            std::string corrFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Correlation Data from file " << corrFile);
+            setCorrelationDataFromFile(corrFile);
         }
     }
 
@@ -1747,6 +1752,11 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA");
+
+    tmp = params_->get("xva", "generateCorrelations", false);
+    if (!tmp.empty()) {
+        generateCorrelations_ = parseBool(tmp);
+    }
 
     tmp = params_->get("pfe", "active", false);
     if (!tmp.empty() && parseBool(tmp))
@@ -1958,6 +1968,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false);
+        if (!tmp.empty())
+            setXvaCgRegressionReportTimeStepsDynamicIM(parseListOfValues<Size>(tmp, parseInteger));
 
         tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
         if (!tmp.empty())
@@ -2368,6 +2382,38 @@ void OREAppInputParameters::loadParameters() {
         LOG("MktCube loading done");
     }
 
+    tmp = params_->get("xva", "marketConfigFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        string file = (inputPath_ / tmp).generic_string();
+        LOG("Loading sensitivity scenario sim market parameters from file" << file);
+        setSensiSimMarketParamsFromFile(file);
+    } else {
+        WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+    }
+    tmp = params_->get("xva", "sensitivityConfigFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        string file = (inputPath_ / tmp).generic_string();
+        LOG("Load sensitivity scenario data from file" << file);
+        setSensiScenarioDataFromFile(file);
+    } else {
+        WLOG("Sensitivity scenario data not loaded");
+    }
+    tmp = params_->get("xva", "historicalScenarioFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
+        setScenarioReader(scenarioFile);
+    }
+
+    tmp = params_->get("xva", "historicalPeriod", false);
+    if (tmp != "" && generateCorrelations_)
+        setBenchmarkVarPeriod(tmp);
+    tmp = params_->get("xva", "mporDays", false);
+    if (tmp != "")
+        setMporDays(parseInteger(tmp));
+    tmp = params_->get("xva", "mporCalendar", false);
+    if (tmp != "" && generateCorrelations_)
+        setMporCalendar(tmp);
+
     tmp = params_->get("xva", "flipViewXVA", false);
     if (tmp != "")
         setFlipViewXVA(parseBool(tmp));
@@ -2622,6 +2668,13 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "firstMporCollateralAdjustment", false);
     if (tmp != "") {
         setfirstMporCollateralAdjustment(parseBool(tmp));
+    }
+
+    tmp = params_->get("xva", "correlationInputFile", false);
+    if (tmp != "") {
+        std::string corrFile = (inputPath_ / tmp).generic_string();
+        LOG("Loading correlation from file" << corrFile);
+        setCorrelationDataFromFile(corrFile);
     }
 
     /*************

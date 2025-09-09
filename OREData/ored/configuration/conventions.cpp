@@ -32,6 +32,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace QuantLib;
@@ -226,11 +227,11 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) const {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index)
-    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM) {}
+    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM, std::string()) {}
 
 FutureConvention::FutureConvention(const string& id, const string& index,
                                    const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                                   const DateGenerationRule dateGenerationRule)
+                                   const DateGenerationRule dateGenerationRule, const string& calendar)
     : Convention(id, Type::Future), strIndex_(index),
       overnightIndexFutureNettingType_(overnightIndexFutureNettingType) {
     parseIborIndex(strIndex_);
@@ -241,13 +242,15 @@ void FutureConvention::fromXML(XMLNode* node) {
     type_ = Type::Future;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
-    parseIborIndex(strIndex_);
+    auto tmpIndex = parseIborIndex(strIndex_);
     string nettingTypeStr = XMLUtils::getChildValue(node, "OvernightIndexFutureNettingType", false);
     overnightIndexFutureNettingType_ =
         nettingTypeStr.empty() ? RateAveraging::Type::Compound : parseOvernightIndexFutureNettingType(nettingTypeStr);
     string dateGenerationStr = XMLUtils::getChildValue(node, "DateGenerationRule", false);
     dateGenerationRule_ =
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
+    strCalendar_ = XMLUtils::getChildValue(node, "Calendar", false);
+    calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
 XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
@@ -257,6 +260,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "OvernightIndexFutureNettingType", ore::data::to_string(overnightIndexFutureNettingType_));
     XMLUtils::addChild(doc, node, "DateGenerationRule", ore::data::to_string(dateGenerationRule_));
+    if (!strCalendar_.empty())
+        XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
     return node;
 }
 
@@ -2850,10 +2855,10 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         add(convention);
         used_.insert(id);
     } catch (exception& e) {
-        WLOG("Convention '" << id << "' could not be built: " << e.what());
-        QL_FAIL("Convention '" << id << "' could not be built: " << e.what());
+        auto err = "Convention '" + id + "' could not be built.";
+        StructuredConventionErrorMessage(id, err, e.what()).log();
+        QL_FAIL(err << e.what());
     }
-
     return convention;
 }
 

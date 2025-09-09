@@ -122,7 +122,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSecuritySpreadsSimulate(false);
     setSimulateFxSpots(true);
     setSimulateCorrelations(false);
-    setSimulateConversionFactors(false);
 
     // set default smile dynamics
     setSwapVolSmileDynamics("", "StickyStrike");
@@ -531,10 +530,6 @@ void ScenarioSimMarketParameters::setCprs(const vector<string>& names) {
     addParamsName(RiskFactorKey::KeyType::CPR, names);
 }
 
-void ScenarioSimMarketParameters::setConversionFactors(const vector<string>& names) {
-    addParamsName(RiskFactorKey::KeyType::ConversionFactor, names);
-}
-
 void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::DividendYield, simulate);
 }
@@ -613,10 +608,6 @@ void ScenarioSimMarketParameters::setSimulateCorrelations(bool simulate) {
 
 void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
-}
-
-void ScenarioSimMarketParameters::setSimulateConversionFactors(bool simulate) {
-    setParamsSimulate(RiskFactorKey::KeyType::ConversionFactor, simulate);
 }
 
 void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
@@ -1443,10 +1434,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setSecuritySpreadsSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
         vector<string> securities = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
         setSecurities(securities);
-
-        // conversion factors can be treated separately, for now they are driven by the security list
-        setSimulateConversionFactors(false); // stays on default
-        setConversionFactors(securities);
     }
 
     DLOG("Loading CPRs");

@@ -15,11 +15,15 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <boost/make_shared.hpp>
+
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
@@ -28,11 +32,12 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
-    const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg)
+    const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg, const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
-    paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
-    fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
-    floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg){
+      paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
+      fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
+      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg),
+      pillarChoice_(pillarChoice) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -85,30 +90,10 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
 
-    /* May need to adjust latestDate_ if you are projecting libor based
-        on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        Size numCashflows = swap_->leg(1).size();
-        Date endDate = latestDate_;
-        if (numCashflows > 0) {
-            for(Size i = numCashflows; i > 0; i--) {
-                Size pos = i - 1;
-                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[pos]);
-                if (!lastFloating)
-                    continue;
-                else {
-                    Date fixingValueDate = index_->valueDate(lastFloating->fixingDate());
-                    endDate = index_->maturityDate(fixingValueDate);
-                    Date endValueDate = index_->maturityDate(fixingValueDate);
-                    latestDate_ = std::max(latestDate_, endValueDate);
-                    break;
-                }
-            }
-        }
-    }
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {false, false});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

@@ -320,7 +320,13 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     \item the observation dates (type 02 accumulator, i.e.\ PricingDates are given)
     \item the observation dates (type 01 accumulator, i.e.\ no PricingDates are given), if barrier style is European
     \item from the start date to the first observation date and between the observation dates on a continuous basis
-      (type 01 accumulator), if barrier style is American
+      (type 01 accumulator), if barrier style is American.
+    \item StrictComparison [Optional]: \emph{0}, \emph{1}. Defaults to \emph{0}. Determines how the barrier is checked as per: 
+    
+     \emph{0}: the barrier checks use $<=$, $>=$.
+
+     \emph{1}: the barrier checks use strict comparison $<$ and $>$.
+
   \end{itemize}
 
     For \emph{type 01 accumulators} (no pricing dates are given), the FixingFloor guarantees a specific number of

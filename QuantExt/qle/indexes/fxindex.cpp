@@ -294,8 +294,9 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                                                          << ")");
 
     Real fixing = timeSeries()[fixingDate];
-    if (fixing != Null<Real>())
+    if (fixing != Null<Real>()) {
         return fixing;
+    }
 
     if (fixingTriangulation_) {
         // check reverse

@@ -47,10 +47,11 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
                                                    const QuantLib::ext::shared_ptr<IborIndex>& baseIndex,
                                                    const QuantLib::ext::shared_ptr<IborIndex>& targetIndex,
                                                    const Period& baseRateComputationPeriod,
-                                                   const Period& targetRateComputationPeriod)
+                                                   const Period& targetRateComputationPeriod,
+                                                   double scalingFactor)
     : OptionletVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseIndex_(baseIndex), targetIndex_(targetIndex), baseRateComputationPeriod_(baseRateComputationPeriod),
-      targetRateComputationPeriod_(targetRateComputationPeriod) {
+      targetRateComputationPeriod_(targetRateComputationPeriod), scalingFactor_(scalingFactor) {
 
     QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
     QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
@@ -60,6 +61,7 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
     QL_REQUIRE((!isOis(baseIndex_) && !isBMA(baseIndex_)) || baseRateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: base index is OIS or BMA/SIFMA ("
                    << baseIndex->name() << "), so baseRateComputationPeriod must be given and != 0D.");
+    QL_REQUIRE(scalingFactor_ > 0.0, "ProxyOptionletVolatility: scaling factor (" << scalingFactor_ << ") must be positive.");
     registerWith(baseVol_);
     registerWith(baseIndex_);
     registerWith(targetIndex_);
@@ -106,7 +108,7 @@ QuantLib::ext::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionIm
 }
 
 Volatility ProxyOptionletVolatility::volatilityImpl(Time optionTime, Rate strike) const {
-    return smileSection(optionTime)->volatility(strike);
+    return smileSection(optionTime)->volatility(strike) * scalingFactor_;
 }
 
 } // namespace QuantExt
