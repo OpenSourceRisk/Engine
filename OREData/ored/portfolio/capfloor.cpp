@@ -574,9 +574,9 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     additionalData_["notionalCurrency"] = legData_.currency();
     for (Size j = 0; !legs_.empty() && j < legs_[0].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[0][j];
-        // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        // pick flow with the earliest future accrual period end date on this leg
+        if (coupon->accrualEndDate() > asof) {
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -629,11 +629,11 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     try {
         if (!legs_.empty()) {
             for (const auto& flow : legs_[0]) {
-                // pick flow with earliest future payment date on this leg
-                if (flow->date() > asof) {
+                QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+                // pick flow with the earliest future accrual period end date on this leg
+                if (coupon->accrualEndDate() > asof) {
                     amounts.push_back(flow->amount());
                     paymentDates.push_back(flow->date());
-                    QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
                     if (coupon) {
                         currentNotionals.push_back(coupon->nominal());
                         rates.push_back(coupon->rate());
