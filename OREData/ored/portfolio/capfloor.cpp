@@ -576,7 +576,7 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[0][j];
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
         // pick flow with the earliest future accrual period end date on this leg
-        if (coupon->accrualEndDate() > asof) {
+        if ((coupon && coupon->accrualEndDate() > asof) || flow->date() > asof) {
             if (coupon) {
                 Real currentNotional = 0;
                 try {
