@@ -345,6 +345,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
             QuantLib::ext::shared_ptr<FXLinkedCashFlow> cf =
                 QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(legs_[i][j]);
             additionalData_["fxIndexFixingDate[" + label + "]"] = cf->fxFixingDate();
+            additionalData_["fxIndexFixing[" + label + "]"] = cf->fxRate();
         }
         additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
     }
