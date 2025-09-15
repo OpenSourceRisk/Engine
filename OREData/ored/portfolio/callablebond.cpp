@@ -323,12 +323,12 @@ BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFac
     static long id = 0;
     CallableBondData data(BondData(securityId, 1.0));
     data.populateFromBondReferenceData(referenceData);
-    ore::data::CallableBond bond(Envelope(), data);
-    bond.id() = "CallableBondBuilder_" + securityId + "_" + std::to_string(id++);
-    bond.build(engineFactory);
+    auto bond = QuantLib::ext::make_shared<ore::data::CallableBond>(Envelope(), data);
+    bond->id() = "CallableBondBuilder_" + securityId + "_" + std::to_string(id++);
+    bond->build(engineFactory);
 
-    QL_REQUIRE(bond.instrument(), "CallableBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(bond->instrument(), "CallableBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
         qlBond,
