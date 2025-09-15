@@ -409,7 +409,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
+    }/*else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
@@ -441,7 +441,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    } else {
+    }*/else {
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
             runningSpread = quote.runningSpread;
