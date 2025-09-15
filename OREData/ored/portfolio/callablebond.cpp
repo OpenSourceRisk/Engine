@@ -336,6 +336,8 @@ BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFac
 
     Result res;
     res.bond = qlBond;
+    res.trade = bond;
+    res.bondData = data.bondData();
     if (data.bondData().isInflationLinked()) {
         res.isInflationLinked = true;
     }
@@ -346,6 +348,7 @@ BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFac
     res.creditGroup = data.bondData().creditGroup();
     res.priceQuoteMethod = data.bondData().priceQuoteMethod();
     res.priceQuoteBaseValue = data.bondData().priceQuoteBaseValue();
+    res.quotedDirtyPrices = data.bondData().quotedDirtyPrices();
     return res;
 }
 
