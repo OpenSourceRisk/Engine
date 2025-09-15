@@ -1162,7 +1162,7 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
       strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
-      strFloatIndexIsResettable_(strFloatIndexIsResettable_), strIncludeSpread_(strIncludeSpread),
+      strFloatIndexIsResettable_(strFloatIndexIsResettable), strIncludeSpread_(strIncludeSpread),
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
       strIsAveraged_(strIsAveraged) {
 
