@@ -146,6 +146,7 @@
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/callablebond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -211,6 +212,8 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/callablebond.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cashposition.hpp>

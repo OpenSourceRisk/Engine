@@ -85,6 +85,7 @@ The parameters have the following meaning:
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \end{itemize}
 
 \begin{longlisting}
@@ -99,6 +100,7 @@ The parameters have the following meaning:
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="IncludePastCashflows">true</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -147,6 +149,133 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product BondOption, Model Black, Engine BlackBondOptionEngine}
 \label{lst:peconfig_BondOption_Black_BlackBondOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: CallableBond}
+%--------------------------------------------------------
+
+Used by trade type: CallableBond
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/Grid
+\item LGM/FD
+\end{itemize}
+
+Engine description:
+
+LGM/Grid builds a NumericLgmCallableBondEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_CallableBond_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBOnd">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine Grid}
+\label{lst:peconfig_CallableBond_LGM_Grid}
+\end{longlisting}
+
+LGM/FD builds a NumericLgmCallableBondEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_CallableBond_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBond">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="StateGridPoints">64</Parameter>
+        <Parameter name="TimeStepsPerYear">24</Parameter>
+        <Parameter name="MesherEpsilon">1E-4</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine FD}
+\label{lst:peconfig_CallableBond_LGM_FD}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -361,7 +490,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaptionEngine}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_EuropeanSwaption_LGM_Grid}
 
@@ -429,6 +558,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -450,6 +581,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
         <EngineParameters>
@@ -592,7 +724,7 @@ Available Model/Engine pairs:
 
 Engine description:
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_BermudanSwaption_LGM_Grid}
 
@@ -608,6 +740,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -627,6 +761,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -657,6 +792,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -678,6 +815,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
@@ -817,8 +955,11 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -838,6 +979,8 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
@@ -852,7 +995,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_AmericanSwaption_LGM_FD}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and American exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_AmericanSwaption_LGM_Grid}. Not recommended due to inferior performance.
 
@@ -868,6 +1011,9 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -887,6 +1033,8 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -3913,8 +4061,8 @@ The parameters have the following meaning:
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}

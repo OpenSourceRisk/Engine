@@ -720,7 +720,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
-        bond->instrument() && bond->instrument()->qlInstrument(),
+        qlBond,
         "ConvertibleBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
         "(either the instrument wrapper or the ql instrument is null)");
 

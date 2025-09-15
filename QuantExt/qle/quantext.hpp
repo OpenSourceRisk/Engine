@@ -178,6 +178,7 @@
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/callablebond.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashposition.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
@@ -419,6 +420,7 @@
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
 #include <qle/pricingengines/discretizedconvertible.hpp>
 #include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/fdcallablebondevents.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
@@ -443,6 +445,7 @@
 #include <qle/pricingengines/nullamccalculator.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
@@ -513,6 +516,7 @@
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/effectivebonddiscountcurve.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityannounceddividendcurve.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
