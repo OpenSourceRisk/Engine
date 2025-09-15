@@ -42,15 +42,17 @@ public:
     //! \name Constructors
     //@{
     //! Detailed constructor
-    CrossCcyFixFloatSwap(Type type, QuantLib::Real fixedNominal, const QuantLib::Currency& fixedCurrency,
-                         const QuantLib::Schedule& fixedSchedule, QuantLib::Rate fixedRate,
-                         const QuantLib::DayCounter& fixedDayCount, QuantLib::BusinessDayConvention fixedPaymentBdc,
-                         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar,
-                         QuantLib::Real floatNominal, const QuantLib::Currency& floatCurrency,
-                         const QuantLib::Schedule& floatSchedule,
-                         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
-                         QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
-                         const QuantLib::Calendar& floatPaymentCalendar);
+    CrossCcyFixFloatSwap(
+        Type type, QuantLib::Real fixedNominal, const QuantLib::Currency& fixedCurrency,
+        const QuantLib::Schedule& fixedSchedule, QuantLib::Rate fixedRate, const QuantLib::DayCounter& fixedDayCount,
+        QuantLib::BusinessDayConvention fixedPaymentBdc, QuantLib::Natural fixedPaymentLag,
+        const QuantLib::Calendar& fixedPaymentCalendar, QuantLib::Real floatNominal,
+        const QuantLib::Currency& floatCurrency, const QuantLib::Schedule& floatSchedule,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+        QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
+        const QuantLib::Calendar& floatPaymentCalendar, boost::optional<bool> floatIncludeSpread = boost::none,
+        boost::optional<Period> floatLookback = boost::none, boost::optional<Size> floatFixingDays = boost::none,
+        boost::optional<Size> floatRateCutoff = boost::none, boost::optional<bool> floatIsAveraged = boost::none);
     //@}
 
     //! \name Instrument interface
@@ -80,6 +82,11 @@ public:
     QuantLib::BusinessDayConvention floatPaymentBdc() const { return floatPaymentBdc_; }
     QuantLib::Natural floatPaymentLag() const { return floatPaymentLag_; }
     const QuantLib::Calendar& floatPaymentCalendar() const { return floatPaymentCalendar_; }
+    boost::optional<bool> floatIncludeSpread() const { return floatIncludeSpread_; }
+    boost::optional<Period> floatLookback() const { return floatLookback_; }
+    boost::optional<Size> floatFixingDays() const { return floatFixingDays_; }
+    boost::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
+    boost::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
     //@}
 
     //! \name Additional interface
@@ -123,6 +130,11 @@ private:
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
+    boost::optional<bool> floatIncludeSpread_;
+    boost::optional<Period> floatLookback_;
+    boost::optional<Size> floatFixingDays_;
+    boost::optional<Size> floatRateCutoff_;
+    boost::optional<bool> floatIsAveraged_;
 
     mutable QuantLib::Rate fairFixedRate_;
     mutable QuantLib::Spread fairSpread_;

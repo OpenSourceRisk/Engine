@@ -22,6 +22,8 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 namespace QuantExt {
 
@@ -30,22 +32,51 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     const DayCounter& fixedDayCount, BusinessDayConvention fixedPaymentBdc, Natural fixedPaymentLag,
     const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
     const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
-    BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar)
+    BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
+    boost::optional<bool> floatIncludeSpread, boost::optional<Period> floatLookback,
+    boost::optional<Size> floatFixingDays, boost::optional<Size> floatRateCutoff, boost::optional<bool> floatIsAveraged)
     : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
       floatNominal_(floatNominal), floatCurrency_(floatCurrency), floatSchedule_(floatSchedule),
       floatIndex_(floatIndex), floatSpread_(floatSpread), floatPaymentBdc_(floatPaymentBdc),
-      floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar) {
+      floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
+      floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
+      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged) {
 
     // Build the float leg
-    Leg floatLeg = IborLeg(floatSchedule_, floatIndex_)
+    Leg floatLeg;
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(floatIndex_)) {
+        if (floatIsAveraged_ && *floatIsAveraged_) {
+            floatLeg = QuantExt::AverageONLeg(floatSchedule_, on)
+                           .withNotional(floatNominal_)
+                           .withSpread(floatSpread_)
+                           //??.withGearing(floatGearing_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0);
+            //??.withTelescopicValueDates(telescopicValueDates_);
+        } else {
+            floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
+                           .withNotionals(floatNominal_)
+                           .withSpreads(floatSpread_)
+                           //??.withGearings(floatGearing_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0);
+            //??.withTelescopicValueDates(telescopicValueDates_);
+        }
+    } else {
+        floatLeg = IborLeg(floatSchedule_, floatIndex_)
                        .withNotionals(floatNominal_)
                        .withSpreads(floatSpread_)
                        .withPaymentAdjustment(floatPaymentBdc_)
                        .withPaymentLag(floatPaymentLag_)
                        .withPaymentCalendar(floatPaymentCalendar_);
-
+    }
     // Register with each floating rate coupon
     for (Leg::const_iterator it = floatLeg.begin(); it < floatLeg.end(); ++it)
         registerWith(*it);

@@ -53,7 +53,10 @@ public:
         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar, const QuantLib::Currency& floatCurrency,
         const QuantLib::Schedule& floatSchedule, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         const QuantLib::BusinessDayConvention& floatPaymentBdc, QuantLib::Natural floatPaymentLag, const QuantLib::Calendar& floatPaymentCalendar,
-        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true);
+        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true,
+        boost::optional<bool> floatIncludeSpread = boost::none, boost::optional<Period> floatLookback = boost::none,
+        boost::optional<Size> floatFixingDays = boost::none, boost::optional<Size> floatRateCutoff = boost::none,
+        boost::optional<bool> floatIsAveraged = boost::none);
 
     //@}
     //! \name Instrument interface
@@ -76,6 +79,11 @@ public:
     const QuantLib::Schedule& floatSchedule() const { return floatSchedule_; }
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
     QuantLib::Spread floatSpread() const { return floatSpread_; }
+    boost::optional<bool> floatIncludeSpread() const { return floatIncludeSpread_; }
+    boost::optional<Period> floatLookback() const { return floatLookback_; }
+    boost::optional<Size> floatFixingDays() const { return floatFixingDays_; }
+    boost::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
+    boost::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
     //@}
 
     //! \name Additional interface
@@ -123,6 +131,11 @@ private:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool resetsOnFloatLeg_;
     bool receiveFixed_;
+    boost::optional<bool> floatIncludeSpread_;
+    boost::optional<Period> floatLookback_;
+    boost::optional<Size> floatFixingDays_;
+    boost::optional<Size> floatRateCutoff_;
+    boost::optional<bool> floatIsAveraged_;
 
     mutable QuantLib::Spread fairSpread_;
     mutable QuantLib::Rate fairFixedRate_;

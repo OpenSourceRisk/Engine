@@ -1155,12 +1155,16 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& id, const string& settlementDays, const string& settlementCalendar,
     const string& settlementConvention, const string& fixedCurrency, const string& fixedFrequency,
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
-    const std::string& strIsResettable, const std::string& strFloatIndexIsResettable)
+    const std::string& strIsResettable, const std::string& strFloatIndexIsResettable, const string& strIncludeSpread,
+    const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
+    const string& strIsAveraged)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
-      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom),
-      strIsResettable_(strIsResettable), strFloatIndexIsResettable_(strFloatIndexIsResettable){
+      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
+      strFloatIndexIsResettable_(strFloatIndexIsResettable_), strIncludeSpread_(strIncludeSpread),
+      strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
+      strIsAveraged_(strIsAveraged) {
 
     build();
 }
@@ -1177,6 +1181,16 @@ void CrossCcyFixFloatSwapConvention::build() {
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
     floatIndexIsResettable_ = strFloatIndexIsResettable_.empty() ? true : parseBool(strFloatIndexIsResettable_);
+    if (!strIncludeSpread_.empty())
+        includeSpread_ = parseBool(strIncludeSpread_);
+    if (!strLookback_.empty())
+        lookback_ = parsePeriod(strLookback_);
+    if (!strFixingDays_.empty())
+        fixingDays_ = parseInteger(strFixingDays_);
+    if (!strRateCutoff_.empty())
+        rateCutoff_ = parseInteger(strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        isAveraged_ = parseBool(strIsAveraged_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -1198,6 +1212,15 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
+
+    
+    // OIS specific conventions
+
+    strIncludeSpread_ = XMLUtils::getChildValue(node, "SpreadIncludeSpread", false);
+    strLookback_ = XMLUtils::getChildValue(node, "SpreadLookback", false);
+    strFixingDays_ = XMLUtils::getChildValue(node, "SpreadFixingDays", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "SpreadRateCutoff", false);
+    strIsAveraged_ = XMLUtils::getChildValue(node, "SpreadIsAveraged", false);
 
     build();
 }
@@ -1221,7 +1244,16 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
     if (!strFloatIndexIsResettable_.empty())
         XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
-
+    if (!strIncludeSpread_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIncludeSpread", strIncludeSpread_);
+    if (!strLookback_.empty())
+        XMLUtils::addChild(doc, node, "SpreadLookback", strLookback_);
+    if (!strFixingDays_.empty())
+        XMLUtils::addChild(doc, node, "SpreadFixingDays", strFixingDays_);
+    if (!strRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
     return node;
 }
 
