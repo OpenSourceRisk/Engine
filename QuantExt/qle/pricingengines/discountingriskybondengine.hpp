@@ -82,11 +82,16 @@ public:
 protected:
     struct BondNPVCalculationResults {
 	// always provided in calculateNpv()
-        Real npv;
-        Real compoundFactorSettlement;
-        Real cashflowsBeforeSettlementValue;
-        Real accruedAmountSettlement;
+        Real npv = 0.0;
+        Real compoundFactorSettlement = 1.0;
+        Real cashflowsBeforeSettlementValue = 0.0;
+        Real accruedAmountSettlement = 0.0;
 	// only provided in calculateNpv() when additionalResults = true
+        std::vector<CashFlowResults> cashflowResults;
+    };
+
+    struct RecoveryContribution {
+        Real value = 0.0;
         std::vector<CashFlowResults> cashflowResults;
     };
 
@@ -99,6 +104,12 @@ protected:
     BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate,
                                            boost::optional<bool> includeSettlementDateFlows,
                                            const bool conditionalOnSurvival, const bool additionalResults) const;
+
+    DiscountingRiskyBondEngine::RecoveryContribution
+    recoveryContribution(const QuantLib::Date& npvDate, const Real dfNpv, const Real spNpv, const Real effRecovery,
+                         const QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure>& effCreditCurve,
+                         const bool additionalResults, const Real nominal, const QuantLib::Date& startDate,
+                         const QuantLib::Date& endDate) const;
 
     Handle<YieldTermStructure> discountCurve_;
     mutable Handle<DefaultProbabilityTermStructure> defaultCurve_;
