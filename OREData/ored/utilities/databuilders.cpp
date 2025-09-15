@@ -43,6 +43,7 @@
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/callablebond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -106,6 +107,7 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cashposition.hpp>
@@ -266,10 +268,12 @@ void dataBuilders() {
     ORE_REGISTER_REFERENCE_DATUM("Equity", EquityReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("BondBasket", BondBasketReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("ConvertibleBond", ConvertibleBondReferenceDatum, false)
+    ORE_REGISTER_REFERENCE_DATUM("CallableBond", CallableBondReferenceDatum, false)
     ORE_REGISTER_REFERENCE_DATUM("CBO", CboReferenceDatum, false)
 
     ORE_REGISTER_BOND_BUILDER("Bond", VanillaBondBuilder, false)
     ORE_REGISTER_BOND_BUILDER("ConvertibleBond", ConvertibleBondBuilder, false)
+    ORE_REGISTER_BOND_BUILDER("CallableBond", CallableBondBuilder, false)
 
     ORE_REGISTER_TRADE_BUILDER("CashPosition", CashPosition, false)
     ORE_REGISTER_TRADE_BUILDER("CrossCurrencySwap", CrossCurrencySwap, false)
@@ -341,6 +345,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("EquityOptionPosition", EquityOptionPosition, false)
     ORE_REGISTER_TRADE_BUILDER("Ascot", Ascot, false)
     ORE_REGISTER_TRADE_BUILDER("ConvertibleBond", ConvertibleBond, false)
+    ORE_REGISTER_TRADE_BUILDER("CallableBond", CallableBond, false)
 
     ORE_REGISTER_TRADE_BUILDER("ScriptedTrade", ScriptedTrade, false)
     ORE_REGISTER_TRADE_BUILDER("Autocallable_01", Autocallable_01, false)
@@ -533,6 +538,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AscotIntrinsicEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmFdEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmGridEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)
@@ -570,6 +577,7 @@ void dataBuilders() {
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("EquityOptionPosition", EquityOptionPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("BondPosition", BondPositionTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("Derivative", DerivativeTrsUnderlyingBuilder, false)
+    ORE_REGISTER_TRS_UNDERLYING_BUILDER("CallableBond", CallableBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("ConvertibleBond", ConvertibleBondTrsUnderlyingBuilder, false)
     ORE_REGISTER_TRS_UNDERLYING_BUILDER("CBO", CBOTrsUnderlyingBuilder, false)
 
