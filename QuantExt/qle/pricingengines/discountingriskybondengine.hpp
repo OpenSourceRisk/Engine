@@ -106,7 +106,7 @@ protected:
                                            const bool conditionalOnSurvival, const bool additionalResults) const;
 
     DiscountingRiskyBondEngine::RecoveryContribution
-    recoveryContribution(const QuantLib::Date& npvDate, const Real dfNpv, const Real spNpv, const Real effRecovery,
+    recoveryContribution(const Real dfNpv, const Real spNpv, const Real effRecovery,
                          const QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure>& effCreditCurve,
                          const bool additionalResults, const Real nominal, const QuantLib::Date& startDate,
                          const QuantLib::Date& endDate) const;
