@@ -103,14 +103,12 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
         auto mdqt = md->quoteType();
 
         // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
-        if (type == DCCT::SpreadCDS && mdit == MDIT::CDS &&
+        if (((type == DCCT::SpreadCDS && mdit == MDIT::CDS)||(type == DCCT::ConvSpreadCDS && mdit == MDIT::CDS)) &&
             (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
 
             auto q = QuantLib::ext::dynamic_pointer_cast<CdsQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CdsQuote");
             if (wc.matches(q->name())) {
-                QL_REQUIRE(mdqt != MDQT::CONV_CREDIT_SPREAD, 
-                   "Conventional credit spread are currently not supported for default curves");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
             }
@@ -205,7 +203,7 @@ set<QuoteData> getConfiguredQuotes(const std::string& curveID, const DefaultCurv
 
     using DCCT = DefaultCurveConfig::Config::Type;
     auto type = config.type();
-    QL_REQUIRE(type == DCCT::SpreadCDS || type == DCCT::Price || type == DCCT::HazardRate,
+    QL_REQUIRE(type == DCCT::SpreadCDS || type == DCCT::Price || type == DCCT::HazardRate || type == DCCT::ConvSpreadCDS,
                "getConfiguredQuotes expects a curve type of SpreadCDS, Price or HazardRate.");
     QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << curveID);
 
@@ -409,7 +407,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    }/*else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
+    }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
@@ -427,7 +425,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter(), CreditDefaultSwap::PricingModel::ISDA));
                 runningSpread = config.runningSpread();
                 helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
@@ -441,7 +439,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    }*/else {
+    }else {
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
             runningSpread = quote.runningSpread;
