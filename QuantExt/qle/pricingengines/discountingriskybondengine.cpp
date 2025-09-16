@@ -113,7 +113,8 @@ void DiscountingRiskyBondEngine::calculate() const {
 std::pair<Real, Real> DiscountingRiskyBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate,
                                                                const QuantLib::Date& settlementDate,
                                                                const bool conditionalOnSurvival,
-                                                               std::vector<CashFlowResults>* const cfResults) const {
+                                                               std::vector<CashFlowResults>* const cfResults,
+                                                               QuantLib::Leg* const expectedCashflows) const {
     auto res = calculateNpv(forwardNpvDate, settlementDate, includeSettlementDateFlows_, conditionalOnSurvival,
                             cfResults != nullptr);
     if (cfResults != nullptr)

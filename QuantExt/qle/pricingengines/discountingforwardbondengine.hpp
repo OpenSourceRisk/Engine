@@ -66,8 +66,8 @@ public:
 
     std::pair<QuantLib::Real, QuantLib::Real>
     forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
-                 const bool conditionalOnSurvival = true,
-                 std::vector<CashFlowResults>* const cfResults = nullptr) const override;
+                 const bool conditionalOnSurvival = true, std::vector<CashFlowResults>* const cfResults = nullptr,
+                 QuantLib::Leg* const expectedCashflows = nullptr) const override;
 
 private:
     Real calculateBondNpv(Date, Date) const;

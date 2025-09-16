@@ -18,16 +18,90 @@
 
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 
+#include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
+
 namespace QuantExt {
 
 std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
              const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
-             std::vector<CashFlowResults>* cfResults) {
+             std::vector<CashFlowResults>* cfResults, QuantLib::Leg* const expectedCashflows) {
+    instrument->recalculate();
+    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
+    QL_REQUIRE(fwdEngine, "QuantExt::forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+    return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, cfResults, expectedCashflows);
+}
+
+QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Real price,
+                     const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
+                     QuantLib::Frequency frequency, QuantLib::Date forwardDate, QuantLib::Date settlementDate,
+                     const bool conditionalOnSurvival, QuantLib::Real accuracy, QuantLib::Size maxIterations,
+                     QuantLib::Rate guess, QuantLib::Bond::Price::Type priceType) {
+
     instrument->recalculate();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
     QL_REQUIRE(fwdEngine, "forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
-    return fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, cfResults);
+
+    auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(instrument);
+    QL_REQUIRE(bond, "QuantExt::yield(): instrument can not be cast to Bond");
+
+    QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
+
+    if (forwardDate == QuantLib::Date())
+        forwardDate = today;
+
+    if (settlementDate == QuantLib::Date())
+        settlementDate = bond->settlementDate(forwardDate);
+
+    QL_REQUIRE(QuantLib::BondFunctions::isTradable(*bond, settlementDate), "QuantExt::yield(): non tradable at "
+                                                                               << settlementDate << " (maturity being "
+                                                                               << bond->maturityDate() << ")");
+
+    if (priceType == QuantLib::Bond::Price::Clean)
+        price += bond->accruedAmount(settlementDate);
+
+    price /= 100.0 / bond->notional(settlementDate);
+
+    QuantLib::Leg expectedCashflows;
+    fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, nullptr, &expectedCashflows);
+
+    QuantLib::NewtonSafe solver;
+    solver.setMaxEvaluations(maxIterations);
+    return QuantLib::CashFlows::yield<QuantLib::NewtonSafe>(solver, expectedCashflows, price, dayCounter, compounding,
+                                                            frequency, false, settlementDate, settlementDate, accuracy,
+                                                            guess);
+}
+
+QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Rate yield,
+                        const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
+                        QuantLib::Frequency frequency, QuantLib::Duration::Type type, QuantLib::Date forwardDate,
+                        QuantLib::Date settlementDate, const bool conditionalOnSurvival) {
+
+    instrument->recalculate();
+    auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
+    QL_REQUIRE(fwdEngine, "forwardPrice(): engine can not be cast to ForwardEnabledBondEngine");
+
+    auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(instrument);
+    QL_REQUIRE(bond, "QuantExt::yield(): instrument can not be cast to Bond");
+
+    QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
+
+    if (forwardDate == QuantLib::Date())
+        forwardDate = today;
+
+    if (settlementDate == QuantLib::Date())
+        settlementDate = bond->settlementDate(forwardDate);
+
+    QL_REQUIRE(QuantLib::BondFunctions::isTradable(*bond, settlementDate), "QuantExt::duration(): non tradable at "
+                                                                               << settlementDate << " (maturity being "
+                                                                               << bond->maturityDate() << ")");
+
+    QuantLib::Leg expectedCashflows;
+    fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, nullptr, &expectedCashflows);
+
+    QuantLib::InterestRate y(yield, dayCounter, compounding, frequency);
+    return QuantLib::CashFlows::duration(expectedCashflows, y, type, false, settlementDate);
 }
 
 } // namespace QuantExt

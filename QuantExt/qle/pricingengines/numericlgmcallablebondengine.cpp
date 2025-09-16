@@ -385,7 +385,8 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
 std::pair<Real, Real> NumericLgmCallableBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate,
                                                                  const QuantLib::Date& settlementDate,
                                                                  const bool conditionalOnSurvival,
-                                                                 std::vector<CashFlowResults>* const cfResults) const {
+                                                                 std::vector<CashFlowResults>* const cfResults,
+                                                                 QuantLib::Leg* const expectedCashflows) const {
 
     npvDate_ = forwardNpvDate;
     settlementDate_ = settlementDate;

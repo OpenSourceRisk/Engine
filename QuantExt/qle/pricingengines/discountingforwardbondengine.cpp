@@ -553,10 +553,9 @@ std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPre
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
-std::pair<QuantLib::Real, QuantLib::Real>
-DiscountingForwardBondEngine::forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
-                                           const bool conditionalOnSurvival,
-                                           std::vector<CashFlowResults>* const cfResults) const {
+std::pair<QuantLib::Real, QuantLib::Real> DiscountingForwardBondEngine::forwardPrice(
+    const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
+    std::vector<CashFlowResults>* const cfResults, QuantLib::Leg* const expectedCashflows) const {
     Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
     QL_REQUIRE(settlementDate == bondSettlementDate,
                "DiscountingForwardBondEngine::forwardPrice(): settlement date ("

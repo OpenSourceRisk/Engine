@@ -71,7 +71,8 @@ public:
     //! ForwardEnabledBondEngine interface
     std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
                                        const bool conditionalOnSurvival = true,
-                                       std::vector<CashFlowResults>* const cfResults = nullptr) const override;
+                                       std::vector<CashFlowResults>* const cfResults = nullptr,
+                                       QuantLib::Leg* const expectedCashflows = nullptr) const override;
 
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
