@@ -43,6 +43,7 @@ void VolatilityConfig::fromXMLNode(XMLNode* node) {
 
     calendarStr_ = XMLUtils::getChildValue(node, "Calendar", false);
     calendar_ = calendarStr_.empty() ? Calendar() : parseCalendar(calendarStr_);
+    
 }
 
 void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) const {
@@ -99,17 +100,26 @@ const std::string& CDSProxyVolatilityConfig::cdsVolatilityCurve() const { return
 
 void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
     VolatilityConfig::fromXMLNode(node);
+    volTypeStr_ = XMLUtils::getChildValue(node, "VolatilityType", false, "Lognormal");
+    if (volTypeStr_ == "Lognormal") {
+        volType_ = VolatilityType::Lognormal;
+    } else if (volTypeStr_ == "Normal") {
+        volType_ = VolatilityType::Normal;
+    } else if (volTypeStr_ == "ShiftedLognormal") {
+        volType_ = VolatilityType::ShiftedLognormal;
+    } else {
+        QL_FAIL("Volatility type " << volTypeStr_ << " is not supported;");
+    }
     string qType = XMLUtils::getChildValue(node, "QuoteType", false);
     if (qType == "ImpliedVolatility" || qType == "") {
-        string volType = XMLUtils::getChildValue(node, "VolatilityType", false);
-        if (volType == "Lognormal" || qType == "") {
+        if (volType_ == VolatilityType::Lognormal) {
             quoteType_ = MarketDatum::QuoteType::RATE_LNVOL;
-        } else if (volType == "ShiftedLognormal") {
+        } else if (volType_ == VolatilityType::ShiftedLognormal) {
             quoteType_ = MarketDatum::QuoteType::RATE_SLNVOL;
-        } else if (volType == "Normal") {
+        } else if (volType_ == VolatilityType::Normal) {
             quoteType_ = MarketDatum::QuoteType::RATE_NVOL;
         } else {
-            QL_FAIL("Volatility type " << volType << " is not supported;");
+            QL_FAIL("Volatility type " << volTypeStr_ << " is not supported;");
         }
     } else if (qType == "Premium") {
         quoteType_ = MarketDatum::QuoteType::PRICE;
@@ -122,24 +132,13 @@ void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
 
 void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) const {
     VolatilityConfig::toXMLNode(doc, node);
-
+    if (!volTypeStr_.empty())
+        XMLUtils::addChild(doc, node, "VolatilityType", volTypeStr_);
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
         XMLUtils::addChild(doc, node, "QuoteType", "Premium");
         XMLUtils::addChild(doc, node, "ExerciseType", ore::data::to_string(exerciseType_));
         return;
-    }
-
-    // Must be a volatility (or possibly fail)
-    XMLUtils::addChild(doc, node, "QuoteType", "ImpliedVolatility");
-    if (quoteType_ == MarketDatum::QuoteType::RATE_LNVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
-    } else if (quoteType_ == MarketDatum::QuoteType::RATE_SLNVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
-    } else if (quoteType_ == MarketDatum::QuoteType::RATE_NVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
-    } else {
-        QL_FAIL("Invalid quote type");
     }
 }
 
@@ -157,32 +156,37 @@ void ConstantVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Constant");
     QuoteBasedVolatilityConfig::fromBaseNode(node);
     quote_ = XMLUtils::getChildValue(node, "Quote", true);
+    shiftQuote_ = XMLUtils::getChildValue(node, "ShiftQuote", false);
 }
 
 XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Constant");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "Quote", quote_);
+    if (!shiftQuote_.empty())
+        XMLUtils::addChild(doc, node, "ShiftQuote", shiftQuote_);
     return node;
 }
 
 VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
-    bool enforceMontoneVariance, string calendarStr, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), 
+    bool enforceMontoneVariance, const string& calendarStr, Natural priority, const string& shiftQuote)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), shiftQuote_(shiftQuote),
     enforceMontoneVariance_(enforceMontoneVariance) {}
 
 VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes, const string& interpolation,
-    const string& extrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    bool enforceMontoneVariance, string calendarStr, Natural priority)
+    const string& extrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
+    bool enforceMontoneVariance, const string& calendarStr, Natural priority, const std::string& shiftQuote)
     : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), quotes_(quotes),
       interpolation_(interpolation),
-      extrapolation_(extrapolation), enforceMontoneVariance_(enforceMontoneVariance) {}
+      extrapolation_(extrapolation), shiftQuote_(shiftQuote), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
 
 const string& VolatilityCurveConfig::interpolation() const { return interpolation_; }
 
 const string& VolatilityCurveConfig::extrapolation() const { return extrapolation_; }
+
+const string& VolatilityCurveConfig::shiftQuote() const { return shiftQuote_; }
 
 bool VolatilityCurveConfig::enforceMontoneVariance() const { return enforceMontoneVariance_; }
 
@@ -192,6 +196,7 @@ void VolatilityCurveConfig::fromXML(XMLNode* node) {
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
     extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
+    shiftQuote_ = XMLUtils::getChildValue(node, "ShiftQuote", false);
 
     enforceMontoneVariance_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "EnforceMontoneVariance"))
@@ -205,6 +210,8 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::addChild(doc, node, "EnforceMontoneVariance", enforceMontoneVariance_);
+    if (!shiftQuote_.empty())
+        XMLUtils::addChild(doc, node, "ShiftQuote", shiftQuote_);
     return node;
 }
 

@@ -180,7 +180,8 @@ public:
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
         QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
-        bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
+        bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {},
+        VolatilityType volType = VolatilityType::ShiftedLognormal, Real shift = 0.0);
 
 protected:
     //! \name OptionSurfaceStripper interface
