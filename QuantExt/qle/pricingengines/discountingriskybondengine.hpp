@@ -89,10 +89,13 @@ protected:
         Real accruedAmountSettlement = 0.0;
 	// only provided in calculateNpv() when additionalResults = true
         std::vector<CashFlowResults> cashflowResults;
+        QuantLib::Leg expectedCashflows;
     };
 
     struct RecoveryContribution {
         Real value = 0.0;
+        Real expectedAmount = 0.0;
+        Date expectedDate;
         std::vector<CashFlowResults> cashflowResults;
     };
 
