@@ -657,7 +657,8 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
             QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             // pick flow with the earliest future accrual period end date on this leg
-            if ((coupon && coupon->accrualEndDate() > asof) || flow->date() > asof) {
+            auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+            if (date > asof) {
                 additionalData_["amount[" + legID + "]"] = flow->amount();
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
                 if (coupon) {

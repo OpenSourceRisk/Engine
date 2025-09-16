@@ -631,7 +631,8 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
             for (const auto& flow : legs_[0]) {
                 QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
                 // pick flow with the earliest future accrual period end date on this leg
-                if (coupon->accrualEndDate() > asof) {
+                auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+                if (date > asof) {
                     amounts.push_back(flow->amount());
                     paymentDates.push_back(flow->date());
                     if (coupon) {
