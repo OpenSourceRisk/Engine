@@ -36,13 +36,18 @@ using namespace QuantLib;
 class AnalyticEuropeanEngine : public QuantLib::AnalyticEuropeanEngine {
 public:
     explicit AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
-                                    const bool flipResults = false)
-        : QuantLib::AnalyticEuropeanEngine(gbsp), flipResults_(flipResults) {}
+                                    const bool flipResults = false,
+                                    QuantLib::BlackBachelierModel model = QuantLib::BlackBachelierMode::AsVolTypel,
+                                    const double displacement = 0.0)
+        : QuantLib::AnalyticEuropeanEngine(gbsp, model, displacement), flipResults_(flipResults) {}
 
     AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> process,
                            Handle<YieldTermStructure> discountCurve, const bool flipResults = false,
-                           ext::optional<unsigned int> spotDays = {}, ext::optional<Calendar> spotCalendar = {})
-        : QuantLib::AnalyticEuropeanEngine(process, discountCurve, spotDays, spotCalendar), flipResults_(flipResults) {}
+                           ext::optional<unsigned int> spotDays = {}, ext::optional<Calendar> spotCalendar = {},
+                           QuantLib::BlackBachelierModel model = QuantLib::BlackBachelierMode::AsVolTypel,
+                           const double displacement = 0.0)
+        : QuantLib::AnalyticEuropeanEngine(process, discountCurve, spotDays, spotCalendar, model, displacement),
+          flipResults_(flipResults) {}
 
     void calculate() const override;
 
