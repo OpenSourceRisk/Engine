@@ -70,14 +70,10 @@ void FdCallableBondEvents::processBondCashflows() {
             lastRedemptionDate_ = std::max(lastRedemptionDate_, c.payDate);
     }
     for (auto const& d : registeredBondCashflows_) {
-        bool isRedemption = d.couponStartTime_ == Null<Real>();
         Size index = grid_.index(time(d.payDate));
         hasBondCashflow_[index] = true;
         associatedDate_[index] = d.payDate;
-        if (isRedemption && d.payDate == lastRedemptionDate_)
-            bondFinalRedemption_[index].push_back(d);
-        else
-            bondCashflow_[index].push_back(d);
+        bondCashflow_[index].push_back(d);
     }
 }
 
@@ -123,7 +119,6 @@ void FdCallableBondEvents::finalise(const TimeGrid& grid) {
     hasPut_.resize(grid.size(), false);
 
     bondCashflow_.resize(grid.size(), {});
-    bondFinalRedemption_.resize(grid.size(), {});
     callData_.resize(grid.size());
     putData_.resize(grid.size());
 
@@ -143,10 +138,6 @@ bool FdCallableBondEvents::hasPut(const Size i) const { return hasPut_.at(i); }
 std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>
 FdCallableBondEvents::getBondCashflow(const Size i) const {
     return bondCashflow_.at(i);
-}
-std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>
-FdCallableBondEvents::getBondFinalRedemption(const Size i) const {
-    return bondFinalRedemption_.at(i);
 }
 
 const FdCallableBondEvents::CallData& FdCallableBondEvents::getCallData(const Size i) const { return callData_.at(i); }

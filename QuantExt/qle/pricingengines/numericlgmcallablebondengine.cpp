@@ -228,15 +228,6 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                             standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
                 }
 
-                for (auto const& f : events.getBondFinalRedemption(i)) {
-                    auto tmp = f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
-                    value += tmp;
-                    if (generateAdditionalResults_)
-                        valueStripped += tmp;
-                    if (cfResults_)
-                        cfResults_->push_back(
-                            standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
-                }
             }
         }
 
@@ -308,8 +299,6 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
         Real flow = 0.0;
         for (auto const& f : events.getBondCashflow(i))
-            flow += f.qlCf->amount();
-        for (auto const& f : events.getBondFinalRedemption(i))
             flow += f.qlCf->amount();
         if (!QuantLib::close_enough(flow, 0.0))
             bondFlowStr << flow;

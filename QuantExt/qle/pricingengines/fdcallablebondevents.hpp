@@ -65,7 +65,6 @@ public:
     bool hasPut(const Size i) const;
 
     std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondCashflow(const Size i) const;
-    std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondFinalRedemption(const Size i) const;
     const CallData& getCallData(const Size i) const;
     const CallData& getPutData(const Size i) const;
 
@@ -98,7 +97,7 @@ private:
     std::vector<bool> hasBondCashflow_, hasCall_, hasPut_;
 
     // per time index the data associated to events
-    std::vector<std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_, bondFinalRedemption_;
+    std::vector<std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_;
     std::vector<CallData> callData_, putData_;
 
     std::vector<Date> associatedDate_;
