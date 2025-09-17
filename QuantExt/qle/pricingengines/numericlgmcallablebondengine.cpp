@@ -216,8 +216,8 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (events.hasCall(i)) {
 
                 RandomVariable c =
-                    RandomVariable(getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from)),
-                                   solver_->gridSize()) /
+                    RandomVariable(solver_->gridSize(),
+                                   getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from))) /
                     lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
 
                 value = min(c, value);
@@ -233,8 +233,8 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (events.hasPut(i)) {
 
                 RandomVariable c =
-                    RandomVariable(getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from)),
-                                   solver_->gridSize()) /
+                    RandomVariable(solver_->gridSize(),
+                                   getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from))) /
                     lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
 
                 value = max(c, value);
