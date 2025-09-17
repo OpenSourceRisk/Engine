@@ -58,10 +58,10 @@ protected:
     // inputs set for calculation in derived classes
     mutable Date npvDate_;
     mutable Date settlementDate_;
-    mutable bool conditionalOnSurvival_;
-    mutable std::vector<CashFlowResults>* cfResults_;
-    mutable Leg* expectedCashflows_;
-    mutable CallableBond::arguments* instrArgs_;
+    mutable bool conditionalOnSurvival_ = true;
+    mutable std::vector<CashFlowResults>* cfResults_ = nullptr;
+    mutable Leg* expectedCashflows_ = nullptr;
+    mutable CallableBond::arguments* instrArgs_ = nullptr;
 
     // outputs
     mutable Real npv_, settlementValue_;

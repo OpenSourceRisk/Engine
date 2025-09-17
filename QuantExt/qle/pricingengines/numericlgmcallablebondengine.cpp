@@ -224,9 +224,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
                 if (expectedCashflows_) {
                     Filter exercised = close_enough(c, value);
-                    rvCashflows[i] = conditionalResult(exercised, c, rvCashflows[i]);
+                    rvCashflows[i - 1] = conditionalResult(exercised, c, rvCashflows[i - 1]);
                     for (Size j = i + 1; j < grid.size(); ++j)
-                        rvCashflows[i] = applyInverseFilter(rvCashflows[i], exercised);
+                        rvCashflows[i - 1] = applyInverseFilter(rvCashflows[i - 1], exercised);
                 }
             }
 
@@ -241,9 +241,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
                 if (expectedCashflows_) {
                     Filter exercised = close_enough(c, value);
-                    rvCashflows[i] = conditionalResult(exercised, c, rvCashflows[i]);
+                    rvCashflows[i - 1] = conditionalResult(exercised, c, rvCashflows[i - 1]);
                     for (Size j = i + 1; j < grid.size(); ++j)
-                        rvCashflows[i] = applyInverseFilter(rvCashflows[i], exercised);
+                        rvCashflows[i - 1] = applyInverseFilter(rvCashflows[i - 1], exercised);
                 }
             }
 
