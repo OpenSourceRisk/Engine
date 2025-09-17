@@ -50,7 +50,8 @@ public:
         const QuantLib::Currency& floatCurrency, const QuantLib::Schedule& floatSchedule,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
-        const QuantLib::Calendar& floatPaymentCalendar, boost::optional<bool> floatIncludeSpread = boost::none,
+                         const QuantLib::Calendar& floatPaymentCalendar, const bool telescopicValueDates = false,
+                         boost::optional<bool> floatIncludeSpread = boost::none,
         boost::optional<Period> floatLookback = boost::none, boost::optional<Size> floatFixingDays = boost::none,
         boost::optional<Size> floatRateCutoff = boost::none, boost::optional<bool> floatIsAveraged = boost::none);
     //@}
@@ -130,6 +131,7 @@ private:
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
+    bool telescopicValueDates_;
     boost::optional<bool> floatIncludeSpread_;
     boost::optional<Period> floatLookback_;
     boost::optional<Size> floatFixingDays_;

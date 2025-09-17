@@ -76,23 +76,21 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
             floatLeg = QuantExt::AverageONLeg(floatSchedule_, on)
                            .withNotional(floatNotional)
                            .withSpread(floatSpread_)
-                           //??.withGearing(floatGearing_)
                            .withPaymentLag(floatPaymentLag_)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
                            .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
-                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0);
-            //??.withTelescopicValueDates(telescopicValueDates_);
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         } else {
             floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
                            .withNotionals(floatNotional)
                            .withSpreads(floatSpread_)
-                           //??.withGearings(floatGearing_)
                            .withPaymentLag(floatPaymentLag_)
                            .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
                            .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
                            .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
-                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0);
-            //??.withTelescopicValueDates(telescopicValueDates_);
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         }
     } else {
         floatLeg = IborLeg(floatSchedule_, floatIndex_)

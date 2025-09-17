@@ -46,7 +46,7 @@ public:
         QuantLib::BusinessDayConvention fixedConvention, const QuantLib::DayCounter& fixedDayCount,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
-        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
+        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, const bool telescopicValueDates_ = false,
         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
         boost::optional<bool> includeSpread = boost::none, boost::optional<Period> lookback = boost::none,
         boost::optional<Size> fixingDays = boost::none, boost::optional<Size> rateCutoff = boost::none,
@@ -92,6 +92,7 @@ private:
     QuantLib::Handle<QuantLib::YieldTermStructure> floatDiscount_;
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
+    bool telescopicValueDates_;
     QuantLib::Pillar::Choice pillarChoice_;
     boost::optional<bool> includeSpread_;
     boost::optional<Period> lookback_;

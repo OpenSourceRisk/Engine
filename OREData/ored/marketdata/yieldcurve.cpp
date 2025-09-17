@@ -2953,7 +2953,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(),
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
-                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
+                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),true,
                     segment->pillarChoice(), swapConvention->includeSpread(), swapConvention->lookback(),
                     swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
             } else {
@@ -2963,6 +2963,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
+                    true,
                     resetsOnFloatLeg, segment->pillarChoice(), swapConvention->includeSpread(), swapConvention->lookback(), 
                     swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
             }

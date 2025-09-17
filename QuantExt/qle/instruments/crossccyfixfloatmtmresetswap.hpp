@@ -127,7 +127,7 @@ private:
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
-
+    bool telescopicValueDates_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool resetsOnFloatLeg_;
     bool receiveFixed_;

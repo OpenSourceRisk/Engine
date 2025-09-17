@@ -38,13 +38,14 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
-    const Handle<Quote>& spread, bool endOfMonth, QuantLib::Pillar::Choice pillarChoice,
+    const Handle<Quote>& spread, bool endOfMonth, bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
     boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
     boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
-      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), pillarChoice_(pillarChoice),
+      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
       isAveraged_(isAveraged) {
 
@@ -118,7 +119,7 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
                                          fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-                                         paymentLag, paymentCalendar_));
+                                         paymentLag, paymentCalendar_, telescopicValueDates_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
