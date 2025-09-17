@@ -87,9 +87,9 @@ protected:
         Real compoundFactorSettlement = 1.0;
         Real cashflowsBeforeSettlementValue = 0.0;
         Real accruedAmountSettlement = 0.0;
+        QuantLib::Leg expectedCashflows;
 	// only provided in calculateNpv() when additionalResults = true
         std::vector<CashFlowResults> cashflowResults;
-        QuantLib::Leg expectedCashflows;
     };
 
     struct RecoveryContribution {

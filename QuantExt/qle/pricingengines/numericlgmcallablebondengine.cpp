@@ -25,6 +25,7 @@
 
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 namespace QuantExt {
 
@@ -189,7 +190,15 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
     Real t_fwd_cutoff = solver_->model()->parametrization()->termStructure()->timeFromReference(npvDate_);
 
-    // 9 perform the backward pricing using the backward solver
+    // 9 init cashflow variables for expected cashflow calculation if required
+
+    std::vector<RandomVariable> rvCashflows;
+
+    if (expectedCashflows_) {
+        rvCashflows.resize(grid.size() - 1, RandomVariable(solver_->gridSize(), 0.0));
+    }
+
+    // 10 perform the backward pricing using the backward solver
 
     LgmVectorised lgmv(solver_->model()->parametrization());
 
@@ -205,13 +214,37 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             // 7.2 handle call, put on t_i (assume put overrides call, should both be exercised)
 
             if (events.hasCall(i)) {
-                Real c = getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from));
-                value = min(RandomVariable(solver_->gridSize(), c), value);
+
+                RandomVariable c =
+                    RandomVariable(getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from)),
+                                   solver_->gridSize()) /
+                    lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+
+                value = min(c, value);
+
+                if (expectedCashflows_) {
+                    Filter exercised = close_enough(c, value);
+                    rvCashflows[i] = conditionalResult(exercised, c, rvCashflows[i]);
+                    for (Size j = i + 1; j < grid.size(); ++j)
+                        rvCashflows[i] = applyInverseFilter(rvCashflows[i], exercised);
+                }
             }
 
             if (events.hasPut(i)) {
-                Real c = getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from));
-                value = max(RandomVariable(solver_->gridSize(), c), value);
+
+                RandomVariable c =
+                    RandomVariable(getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from)),
+                                   solver_->gridSize()) /
+                    lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+
+                value = max(c, value);
+
+                if (expectedCashflows_) {
+                    Filter exercised = close_enough(c, value);
+                    rvCashflows[i] = conditionalResult(exercised, c, rvCashflows[i]);
+                    for (Size j = i + 1; j < grid.size(); ++j)
+                        rvCashflows[i] = applyInverseFilter(rvCashflows[i], exercised);
+                }
             }
 
             // 7.3 handle bond cashflows on t_i
@@ -221,24 +254,34 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                 for (auto const& f : events.getBondCashflow(i)) {
                     auto tmp = f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
                     value += tmp;
+
                     if (generateAdditionalResults_)
                         valueStripped += tmp;
+
                     if (cfResults_)
                         cfResults_->push_back(
                             standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
-                }
 
+                    if (expectedCashflows_) {
+                        rvCashflows[i - 1] = tmp;
+                    }
+                }
             }
         }
 
         // 7.4 roll back from t_i to t_{i-1}
 
         value = solver_->rollback(value, t_from, t_to, 1);
+
         if (generateAdditionalResults_)
             valueStripped = solver_->rollback(valueStripped, t_from, t_to, 1);
+
+        for (auto c : rvCashflows) {
+            c = solver_->rollback(c, t_from, t_to, 1);
+        }
     }
 
-    // 10 set the result values
+    // 11 set the result values
 
     npv_ = value.at(0) / effIncomeCurve->discount(npvDate_);
     if (conditionalOnSurvival_)
@@ -248,16 +291,35 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                        effCreditCurve->survivalProbability(settlementDate_) *
                        effCreditCurve->survivalProbability(settlementDate_);
 
-    // 11 set additional results if requested
+    if (expectedCashflows_) {
+        std::map<Date, Real> cf;
+        Date currentDate = events.latestRelevantDate();
+        for (Size i = grid.size() - 1; i > 0; ++i) {
+            if (Date tmp = events.getAssociatedDate(i); tmp != Date())
+                currentDate = tmp;
+            if (Real tmp = rvCashflows[i - 1].at(0); !QuantLib::close_enough(tmp, 0.0)) {
+                cf[currentDate] += tmp;
+            }
+        }
+        for (auto& [d, v] : cf) {
+            v /= effIncomeCurve->discount(npvDate_);
+            if (conditionalOnSurvival_)
+                v /= effCreditCurve->survivalProbability(npvDate_);
+            v /= effDiscountCurve->discount(d) / effDiscountCurve->discount(npvDate_);
+            expectedCashflows_->push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
+        }
+    }
+
+    // 12 set additional results if requested
 
     if (!generateAdditionalResults_)
         return;
 
-    // 11.1 additional results from lgm model
+    // 12.1 additional results from lgm model
 
     additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
-    // 11.2 stripped underlying bond, and call / put option
+    // 12.2 stripped underlying bond, and call / put option
 
     Real npvStripped = valueStripped.at(0) / effIncomeCurve->discount(npvDate_);
     if (conditionalOnSurvival_)
@@ -270,7 +332,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     additionalResults_["strippedBondSettlementValue"] = settlementValueStripped;
     additionalResults_["callPutValue"] = settlementValueStripped - settlementValue_;
 
-    // 11.3 event table
+    // 12.3 event table
 
     constexpr Size width = 12;
     std::ostringstream header;
@@ -381,6 +443,7 @@ std::pair<Real, Real> NumericLgmCallableBondEngine::forwardPrice(const QuantLib:
     settlementDate_ = settlementDate;
     conditionalOnSurvival_ = true;
     cfResults_ = cfResults;
+    expectedCashflows_ = expectedCashflows;
     instrArgs_ = &arguments_;
 
     calculate();

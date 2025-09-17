@@ -123,6 +123,7 @@ void FdCallableBondEvents::finalise(const TimeGrid& grid) {
     putData_.resize(grid.size());
 
     associatedDate_.resize(grid.size(), Null<Date>());
+    associatedDate_[0] = today_;
 
     // process data
 
@@ -147,5 +148,13 @@ const FdCallableBondEvents::CallData& FdCallableBondEvents::getPutData(const Siz
 Date FdCallableBondEvents::getAssociatedDate(const Size i) const { return associatedDate_.at(i); }
 
 bool FdCallableBondEvents::hasAmericanExercise() const { return hasAmericanExercise_; }
+
+Date FdCallableBondEvents::latestRelevantDate() const {
+    for (int i = static_cast<int>(grid_.size() - 1); i >= 0; --i) {
+        if (associatedDate_[i] != Null<Date>())
+            return associatedDate_[i];
+    }
+    return Null<Date>();
+}
 
 } // namespace QuantExt

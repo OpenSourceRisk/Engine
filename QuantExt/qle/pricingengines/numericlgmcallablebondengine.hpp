@@ -60,6 +60,7 @@ protected:
     mutable Date settlementDate_;
     mutable bool conditionalOnSurvival_;
     mutable std::vector<CashFlowResults>* cfResults_;
+    mutable Leg* expectedCashflows_;
     mutable CallableBond::arguments* instrArgs_;
 
     // outputs

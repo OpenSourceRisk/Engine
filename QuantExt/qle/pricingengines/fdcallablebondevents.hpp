@@ -71,6 +71,8 @@ public:
     Date getAssociatedDate(const Size i) const; // null if no date is associated
     bool hasAmericanExercise() const; // at least on "from this date on" call data
 
+    Date latestRelevantDate() const;  // the latest event date after finalise
+
 private:
     Date nextExerciseDate(const Date& d, const std::vector<CallableBond::CallabilityData>& data) const;
 
