@@ -23,7 +23,6 @@
 
 #include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
-#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
@@ -34,6 +33,7 @@
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
