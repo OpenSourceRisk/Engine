@@ -31,7 +31,6 @@
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 using namespace ore::data;
 using namespace QuantExt;
@@ -169,7 +168,6 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     legs_.swap(legsTmp);
     legPayers_.swap(legPayersTmp);
     legCurrencies_.swap(legCurrenciesTmp);
-    originalLegs_ = legs_;
 
     // If leg has SettlementData, do the fx conversion
     for (Size i = 0; i < legData_.size(); ++i) {
@@ -195,8 +193,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                                                                << io::iso_date(fixingDate)
                                                                << " added to required fixings for trade " << id());
 
-                legFxConverted.push_back(ext::make_shared<QuantExt::FXLinkedCashFlow>(cf->date(), adjustedFixingDate,
-                                                                                      cf->amount(), fxIndex));
+                legFxConverted.push_back(
+                    ext::make_shared<QuantExt::IndexWrappedCashFlow>(cf, 1.0, fxIndex, adjustedFixingDate));
             }
         } else {
             fixingDate = parseDate(legData_[i].settlementFxFixingDate());
@@ -207,8 +205,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                                                            << " added to required fixings for trade " << id());
 
             for (auto& cf : legs_[i]) {
-                legFxConverted.push_back(ext::make_shared<QuantExt::FXLinkedCashFlow>(cf->date(), adjustedFixingDate,
-                                                                                      cf->amount(), fxIndex));
+                legFxConverted.push_back(
+                    ext::make_shared<QuantExt::IndexWrappedCashFlow>(cf, 1.0, fxIndex, adjustedFixingDate));
             }
         }
         
@@ -239,8 +237,8 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
             additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
         else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
-        for (Size j = 0; j < originalLegs_[i].size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = originalLegs_[i][j];
+        for (Size j = 0; j < legs_[i].size(); ++j) {
+            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             if (flow->date() > asof) {
                 std::string label = legID + ":" + std::to_string(j + 1);
                 // CommodityFloatingLeg consists of indexed or indexed average cash flows
@@ -352,10 +350,10 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
         additionalData_["fxIndex[" + legID + "]"] = legData_[i].settlementFxIndex();
         for (Size j = 0; j < legs_[i].size(); ++j) {
             std::string label = legID + ":" + std::to_string(j + 1);
-            QuantLib::ext::shared_ptr<FXLinkedCashFlow> cf =
-                QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(legs_[i][j]);
-            additionalData_["fxIndexFixingDate[" + label + "]"] = cf->fxFixingDate();
-            additionalData_["fxIndexFixing[" + label + "]"] = cf->fxRate();
+            QuantLib::ext::shared_ptr<IndexWrappedCashFlow> cf =
+                QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(legs_[i][j]);
+            additionalData_["fxIndexFixingDate[" + label + "]"] = cf->fixingDate();
+            additionalData_["fxIndexFixing[" + label + "]"] = cf->multiplier();
         }
         additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
     }

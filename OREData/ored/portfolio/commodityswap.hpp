@@ -73,7 +73,6 @@ private:
         const ore::data::LegData& legDatum, const std::string& configuration);
 
     std::vector<ore::data::LegData> legData_;
-    std::vector<QuantLib::Leg> originalLegs_;
 };
 
 } // namespace data
