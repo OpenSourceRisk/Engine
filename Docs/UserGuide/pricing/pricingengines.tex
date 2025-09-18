@@ -82,7 +82,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
@@ -131,7 +131,7 @@ Black/BlackBondOptionEngine builds a BlackBondOptionEngine. A sample configurati
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4046,7 +4046,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
 \end{itemize}

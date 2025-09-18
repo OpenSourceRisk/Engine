@@ -302,7 +302,8 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(),
-                                               bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+                                               bondData_.referenceCurveId(), bondData_.incomeCurveId(),
+                                               BondEngineBuilderParameterOverride()));
     setSensitivityTemplate(*bondBuilder);
     addProductModelEngine(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
