@@ -458,6 +458,7 @@ void NumericLgmCallableBondEngine::calculate() const {
     settlementDate_ = arguments_.settlementDate;
     conditionalOnSurvival_ = false; // does not matter, since npvDate_ = today
     cfResults_ = &cfResults;
+    expectedCashflows_ = nullptr;
     instrArgs_ = &arguments_;
 
     NumericLgmCallableBondEngineBase::calculate();

@@ -148,6 +148,7 @@ DiscountingRiskyBondEngine::RecoveryContribution DiscountingRiskyBondEngine::rec
     result.value = expectedRecoveryAmount * P * recoveryDiscountFactor;
     result.expectedAmount = expectedRecoveryAmount * P;
     result.expectedDate = defaultDate;
+    result.valid = true;
     return result;
 }
 
@@ -215,8 +216,9 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
             result.npv += rec.value;
             result.cashflowResults.insert(result.cashflowResults.end(), rec.cashflowResults.begin(),
                                           rec.cashflowResults.end());
-            result.expectedCashflows.push_back(
-                QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
+            if (rec.valid)
+                result.expectedCashflows.push_back(
+                    QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
         }
     }
 
@@ -232,8 +234,9 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
             result.npv += rec.value;
             result.cashflowResults.insert(result.cashflowResults.end(), rec.cashflowResults.begin(),
                                           rec.cashflowResults.end());
-            result.expectedCashflows.push_back(
-                QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
+            if (rec.valid)
+                result.expectedCashflows.push_back(
+                    QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
             startDate = stepDate;
         }
     }

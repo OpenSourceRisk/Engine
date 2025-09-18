@@ -93,6 +93,7 @@ protected:
     };
 
     struct RecoveryContribution {
+        bool valid = false;
         Real value = 0.0;
         Real expectedAmount = 0.0;
         Date expectedDate;
