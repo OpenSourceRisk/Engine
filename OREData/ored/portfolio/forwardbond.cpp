@@ -123,13 +123,6 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                    << ") are not allowed. Notice that we will ensure that a positive compensation amount will be paid "
                       "by the party being long in the forward contract.");
 
-    QuantLib::ext::shared_ptr<Payoff> payoff;
-    if (amount != Null<Real>()) {
-        payoff = longInForward ? QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, amount)
-                               : QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, amount);
-    }
-    compensationPayment = longInForward ? compensationPayment : -compensationPayment;
-
     std::vector<Leg> separateLegs;
     for (Size i = 0; i < bondData_.coupons().size(); ++i) {
         std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
@@ -161,13 +154,14 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
-        payoff ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
-                                                           isPhysicallySettled, settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData_.bondNotional())
-               : QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
-                                                           fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
-                                                           settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData_.bondNotional(), dv01);
+        amount != Null<Real>()
+            ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(
+                  bond, amount, fwdMaturityDate, fwdSettlementDate, isPhysicallySettled, settlementDirty,
+                  compensationPayment, compensationPaymentDate, longInForward, bondData_.bondNotional())
+            : QuantLib::ext::make_shared<QuantExt::ForwardBond>(
+                  bond, lockRate, lockRateDayCounter, longInForward, fwdMaturityDate, fwdSettlementDate,
+                  isPhysicallySettled, settlementDirty, compensationPayment, compensationPaymentDate, longInForward,
+                  bondData_.bondNotional(), dv01);
 
     auto fwdBondBuilder = QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());

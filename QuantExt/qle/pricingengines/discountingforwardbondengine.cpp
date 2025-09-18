@@ -33,551 +33,101 @@
 #include <boost/tuple/tuple.hpp>
 namespace QuantExt {
 
-DiscountingForwardBondEngine::DiscountingForwardBondEngine(
-    const Handle<YieldTermStructure>& discountCurve, const Handle<YieldTermStructure>& incomeCurve,
-    const Handle<YieldTermStructure>& bondReferenceYieldCurve, const Handle<Quote>& bondSpread,
-    const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve, const Handle<Quote>& bondRecoveryRate,
-    const Handle<Quote>& conversionFactor, Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows,
-    const Date& settlementDate, const Date& npvDate)
-    : discountCurve_(discountCurve), incomeCurve_(incomeCurve), bondReferenceYieldCurve_(bondReferenceYieldCurve),
-      bondSpread_(bondSpread), bondDefaultCurve_(bondDefaultCurve), bondRecoveryRate_(bondRecoveryRate),
-      conversionFactor_(conversionFactor), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
-
-    registerWith(discountCurve_);           // curve for discounting of the forward derivative contract. OIS, usually.
-    registerWith(incomeCurve_);             // this is a curve for compounding of the bond
-    registerWith(bondReferenceYieldCurve_); // this is the bond reference curve, for discounting, usually RePo
-    registerWith(bondSpread_);
-    registerWith(bondDefaultCurve_);
-    registerWith(bondRecoveryRate_);
+DiscountingForwardBondEngine::DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                                                           const Handle<Quote>& conversionFactor)
+    : discountCurve_(discountCurve), conversionFactor_(conversionFactor) {
+    registerWith(discountCurve_);
+    registerWith(conversionFactor_);
 }
 
 void DiscountingForwardBondEngine::calculate() const {
-    // Do some checks on data
-    QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
-    QL_REQUIRE(!incomeCurve_.empty(), "income term structure handle is empty");
-    QL_REQUIRE(!bondReferenceYieldCurve_.empty(), "bond reference term structure handle is empty");
+    QL_REQUIRE(!discountCurve_.empty(), "DiscountingForwardBondEngine::calculate(): discountCurve is empty.");
 
-    Date npvDate = npvDate_; // this is today when the valuation occurs
-    if (npvDate == Null<Date>()) {
-        npvDate = (*discountCurve_)->referenceDate();
-    }
-    Date settlementDate = settlementDate_; //
-    if (settlementDate == Null<Date>()) {
-        settlementDate = (*discountCurve_)->referenceDate();
-    }
+    Date bondSettlementDate = arguments_.underlying->settlementDate(arguments_.fwdMaturityDate);
+    Real accruedAmount = arguments_.underlying->accruedAmount(bondSettlementDate) / 100.0;
+    Real notionalMultiplier = arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
 
-    Date maturityDate =
-        arguments_.fwdMaturityDate; // this is the date when the forward is executed, i.e. cash and bond change hands
+    std::vector<CashFlowResults> cfResults;
 
-    Real cmpPayment = arguments_.compensationPayment;
-    if (cmpPayment == Null<Real>()) {
-        cmpPayment = 0.0;
-    }
-    Date cmpPaymentDate = arguments_.compensationPaymentDate;
-    if (cmpPaymentDate == Null<Date>()) {
-        cmpPaymentDate = npvDate;
+    Real forwardPrice = QuantExt::forwardPrice(arguments_.underlying, arguments_.fwdMaturityDate,
+                                               arguments_.fwdMaturityDate, false, &cfResults)
+                            .second;
+
+    if(!conversionFactor_.empty()) {
+        forwardPrice = (forwardPrice - accruedAmount) / conversionFactor_->value() + accruedAmount;
     }
 
-    // in case that the premium payment has occurred in the past, we set the amount to 0. the date itself is set to the
-    // npvDate to have a valid date for "discounting"
-    Date cmpPaymentDate_use = cmpPaymentDate >= npvDate ? cmpPaymentDate : maturityDate;
-    cmpPayment = cmpPaymentDate >= npvDate ? cmpPayment : 0.0; // premium cashflow is not relevant for npv if in the
-                                                               // past
+    Real strikeAmount;
 
-    // initialize
-    results_.value = 0.0;               // this is today's npv of the forward contract
-    results_.underlyingSpotValue = 0.0; // this is today's value of the "restricted bond". Restricted means that only
-                                        // cashflows after maturity are taken into account.
-    results_.forwardValue = 0.0;        // this the value of the forward contract just before maturity
+    if (arguments_.lockRate == Null<Real>()) {
 
-    bool dirty = arguments_.settlementDirty;
+        // plain vanilla payoff
 
-    results_.underlyingSpotValue = calculateBondNpv(npvDate, maturityDate); // cashflows before maturity will be ignored
+        strikeAmount =
+            arguments_.strikeAmount + (arguments_.settlementDirty ? 0.0 : accruedAmount * notionalMultiplier);
 
-    QuantLib::ext::tie(results_.forwardValue, results_.value) = calculateForwardContractPresentValue(
-        results_.underlyingSpotValue, cmpPayment, npvDate, maturityDate, arguments_.fwdSettlementDate,
-        !arguments_.isPhysicallySettled, cmpPaymentDate_use, dirty, conversionFactor_->value());
-}
-
-Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDate) const {
-    Real npvValue = 0.0;
-    Size numCoupons = 0;
-    bool hasLiveCashFlow = false;
-
-    // handle case where we wish to price simply with benchmark curve and scalar security spread
-    // i.e. credit curve term structure (and recovery) have not been specified
-    // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
-    // captured within security spread)
-    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
-        bondDefaultCurve_.empty()
-            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
-            : bondDefaultCurve_.currentLink();
-    Rate recoveryVal = bondRecoveryRate_.empty() ? 0.0 : bondRecoveryRate_->value(); // setup default bond recovery rate
-    std::vector<Date> bondCashflowPayDates;
-    std::vector<Real> bondCashflows, bondCashflowSurvivalProbabilities, bondCashflowDiscountFactors;
-
-    // load the shared pointer into bd
-    QuantLib::ext::shared_ptr<Bond> bd = arguments_.underlying;
-
-    std::vector<CashFlowResults> cashFlowResults;
-    for (Size i = 0; i < bd->cashflows().size(); i++) {
-        // Recovery amount is computed over the whole time interval (npvDate,maturityOfBond)
-
-        if (bd->cashflows()[i]->hasOccurred(
-                computeDate, includeSettlementDateFlows_)) // Cashflows before computeDate not relevant for npv
-            continue;
-
-        /* The amount recovered in the case of default is the recoveryrate*Notional*Probability of
-           Default; this is added to the NPV value. For coupon bonds the coupon periods are taken
-           as the timesteps for integrating over the probability of default.
-        */
-        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
-
-        if (coupon) {
-            numCoupons++;
-            Date startDate = coupon->accrualStartDate();
-            Date endDate = coupon->accrualEndDate();
-            Date effectiveStartDate = (startDate <= computeDate && computeDate <= endDate) ? computeDate : startDate;
-            Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
-            Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, endDate);
-
-            Real cpnRecovery = coupon->nominal() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
-            npvValue += cpnRecovery;
-            if (!close_enough(cpnRecovery, 0.0)) {
-                CashFlowResults recoveryFlow;
-                recoveryFlow.payDate = defaultDate;
-                recoveryFlow.accrualStartDate = effectiveStartDate;
-                recoveryFlow.accrualEndDate = endDate;
-                recoveryFlow.amount = coupon->nominal() * recoveryVal * arguments_.bondNotional;
-                recoveryFlow.discountFactor = P * bondReferenceYieldCurve_->discount(defaultDate);
-                recoveryFlow.presentValue = recoveryFlow.amount * recoveryFlow.discountFactor;
-                recoveryFlow.legNumber = 0;
-                recoveryFlow.type = "Bond_ExpectedRecovery";
-                cashFlowResults.push_back(recoveryFlow);
-            }
-        }
-
-        hasLiveCashFlow = true; // check if a cashflow  is available after the date of valuation.
-
-        // Coupon value is discounted future payment times the survival probability
-        Probability S = creditCurvePtr->survivalProbability(bd->cashflows()[i]->date()) /
-                        creditCurvePtr->survivalProbability(computeDate);
-        npvValue += bd->cashflows()[i]->amount() * S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
-
-        bondCashflows.push_back(bd->cashflows()[i]->amount());
-        bondCashflowPayDates.push_back(bd->cashflows()[i]->date());
-        bondCashflowSurvivalProbabilities.push_back(S);
-        bondCashflowDiscountFactors.push_back(bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date()));
-        CashFlowResults cfResult = populateCashFlowResultsFromCashflow(bd->cashflows()[i], arguments_.bondNotional);
-        cfResult.type = "Bond_" + cfResult.type;
-        cfResult.discountFactor = S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
-        cfResult.presentValue = cfResult.amount * cfResult.discountFactor;
-        cashFlowResults.push_back(cfResult);
-    }
-
-    // the ql instrument might not yet be expired and still have not anything to value if
-    // the computeDate > evaluation date
-    if (!hasLiveCashFlow)
-        return 0.0;
-
-    if (bd->cashflows().size() > 1 && numCoupons == 0) {
-        QL_FAIL("DiscountingForwardBondEngine does not support bonds with multiple cashflows but no coupons");
-    }
-
-    Real bondRecovery = 0;
-    QuantLib::ext::shared_ptr<Coupon> firstCoupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
-    if (firstCoupon) {
-        Date startDate = computeDate; // face value recovery starting with computeDate
-        while (startDate < bd->cashflows()[0]->date()) {
-            Date stepDate = startDate + timestepPeriod_;
-            Date endDate = (stepDate > bd->cashflows()[0]->date()) ? bd->cashflows()[0]->date() : stepDate;
-            Date defaultDate = startDate + (endDate - startDate) / 2;
-            Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
-
-            bondRecovery += firstCoupon->nominal() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
-            startDate = stepDate;
-        }
-        if (!close_enough(bondRecovery, 0.0)) {
-            CashFlowResults recoveryFlow;
-            recoveryFlow.payDate = bd->cashflows()[0]->date();
-            recoveryFlow.accrualStartDate = computeDate;
-            recoveryFlow.accrualEndDate = bd->cashflows()[0]->date();
-            recoveryFlow.amount = firstCoupon->nominal() * recoveryVal * arguments_.bondNotional;
-            recoveryFlow.discountFactor = bondRecovery * arguments_.bondNotional / recoveryFlow.amount;
-            recoveryFlow.presentValue = bondRecovery * arguments_.bondNotional;
-            recoveryFlow.legNumber = 0;
-            recoveryFlow.type = "Bond_ExpectedRecovery";
-            cashFlowResults.push_back(recoveryFlow);
-        }
-    }
-
-    /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
-       maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
-       to bonds with 1 cashflow, identified as a final redemption payment.
-    */
-    if (bd->cashflows().size() == 1) {
-        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
-        Real redemptionRecovery = 0;
-        if (redemption) {
-            Date startDate = computeDate;
-            while (startDate < redemption->date()) {
-                Date stepDate = startDate + timestepPeriod_;
-                Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
-                Date defaultDate = startDate + (endDate - startDate) / 2;
-                Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
-
-                redemptionRecovery +=
-                    redemption->amount() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
-                startDate = stepDate;
-            }
-            bondRecovery += redemptionRecovery;
-            if (!close_enough(redemptionRecovery, 0.0)) {
-                CashFlowResults recoveryFlow;
-                recoveryFlow.payDate = bd->cashflows()[0]->date();
-                recoveryFlow.accrualStartDate = computeDate;
-                recoveryFlow.accrualEndDate = bd->cashflows()[0]->date();
-                recoveryFlow.amount = redemption->amount() * recoveryVal * arguments_.bondNotional;
-                recoveryFlow.discountFactor = redemptionRecovery * arguments_.bondNotional / recoveryFlow.amount;
-                recoveryFlow.presentValue = redemptionRecovery * arguments_.bondNotional;
-                recoveryFlow.legNumber = 0;
-                recoveryFlow.type = "Bond_ExpectedRecovery";
-                cashFlowResults.push_back(recoveryFlow);
-            }
-        }
-    }
-
-    npvValue += bondRecovery;
-
-    // Add cashflowResults
-    if (results_.additionalResults.find("cashFlowResults") != results_.additionalResults.end()) {
-        auto tmp = results_.additionalResults["cashFlowResults"];
-        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
-        std::vector<CashFlowResults> prevCfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
-        prevCfResults.insert(prevCfResults.end(), cashFlowResults.begin(), cashFlowResults.end());
-        results_.additionalResults["cashFlowResults"] = prevCfResults;
     } else {
-        results_.additionalResults["cashFlowResults"] = cashFlowResults;
-    }
 
-    results_.additionalResults["bondCashflow"] = bondCashflows;
-    results_.additionalResults["bondCashflowPayDates"] = bondCashflowPayDates;
-    results_.additionalResults["bondCashflowSurvivalProbabilities"] = bondCashflowSurvivalProbabilities;
-    results_.additionalResults["bondCashflowDiscountFactors"] = bondCashflowDiscountFactors;
-    results_.additionalResults["bondRecovery"] = bondRecovery;
-
-    return npvValue * arguments_.bondNotional;
-}
-
-std::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
-    Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
-    Date cmpPaymentDate, bool dirty, double conversionFactor) const {
-
-    // here we go with the true forward computation
-    Real forwardBondValue = 0.0;
-    Real forwardContractPresentValue = 0.0;
-    Real forwardContractForwardValue = 0.0;
-
-    std::vector<Date> fwdBondCashflowPayDates;
-    std::vector<Real> fwdBondCashflows, fwdBondCashflowSurvivalProbabilities, fwdBondCashflowDiscountFactors;
-
-    // handle case where we wish to price simply with benchmark curve and scalar security spread
-    // i.e. credit curve term structure (and recovery) have not been specified
-    // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
-    // captured within security spread)
-    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
-        bondDefaultCurve_.empty()
-            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
-            : bondDefaultCurve_.currentLink();
-    Rate recoveryVal = bondRecoveryRate_.empty() ? 0.0 : bondRecoveryRate_->value(); // setup default bond recovery rate
-    // load the shared pointer into bd
-    QuantLib::ext::shared_ptr<Bond> bd = arguments_.underlying;
-
-    // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
-    Date bondSettlementDate = bd->settlementDate(computeDate);
-    Real accruedAmount = dirty ? 0.0
-                               : bd->accruedAmount(bondSettlementDate) * bd->notional(bondSettlementDate) / 100.0 *
-                                     arguments_.bondNotional;
-
-    /* Discounting and compounding, taking account of possible bond default before delivery*/
-
-    if (cashSettlement) {
-        forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
-        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
-        results_.additionalResults["incomeCompoundingDate"] = bondSettlementDate;
-        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(bondSettlementDate);
-    } else {
-        forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
-        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(settlementDate);
-        results_.additionalResults["incomeCompoundingDate"] = settlementDate;
-        results_.additionalResults["incomeCompounding"] = 1.0 / incomeCurve_->discount(settlementDate);
-    }
-
-    results_.additionalResults["spotForwardBondValue"] = spotValue;
-    results_.additionalResults["forwardForwardBondValue"] = forwardBondValue;
-
-    results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
-    results_.additionalResults["forwardSettlementDate"] = settlementDate;
-
-    results_.additionalResults["bondNotionalSettlementDate"] =
-        bd->notional(bondSettlementDate) * arguments_.bondNotional;
-    results_.additionalResults["accruedAmount"] = accruedAmount;
-
-    // apply conversion factor for future calcs
-
-    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
-    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
-    forwardBondValue /= conversionFactor;
-
-    // Subtract strike at maturity. Regarding accrual (i.e. strike is given clean vs dirty) there are two
-    // cases: long or short.
-
-    // Long: forwardBondValue - strike_dirt = (forwardBondValue - accrual) - strike_clean
-    // Short: strike_dirt - forwardBondValue = strike_clean - (forwardBondValue - accrual)
-    // In total:
-    QuantLib::ext::shared_ptr<Payoff> effectivePayoff;
-    if (arguments_.payoff) {
-        // vanilla forward bond calculation
-        forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
-        effectivePayoff = arguments_.payoff;
-    } else if (arguments_.lockRate != Null<Real>()) {
-        // lock rate specified forward bond calculation, use hardcoded conventions (compounded / semi annual) here, from
-        // treasury bonds
-        Real priceAmount = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
-        Bond::Price price(priceAmount, Bond::Price::Dirty);
-        Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
-                                          bondSettlementDate, 1E-10, 100, 0.05);
+        // t-lock payoff using hardcoded conventions (compounded / semi annual) for treasury bonds here
+        Real yield = QuantExt::yield(arguments_.underlying, forwardPrice / notionalMultiplier * 100.0,
+                                     arguments_.lockRateDayCounter, Compounded, Semiannual, arguments_.fwdMaturityDate,
+                                     bondSettlementDate, false, 1E-10, 100, 0.05, QuantLib::Bond::Price::Dirty);
         Real dv01, modDur = Null<Real>();
         if (arguments_.dv01 != Null<Real>()) {
             dv01 = arguments_.dv01;
         } else {
-            modDur = BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
-                                             Duration::Modified, bondSettlementDate);
-            dv01 = price.amount() / 100.0 * modDur;
+            modDur =
+                QuantExt::duration(arguments_.underlying, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
+                                   Duration::Modified, arguments_.fwdMaturityDate, bondSettlementDate, false);
+            dv01 = forwardPrice / notionalMultiplier * modDur;
         }
 
-        QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
-                                             "populated if payoff is specified via lock-rate");
-        Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
-        forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
-                                      bd->notional(bondSettlementDate);
+        forwardPrice = yield * dv01;
+        strikeAmount = arguments_.lockRate * dv01 * notionalMultiplier;
 
-        effectivePayoff = QuantLib::ext::make_shared<ForwardBondTypePayoff>(
-            (*arguments_.longInForward) ? Position::Long : Position::Short,
-            arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
-
-        results_.additionalResults["dv01"] = dv01;
-        results_.additionalResults["modifiedDuration"] = modDur;
-        results_.additionalResults["yield"] = yield;
-        results_.additionalResults["price"] = price;
+        results_.additionalResults["forwardYield"] = yield;
+        results_.additionalResults["forwardDv01"] = dv01;
         results_.additionalResults["lockRate"] = arguments_.lockRate;
-    } else {
-        QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
-                "of them to be populated.");
-    }
-    // forwardContractPresentValue adjusted for potential default before computeDate:
-    forwardContractPresentValue =
-        forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *
-            creditCurvePtr->survivalProbability(computeDate) -
-        cmpPayment *
-            (discountCurve_->discount(cmpPaymentDate)); // The forward is a derivative. We use "OIS curve" to discount.
-                                                        // We subtract the potential payment due to Premium.
-
-    results_.additionalResults["forwardContractForwardValue"] = forwardContractForwardValue;
-    results_.additionalResults["forwardContractDiscountFactor"] = discountCurve_->discount(settlementDate);
-    results_.additionalResults["forwardContractSurvivalProbability"] = creditCurvePtr->survivalProbability(computeDate);
-    results_.additionalResults["compensationPayment"] = cmpPayment;
-    results_.additionalResults["compensationPaymentDate"] = cmpPaymentDate;
-    results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(cmpPaymentDate);
-
-    fwdBondCashflows.push_back(forwardContractForwardValue);
-    fwdBondCashflowPayDates.push_back(computeDate);
-    fwdBondCashflowSurvivalProbabilities.push_back(creditCurvePtr->survivalProbability(computeDate));
-    fwdBondCashflowDiscountFactors.push_back(discountCurve_->discount(computeDate));
-
-    fwdBondCashflows.push_back(-1 * cmpPayment);
-    fwdBondCashflowPayDates.push_back(cmpPaymentDate);
-    fwdBondCashflowSurvivalProbabilities.push_back(1);
-    fwdBondCashflowDiscountFactors.push_back(discountCurve_->discount(cmpPaymentDate));
-
-    // Write Cashflow Results
-    std::vector<CashFlowResults> forwardCashFlowResults;
-    forwardCashFlowResults.reserve(2);
-
-    // Forward Leg
-    CashFlowResults fwdCfResult;
-    fwdCfResult.payDate = settlementDate;
-    fwdCfResult.legNumber = 1;
-    fwdCfResult.amount = forwardContractForwardValue;
-    fwdCfResult.discountFactor =
-        discountCurve_->discount(settlementDate) * creditCurvePtr->survivalProbability(computeDate);
-    fwdCfResult.presentValue = fwdCfResult.amount * fwdCfResult.discountFactor;
-    fwdCfResult.type = "ForwardValue";
-    forwardCashFlowResults.push_back(fwdCfResult);
-
-    if (!close_enough(cmpPayment, 0.0)) {
-        CashFlowResults cmpCfResult;
-        cmpCfResult.payDate = cmpPaymentDate;
-        cmpCfResult.legNumber = 2;
-        cmpCfResult.amount = -1 * cmpPayment;
-        cmpCfResult.discountFactor = discountCurve_->discount(cmpPaymentDate);
-        cmpCfResult.presentValue = cmpCfResult.amount * cmpCfResult.discountFactor;
-        cmpCfResult.type = "Premium";
-        forwardCashFlowResults.push_back(cmpCfResult);
     }
 
-    Real fwdBondRecovery = 0;
-    // Take account of face value recovery:
-    // A) Recovery for time period when coupons are present
-    for (Size i = 0; i < bd->cashflows().size(); i++) {
-        if (bd->cashflows()[i]->hasOccurred(
-                npvDate, includeSettlementDateFlows_)) // Cashflows before npvDate not relevant for npv
-            continue;
-        if (bd->cashflows()[i]->date() >=
-            computeDate) // Cashflows after computeDate do not fall into the forward period
-            continue;
-        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
+    Date effSettlementDate = arguments_.isPhysicallySettled ? bondSettlementDate : arguments_.fwdSettlementDate;
 
-        if (coupon) {
-            Date startDate = coupon->accrualStartDate();
-            Date endDate = coupon->accrualEndDate();
-            Date effectiveStartDate = (startDate <= npvDate && npvDate <= endDate) ? npvDate : startDate;
-            Date effectiveEndDate = (startDate <= computeDate && computeDate <= endDate) ? computeDate : endDate;
-            Date defaultDate = effectiveStartDate + (effectiveEndDate - effectiveStartDate) / 2;
-            Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, effectiveEndDate);
+    results_.value =
+        (arguments_.isLong ? 1.0 : -1.0) * (forwardPrice - strikeAmount) * discountCurve_->discount(effSettlementDate);
 
-            Real couponRecovery = 
-                (*effectivePayoff)(coupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
-                (discountCurve_->discount(defaultDate));
-            fwdBondRecovery += couponRecovery;
-            if (!close_enough(couponRecovery, 0.0)) {
-                CashFlowResults recoveryFlow;
-                recoveryFlow.payDate = defaultDate;
-                recoveryFlow.accrualStartDate = effectiveStartDate;
-                recoveryFlow.accrualEndDate = endDate;
-                recoveryFlow.amount =
-                    (*effectivePayoff)(coupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount);
-                recoveryFlow.discountFactor = P * (discountCurve_->discount(defaultDate));
-                recoveryFlow.presentValue = recoveryFlow.amount * recoveryFlow.discountFactor;
-                recoveryFlow.legNumber = 3;
-                recoveryFlow.type = "Forward_ExpectedRecovery";
-                forwardCashFlowResults.push_back(recoveryFlow);
-            }
-        }
+    if(arguments_.compensationPayment != Null<Real>()) {
+
+        QL_REQUIRE(arguments_.compensationPaymentDate != Null<Date>(),
+                   "DiscountingForwardBondEngine::calculate(): no compensation payment date given for compensation "
+                   "payment amount "
+                       << arguments_.compensationPayment);
+
+        results_.value += (arguments_.isLong ? 1.0 : -1.0) * arguments_.compensationPayment * discountCurve_->discount(arguments_.compensationPaymentDate);
+
+        results_.additionalResults["compensationPayment"] = arguments_.compensationPayment;
+        results_.additionalResults["compensationPaymentDate"] = arguments_.compensationPaymentDate;
+        results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(arguments_.compensationPaymentDate);
     }
 
-    // B) Recovery for time period before coupons are present
-    QuantLib::ext::shared_ptr<Coupon> firstCoupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[0]);
-    if (firstCoupon) {
-        Date startDate = npvDate; // face value recovery starting with npvDate
-        Date stopDate = std::min(bd->cashflows()[0]->date(), computeDate);
-        Real recoveryBeforeCoupons = 0.0;
-        while (startDate < stopDate) {
-            Date stepDate = startDate + timestepPeriod_;
-            Date endDate = (stepDate > stopDate) ? stopDate : stepDate;
-            Date defaultDate = startDate + (endDate - startDate) / 2;
-            Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
+    results_.additionalResults["cashFlowResults"] = cfResults;
 
-            recoveryBeforeCoupons +=
-                (*effectivePayoff)(firstCoupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
-                (discountCurve_->discount(defaultDate));
-            startDate = stepDate;
-        }
-        fwdBondRecovery += recoveryBeforeCoupons;
-        if (!close_enough(recoveryBeforeCoupons, 0.0)) {
-            CashFlowResults recoveryFlow;
-            recoveryFlow.payDate = stopDate;
-            recoveryFlow.accrualStartDate = startDate;
-            recoveryFlow.accrualEndDate = stopDate;
-            recoveryFlow.amount =
-                (*effectivePayoff)(firstCoupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount);
-            recoveryFlow.discountFactor = recoveryBeforeCoupons / recoveryFlow.amount;
-            recoveryFlow.presentValue = recoveryBeforeCoupons;
-            recoveryFlow.legNumber = 4;
-            recoveryFlow.type = "Forward_ExpectedRecovery";
-            forwardCashFlowResults.push_back(recoveryFlow);
-        }
-    }
-    // C) ZCB
-    /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
-       maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
-       to bonds with 1 cashflow, identified as a final redemption payment.
-    */
-    if (bd->cashflows().size() == 1) {
-        QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
-        if (redemption) {
-            Real redemptionRecovery = 0;
-            Date startDate = npvDate;
-            while (startDate < redemption->date()) {
-                Date stepDate = startDate + timestepPeriod_;
-                Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
-                Date defaultDate = startDate + (endDate - startDate) / 2;
-                Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
-                redemptionRecovery +=
-                    (*effectivePayoff)(redemption->amount() * arguments_.bondNotional * recoveryVal - accruedAmount) *
-                    P * (discountCurve_->discount(defaultDate));
-                startDate = stepDate;
-            }
-            fwdBondRecovery += redemptionRecovery;
-            if (!close_enough(redemptionRecovery, 0.0)) {
-                CashFlowResults recoveryFlow;
-                recoveryFlow.payDate = redemption->date();
-                recoveryFlow.accrualStartDate = startDate;
-                recoveryFlow.accrualEndDate = redemption->date();
-                recoveryFlow.amount =
-                    (*effectivePayoff)(redemption->amount() * arguments_.bondNotional * recoveryVal - accruedAmount);
-                recoveryFlow.discountFactor = redemptionRecovery / recoveryFlow.amount;
-                recoveryFlow.presentValue = redemptionRecovery;
-                recoveryFlow.legNumber = 5;
-                recoveryFlow.type = "Forward_ExpectedRecovery";
-                forwardCashFlowResults.push_back(recoveryFlow);
-            }
-        }
-    }
-
-    results_.additionalResults["forwardBondRecovery"] = fwdBondRecovery;
-
-    // Add cashflowResults
-    if (results_.additionalResults.find("cashFlowResults") != results_.additionalResults.end()) {
-        auto tmp = results_.additionalResults["cashFlowResults"];
-        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
-        std::vector<CashFlowResults> prevCfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
-        prevCfResults.insert(prevCfResults.end(), forwardCashFlowResults.begin(), forwardCashFlowResults.end());
-        results_.additionalResults["cashFlowResults"] = prevCfResults;
-    } else {
-        results_.additionalResults["cashFlowResults"] = forwardCashFlowResults;
-    }
-
-    forwardContractPresentValue += fwdBondRecovery;
-
-    return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
+    results_.additionalResults["forwardPrice"] = forwardPrice;
+    results_.additionalResults["strikeAmount"] = strikeAmount;
+    results_.additionalResults["accruedAmount"] = accruedAmount * notionalMultiplier;
+    results_.additionalResults["position"] = arguments_.isLong ? "long" : "short";
+    results_.additionalResults["settlement"] = arguments_.isPhysicallySettled ? "physical" : "cash";
+    results_.additionalResults["forwardContractDiscountFactor"] = discountCurve_->discount(effSettlementDate);
+    results_.additionalResults["fowardContractSettlementDate"] = effSettlementDate;
+    results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
+    results_.additionalResults["contractNotional"] = arguments_.bondNotional;
+    results_.additionalResults["effectiveNotional"] = notionalMultiplier;
 }
 
 std::pair<QuantLib::Real, QuantLib::Real> DiscountingForwardBondEngine::forwardPrice(
     const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate, const bool conditionalOnSurvival,
     std::vector<CashFlowResults>* const cfResults, QuantLib::Leg* const expectedCashflows) const {
-    Date bondSettlementDate = QuantLib::ext::any_cast<Date>(results_.additionalResults["incomeCompoundingDate"]);
-    QL_REQUIRE(settlementDate == bondSettlementDate,
-               "DiscountingForwardBondEngine::forwardPrice(): settlement date ("
-                   << settlementDate << ") must match bond settlement date from forward calculation ("
-                   << bondSettlementDate);
-    Real price = QuantLib::ext::any_cast<double>(results_.additionalResults["forwardForwardBondValue"]);
-    Real settlDsc = incomeCurve_->discount(settlementDate) / incomeCurve_->discount(forwardNpvDate);
-    Real settlSp = 1.0;
-    Real conditionalDefault = 1.0;
-    if(!bondDefaultCurve_.empty()) {
-        settlSp = bondDefaultCurve_->survivalProbability(settlementDate) / bondDefaultCurve_->survivalProbability(forwardNpvDate);
-        if(!conditionalOnSurvival) {
-            conditionalDefault = bondDefaultCurve_->survivalProbability(forwardNpvDate);
-        }
-    }
-
-    if(cfResults != nullptr) {
-        auto tmp = results_.additionalResults["cashFlowResults"];
-        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
-        *cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
-    }
-    return std::make_pair(price * conditionalDefault, price * conditionalDefault / settlDsc / settlSp);
+    return QuantExt::forwardPrice(arguments_.underlying, forwardNpvDate, settlementDate, conditionalOnSurvival,
+                                  cfResults, expectedCashflows);
 }
 
 } // namespace QuantExt

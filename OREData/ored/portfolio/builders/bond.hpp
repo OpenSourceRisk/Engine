@@ -115,7 +115,7 @@ protected:
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
             yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true,
-            parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")));
+            parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "false")));
     }
 };
 

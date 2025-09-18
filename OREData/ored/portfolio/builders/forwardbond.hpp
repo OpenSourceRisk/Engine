@@ -90,14 +90,11 @@ protected:
                const string& creditCurveId, const string& securityId, const string& referenceCurveId,
                const string& incomeCurveId, const bool dirty, const double cf = Real()) override {
 
-        string tsperiodStr = engineParameters_.at("TimestepPeriod");
-        Period tsperiod = parsePeriod(tsperiodStr);
         auto curves = getCurves(id, ccy, bondspreadId, discountCurveName, creditCurveId, securityId, referenceCurveId,
                                 incomeCurveId, dirty, cf);
 
-        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
-            curves.discountCurve_, curves.incomeCurve_, curves.spreadedReferenceCurve_,
-            curves.bondSpread_, curves.dpts_, curves.recovery_, curves.conversionFactor_, tsperiod);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(curves.discountCurve_,
+                                                                                  curves.conversionFactor_);
     }
 };
 

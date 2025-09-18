@@ -102,16 +102,14 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     // Date valueDate = today;
     Date fwdMaturityDate = today;
     Real strikePrice = 103.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -180,17 +178,14 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
     // Date valueDate = today;
     Date fwdMaturityDate = today;
     Real strikePrice = 98.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -259,17 +254,14 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     // Date valueDate = today;
     Date fwdMaturityDate = today + 2 * Months; // there are no cfs in these two months.
     Real strikePrice = 98.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -342,17 +334,14 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
                                                           // to be a saturday, thus two days are added.
 
     Real strikePrice = 98.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    //  Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -446,17 +435,14 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
                                                           // to be a saturday, thus two days are added.
 
     Real strikePrice = 98.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    //  Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -532,33 +518,23 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     // Date valueDate = today;
     Date fwdMaturityDate = today + 2 * Months; // there are no cfs in these two months.
     Real strikePrice = 98.0;
-    QuantLib::ext::shared_ptr<Payoff> payoff = QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
-    // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond_sh(
-        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine_sh(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
-    fwdBond_sh->setPricingEngine(fwdBondEngine_sh);
+    auto fwdBondEngine =
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+    fwdBond_sh->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price long = " << fwdBond_sh->NPV());
 
     Real fwdBondNPV = fwdBond_sh->NPV(); // save result of long computation.
-
-    QuantLib::ext::shared_ptr<Payoff> payoff_sh =
-        QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, strikePrice);
-    // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, payoff_sh, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
-                                  compensationPayment, compensationPaymentDate));
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate, false));
 
-    QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, conversionFactor, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price short = " << fwdBond->NPV());
