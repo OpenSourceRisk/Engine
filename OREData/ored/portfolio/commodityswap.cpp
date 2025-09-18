@@ -180,6 +180,13 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             foreignCcy = ld->foreignCurrency();
         else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()))
             foreignCcy = ld->foreignCurrency();
+        std::string tradePnLCurrency = envelope().additionalField("TradePnLCurrency", false, std::string());
+        if (!tradePnLCurrency.empty())
+            QL_REQUIRE(
+                foreignCcy == tradePnLCurrency,
+                "If TradePnLCurrency is given in the envelope, it must be the same as underlying index currency, got "
+                    << tradePnLCurrency << " in TradePnLCurrency, and " << foreignCcy
+                    << " as underlying index currency");
         fxIndex = buildFxIndex(legData_[i].settlementFxIndex(), legData_[i].currency(), foreignCcy,
                                engineFactory->market(), configuration);
         Date fixingDate;
