@@ -43,6 +43,7 @@
       <Parameter name="simulationConfigFile">simulation_vm.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
       <!-- enable dynamic IM -->
       <Parameter name="xvaCgDynamicIM">false</Parameter>
       <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
@@ -68,11 +69,15 @@
       <Parameter name="fullInitialCollateralisation">Y</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="dim">N</Parameter>
+      <Parameter name="dim">false</Parameter>
+      <Parameter name="mva">false</Parameter>
       <!-- DynamicIM requires xvaCgDynamicIM = true under simulation above -->
       <Parameter name="dimModel">DynamicIM</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
