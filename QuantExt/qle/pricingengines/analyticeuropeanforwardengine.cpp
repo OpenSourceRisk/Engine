@@ -38,7 +38,7 @@
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/pricingengines/blackcalculator.hpp>
+#include <ql/pricingengines/diffusioncalculator.hpp>
 
 using QuantLib::Date;
 using QuantLib::DiscountFactor;
@@ -60,15 +60,19 @@ using QuantLib::Error;
 namespace QuantExt {
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
-             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process)
-    : process_(process) {
+             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
+             const QuantLib::DiffusionModelType modelType,
+             const QuantLib::Real displacement)
+    : process_(process), modelType_(modelType), displacement_(displacement) {
         registerWith(process_);
     }
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
              const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
-             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
-    : process_(process), discountCurve_(discountCurve) {
+             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve, 
+             const QuantLib::DiffusionModelType modelType,
+             const QuantLib::Real displacement)
+    : process_(process), discountCurve_(discountCurve), modelType_(modelType), displacement_(displacement) {
         registerWith(process_);
         registerWith(discountCurve_);
     }
@@ -107,7 +111,12 @@ namespace QuantExt {
         QL_REQUIRE(spot > 0.0, "negative or null underlying given");
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
-        QuantLib::BlackCalculator black(payoff, forwardPrice, std::sqrt(variance),df);
+
+        
+
+
+
+        QuantLib::DiffusionCalculator black(payoff, forwardPrice, std::sqrt(variance),df, );
 
 
         results_.value = black.value();

@@ -37,14 +37,14 @@ class AnalyticEuropeanEngine : public QuantLib::AnalyticEuropeanEngine {
 public:
     explicit AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
                                     const bool flipResults = false,
-                                    QuantLib::BlackBachelierModel model = QuantLib::BlackBachelierMode::AsVolTypel,
+                                    QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
                                     const double displacement = 0.0)
         : QuantLib::AnalyticEuropeanEngine(gbsp, model, displacement), flipResults_(flipResults) {}
 
     AnalyticEuropeanEngine(ext::shared_ptr<GeneralizedBlackScholesProcess> process,
                            Handle<YieldTermStructure> discountCurve, const bool flipResults = false,
                            ext::optional<unsigned int> spotDays = {}, ext::optional<Calendar> spotCalendar = {},
-                           QuantLib::BlackBachelierModel model = QuantLib::BlackBachelierMode::AsVolTypel,
+                           QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
                            const double displacement = 0.0)
         : QuantLib::AnalyticEuropeanEngine(process, discountCurve, spotDays, spotCalendar, model, displacement),
           flipResults_(flipResults) {}

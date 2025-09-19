@@ -40,7 +40,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 namespace ore {
 namespace data {
 
@@ -152,6 +152,23 @@ protected:
         return assetName + "/" + ccy.code() + "/" + discountCurveName + "/" + to_string(expiryDate) + "/" + (useFxSpot ? "1" : "0") + "/" + settlementCurrency;
     }
 
+    std::pair<QuantLib::DiffusionModelType, Real> getVolTypeAndDisplacement(const string& assetName, const AssetClass& assetClassUnderlying) {
+        QuantLib::DiffusionModelType volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        Real displacement = 0.0;
+        if (assetClassUnderlying == AssetClass::COM){
+            auto volTypeStr = this->modelParameter("VolatilityType", {assetName}, false, "AsInputVolatilityType");
+            auto displacementStr = this->modelParameter("Displacement", {assetName}, false, "0.0");
+            if(volTypeStr == "ShiftedLognormal")
+                volType = QuantLib::DiffusionModelType::Black;
+            else if (volTypeStr == "Normal")
+                volType = QuantLib::DiffusionModelType::Bachelier;
+            else
+                volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+            displacement = parseReal(displacementStr);
+        }
+        return {volType, displacement};
+    }
+
     Date expiryDate_;
 };
 
@@ -184,8 +201,11 @@ protected:
             spotDays = fixingDays;
             spotCalendar = calendar;
         }
+
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+
         return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays,
-                                                                            spotCalendar);
+                                                                            spotCalendar, volType, displacement);
     }
 };
 
@@ -209,7 +229,8 @@ protected:
         Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve);
+            auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve, volType, displacement);
     }
 };
 
