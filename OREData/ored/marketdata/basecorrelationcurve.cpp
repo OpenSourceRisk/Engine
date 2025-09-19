@@ -527,7 +527,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto calibrationResults = curveCalibration->calibratedCurves(
                 basketData.remainingNames, basketData.remainingWeights, dpts, recoveryRates);
 
-            DLOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
+            DLOG("Maturity CalibrationFactor MarketNPV ImpliedNPV Error");
             DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
             for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
                 DLOG(io::iso_date(calibrationResults.cdsMaturity[i])
@@ -537,6 +537,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             }
             if (calibrationResults.success) {
                 dpts = calibrationResults.curves;
+            } else {
+                ALOG("Calibration of constituent curves to index spread failed, proceeding with non-calibrated curves. Got " << 
+                     calibrationResults.errorMessage);
             }
         }
         auto pool = QuantLib::ext::make_shared<Pool>();

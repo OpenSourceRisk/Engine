@@ -116,10 +116,13 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
     for (const auto& d : maturities) {
         const auto maturityTime = curve->timeFromReference(d);
         QL_REQUIRE(maturityTime > 0, "Maturity time must be positive");
+        indexCdsMaturityTimes.push_back(maturityTime);
+        if (d > curve->maxDate()) {
+            continue;
+        }
         curveTimes.push_back(curve->timeFromReference(d - 1 * Days));
         curveTimes.push_back(maturityTime);
         curveTimes.push_back(curve->timeFromReference(d + 1 * Days));
-        indexCdsMaturityTimes.push_back(maturityTime);
     }
     std::sort(curveTimes.begin(), curveTimes.end());
     auto it = std::unique(curveTimes.begin(), curveTimes.end());
@@ -136,7 +139,9 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
             }
 
             auto sp = curve->survivalProbability(curveTimes[timeIdx], true);
-
+            if (close_enough(sp, 0.0)) {
+                sp = 1e-06;
+            }
             auto compQuote = QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
                 Handle<Quote>(calibrationFactors[i]), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
                 [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); });
