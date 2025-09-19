@@ -45,16 +45,18 @@ void DiscountingForwardBondEngine::calculate() const {
 
     Date bondSettlementDate = arguments_.underlying->settlementDate(arguments_.fwdMaturityDate);
     Real accruedAmount = arguments_.underlying->accruedAmount(bondSettlementDate) / 100.0;
-    Real notionalMultiplier = arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
+    Real accruedAmountDollar =
+        accruedAmount * arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
 
     std::vector<CashFlowResults> cfResults;
 
     Real forwardPrice = QuantExt::forwardPrice(arguments_.underlying, arguments_.fwdMaturityDate,
                                                arguments_.fwdMaturityDate, false, &cfResults)
-                            .second;
+                            .second *
+                        arguments_.bondNotional;
 
-    if(!conversionFactor_.empty()) {
-        forwardPrice = (forwardPrice - accruedAmount) / conversionFactor_->value() + accruedAmount;
+    if (!conversionFactor_.empty()) {
+        forwardPrice = (forwardPrice - accruedAmountDollar) / conversionFactor_->value() + accruedAmountDollar;
     }
 
     Real strikeAmount;
@@ -63,13 +65,14 @@ void DiscountingForwardBondEngine::calculate() const {
 
         // plain vanilla payoff
 
-        strikeAmount =
-            arguments_.strikeAmount + (arguments_.settlementDirty ? 0.0 : accruedAmount * notionalMultiplier);
+        strikeAmount = arguments_.strikeAmount + (arguments_.settlementDirty ? 0.0 : accruedAmountDollar);
 
     } else {
 
         // t-lock payoff using hardcoded conventions (compounded / semi annual) for treasury bonds here
-        Real yield = QuantExt::yield(arguments_.underlying, forwardPrice / notionalMultiplier * 100.0,
+        Real yield = QuantExt::yield(arguments_.underlying,
+                                     forwardPrice / arguments_.bondNotional /
+                                         arguments_.underlying->notional(bondSettlementDate) * 100.0,
                                      arguments_.lockRateDayCounter, Compounded, Semiannual, arguments_.fwdMaturityDate,
                                      bondSettlementDate, false, 1E-10, 100, 0.05, QuantLib::Bond::Price::Dirty);
         Real dv01, modDur = Null<Real>();
@@ -79,11 +82,13 @@ void DiscountingForwardBondEngine::calculate() const {
             modDur =
                 QuantExt::duration(arguments_.underlying, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                    Duration::Modified, arguments_.fwdMaturityDate, bondSettlementDate, false);
-            dv01 = forwardPrice / notionalMultiplier * modDur;
+            dv01 =
+                forwardPrice / arguments_.bondNotional / arguments_.underlying->notional(bondSettlementDate) * modDur;
         }
 
-        forwardPrice = yield * dv01;
-        strikeAmount = arguments_.lockRate * dv01 * notionalMultiplier;
+        forwardPrice = yield * dv01 * arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
+        strikeAmount =
+            arguments_.lockRate * dv01 * arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
 
         results_.additionalResults["forwardYield"] = yield;
         results_.additionalResults["forwardDv01"] = dv01;
@@ -95,7 +100,7 @@ void DiscountingForwardBondEngine::calculate() const {
     results_.value =
         (arguments_.isLong ? 1.0 : -1.0) * (forwardPrice - strikeAmount) * discountCurve_->discount(effSettlementDate);
 
-    if(arguments_.compensationPayment != Null<Real>()) {
+    if (arguments_.compensationPayment != Null<Real>()) {
 
         QL_REQUIRE(arguments_.compensationPaymentDate != Null<Date>(),
                    "DiscountingForwardBondEngine::calculate(): no compensation payment date given for compensation "
@@ -116,14 +121,15 @@ void DiscountingForwardBondEngine::calculate() const {
 
     results_.additionalResults["forwardPrice"] = forwardPrice;
     results_.additionalResults["strikeAmount"] = strikeAmount;
-    results_.additionalResults["accruedAmount"] = accruedAmount * notionalMultiplier;
+    results_.additionalResults["accruedAmount"] = accruedAmountDollar;
     results_.additionalResults["position"] = arguments_.isLong ? "long" : "short";
     results_.additionalResults["settlement"] = arguments_.isPhysicallySettled ? "physical" : "cash";
     results_.additionalResults["forwardContractDiscountFactor"] = discountCurve_->discount(effSettlementDate);
     results_.additionalResults["fowardContractSettlementDate"] = effSettlementDate;
     results_.additionalResults["bondSettlementDate"] = bondSettlementDate;
     results_.additionalResults["contractNotional"] = arguments_.bondNotional;
-    results_.additionalResults["effectiveNotional"] = notionalMultiplier;
+    results_.additionalResults["effectiveNotional"] =
+        arguments_.underlying->notional(bondSettlementDate) * arguments_.bondNotional;
 }
 
 std::pair<QuantLib::Real, QuantLib::Real> DiscountingForwardBondEngine::forwardPrice(
