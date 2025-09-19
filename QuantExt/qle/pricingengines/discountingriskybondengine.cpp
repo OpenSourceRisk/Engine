@@ -157,6 +157,8 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
                                          boost::optional<bool> includeSettlementDateFlows,
                                          const bool conditionalOnSurvival, const bool additionalResults) const {
 
+    std::map<Date, Real> expectedCashflows;
+
     bool includeRefDateFlows =
         includeSettlementDateFlows ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
 
@@ -200,7 +202,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         else
             result.cashflowsBeforeSettlementValue += tmp;
 
-        result.expectedCashflows.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(cf->amount() * S, cf->date()));
+        expectedCashflows[cf->date()] += cf->amount();
 
         if (additionalResults) {
             CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
@@ -216,9 +218,6 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
             result.npv += rec.value;
             result.cashflowResults.insert(result.cashflowResults.end(), rec.cashflowResults.begin(),
                                           rec.cashflowResults.end());
-            if (rec.valid)
-                result.expectedCashflows.push_back(
-                    QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
         }
     }
 
@@ -234,9 +233,6 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
             result.npv += rec.value;
             result.cashflowResults.insert(result.cashflowResults.end(), rec.cashflowResults.begin(),
                                           rec.cashflowResults.end());
-            if (rec.valid)
-                result.expectedCashflows.push_back(
-                    QuantLib::ext::make_shared<SimpleCashFlow>(rec.expectedAmount, rec.expectedDate));
             startDate = stepDate;
         }
     }
@@ -270,8 +266,10 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         // compound recovery from reference date back to forwardDate, on reference curve
         auto tmp = recovery0 / discountCurve_->discount(npvDate);
         result.npv += tmp;
-        result.expectedCashflows.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(tmp, npvDate));
     }
+
+    for (auto const& [d, v] : expectedCashflows)
+        result.expectedCashflows.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
 
     /* Return the result */
 

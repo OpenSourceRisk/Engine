@@ -103,13 +103,13 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     Date fwdMaturityDate = today;
     Real strikePrice = 103.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -179,13 +179,13 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
     Date fwdMaturityDate = today;
     Real strikePrice = 98.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -255,13 +255,13 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     Date fwdMaturityDate = today + 2 * Months; // there are no cfs in these two months.
     Real strikePrice = 98.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -335,13 +335,13 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
 
     Real strikePrice = 98.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -436,13 +436,13 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
 
     Real strikePrice = 98.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -519,20 +519,20 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     Date fwdMaturityDate = today + 2 * Months; // there are no cfs in these two months.
     Real strikePrice = 98.0;
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond_sh(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, true));
 
     auto conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     auto fwdBondEngine =
-        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, conversionFactor);
+        QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, dpts, conversionFactor);
     fwdBond_sh->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price long = " << fwdBond_sh->NPV());
 
     Real fwdBondNPV = fwdBond_sh->NPV(); // save result of long computation.
     QuantLib::ext::shared_ptr<QuantExt::ForwardBond> fwdBond(
-        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+        new QuantExt::ForwardBond(bond, strikePrice, fwdMaturityDate, fwdMaturityDate, true, false, settlementDirty,
                                   compensationPayment, compensationPaymentDate, false));
 
     fwdBond->setPricingEngine(fwdBondEngine);

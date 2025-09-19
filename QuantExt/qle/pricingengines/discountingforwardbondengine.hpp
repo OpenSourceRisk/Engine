@@ -27,6 +27,7 @@
 
 #include <qle/instruments/cashflowresults.hpp>
 
+#include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
 
@@ -46,6 +47,7 @@ class DiscountingForwardBondEngine : public QuantExt::ForwardBond::engine, publi
 public:
     //! conversion factor is only used for deprecated representation of bond futures as bond forwards
     DiscountingForwardBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                                 const Handle<DefaultProbabilityTermStructure>& creditCurve,
                                  const Handle<Quote>& conversionFactor);
 
     void calculate() const override;
@@ -60,6 +62,7 @@ public:
 
 private:
     Handle<YieldTermStructure> discountCurve_;
+    Handle<DefaultProbabilityTermStructure> creditCurve_;
     Handle<Quote> conversionFactor_;
 };
 } // namespace QuantExt

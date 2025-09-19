@@ -25,10 +25,10 @@ namespace QuantExt {
 
 ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, const Real strikeAmount,
                          const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
-                         const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
-                         const bool isLong, const Real bondNotional)
+                         const bool knockOut, const bool settlementDirty, const Real compensationPayment,
+                         const Date compensationPaymentDate, const bool isLong, const Real bondNotional)
     : underlying_(underlying), strikeAmount_(strikeAmount), lockRate_(Null<Real>()), fwdMaturityDate_(fwdMaturityDate),
-      fwdSettlementDate_(fwdSettlementDate), isPhysicallySettled_(isPhysicallySettled),
+      fwdSettlementDate_(fwdSettlementDate), isPhysicallySettled_(isPhysicallySettled), knockOut_(knockOut),
       settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
       compensationPaymentDate_(compensationPaymentDate), isLong_(isLong), bondNotional_(bondNotional),
       dv01_(Null<Real>()) {
@@ -37,12 +37,12 @@ ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, cons
 
 ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, const Real lockRate,
                          const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
-                         const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
-                         const Real compensationPayment, const Date compensationPaymentDate, const bool isLong,
-                         const Real bondNotional, const Real dv01)
+                         const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool knockOut,
+                         const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
+                         const bool isLong, const Real bondNotional, const Real dv01)
     : underlying_(underlying), strikeAmount_(Null<Real>()), lockRate_(lockRate),
       lockRateDayCounter_(lockRateDayCounter), fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate),
-      isPhysicallySettled_(isPhysicallySettled), settlementDirty_(settlementDirty),
+      isPhysicallySettled_(isPhysicallySettled), knockOut_(knockOut), settlementDirty_(settlementDirty),
       compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate), isLong_(isLong),
       bondNotional_(bondNotional), dv01_(dv01) {
     registerWith(underlying);
@@ -64,6 +64,7 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->fwdMaturityDate = fwdMaturityDate_;
     arguments->fwdSettlementDate = fwdSettlementDate_;
     arguments->isPhysicallySettled = isPhysicallySettled_;
+    arguments->knockOut = knockOut_;
     arguments->settlementDirty = settlementDirty_;
     arguments->compensationPayment = compensationPayment_;
     arguments->compensationPaymentDate = compensationPaymentDate_;

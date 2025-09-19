@@ -45,18 +45,16 @@ public:
     //! Constructor vanilla forward bond
     ForwardBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const Real strikeAmount,
                 const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
-                const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
-                const bool isLong, const Real bondNotional = 1.0);
+                const bool knockOut, const bool settlementDirty, const Real compensationPayment,
+                const Date compensationPaymentDate, const bool isLong, const Real bondNotional = 1.0);
     //! Constructor for tlocks with lock rate
     ForwardBond(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
                 const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
-                const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
-                const Real compensationPayment, const Date compensationPaymentDate, 
-                const bool isLong,
-                const Real bondNotional = 1.0,
-                const Real dv01 = Null<Real>());
+                const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool knockOut,
+                const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
+                const bool isLong, const Real bondNotional = 1.0, const Real dv01 = Null<Real>());
 
-    //! \name Instrument interface
+    //! \Name Instrument interface
     //@{
     bool isExpired() const override;
     void setupArguments(PricingEngine::arguments*) const override;
@@ -76,6 +74,7 @@ private:
     Date fwdMaturityDate_;
     Date fwdSettlementDate_;
     bool isPhysicallySettled_;
+    bool knockOut_;
     bool settlementDirty_;
     Real compensationPayment_;
     Date compensationPaymentDate_;
@@ -94,6 +93,7 @@ public:
     Date fwdMaturityDate;
     Date fwdSettlementDate;
     bool isPhysicallySettled;
+    bool knockOut;
     bool settlementDirty;
     Real compensationPayment;
     Date compensationPaymentDate;

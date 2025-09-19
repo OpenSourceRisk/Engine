@@ -302,10 +302,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             }
         }
         for (auto& [d, v] : cf) {
-            v /= effIncomeCurve->discount(npvDate_);
-            if (conditionalOnSurvival_)
-                v /= effCreditCurve->survivalProbability(npvDate_);
-            v /= effDiscountCurve->discount(d) / effDiscountCurve->discount(npvDate_);
+            v /= effDiscountCurve->discount(d);
             expectedCashflows_->push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
         }
     }

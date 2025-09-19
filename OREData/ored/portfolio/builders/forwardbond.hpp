@@ -93,7 +93,7 @@ protected:
         auto curves = getCurves(id, ccy, bondspreadId, discountCurveName, creditCurveId, securityId, referenceCurveId,
                                 incomeCurveId, dirty, cf);
 
-        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(curves.discountCurve_,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(curves.discountCurve_, curves.dpts_,
                                                                                   curves.conversionFactor_);
     }
 };

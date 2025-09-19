@@ -385,6 +385,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
+      <xs:element type="xs:boolean" name="KnockOut"/>
     </xs:all>
   </xs:complexType>
 

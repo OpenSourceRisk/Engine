@@ -101,6 +101,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Real compensationPayment = parseReal(compensationPayment_);
     Date compensationPaymentDate = parseDate(compensationPaymentDate_);
     bool longInForward = parseBool(longInForward_);
+    bool knockOut = knockOut_.empty() ? !dv01_.empty() : parseBool(knockOut_);
 
     QL_REQUIRE((amount == Null<Real>() && lockRate != Null<Real>()) ||
                    (amount != Null<Real>() && lockRate == Null<Real>()),
@@ -165,12 +166,12 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
         amount != Null<Real>()
             ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(
-                  bond, amount, fwdMaturityDate, fwdSettlementDate, isPhysicallySettled, settlementDirty,
+                  bond, amount, fwdMaturityDate, fwdSettlementDate, isPhysicallySettled, knockOut, settlementDirty,
                   compensationPayment, compensationPaymentDate, longInForward, bondData_.bondNotional())
             : QuantLib::ext::make_shared<QuantExt::ForwardBond>(
                   bond, lockRate, lockRateDayCounter, longInForward, fwdMaturityDate, fwdSettlementDate,
-                  isPhysicallySettled, settlementDirty, compensationPayment, compensationPaymentDate, longInForward,
-                  bondData_.bondNotional(), dv01);
+                  isPhysicallySettled, knockOut, settlementDirty, compensationPayment, compensationPaymentDate,
+                  longInForward, bondData_.bondNotional(), dv01);
 
     // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
@@ -215,6 +216,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     }
 
     longInForward_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
+    knockOut_ = XMLUtils::getChildValue(fwdBondNode, "KnockOut", false);
 }
 
 XMLNode* ForwardBond::toXML(XMLDocument& doc) const {
@@ -247,6 +249,8 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
 
     XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInForward_);
+    if (!knockOut_.empty())
+        XMLUtils::addChild(doc, fwdBondNode, "KnockOut", knockOut_);
 
     return node;
 }
