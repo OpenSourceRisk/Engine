@@ -327,8 +327,10 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-        // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+        if (date > asof) {
+        // pick flow with the earliest future accrual period end date on this leg
             Real flowAmount = 0.0;
             try {
                 flowAmount = flow->amount();
@@ -337,7 +339,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            //QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
