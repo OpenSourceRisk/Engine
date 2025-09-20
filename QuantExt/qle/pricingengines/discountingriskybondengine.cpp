@@ -144,9 +144,7 @@ DiscountingRiskyBondEngine::RecoveryContribution DiscountingRiskyBondEngine::rec
         recoveryResult.currency = "";
         recoveryResult.discountFactor = recoveryDiscountFactor;
         recoveryResult.presentValue = recoveryResult.discountFactor * recoveryResult.amount;
-        std::ostringstream o;
-        o << QuantLib::io::iso_date(defaultDate);
-        recoveryResult.type = "ExpectedRecovery_" + o.str();
+        recoveryResult.type = "ExpectedRecovery";
         result.cashflowResults.push_back(recoveryResult);
     }
     result.value = expectedRecoveryAmount * P * recoveryDiscountFactor;
@@ -168,10 +166,10 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
 
     DiscountingRiskyBondEngine::BondNPVCalculationResults result;
 
-    auto effCreditCurve =
-        defaultCurve_.empty()
-            ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
-            : defaultCurve_.currentLink();
+    auto effCreditCurve = defaultCurve_.empty()
+                              ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(discountCurve_->referenceDate(),
+                                                                                     0.0, discountCurve_->dayCounter())
+                              : defaultCurve_.currentLink();
     Rate effRecovery = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     Real dfNpv = incomeCurve_->discount(npvDate);
