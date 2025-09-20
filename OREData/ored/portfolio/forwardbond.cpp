@@ -101,7 +101,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Real compensationPayment = parseReal(compensationPayment_);
     Date compensationPaymentDate = parseDate(compensationPaymentDate_);
     bool longInForward = parseBool(longInForward_);
-    bool knockOut = knockOut_.empty() ? !dv01_.empty() : parseBool(knockOut_);
+    bool knockOut = knockOut_.empty() ? !lockRate_.empty() : parseBool(knockOut_);
 
     QL_REQUIRE((amount == Null<Real>() && lockRate != Null<Real>()) ||
                    (amount != Null<Real>() && lockRate == Null<Real>()),
