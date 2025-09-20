@@ -75,15 +75,14 @@ void DiscountingForwardBondEngine::calculate() const {
                                      forwardPrice / arguments_.bondNotional /
                                          arguments_.underlying->notional(bondSettlementDate) * 100.0,
                                      arguments_.lockRateDayCounter, Compounded, Semiannual, arguments_.fwdMaturityDate,
-                                     bondSettlementDate, false, 1E-10, 100, 0.05, QuantLib::Bond::Price::Dirty);
+                                     bondSettlementDate, 1E-10, 100, 0.05, QuantLib::Bond::Price::Dirty);
 
         Real dv01, modDur = Null<Real>();
         if (arguments_.dv01 != Null<Real>()) {
             dv01 = arguments_.dv01;
         } else {
-            modDur =
-                QuantExt::duration(arguments_.underlying, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
-                                   Duration::Modified, arguments_.fwdMaturityDate, bondSettlementDate, false);
+            modDur = QuantExt::duration(arguments_.underlying, yield, arguments_.lockRateDayCounter, Compounded,
+                                        Semiannual, Duration::Modified, arguments_.fwdMaturityDate, bondSettlementDate);
             dv01 =
                 forwardPrice / arguments_.bondNotional / arguments_.underlying->notional(bondSettlementDate) * modDur;
 

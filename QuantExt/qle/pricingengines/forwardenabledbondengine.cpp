@@ -36,8 +36,8 @@ forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, 
 QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Real price,
                      const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
                      QuantLib::Frequency frequency, QuantLib::Date forwardDate, QuantLib::Date settlementDate,
-                     const bool conditionalOnSurvival, QuantLib::Real accuracy, QuantLib::Size maxIterations,
-                     QuantLib::Rate guess, QuantLib::Bond::Price::Type priceType) {
+                     QuantLib::Real accuracy, QuantLib::Size maxIterations, QuantLib::Rate guess,
+                     QuantLib::Bond::Price::Type priceType) {
 
     instrument->recalculate();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
@@ -64,7 +64,7 @@ QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst
     price /= 100.0 / bond->notional(settlementDate);
 
     QuantLib::Leg expectedCashflows;
-    fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, nullptr, &expectedCashflows);
+    fwdEngine->forwardPrice(forwardDate, settlementDate, true, nullptr, &expectedCashflows);
 
     QuantLib::NewtonSafe solver;
     solver.setMaxEvaluations(maxIterations);
@@ -76,7 +76,7 @@ QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst
 QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Rate yield,
                         const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
                         QuantLib::Frequency frequency, QuantLib::Duration::Type type, QuantLib::Date forwardDate,
-                        QuantLib::Date settlementDate, const bool conditionalOnSurvival) {
+                        QuantLib::Date settlementDate) {
 
     instrument->recalculate();
     auto fwdEngine = QuantLib::ext::dynamic_pointer_cast<ForwardEnabledBondEngine>(instrument->pricingEngine());
@@ -98,7 +98,7 @@ QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& i
                                                                                << bond->maturityDate() << ")");
 
     QuantLib::Leg expectedCashflows;
-    fwdEngine->forwardPrice(forwardDate, settlementDate, conditionalOnSurvival, nullptr, &expectedCashflows);
+    fwdEngine->forwardPrice(forwardDate, settlementDate, true, nullptr, &expectedCashflows);
 
     QuantLib::InterestRate y(yield, dayCounter, compounding, frequency);
     return QuantLib::CashFlows::duration(expectedCashflows, y, type, false, settlementDate);

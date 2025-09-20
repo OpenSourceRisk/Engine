@@ -46,14 +46,14 @@ forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, 
 QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Real price,
                      const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
                      QuantLib::Frequency frequency, QuantLib::Date forwardDate = QuantLib::Date(),
-                     QuantLib::Date settlementDate = QuantLib::Date(), const bool conditionalOnSurvival = true,
-                     QuantLib::Real accuracy = 1.0e-10, QuantLib::Size maxIterations = 100, QuantLib::Rate guess = 0.05,
+                     QuantLib::Date settlementDate = QuantLib::Date(), QuantLib::Real accuracy = 1.0e-10,
+                     QuantLib::Size maxIterations = 100, QuantLib::Rate guess = 0.05,
                      QuantLib::Bond::Price::Type priceType = QuantLib::Bond::Price::Clean);
 
 QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Rate yield,
                         const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
                         QuantLib::Frequency frequency, QuantLib::Duration::Type type = QuantLib::Duration::Modified,
-                        QuantLib::Date forwardDate = QuantLib::Date(), QuantLib::Date settlementDate = QuantLib::Date(),
-                        const bool conditionalOnSurvivial = true);
+                        QuantLib::Date forwardDate = QuantLib::Date(),
+                        QuantLib::Date settlementDate = QuantLib::Date());
 
 } // namespace QuantExt
