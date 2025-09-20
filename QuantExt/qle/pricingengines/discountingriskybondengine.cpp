@@ -137,12 +137,16 @@ DiscountingRiskyBondEngine::RecoveryContribution DiscountingRiskyBondEngine::rec
     DiscountFactor recoveryDiscountFactor = discountCurve_->discount(defaultDate) / dfNpv;
     if (additionalResults && !close_enough(expectedRecoveryAmount * P * recoveryDiscountFactor, 0.0)) {
         CashFlowResults recoveryResult;
-        recoveryResult.amount = expectedRecoveryAmount;
+        recoveryResult.accrualStartDate = startDate;
+        recoveryResult.accrualEndDate = endDate;
+        recoveryResult.amount = expectedRecoveryAmount * P;
         recoveryResult.payDate = defaultDate;
         recoveryResult.currency = "";
-        recoveryResult.discountFactor = P * recoveryDiscountFactor;
+        recoveryResult.discountFactor = recoveryDiscountFactor;
         recoveryResult.presentValue = recoveryResult.discountFactor * recoveryResult.amount;
-        recoveryResult.type = "ExpectedRecovery";
+        std::ostringstream o;
+        o << QuantLib::io::iso_date(defaultDate);
+        recoveryResult.type = "ExpectedRecovery_" + o.str();
         result.cashflowResults.push_back(recoveryResult);
     }
     result.value = expectedRecoveryAmount * P * recoveryDiscountFactor;
@@ -173,10 +177,8 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Real dfNpv = incomeCurve_->discount(npvDate);
     Real spNpv = conditionalOnSurvival ? effCreditCurve->survivalProbability(npvDate) : 1.0;
     Real dfSettl = incomeCurve_->discount(settlementDate);
-    Real spSettl = effCreditCurve->survivalProbability(settlementDate);
-
-    if (!conditionalOnSurvival)
-        spSettl /= effCreditCurve->survivalProbability(npvDate);
+    Real spSettl = effCreditCurve->survivalProbability(settlementDate) /
+                   (conditionalOnSurvival ? 1.0 : effCreditCurve->survivalProbability(npvDate));
 
     result.compoundFactorSettlement = (dfNpv * spNpv) / (dfSettl * spSettl);
     result.accruedAmountSettlement =
@@ -239,33 +241,46 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
 
     /* If conditionalOnSurvival = false, we add the recovery contribution between reference date and npv date */
 
-    if (!conditionalOnSurvival_) {
+    if (!conditionalOnSurvival) {
+
+        Real compoundFactor = 1.0 / discountCurve_->discount(npvDate);
+
         Real recovery0 = 0.0;
         if (auto redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(arguments_.cashflows[0]);
             redemption && arguments_.cashflows.size() == 1) {
             Date startDate = discountCurve_->referenceDate();
             while (startDate < std::min(redemption->date(), npvDate)) {
                 Date stepDate = startDate + timestepPeriod_;
-                auto rec = recoveryContribution(1.0, 1.0, effRecovery, effCreditCurve, false, redemption->amount(),
-                                                startDate, std::min(npvDate, redemption->date()));
-                recovery0 += rec.value;
+                auto rec = recoveryContribution(1.0, 1.0, effRecovery, effCreditCurve, additionalResults,
+                                                redemption->amount(), startDate, std::min(npvDate, redemption->date()));
                 startDate = stepDate;
+                recovery0 += rec.value * compoundFactor;
+                for (auto& r : rec.cashflowResults) {
+                    r.payDate = npvDate;
+                    r.discountFactor *= compoundFactor;
+                    r.presentValue *= compoundFactor;
+                    result.cashflowResults.push_back(r);
+                }
             }
         } else {
             for (Size i = 0; i < arguments_.cashflows.size(); i++) {
                 QuantLib::ext::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
                 if (auto coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(cf)) {
-                    auto rec =
-                        recoveryContribution(1.0, 1.0, effRecovery, effCreditCurve, false, coupon->nominal(),
-                                             std::max(discountCurve_->referenceDate(), coupon->accrualStartDate()),
-                                             std::min(npvDate, coupon->accrualEndDate()));
-                    recovery0 += rec.value;
+                    auto rec = recoveryContribution(
+                        1.0, 1.0, effRecovery, effCreditCurve, additionalResults, coupon->nominal(),
+                        std::max(discountCurve_->referenceDate(), coupon->accrualStartDate()),
+                        std::min(npvDate, coupon->accrualEndDate()));
+                    recovery0 += rec.value * compoundFactor;
+                    for (auto& r : rec.cashflowResults) {
+                        r.payDate = npvDate;
+                        r.discountFactor *= compoundFactor;
+                        r.presentValue *= compoundFactor;
+                        result.cashflowResults.push_back(r);
+                    }
                 }
             }
         }
-        // compound recovery from reference date back to forwardDate, on reference curve
-        auto tmp = recovery0 / discountCurve_->discount(npvDate);
-        result.npv += tmp;
+        result.npv += recovery0;
     }
 
     for (auto const& [d, v] : expectedCashflows)
