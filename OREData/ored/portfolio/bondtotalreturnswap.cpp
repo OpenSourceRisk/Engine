@@ -47,7 +47,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactoryInput) {
     DLOG("BondTRS::build() called for trade " << id());
 
     // ISDA taxonomy
@@ -55,6 +55,24 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     additionalData_["isdaBaseProduct"] = string("Total Return Swap");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
+
+    // propagate some parameters to underlying bond builder on a copy of engine factory
+
+    auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(*engineFactoryInput);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
+    std::vector<EngineFactory::ParameterOverride> overrides;
+    if (auto s = fwdBondBuilder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (!overrides.empty())
+        engineFactory->setEngineParameterOverrides(overrides);
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
@@ -136,6 +154,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     }
 
     // build bond index (absolute prices, conditional on survival set to false)
+
     BondIndexBuilder bondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
     auto bondIndex = bondIndexBuilder.bondIndex();
 
