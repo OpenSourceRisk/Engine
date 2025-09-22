@@ -643,7 +643,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     flowType = "Notional";
                 }
 
-                ptrFlow = unpackIndexedCouponOrCashFlow(ptrFlow);
+                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
+                    ptrFlow = unpackIndexedCoupon(cpn);
+                }
 
                 QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -651,6 +653,8 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::IndexWrappedCashFlow> ptrIndWrapCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::IndexWrappedCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
@@ -720,6 +724,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                 } else if (ptrIndCf) {
                     fixingDate = ptrIndCf->fixingDate();
                     fixingValue = ptrIndCf->indexFixing();
+                    flowType = "Index";
+                } else if (ptrIndWrapCf) {
+                    fixingDate = ptrIndWrapCf->fixingDate();
+                    fixingValue = ptrIndWrapCf->multiplier();
                     flowType = "Index";
                 } else if (ptrFxlCf) {
                     fixingDate = ptrFxlCf->fxFixingDate();
