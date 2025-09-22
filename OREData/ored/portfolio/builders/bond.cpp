@@ -63,8 +63,7 @@ CamAmcBondEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
 
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                                    const string& referenceCurveId, const string& incomeCurveId,
-                                    const BondEngineBuilderParameterOverride& parameterOverride) {
+                                    const string& referenceCurveId, const string& incomeCurveId) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -82,18 +81,6 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
             yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
     return buildMcEngine(model->lgm(0), yts, externalModelIndices);
-}
-
-BondEngineBuilderParameterOverride::operator string() const {
-    std::string result = "_";
-    if (timestepPeriod) {
-        result += ore::data::to_string(*timestepPeriod);
-    }
-    result += "_";
-    if (spreadOnIncome) {
-        result += *spreadOnIncome ? "s" : "n";
-    }
-    return result;
 }
 
 } // namespace data

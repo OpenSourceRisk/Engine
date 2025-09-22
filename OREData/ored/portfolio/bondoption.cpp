@@ -46,7 +46,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactoryInput) {
     DLOG("Building Bond Option: " << id());
 
     // ISDA taxonomy
@@ -55,8 +55,25 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     additionalData_["isdaSubProduct"] = string("Debt Option");
     additionalData_["isdaTransaction"] = string("");
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    // propagate some parameters to underlying bond builder on a copy of engine factory
+
+    auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(*engineFactoryInput);
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
+    auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
+    std::vector<EngineFactory::ParameterOverride> overrides;
+    if (auto s = fwdBondBuilder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (!overrides.empty())
+        engineFactory->setEngineParameterOverrides(overrides);
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     bondData_ = originalBondData_;
     auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
     QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,

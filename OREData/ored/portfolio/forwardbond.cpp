@@ -46,7 +46,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactoryInput) {
     DLOG("ForwardBond::build() called for trade " << id());
 
     // ISDA taxonomy
@@ -57,9 +57,25 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["currency"] = currency_;
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    // propagate some parameters to underlying bond builder on a copy of engine factory
 
+    auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(*engineFactoryInput);
     QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
+    std::vector<EngineFactory::ParameterOverride> overrides;
+    if (auto s = fwdBondBuilder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (auto s = fwdBondBuilder->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    }
+    if (!overrides.empty())
+        engineFactory->setEngineParameterOverrides(overrides);
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
@@ -152,11 +168,6 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     auto fwdBondBuilder = QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());
-
-    BondEngineBuilderParameterOverride parameterOverride;
-    parameterOverride.spreadOnIncome =
-        parseBool(fwdBondBuilder->engineParameter("SpreadOnIncomeCurve", {}, false, "false"));
-    parameterOverride.timestepPeriod = parsePeriod(fwdBondBuilder->engineParameter("TimestepPeriod", {}, false, "3M"));
 
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(),
                                                bondData_.referenceCurveId(), bondData_.incomeCurveId(),

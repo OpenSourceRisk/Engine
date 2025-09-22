@@ -40,31 +40,15 @@
 namespace ore {
 namespace data {
 
-/*! BondEngineBuilder parameter override that can be used by other product types (e.g. ForwardBond) when
-    they build their underlyings using the bond engine builder */
-struct BondEngineBuilderParameterOverride {
-    std::optional<Period> timestepPeriod;
-    std::optional<bool> spreadOnIncome;
-    operator string() const;
-};
-
-//! Engine Builder base class for Bonds
-/*! Pricing engines are cached by security id
-\ingroup builders
-*/
-
-class BondEngineBuilder
-    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&,
-                                         const string&, const BondEngineBuilderParameterOverride&> {
+class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
+                                                             const string&, const string&> {
 protected:
     BondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
     virtual string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                           const string& referenceCurveId, const string& incomeCurveId,
-                           const BondEngineBuilderParameterOverride& parameterOverride) override {
-        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId +
-               "_" + (string)parameterOverride;
+                           const string& referenceCurveId, const string& incomeCurveId) override {
+        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
     }
 };
 
@@ -80,20 +64,7 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-               const string& referenceCurveId, const string& incomeCurveId,
-               const BondEngineBuilderParameterOverride& parameterOverride) override {
-
-        Period tsperiod;
-        if (parameterOverride.timestepPeriod)
-            tsperiod = *parameterOverride.timestepPeriod;
-        else
-            tsperiod = parsePeriod(engineParameter("TimestepPeriod"));
-
-        bool spreadOnIncome;
-        if (parameterOverride.spreadOnIncome)
-            spreadOnIncome = *parameterOverride.spreadOnIncome;
-        else
-            spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
+               const string& referenceCurveId, const string& incomeCurveId) override {
 
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
 
@@ -133,8 +104,13 @@ protected:
         bool includePastCashflows =
             parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
+        bool spreadOnIncome = engineParameter("SpreadOnIncome", {}, false, "true");
+        bool treatSecuritySpreadAsCreditSpread =
+            modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false");
+
         return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true, spreadOnIncome);
+            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true, spreadOnIncome,
+            treatSecuritySpreadAsCreditSpread);
     }
 };
 
@@ -153,7 +129,7 @@ protected:
     engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
                const string& referenceCurveId, const string& incomeCurveId,
                const BondEngineBuilderParameterOverride& parameterOverride) override {
-        string tsperiodStr = engineParameter("TimestepPeriod");
+        string tsperiodStr = engineParameter("TimestepPeriod", {}, false, "3M");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<Quote> spread;

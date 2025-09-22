@@ -58,13 +58,15 @@ public:
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                const bool includePastCashflows = false,
                                const Handle<YieldTermStructure>& incomeCurve = {},
-                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true);
+                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
+                               const bool treatSecuritySpreadAsCreditSpread = false);
 
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                const Handle<YieldTermStructure>& incomeCurve = {},
-                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true);
+                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
+                               const bool treatSecuritySpreadAsCreditSpread = false);
 
     void calculate() const override;
 
@@ -126,6 +128,7 @@ protected:
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
     bool spreadOnIncome_;
+    bool treatSecuritySpreadAsCreditSpread_;
 };
 
 } // namespace QuantExt
