@@ -9,7 +9,7 @@
 - [Methods](methods.pdf): Summary of simulation, xva and risk methods used in ORE
 
 
-## Additional detailed documentation**:
+## Additional detailed and technical documentation**:
 
 - [Design](ore_design.pdf): Introduction into the internal workings of ORE's stack of libraries
 
