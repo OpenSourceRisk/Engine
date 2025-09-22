@@ -59,18 +59,18 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     // propagate some parameters to underlying bond builder on a copy of engine factory
 
-    auto engineFactory = QuantLib::ext::shared_ptr<EngineFactory>(*engineFactoryInput);
+    auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(*engineFactoryInput);
     QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
-    if (auto s = fwdBondBuilder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    if (auto s = builder_fwd->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"TreatSecuritySpreadAsCreditSpread", s}}});
     }
-    if (auto s = fwdBondBuilder->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    if (auto s = builder_fwd->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"SpreadOnIncomeCurve", s}}});
     }
-    if (auto s = fwdBondBuilder->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride(isBond, s));
+    if (auto s = builder_fwd->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
+        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"TimestepPeriod", s}}});
     }
     if (!overrides.empty())
         engineFactory->setEngineParameterOverrides(overrides);
@@ -170,8 +170,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());
 
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(),
-                                               bondData_.referenceCurveId(), bondData_.incomeCurveId(),
-                                               parameterOverride));
+                                               bondData_.referenceCurveId(), bondData_.incomeCurveId()));
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =

@@ -481,8 +481,7 @@ void BondFutureUtils::modifyToForwardBond(const Date& expiry, QuantLib::ext::sha
         QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << securityId);
     modifiedBond->setPricingEngine(bondBuilder->engine(parseCurrency(data.currency()), data.creditCurveId(), securityId,
-                                                       data.referenceCurveId(), data.incomeCurveId(),
-                                                       BondEngineBuilderParameterOverride()));
+                                                       data.referenceCurveId(), data.incomeCurveId()));
 
     // store modified bond
     bond = modifiedBond;

@@ -104,9 +104,10 @@ protected:
         bool includePastCashflows =
             parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
-        bool spreadOnIncome = engineParameter("SpreadOnIncome", {}, false, "true");
+        bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncome", {}, false, "true"));
         bool treatSecuritySpreadAsCreditSpread =
-            modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false");
+            parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false"));
+        Period tsperiod = parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M"));
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
             yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true, spreadOnIncome,
@@ -125,10 +126,10 @@ public:
         : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngineMultiState") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-               const string& referenceCurveId, const string& incomeCurveId,
-               const BondEngineBuilderParameterOverride& parameterOverride) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override {
         string tsperiodStr = engineParameter("TimestepPeriod", {}, false, "3M");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
@@ -207,10 +208,10 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-               const string& referenceCurveId, const string& incomeCurveId,
-               const BondEngineBuilderParameterOverride& parameterOverride) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,

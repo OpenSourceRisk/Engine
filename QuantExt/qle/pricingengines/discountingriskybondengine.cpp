@@ -17,15 +17,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/date_time.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
+
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-#include <qle/instruments/cashflowresults.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
+
+#include <boost/date_time.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -43,7 +47,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
       includePastCashflows_(includePastCashflows), incomeCurve_(incomeCurve),
       conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome),
       treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
-    discountCurve_ = securitySpread_.empty() || treatSecuritySoreadAsCreditSpread
+    discountCurve_ = securitySpread_.empty() || treatSecuritySpreadAsCreditSpread_
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -69,7 +73,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
       includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
       conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome),
       treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
-    discountCurve_ = securitySpread_.empty() || treatSecuritySoreadAsCreditSpread
+    discountCurve_ = securitySpread_.empty() || treatSecuritySpreadAsCreditSpread_
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -176,9 +180,10 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     Rate effSecSpread = securitySpread_.empty() ? 0.0 : securitySpread_->value();
     Rate effRecovery = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
-    if (treatSecuritySoreadAsCreditSpread_) {
+    if (treatSecuritySpreadAsCreditSpread_) {
         effCreditCurve = QuantLib::ext::make_shared<HazardSpreadedDefaultTermStructure>(
-            effCreditCurve, effSecSpread / (1.0 - effRecovery));
+            Handle<DefaultProbabilityTermStructure>(effCreditCurve),
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(effSecSpread / (1.0 - effRecovery))));
     }
 
     Real dfNpv = incomeCurve_->discount(npvDate);

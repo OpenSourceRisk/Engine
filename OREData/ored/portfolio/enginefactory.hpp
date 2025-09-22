@@ -241,7 +241,9 @@ public:
         //! reference data
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        //! additional engine builders
+        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 
     //! Return the market used by this EngineFactory
     const QuantLib::ext::shared_ptr<Market>& market() const { return market_; };
