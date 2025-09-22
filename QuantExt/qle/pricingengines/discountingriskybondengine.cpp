@@ -161,8 +161,6 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
                                          boost::optional<bool> includeSettlementDateFlows,
                                          const bool conditionalOnSurvival, const bool additionalResults) const {
 
-    std::map<Date, Real> expectedCashflows;
-
     bool includeRefDateFlows =
         includeSettlementDateFlows ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
 
@@ -204,7 +202,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         else
             result.cashflowsBeforeSettlementValue += tmp;
 
-        expectedCashflows[cf->date()] += cf->amount();
+        result.expectedCashflows.push_back(cf);
 
         if (additionalResults) {
             CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
@@ -282,9 +280,6 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         }
         result.npv += recovery0;
     }
-
-    for (auto const& [d, v] : expectedCashflows)
-        result.expectedCashflows.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
 
     /* Return the result */
 
