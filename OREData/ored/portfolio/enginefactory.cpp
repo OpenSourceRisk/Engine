@@ -179,36 +179,28 @@ EngineFactory::EngineFactory(const QuantLib::ext::shared_ptr<EngineData>& engine
                              const QuantLib::ext::shared_ptr<Market>& market,
                              const map<MarketContext, string>& configurations,
                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                             const IborFallbackConfig& iborFallbackConfig,
-                             const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                             const bool allowOverwrite)
+                             const IborFallbackConfig& iborFallbackConfig)
     : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig) {
-    LOG("Building EngineFactory");
+      iborFallbackConfig_(iborFallbackConfig) {}
 
-    addDefaultBuilders();
-    addExtraBuilders(extraEngineBuilders, {}, allowOverwrite);
-}
-
-void EngineFactory::registerBuilder(const QuantLib::ext::shared_ptr<EngineBuilder>& builder,
-                                    const bool allowOverwrite) {
-    const string& modelName = builder->model();
-    const string& engineName = builder->engine();
-    auto key = make_tuple(modelName, engineName, builder->tradeTypes());
-    if (allowOverwrite)
-        builders_.erase(key);
-    QL_REQUIRE(builders_.insert(make_pair(key, builder)).second,
-               "EngineFactory: duplicate engine builder for (" << modelName << "/" << engineName << "/"
-                                                               << boost::algorithm::join(builder->tradeTypes(), ",")
-                                                               << ") - this is an internal error.");
+void EngineFactory::resetBuilders() {
+    builders_.clear();
+    legBuidlers_.clear();
+    for (auto const& b : EngineBuilderFactory::instance().generateEngineBuilders())
+        builders_.insert(make_pair(make_tuple(builder->model(), builder->engine(), builder->tradeTypes()), builder));
+    for (auto const& b : EngineBuilderFactory::instance().generateLegBuilders())
+        legBuilders_.insert(std::make_pair(legBuilder->legType(), legBuilder));
+    buildersDirty_ = false;
 }
 
 QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
-    // Check that we have a model/engine for tradetype
+
+    if(buildersDirty_)
+        resetBuilders();
+
     QL_REQUIRE(engineData_->hasProduct(tradeType),
                "No Pricing Engine configuration was provided for trade type " << tradeType);
 
-    // Find a builder for the model/engine/tradeType
     const string& model = engineData_->model(tradeType);
     const string& engine = engineData_->engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> map_type;
@@ -227,19 +219,32 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
     if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder))
         effectiveTradeType = db->effectiveTradeType();
 
-    builder->init(market_, configurations_, engineData_->modelParameters(effectiveTradeType),
-                  engineData_->engineParameters(effectiveTradeType), engineData_->globalParameters());
+    auto modelParams = engineData_->modelParameters(effectiveTradeType);
+    auto engineParams = engineData_->engineParameters(effectiveTradeType);
+
+    for (auto const& p : modelParameterOverrides_) {
+        if (p.applies(effectiveTradeType)) {
+            for (auto const& [k, v] : p.overrides) {
+                modelParams[k] = v;
+                DLOG("override model parameter '" << k << "' with value '" << v << "' in builder for product '"
+                                                  << tradeType);
+            }
+        }
+    }
+
+    for (auto const& p : engineParameterOverrides_) {
+        if (p.applies(effectiveTradeType)) {
+            for (auto const& [k, v] : p.overrides) {
+                engineParams[k] = v;
+                DLOG("override engine parameter '" << k << "' with value '" << v << "' in builder for product '"
+                                                   << tradeType);
+            }
+        }
+    }
+
+    builder->init(market_, configurations_, modelParams, engineParams, engineData_->globalParameters());
 
     return builder;
-}
-
-void EngineFactory::registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder,
-                                       const bool allowOverwrite) {
-    if (allowOverwrite)
-        legBuilders_.erase(legBuilder->legType());
-    QL_REQUIRE(legBuilders_.insert(std::make_pair(legBuilder->legType(), legBuilder)).second,
-               "EngineFactory duplicate leg builder for '" << legBuilder->legType()
-                                                           << "' - this is an internal error.");
 }
 
 QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& legType) {
@@ -256,27 +261,14 @@ set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> Engine
     return res;
 }
 
-void EngineFactory::addDefaultBuilders() {
-    for (auto const& b : EngineBuilderFactory::instance().generateEngineBuilders())
-        registerBuilder(b);
-    for (auto const& b : EngineBuilderFactory::instance().generateLegBuilders())
-        registerLegBuilder(b);
+void EngineFactory::setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides) {
+    engineParameterOverrides_ = overrides;
+    buildersDirty_ = true;
 }
 
-void EngineFactory::addExtraBuilders(const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                                     const std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders,
-                                     const bool allowOverwrite) {
-
-    if (extraEngineBuilders.size() > 0) {
-        DLOG("adding " << extraEngineBuilders.size() << " extra engine builders");
-        for (auto eb : extraEngineBuilders)
-            registerBuilder(eb, allowOverwrite);
-    }
-    if (extraLegBuilders.size() > 0) {
-        DLOG("adding " << extraLegBuilders.size() << " extra leg builders");
-        for (auto elb : extraLegBuilders)
-            registerLegBuilder(elb, allowOverwrite);
-    }
+void EngineFactory::setModelParameterOverrides(const std::vector<ParameterOverride>& overrides) {
+    modelParameterOverrides_ = overrides;
+    buildersDirty_ = true;
 }
 
 } // namespace data
