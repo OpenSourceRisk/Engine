@@ -247,8 +247,7 @@ void XvaEngineCG::buildPortfolio() {
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
         EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
-            model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())),
-        true);
+            model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())));
 
     portfolio_->build(factory, "xva engine cg", true);
 

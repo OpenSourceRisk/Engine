@@ -297,6 +297,7 @@ private:
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
     map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders_;
     IborFallbackConfig iborFallbackConfig_;
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;

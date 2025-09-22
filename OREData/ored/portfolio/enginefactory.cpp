@@ -182,17 +182,17 @@ EngineFactory::EngineFactory(const QuantLib::ext::shared_ptr<EngineData>& engine
                              const IborFallbackConfig& iborFallbackConfig,
                              const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders)
     : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig) {}
+      extraEngineBuilders_(extraEngineBuilders), iborFallbackConfig_(iborFallbackConfig) {}
 
 void EngineFactory::resetBuilders() {
     builders_.clear();
     legBuilders_.clear();
     for (auto const& b : EngineBuilderFactory::instance().generateEngineBuilders())
-        builders_.insert(make_pair(make_tuple(b->model(), b->engine(), b->tradeTypes()), b));
-    for (auto const& b : extraEngineBuilders)
-        builders_.insert(make_pair(make_tuple(b->model(), b->engine(), b->tradeTypes()), b));
+        builders_[make_tuple(b->model(), b->engine(), b->tradeTypes())] = b;
+    for (auto const& b : extraEngineBuilders_)
+        builders_[make_tuple(b->model(), b->engine(), b->tradeTypes())] = b;
     for (auto const& b : EngineBuilderFactory::instance().generateLegBuilders())
-        legBuilders_.insert(std::make_pair(b->legType(), b));
+        legBuilders_[b->legType()] = b;
     buildersDirty_ = false;
 }
 
