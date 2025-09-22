@@ -298,7 +298,6 @@ private:
     IborFallbackConfig iborFallbackConfig_;
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;
-    std::vector<std::map<string, string>> globalParameterOverrides_;
 };
 
 //! Leg builder
