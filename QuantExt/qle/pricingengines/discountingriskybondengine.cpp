@@ -36,12 +36,14 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
     const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread, Period timestepPeriod,
     boost::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
-    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival, const bool spreadOnIncome)
+    const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival, const bool spreadOnIncome,
+    const bool treatSecuritySpreadAsCreditSpread)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
       includePastCashflows_(includePastCashflows), incomeCurve_(incomeCurve),
-      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
-    discountCurve_ = securitySpread_.empty()
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome),
+      treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
+    discountCurve_ = securitySpread_.empty() || treatSecuritySoreadAsCreditSpread
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -61,11 +63,13 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows,
                                                        const Handle<YieldTermStructure>& incomeCurve,
-                                                       const bool conditionalOnSurvival, const bool spreadOnIncome)
+                                                       const bool conditionalOnSurvival, const bool spreadOnIncome,
+                                                       const bool treatSecuritySpreadAsCreditSpread)
     : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
       includeSettlementDateFlows_(includeSettlementDateFlows), incomeCurve_(incomeCurve),
-      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome) {
-    discountCurve_ = securitySpread_.empty()
+      conditionalOnSurvival_(conditionalOnSurvival), spreadOnIncome_(spreadOnIncome),
+      treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
+    discountCurve_ = securitySpread_.empty() || treatSecuritySoreadAsCreditSpread
                          ? discountCurve
                          : Handle<YieldTermStructure>(
                                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -170,7 +174,14 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         defaultCurve_.empty()
             ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, discountCurve_->dayCounter())
             : defaultCurve_.currentLink();
+
+    Rate effSecSpread = securitySpread_.empty() ? 0.0 : securitySpread_->value();
     Rate effRecovery = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
+
+    if (treatSecuritySoreadAsCreditSpread_) {
+        effCreditCurve = QuantLib::ext::make_shared<HazardSpreadedDefaultTermStructure>(
+            effCreditCurve, effSecSpread / (1.0 - effRecovery));
+    }
 
     Real dfNpv = incomeCurve_->discount(npvDate);
     Real spNpv = conditionalOnSurvival ? effCreditCurve->survivalProbability(npvDate) : 1.0;
