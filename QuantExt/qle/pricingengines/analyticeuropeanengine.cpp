@@ -17,7 +17,6 @@
 */
 
 #include <ql/exercise.hpp>
-#include <ql/pricingengines/blackcalculator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
 

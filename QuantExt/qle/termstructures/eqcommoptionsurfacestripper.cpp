@@ -329,10 +329,11 @@ CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& callSurface,
     const QuantLib::ext::shared_ptr<OptionInterpolatorBase>& putSurface, const Calendar& calendar,
     const DayCounter& dayCounter, Exercise::Type type, bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
-    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions)
+    QuantLib::BlackVolTimeExtrapolation timeExtrapolation, bool preferOutOfTheMoney, Solver1DOptions solverOptions,
+    VolatilityType volType, Real shift)
     : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
                             upperStrikeConstExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions),
-      priceCurve_(priceCurve), discountCurve_(discountCurve) {
+      priceCurve_(priceCurve), discountCurve_(discountCurve)  {
     registerWith(priceCurve_);
     registerWith(discountCurve_);
 }

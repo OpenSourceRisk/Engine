@@ -93,10 +93,6 @@ namespace QuantExt {
             QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
         QL_REQUIRE(payoff, "non-striked payoff given");
 
-        Real variance =
-            process_->blackVolatility()->blackVariance(
-                                              arguments_.exercise->lastDate(),
-                                              payoff->strike());
         DiscountFactor dividendDiscount =
             process_->dividendYield()->discount(
                                              arguments_.forwardDate);
@@ -112,11 +108,11 @@ namespace QuantExt {
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
 
-        
+        auto [variance, volType, displacement] = getImpliedVarianceFromModelType(
+            modelType_, displacement_, *process_->blackVolatility(), forwardPrice, payoff->strike(),
+            process_->blackVolatility()->timeFromReference(arguments_.exercise->lastDate()));
 
-
-
-        QuantLib::DiffusionCalculator black(payoff, forwardPrice, std::sqrt(variance),df, );
+        QuantLib::DiffusionCalculator black(payoff, forwardPrice, std::sqrt(variance),df, volType, displacement);
 
 
         results_.value = black.value();
