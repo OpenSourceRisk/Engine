@@ -50,6 +50,8 @@
 	<YieldCurves id="default">
 	        <YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
 		<YieldCurve name="GBP-IN-USD">Yield/GBP/GBP-IN-USD</YieldCurve>
+		<YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+		<YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
 	</YieldCurves>
 	<DiscountingCurves id="default">
 		<DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
@@ -136,6 +138,7 @@
 	<CapFloorVolatilities id="default"/>
         <CDSVolatilities id="default"/>
 	<DefaultCurves id="default">
+	        <DefaultCurve name="BANK">Default/EUR/BANK</DefaultCurve>
 	        <DefaultCurve name="CPTY_A">Default/EUR/CPTY_A</DefaultCurve>
 	</DefaultCurves>
 	<YYInflationCapFloorVolatilities id="default"/>
