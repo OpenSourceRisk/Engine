@@ -230,7 +230,7 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
             for (auto const& [k, v] : p.overrides) {
                 modelParams[k] = v;
                 DLOG("override model parameter '" << k << "' with value '" << v << "' in builder for product '"
-                                                  << tradeType);
+                                                  << tradeType << "'");
             }
         }
     }
@@ -240,7 +240,7 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
             for (auto const& [k, v] : p.overrides) {
                 engineParams[k] = v;
                 DLOG("override engine parameter '" << k << "' with value '" << v << "' in builder for product '"
-                                                   << tradeType);
+                                                   << tradeType << "'");
             }
         }
     }
@@ -251,6 +251,10 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
 }
 
 QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& legType) {
+
+    if(buildersDirty_)
+        resetBuilders();
+
     auto it = legBuilders_.find(legType);
     QL_REQUIRE(it != legBuilders_.end(), "No LegBuilder for " << legType);
     return it->second;
