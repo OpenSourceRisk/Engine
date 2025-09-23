@@ -104,7 +104,7 @@ protected:
         bool includePastCashflows =
             parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
-        bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncome", {}, false, "true"));
+        bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
         bool treatSecuritySpreadAsCreditSpread =
             parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false"));
         Period tsperiod = parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M"));
