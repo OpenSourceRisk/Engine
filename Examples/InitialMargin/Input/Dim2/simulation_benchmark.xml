@@ -3,8 +3,8 @@
   <Parameters>
       <Discretization>Euler</Discretization>
       <TimeStepsPerYear>24</TimeStepsPerYear>
+      <!--<Grid>62,1M</Grid>-->
       <Grid>65,1M</Grid>
-      <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
@@ -12,6 +12,10 @@
       <Samples>10</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+      <!--
+      <CloseOutLag>2W</CloseOutLag>
+      <MporMode>StickyDate</MporMode>
+      -->
   </Parameters>
 
   <CrossAssetModel>

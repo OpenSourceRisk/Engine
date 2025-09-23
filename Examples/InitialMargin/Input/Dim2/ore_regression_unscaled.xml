@@ -2,7 +2,7 @@
   <Setup>
     <Parameter name="asofDate">2025-02-10</Parameter>
     <Parameter name="inputPath">Input/Dim2</Parameter>
-    <Parameter name="outputPath">Output/Dim2/AmcReg</Parameter>
+    <Parameter name="outputPath">Output/Dim2/AmcRegUnscaled</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
@@ -35,7 +35,7 @@
       <Parameter name="additionalResultsReportPrecision">12</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation_regression.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
@@ -46,9 +46,9 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">../AmcRegUnscaled/cube.csv.gz</Parameter>
-      <Parameter name="scenarioFile">../AmcRegUnscaled/scenariodata.csv.gz</Parameter>
-      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+      <!--<Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>-->
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -61,7 +61,7 @@
       <Parameter name="cva">Y</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="dim">N</Parameter>
+      <Parameter name="dim">Y</Parameter>
       <Parameter name="dimModel">Regression</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
@@ -79,4 +79,4 @@
       <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
     </Analytic>
   </Analytics>
-</ORE>
+  </ORE>
