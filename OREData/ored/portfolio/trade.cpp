@@ -643,9 +643,6 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     flowType = "Notional";
                 }
 
-                //if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                //    ptrFlow = unpackIndexedCoupon(cpn);
-                //}
                 ptrFlow = unpackIndexedCouponOrCashFlow(ptrFlow);
 
                 QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
@@ -731,11 +728,11 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                 } else if (ptrCommIndCf) {
                     fixingDate = ptrCommIndCf->lastPricingDate();
                     fixingValue = ptrCommIndCf->fixing();
-                    flowType = "Notional";
+                    flowType = "Notional (units)";
                 } else if (ptrCommIndAvgCf) {
                     fixingDate = ptrCommIndAvgCf->lastPricingDate();
                     fixingValue = ptrCommIndAvgCf->fixing();
-                    flowType = "Notional";
+                    flowType = "Notional (units)";
                 } else if (ptrFxlCf) {
                     fixingDate = ptrFxlCf->fxFixingDate();
                     fixingValue = ptrFxlCf->fxRate();
