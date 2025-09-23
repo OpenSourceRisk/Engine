@@ -847,7 +847,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
                    "Quote type for " << datumName << " should be 'RATE_LNVOL', 'RATE_NVOL', 'RATE_SLNVOL', 'PRICE' or 'SHIFT'");
 
         if (quoteType == QT::SHIFT) {
-            return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(value, asof, datumName, tokens[2]);
+            return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(value, asof, datumName, quoteType, tokens[2]);
         }
 
         QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[4]);

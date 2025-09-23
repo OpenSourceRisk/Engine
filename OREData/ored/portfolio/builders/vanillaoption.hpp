@@ -155,16 +155,19 @@ protected:
     std::pair<QuantLib::DiffusionModelType, Real> getVolTypeAndDisplacement(const string& assetName, const AssetClass& assetClassUnderlying) {
         QuantLib::DiffusionModelType volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
         Real displacement = 0.0;
-        if (assetClassUnderlying == AssetClass::COM){
-            auto volTypeStr = this->modelParameter("VolatilityType", {assetName}, false, "AsInputVolatilityType");
+        if (assetClassUnderlying == AssetClass::COM) {
+            auto volTypeStr = this->modelParameter("Volatility", {assetName}, false, "AsInputVolatilityType");
+            boost::to_lower(volTypeStr);
             auto displacementStr = this->modelParameter("Displacement", {assetName}, false, "0.0");
-            if(volTypeStr == "ShiftedLognormal")
+            if (volTypeStr == "lognormal") {
                 volType = QuantLib::DiffusionModelType::Black;
-            else if (volTypeStr == "Normal")
+            } else if (volTypeStr == "shiftedlognormal") {
+                volType = QuantLib::DiffusionModelType::Black;
+                displacement = parseReal(displacementStr);
+            } else if (volTypeStr == "normal")
                 volType = QuantLib::DiffusionModelType::Bachelier;
             else
                 volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
-            displacement = parseReal(displacementStr);
         }
         return {volType, displacement};
     }
@@ -254,7 +257,8 @@ protected:
             ? market_->discountCurve(discountingCurrency, configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
         auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
-        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve, volType, displacement);
+        bool flipResults = false;
+        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve, flipResults, volType, displacement);
     }
 };
 
@@ -332,7 +336,7 @@ protected:
         QL_REQUIRE((volType == QuantLib::DiffusionModelType::Black ||
                     volType == QuantLib::DiffusionModelType::AsInputVolatilityType) &&
                        volTS->volType() == VolatilityType::ShiftedLognormal &&
-                       QuantLib::close_enough(volTS->displacement(), 0.0),
+                       QuantLib::close_enough(volTS->shift(), 0.0),
                    "AmericanOptionFDEngineBuilder: only ShiftedLognormal (Black) vol type supported for FD engine");
 
         return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
@@ -358,21 +362,21 @@ protected:
         std::string delimiter = "#";
         std::string assetNameLocal = assetName;
         QuantLib::Date forwardDate = QuantLib::Date();
-        if (assetName.find(delimiter) != std::string::npos){
+        if (assetName.find(delimiter) != std::string::npos) {
             std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
             bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
             if (validDate)
-                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
+                assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
         }
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetNameLocal, ccy, assetClass);
         auto volTS = gbsp->blackVolatility();
         auto [volType, displacement] = getVolTypeAndDisplacement(assetNameLocal, assetClass);
-
         QL_REQUIRE((volType == QuantLib::DiffusionModelType::Black ||
                     volType == QuantLib::DiffusionModelType::AsInputVolatilityType) &&
                        volTS->volType() == VolatilityType::ShiftedLognormal &&
-                       QuantLib::close_enough(volTS->displacement(), 0.0),
+                       QuantLib::close_enough(volTS->shift(), 0.0),
                    "AmericanOptionFDEngineBuilder: only ShiftedLognormal (Black) vol type supported for FD engine");
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass);
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
 };

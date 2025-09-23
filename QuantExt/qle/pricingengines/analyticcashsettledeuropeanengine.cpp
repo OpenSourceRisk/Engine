@@ -46,8 +46,7 @@ namespace QuantExt {
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
     const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults,
     QuantLib::DiffusionModelType model, double displacement)
-    : underlyingEngine_(bsp, model, displacement), bsp_(bsp), flipResults_(flipResults), modelType_(model),
-      displacement_(displacement) {
+    : underlyingEngine_(bsp, model, displacement), bsp_(bsp), flipResults_(flipResults) {
     registerWith(bsp_);
 }
 
@@ -56,7 +55,7 @@ AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
     const Handle<YieldTermStructure>& discountCurve, const bool flipResults, QuantLib::DiffusionModelType model,
     double displacement)
     : underlyingEngine_(bsp, discountCurve, model, displacement), bsp_(bsp), discountCurve_(discountCurve),
-      flipResults_(flipResults), modelType_(model), displacement_(displacement) {
+      flipResults_(flipResults) {
     registerWith(bsp_);
     registerWith(discountCurve_);
 }

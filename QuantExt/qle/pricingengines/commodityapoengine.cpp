@@ -23,6 +23,7 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <ql/pricingengines/diffusioncalculator.hpp>
 
 using std::adjacent_difference;
 using std::exp;
@@ -99,7 +100,9 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike, const QuantLib::Date& exerciseDate, bool useBachelierModel) {
+    QuantLib::Real strike, const QuantLib::Date& exerciseDate, DiffusionModelType modelType,
+    const Real displacement) {
+
     Date today = Settings::instance().evaluationDate();
     MomentMatchingResults res;
     auto optionExerciseDate = exerciseDate == Date() ? flow->lastPricingDate() : exerciseDate;
@@ -137,14 +140,19 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                 Date volDate = optionExpiry <= today ? expiry : optionExpiry;
                 optionExpiries.push_back(volDate);
                 if (futureVols.count(volDate) == 0) {
-                    futureVols[volDate] =
-                        getBlackOrBachelierVol(vol, volDate, atmUnderlyingCcy, K, res.times.back(), useBachelierModel);
+                    auto [volatility, volType, shift] =  convertInputVolatility(
+                        modelType, displacement, vol, atmUnderlyingCcy, K, res.times.back());
+                    futureVols[volDate] = volatility;
+                    res.volType = volType;
+                    res.displacement = shift;
                 }
                 res.futureVols.push_back(futureVols[volDate]);
             } else {
                 auto tte = res.times.back();
-                auto spotVol =
-                    getBlackOrBachelierVol(vol, pricingDate, atmUnderlyingCcy, K, res.times.back(), useBachelierModel);
+                auto [spotVol, volType, shift] =  convertInputVolatility(
+                        modelType, displacement, vol, atmUnderlyingCcy, K, res.times.back());
+                res.volType = volType;
+                res.displacement = shift;
                 res.spotVols.push_back(spotVol);
                 spotVariances.push_back(spotVol * spotVol * tte);
             }
@@ -155,6 +163,8 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     EA /= static_cast<double>(n);
 
     res.forward = EA;
+
+    bool useBachelierModel = res.volType == QuantLib::VolatilityType::Normal;
 
     double EA2 = flow->useFuturePrice() ? calcEA2FutureContracts(res.forwards, res.futureVols, futureExpiries,
                                                                  res.times, rho, useBachelierModel)
@@ -181,16 +191,19 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-    QuantLib::Real beta)
-    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta) {
+    QuantLib::Real beta, DiffusionModelType modelType, Real displacement)
+    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta), 
+      modelType_(modelType), displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(model);
 }
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta)
-    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta, DiffusionModelType modelType,
+    Real displacement)
+    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta), modelType_(modelType),
+      displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volStructure_);
@@ -338,7 +351,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
         arguments_.flow, *volStructure_,
         std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1,
                   std ::placeholders::_2),
-        effectiveStrike);
+        effectiveStrike, Date(), modelType_, displacement_);
 
     if (arguments_.flow->useFuturePrice()) {
         mp["futureVols"] = matchedMoments.futureVols;
@@ -346,11 +359,16 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
         mp["spotVols"] = matchedMoments.spotVols;
     }
 
-    // Populate results
-    results_.value =
-        arguments_.quantity * arguments_.flow->gearing() *
-        blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(), matchedMoments.stdDev(), discount);
-
+    if (matchedMoments.volType == QuantLib::VolatilityType::Normal) {
+        results_.value = arguments_.quantity * arguments_.flow->gearing() *
+                         bachelierBlackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
+                                               matchedMoments.stdDev(), discount);
+    } else {
+        // Populate results
+        results_.value = arguments_.quantity * arguments_.flow->gearing() *
+                         blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
+                                      matchedMoments.stdDev(), discount, matchedMoments.displacement);
+    }
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / discount;

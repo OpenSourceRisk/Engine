@@ -108,7 +108,7 @@ namespace QuantExt {
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
 
-        auto [variance, volType, displacement] = getImpliedVarianceFromModelType(
+        auto [variance, volType, displacement] = convertInputVariance(
             modelType_, displacement_, *process_->blackVolatility(), forwardPrice, payoff->strike(),
             process_->blackVolatility()->timeFromReference(arguments_.exercise->lastDate()));
 

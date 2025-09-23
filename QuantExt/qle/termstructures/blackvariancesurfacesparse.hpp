@@ -56,7 +56,7 @@ public:
                                bool upperStrikeConstExtrap = true, 
                                QuantLib::BlackVolTimeExtrapolation timeExtrapolation
                                 = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
-                               const VolatilityType volType = VolatilityType::ShiftedLognormal,
+                               const QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal,
                                const Real shift = 0.0);
 
     enum class TimeInterpolationMethod { Linear, Flat };

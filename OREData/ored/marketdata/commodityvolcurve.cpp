@@ -365,8 +365,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
             auto q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionQuote>(md);
             if (!q)
                 continue;
-            QL_REQUIRE(q->quoteType() == vcc.quoteType() || (vcc.volType() == VolatilityConfig::VolatilityType::ShiftedLognormal &&
-                                                             q->quoteType() == MarketDatum::QuoteType::SHIFT),
+            QL_REQUIRE(q->quoteType() == vcc.quoteType(),
                        "CommodityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '"
                                                      << vcc.quoteType() << "'");
 
@@ -551,7 +550,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     VolatilityType volType = vssc.volType() == VolatilityConfig::VolatilityType::Normal
                                  ? VolatilityType::Normal
                                  : VolatilityType::ShiftedLognormal;
-    Real shift = 0.0;
+    Real displacement = 0.0;
     if (vssc.volType() == VolatilityConfig::VolatilityType::ShiftedLognormal) {
         std::ostringstream ss;
         ss << MarketDatum::InstrumentType::COMMODITY_OPTION << "/SHIFT/" << vc.curveID();
@@ -562,14 +561,14 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             auto commodityShiftQuote = QuantLib::ext::dynamic_pointer_cast<CommodityOptionShiftQuote>(shiftMd);
             QL_REQUIRE(commodityShiftQuote, "Internal error: could not downcast MarketDatum '"
                                                 << shiftMd->name() << "' to CommodityOptionShiftQuote");
-            shift = shiftMd->quote()->value();
-            DLOG("Using shifted lognormal shift of " << shift << " from quote " << ss.str());
+            displacement = shiftMd->quote()->value();
+            DLOG("Using shifted lognormal shift of " << displacement << " from quote " << ss.str());
         }
     }
 
     // If there are no wildcard strikes or wildcard expiries, delegate to buildVolatilityExplicit.
     if (!expWc && !strkWc) {
-        buildVolatilityExplicit(asof, vc, vssc, loader, configuredStrikes);
+        buildVolatilityExplicit(asof, vc, vssc, loader, configuredStrikes, displacement);
         return;
     }
 
@@ -744,24 +743,24 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                 volatility_ = QuantLib::ext::make_shared<
                     BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                    timeExtrapolation, volType, shift);
+                    timeExtrapolation, volType, displacement);
             } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation, volType, shift);
+                        timeExtrapolation, volType, displacement);
             }
         } else {
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation, volType, shift);
+                        timeExtrapolation, volType, displacement);
             } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation, volType, shift);
+                        timeExtrapolation, volType, displacement);
             }
         } 
 
@@ -782,7 +781,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
         auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(
             pts_, yts_, cSurface, pSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
-            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions, volType, displacement);
         volatility_ = coss->volSurface();
 
         // If data level logging, output the stripped volatilities.
@@ -825,12 +824,15 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
 void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolatilityConfig& vc,
                                                 const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                                const vector<Real>& configuredStrikes) {
+                                                const vector<Real>& configuredStrikes, const Real displacement) {
 
     LOG("CommodityVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
 
-    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
-        " RATE_LNVOL is currently supported for 2-D volatility strike surface with explicit strikes and expiries.");
+    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL ||
+                   vssc.quoteType() == MarketDatum::QuoteType::RATE_NVOL ||
+                   vssc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL,
+               "CommodityVolCurve: only quote type" << " RATE_LNVOL is currently supported for 2-D volatility strike "
+                                                       "surface with explicit strikes and expiries.");
 
     // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the
     // vectors of volatilities, one for each configured strike.
@@ -970,9 +972,12 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     }
 
     DLOG("Creating BlackVarianceSurface object");
+    VolatilityType volType = vssc.volType() == VolatilityConfig::VolatilityType::Normal
+                                 ? VolatilityType::Normal
+                                 : VolatilityType::ShiftedLognormal;
     auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes,
                                                                 volatilities, dayCounter_, strikeExtrap, strikeExtrap,
-                                                                timeExtrapolation);
+                                                                timeExtrapolation, volType, displacement);
 
     // Set the interpolation if configured properly. The default is Bilinear.
     if (!(vssc.timeInterpolation() == "Linear" && vssc.strikeInterpolation() == "Linear")) {

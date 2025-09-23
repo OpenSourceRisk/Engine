@@ -1852,6 +1852,8 @@ private:
 */
 class CommodityOptionShiftQuote : public MarketDatum {
 public:
+    CommodityOptionShiftQuote() {}
+
     CommodityOptionShiftQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
                             const std::string& commodityName)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION),
@@ -1862,7 +1864,7 @@ public:
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
         return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(quote_->value(),
-            asofDate_, commodityName_);
+            asofDate_, name_, quoteType_, commodityName_);
     }
 
     //! \name Inspectors

@@ -64,8 +64,6 @@ private:
     //! Curve for discounting cashflows
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     bool flipResults_;
-    QuantLib::DiffusionModelType modelType_;
-    double displacement_;
 };
 
 } // namespace QuantExt
