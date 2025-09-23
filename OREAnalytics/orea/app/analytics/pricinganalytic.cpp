@@ -212,7 +212,7 @@ void PricingAnalyticImpl::runAnalytic(
             if (inputs_->parSensi()) {
                 LOG("Sensi analysis - par conversion");
 
-                if (inputs_->optimiseRiskFactors()){
+                if (inputs_->optimiseRiskFactors()) {
                     std::set<RiskFactorKey> collectRiskFactors;
                     // collect risk factors of all cubes ...
                     for (auto const& c : sensiAnalysis_->sensiCubes()) {
