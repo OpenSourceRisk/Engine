@@ -645,9 +645,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     flowType = "Notional";
                 }
 
-                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                    ptrFlow = unpackIndexedCoupon(cpn);
-                }
+                ptrFlow = unpackIndexedCouponOrCashFlow(ptrFlow);
 
                 QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -655,6 +653,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommIndCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedAverageCashFlow> ptrCommIndAvgCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedAverageCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
@@ -725,6 +727,14 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     fixingDate = ptrIndCf->fixingDate();
                     fixingValue = ptrIndCf->indexFixing();
                     flowType = "Index";
+                } else if (ptrCommIndCf) {
+                    fixingDate = ptrCommIndCf->lastPricingDate();
+                    fixingValue = ptrCommIndCf->fixing();
+                    flowType = "Notional (units)";
+                } else if (ptrCommIndAvgCf) {
+                    fixingDate = ptrCommIndAvgCf->lastPricingDate();
+                    fixingValue = ptrCommIndAvgCf->fixing();
+                    flowType = "Notional (units)";
                 } else if (ptrFxlCf) {
                     fixingDate = ptrFxlCf->fxFixingDate();
                     fixingValue = ptrFxlCf->fxRate();
