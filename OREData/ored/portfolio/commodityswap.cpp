@@ -176,12 +176,10 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         DLOG("CommoditySwap::build() applying netting logic for trade " << id());
 
         // Capture original floating leg information before netting for transparency
-        Size originalLegCount = 0;
         map<Date, vector<pair<ext::shared_ptr<CashFlow>, bool>>> originalCashflowsByDate;
 
         for (Size origIdx = 0; origIdx < legData_.size(); ++origIdx) {
             if (legData_[origIdx].legType() != LegType::CommodityFixed) {
-                originalLegCount++;
 
                 // Extract cashflows for netting analysis
                 Leg originalLeg = legs_[origIdx];

@@ -40,7 +40,7 @@ namespace QuantExt {
     3. Rounds this sum to specified precision
     4. Multiplies rounded sum by common periodQuantity to get final amount
 */
-class NettedCommodityCashFlow : public QuantLib::CashFlow, public QuantLib::Observer {
+class NettedCommodityCashFlow : public QuantLib::CashFlow {
 
 public:
     /*! Constructor
