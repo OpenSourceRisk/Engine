@@ -3365,22 +3365,29 @@ void ScenarioSimMarket::applyCurveAlgebra() {
     for (auto const& a : parameters_->curveAlgebraData().data()) {
         DLOG("Applying operation type " << a.operationType());
         if (a.operationType() == "Spreaded") {
-            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
-            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
-        } else
-        // add more operations here...
-        {
+            std::vector<Handle<YieldTermStructure>> bases;
+            std::vector<double> multiplier;
+            for (auto const& arg : a.arguments()) {
+                auto v = parseListOfValues(arg);
+                bases.push_back(getYieldCurve(v[0]));
+                multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+                DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier "
+                              << multiplier.back());
+            }
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), bases, multiplier);
+        } else {
             QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
         }
     }
 }
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                                           const Handle<YieldTermStructure>& base) {
+                                                            const std::vector<Handle<YieldTermStructure>>& bases,
+                                                            const std::vector<double>& multiplier) {
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
                 "supported curve types. Internal error, contact dev.");
