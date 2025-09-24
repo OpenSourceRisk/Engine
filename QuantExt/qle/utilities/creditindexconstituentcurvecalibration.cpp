@@ -113,6 +113,7 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
     const std::vector<QuantLib::ext::shared_ptr<SimpleQuote>>& calibrationFactors) const {
     auto curveTimes = getCreditCurveTimes(curve);
     std::vector<double> indexCdsMaturityTimes;
+    
     for (const auto& d : maturities) {
         const auto maturityTime = curve->timeFromReference(d);
         QL_REQUIRE(maturityTime > 0, "Maturity time must be positive");
@@ -138,14 +139,20 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
                 i++;
             }
 
-            auto sp = curve->survivalProbability(curveTimes[timeIdx], true);
-            if (close_enough(sp, 0.0)) {
-                sp = 1e-06;
+            auto sp = curve->survivalProbability(time, true);
+            Handle<Quote> calibrationFactorSpread;
+            if (QuantLib::close_enough(sp, 0.0)) {
+                calibrationFactorSpread = spreads.empty()
+                                              ? Handle<Quote>(QuantLib::ext::make_shared<QuantLib::SimpleQuote>(1.0))
+                                              : spreads.back();
+            } else {
+                calibrationFactorSpread =
+                    Handle<Quote>(QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
+                        Handle<Quote>(calibrationFactors[i]),
+                        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
+                        [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); }));
             }
-            auto compQuote = QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
-                Handle<Quote>(calibrationFactors[i]), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
-                [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); });
-            spreads.push_back(Handle<Quote>(compQuote));
+            spreads.push_back(calibrationFactorSpread);
         }
         Handle<DefaultProbabilityTermStructure> targetCurve = Handle<DefaultProbabilityTermStructure>(
             QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(curve, curveTimes, spreads));

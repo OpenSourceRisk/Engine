@@ -55,7 +55,7 @@ void SpreadedSurvivalProbabilityTermStructure::performCalculations() const {
 
 Probability SpreadedSurvivalProbabilityTermStructure::survivalProbabilityImpl(Time t) const {
     calculate();
-    if (close_enough(referenceCurve()->survivalProbability(t), 0.0))
+    if (QuantLib::close_enough(referenceCurve()->survivalProbability(t), 0.0))
         return 0.0;
     if (t <= this->times_.back())
         return referenceCurve_->survivalProbability(t) * (*interpolation_)(t, true);
