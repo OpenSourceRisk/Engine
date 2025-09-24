@@ -10,6 +10,19 @@ from dateutil import parser
 from lxml import etree as et
 from io import StringIO
 
+def checkErrorsAndRunTime(app):
+    errors = app.getErrors()
+    print ("Run time: %.2f sec" % app.getRunTime())       
+    print ("Errors: %d" % len(errors))
+    if len(errors) > 0:
+        for e in errors:
+            print(e)        
+
+def writeList(lst):
+    print()
+    for r in lst:
+        print("-", r)
+
 def getSamples(simulationXml):
     tree = et.parse(simulationXml)
     root = tree.getroot()
