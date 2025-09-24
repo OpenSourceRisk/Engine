@@ -252,7 +252,7 @@ public:
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
     //! Return a configuration (or the default one if key not found)
-    const string& configuration(const MarketContext& key) {
+    const string& configuration(const MarketContext& key) const {
         if (configurations_.count(key) > 0) {
             return configurations_.at(key);
         } else {

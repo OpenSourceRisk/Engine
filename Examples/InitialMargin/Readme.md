@@ -24,17 +24,27 @@ Run this batch with <code>python run_dim.py</code>
 
 ### Dynamic SIMM using AAD Sensitivities under AMC
 
-This batch demonstrades a SIMM calculation under AMC scenarios with sensitivities
-computed using AAD (Input/Dim2/ore_amccg.xml).
-This fast dynamic SIMM is validated against(significantly slower) full SIMM
-calculations along a small number of MC paths (Input/DimValidation/ore_simm.xml),
-using an IR/FX CRIF generator added to ORE for this validation purpose,
-applied to simulated market data in Input/DimValidation.
-As test portfolio we start with the same IR/FX portfolio as above, adding
-Bermudan Swaption and FX TaRF to demonstrate the wider product scope of
-Dynamic SIMM in ORE. We furthermore compare results to the regression DIM.
+This example demonstrates a SIMM calculation under AMC scenarios with sensitivities
+computed using AAD for a Bermudan Swaption case, comparing exposure without collateral,
+exposure with variation margin only and both variation and initial margin.
 
 Run this batch with <code>python run_dim2.py</code>
 
-See the user guide for a discussion of each case and expected results.
+See also the related Jupyter notebook with <code>python -m jupyterlab ore_dynamicsimm.ipynb</code>
+with brief discussion.
+
+
+### Dynamic SIMM Benchmarking
+
+This section also contains tools for validating Dynamic SIMM against several benchmarks
+- full SIMM calculations along a small number of MC paths, using a limited IR/FX CRIF
+generator applied to simulated market data in Input/DimValidation;
+- dynamic SIMM based on analytical sensitivities rather than AAD sensitivities
+(see Input/Dim2/ore_benchmark.xml);
+- simple regression DIM
+
+The benchmarking involves various ORE runs for market generation, pathwise SIMM comparisons
+and SIMM distribution comparisons, all orchestrated by
+<code>run_dynamicsimm_benchmark.py</code> and <code>run_simmcube.py</code>.
+
 

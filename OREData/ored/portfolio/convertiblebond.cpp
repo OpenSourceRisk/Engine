@@ -621,7 +621,7 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
     maturityType_ = "Underlying Bond's Maturity Date";
-    notional_ = qlUnderlyingBond->notional();
+    notional_ = underlyingBond.notional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
@@ -720,7 +720,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
-        bond->instrument() && bond->instrument()->qlInstrument(),
+        qlBond,
         "ConvertibleBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
         "(either the instrument wrapper or the ql instrument is null)");
 
