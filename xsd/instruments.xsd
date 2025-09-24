@@ -89,7 +89,7 @@
       <xs:element type="basketVarianceSwapData2" name="EquityBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="FxBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="CommodityBasketVarianceSwapData"/>
-      <xs:element type="extendedForwardData" name="ExtendedForwardData"/>
+      <xs:element type="extendedFxForwardSwapData" name="ExtendedFxForwardSwapData"/>
       <xs:element type="varianceOptionData" name="VarianceOptionData"/>
       <xs:element type="varianceDispersionSwapData" name="VarianceDispersionSwapData"/>
       <xs:element type="kikoVarianceSwapData" name="KIKOVarianceSwapData"/>
@@ -3096,7 +3096,7 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="extendedForwardData">
+  <xs:complexType name="extendedFxForwardSwapData">
     <xs:all>
       <xs:element type="stFreeStyleCurrency" name="Currency"/>
       <xs:element type="stFreeStyleNumber" name="Notional"/>
