@@ -59,7 +59,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     // propagate some parameters to underlying bond builder on a copy of engine factory
 
     auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(*engineFactoryInput);
-    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("BondTRS");
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
     if (auto s = builder_fwd->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
