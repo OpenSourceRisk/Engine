@@ -610,13 +610,8 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 double mktUpfront = it->second->value();
                 auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
                                        &trancheWidth](const double correlation) {
-                    // TLOG("Imply BaseCorrelations: call targetfunction with correlation " << correlation);
                     baseCorrelQuote->setValue(correlation);
                     double implyUpfront = implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-
-                    // TLOG("Imply BaseCorrelation: Correlation: " << correlation << " Upfront: " << mktUpfront <<
-                    // "Implied Upfront: " << implyUpfront
-                    //                     << " Error: " << mktUpfront - implyUpfront);
                     return mktUpfront - implyUpfront;
                 };
 
@@ -629,12 +624,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 }
                 double error = targetFunction(targetCorrelation);
                 double impliedUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-                LOG("CurveId" << "," << "term" << "," << "inceptionAttachPoint" << "," << "inceptionDetachPoint" << ","
+                DLOG("CurveId" << "," << "term" << "," << "inceptionAttachPoint" << "," << "inceptionDetachPoint" << ","
                               << "inceptionTrancheWidth" << ","
                               << "adjustedAttachPoint" << "," << "adjustedDetachPoint" << "," << "trancheWidth"
                               << "," << "mktUpfront" << "," << "impliedUpfront" << "," << "error" << ","
                               << "targetCorrelation");
-                LOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint << ","
+                DLOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint << ","
                                      << inceptionTrancheWidth << "," << adjustedAttachPoint << ","
                                      << adjustedDetachPoint << "," << trancheWidth << "," << mktUpfront << ","
                                      << impliedUpfront << "," << error << "," << targetCorrelation);
