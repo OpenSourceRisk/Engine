@@ -894,7 +894,7 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
             set<Date> iborDates;
             set<Date> oisDates;
             set<Date> bmaDates;
-            WeekendsOnly calendar;
+            NullCalendar calendar;
 
             std::set<std::string> indices;
             for (auto const& [i, _] : mktParams.mapping(MarketObject::IndexCurve, configuration)) {

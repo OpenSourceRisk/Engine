@@ -327,8 +327,10 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-        // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+        if (date > asof) {
+        // pick flow with the earliest future accrual period end date on this leg
             Real flowAmount = 0.0;
             try {
                 flowAmount = flow->amount();
@@ -337,7 +339,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            //QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -643,9 +645,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     flowType = "Notional";
                 }
 
-                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                    ptrFlow = unpackIndexedCoupon(cpn);
-                }
+                ptrFlow = unpackIndexedCouponOrCashFlow(ptrFlow);
 
                 QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -653,6 +653,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommIndCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedAverageCashFlow> ptrCommIndAvgCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedAverageCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
@@ -723,6 +727,14 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     fixingDate = ptrIndCf->fixingDate();
                     fixingValue = ptrIndCf->indexFixing();
                     flowType = "Index";
+                } else if (ptrCommIndCf) {
+                    fixingDate = ptrCommIndCf->lastPricingDate();
+                    fixingValue = ptrCommIndCf->fixing();
+                    flowType = "Notional (units)";
+                } else if (ptrCommIndAvgCf) {
+                    fixingDate = ptrCommIndAvgCf->lastPricingDate();
+                    fixingValue = ptrCommIndAvgCf->fixing();
+                    flowType = "Notional (units)";
                 } else if (ptrFxlCf) {
                     fixingDate = ptrFxlCf->fxFixingDate();
                     fixingValue = ptrFxlCf->fxRate();

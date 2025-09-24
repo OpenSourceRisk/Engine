@@ -605,6 +605,9 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 bool singleCurve = data.parInstrumentSingleCurve;
 
                 RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
+                if (!dryRun && !relevantRiskFactors.empty() &&
+                    relevantRiskFactors.find(key) == relevantRiskFactors.end())
+                    continue;
                 bool recognised = true;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
@@ -673,6 +676,9 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 for (Size k = 0; k < n_expiries; ++k) {
                     RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, indexName,
                                       k * n_strikes + j);
+                    if (!dryRun && !relevantRiskFactors.empty() &&
+                        relevantRiskFactors.find(key) == relevantRiskFactors.end())
+                        continue;
 
                     bool recognised = true;
                     string instType;

@@ -365,7 +365,7 @@ void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDate
 */
 void addMarketFixingDates(const QuantLib::Date& asof, std::map<std::string, RequiredFixings::FixingDates>& fixings,
                           const TodaysMarketParameters& mktParams,
-                          const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+                          const QuantLib::Period& iborLookback = 7 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years);
