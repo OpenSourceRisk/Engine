@@ -102,6 +102,11 @@ void CommodityIndexedAverageCashFlow::performCalculations() const {
     }
 
     if (avgPricePrecision_ != QuantLib::Null<QuantLib::Natural>()) {
+        // First, round to 8 decimal places to avoid floating point problems
+        static const QuantLib::Natural preRoundPrecision = 8;
+        QuantLib::ClosestRounding preRound(preRoundPrecision);
+        averagePrice_ = preRound(averagePrice_);
+
         QuantLib::ClosestRounding round(avgPricePrecision_);
         averagePrice_ = round(averagePrice_);
     }

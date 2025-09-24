@@ -9,7 +9,7 @@
   under the terms of the Modified BSD License.  You should have received a
   copy of the license along with this program.
   The license is also available online at <http://opensourcerisk.org>
-  
+
   This program is distributed on the basis that it will form a useful
   contribution to risk analytics and model standardisation, but WITHOUT
   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -73,6 +73,11 @@ private:
         const ore::data::LegData& legDatum, const std::string& configuration);
 
     std::vector<ore::data::LegData> legData_;
+    bool isNetted_ = false;
+    QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
+
+    // Store original floating leg information for netting transparency
+    mutable std::map<std::string, boost::any> originalLegData_;
 };
 
 } // namespace data

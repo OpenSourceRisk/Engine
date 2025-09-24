@@ -1103,6 +1103,8 @@
   <xs:complexType name="commoditySwapData">
     <xs:sequence>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="2"/>
+      <xs:element type="xs:boolean" name="IsNetted" minOccurs="0"/>
+      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1472,7 +1474,7 @@
       <xs:enumeration value="FixingFloor"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="barrierCompare">
     <xs:restriction base="xs:string">
       <xs:enumeration value="0"/>
@@ -3355,7 +3357,7 @@
       <xs:element type="stFreeStyleCurrency" name="Currency"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="strikeResettableOptionData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
@@ -4620,7 +4622,7 @@
       <xs:element type="underlying" name="Underlying"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="strikeResettableOptionData2">
     <xs:all>
       <xs:element type="longShort" name="LongShort"/>
@@ -4912,7 +4914,7 @@
       <xs:element type="stFreeStyleEventSchedule" name="FixingSchedule"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="cashPositionData">
     <xs:all>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
