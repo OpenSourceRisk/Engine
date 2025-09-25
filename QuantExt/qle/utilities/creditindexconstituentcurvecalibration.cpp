@@ -60,7 +60,7 @@ CreditIndexConstituentCurveCalibration::CalibrationResults CreditIndexConstituen
             return (target - indexCDS->NPV());
         };
         Brent solver;
-        double adjustmentFactor = solver.solve(targetFunction, 1e-8, 0.5, 0.001, 2);
+        double adjustmentFactor = solver.solve(targetFunction, 1e-8, 1.0, 0.001, 2);
 
         calibrationFactor->setValue(adjustmentFactor);
         results.calibrationFactor.push_back(adjustmentFactor);
