@@ -137,7 +137,6 @@ The parameters have the following meaning:
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
-\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
@@ -147,7 +146,6 @@ The parameters have the following meaning:
 <Product type="BondOption">
     <Model>Black</Model>
     <ModelParameters>
-      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
       <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>BlackBondOptionEngine</Engine>
@@ -199,7 +197,6 @@ The parameters have the following meaning:
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
-\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -1241,7 +1238,6 @@ The parameters have the following meaning:
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
-\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
   discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -1252,7 +1248,6 @@ The parameters have the following meaning:
 <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
-      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
       <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingBondTRSEngine</Engine>
@@ -4064,14 +4059,12 @@ in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardB
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
 \item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
-\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
   discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use
-\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
 \end{itemize}
 
 \begin{longlisting}
@@ -4079,7 +4072,6 @@ The parameters have the following meaning:
 <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
-      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
       <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingForwardBondEngine</Engine>
