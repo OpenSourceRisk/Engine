@@ -607,11 +607,6 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 Period term = data.shiftTenors[j];
                 string instType = data.parInstruments[j];
                 bool singleCurve = data.parInstrumentSingleCurve;
-
-                RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
-                if (!dryRun && !relevantRiskFactors.empty() &&
-                    relevantRiskFactors.find(key) == relevantRiskFactors.end())
-                    continue;
                 bool recognised = true;
                 try {
                     map<string, string> conventionsMap = data.parInstrumentConventions;
