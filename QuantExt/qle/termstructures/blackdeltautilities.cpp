@@ -16,20 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/blackdeltautilities.hpp>
-
+#include <ql/experimental/fx/bachelierdeltacalculator.hpp>
 #include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 
 namespace QuantExt {
 
-Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy) {
+Real getStrikeFromDeltaBlack(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot,
+                             Real domDiscount, Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol,
+                             Real t, Real accuracy) {
 
-    auto targetFct = [optionType, &delta, dt, &spot, &domDiscount, &forDiscount, &vol, &t](const Real x) {
+    auto BlackTargetFct = [optionType, &delta, dt, &spot, &domDiscount, &forDiscount, &vol, &t](const Real x) {
         Real k = std::exp(x);
-        return BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount, std::sqrt(vol->blackVariance(t, k)))
-                   .deltaFromStrike(k) -
-               delta;
+        Real computedDelta =
+            BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount, std::sqrt(vol->blackVariance(t, k)))
+                .deltaFromStrike(k);
+        return computedDelta - delta;
+    };
+
+    auto BachelierTargetFct = [optionType, &delta, dt, &spot, &domDiscount, &forDiscount, &vol, &t](const Real x) {
+        Real computedDelta = BachelierDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
+                                                      std::sqrt(vol->blackVariance(t, x)))
+                                 .deltaFromStrike(x);
+        return computedDelta - delta;
     };
 
     try {
@@ -37,6 +46,9 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
                                                    std::sqrt(vol->blackVariance(t, spot / domDiscount * forDiscount)))
                                   .strikeFromDelta(delta));
         Brent brent;
+
+        auto targetFct = vol->volType() == VolatilityType::ShiftedLognormal ? BlackTargetFct : BachelierTargetFct;
+
         return std::exp(brent.solve(targetFct, accuracy, guess, 0.0001));
     } catch (const std::exception& e) {
         QL_FAIL("getStrikeFromDelta(" << (optionType == Option::Call ? 1.0 : -1.0) * delta
@@ -44,6 +56,38 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
                                       << spot / domDiscount * forDiscount << " (domRate=" << -std::log(domDiscount) / t
                                       << ", forRate=" << -std::log(forDiscount) / t << ")");
     }
+}
+
+Real getStrikeFromDeltaBachelier(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot,
+                                 Real domDiscount, Real forDiscount,
+                                 QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy) {
+
+    auto targetFct = [optionType, &delta, dt, &spot, &domDiscount, &forDiscount, &vol, &t](const Real k) {
+        Real computedDelta = BachelierDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
+                                                      std::sqrt(vol->blackVariance(t, k)))
+                                 .deltaFromStrike(k);
+        return computedDelta - delta;
+    };
+
+    try {
+        Real guess = BachelierDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
+                                              std::sqrt(vol->blackVariance(t, spot / domDiscount * forDiscount)))
+                         .strikeFromDelta(delta);
+        Brent brent;
+        return brent.solve(targetFct, accuracy, guess, 0.0001);
+    } catch (const std::exception& e) {
+        QL_FAIL("getStrikeFromDeltaBachelier("
+                << (optionType == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot
+                << ", forward=" << spot / domDiscount * forDiscount << " (domRate=" << -std::log(domDiscount) / t
+                << ", forRate=" << -std::log(forDiscount) / t << ")");
+    }
+}
+
+Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
+                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy) {
+    return vol->volType() == VolatilityType::ShiftedLognormal
+               ? getStrikeFromDeltaBlack(optionType, delta, dt, spot, domDiscount, forDiscount, vol, t, accuracy)
+               : getStrikeFromDeltaBachelier(optionType, delta, dt, spot, domDiscount, forDiscount, vol, t, accuracy);
 }
 
 Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,
@@ -54,9 +98,15 @@ Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real s
     do {
         Real stddev = std::sqrt(vol->blackVariance(t, result));
         try {
-            BlackDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
-            lastResult = result;
-            result = bdc.atmStrike(at);
+            if(vol->volType() == VolatilityType::ShiftedLognormal) {
+                BlackDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
+                lastResult = result;
+                result = bdc.atmStrike(at);
+            } else {
+                BachelierDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
+                lastResult = result;
+                result = bdc.atmStrike(at);
+            }
         } catch (const std::exception& e) {
             QL_FAIL("getAtmStrike() could not be computed for spot="
                     << spot << ", forward=" << spot / domDiscount * forDiscount

@@ -1012,8 +1012,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     LOG("CommodityVolCurve: start building 2-D volatility delta strike surface");
 
-    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
-        " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
+    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
+               "CommodityVolCurve: only quote type"
+                   << " RATE_LNVOL is are currently supported for a 2-D volatility delta strike surface.");
 
     // Parse, sort and check the vector of configured put deltas
     vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
@@ -1054,6 +1055,11 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Configured delta and Atm types.
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
+
+    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL || deltaType == DeltaVolQuote::DeltaType::Spot ||
+                   deltaType == DeltaVolQuote::DeltaType::Forward,
+               "CommodityVolCurve: only delta types Spot and Forward are supported for normal volatilities.");
+
     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
     if (!vdsc.atmDeltaType().empty()) {
         atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
@@ -1919,11 +1925,12 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
 
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
-
+        
         if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             atmType = parseAtmType(vdsc->atmType());
             deltaType = parseDeltaType(vdsc->deltaType());
         }
+        
 
         info->dayCounter = to_string(dayCounter_);
         info->calendar = to_string(calendar_).empty() ? "na" : calendar_.name();
@@ -1988,6 +1995,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 for (Size j = 0; j < deltas.size(); ++j) {
                     DeltaString d(deltas[j]);
                     try {
+                        
                         Real strike;
                         if (d.isAtm()) {
                             strike = QuantExt::getAtmStrike(dt, at, pts_->price(asof, true), yts_->discount(t),
@@ -2000,16 +2008,21 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                                                                   yts_->discount(t), pyts->discount(t), volatility_, t);
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
-                        callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
-
+                        callPricesDelta[i][j] = volatility_->volType() == VolatilityType::Normal
+                                                    ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev)
+                                                    : blackFormula(Option::Call, strike, forwards[i], stddev, 1.0, volatility_->shift());
                         if (d.isPut()) {
                             info->deltaPutPrices[i][j] =
-                                blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                                volatility_->volType() == VolatilityType::Normal
+                                    ? bachelierBlackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t))
+                                    : blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t), volatility_->shift());
                         } else {
                             info->deltaCallPrices[i][j] =
-                                blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                                volatility_->volType() == VolatilityType::Normal
+                                    ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev,
+                                                            yts_->discount(t))
+                                    : blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t), volatility_->shift());
                         }
-
                         info->deltaGridStrikes[i][j] = strike;
                         info->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {
@@ -2020,7 +2033,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 if (validSlice) {
                     try {
                         QuantExt::CarrMadanMarginalProbability cm(info->deltaGridStrikes[i], forwards[i],
-                                                                  callPricesDelta[i]);
+                                                                  callPricesDelta[i], volatility_->volType(),
+                                                                  volatility_->shift());
                         info->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
                         info->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
                         if (!cm.arbitrageFree())
