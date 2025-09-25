@@ -119,7 +119,8 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
                                          fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-                                         paymentLag, paymentCalendar_, telescopicValueDates_));
+                                         paymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
+                                         fixingDays_, rateCutoff_, isAveraged_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
