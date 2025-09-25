@@ -44,7 +44,8 @@ public:
             const std::vector<Leg>& fundingLeg, const bool payTotalReturnLeg, const std::vector<Date>& valuationDates,
             const std::vector<Date>& paymentDates, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
             bool payBondCashFlowsImmediately = false, const Currency& fundingCurrency = Currency(),
-            const Currency& bondCurrency = Currency(), const Period paymentLag = Period());
+            const Currency& bondCurrency = Currency(), const bool applyFXIndexFixingDays = false,
+            const Period paymentLag = Period());
 
     //! \name Instrument interface
     //@{
@@ -78,6 +79,7 @@ private:
     Currency fundingCurrency_, bondCurrency_;
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
+    bool applyFXIndexFixingDays_ = false;
     Period paymentLag_;
     //
     Leg returnLeg_;
