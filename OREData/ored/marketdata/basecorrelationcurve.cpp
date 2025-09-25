@@ -584,7 +584,6 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 DLOG("adjustedDetachPoint" << adjustedDetachPoint);
                 DLOG("trancheWidth" << trancheWidth);
                 DLOG("previousTrancheNPV" << previousTrancheCleanNPV);
-                // LOG("previous Tranche clean NPV" << previousTrancheCleanNPV);
                 //  Build Tranche
                 auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
                 RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
@@ -625,14 +624,14 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 double error = targetFunction(targetCorrelation);
                 double impliedUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
                 DLOG("CurveId" << "," << "term" << "," << "inceptionAttachPoint" << "," << "inceptionDetachPoint" << ","
-                              << "inceptionTrancheWidth" << ","
-                              << "adjustedAttachPoint" << "," << "adjustedDetachPoint" << "," << "trancheWidth"
-                              << "," << "mktUpfront" << "," << "impliedUpfront" << "," << "error" << ","
-                              << "targetCorrelation");
-                DLOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint << ","
-                                     << inceptionTrancheWidth << "," << adjustedAttachPoint << ","
-                                     << adjustedDetachPoint << "," << trancheWidth << "," << mktUpfront << ","
-                                     << impliedUpfront << "," << error << "," << targetCorrelation);
+                               << "inceptionTrancheWidth" << ","
+                               << "adjustedAttachPoint" << "," << "adjustedDetachPoint" << "," << "trancheWidth"
+                               << "," << "mktUpfront" << "," << "impliedUpfront" << "," << "error" << ","
+                               << "targetCorrelation");
+                DLOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint
+                                      << "," << inceptionTrancheWidth << "," << adjustedAttachPoint << ","
+                                      << adjustedDetachPoint << "," << trancheWidth << "," << mktUpfront << ","
+                                      << impliedUpfront << "," << error << "," << targetCorrelation);
                 trancheNPV.push_back(cdo->cleanNPV());
                 newQuoteData.data[key] = Handle<Quote>(ext::make_shared<SimpleQuote>(targetCorrelation));
             }
