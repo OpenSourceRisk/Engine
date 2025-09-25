@@ -30,23 +30,6 @@ namespace {} // namespace
 
 DecomposedSensitivityStream::DecomposedSensitivityStream(
     const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
-    std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights,
-    const std::set<std::string>& eqComDecompositionTradeIds,
-    const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities,
-    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
-    const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket)
-    : ss_(ss), baseCurrency_(baseCurrency), defaultRiskDecompositionWeights_(defaultRiskDecompositionWeights),
-      eqComDecompositionTradeIds_(eqComDecompositionTradeIds),
-      currencyHedgedIndexQuantities_(currencyHedgedIndexQuantities), refDataManager_(refDataManager),
-      curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
-    reset();
-    decompose_ = !defaultRiskDecompositionWeights_.empty() || !eqComDecompositionTradeIds_.empty();
-}
-
-DecomposedSensitivityStream::DecomposedSensitivityStream(
-    const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,

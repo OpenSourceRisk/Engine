@@ -38,18 +38,6 @@ namespace analytics {
 class DecomposedSensitivityStream : public SensitivityStream {
 public:
     /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
-     */
-    DecomposedSensitivityStream(
-        const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
-        std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights = {},
-        const std::set<std::string>& eqComDecompositionTradeIds = {},
-        const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities = {},
-        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData = nullptr,
-        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket = nullptr);
-
-    /*! Constructor providing the weights for the credit index decomposition and the ids and reference data used for
     */
     DecomposedSensitivityStream(
         const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
