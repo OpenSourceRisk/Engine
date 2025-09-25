@@ -28,11 +28,12 @@ BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex
                  const Real initialPrice, const std::vector<QuantLib::Leg>& fundingLeg, const bool payTotalReturnLeg,
                  const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool payBondCashFlowsImmediately,
-                 const Currency& fundingCurrency, const Currency& bondCurrency)
+                 const Currency& fundingCurrency, const Currency& bondCurrency, const bool applyFXIndexFixingDays)
     : bondIndex_(bondIndex), bondNotional_(bondNotional), initialPrice_(initialPrice), fundingLeg_(fundingLeg),
       payTotalReturnLeg_(payTotalReturnLeg), fxIndex_(fxIndex),
       payBondCashFlowsImmediately_(payBondCashFlowsImmediately), fundingCurrency_(fundingCurrency),
-      bondCurrency_(bondCurrency), valuationDates_(valuationDates), paymentDates_(paymentDates) {
+      bondCurrency_(bondCurrency), valuationDates_(valuationDates), paymentDates_(paymentDates),
+      applyFXIndexFixingDays_(applyFXIndexFixingDays) {
 
     QL_REQUIRE(bondIndex, "BondTRS: no bond index given");
 
@@ -59,8 +60,9 @@ BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex
 
     QL_REQUIRE(valuationDates.size() > 1, "valuation dates size > 1 required");
 
-    returnLeg_ =
-        BondTRSLeg(valuationDates_, paymentDates_, bondNotional_, bondIndex_, fxIndex_).withInitialPrice(initialPrice_);
+    returnLeg_ = BondTRSLeg(valuationDates_, paymentDates_, bondNotional_, bondIndex_, fxIndex_)
+                     .withInitialPrice(initialPrice_)
+                     .withApplyFXIndexFixingDays(applyFXIndexFixingDays_);
 }
 
 bool BondTRS::isExpired() const { return detail::simple_event(valuationDates_.back()).hasOccurred(); }

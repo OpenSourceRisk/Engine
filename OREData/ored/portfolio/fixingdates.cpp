@@ -775,9 +775,9 @@ void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     }
     requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
     if (bc.fxIndex()) {
-        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+        requiredFixings_.addFixingDate(bc.fxFixingStartDate(),
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
-        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+        requiredFixings_.addFixingDate(bc.fxFixingEndDate(),    
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
     }
 }

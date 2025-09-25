@@ -2208,6 +2208,7 @@
       <!-- just kept here for backward compatibility of the schema, these elements are not used any more -->
       <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="ApplyFXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
