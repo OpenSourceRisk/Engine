@@ -93,8 +93,6 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         observationConvention_.empty() ? Unadjusted : parseBusinessDayConvention(observationConvention_);
 
     PaymentLag paymentLag = parsePaymentLag(paymentLag_);
-    if (paymentLag_ != "")
-        bondData_.setPaymentLag(paymentLag_);
     Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
     Calendar paymentCalendar = parseCalendar(paymentCalendar_);
     BusinessDayConvention paymentConvention =
@@ -196,7 +194,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         bondIndex, bondData_.bondNotional(), effectiveInitialPrice,
         std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg}, payTotalReturnLeg_, valuationDates, paymentDates,
         fxIndex, payBondCashFlowsImmediately_, parseCurrency(fundingLegData_.currency()),
-        parseCurrency(bondData_.currency()));
+        parseCurrency(bondData_.currency()), plPeriod);
     DLOG("After bondTRS");
     QuantLib::ext::shared_ptr<BondTRSEngineBuilder> trsBondBuilder =
         QuantLib::ext::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
