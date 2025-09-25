@@ -1056,10 +1056,6 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
 
-    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL || deltaType == DeltaVolQuote::DeltaType::Spot ||
-                   deltaType == DeltaVolQuote::DeltaType::Forward,
-               "CommodityVolCurve: only delta types Spot and Forward are supported for normal volatilities.");
-
     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
     if (!vdsc.atmDeltaType().empty()) {
         atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
