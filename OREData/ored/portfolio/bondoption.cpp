@@ -61,17 +61,16 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
-    if (auto s = builder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"TreatSecuritySpreadAsCreditSpread", s}}});
-    }
-    if (auto s = builder->engineParameter("SpreadOnIncomeCurve", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"SpreadOnIncomeCurve", s}}});
-    }
-    if (auto s = builder->engineParameter("TimestepPeriod", {}, false); !s.empty()) {
-        overrides.push_back(EngineFactory::ParameterOverride{isBond, {{"TimestepPeriod", s}}});
-    }
-    if (!overrides.empty())
-        engineFactory->setEngineParameterOverrides(overrides);
+    overrides.push_back(EngineFactory::ParameterOverride{
+        isBond,
+        {{"TreatSecuritySpreadAsCreditSpread",
+          builder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        isBond, {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
+    engineFactory->setEngineParameterOverrides(overrides);
+    engineFactory->setEngineParameterOverrides(overrides);
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     bondData_ = originalBondData_;

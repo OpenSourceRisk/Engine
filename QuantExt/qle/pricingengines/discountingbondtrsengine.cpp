@@ -280,8 +280,6 @@ void DiscountingBondTRSEngine::calculate() const {
 
     results_.value = mult * (returnLeg + bondPayments + bondRecovery - fundingLeg);
 
-    std::cout << "results value " << results_.value << " return leg npv " << mult * (returnLeg + bondPayments + bondRecovery) << " funding " << -mult * fundingLeg << std::endl;
-
     results_.additionalResults["returnLegNpv"] = mult * (returnLeg + bondPayments + bondRecovery);
     results_.additionalResults["returnLegNpvReturnPaymentsContribtion"] = mult * returnLeg;
     results_.additionalResults["returnLegNpvBondPaymentsContribtion"] = mult * bondPayments;
