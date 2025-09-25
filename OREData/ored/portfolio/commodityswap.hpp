@@ -72,6 +72,9 @@ private:
     void buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef,
         const ore::data::LegData& legDatum, const std::string& configuration);
 
+    // Net floating cashflows for same payment dates
+    void netFloatingFlows();
+
     std::vector<ore::data::LegData> legData_;
     bool isNetted_ = false;
     QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();

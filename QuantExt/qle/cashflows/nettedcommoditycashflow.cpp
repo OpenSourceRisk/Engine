@@ -25,15 +25,16 @@ using namespace QuantLib;
 namespace QuantExt {
 
 NettedCommodityCashFlow::NettedCommodityCashFlow(
-    const std::vector<std::pair<ext::shared_ptr<CashFlow>, bool>>& underlyingCashflows,
-    const Date& paymentDate,
+    const std::vector<std::pair<ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows,
     Natural nettingPrecision)
-    : underlyingCashflows_(underlyingCashflows), paymentDate_(paymentDate),
-      nettingPrecision_(nettingPrecision), commonQuantity_(0.0), cachedAmount_(0.0), calculated_(false) {
+    : CommodityCashFlow(0.0, 0.0, 1.0, false, nullptr, nullptr),
+      underlyingCashflows_(underlyingCashflows), nettingPrecision_(nettingPrecision),
+      commonQuantity_(0.0), cachedAmount_(0.0), calculated_(false), lastPricingDate_(Date()),
+      indicesCalculated_(false) {
 
     QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows provided");
 
-    validateAndSetCommonQuantity();
+    validateAndSetCommonQuantityAndDate();
 
     // Register as observer of all underlying cashflows
     for (const auto& cfPair : underlyingCashflows_) {
@@ -41,32 +42,32 @@ NettedCommodityCashFlow::NettedCommodityCashFlow(
     }
 }
 
-void NettedCommodityCashFlow::validateAndSetCommonQuantity() {
+void NettedCommodityCashFlow::validateAndSetCommonQuantityAndDate() {
     Real quantity = Null<Real>();
+    Date paymentDate = Date();
 
-    for (const auto& cfPair : underlyingCashflows_) {
-        const auto& cf = cfPair.first;
-        Real cfQuantity = Null<Real>();
+    for (size_t i = 0; i < underlyingCashflows_.size(); ++i) {
+        const auto& cf = underlyingCashflows_[i].first;
 
-        // Try to cast to different commodity cashflow types to get the quantity
-        if (auto indexedCf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
-            cfQuantity = indexedCf->periodQuantity();
-        } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
-            cfQuantity = avgCf->periodQuantity();
-        } else {
-            QL_FAIL("NettedCommodityCashFlow: underlying cashflow is not a supported commodity cashflow type");
-        }
+        // Get quantity from the CommodityCashFlow base class
+        Real cfQuantity = cf->periodQuantity();
+        Date cfPaymentDate = cf->date();
 
-        if (quantity == Null<Real>()) {
+        if (i == 0) {
             quantity = cfQuantity;
+            paymentDate = cfPaymentDate;
         } else {
-            QL_REQUIRE(std::abs(quantity - cfQuantity) < 1e-12,
+            QL_REQUIRE(QuantLib::close_enough(quantity, cfQuantity),
                       "NettedCommodityCashFlow: all underlying cashflows must have the same periodQuantity(). "
                       << "Expected " << quantity << ", found " << cfQuantity);
+            QL_REQUIRE(paymentDate == cfPaymentDate,
+                      "NettedCommodityCashFlow: all underlying cashflows must have the same payment date. "
+                      << "Expected " << paymentDate << ", found " << cfPaymentDate);
         }
     }
 
     QL_REQUIRE(quantity != Null<Real>(), "NettedCommodityCashFlow: could not determine common quantity");
+    QL_REQUIRE(paymentDate != Date(), "NettedCommodityCashFlow: could not determine common payment date");
     commonQuantity_ = quantity;
 }
 
@@ -76,19 +77,11 @@ Real NettedCommodityCashFlow::calculateTotalAverageFixing() const {
     for (const auto& cfPair : underlyingCashflows_) {
         const auto& cf = cfPair.first;
         const bool isPayer = cfPair.second;
-        Real fixing = 0.0;
 
-        // Try to cast to different commodity cashflow types to get the fixing
-        if (auto indexedCf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(cf)) {
-            fixing = indexedCf->fixing();
-        } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(cf)) {
-            fixing = avgCf->fixing();
-        } else {
-            QL_FAIL("NettedCommodityCashFlow: underlying cashflow is not a supported commodity cashflow type");
-        }
-
-        // Apply payer sign: payer legs subtract, receiver legs add
-        totalFixing += (isPayer ? -1.0 : 1.0) * fixing;
+        // Use CommodityCashFlow methods directly - implement the formula: sign_pay * cf.gearing() * cf.fixing() + cf.spread()
+        Real sign_pay = isPayer ? -1.0 : 1.0;
+        Real fixing = sign_pay * cf->gearing() * cf->fixing() + cf->spread();
+        totalFixing += fixing;
     }
 
     return totalFixing;
@@ -96,20 +89,8 @@ Real NettedCommodityCashFlow::calculateTotalAverageFixing() const {
 
 Real NettedCommodityCashFlow::amount() const {
     if (!calculated_) {
-        // Calculate the total average fixing
-        Real totalAverageFixing = calculateTotalAverageFixing();
-
-        // Round to specified precision if precision is specified
-        Real roundedTotalFixing = totalAverageFixing;
-        if (nettingPrecision_ != Null<Natural>()) {
-            static const QuantLib::Natural preRoundPrecision = 8;
-            QuantLib::ClosestRounding preRound(preRoundPrecision);
-            totalAverageFixing = preRound(totalAverageFixing);
-            ClosestRounding rounder(nettingPrecision_);
-            roundedTotalFixing = rounder(totalAverageFixing);
-        }
-
-        // Calculate final amount: rounded total fixing * common quantity
+        // Get the rounded fixing and calculate final amount
+        Real roundedTotalFixing = roundedFixing();
         cachedAmount_ = roundedTotalFixing * commonQuantity_;
         calculated_ = true;
     }
@@ -117,11 +98,82 @@ Real NettedCommodityCashFlow::amount() const {
     return cachedAmount_;
 }
 
+Date NettedCommodityCashFlow::date() const {
+    QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows");
+    return underlyingCashflows_[0].first->date();
+}
+
+const std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>>& NettedCommodityCashFlow::indices() const {
+    if (!indicesCalculated_) {
+        cachedIndices_.clear();
+
+        // Collect all indices from underlying cashflows
+        for (const auto& cfPair : underlyingCashflows_) {
+            const auto& cf = cfPair.first;
+            const auto& cfIndices = cf->indices();
+
+            // Add all indices from this cashflow
+            for (const auto& indexPair : cfIndices) {
+                cachedIndices_.push_back(indexPair);
+            }
+        }
+
+        indicesCalculated_ = true;
+    }
+
+    return cachedIndices_;
+}
+
+Date NettedCommodityCashFlow::lastPricingDate() const {
+    if (lastPricingDate_ == Date()) {
+        Date maxDate = Date();
+
+        // Find the latest pricing date across all underlying cashflows
+        for (const auto& cfPair : underlyingCashflows_) {
+            const auto& cf = cfPair.first;
+            Date cfLastDate = cf->lastPricingDate();
+
+            if (maxDate == Date() || cfLastDate > maxDate) {
+                maxDate = cfLastDate;
+            }
+        }
+
+        lastPricingDate_ = maxDate;
+    }
+
+    return lastPricingDate_;
+}
+
+Real NettedCommodityCashFlow::periodQuantity() const {
+    return commonQuantity_;
+}
+
+Real NettedCommodityCashFlow::roundedFixing() const {
+    // Calculate the total average fixing
+    Real totalAverageFixing = calculateTotalAverageFixing();
+
+    // Round to specified precision if precision is specified
+    Real roundedTotalFixing = totalAverageFixing;
+    if (nettingPrecision_ != Null<Natural>()) {
+        static const QuantLib::Natural preRoundPrecision = 8;
+        QuantLib::ClosestRounding preRound(preRoundPrecision);
+        totalAverageFixing = preRound(totalAverageFixing);
+        ClosestRounding rounder(nettingPrecision_);
+        roundedTotalFixing = rounder(totalAverageFixing);
+    }
+
+    return roundedTotalFixing;
+}
+
+Real NettedCommodityCashFlow::fixing() const {
+    return roundedFixing();
+}
+
 void NettedCommodityCashFlow::accept(AcyclicVisitor& v) {
     if (Visitor<NettedCommodityCashFlow>* v1 = dynamic_cast<Visitor<NettedCommodityCashFlow>*>(&v))
         v1->visit(*this);
     else
-        CashFlow::accept(v);
+        CommodityCashFlow::accept(v);
 }
 
 } // namespace QuantExt

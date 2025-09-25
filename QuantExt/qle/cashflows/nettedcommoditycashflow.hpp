@@ -23,8 +23,8 @@
 #ifndef quantext_netted_commodity_cash_flow_hpp
 #define quantext_netted_commodity_cash_flow_hpp
 
-#include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <vector>
@@ -40,30 +40,37 @@ namespace QuantExt {
     3. Rounds this sum to specified precision
     4. Multiplies rounded sum by common periodQuantity to get final amount
 */
-class NettedCommodityCashFlow : public QuantLib::CashFlow {
+class NettedCommodityCashFlow : public CommodityCashFlow {
 
 public:
     /*! Constructor
         \param underlyingCashflows Vector of pairs containing the underlying commodity cashflows and their payer flags
-        \param paymentDate The payment date for this netted cashflow
         \param nettingPrecision Number of decimal places to round the total average fixing to (Null<Natural>() means no rounding)
     */
-    NettedCommodityCashFlow(const std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, bool>>& underlyingCashflows,
-                           const QuantLib::Date& paymentDate,
+    NettedCommodityCashFlow(const std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows,
                            QuantLib::Natural nettingPrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
-    const std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, bool>>& underlyingCashflows() const {
+    const std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows() const {
         return underlyingCashflows_;
     }
     QuantLib::Natural nettingPrecision() const { return nettingPrecision_; }
     QuantLib::Real commonQuantity() const { return commonQuantity_; }
+    QuantLib::Real roundedFixing() const;
     //@}
 
     //! \name Event interface
     //@{
-    QuantLib::Date date() const override { return paymentDate_; }
+    QuantLib::Date date() const override;
+    //@}
+
+    //! \name CommodityCashFlow interface
+    //@{
+    const std::vector<std::pair<QuantLib::Date, QuantLib::ext::shared_ptr<CommodityIndex>>>& indices() const override;
+    QuantLib::Date lastPricingDate() const override;
+    QuantLib::Real periodQuantity() const override;
+    QuantLib::Real fixing() const override;
     //@}
 
     //! \name CashFlow interface
@@ -85,15 +92,17 @@ public:
     //@}
 
 private:
-    void validateAndSetCommonQuantity();
+    void validateAndSetCommonQuantityAndDate();
     QuantLib::Real calculateTotalAverageFixing() const;
 
-    std::vector<std::pair<QuantLib::ext::shared_ptr<QuantLib::CashFlow>, bool>> underlyingCashflows_;
-    QuantLib::Date paymentDate_;
+    std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>> underlyingCashflows_;
     QuantLib::Natural nettingPrecision_;
     QuantLib::Real commonQuantity_;
     mutable QuantLib::Real cachedAmount_;
     mutable bool calculated_;
+    mutable std::vector<std::pair<QuantLib::Date, QuantLib::ext::shared_ptr<CommodityIndex>>> cachedIndices_;
+    mutable QuantLib::Date lastPricingDate_;
+    mutable bool indicesCalculated_;
 };
 
 } // namespace QuantExt
