@@ -3103,7 +3103,10 @@
       <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleNumber" name="ExtensionTrigger"/>
       <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCurrency"/>
       <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSettlementDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ConditionalObservationDates"/>
       <xs:element type="stFreeStyleEventSchedule" name="ConditionalSettlementDates"/>
       <xs:element type="stFreeStyleEvent" name="ExtensionDecisionDate"/>
     </xs:all>
