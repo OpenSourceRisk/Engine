@@ -93,7 +93,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     legCurrencies_ = underlying_->legCurrencies();
     legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
     npvCurrency_ = underlying_->bondData().currency();
-    notional_ = underlying_->notional() * bondData_.bondNotional();
+    notional_ = underlying_->notional();
     notionalCurrency_ = underlying_->bondData().currency();
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
     maturityType_ =
