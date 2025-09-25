@@ -2076,25 +2076,41 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 Real t = times[i];
                 for (Size j = 0; j < moneyness.size(); ++j) {
                     try {
-                        Real strike = moneyness[j] * forwards[i];
+                        Real strike = volatility_->volType() == VolatilityType::ShiftedLognormal
+                                          ? moneyness[j] * (forwards[i] + volatility_->shift()) - volatility_->shift()
+                                          : moneyness[j] + forwards[i];
                         info->moneynessGridStrikes[i][j] = strike;
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
-                        callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                        VolatilityType vt = volatility_->volType();
+                        bool isNormalVol = vt == VolatilityType::Normal;
+                        callPricesMoneyness[i][j] =
+                            isNormalVol
+                                ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev)
+                                : blackFormula(Option::Call, strike, forwards[i], stddev, 1.0, volatility_->shift());
                         info->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
-                        if (moneyness[j] >= 1) {
-                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                        if ((!isNormalVol && moneyness[j] >= 1) || (isNormalVol && moneyness[j] >= 0)) {
+                            calibrationInfo_->moneynessCallPrices[i][j] =
+                                isNormalVol ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev,
+                                                                    yts_->discount(t))
+                                            : blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t),
+                                                           volatility_->shift());
                         } else {
-                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                            calibrationInfo_->moneynessPutPrices[i][j] =
+                                isNormalVol
+                                    ? bachelierBlackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t))
+                                    : blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t),
+                                                   volatility_->shift());
                         };
                     } catch (const std::exception& e) {
-                        TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
+                        TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": "
+                                                                  << e.what());
                     }
                 }
             }
             if (!times.empty() && !moneyness.empty()) {
                 try {
-                    QuantExt::CarrMadanSurface cm(times, moneyness, pts_->price(asof,true), forwards,
-                                                  callPricesMoneyness);
+                    QuantExt::CarrMadanSurface cm(times, moneyness, pts_->price(asof, true), forwards,
+                                                  callPricesMoneyness, volatility_->volType(), volatility_->shift());
                     for (Size i = 0; i < times.size(); ++i) {
                         info->moneynessGridProb[i] = cm.timeSlices()[i].density();
                     }
