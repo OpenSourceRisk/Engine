@@ -178,71 +178,10 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     }
 
     // If leg has SettlementData, do the fx conversion
-    // Note: When netting is enabled, legs_.size() may be different from legData_.size()
-    Size numLegsToProcess = isNetted_ ? legs_.size() : legData_.size();
-    for (Size i = 0; i < numLegsToProcess; ++i) {
-        // For netted swaps, only process legs that actually exist
-        if (i >= legs_.size()) break;
-
-        // Find corresponding legData entry - for netted swaps, use the first floating leg's FX settings
-        Size legDataIdx = i;
-        if (isNetted_ && i >= legData_.size()) {
-            // For netted floating leg, find the first floating leg in legData_
-            for (Size j = 0; j < legData_.size(); ++j) {
-                if (legData_[j].legType() != LegType::CommodityFixed) {
-                    legDataIdx = j;
-                    break;
-                }
-            }
-        }
-
-        if (legDataIdx >= legData_.size() || legData_[legDataIdx].settlementFxIndex().empty()) {
-            continue;
-        }
-        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = parseFxIndex(legData_[legDataIdx].settlementFxIndex());
-        std::string foreignCcy;
-        if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(legData_[legDataIdx].concreteLegData()))
-            foreignCcy = ld->foreignCurrency();
-        else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[legDataIdx].concreteLegData()))
-            foreignCcy = ld->foreignCurrency();
-        std::string tradePnLCurrency = envelope().additionalField("TradePnLCurrency", false, std::string());
-        if (!tradePnLCurrency.empty())
-            QL_REQUIRE(
-                foreignCcy == tradePnLCurrency,
-                "If TradePnLCurrency is given in the envelope, it must be the same as underlying index currency, got "
-                    << tradePnLCurrency << " in TradePnLCurrency, and " << foreignCcy
-                    << " as underlying index currency");
-        fxIndex = buildFxIndex(legData_[legDataIdx].settlementFxIndex(), legData_[legDataIdx].currency(), foreignCcy,
-                               engineFactory->market(), configuration);
-        Date fixingDate;
-        Leg legFxConverted;
-        if (legData_[legDataIdx].settlementFxFixingDate().empty()) {
-            for (auto& cf : legs_[i]) {
-                fixingDate = cf->date();
-                Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
-                requiredFixings_.addFixingDate(adjustedFixingDate, legData_[legDataIdx].settlementFxIndex());
-                DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
-                                                               << io::iso_date(fixingDate)
-                                                               << " added to required fixings for trade " << id());
-
-                legFxConverted.push_back(
-                    ext::make_shared<QuantExt::IndexWrappedCashFlow>(cf, 1.0, fxIndex, adjustedFixingDate));
-            }
-        } else {
-            fixingDate = parseDate(legData_[legDataIdx].settlementFxFixingDate());
-            Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
-            requiredFixings_.addFixingDate(adjustedFixingDate, legData_[legDataIdx].settlementFxIndex());
-            DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
-                                                           << io::iso_date(fixingDate)
-                                                           << " added to required fixings for trade " << id());
-
-            for (auto& cf : legs_[i]) {
-                legFxConverted.push_back(
-                    ext::make_shared<QuantExt::IndexWrappedCashFlow>(cf, 1.0, fxIndex, adjustedFixingDate));
-            }
-        }
-
-        legs_[i] = legFxConverted;
+    // In case of netting we need to ensure that all netted flows have the same fx settlement
+    for (Size i = 0; i < legs_.size(); ++i) {
+        Size legDataIdx = getLegDataIdx(i, isNetted_);
+        legs_[i] = getFxSettledCommodityFlow(legs_[i], legData_[legDataIdx], engineFactory, configuration);
     }
 
     // Create the QuantLib swap instrument and assign pricing engine
@@ -634,6 +573,8 @@ void CommoditySwap::netFloatingFlows() {
 
     vector<Leg> floatingLegsForNetting;
     vector<bool> floatingLegPayersForNetting;
+    string floatingLegCurrency = "";
+    string firstFloatingFxIndex = "";
 
     // Collect floating legs and add fixed legs directly to the result
     for (Size i = 0; i < legData_.size(); ++i) {
@@ -646,6 +587,25 @@ void CommoditySwap::netFloatingFlows() {
             // Collect floating legs for netting
             floatingLegsForNetting.push_back(originalLegs[i]);
             floatingLegPayersForNetting.push_back(originalLegPayers[i]);
+            
+            // Check currency consistency across floating legs
+            if (floatingLegCurrency.empty()) {
+                floatingLegCurrency = legData_[i].currency();
+            } else {
+                QL_REQUIRE(floatingLegCurrency == legData_[i].currency(),
+                          "CommoditySwap::netFloatingFlows(): all floating legs must have the same currency for netting. "
+                          << "Expected " << floatingLegCurrency << ", found " << legData_[i].currency());
+            }
+            
+            // Check FX settlement consistency across floating legs
+            string currentFxIndex = legData_[i].settlementFxIndex();
+            if (firstFloatingFxIndex.empty()) {
+                firstFloatingFxIndex = currentFxIndex;
+            } else {
+                QL_REQUIRE(firstFloatingFxIndex == currentFxIndex,
+                          "CommoditySwap::netFloatingFlows(): all floating legs must have the same FX settlement for netting. "
+                          << "Expected '" << firstFloatingFxIndex << "', found '" << currentFxIndex << "'");
+            }
         }
     }
 
@@ -704,18 +664,67 @@ void CommoditySwap::netFloatingFlows() {
         legs_.push_back(nettedFloatingLeg);
         legPayers_.push_back(false); // The netting is handled internally
 
-        // Use currency from first floating leg
-        string floatingLegCurrency = legData_[0].currency();
-        for (Size i = 0; i < legData_.size(); ++i) {
-            if (legData_[i].legType() != LegType::CommodityFixed) {
-                floatingLegCurrency = legData_[i].currency();
-                break;
-            }
-        }
+        // Use currency from floating legs (already validated to be consistent)
         legCurrencies_.push_back(floatingLegCurrency);
     }
 
     DLOG("CommoditySwap::netFloatingFlows() completed netting: " << legs_.size() << " final legs for trade " << id());
+}
+
+std::size_t CommoditySwap::getLegDataIdx(std::size_t legIdx, bool isNetted) const {
+    if (!isNetted || legIdx < legData_.size()) {
+        return legIdx;
+    }
+    
+    // For netted floating leg, find the first floating leg in legData_
+    for (Size j = 0; j < legData_.size(); ++j) {
+        if (legData_[j].legType() != LegType::CommodityFixed) {
+            return j;
+        }
+    }
+    
+    QL_FAIL("CommoditySwap::getLegDataIdx(): could not find floating leg data for netted leg");
+}
+
+QuantLib::Leg CommoditySwap::getFxSettledCommodityFlow(const QuantLib::Leg& leg, const ore::data::LegData& legData,
+                                                      const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
+                                                      const std::string& configuration) {
+    if (legData.settlementFxIndex().empty()) {
+        return leg; // No FX settlement needed
+    }
+    
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = parseFxIndex(legData.settlementFxIndex());
+    std::string foreignCcy;
+    if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(legData.concreteLegData()))
+        foreignCcy = ld->foreignCurrency();
+    else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData.concreteLegData()))
+        foreignCcy = ld->foreignCurrency();
+        
+    std::string tradePnLCurrency = envelope().additionalField("TradePnLCurrency", false, std::string());
+    if (!tradePnLCurrency.empty())
+        QL_REQUIRE(
+            foreignCcy == tradePnLCurrency,
+            "If TradePnLCurrency is given in the envelope, it must be the same as underlying index currency, got "
+                << tradePnLCurrency << " in TradePnLCurrency, and " << foreignCcy
+                << " as underlying index currency");
+                
+    fxIndex = buildFxIndex(legData.settlementFxIndex(), legData.currency(), foreignCcy,
+                          engineFactory->market(), configuration);
+                          
+    Leg legFxConverted;
+    for (auto& cf : leg) {
+        Date fixingDate = legData.settlementFxFixingDate().empty() ? cf->date() : parseDate(legData.settlementFxFixingDate());
+        Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+        requiredFixings_.addFixingDate(adjustedFixingDate, legData.settlementFxIndex());
+        DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
+                                                       << io::iso_date(fixingDate)
+                                                       << " added to required fixings for trade " << id());
+
+        legFxConverted.push_back(
+            ext::make_shared<QuantExt::IndexWrappedCashFlow>(cf, 1.0, fxIndex, adjustedFixingDate));
+    }
+    
+    return legFxConverted;
 }
 
 } // namespace data

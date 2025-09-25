@@ -29,8 +29,7 @@ NettedCommodityCashFlow::NettedCommodityCashFlow(
     Natural nettingPrecision)
     : CommodityCashFlow(0.0, 0.0, 1.0, false, nullptr, nullptr),
       underlyingCashflows_(underlyingCashflows), nettingPrecision_(nettingPrecision),
-      commonQuantity_(0.0), cachedAmount_(0.0), calculated_(false), lastPricingDate_(Date()),
-      indicesCalculated_(false) {
+      commonQuantity_(0.0), lastPricingDate_(Date()), indicesCalculated_(false) {
 
     QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows provided");
 
@@ -88,14 +87,10 @@ Real NettedCommodityCashFlow::calculateTotalAverageFixing() const {
 }
 
 Real NettedCommodityCashFlow::amount() const {
-    if (!calculated_) {
-        // Get the rounded fixing and calculate final amount
-        Real roundedTotalFixing = roundedFixing();
-        cachedAmount_ = roundedTotalFixing * commonQuantity_;
-        calculated_ = true;
-    }
-
-    return cachedAmount_;
+    // Calculate and return the amount directly - no need for caching since
+    // underlying commodity cashflows are already lazy
+    Real roundedTotalFixing = roundedFixing();
+    return roundedTotalFixing * commonQuantity_;
 }
 
 Date NettedCommodityCashFlow::date() const {
@@ -153,16 +148,15 @@ Real NettedCommodityCashFlow::roundedFixing() const {
     Real totalAverageFixing = calculateTotalAverageFixing();
 
     // Round to specified precision if precision is specified
-    Real roundedTotalFixing = totalAverageFixing;
     if (nettingPrecision_ != Null<Natural>()) {
         static const QuantLib::Natural preRoundPrecision = 8;
         QuantLib::ClosestRounding preRound(preRoundPrecision);
         totalAverageFixing = preRound(totalAverageFixing);
         ClosestRounding rounder(nettingPrecision_);
-        roundedTotalFixing = rounder(totalAverageFixing);
+        totalAverageFixing = rounder(totalAverageFixing);
     }
 
-    return roundedTotalFixing;
+    return totalAverageFixing;
 }
 
 Real NettedCommodityCashFlow::fixing() const {

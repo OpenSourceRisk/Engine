@@ -98,8 +98,6 @@ private:
     std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>> underlyingCashflows_;
     QuantLib::Natural nettingPrecision_;
     QuantLib::Real commonQuantity_;
-    mutable QuantLib::Real cachedAmount_;
-    mutable bool calculated_;
     mutable std::vector<std::pair<QuantLib::Date, QuantLib::ext::shared_ptr<CommodityIndex>>> cachedIndices_;
     mutable QuantLib::Date lastPricingDate_;
     mutable bool indicesCalculated_;
