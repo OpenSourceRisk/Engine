@@ -24,12 +24,26 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+Real roundWithPrecision(Real value, Natural precision, Natural preRoundPrecision) {
+    if (precision == Null<Natural>()) {
+        return value;
+    }
+
+    // First, round to pre-round precision to avoid floating point problems
+    QuantLib::ClosestRounding preRound(preRoundPrecision);
+    value = preRound(value);
+
+    // Then round to final precision
+    QuantLib::ClosestRounding finalRound(precision);
+    return finalRound(value);
+}
+
 NettedCommodityCashFlow::NettedCommodityCashFlow(
     const std::vector<std::pair<ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows,
     Natural nettingPrecision)
     : CommodityCashFlow(0.0, 0.0, 1.0, false, nullptr, nullptr),
       underlyingCashflows_(underlyingCashflows), nettingPrecision_(nettingPrecision),
-      commonQuantity_(0.0), lastPricingDate_(Date()), indicesCalculated_(false) {
+      commonQuantity_(0.0) {
 
     QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows provided");
 
@@ -70,7 +84,7 @@ void NettedCommodityCashFlow::validateAndSetCommonQuantityAndDate() {
     commonQuantity_ = quantity;
 }
 
-Real NettedCommodityCashFlow::calculateTotalAverageFixing() const {
+Real NettedCommodityCashFlow::fixing() const {
     Real totalFixing = 0.0;
 
     for (const auto& cfPair : underlyingCashflows_) {
@@ -83,13 +97,21 @@ Real NettedCommodityCashFlow::calculateTotalAverageFixing() const {
         totalFixing += fixing;
     }
 
-    return totalFixing;
+    // Apply rounding if precision is specified
+    if (nettingPrecision_ != Null<Natural>()) {
+        return roundWithPrecision(totalFixing, nettingPrecision_);
+    } else {
+        return totalFixing;
+    }
+}
+
+Real NettedCommodityCashFlow::roundedFixing() const {
+    return fixing();
 }
 
 Real NettedCommodityCashFlow::amount() const {
-    // Calculate and return the amount directly - no need for caching since
-    // underlying commodity cashflows are already lazy
-    Real roundedTotalFixing = roundedFixing();
+    // Calculate and return the amount directly
+    Real roundedTotalFixing = fixing();
     return roundedTotalFixing * commonQuantity_;
 }
 
@@ -99,68 +121,41 @@ Date NettedCommodityCashFlow::date() const {
 }
 
 const std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>>& NettedCommodityCashFlow::indices() const {
-    if (!indicesCalculated_) {
-        cachedIndices_.clear();
+    static std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>> allIndices;
+    allIndices.clear();
 
-        // Collect all indices from underlying cashflows
-        for (const auto& cfPair : underlyingCashflows_) {
-            const auto& cf = cfPair.first;
-            const auto& cfIndices = cf->indices();
+    // Collect all indices from underlying cashflows
+    for (const auto& cfPair : underlyingCashflows_) {
+        const auto& cf = cfPair.first;
+        const auto& cfIndices = cf->indices();
 
-            // Add all indices from this cashflow
-            for (const auto& indexPair : cfIndices) {
-                cachedIndices_.push_back(indexPair);
-            }
+        // Add all indices from this cashflow
+        for (const auto& indexPair : cfIndices) {
+            allIndices.push_back(indexPair);
         }
-
-        indicesCalculated_ = true;
     }
 
-    return cachedIndices_;
+    return allIndices;
 }
 
 Date NettedCommodityCashFlow::lastPricingDate() const {
-    if (lastPricingDate_ == Date()) {
-        Date maxDate = Date();
+    Date maxDate = Date();
 
-        // Find the latest pricing date across all underlying cashflows
-        for (const auto& cfPair : underlyingCashflows_) {
-            const auto& cf = cfPair.first;
-            Date cfLastDate = cf->lastPricingDate();
+    // Find the latest pricing date across all underlying cashflows
+    for (const auto& cfPair : underlyingCashflows_) {
+        const auto& cf = cfPair.first;
+        Date cfLastDate = cf->lastPricingDate();
 
-            if (maxDate == Date() || cfLastDate > maxDate) {
-                maxDate = cfLastDate;
-            }
+        if (maxDate == Date() || cfLastDate > maxDate) {
+            maxDate = cfLastDate;
         }
-
-        lastPricingDate_ = maxDate;
     }
 
-    return lastPricingDate_;
+    return maxDate;
 }
 
 Real NettedCommodityCashFlow::periodQuantity() const {
     return commonQuantity_;
-}
-
-Real NettedCommodityCashFlow::roundedFixing() const {
-    // Calculate the total average fixing
-    Real totalAverageFixing = calculateTotalAverageFixing();
-
-    // Round to specified precision if precision is specified
-    if (nettingPrecision_ != Null<Natural>()) {
-        static const QuantLib::Natural preRoundPrecision = 8;
-        QuantLib::ClosestRounding preRound(preRoundPrecision);
-        totalAverageFixing = preRound(totalAverageFixing);
-        ClosestRounding rounder(nettingPrecision_);
-        totalAverageFixing = rounder(totalAverageFixing);
-    }
-
-    return totalAverageFixing;
-}
-
-Real NettedCommodityCashFlow::fixing() const {
-    return roundedFixing();
 }
 
 void NettedCommodityCashFlow::accept(AcyclicVisitor& v) {

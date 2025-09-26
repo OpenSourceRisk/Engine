@@ -31,6 +31,16 @@
 
 namespace QuantExt {
 
+/*! \brief Helper function to perform precise rounding with pre-rounding to avoid floating point issues.
+
+    \param value The value to round
+    \param precision Number of decimal places for final rounding
+    \param preRoundPrecision Number of decimal places for pre-rounding (default 8)
+    \return The rounded value
+*/
+QuantLib::Real roundWithPrecision(QuantLib::Real value, QuantLib::Natural precision,
+                                 QuantLib::Natural preRoundPrecision = 8);
+
 /*! Cash flow that aggregates multiple commodity floating leg cashflows for netting.
 
     This class takes a collection of commodity floating leg cashflows that have the same payment date
@@ -93,14 +103,10 @@ public:
 
 private:
     void validateAndSetCommonQuantityAndDate();
-    QuantLib::Real calculateTotalAverageFixing() const;
 
     std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>> underlyingCashflows_;
     QuantLib::Natural nettingPrecision_;
     QuantLib::Real commonQuantity_;
-    mutable std::vector<std::pair<QuantLib::Date, QuantLib::ext::shared_ptr<CommodityIndex>>> cachedIndices_;
-    mutable QuantLib::Date lastPricingDate_;
-    mutable bool indicesCalculated_;
 };
 
 } // namespace QuantExt
