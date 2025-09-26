@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/cashflows/nettedcommoditycashflow.hpp>
-#include <ql/math/rounding.hpp>
 #include <ql/errors.hpp>
+#include <ql/math/rounding.hpp>
+#include <qle/cashflows/nettedcommoditycashflow.hpp>
 
 using namespace QuantLib;
 
@@ -39,97 +39,53 @@ Real roundWithPrecision(Real value, Natural precision, Natural preRoundPrecision
 }
 
 NettedCommodityCashFlow::NettedCommodityCashFlow(
-    const std::vector<std::pair<ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows,
+    const std::vector<ext::shared_ptr<CommodityCashFlow>>& underlyingCashflows, const std::vector<bool>& isPayer,
     Natural nettingPrecision)
-    : CommodityCashFlow(0.0, 0.0, 1.0, false, nullptr, nullptr),
-      underlyingCashflows_(underlyingCashflows), nettingPrecision_(nettingPrecision),
-      commonQuantity_(0.0) {
+    : CommodityCashFlow(0.0, 0.0, 1.0, false, nullptr, nullptr), underlyingCashflows_(underlyingCashflows),
+      isPayer_(isPayer), nettingPrecision_(nettingPrecision) {
 
     QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows provided");
-
-    validateAndSetCommonQuantityAndDate();
-
-    // Register as observer of all underlying cashflows
-    for (const auto& cfPair : underlyingCashflows_) {
-        Observer::registerWith(cfPair.first);
-    }
-}
-
-void NettedCommodityCashFlow::validateAndSetCommonQuantityAndDate() {
-    Real quantity = Null<Real>();
-    Date paymentDate = Date();
-
-    for (size_t i = 0; i < underlyingCashflows_.size(); ++i) {
-        const auto& cf = underlyingCashflows_[i].first;
-
-        // Get quantity from the CommodityCashFlow base class
-        Real cfQuantity = cf->periodQuantity();
-        Date cfPaymentDate = cf->date();
-
-        if (i == 0) {
-            quantity = cfQuantity;
-            paymentDate = cfPaymentDate;
-        } else {
-            QL_REQUIRE(QuantLib::close_enough(quantity, cfQuantity),
-                      "NettedCommodityCashFlow: all underlying cashflows must have the same periodQuantity(). "
-                      << "Expected " << quantity << ", found " << cfQuantity);
-            QL_REQUIRE(paymentDate == cfPaymentDate,
-                      "NettedCommodityCashFlow: all underlying cashflows must have the same payment date. "
-                      << "Expected " << paymentDate << ", found " << cfPaymentDate);
-        }
+    QL_REQUIRE(underlyingCashflows_.size() == isPayer_.size(),
+               "NettedCommodityCashFlow: underlyingCashflows and isPayer vectors must have the same size");
+    for (size_t i = 1; i < underlyingCashflows_.size(); ++i) {
+        QL_REQUIRE(underlyingCashflows_[i] != nullptr,
+                   "NettedCommodityCashFlow: null underlying cashflow at index " << i);
+        QL_REQUIRE(underlyingCashflows_[i]->date() == underlyingCashflows_[0]->date(),
+                   "NettedCommodityCashFlow: all underlying cashflows must have the same payment date. "
+                       << "Expected " << underlyingCashflows_[0]->date() << ", found "
+                       << underlyingCashflows_[i]->date());
+        QL_REQUIRE(underlyingCashflows_[i]->periodQuantity() == underlyingCashflows_[0]->periodQuantity(),
+                   "NettedCommodityCashFlow: all underlying cashflows must have the same periodQuantity(). "
+                       << "Expected " << underlyingCashflows_[0]->periodQuantity() << ", found "
+                       << underlyingCashflows_[i]->periodQuantity());
     }
 
-    QL_REQUIRE(quantity != Null<Real>(), "NettedCommodityCashFlow: could not determine common quantity");
-    QL_REQUIRE(paymentDate != Date(), "NettedCommodityCashFlow: could not determine common payment date");
-    commonQuantity_ = quantity;
+    for (const auto& cashflow : underlyingCashflows_) {
+        registerWith(cashflow);
+    }
 }
 
 Real NettedCommodityCashFlow::fixing() const {
-    Real totalFixing = 0.0;
-
-    for (const auto& cfPair : underlyingCashflows_) {
-        const auto& cf = cfPair.first;
-        const bool isPayer = cfPair.second;
-
-        // Use CommodityCashFlow methods directly - implement the formula: sign_pay * cf.gearing() * cf.fixing() + cf.spread()
-        Real sign_pay = isPayer ? -1.0 : 1.0;
-        Real fixing = sign_pay * cf->gearing() * cf->fixing() + cf->spread();
-        totalFixing += fixing;
+    Real nettedFixing = 0.0;
+    for (size_t i = 0; i < underlyingCashflows_.size(); ++i) {
+        const auto& cf = underlyingCashflows_[i];
+        double multiplier = isPayer_[i] ? -1.0 : 1.0;
+        Real fixing = multiplier * cf->gearing() * cf->fixing() + cf->spread();
+        nettedFixing += fixing;
     }
-
-    // Apply rounding if precision is specified
-    if (nettingPrecision_ != Null<Natural>()) {
-        return roundWithPrecision(totalFixing, nettingPrecision_);
-    } else {
-        return totalFixing;
-    }
+    return roundWithPrecision(nettedFixing, nettingPrecision_);
 }
 
-Real NettedCommodityCashFlow::roundedFixing() const {
-    return fixing();
-}
-
-Real NettedCommodityCashFlow::amount() const {
-    // Calculate and return the amount directly
-    Real roundedTotalFixing = fixing();
-    return roundedTotalFixing * commonQuantity_;
-}
-
-Date NettedCommodityCashFlow::date() const {
-    QL_REQUIRE(!underlyingCashflows_.empty(), "NettedCommodityCashFlow: no underlying cashflows");
-    return underlyingCashflows_[0].first->date();
+Real NettedCommodityCashFlow::amount() const { // Calculate and return the amount directly
+    return fixing() * periodQuantity();
 }
 
 const std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>>& NettedCommodityCashFlow::indices() const {
     static std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>> allIndices;
     allIndices.clear();
 
-    // Collect all indices from underlying cashflows
-    for (const auto& cfPair : underlyingCashflows_) {
-        const auto& cf = cfPair.first;
+    for (const auto& cf : underlyingCashflows_) {
         const auto& cfIndices = cf->indices();
-
-        // Add all indices from this cashflow
         for (const auto& indexPair : cfIndices) {
             allIndices.push_back(indexPair);
         }
@@ -139,24 +95,18 @@ const std::vector<std::pair<Date, ext::shared_ptr<CommodityIndex>>>& NettedCommo
 }
 
 Date NettedCommodityCashFlow::lastPricingDate() const {
-    Date maxDate = Date();
-
+    Date maxDate;
     // Find the latest pricing date across all underlying cashflows
-    for (const auto& cfPair : underlyingCashflows_) {
-        const auto& cf = cfPair.first;
+    for (const auto& cf : underlyingCashflows_) {
         Date cfLastDate = cf->lastPricingDate();
-
         if (maxDate == Date() || cfLastDate > maxDate) {
             maxDate = cfLastDate;
         }
     }
-
     return maxDate;
 }
 
-Real NettedCommodityCashFlow::periodQuantity() const {
-    return commonQuantity_;
-}
+Real NettedCommodityCashFlow::periodQuantity() const { return underlyingCashflows_.front()->periodQuantity(); }
 
 void NettedCommodityCashFlow::accept(AcyclicVisitor& v) {
     if (Visitor<NettedCommodityCashFlow>* v1 = dynamic_cast<Visitor<NettedCommodityCashFlow>*>(&v))

@@ -1,32 +1,29 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
- All rights reserved.
+Copyright (C) 2025 Quaternion Risk Management Ltd
+All rights reserved.
 
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
+This file is part of ORE, a free-software/open-source library
+for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
+ORE is free software: you can redistribute it and/or modify it
+under the terms of the Modified BSD License.  You should have received a
+copy of the license along with this program.
+The license is also available online at <http://opensourcerisk.org>
 
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+This program is distributed on the basis that it will form a useful
+contribution to risk analytics and model standardisation, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file qle/cashflows/nettedcommoditycashflow.hpp
     \brief Cash flow that nets multiple commodity floating leg cashflows for a given payment period
- */
+*/
 
-#ifndef quantext_netted_commodity_cash_flow_hpp
-#define quantext_netted_commodity_cash_flow_hpp
+#pragma once
 
 #include <ql/patterns/visitor.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
-#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <vector>
 
 namespace QuantExt {
@@ -39,7 +36,7 @@ namespace QuantExt {
     \return The rounded value
 */
 QuantLib::Real roundWithPrecision(QuantLib::Real value, QuantLib::Natural precision,
-                                 QuantLib::Natural preRoundPrecision = 8);
+                                  QuantLib::Natural preRoundPrecision = 8);
 
 /*! Cash flow that aggregates multiple commodity floating leg cashflows for netting.
 
@@ -54,25 +51,21 @@ class NettedCommodityCashFlow : public CommodityCashFlow {
 
 public:
     /*! Constructor
-        \param underlyingCashflows Vector of pairs containing the underlying commodity cashflows and their payer flags
-        \param nettingPrecision Number of decimal places to round the total average fixing to (Null<Natural>() means no rounding)
+        \param underlyingCashflows Vector of containing the underlying commodity cashflows
+        \param isPayer their payer flags
+        \param nettingPrecision Number of decimal places to round the total average fixing to (Null<Natural>() means no
+    rounding)
     */
-    NettedCommodityCashFlow(const std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows,
-                           QuantLib::Natural nettingPrecision = QuantLib::Null<QuantLib::Natural>());
+    NettedCommodityCashFlow(const std::vector<QuantLib::ext::shared_ptr<CommodityCashFlow>>& underlyingCashflows,
+                            const std::vector<bool>& isPayer,
+                            QuantLib::Natural nettingPrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
-    const std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>>& underlyingCashflows() const {
+    const std::vector<QuantLib::ext::shared_ptr<CommodityCashFlow>>& underlyingCashflows() const {
         return underlyingCashflows_;
     }
     QuantLib::Natural nettingPrecision() const { return nettingPrecision_; }
-    QuantLib::Real commonQuantity() const { return commonQuantity_; }
-    QuantLib::Real roundedFixing() const;
-    //@}
-
-    //! \name Event interface
-    //@{
-    QuantLib::Date date() const override;
     //@}
 
     //! \name CommodityCashFlow interface
@@ -88,11 +81,23 @@ public:
     QuantLib::Real amount() const override;
     //@}
 
+    //! \name Event interface
+    //@{
+    QuantLib::Date date() const override { return underlyingCashflows_.front()->date(); }
+    //@}
+
     //! \name Observer interface
     //@{
     void update() override {
         calculated_ = false;
         notifyObservers();
+    }
+
+    void deepUpdate() override {
+        for (const auto& cf : underlyingCashflows_) {
+            cf->deepUpdate();
+        }
+        update();
     }
     //@}
 
@@ -102,13 +107,9 @@ public:
     //@}
 
 private:
-    void validateAndSetCommonQuantityAndDate();
-
-    std::vector<std::pair<QuantLib::ext::shared_ptr<CommodityCashFlow>, bool>> underlyingCashflows_;
+    std::vector<QuantLib::ext::shared_ptr<CommodityCashFlow>> underlyingCashflows_;
+    std::vector<bool> isPayer_;
     QuantLib::Natural nettingPrecision_;
-    QuantLib::Real commonQuantity_;
 };
 
 } // namespace QuantExt
-
-#endif

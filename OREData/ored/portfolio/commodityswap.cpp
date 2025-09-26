@@ -9,7 +9,7 @@
   under the terms of the Modified BSD License.  You should have received a
   copy of the license along with this program.
   The license is also available online at <http://opensourcerisk.org>
-
+  
   This program is distributed on the basis that it will form a useful
   contribution to risk analytics and model standardisation, but WITHOUT
   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -29,7 +29,6 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/nettedcommoditycashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
@@ -38,7 +37,6 @@ using namespace ore::data;
 using namespace QuantExt;
 using namespace QuantLib;
 using std::max;
-using std::make_pair;
 
 namespace ore {
 namespace data {
@@ -54,7 +52,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     additionalData_["isdaBaseProduct"] = string("Swap");
     additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
 
     check();
 
@@ -70,11 +68,11 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     const string& configuration = builder->configuration(MarketContext::pricing);
 
     // Build the commodity swap legs
-
+    
     // Build the floating legs first in case we need the quantities to build the fixed legs.
-    // Store the floating legs in the map with their "Tag" as key. This allows the fixed leg to find the floating leg
-    // with the matching "Tag" when retrieving the quantities if it needs them. Note the if all the tags are empty,
-    // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag.
+    // Store the floating legs in the map with their "Tag" as key. This allows the fixed leg to find the floating leg 
+    // with the matching "Tag" when retrieving the quantities if it needs them. Note the if all the tags are empty, 
+    // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag. 
     // This is by design i.e. use tags if you want to link specific legs.
     map<string, Leg> floatingLegs;
     map<string, string> tagToForeignCcy;
@@ -85,7 +83,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         const LegType& type = legDatum.legType();
         if (type == LegType::CommodityFixed)
             continue;
-
+        floatingLegIds_.insert(t);
         // Build the leg and add it to legs_
         buildLeg(engineFactory, legDatum, configuration);
         legsIdx[t] = legs_.size() - 1;
@@ -108,7 +106,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         const LegType& type = effLegDatum.legType();
         if (type != LegType::CommodityFixed)
             continue;
-
+        fixedLegIds_.insert(t);
         // Update the commodity fixed leg quantities if necessary.
         auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(effLegDatum.concreteLegData());
         QL_REQUIRE(cfld, "CommodityFixed leg should have valid CommodityFixedLegData");
@@ -172,16 +170,13 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     legPayers_.swap(legPayersTmp);
     legCurrencies_.swap(legCurrenciesTmp);
 
-    // Apply netting logic if enabled
-    if (isNetted_) {
-        netFloatingFlows();
+    // If leg has SettlementData, do the fx conversion
+    for (Size i = 0; i < legData_.size(); ++i) {
+        legs_[i] = fxSettledLeg(legs_[i], legData_[i], engineFactory, configuration);
     }
 
-    // If leg has SettlementData, do the fx conversion
-    // In case of netting we need to ensure that all netted flows have the same fx settlement
-    for (Size i = 0; i < legs_.size(); ++i) {
-        Size legDataIdx = getLegDataIdx(i, isNetted_);
-        legs_[i] = getFxSettledCommodityFlow(legs_[i], legData_[legDataIdx], engineFactory, configuration);
+    if (isNetted_) {
+        buildNettedLegs(engineFactory, configuration);
     }
 
     // Create the QuantLib swap instrument and assign pricing engine
@@ -195,50 +190,24 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 }
 
 const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
+    Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
-
-    // Determine which legs to process for normal output
-    vector<Leg> legsToProcess = legs_;
-    vector<bool> legPayersToProcess = legPayers_;
-    vector<string> legCurrenciesToProcess = legCurrencies_;
-    Size numLegsToProcess = legs_.size();
-
-    // If netting is enabled, use the original legs for normal reporting
-    if (isNetted_ && !originalLegsBeforeNetting_.empty()) {
-        legsToProcess = originalLegsBeforeNetting_;
-        legPayersToProcess = originalLegPayersBeforeNetting_;
-        legCurrenciesToProcess = originalLegCurrenciesBeforeNetting_;
-        numLegsToProcess = originalLegsBeforeNetting_.size();
-    }
-
-    // Process legs normally (either current legs or original legs if netted)
-    for (Size i = 0; i < numLegsToProcess; ++i) {
+    const auto& legs = isNetted_ ? originalLegsBeforeNetting_ : legs_;
+    for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
-
-        // Report leg metadata
-        if (i < legData_.size()) {
-            additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
-            additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
-            additionalData_["currency[" + legID + "]"] = legData_[i].currency();
-        }
-
-        // Report leg NPV
-        if (swap && i < swap->numberOfLegs()) {
+        additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
+        additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
+        additionalData_["currency[" + legID + "]"] = legData_[i].currency();
+        if (swap && (!isNetted_ || fixedLegIds_.count(i) == 1)) // if netted we have only the fixed legs and one netted floating leg (which we add later)
             additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-        } else if (swap && isNetted_) {
-            // For netted case, can't easily get original leg NPVs, so skip or use approximation
-            ALOG("commodity swap underlying instrument not set for original leg NPV reporting");
-        }
-
-        // Process cashflows for this leg
-        const Leg& leg = legsToProcess[i];
-        for (Size j = 0; j < leg.size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = leg[j];
+        else
+            ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
+        for (Size j = 0; j < legs[i].size(); ++j) {
+            QuantLib::ext::shared_ptr<CashFlow> flow = legs[i][j];
             if (flow->date() > asof) {
                 std::string label = legID + ":" + std::to_string(j + 1);
-
                 // CommodityFloatingLeg consists of indexed or indexed average cash flows
                 QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> indexedFlow =
                     QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(unpackIndexWrappedCashFlow(flow));
@@ -286,7 +255,6 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     }
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedFlow->date());
                 }
-
                 QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> indexedAvgFlow =
                     QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(unpackIndexWrappedCashFlow(flow));
                 if (indexedAvgFlow) {
@@ -320,7 +288,6 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                         additionalData_["weights[" + label + "]"] = weightsVector;
                     }
                 }
-
                 // CommodityFixedLeg consists of simple cash flows
                 Real flowAmount = 0.0;
                 try {
@@ -332,10 +299,8 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                 additionalData_["paymentDate[" + label + "]"] = to_string(flow->date());
             }
         }
-
-        // Report original notional
-        if (leg.size() > 0) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[0]);
+        if (legs[i].size() > 0) {
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][0]);
             if (coupon) {
                 Real originalNotional = 0.0;
                 try { originalNotional = coupon->nominal(); }
@@ -345,68 +310,36 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                 additionalData_["originalNotional[" + legID + "]"] = originalNotional;
             }
         }
-
-        // Handle FX settlement information
-        if (i < legData_.size() && !legData_[i].settlementFxIndex().empty()) {
-            additionalData_["fxIndex[" + legID + "]"] = legData_[i].settlementFxIndex();
-            for (Size j = 0; j < leg.size(); ++j) {
-                std::string label = legID + ":" + std::to_string(j + 1);
-                QuantLib::ext::shared_ptr<IndexWrappedCashFlow> cf =
-                    QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(leg[j]);
-                if (cf) {
-                    additionalData_["fxIndexFixingDate[" + label + "]"] = cf->fixingDate();
-                    additionalData_["fxIndexFixing[" + label + "]"] = cf->multiplier();
-                }
-            }
-            additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
+        if (legData_[i].settlementFxIndex().empty()) {
+            continue;
         }
-    }
+        
+        additionalData_["fxIndex[" + legID + "]"] = legData_[i].settlementFxIndex();
+        for (Size j = 0; j < legs[i].size(); ++j) {
+            std::string label = legID + ":" + std::to_string(j + 1);
+            QuantLib::ext::shared_ptr<IndexWrappedCashFlow> cf =
+                QuantLib::ext::dynamic_pointer_cast<IndexWrappedCashFlow>(legs[i][j]);
+            additionalData_["fxIndexFixingDate[" + label + "]"] = cf->fixingDate();
+            additionalData_["fxIndexFixing[" + label + "]"] = cf->multiplier();
+        }
+        additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
 
-    // If netting is enabled, add minimal information about the netted leg
-    if (isNetted_ && nettedLegId_ != Null<Size>()) {
-        Size nettedLegIdx = nettedLegId_;
-
-        // Report NPV for netted leg
-        additionalData_["nettedLegPV"] = swap->legNPV(nettedLegIdx);
-
-        // Provide minimal summary information for the entire netted leg
-        Real totalNettedQuantity = 0.0;
-        Real totalNettedFixing = 0.0;
-        Natural nettingPrecision = Null<Natural>();
-
-        const Leg& nettedLeg = legs_[nettedLegIdx];
-        for (Size j = 0; j < nettedLeg.size(); ++j) {
-            QuantLib::ext::shared_ptr<CashFlow> flow = nettedLeg[j];
-            if (flow->date() > asof) {
-                // Handle NettedCommodityCashFlow - aggregate information
-                QuantLib::ext::shared_ptr<NettedCommodityCashFlow> nettedFlow =
-                    QuantLib::ext::dynamic_pointer_cast<NettedCommodityCashFlow>(unpackIndexWrappedCashFlow(flow));
-                if (nettedFlow) {
-                    Real commonQuantity = nettedFlow->commonQuantity();
-                    totalNettedQuantity += commonQuantity;
-
-                    // Use the fixing that's already calculated (already rounded)
-                    Real fixing = nettedFlow->fixing();
-                    totalNettedFixing += fixing;
-
-                    if (nettedFlow->nettingPrecision() != Null<Natural>()) {
-                        nettingPrecision = nettedFlow->nettingPrecision();
-                    }
-                }
+        // Add netted leg additional data
+        if (isNetted_ && nettedLegId_ != Null<Size>()) {
+            if (swap){
+                additionalData_["nettedLegPV"] = swap->legNPV(nettedLegId_);
+            } else {
+                ALOG("commodity swap underlying instrument not set, skip netted leg npv reporting");
+            }
+            if (nettingPrecision_ != Null<Natural>()) {
+                additionalData_["nettedLegPrecision"] = static_cast<int>(nettingPrecision_);
             }
         }
-
-        // Add summary information for the entire netted leg
-        additionalData_["nettedLegQuantity"] = totalNettedQuantity;
-        additionalData_["nettedLegFixing"] = totalNettedFixing;
-
-        if (nettingPrecision != Null<Natural>()) {
-            additionalData_["nettedLegPrecision"] = static_cast<int>(nettingPrecision);
-        }
     }
-
     return additionalData_;
-}QuantLib::Real CommoditySwap::notional() const {
+}
+
+QuantLib::Real CommoditySwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     Real currentAmount = Null<Real>();
     // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
@@ -517,140 +450,65 @@ void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
 
 }
 
-void CommoditySwap::netFloatingFlows() {
+void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const string& configuration) {
     DLOG("CommoditySwap::netFloatingFlows() applying netting logic for trade " << id());
-
+    QL_REQUIRE(!floatingLegIds_.empty(), "No floating legs found to net for trade " << id());
     // Backup original legs before netting for transparency
-    originalLegsBeforeNetting_ = legs_;
-    originalLegPayersBeforeNetting_ = legPayers_;
-    originalLegCurrenciesBeforeNetting_ = legCurrencies_;
+    originalLegsBeforeNetting_.swap(legs_);
+    originalLegPayersBeforeNetting_.swap(legPayers_);
+    originalLegCurrenciesBeforeNetting_.swap(legCurrencies_);
 
-    // Separate floating and fixed legs
-    vector<Leg> originalLegs = legs_;
-    vector<bool> originalLegPayers = legPayers_;
-    vector<string> originalLegCurrencies = legCurrencies_;
-
-    legs_.clear();
-    legPayers_.clear();
-    legCurrencies_.clear();
-
-    vector<Leg> floatingLegsForNetting;
-    vector<bool> floatingLegPayersForNetting;
-    string floatingLegCurrency = "";
-    string firstFloatingFxIndex = "";
-
+    vector<Leg> legs;
+    vector<bool> legPayers;
+    vector<string> legCurrencies;
+    
     // Collect floating legs and add fixed legs directly to the result
-    for (Size i = 0; i < legData_.size(); ++i) {
-        if (legData_[i].legType() == LegType::CommodityFixed) {
-            // Add fixed legs as-is
-            legs_.push_back(originalLegs[i]);
-            legPayers_.push_back(originalLegPayers[i]);
-            legCurrencies_.push_back(originalLegCurrencies[i]);
-        } else {
-            // Collect floating legs for netting
-            floatingLegsForNetting.push_back(originalLegs[i]);
-            floatingLegPayersForNetting.push_back(originalLegPayers[i]);
-
-            // Check currency consistency across floating legs
-            if (floatingLegCurrency.empty()) {
-                floatingLegCurrency = legData_[i].currency();
-            } else {
-                QL_REQUIRE(floatingLegCurrency == legData_[i].currency(),
-                          "CommoditySwap::netFloatingFlows(): all floating legs must have the same currency for netting. "
-                          << "Expected " << floatingLegCurrency << ", found " << legData_[i].currency());
-            }
-
-            // Check FX settlement consistency across floating legs
-            string currentFxIndex = legData_[i].settlementFxIndex();
-            if (firstFloatingFxIndex.empty()) {
-                firstFloatingFxIndex = currentFxIndex;
-            } else {
-                QL_REQUIRE(firstFloatingFxIndex == currentFxIndex,
-                          "CommoditySwap::netFloatingFlows(): all floating legs must have the same FX settlement for netting. "
-                          << "Expected '" << firstFloatingFxIndex << "', found '" << currentFxIndex << "'");
-            }
-        }
+    for (const auto& fixedLegId: fixedLegIds_) {
+        legs.push_back(originalLegsBeforeNetting_[fixedLegId]);
+        legPayers.push_back(originalLegPayersBeforeNetting_[fixedLegId]);
+        legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[fixedLegId]);
+    }
+    // Check floating legs are compatible for netting and collect their ids
+    const size_t firstFloatingLegId = *floatingLegIds_.begin();
+    for (const auto& i : floatingLegIds_) {
+        QL_REQUIRE(legData_[i].currency() == legData_[firstFloatingLegId].currency(),
+                   "All floating legs to be netted must have the same currency");
+        QL_REQUIRE(originalLegsBeforeNetting_[i].size() == originalLegsBeforeNetting_[firstFloatingLegId].size(),
+                   "All floating legs to be netted must have the same number of cashflows");
+        QL_REQUIRE(legData_[i].settlementFxIndex() == legData_[firstFloatingLegId].settlementFxIndex(),
+                   "All floating legs to be netted must have the same FX settlement configuration");
     }
 
-    // Group floating leg cashflows by payment date
-    map<Date, vector<pair<ext::shared_ptr<CommodityCashFlow>, bool>>> cashflowsByDate;
-
-    for (Size legIdx = 0; legIdx < floatingLegsForNetting.size(); ++legIdx) {
-        const Leg& leg = floatingLegsForNetting[legIdx];
-        bool isPayer = floatingLegPayersForNetting[legIdx];
-
-        for (const auto& cf : leg) {
-            auto unpackedCf = unpackIndexWrappedCashFlow(cf);
-
-            // Only process commodity floating leg cashflows - now cast to CommodityCashFlow
-            if (auto commodityCf = ext::dynamic_pointer_cast<CommodityCashFlow>(unpackedCf)) {
-                cashflowsByDate[cf->date()].push_back(make_pair(commodityCf, isPayer));
-            } else {
-                QL_FAIL("NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
-            }
+    // net cashflows 
+    Leg nettedLeg;
+    size_t numberFloatingCashflows = originalLegsBeforeNetting_[firstFloatingLegId].size();
+    for (Size i = 0; i < numberFloatingCashflows; ++i) {
+        vector<ext::shared_ptr<CommodityCashFlow>> cfs;
+        vector<bool> payers;
+        for(const auto& legId : floatingLegIds_) {
+            cfs.push_back(ext::dynamic_pointer_cast<CommodityCashFlow>(
+                unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i])));
+            QL_REQUIRE(cfs.back(), "NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
+            payers.push_back(originalLegPayersBeforeNetting_[legId]);
         }
+        nettedLeg.push_back(ext::make_shared<NettedCommodityCashFlow>(cfs, payers, nettingPrecision_));    
     }
-
-    // Create netted cashflows for each payment date
-    if (!cashflowsByDate.empty()) {
-        Leg nettedFloatingLeg;
-
-        for (const auto& dateCfPair : cashflowsByDate) {
-            const vector<pair<ext::shared_ptr<CommodityCashFlow>, bool>>& cashflows = dateCfPair.second;
-
-            if (cashflows.size() > 1) {
-                // Create netted cashflow when there are multiple cashflows
-                auto nettedCf = ext::make_shared<NettedCommodityCashFlow>(
-                    cashflows, nettingPrecision_);
-                nettedFloatingLeg.push_back(nettedCf);
-            } else {
-                // Single cashflow - add as-is but need to handle the sign properly
-                auto originalCf = cashflows[0].first;
-                bool isPayer = cashflows[0].second;
-
-                // Create a wrapper that handles the payer sign correctly
-                if (isPayer) {
-                    // For payer legs, we need to negate the amount
-                    auto nettedCf = ext::make_shared<NettedCommodityCashFlow>(
-                        cashflows, nettingPrecision_);
-                    nettedFloatingLeg.push_back(nettedCf);
-                } else {
-                    // For receiver legs, add as-is
-                    auto nettedCf = ext::make_shared<NettedCommodityCashFlow>(
-                        cashflows, nettingPrecision_);
-                    nettedFloatingLeg.push_back(nettedCf);
-                }
-            }
-        }
-
-        // Add the netted floating leg to the swap
-        legs_.push_back(nettedFloatingLeg);
-        legPayers_.push_back(false); // The netting is handled internally
-        nettedLegId_ = legs_.size() - 1; // Record the netted leg index
-
-        // Use currency from floating legs (already validated to be consistent)
-        legCurrencies_.push_back(floatingLegCurrency);
-    }
+    // Apply FX Settlement if any
+    nettedLeg = fxSettledLeg(nettedLeg, legData_[firstFloatingLegId], ef, configuration);
+    legs.push_back(nettedLeg);
+    nettedLegId_ = legs.size() - 1;
+    legPayers_.push_back(false); // Payer flag not relevant for netted leg
+    legCurrencies_.push_back(originalLegCurrenciesBeforeNetting_[firstFloatingLegId]);
+    
+    legs_.swap(legs);
+    legPayers_.swap(legPayers);
+    legCurrencies_.swap(legCurrencies);
 
     DLOG("CommoditySwap::netFloatingFlows() completed netting: " << legs_.size() << " final legs for trade " << id());
 }
 
-std::size_t CommoditySwap::getLegDataIdx(std::size_t legIdx, bool isNetted) const {
-    if (!isNetted || legIdx < legData_.size()) {
-        return legIdx;
-    }
 
-    // For netted floating leg, find the first floating leg in legData_
-    for (Size j = 0; j < legData_.size(); ++j) {
-        if (legData_[j].legType() != LegType::CommodityFixed) {
-            return j;
-        }
-    }
-
-    QL_FAIL("CommoditySwap::getLegDataIdx(): could not find floating leg data for netted leg");
-}
-
-QuantLib::Leg CommoditySwap::getFxSettledCommodityFlow(const QuantLib::Leg& leg, const ore::data::LegData& legData,
+QuantLib::Leg CommoditySwap::fxSettledLeg(const QuantLib::Leg& leg, const ore::data::LegData& legData,
                                                       const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                                                       const std::string& configuration) {
     if (legData.settlementFxIndex().empty()) {

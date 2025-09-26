@@ -72,22 +72,24 @@ private:
     void buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef,
         const ore::data::LegData& legDatum, const std::string& configuration);
 
-    // Net floating cashflows for same payment dates
-    void netFloatingFlows();
+    // Build netted legs
+    void buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const string& configuration);
 
-    // Helper functions for FX settlement
-    std::size_t getLegDataIdx(std::size_t legIdx, bool isNetted) const;
-    QuantLib::Leg getFxSettledCommodityFlow(const QuantLib::Leg& leg, const ore::data::LegData& legData,
+    // Apply FX settlement if any
+    QuantLib::Leg fxSettledLeg(const QuantLib::Leg& leg, const ore::data::LegData& legData,
                                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
-                                           const std::string& configuration);    std::vector<ore::data::LegData> legData_;
+                                           const std::string& configuration);    
+                                           
+    std::vector<ore::data::LegData> legData_;
     bool isNetted_ = false;
     QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
 
     // Store original legs before netting and netted leg index for transparency
-    mutable std::vector<QuantLib::Leg> originalLegsBeforeNetting_;
-    mutable std::vector<bool> originalLegPayersBeforeNetting_;
-    mutable std::vector<std::string> originalLegCurrenciesBeforeNetting_;
-    mutable QuantLib::Size nettedLegId_ = QuantLib::Null<QuantLib::Size>();
+    std::vector<QuantLib::Leg> originalLegsBeforeNetting_;
+    std::vector<bool> originalLegPayersBeforeNetting_;
+    std::vector<std::string> originalLegCurrenciesBeforeNetting_;
+    QuantLib::Size nettedLegId_ = QuantLib::Null<QuantLib::Size>();
+    std::set<QuantLib::Size> fixedLegIds_, floatingLegIds_;
 };
 
 } // namespace data
