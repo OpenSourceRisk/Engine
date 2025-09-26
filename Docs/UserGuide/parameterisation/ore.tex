@@ -748,6 +748,7 @@ shows a typical configuration for sensitivity calculation.
    <Parameter name="outputJacobi">Y</Parameter>
    <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
    <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+   <Parameter name="decomposeIndexSensitivities">Y</Parameter>
  </Analytic>
 </Analytics>
 \end{minted}
@@ -778,7 +779,32 @@ The parameters have the following interpretation:
 \item {\tt outputJacobi}: If set to Y, then the relevant Jacobi and inverse Jacobi matrix is written to a file, see below
 \item {\tt jacobiOutputFile}: Output file name for the Jacobi matrix
 \item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
+\item {\tt decomposeIndexSensitivities}: Decompose Credit index and Equity and Commodity index sensitivities into constituent sensitivities 
 \end{itemize}
+
+The decomposition of index sensitivities is controlled as follows:
+
+\begin{itemize}
+    \item \textbf{Credit Index Decomposition:} Enabled via the \texttt{SensitivityDecomposition} flag in the pricing engine settings for \texttt{IndexCreditDefaultSwap}, \texttt{IndexCreditDefaultSwapOption}, and \texttt{SyntheticCDO} (see pricing engine parameterisation, Section~\ref{sec:configuration_pricingengines}).
+    \item \textbf{Equity and Commodity Index Decomposition:} Controlled at the trade level by adding the field \texttt{index\_decomposition} to the trade envelope's \texttt{AdditionalFields} section, as shown in Listing~\ref{lst:eq_index_decomposition}.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Envelope>
+  ...
+  <AdditionalFields>
+    <index_decomposition>true</index_decomposition>
+  </AdditionalFields>
+</Envelope>
+\end{minted}
+\caption{Trade envelope configuration for equity and commodity index decomposition}
+\label{lst:eq_index_decomposition}
+\end{listing}
+
+Equity index decomposition is supported for \texttt{EquitySwap} and \texttt{GenericTRS} trades, while commodity index decomposition is available for \texttt{GenericTRS} trades.
+
+To enable index decomposition, appropriate reference data for credit, equity, or commodity indices must be provided.
 
 The conversion of ``raw'' to ``par'' sensitivities, embedded above, can also be performed as a
 separate step by calling the {\tt zeroToParSensiConversion} analytic as shown in Listing
