@@ -88,7 +88,7 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
                </ScheduleData>
             </Event>
             <Number>
-               <Name>FixedAmount</Name>
+               <Name>FixingAmount</Name>
                <Value>840336</Value>
             </Number>
             <Number>
@@ -125,7 +125,7 @@ The meanings and allowable values of the elements in the \verb+Extended Fx Forwa
 \item Strike: the strike of the option, input as a percentage (of the value of Index Initial)
 \item Underlying: the underlying index
 \item Notional: the notional amount of the option
-\item FixedAmount: the notional amount in 
+\item FixingAmount: the notional amount in 
 \item PayCurrency: the currency of the underlying swap notional
 \item ExtensionDecisionDate: the date on which the Extension Condition is decided on
 \item ExtensionTrigger: the value of the index below which a Trigger Event occurs on any of the Strike Observation Dates
@@ -142,19 +142,19 @@ The script `ExtendedFxForwardSwap' referenced in the trade above is shown in Lis
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 
-REQUIRE {FixedAmount >= 0} AND {Strike >= 0};
+REQUIRE {FixingAmount >= 0} AND {Strike >= 0};
 REQUIRE {SIZE(ConditionalObservationDates) == SIZE(ConditionalSettlementDates)};
 NUMBER d, Fixing;
             
     FOR d IN (1, SIZE(ObservationDates), 1) DO
         Fixing = Underlying(ObservationDates[d]);
-        Value = Value + PAY(FixedAmount*Strike-FixedAmount*Fixing, ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
+        Value = Value + PAY(FixingAmount*Strike-FixingAmount*Fixing, ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
     END;
             
     IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
         FOR d IN (1, SIZE(ConditionalObservationDates), 1) DO
             Fixing = Underlying(ConditionalObservationDates[d]);
-            Value = Value + PAY(FixedAmount*Strike-FixedAmount*Fixing, ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
+            Value = Value + PAY(FixingAmount*Strike-FixingAmount*Fixing, ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
     END;
 END;
 \end{minted}
