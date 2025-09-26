@@ -1216,11 +1216,11 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     
     // OIS specific conventions
 
-    strIncludeSpread_ = XMLUtils::getChildValue(node, "SpreadIncludeSpread", false);
-    strLookback_ = XMLUtils::getChildValue(node, "SpreadLookback", false);
-    strFixingDays_ = XMLUtils::getChildValue(node, "SpreadFixingDays", false);
-    strRateCutoff_ = XMLUtils::getChildValue(node, "SpreadRateCutoff", false);
-    strIsAveraged_ = XMLUtils::getChildValue(node, "SpreadIsAveraged", false);
+    strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
+    strLookback_ = XMLUtils::getChildValue(node, "Lookback", false);
+    strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
+    strIsAveraged_ = XMLUtils::getChildValue(node, "IsAveraged", false);
 
     build();
 }
