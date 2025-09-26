@@ -41,18 +41,8 @@ namespace CommodityAveragePriceOptionMomementMatching {
 QuantLib::Real MomentMatchingResults::firstMoment() { return forward; }
 QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn; }
 QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
-QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
+QuantLib::Time MomentMatchingResults::timeToExpiry() { return tn; }
 
-double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate,
-                              double forward, double strike, double ttm, bool useBachelierModel) {
-    double blackVol = vol->blackVol(volDate, strike, true);
-    if (!useBachelierModel) {
-        return blackVol;
-    }
-    Option::Type optionType = strike >= forward ? Option::Call : Option::Put;
-    double blackPrice = blackFormula(optionType, strike, forward, blackVol * sqrt(ttm));
-    return bachelierBlackFormulaImpliedVol(optionType, strike, forward, ttm, blackPrice);
-}
 
 double
 calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<double>& futureVols,
@@ -140,8 +130,9 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                 Date volDate = optionExpiry <= today ? expiry : optionExpiry;
                 optionExpiries.push_back(volDate);
                 if (futureVols.count(volDate) == 0) {
-                    auto [volatility, volType, shift] =  convertInputVolatility(
-                        modelType, displacement, vol, atmUnderlyingCcy, K, res.times.back());
+                    auto [volatility, volType, shift] =
+                        convertInputVolatility(modelType, displacement, vol->volType(), vol->shift(),
+                                               vol->blackVol(volDate, K), atmUnderlyingCcy, K, res.times.back());
                     futureVols[volDate] = volatility;
                     res.volType = volType;
                     res.displacement = shift;
@@ -149,8 +140,9 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
                 res.futureVols.push_back(futureVols[volDate]);
             } else {
                 auto tte = res.times.back();
-                auto [spotVol, volType, shift] =  convertInputVolatility(
-                        modelType, displacement, vol, atmUnderlyingCcy, K, res.times.back());
+                auto [spotVol, volType, shift] =
+                    convertInputVolatility(modelType, displacement, vol->volType(), vol->shift(),
+                                           vol->blackVol(pricingDate, K), atmUnderlyingCcy, K, res.times.back());
                 res.volType = volType;
                 res.displacement = shift;
                 res.spotVols.push_back(spotVol);
@@ -381,7 +373,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["effective_strike"] = effectiveStrike;
     mp["forward"] = matchedMoments.forward;
     mp["exp_A_2"] = matchedMoments.EA2;
-    mp["tte"] = matchedMoments.timeToExpriy();
+    mp["tte"] = matchedMoments.timeToExpiry();
     mp["sigma"] = matchedMoments.sigma;
     mp["quantity"] = arguments_.quantity;
     mp["npv"] = results_.value * (arguments_.type == Option::Call ? 1 : -1);

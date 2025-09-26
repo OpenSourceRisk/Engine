@@ -54,7 +54,7 @@ struct MomentMatchingResults {
     Real firstMoment();
     Real secondMoment();
     Real stdDev();
-    Time timeToExpriy();
+    Time timeToExpiry();
     QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal;
     QuantLib::Real displacement = 0.0;
 };
@@ -81,14 +81,14 @@ public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
                                           QuantLib::Real beta = 0.0,
-                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::Black,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
                                           QuantLib::Real displacement = 0.0);
 
     // if you want speed-optimized observability, use the other constructor
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
                                           QuantLib::Real beta = 0.0,
-                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::Black,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
                                           QuantLib::Real displacement = 0.0);
 
 protected:
