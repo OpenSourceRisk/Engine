@@ -4,15 +4,16 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Trade id="SCRIPTED_ExtendedFxForwardSwap">
-  <TradeType>ScriptedTrade</TradeType>
-  <Envelope>
-    <CounterParty>CPTY_A</CounterParty>
-    <NettingSetId>CPTY_A</NettingSetId>
-    <AdditionalFields/>
-  </Envelope>
-  <ScriptedTradeData>
-    <ScriptName>ExtendedFxForwardSwap</ScriptName>
+<Trade id="ExtendedForward">
+      <TradeType>ScriptedTrade</TradeType>
+      <Envelope>
+         <CounterParty>CPTY_A</CounterParty>
+         <NettingSetId>CRIF_20191230</NettingSetId>
+         <PortfolioIds/>
+         <AdditionalFields/>
+      </Envelope>
+      <ScriptedTradeData>
+         <ScriptName>ExtendedFxForwardSwap</ScriptName>
          <Data>
             <Event>
                <Name>ObservationDates</Name>
@@ -87,8 +88,8 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
                </ScheduleData>
             </Event>
             <Number>
-               <Name>Notional</Name>
-               <Value>1000000</Value>
+               <Name>FixedAmount</Name>
+               <Value>840336</Value>
             </Number>
             <Number>
                <Name>Strike</Name>
@@ -104,14 +105,14 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
             </Index>
             <Currency>
                <Name>Currency</Name>
-               <Value>USD</Value>
+               <Value>EUR</Value>
             </Currency>
             <Currency>
                <Name>PayCurrency</Name>
-               <Value>EUR</Value>
+               <Value>USD</Value>
             </Currency>
          </Data>
-  </ScriptedTradeData>
+    </ScriptedTradeData>
 </Trade>
 \end{minted}
 \caption{Extended Fx Forward Swap Representation}
@@ -124,6 +125,7 @@ The meanings and allowable values of the elements in the \verb+Extended Fx Forwa
 \item Strike: the strike of the option, input as a percentage (of the value of Index Initial)
 \item Underlying: the underlying index
 \item Notional: the notional amount of the option
+\item FixedAmount: the notional amount in 
 \item PayCurrency: the currency of the underlying swap notional
 \item ExtensionDecisionDate: the date on which the Extension Condition is decided on
 \item ExtensionTrigger: the value of the index below which a Trigger Event occurs on any of the Strike Observation Dates
@@ -140,21 +142,20 @@ The script `ExtendedFxForwardSwap' referenced in the trade above is shown in Lis
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 
-REQUIRE {Notional >= 0} AND {Strike >= 0};
+REQUIRE {FixedAmount >= 0} AND {Strike >= 0};
 REQUIRE {SIZE(ConditionalObservationDates) == SIZE(ConditionalSettlementDates)};
-NUMBER d, FOR_AMOUNT, Fix;
+NUMBER d, Fixing;
             
-FOR_AMOUNT = Notional/Strike;
-FOR d IN (1, SIZE(ObservationDates), 1) DO
-  Fix = Underlying(ObservationDates[d]);
-  Value = Value + PAY(FOR_AMOUNT-Notional/Fix, ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
-END;
+    FOR d IN (1, SIZE(ObservationDates), 1) DO
+        Fixing = Underlying(ObservationDates[d]);
+        Value = Value + PAY(FixedAmount*Strike-FixedAmount*Fixing, ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
+    END;
             
-IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
-  FOR d IN (1, SIZE(ConditionalObservationDates), 1) DO
-    Fix = Underlying(ConditionalObservationDates[d]);
-    Value = Value + PAY(FOR_AMOUNT-Notional/Fix, ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
-  END;
+    IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
+        FOR d IN (1, SIZE(ConditionalObservationDates), 1) DO
+            Fixing = Underlying(ConditionalObservationDates[d]);
+            Value = Value + PAY(FixedAmount*Strike-FixedAmount*Fixing, ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
+    END;
 END;
 \end{minted}
 \caption{ExtendedFxForwardSwap Script}
