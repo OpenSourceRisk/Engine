@@ -726,11 +726,12 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -1002,7 +1003,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
-        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
@@ -1011,11 +1011,12 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.run();
 
