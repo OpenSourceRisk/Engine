@@ -9,6 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neighbors import NearestNeighbors
 from sklearn.tree import plot_tree
+from pyearth import Earth
 
 import hnswlib as hnswlib
 
@@ -31,11 +32,11 @@ def conditional_expectation(x,y):
 
     # 1b ridge regression
 
-    poly = PolynomialFeatures(degree=4)
-    X_pre = poly.fit_transform(X)
-    model = Ridge()
-    model.fit(X_pre, Y)
-    return model.predict(X_pre).tolist()
+    #poly = PolynomialFeatures(degree=4)
+    #X_pre = poly.fit_transform(X)
+    #model = Ridge()
+    #model.fit(X_pre, Y)
+    #return model.predict(X_pre).tolist()
 
     # 2 regression tree
 
@@ -131,3 +132,10 @@ def conditional_expectation(x,y):
     # avg_preds = np.mean(neighbor_targets, axis=1)
 
     # return flatten_list(avg_preds)
+
+    # MARS (py-earth2)
+
+    #model = Earth(use_fast=True, fast_K=20, fast_h=1, max_degree=1, max_terms=20, minspan=0, penalty=0)#, endspan=0, tresh=0.00001)
+    model = Earth(use_fast=True, fast_K=20, fast_h=1, max_degree=1, max_terms=20)
+    model.fit(X,Y)
+    return model.predict(X).tolist()
