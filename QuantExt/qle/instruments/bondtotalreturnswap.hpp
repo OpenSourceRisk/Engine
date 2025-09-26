@@ -29,6 +29,7 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -40,11 +41,13 @@ public:
     using engine = GenericEngine<BondTRS::arguments, BondTRS::results>;
     using results = BondTRS::results;
     //! Constructor
-    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional, const Real initialPrice,
-            const std::vector<Leg>& fundingLeg, const bool payTotalReturnLeg, const std::vector<Date>& valuationDates,
-            const std::vector<Date>& paymentDates, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional,
+            const Real initialPrice, const std::vector<Leg>& fundingLeg, const bool payTotalReturnLeg,
+            const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
+            const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
             bool payBondCashFlowsImmediately = false, const Currency& fundingCurrency = Currency(),
-            const Currency& bondCurrency = Currency());
+            const Currency& bondCurrency = Currency(), const Period& payLagPeriod = Period(),
+            const Calendar& paymentCalendar = WeekendsOnly());
 
     //! \name Instrument interface
     //@{
@@ -75,6 +78,8 @@ private:
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
     bool payBondCashFlowsImmediately_;
     Currency fundingCurrency_, bondCurrency_;
+    Period payLagPeriod_;
+    Calendar paymentCalendar_;
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
     //
@@ -92,6 +97,8 @@ public:
     bool payTotalReturnLeg;
     bool payBondCashFlowsImmediately;
     Currency fundingCurrency, bondCurrency;
+    Period payLagPeriod;
+    Calendar paymentCalendar;
     void validate() const override {}
     std::vector<Date> paymentDates;
     std::vector<Date> valuationDates;

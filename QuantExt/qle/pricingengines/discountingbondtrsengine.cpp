@@ -182,20 +182,22 @@ void DiscountingBondTRSEngine::calculate() const {
 
     for (Size i = 0; i < expectedCashflows.size(); i++) {
 
+        Date payDate = arguments_.paymentCalendar.advance(
+            expectedCashflows[i]->date(), arguments_.payLagPeriod == Period() ? 0 * Days : arguments_.payLagPeriod);
+
         // 5a skip bond cashflows that are outside the total return valuation schedule
 
-        if (expectedCashflows[i]->date() <= start || expectedCashflows[i]->date() > end)
+        if (payDate <= start || payDate > end)
             continue;
 
         // 5b determine bond cf pay date
 
         Date bondFlowPayDate;
         Date bondFlowValuationDate;
-        bool paymentAfterMaturityButWithinBondSettlement =
-            expectedCashflows[i]->date() > arguments_.valuationDates.back() && expectedCashflows[i]->date() <= end;
+        bool paymentAfterMaturityButWithinBondSettlement = payDate > arguments_.valuationDates.back() && payDate <= end;
         if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
-            bondFlowPayDate = expectedCashflows[i]->date();
-            bondFlowValuationDate = expectedCashflows[i]->date();
+            bondFlowPayDate = payDate;
+            bondFlowValuationDate = payDate;
         } else {
             const auto& payDates = arguments_.paymentDates;
             auto nextPayDate = std::lower_bound(payDates.begin(), payDates.end(), expectedCashflows[i]->date());
