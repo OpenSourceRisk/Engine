@@ -97,6 +97,7 @@
       <xs:element type="kikoCorridorVarianceSwapData" name="KIKOCorridorVarianceSwapData"/>
       <xs:element type="corridorVarianceDispersionSwapData" name="CorridorVarianceDispersionSwapData"/>
       <xs:element type="koCorridorVarianceDispersionSwapData" name="KOCorridorVarianceDispersionSwapData"/>
+	  <xs:element type="pairwiseGeometricVarianceDispersionSwapData" name="PairwiseGeometricVarianceDispersionSwapData"/>
       <xs:element type="conditionalVarianceSwap01Data" name="ConditionalVarianceSwap01Data"/>
       <xs:element type="conditionalVarianceSwap02Data" name="ConditionalVarianceSwap02Data"/>
       <xs:element type="gammaSwapData" name="GammaSwapData"/>
@@ -3265,6 +3266,28 @@
       <xs:element type="stFreeStyleEventSchedule" name="KnockOutSchedule"/>
       <xs:element type="stFreeStyleEvent" name="VarianceAccrualStartDate"/>
       <xs:element type="stFreeStyleEventSchedule" name="SettlementSchedule"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="pairwiseGeometricVarianceDispersionSwapData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleNumber" name="PairCount"/>
+	  <xs:element type="stFreeStyleNumber" name="BasketCount"/>
+      <xs:element type="stFreeStyleNumberVector" name="Notionals"/>
+	  <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikesVS"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikesBVS"/>
+      <xs:element type="stFreeStyleNumberVector" name="BasketWeights"/>
+      <xs:element type="stFreeStyleNumberVector" name="VarianceWeights"/>
+      <xs:element type="stFreeStyleNumber" name="Lag"/>
+	  <xs:element type="stFreeStyleNumber" name="CapAmountMultiplier"/>
+	  <xs:element type="stFreeStyleNumber" name="Cap"/>
+	  <xs:element type="stFreeStyleNumber" name="Floor"/>
+	  <xs:element type="stFreeStyleBool" name="DividendAdjustment"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
