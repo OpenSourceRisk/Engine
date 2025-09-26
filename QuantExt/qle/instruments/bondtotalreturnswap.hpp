@@ -46,8 +46,8 @@ public:
             const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
             const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
             bool payBondCashFlowsImmediately = false, const Currency& fundingCurrency = Currency(),
-            const Currency& bondCurrency = Currency(), const Period& payLagPeriod = Period(),
-            const Calendar& paymentCalendar = WeekendsOnly());
+            const Currency& bondCurrency = Currency(), const bool applyFXIndexFixingDays = false,
+            const Period& payLagPeriod = Period(), const Calendar& paymentCalendar = WeekendsOnly());
 
     //! \name Instrument interface
     //@{
@@ -67,6 +67,7 @@ public:
     bool payBondCashFlowsImmediately() const { return payBondCashFlowsImmediately_; }
     const std::vector<Date>& valuationDates() const { return valuationDates_; }
     const std::vector<Date>& paymentDates() const { return paymentDates_; }
+    Period paymentLag() const { return paymentLag_; }
     //@}
 
 private:
@@ -82,6 +83,8 @@ private:
     Calendar paymentCalendar_;
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
+    bool applyFXIndexFixingDays_ = false;
+    Period paymentLag_;
     //
     Leg returnLeg_;
 };
@@ -102,6 +105,7 @@ public:
     void validate() const override {}
     std::vector<Date> paymentDates;
     std::vector<Date> valuationDates;
+    Period paymentLag;
 };
 
 } // namespace QuantExt

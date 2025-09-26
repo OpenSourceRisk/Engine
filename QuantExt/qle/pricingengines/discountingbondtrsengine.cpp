@@ -197,7 +197,7 @@ void DiscountingBondTRSEngine::calculate() const {
         bool paymentAfterMaturityButWithinBondSettlement = payDate > arguments_.valuationDates.back() && payDate <= end;
         if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
             bondFlowPayDate = payDate;
-            bondFlowValuationDate = payDate;
+            bondFlowValuationDate = expectedCashflows[i]->date();
         } else {
             const auto& payDates = arguments_.paymentDates;
             auto nextPayDate = std::lower_bound(payDates.begin(), payDates.end(), expectedCashflows[i]->date());

@@ -38,6 +38,8 @@ Corridor Variance Dispersion Swap & \lstinline!CorridorVarianceDispersionSwap! \
 \hline
 Corridor Variance Dispersion Swap with KO Barrier & \lstinline!KOCorridorVarianceDispersionSwap! \\
 \hline
+Pairwise Geometric Variance Dispersion Swap & \lstinline!PairwiseGeometricVarianceDispersionSwap! \\
+\hline
 Gamma Swap & \lstinline!GammaSwap! \\
 \hline
 Basket Variance Swap & \lstinline!BasketVarianceSwap! \\
@@ -2262,6 +2264,188 @@ The meanings and allowable values for the \lstinline!KOCorridorVarianceDispersio
   no knock-out occurs.. \\
   Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see (see the scripted trade
   documentation in ore/Docs/ScriptedTrade).
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Pairwise Geometric Variance Dispersion Swap}
+
+The traditional trade representation is as follows, using EQ underlyings in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_PairwiseGeometricVarianceDispersionSwap">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <PairwiseGeometricVarianceDispersionSwapData>
+		<PairCount type="number">3</PairCount>
+		<BasketCount type="number">2</BasketCount>
+		<Notionals type="number">
+			<Value>100</Value>
+			<Value>150</Value>
+			<Value>200</Value>
+		</Notionals>
+		<Underlyings type="index">
+			<Value>EQ-RIC:HSBA.L</Value>
+			<Value>EQ-RIC:MSFT.OQ</Value>
+			<Value>EQ-RIC:AMZN.O</Value>
+			<Value>EQ-RIC:HSBA.L</Value>
+			<Value>EQ-RIC:MSFT.OQ</Value>
+			<Value>EQ-RIC:AMZN.O</Value>
+		</Underlyings>
+		<StrikesVS type="number">
+			<Value>20</Value>
+			<Value>25</Value>
+			<Value>30</Value>
+			<Value>20</Value>
+			<Value>25</Value>
+			<Value>30</Value>
+		</StrikesVS>
+		<StrikesBVS type="number">
+			<Value>20</Value>
+			<Value>25</Value>
+			<Value>30</Value>
+		</StrikesBVS>
+		<BasketWeights type="number">
+			<Value>0.5</Value>
+			<Value>0.5</Value>
+		</BasketWeights>
+		<VarianceWeights type="number">
+			<Value>0.48</Value>
+			<Value>0.49</Value>
+			<Value>0.47</Value>
+			<Value>0.48</Value>
+			<Value>0.49</Value>
+			<Value>0.47</Value>
+		</VarianceWeights>
+		<Lag type="number">5</Lag>
+		<CapAmountMultiplier type="number">2.5</CapAmountMultiplier>
+		<Cap type="number">10</Cap>
+		<Floor type="number">-10</Floor>
+		<!--DividendAdjustment type="bool">false</DividendAdjustment-->
+		<ValuationSchedule type="event">
+			<ScheduleData>
+				<Rules>
+					<StartDate>2020-11-26</StartDate>
+					<EndDate>2020-12-31</EndDate>
+					<Tenor>1D</Tenor>
+					<Convention>Following</Convention>
+					<TermConvention>Following</TermConvention>
+					<Calendar>USA, GBP</Calendar>
+					<Rule>Forward</Rule>
+				</Rules>
+			</ScheduleData>
+		</ValuationSchedule>
+		<SettlementDate type="event">2021-01-10</SettlementDate>
+		<PayCcy type="currency">USD</PayCcy>
+	</PairwiseGeometricVarianceDispersionSwapData>
+</Trade>
+\end{minted}
+
+The PairwiseGeometricVarianceDispersionSwap script referenced in the trade above is shown in listing
+\ref{lst:pairwise_geometric_variance_dispersion_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {SIZE(StrikesVS) == PairCount * BasketCount} AND {SIZE(StrikesBVS) == PairCount};
+REQUIRE {SIZE(Underlyings) == PairCount * BasketCount} AND {SIZE(Notionals) == PairCount};
+REQUIRE {SIZE(BasketWeights) == BasketCount} AND {SIZE(VarianceWeights) == PairCount * BasketCount};
+
+NUMBER currentNotional;
+currentNotional = Notionals[1];
+
+NUMBER D, expectedN, normalizationFactor;
+
+D = SIZE(ValuationSchedule);
+expectedN = D - 1;
+normalizationFactor = 252 / ((expectedN - Lag + 1) * Lag);
+
+NUMBER pair, d, basket, id;
+NUMBER basketVariance, realisedVariance, currPrice, prevPrice;
+NUMBER equityAmountBVS, equityAmountVS, equityAmount;
+
+FOR pair IN (1, PairCount, 1) DO
+  FOR d IN (Lag + 1, D, 1) DO
+	FOR basket IN (1, BasketCount, 1) DO
+	  id = (basket - 1) * PairCount + pair;
+	  currPrice = Underlyings[id](ValuationSchedule[d]);
+	  prevPrice = Underlyings[id](ValuationSchedule[d - Lag]);
+	  basketVariance = basketVariance + BasketWeights[basket] * ln(currPrice/prevPrice);
+	END;
+	realisedVariance = realisedVariance + pow(basketVariance, 2);
+	basketVariance = 0;
+  END;
+  
+  equityAmountBVS = 1 / (2 * StrikesBVS[pair] * 100) * (pow(min(100 * sqrt(realisedVariance * normalizationFactor), CapAmountMultiplier * StrikesBVS[pair] * 100),2) - pow(StrikesBVS[pair] * 100, 2));
+  realisedVariance = 0;
+  
+  FOR basket IN (1, BasketCount, 1) DO
+	id = (basket - 1) * PairCount + pair;
+	FOR d IN (2, D, 1) DO
+	  currPrice = Underlyings[id](ValuationSchedule[d]);
+	  prevPrice = Underlyings[id](ValuationSchedule[d - 1]);
+	  realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+	END;
+	equityAmountVS = equityAmountVS + VarianceWeights[id] * 1 / (2 * StrikesVS[id] * 100) * (pow(min(100 * sqrt(252 / expectedN * realisedVariance), CapAmountMultiplier * StrikesVS[id] * 100), 2) - pow(StrikesVS[id] * 100, 2));
+	realisedVariance = 0;
+  END;
+  
+  equityAmount = equityAmount + Notionals[pair] * max(Floor, min(Cap, equityAmountVS - equityAmountBVS));
+  equityAmountVS = 0;
+END;
+
+Swap = PAY(LongShort * equityAmount, ValuationSchedule[D], SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a PairwiseGeometricVarianceDispersionSwap.}
+\label{lst:pairwise_geometric_variance_dispersion_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!PairwiseGeometricVarianceDispersionSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to selling volatility on
+  the Variance Swap transaction and buying volatility on Basket Variance Swap transaction. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!PairCount!: Number of pairs. \\
+  Allowable values: Any positive integer.
+  \item{}[number] \lstinline!BasketCount!: Number of baskets. \\
+  Allowable values: Any positive integer.
+  \item{}[number] \lstinline!Notionals!: The vega notional amount for each basket. \\
+  Allowable values: Any real number.
+  \item{}[index] \lstinline!Underlyings!: The underlyings index, ordered sequentially in each basket before moving to the next basket \\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!StrikesVS!: The volatility strike $K_{VS,u,vol}$ for each underlying $u$ in the Variance Swap transaction part, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here. The strikes should be ordered sequentially in each basket before moving to the next basket.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!StrikesBVS!: The volatility strike $K_{BVS,u,vol}$ for each pair in the Basket Variance Swap transaction part, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!BasketWeights!: List of weights applied to the realised volatility of each basket in the Basket Variance Swap transaction. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!VarianceWeights!: List of weights applied to the realised volatility of each underlying in the Variance Swap transaction, 
+  ordered sequentially in each basket before moving to the next basket. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Lag!: The number of lag days when calculating the realised variance in the Basket Variance Swap transaction.\\
+  Allowable values: Any positive integer.
+  \item{}[number] \lstinline!CapAmountMultiplier!: The multiplier used to calculate the Cap Amount from StrikesVS and StrikesBVS.
+  $CapAmount_{VS/BVS,u,vol} = K_{VS/BVS,u,var} \cdot CapAmountMultiplier$\\
+  Allowable values: Any positive integer.
+  \item{}[number] \lstinline!Cap!: The cap on the difference between Variance Swap equity amount and Basket Variance Swap equity amount. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!Floor!: The floor on the difference between Variance Swap equity amount and Basket Variance Swap equity amount. \\
+  Allowable values: Any number.
+  \item{}[bool] \lstinline!DividendAdjustment!: Whether or not the underlying price is adjusted for dividend payments. This feature is
+  not yet supported.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
