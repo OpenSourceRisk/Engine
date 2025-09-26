@@ -1012,9 +1012,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     LOG("CommodityVolCurve: start building 2-D volatility delta strike surface");
 
-    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
-               "CommodityVolCurve: only quote type"
-                   << " RATE_LNVOL is are currently supported for a 2-D volatility delta strike surface.");
+    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
 
     // Parse, sort and check the vector of configured put deltas
     vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
@@ -1055,7 +1054,6 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Configured delta and Atm types.
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
-
     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
     if (!vdsc.atmDeltaType().empty()) {
         atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
@@ -1075,6 +1073,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::COMMODITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.curveID() << "/"
        << vc.currency() << "/*";
+    DLOG("Loading quotes with wildcard " << ss.str());
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
