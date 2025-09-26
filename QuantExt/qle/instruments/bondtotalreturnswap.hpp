@@ -79,11 +79,11 @@ private:
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
     bool payBondCashFlowsImmediately_;
     Currency fundingCurrency_, bondCurrency_;
+    bool applyFXIndexFixingDays_ = false;
     Period payLagPeriod_;
     Calendar paymentCalendar_;
     std::vector<Date> valuationDates_;
     std::vector<Date> paymentDates_;
-    bool applyFXIndexFixingDays_ = false;
     Period paymentLag_;
     //
     Leg returnLeg_;
