@@ -497,8 +497,8 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
     nettedLeg = fxSettledLeg(nettedLeg, legData_[firstFloatingLegId], ef, configuration);
     legs.push_back(nettedLeg);
     nettedLegId_ = legs.size() - 1;
-    legPayers_.push_back(false); // Payer flag not relevant for netted leg
-    legCurrencies_.push_back(originalLegCurrenciesBeforeNetting_[firstFloatingLegId]);
+    legPayers.push_back(false); // Payer flag not relevant for netted leg
+    legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[firstFloatingLegId]);
     
     legs_.swap(legs);
     legPayers_.swap(legPayers);
