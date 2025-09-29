@@ -70,5 +70,6 @@ absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
                            const QuantLib::ext::shared_ptr<Scenario>& base,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
 
+std::vector<Period> getShiftedTenors(const std::vector<Period>& tenors, const QuantLib::Date& asof, const QuantLib::Date& mpor);
 } // namespace analytics
 } // namespace ore

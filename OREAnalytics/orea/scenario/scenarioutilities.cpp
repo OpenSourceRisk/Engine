@@ -461,5 +461,22 @@ absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
     return result;
 }
 
+std::vector<QuantLib::Period> getShiftedTenors(const std::vector<Period>& tenors, const QuantLib::Date& asof, const QuantLib::Date& mpor){
+    std::vector<QuantLib::Period> shiftedTenors;
+    QuantLib::Period shiftedTenor;
+    QuantLib::Date tenorDate, shiftedDate;
+    Size mporDays = (mpor - asof);
+    for (const auto& tenor : tenors) {
+        tenorDate = mpor + tenor;
+        shiftedDate = tenorDate - Period(mporDays, Days);
+        if (shiftedDate > mpor)
+            shiftedTenor = QuantLib::Period(int(QuantLib::Actual365Fixed().yearFraction(mpor, shiftedDate)*365), QuantLib::Days);
+        else
+            shiftedTenor = QuantLib::Period(0, QuantLib::Days);              
+        shiftedTenors.push_back(shiftedTenor);
+    }
+    return shiftedTenors;
+}
+
 } // namespace analytics
 } // namespace ore
