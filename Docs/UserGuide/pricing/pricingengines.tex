@@ -1505,10 +1505,20 @@ Available Model/Engine pairs:
 \item Black/MonteCarlo
 \end{itemize}
 
+Model Parameters (Black/AnalyticalApproximation, the MonteCarlo engine requires LogNormal volatilites):
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{LogNormal}: Use Moment-Matching approximation, if needed and possible normal input vols are converted into log-normal vols 
+    \end{itemize}
+\end{itemize}
+
+
 Engine description:
 
-Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future
-contracts is parametrized as
+Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future contracts is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -2703,10 +2713,11 @@ Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
 
 Model Parameters:
 \begin{itemize}
-    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to Kirk approximation.
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
     \begin{itemize}
-        \item \textbf{normal}: Use Bachelier model
-        \item \textbf{lognormal}: Use Kirk approximation
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{LogNormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols 
     \end{itemize}
 \end{itemize}
 
@@ -2772,6 +2783,16 @@ Used by trade type: CommodityOption
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{LogNormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+    \end{itemize}
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
@@ -2806,6 +2827,16 @@ Used by trade type: CommodityOption if a future is referenced
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanForwardEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{LogNormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+    \end{itemize}
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
@@ -2839,6 +2870,16 @@ The parameters have the following meaning:
 Used by trade type: CommodityOption if cash settled
 
 Available Model/Engine pairs: BlackScholes/AnalyticCashSettledEuropeanEngine
+
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{LogNormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+    \end{itemize}
+\end{itemize}
 
 Engine description:
 

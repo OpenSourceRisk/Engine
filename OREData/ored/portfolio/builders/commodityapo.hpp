@@ -126,6 +126,11 @@ protected:
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
+
+        QL_REQUIRE(vol->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(vol->shift(), 0.0),
+                   "CommodityApoMonteCarloEngineBuilder: currently only lognormal vols are supported");
+
         Handle<YieldTermStructure> yts = discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
