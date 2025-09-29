@@ -1016,6 +1016,7 @@ The {\tt pnl} and {\tt pnlExplain} analytics provide computation of a single-per
       <Parameter name="conventionsMporFile">conventions.xml</Parameter>
       <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
       <Parameter name="outputFileName">pnl.csv</Parameter>
+      <Parameter name="dateAdjustedRiskFactors">CommodityCurve</Parameter>
     </Analytic>
   </Analytics>
 \end{minted}
@@ -1033,6 +1034,7 @@ The parameters in Listing \ref{lst:ore_pnl} have the following interpretation:
 \item {\tt curveConfigMporFile}, {\tt conventionsMporFile}: Parametrisation to be applied at the mporDate; this may be different from the configuration on asofDate which is provided in the Setup section.
 \item {\tt conventionsMporFile}: Conventions applied at the mporDate
 \item {\tt portfolioMporFile} [Optional]: The portfolio on mporDate which is usually different from the portfolio on asofDate.  
+\item {\tt dateAdjustedRiskFactors} [Optional]: List of risk factor types (e.g., CommodityCurve) for which scenario dates at the mporDate are adjusted relative to the asofDate when computing P\&L Explain. This adjustment is particularly important for commodity curves, so that scenario dates reference the same future contracts at both mporDate and asofDate.
 \end{itemize}
 
 \begin{listing}[H]
@@ -1046,9 +1048,10 @@ The parameters in Listing \ref{lst:ore_pnl} have the following interpretation:
       <Parameter name="curveConfigMporFile">curveconfig.xml</Parameter>
       <Parameter name="conventionsMporFile">conventions.xml</Parameter>
       <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
-      <Parameter name="outputFileName">pnl_explain.csv</Parameter>
+      <Parameter name="outputFileName">pnl_explain.csv</Parameter>	  
+      <Parameter name="dateAdjustedRiskFactors">CommodityCurve</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="parSensitivity">Y</Parameter>	  
+      <Parameter name="parSensitivity">Y</Parameter>
     </Analytic>
   </Analytics>
 \end{minted}

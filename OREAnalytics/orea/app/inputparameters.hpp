@@ -550,6 +550,7 @@ public:
     void insertAnalytic(const std::string& s); 
     void removeAnalytic(const std::string& s);
 
+    void setPnlDateAdjustedRiskFactors(const std::string& s); // parse to vector<RiskFactorKey::KeyType>
 
 
     /***************************
@@ -978,6 +979,11 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
 
+    /****************************
+     * Getters for pnl analytics
+     ****************************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1367,6 +1373,11 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
+
+    /*****************
+     * PNL analytic
+     *****************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

@@ -1410,6 +1410,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnl", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+
+        tmp = params_->get("pnl", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
     }
 
     /****************
@@ -1474,6 +1479,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+        tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
     }
     /****************
      * SIMM and IM Schedule
