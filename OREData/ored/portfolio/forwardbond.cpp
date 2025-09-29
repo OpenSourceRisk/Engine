@@ -104,7 +104,6 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     } catch (...) {
         // try to fill some fields for trade matching purposes although the trade build itself failed already
-        notional_ = bondData_.bondNotional();
         npvCurrency_ = notionalCurrency_ = currency_ = bondData_.currency();
         for (auto const& d : bondData_.coupons()) {
             try {
@@ -112,7 +111,10 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                 maturity_ = std::max(maturity_, s.back());
             } catch (...) {
             }
+            if (!d.notionals().empty())
+                notional_ = d.notionals().front();
         }
+        notional_ *= bondData_.bondNotional();
         throw;
     }
 
