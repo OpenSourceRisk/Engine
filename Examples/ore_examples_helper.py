@@ -25,11 +25,10 @@ def get_list_of_examples():
     return get_list_of_new_examples()
 
 def get_list_of_legacy_examples():
-    return ["Legacy/Example_11",
-            "Legacy/Example_45",
-            "Legacy/Example_71",
-            "Legacy/Example_76"
-            ]
+    legacy = sorted([e for e in os.listdir(os.path.join(os.getcwd(),"Legacy"))
+                     if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
+#                     if e == 'Example_1'])
+    return [ os.path.join("Legacy", e) for e in legacy if e not in skip_examples ]
 
 def get_list_of_new_examples():
     return ["AmericanMonteCarlo",
@@ -74,7 +73,69 @@ class OreExample(object):
             self._locate_ore_exe()
 
     def _locate_ore_exe(self):
-        self.ore_exe = "/Users/peter.caspers/oreplus/build/macOS-clang-ninja-relwithdebinfo/ore/App/ore"
+        if os.name == 'nt':
+            if platform.machine()[-2:] == "64":
+                if os.path.isfile("..\\..\\App\\bin\\x64\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\App\\bin\\x64\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\App\\bin\\x64\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                elif os.path.isfile("..\..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\..\\..\\build\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\ore\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\ore\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\..\\build\\ore\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\..\\build\\ore\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\App\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\App\\Release\\ore.exe"
+                else:
+                    print_on_console("ORE executable not found.")
+                    quit()
+            else:
+                if os.path.isfile("..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                elif os.path.isfile("..\\..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\..\\build\\App\\ore.exe"
+                else:
+                    print_on_console("ORE executable not found.")
+                    quit()
+        else:
+            if os.path.isfile("../../App/build/ore"):
+                self.ore_exe = "../../App/build/ore"
+            elif os.path.isfile("../../../App/build/ore"):
+                self.ore_exe = "../../../App/build/ore"
+            elif os.path.isfile("../../build/App/ore"):
+                self.ore_exe = "../../build/App/ore"
+            elif os.path.isfile("../../../build/App/ore"):
+                self.ore_exe = "../../../build/App/ore"
+            elif os.path.isfile("../../../build/App/ore"):
+                self.ore_exe = "../../../build/App/ore"
+            elif os.path.isfile("../../../../build/App/ore"):
+                self.ore_exe = "../../../../build/App/ore"
+            elif os.path.isfile("../../App/ore"):
+                self.ore_exe = "../../App/ore"
+            elif os.path.isfile("../../../App/ore"):
+                self.ore_exe = "../../../App/ore"
+            elif os.path.isfile("../../../build/ore/App/ore"):
+                self.ore_exe = "../../../build/ore/App/ore"
+                self.ore_plus_exe = "../../../build/AppPlus/ore_plus"
+            elif os.path.isfile("../../../../build/ore/App/ore"):
+                self.ore_exe = "../../../../build/ore/App/ore"
+                self.ore_plus_exe = "../../../../build/AppPlus/ore_plus"
+            else:
+                print_on_console("ORE executable not found.")
+                quit()
         print_on_console("Using ORE executable " + (os.path.abspath(self.ore_exe)))
 
     def print_headline(self, headline):
