@@ -465,7 +465,7 @@ std::vector<QuantLib::Period> getShiftedTenors(const std::vector<Period>& tenors
     std::vector<QuantLib::Period> shiftedTenors;
     QuantLib::Period shiftedTenor;
     for (const auto& tenor : tenors) {
-        shiftedTenor = std::max(0, (asof + tenor) - mpor) * Days;            
+        shiftedTenor = std::max(0, int((asof + tenor) - mpor)) * Days;            
         shiftedTenors.push_back(shiftedTenor);
     }
     return shiftedTenors;
