@@ -286,9 +286,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            LegData legData = bondData_.coupons()[i];
-            legData.setPaymentLag(bondData_.paymentLag());
-            leg = legBuilder->buildLeg(legData, engineFactory, requiredFixings_, configuration,
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
             addProductModelEngine(productModelEngines);
@@ -310,7 +308,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
     maturityType_ = "Final Bond Cashlow Date";
-    notional_ = currentNotional(bond->cashflows());
+    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     notionalCurrency_ = bondData_.currency();
 
     issuer_ = bondData_.issuerId();

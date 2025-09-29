@@ -78,6 +78,7 @@ engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
 engine/correlationreport.cpp
 engine/cptycalculator.cpp
+engine/creditindexdecomposition.cpp
 engine/cvasensitivitycubestream.cpp
 engine/cvasensitivityrecord.cpp
 engine/decomposedsensitivitystream.cpp
@@ -293,6 +294,7 @@ engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/correlationreport.hpp
 engine/cptycalculator.hpp
+engine/creditindexdecomposition.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp

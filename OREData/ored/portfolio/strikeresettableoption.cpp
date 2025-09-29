@@ -82,7 +82,11 @@ void StrikeResettableOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     // set script
     
     script_[""] = ScriptedTradeScriptData(script, "Option",
-                                          {{"FinalStrike", "strike"},
+                                          {{"strike", "InitialStrike"},
+                                           {"quantity", "Quantity"},
+                                           {"underlyingSecurityId", "Underlying"},
+                                           {"strikeCurrency", "Currency"},
+                                           {"FinalStrike", "strike"},
                                            {"payoffAmount", "payoff"},
                                            {"currentNotional", "notional"},
                                            {"notionalCurrency", "Currency"}},

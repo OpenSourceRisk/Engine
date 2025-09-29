@@ -202,7 +202,7 @@ void DiscountingBondTRSEngine::calculate() const {
         bool paymentAfterMaturityButWithinBondSettlement =
             bd->cashflows()[i]->date() > arguments_.valuationDates.back() && bd->cashflows()[i]->date() <= end;
         if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
-            bondFlowPayDate = bd->cashflows()[i]->date();
+            bondFlowPayDate = bd->calendar().advance(bd->cashflows()[i]->date(), arguments_.paymentLag);
             bondFlowValuationDate = bd->cashflows()[i]->date();
         } else {
             const auto& payDates = arguments_.paymentDates;

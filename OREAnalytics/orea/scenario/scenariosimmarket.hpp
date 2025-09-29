@@ -164,7 +164,8 @@ protected:
 
     void applyCurveAlgebra();
     void applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                             const Handle<YieldTermStructure>& base);
+                                             const std::vector<Handle<YieldTermStructure>>& bases,
+                                             const std::vector<double>& multiplier);
 
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from

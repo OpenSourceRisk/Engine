@@ -1,10 +1,9 @@
-<?xml version="1.0"?>
 <Simulation>
 
   <Parameters>
       <Discretization>Euler</Discretization>
       <TimeStepsPerYear>24</TimeStepsPerYear>
-      <Grid>121,1M</Grid>
+      <Grid>65,1M</Grid>
       <!--<Calendar>EUR,USD</Calendar>-->
       <Calendar>NullCalendar</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
