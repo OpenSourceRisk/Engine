@@ -83,30 +83,48 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     BondIndexBuilder bondIndexBuilder;
 
-    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
+    try {
 
-        // vanilla bond underlying
+        if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
-        bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+            // vanilla bond underlying
 
-        QL_REQUIRE(fundingLegData_.currency() != bondData_.currency() || fxIndex_.empty(),
-                   "if funding leg ccy (" << fundingLegData_.currency() << ") = bond ccy (" << bondData_.currency()
-                   << "), no fx index must be given");
-        QL_REQUIRE(fundingLegData_.currency() == bondData_.currency() || !fxIndex_.empty(),
-                   "if funding leg ccy (" << fundingLegData_.currency() << ") != bond ccy (" << bondData_.currency()
-                   << "), a fx index must be given");
+            bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
-        // build bond index (absolute prices, conditional on survival set to false)
-        bondIndexBuilder = BondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
-        bondIndex = bondIndexBuilder.bondIndex();
+            QL_REQUIRE(fundingLegData_.currency() != bondData_.currency() || fxIndex_.empty(),
+                       "if funding leg ccy (" << fundingLegData_.currency() << ") = bond ccy (" << bondData_.currency()
+                                              << "), no fx index must be given");
+            QL_REQUIRE(fundingLegData_.currency() == bondData_.currency() || !fxIndex_.empty(),
+                       "if funding leg ccy (" << fundingLegData_.currency() << ") != bond ccy (" << bondData_.currency()
+                                              << "), a fx index must be given");
 
-    } else {
+            // build bond index (absolute prices, conditional on survival set to false)
+            bondIndexBuilder =
+                BondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
+            bondIndex = bondIndexBuilder.bondIndex();
 
-        // non-vanilla bond underlying (callable bond etc.)
+        } else {
 
-        bondIndexBuilder =
-            BondIndexBuilder(bondData_.securityId(), useDirtyPrices_, false, NullCalendar(), false, engineFactory);
-        bondIndex = bondIndexBuilder.bondIndex();
+            // non-vanilla bond underlying (callable bond etc.)
+
+            bondIndexBuilder =
+                BondIndexBuilder(bondData_.securityId(), useDirtyPrices_, false, NullCalendar(), false, engineFactory);
+            bondIndex = bondIndexBuilder.bondIndex();
+        }
+
+    } catch (...) {
+        // try to fill some fields for trade matching purposes although the trade build itself failed already
+        npvCurrency_ = fundingLegData_.currency();
+        notional_ = bondData_.bondNotional();
+        notionalCurrency_ = bondData_.currency();
+        for (auto const& d : bondData_.coupons()) {
+            try {
+                auto s = makeSchedule(d.schedule());
+                maturity_ = std::max(maturity_, s.back());
+            } catch (...) {
+            }
+        }
+        throw;
     }
 
     additionalData_["underlyingSecurityId"] = bondData_.securityId();

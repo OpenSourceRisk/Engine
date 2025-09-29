@@ -79,23 +79,41 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> qlBondInstr;
 
-    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
+    try {
 
-        // vanilla bond underlying
+        if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
-        bondData_.populateFromBondReferenceData(engineFactory->referenceData());
-        underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
-        underlying_->build(engineFactory);
-        qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
+            // vanilla bond underlying
 
-    } else {
+            bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+            underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
+            underlying_->build(engineFactory);
+            qlBondInstr =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
 
-        // non-vanilla bond underlying (callable bond etc.)
+        } else {
 
-        auto r = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
-        underlying_ = r.trade;
-        qlBondInstr = r.bond;
-        bondData_ = r.bondData;
+            // non-vanilla bond underlying (callable bond etc.)
+
+            auto r =
+                BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
+            underlying_ = r.trade;
+            qlBondInstr = r.bond;
+            bondData_ = r.bondData;
+        }
+
+    } catch (...) {
+        // try to fill some fields for trade matching purposes although the trade build itself failed already
+        notional_ = bondData_.bondNotional();
+        notionalCurrency_ = npvCurrency_ = bondData_.currency();
+        for (auto const& d : bondData_.coupons()) {
+            try {
+                auto s = makeSchedule(d.schedule());
+                maturity_ = std::max(maturity_, s.back());
+            } catch (...) {
+            }
+        }
+        throw;
     }
 
     QuantLib::ext::shared_ptr<QuantExt::BondOption> bondoption;

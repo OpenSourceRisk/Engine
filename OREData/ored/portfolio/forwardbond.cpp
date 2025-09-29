@@ -81,22 +81,39 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
-    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
+    try {
 
-        // vanilla bond underlying
+        if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
-        bondData_.populateFromBondReferenceData(engineFactory->referenceData());
-        auto underlying = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
-        underlying->build(engineFactory);
-        bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
+            // vanilla bond underlying
 
-    } else {
+            bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+            auto underlying = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
+            underlying->build(engineFactory);
+            bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
 
-        // non-vanilla bond underlying (callable bond etc.)
+        } else {
 
-        auto r = BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
-        bond = r.bond;
-        bondData_ = r.bondData;
+            // non-vanilla bond underlying (callable bond etc.)
+
+            auto r =
+                BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
+            bond = r.bond;
+            bondData_ = r.bondData;
+        }
+
+    } catch (...) {
+        // try to fill some fields for trade matching purposes although the trade build itself failed already
+        notional_ = bondData_.bondNotional();
+        npvCurrency_ = notionalCurrency_ = currency_ = bondData_.currency();
+        for (auto const& d : bondData_.coupons()) {
+            try {
+                auto s = makeSchedule(d.schedule());
+                maturity_ = std::max(maturity_, s.back());
+            } catch (...) {
+            }
+        }
+        throw;
     }
 
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
