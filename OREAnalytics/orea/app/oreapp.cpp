@@ -1410,6 +1410,16 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnl", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+        tmp = params_->get("pnl", "dateAdjustedRiskFactors", false);
+        std::cout<< "OREAppInputParameters::dateAdjustedRiskFactors = " << tmp << std::endl;
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(parseBool(tmp));
+
+        tmp = params_->get("pnl", "dateAdjustedRiskFactorTypes", false);
+        std::cout<< "OREAppInputParameters::dateAdjustedRiskFactorTypes = " << tmp << std::endl;
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactorTypes(tmp);
     }
 
     /****************
@@ -1474,6 +1484,16 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+        tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
+        std::cout<< "OREAppInputParameters::dateAdjustedRiskFactors = " << tmp << std::endl;
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(parseBool(tmp));
+
+        tmp = params_->get("pnlExplain", "dateAdjustedRiskFactorTypes", false);
+        std::cout<< "OREAppInputParameters::dateAdjustedRiskFactorTypes = " << tmp << std::endl;
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactorTypes(tmp);
     }
     /****************
      * SIMM and IM Schedule

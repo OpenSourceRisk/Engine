@@ -135,8 +135,25 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto mporAnalytic = dependentAnalytic(mporLookupKey);
     mporAnalytic->configurations().asofDate = mporDate();
     mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    mporAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
 
+    bool dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
+    std::vector<RFType> dateAdjustedRiskFactorTypes = inputs_->pnlDateAdjustedRiskFactorTypes();
+    std::vector<QuantLib::Period> shiftedTenors;
+    if (dateAdjustedRiskFactors) {
+        for (const auto& rt : dateAdjustedRiskFactorTypes) {
+            if (rt == RFType::CommodityCurve){
+                WLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
+                for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
+                    shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), mporDate());
+                    mporSimMarketParams->setCommodityCurveTenors(commodityName, shiftedTenors);
+                }
+            }
+            else 
+                WLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
+        }
+    }
+    mporAnalytic->configurations().simMarketParams = mporSimMarketParams;
     // Run the mpor analytic to generate the market scenario as of t1
     mporAnalytic->runAnalytic(loader);
 
