@@ -137,11 +137,11 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
 
-    bool dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
-    std::vector<RFType> dateAdjustedRiskFactorTypes = inputs_->pnlDateAdjustedRiskFactorTypes();
-    std::vector<QuantLib::Period> shiftedTenors;
-    if (dateAdjustedRiskFactors) {
-        for (const auto& rt : dateAdjustedRiskFactorTypes) {
+    std::vector<RFType> dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
+    if (dateAdjustedRiskFactors.size() > 0) {
+        std::cout<< "PnlAnalytic::run: Adjusting tenors for risk factors: ";
+        std::vector<QuantLib::Period> shiftedTenors;
+        for (const auto& rt : dateAdjustedRiskFactors) {
             if (rt == RFType::CommodityCurve){
                 WLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
                 for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
@@ -150,7 +150,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 }
             }
             else 
-                WLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
+                DLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
         }
     }
     mporAnalytic->configurations().simMarketParams = mporSimMarketParams;
