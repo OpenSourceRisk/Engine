@@ -143,14 +143,14 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         std::vector<QuantLib::Period> shiftedTenors;
         for (const auto& rt : dateAdjustedRiskFactors) {
             if (rt == RFType::CommodityCurve){
-                WLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
+                DLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
                 for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
                     shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), mporDate());
                     mporSimMarketParams->setCommodityCurveTenors(commodityName, shiftedTenors);
                 }
             }
             else 
-                DLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
+                WLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
         }
     }
     mporAnalytic->configurations().simMarketParams = mporSimMarketParams;
