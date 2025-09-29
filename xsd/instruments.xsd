@@ -89,6 +89,7 @@
       <xs:element type="basketVarianceSwapData2" name="EquityBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="FxBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="CommodityBasketVarianceSwapData"/>
+      <xs:element type="extendedFxForwardSwapData" name="ExtendedFxForwardSwapData"/>
       <xs:element type="varianceOptionData" name="VarianceOptionData"/>
       <xs:element type="varianceDispersionSwapData" name="VarianceDispersionSwapData"/>
       <xs:element type="kikoVarianceSwapData" name="KIKOVarianceSwapData"/>
@@ -3095,6 +3096,22 @@
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="extendedFxForwardSwapData">
+    <xs:all>
+      <xs:element type="stFreeStyleCurrency" name="Currency"/>
+      <xs:element type="stFreeStyleNumber" name="FixingAmount"/>
+      <xs:element type="stFreeStyleNumber" name="Strike"/>
+      <xs:element type="stFreeStyleNumber" name="ExtensionTrigger"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCurrency"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSettlementDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ConditionalObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ConditionalSettlementDates"/>
+      <xs:element type="stFreeStyleEvent" name="ExtensionDecisionDate"/>
     </xs:all>
   </xs:complexType>
 
