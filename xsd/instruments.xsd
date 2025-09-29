@@ -1101,11 +1101,11 @@
   </xs:element>
 
   <xs:complexType name="commoditySwapData">
-    <xs:all>
+    <xs:sequence>
+      <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0" maxOccurs="1"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="2"/>
-      <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0"/>
-      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0"/>
-    </xs:all>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="commoditySwaptionData">

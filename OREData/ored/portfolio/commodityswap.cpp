@@ -412,16 +412,18 @@ XMLNode* CommoditySwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode("SwapData");
     XMLUtils::appendNode(node, swapNode);
-    for (Size i = 0; i < legData_.size(); i++)
-        XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
-
-    // Add netting configuration to XML
+    
+    // Add netting configuration to XML first (to match XSD sequence)
     if (roundNettedFloatingLegs_) {
         XMLUtils::addChild(doc, swapNode, "RoundNettedFloatingLegs", roundNettedFloatingLegs_);
         if (nettingPrecision_ != Null<Natural>()) {
             XMLUtils::addChild(doc, swapNode, "NettingPrecision", static_cast<int>(nettingPrecision_));
         }
     }
+    
+    // Add LegData elements after netting flags
+    for (Size i = 0; i < legData_.size(); i++)
+        XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
 
     return node;
 }
