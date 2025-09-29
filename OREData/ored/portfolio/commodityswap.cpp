@@ -175,7 +175,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         legs_[i] = fxSettledLeg(legs_[i], legData_[i], engineFactory, configuration);
     }
 
-    if (isNetted_) {
+    if (roundNettedFloatingLegs_) {
         buildNettedLegs(engineFactory, configuration);
     }
 
@@ -194,13 +194,13 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
-    const auto& legs = isNetted_ ? originalLegsBeforeNetting_ : legs_;
+    const auto& legs = roundNettedFloatingLegs_ ? originalLegsBeforeNetting_ : legs_;
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
         additionalData_["legType[" + legID + "]"] = ore::data::to_string(legData_[i].legType());
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["currency[" + legID + "]"] = legData_[i].currency();
-        if (swap && (!isNetted_ || fixedLegIds_.count(i) == 1)) // if netted we have only the fixed legs and one netted floating leg (which we add later)
+        if (swap && (!roundNettedFloatingLegs_ || fixedLegIds_.count(i) == 1)) // if netted we have only the fixed legs and one netted floating leg (which we add later)
             additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
         else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
@@ -325,7 +325,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
         additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
 
         // Add netted leg additional data
-        if (isNetted_ && nettedLegId_ != Null<Size>()) {
+        if (roundNettedFloatingLegs_ && nettedLegId_ != Null<Size>()) {
             if (swap){
                 additionalData_["nettedLegPV"] = swap->legNPV(nettedLegId_);
             } else {
@@ -400,8 +400,8 @@ void CommoditySwap::fromXML(XMLNode* node) {
     }
 
     // Parse the netting configuration
-    isNetted_ = XMLUtils::getChildValueAsBool(swapNode, "IsNetted", false, false);
-    if (isNetted_ && XMLUtils::getChildNode(swapNode, "NettingPrecision")) {
+    roundNettedFloatingLegs_ = XMLUtils::getChildValueAsBool(swapNode, "RoundNettedFloatingLegs", false, false);
+    if (roundNettedFloatingLegs_ && XMLUtils::getChildNode(swapNode, "NettingPrecision")) {
         nettingPrecision_ = XMLUtils::getChildValueAsInt(swapNode, "NettingPrecision", false, 0);
     } else {
         nettingPrecision_ = Null<Natural>();
@@ -416,8 +416,8 @@ XMLNode* CommoditySwap::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
 
     // Add netting configuration to XML
-    if (isNetted_) {
-        XMLUtils::addChild(doc, swapNode, "IsNetted", isNetted_);
+    if (roundNettedFloatingLegs_) {
+        XMLUtils::addChild(doc, swapNode, "RoundNettedFloatingLegs", roundNettedFloatingLegs_);
         if (nettingPrecision_ != Null<Natural>()) {
             XMLUtils::addChild(doc, swapNode, "NettingPrecision", static_cast<int>(nettingPrecision_));
         }

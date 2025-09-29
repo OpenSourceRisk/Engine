@@ -78,10 +78,10 @@ private:
     // Apply FX settlement if any
     QuantLib::Leg fxSettledLeg(const QuantLib::Leg& leg, const ore::data::LegData& legData,
                                            const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
-                                           const std::string& configuration);    
-                                           
+                                           const std::string& configuration);
+
     std::vector<ore::data::LegData> legData_;
-    bool isNetted_ = false;
+    bool roundNettedFloatingLegs_ = false;
     QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
 
     // Store original legs before netting and netted leg index for transparency

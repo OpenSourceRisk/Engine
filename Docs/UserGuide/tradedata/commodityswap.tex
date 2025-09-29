@@ -48,7 +48,7 @@ The structure of a \lstinline!CommoditySwap! trade node is shown in listing \ref
 
 The \lstinline!SwapData! node may contain two or more \lstinline!LegData! nodes. There must be at least one \lstinline!LegData! node of a commodity  \lstinline!LegType!, i.e. \lstinline!CommodityFixed! or \lstinline!CommodityFloating!, but non-commodity leg types are also allowed. The commodity leg types are described in sections \ref{ss:commodityfixedleg} and \ref{ss:commodityfloatingleg} respectively.
 
-The \lstinline!SwapData! node also supports optional netting functionality for floating legs through the \lstinline!IsNetted! and \lstinline!NettingPrecision! elements. When \lstinline!IsNetted! is set to \lstinline!true!, all floating leg cashflows are netted by payment date, while fixed legs are processed normally. The netting calculation sums the effective fixings of all floating legs for each payment period and multiplies by the common quantity. If \lstinline!NettingPrecision! is specified, the summed fixing is rounded to the specified number of decimal places before multiplying by the quantity.
+The \lstinline!SwapData! node also supports optional netting functionality for floating legs through the \lstinline!RoundNettedFloatingLegs! and \lstinline!NettingPrecision! elements. When \lstinline!RoundNettedFloatingLegs! is set to \lstinline!true!, all floating leg cashflows are netted by payment date, while fixed legs are processed normally. The netting calculation sums the effective fixings of all floating legs for each payment period and multiplies by the common quantity. If \lstinline!NettingPrecision! is specified, the summed fixing is rounded to the specified number of decimal places before multiplying by the quantity.
 
 \begin{listing}[h!]
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -65,7 +65,7 @@ The \lstinline!SwapData! node also supports optional netting functionality for f
       <LegType>CommodityFloating</LegType>
       ...
     </LegData>
-    <IsNetted>true</IsNetted>
+    <RoundNettedFloatingLegs>true</RoundNettedFloatingLegs>
     <NettingPrecision>2</NettingPrecision>
   </SwapData>
 </Trade>
@@ -77,9 +77,9 @@ The \lstinline!SwapData! node also supports optional netting functionality for f
 The optional netting parameters are:
 
 \begin{itemize}
-\item \lstinline!IsNetted! [Optional]: Boolean flag to enable floating leg netting. When set to \lstinline!true!, all floating leg cashflows with the same payment date are netted into a single cashflow. Fixed legs are processed normally and are not affected by netting. Defaults to \lstinline!false!.
+\item \lstinline!RoundNettedFloatingLegs! [Optional]: Boolean flag to enable floating leg netting. When set to \lstinline!true!, all floating leg cashflows with the same payment date are netted into a single cashflow. Fixed legs are processed normally and are not affected by netting. Defaults to \lstinline!false!.
 
-\item \lstinline!NettingPrecision! [Optional]: Number of decimal places to round the total average fixing before multiplying by the quantity. Only applies when \lstinline!IsNetted! is \lstinline!true!. If not specified, no rounding is applied to the netted fixing.
+\item \lstinline!NettingPrecision! [Optional]: Number of decimal places to round the total average fixing before multiplying by the quantity. Only applies when \lstinline!RoundNettedFloatingLegs! is \lstinline!true!. If not specified, no rounding is applied to the netted fixing.
 \end{itemize}
 
 The netting calculation works as follows:
