@@ -79,7 +79,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> qlBondInstr;
 
-    if (bondType == BondReferenceDatum::TYPE) {
+    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
         // vanilla bond underlying
 

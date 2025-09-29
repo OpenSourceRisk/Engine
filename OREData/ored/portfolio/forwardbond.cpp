@@ -81,7 +81,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
-    if (bondType == BondReferenceDatum::TYPE) {
+    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
         // vanilla bond underlying
 

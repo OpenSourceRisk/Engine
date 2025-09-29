@@ -83,7 +83,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     BondIndexBuilder bondIndexBuilder;
 
-    if (bondType == BondReferenceDatum::TYPE) {
+    if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
         // vanilla bond underlying
 
