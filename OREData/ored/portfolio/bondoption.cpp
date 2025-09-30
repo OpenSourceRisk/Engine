@@ -79,6 +79,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> qlBondInstr;
 
+    Real bondNotional = bondData_.bondNotional();
+
     try {
 
         if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
@@ -114,7 +116,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
             if (!d.notionals().empty())
                 notional_ = d.notionals().front();
         }
-        notional_ *= bondData_.bondNotional();
+        notional_ *= bondNotional;
         throw;
     }
 
@@ -185,8 +187,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     setSensitivityTemplate(*bondOptionBuilder);
     addProductModelEngine(*bondOptionBuilder);
 
-    Real multiplier =
-        bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
+    Real multiplier = bondNotional * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;

@@ -81,6 +81,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
+    Real bondNotional = bondData_.bondNotional();
+
     try {
 
         if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
@@ -114,7 +116,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
             if (!d.notionals().empty())
                 notional_ = d.notionals().front();
         }
-        notional_ *= bondData_.bondNotional();
+        notional_ *= bondNotional;
         throw;
     }
 
@@ -171,7 +173,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Currency currency = parseCurrency(currency_);
     maturity_ = bond->cashflows().back()->date();
     maturityType_ = "Bond Cashflow Date";
-    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
+    notional_ = currentNotional(bond->cashflows()) * bondNotional;
 
     auto fwdBondBuilder = QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder to FwdBondEngineBuilder: " << id());
@@ -181,11 +183,11 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         amount != Null<Real>()
             ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(
                   bond, amount, fwdMaturityDate, fwdSettlementDate, isPhysicallySettled, knockOut, settlementDirty,
-                  compensationPayment, compensationPaymentDate, longInForward, bondData_.bondNotional())
+                  compensationPayment, compensationPaymentDate, longInForward, bondNotional)
             : QuantLib::ext::make_shared<QuantExt::ForwardBond>(
                   bond, lockRate, lockRateDayCounter, longInForward, fwdMaturityDate, fwdSettlementDate,
                   isPhysicallySettled, knockOut, settlementDirty, compensationPayment, compensationPaymentDate,
-                  longInForward, bondData_.bondNotional(), dv01);
+                  longInForward, bondNotional, dv01);
 
     // contractId as input for the spread on the contract discount is empty
     fwdBond->setPricingEngine(fwdBondBuilder->engine(
@@ -197,8 +199,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     addProductModelEngine(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
-    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
-    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondNotional;
+    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondNotional;
 }
 
 void ForwardBond::fromXML(XMLNode* node) {

@@ -83,6 +83,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     BondIndexBuilder bondIndexBuilder;
 
+    Real bondNotional = bondData_.bondNotional();
+
     try {
 
         if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
@@ -125,7 +127,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
             if (!d.notionals().empty())
                 notional_ = d.notionals().front();
         }
-        notional_ *= bondData_.bondNotional();
+        notional_ *= bondNotional;
         throw;
     }
 
@@ -204,7 +206,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
         // add bond indexing
         Indexing bondIndexing("BOND-" + bondIndex->securityName(), "", bondIndex->dirty(), bondIndex->relative(),
-                              bondIndex->conditionalOnSurvival(), bondData_.bondNotional(), effectiveInitialPrice,
+                              bondIndex->conditionalOnSurvival(), bondNotional, effectiveInitialPrice,
                               Null<Real>(), valuationSchedule, 0, "", "U", false);
         fundingLegData_.indexing().push_back(bondIndexing);
 
@@ -240,7 +242,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(fundingLegData_.isPayer() != payTotalReturnLeg_,
                "funding leg and total return lag are both rec or both pay");
     auto bondTRS = QuantLib::ext::make_shared<QuantExt::BondTRS>(
-        bondIndex, bondData_.bondNotional(), effectiveInitialPrice,
+        bondIndex, bondNotional, effectiveInitialPrice,
         std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg}, payTotalReturnLeg_, valuationDates, paymentDates,
         fxIndex, payBondCashFlowsImmediately_, parseCurrency(fundingLegData_.currency()),
         parseCurrency(bondData_.currency()), applyFxIndexFixingDays_, payLagPeriod, paymentCalendar);
@@ -255,7 +257,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     // maturity_ = std::max(valuationDates.back(), paymentDates.back());
     maturity_ = bondIndex->bond()->maturityDate();
     maturityType_ = "Bond Maturity Date";
-    notional_ = bondIndex->bond()->notional() * bondData_.bondNotional();
+    notional_ = bondIndex->bond()->notional() * bondNotional;
 
     // cashflows will be generated as additional results in the pricing engine
 
