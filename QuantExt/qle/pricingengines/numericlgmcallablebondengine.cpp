@@ -46,11 +46,10 @@ NumericLgmCallableBondEngineBase::NumericLgmCallableBondEngineBase(
     const Handle<QuantLib::YieldTermStructure>& referenceCurve, const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
-    const bool spreadOnIncome, const bool generateAdditionalResults)
+    const bool spreadOnIncome)
     : solver_(solver), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),
       referenceCurve_(referenceCurve), discountingSpread_(discountingSpread), creditCurve_(creditCurve),
-      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate), spreadOnIncome_(spreadOnIncome),
-      generateAdditionalResults_(generateAdditionalResults) {}
+      incomeCurve_(incomeCurve), recoveryRate_(recoveryRate), spreadOnIncome_(spreadOnIncome) {}
 
 void NumericLgmCallableBondEngineBase::calculate() const {
 
@@ -259,8 +258,8 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                         valueStripped += tmp;
 
                     if (cfResults_)
-                        cfResults_->push_back(
-                            standardCashFlowResults(f.qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
+                        cfResults_->insert(cfResults_->begin(), standardCashFlowResults(f.qlCf, 1.0, std::string(), 0,
+                                                                                        Currency(), effDiscountCurve));
 
                     if (expectedCashflows_) {
                         rvCashflows[i - 1] = tmp;
@@ -284,6 +283,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     // 11 set the result values
 
     npv_ = value.at(0) / effIncomeCurve->discount(npvDate_);
+
     if (conditionalOnSurvival_)
         npv_ /= effCreditCurve->survivalProbability(npvDate_);
 
@@ -402,7 +402,8 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     const bool spreadOnIncome, const bool generateAdditionalResults)
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmConvolutionSolver2>(*model, sy, ny, sx, nx),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate, spreadOnIncome, generateAdditionalResults) {
+                                       incomeCurve, recoveryRate, spreadOnIncome),
+      generateAdditionalResultsInput_(generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);
@@ -421,7 +422,8 @@ NumericLgmCallableBondEngine::NumericLgmCallableBondEngine(
     : NumericLgmCallableBondEngineBase(QuantLib::ext::make_shared<LgmFdSolver>(*model, maxTime, scheme, stateGridPoints,
                                                                                timeStepsPerYear, mesherEpsilon),
                                        americanExerciseTimeStepsPerYear, referenceCurve, discountingSpread, creditCurve,
-                                       incomeCurve, recoveryRate, spreadOnIncome, generateAdditionalResults) {
+                                       incomeCurve, recoveryRate, spreadOnIncome),
+      generateAdditionalResultsInput_(generateAdditionalResults) {
     registerWith(solver_->model());
     registerWith(referenceCurve_);
     registerWith(discountingSpread_);
@@ -435,15 +437,15 @@ std::pair<Real, Real> NumericLgmCallableBondEngine::forwardPrice(const QuantLib:
                                                                  const bool conditionalOnSurvival,
                                                                  std::vector<CashFlowResults>* const cfResults,
                                                                  QuantLib::Leg* const expectedCashflows) const {
-
     npvDate_ = forwardNpvDate;
     settlementDate_ = settlementDate;
-    conditionalOnSurvival_ = true;
+    conditionalOnSurvival_ = conditionalOnSurvival;
     cfResults_ = cfResults;
     expectedCashflows_ = expectedCashflows;
     instrArgs_ = &arguments_;
+    generateAdditionalResults_ = false;
 
-    calculate();
+    NumericLgmCallableBondEngineBase::calculate();
 
     return std::make_pair(npv_, settlementValue_);
 }
@@ -457,6 +459,7 @@ void NumericLgmCallableBondEngine::calculate() const {
     cfResults_ = &cfResults;
     expectedCashflows_ = nullptr;
     instrArgs_ = &arguments_;
+    generateAdditionalResults_ = generateAdditionalResultsInput_;
 
     NumericLgmCallableBondEngineBase::calculate();
 
