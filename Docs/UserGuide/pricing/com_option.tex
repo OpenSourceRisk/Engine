@@ -16,9 +16,9 @@ The model?s drift is calibrated such that the expected future spot commodity pri
 agrees with today?s fair forward commodity price for time T. This means that the 
 commodity forward rate $F(t,T)$ follows drift-free GBM under the T-forward measure:
 $$
-dF(t,T)) = \sigma(t)\,F(t,T)\,dW
+dF(t,T) = \sigma(t)\,F(t,T)\,dW
 $$
-This leads a Black76 analytical solution for the present value of a European Commodity option:
+This leads to a Black76 analytical solution for the present value of a European Commodity option:
 $$
 \NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{T},\omega,s)\cdot?P(T)
 $$
@@ -37,16 +37,16 @@ See Black Model and Shifted Black model, Section \ref{sec:models}, for more deta
 
 Alternatively, the Bachelier model can be used when normal volatilities are preferred, particularly for commodities where prices may become negative. 
 In the Bachelier framework, the forward commodity price $F(t,T)$ follows a normal diffusion process:
-$$
+\[
 dF(t,T) = \sigma_N(t)\,dW
-$$
+\]
 where $\sigma_N(t)$ is the normal volatility. 
 
 This yields a Bachelier analytical solution for the present value of a European Commodity option:
 
-$$
-\NPV = N\cdot \mbox{Bachelier}(K, F(0,T), \sigma\sqrt(T),\omega)\cdot?P(T)
-$$
+\[
+NPV = N\cdot \mbox{Bachelier}(K, F(0,T), \sigma\sqrt{T},\omega) \cdot P(T)
+\]
 where:
 \begin{itemize}
 \item $N$: notional
