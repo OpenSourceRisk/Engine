@@ -81,11 +81,13 @@ in listing \ref{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine
 The parameters have the following meaning:
 
 \begin{itemize}
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
 \item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
-\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
 \end{itemize}
 
 \begin{longlisting}
@@ -94,13 +96,14 @@ The parameters have the following meaning:
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
       <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="IncludePastCashflows">true</Parameter>
-        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -131,7 +134,10 @@ Black/BlackBondOptionEngine builds a BlackBondOptionEngine. A sample configurati
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -139,10 +145,13 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="BondOption">
     <Model>Black</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
+    </ModelParameters>
     <Engine>BlackBondOptionEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -1226,7 +1235,10 @@ DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TreatSecuritySpreadAsCreditSpread [optional]: defaults to false. If true, the security spread is included in the
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
   discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
@@ -1236,10 +1248,12 @@ The parameters have the following meaning:
 <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
-        <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
+        <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -4045,10 +4059,12 @@ in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardB
 The parameters have the following meaning:
 
 \begin{itemize}
-\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
-\item TimestepPeriod: discretization interval for zero bond pricing
-\item SensitivityTemplate [optional]: the sensitivity template to use
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
+  discounting of intermediate bond cashflows.
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4056,7 +4072,7 @@ The parameters have the following meaning:
 <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
-      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>

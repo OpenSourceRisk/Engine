@@ -243,9 +243,7 @@ public:
         //! ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
         //! additional engine builders
-        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
-        //! additional engine builders may overwrite existing builders with same key
-        const bool allowOverwrite = false);
+        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 
     //! Return the market used by this EngineFactory
     const QuantLib::ext::shared_ptr<Market>& market() const { return market_; };
@@ -261,8 +259,6 @@ public:
     }
     //! Return the EngineData parameters
     const QuantLib::ext::shared_ptr<EngineData> engineData() const { return engineData_; };
-    //! Register a builder with the factory
-    void registerBuilder(const QuantLib::ext::shared_ptr<EngineBuilder>& builder, const bool allowOverwrite = false);
     //! Return the reference data used by this EngineFactory
     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
     //! Return the ibor fallback config
@@ -276,36 +272,35 @@ public:
      */
     QuantLib::ext::shared_ptr<EngineBuilder> builder(const string& tradeType);
 
-    //! Register a leg builder with the factory
-    void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
-
     //! Get a leg builder by leg type
     QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
-
-    //! Add a set of default engine and leg builders
-    void addDefaultBuilders();
-    //! Add a set of default engine and leg builders, overwrite existing builders with same key if specified
-    void addExtraBuilders(const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                          const std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders,
-                          const bool allowOverwrite = false);
-
-    //! Clear all builders
-    void clear() {
-        builders_.clear();
-        legBuilders_.clear();
-    }
 
     //! return model builders
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
 
+    struct ParameterOverride {
+        std::function<bool(string)> applies;
+        std::map<string, string> overrides;
+    };
+
+    void setModelParameterOverrides(const std::vector<ParameterOverride>& overrides);
+    void setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides);
+
 private:
+    void resetBuilders();
+
+    bool buildersDirty_ = true;
+
     QuantLib::ext::shared_ptr<Market> market_;
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
     map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders_;
     IborFallbackConfig iborFallbackConfig_;
+    std::vector<ParameterOverride> modelParameterOverrides_;
+    std::vector<ParameterOverride> engineParameterOverrides_;
 };
 
 //! Leg builder
