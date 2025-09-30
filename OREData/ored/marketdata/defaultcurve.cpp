@@ -307,8 +307,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     LOG("Start building default curve of type SpreadCDS for curve " << curveID);
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Config::Type::SpreadCDS ||
-                config.type() == DefaultCurveConfig::Config::Type::Price ||
-                config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS,
+               config.type() == DefaultCurveConfig::Config::Type::Price ||
+               config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS,
                "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS/Price");
     QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: recovery rate needed to build SpreadCDS curve");
 
@@ -342,6 +342,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     refData.dayCounter = cdsConv->dayCounter();
     refData.lastPeriodDayCounter = cdsConv->lastPeriodDayCounter();
     refData.cashSettlementDays = cdsConv->upfrontSettlementDays();
+
 
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
@@ -392,7 +393,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 };
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
                     cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
                 helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
@@ -424,8 +425,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 };
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
                     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter(), CreditDefaultSwap::PricingModel::ISDA));
+                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA,
+                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
                 helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
@@ -452,7 +453,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
                 config.startDate(), cdsConv->lastPeriodDayCounter());
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
