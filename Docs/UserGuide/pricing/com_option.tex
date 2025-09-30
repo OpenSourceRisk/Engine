@@ -1,8 +1,10 @@
 \subsubsection{European Commodity Option}
 \label{pricing:com_option}
 
-European Commodity Options are priced using the Black-Scholes model with log-normal 
-volatilities. Volatility structures with smile are taken into account where available. 
+European Commodity Options are priced using the Black-Scholes model with log-normal or shifted lognormal
+volatilities or the Bachelier model with normal volatilities.
+
+Volatility structures with smile are taken into account where available. 
 The commodity forwarding curve is used for respective commodity.
 
 The Black-Scholes model assumes that the spot commodity price C follows Geometric 
@@ -16,9 +18,34 @@ commodity forward rate $F(t,T)$ follows drift-free GBM under the T-forward measu
 $$
 dF(t,T)) = \sigma(t)\,F(t,T)\,dW
 $$
-This leads a Black76 analytical solution for the present value of a European FX option:
+This leads a Black76 analytical solution for the present value of a European Commodity option:
 $$
-\NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{T},\omega)\cdot?P(T)
+\NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{T},\omega,s)\cdot?P(T)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: strike price
+\item $F(0,T)$: the forward commodity price for maturity $T$ at time 0 (start)
+\item $\sigma$: the volatility of the commodity forward price
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\item $s$: the displacement factor in the shifted diffusion model
+\end{itemize}
+
+See Black Model and Shifted Black model, Section \ref{sec:models}, for more details.
+
+Alternatively, the Bachelier model can be used when normal volatilities are preferred, particularly for commodities where prices may become negative. 
+In the Bachelier framework, the forward commodity price $F(t,T)$ follows a normal diffusion process:
+$$
+dF(t,T) = \sigma_N(t)\,dW
+$$
+where $\sigma_N(t)$ is the normal volatility. 
+
+This yields a Bachelier analytical solution for the present value of a European Commodity option:
+
+$$
+\NPV = N\cdot \mbox{Bachelier}(K, F(0,T), \sigma\sqrt(T),\omega)\cdot?P(T)
 $$
 where:
 \begin{itemize}
@@ -30,5 +57,4 @@ where:
 \item $P(T)$: the discount factor for maturity time $T$
 \end{itemize}
 
-See Black Model, Section \ref{sec:models}, for more details.
-
+See Bachelier Model, Section \ref{sec:models}, for more details.

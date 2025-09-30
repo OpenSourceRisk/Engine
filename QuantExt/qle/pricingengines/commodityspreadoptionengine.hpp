@@ -46,7 +46,7 @@ public:
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset,
                                           const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho,
                                           Real beta = 0.0,
-                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::Black,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
                                           Real displacement = 0.0);
     void calculate() const override;
 

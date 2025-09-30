@@ -214,8 +214,6 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
     res.displacement = modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType
                            ? vol->shift()
                            : (modelType_ == QuantLib::DiffusionModelType::Black ? displacement_ : 0.0);
-    std::cout << "Deriving pricing parameter with vol type " << vol->volType() << std::endl;
-
     if (auto cf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(flow)) {
         res.accruals = 0.0;
         // In case exercise is after future expiry (e.g. calendar spreads)
@@ -228,12 +226,9 @@ CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext:
         double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
         res.sigma = 0;
-        std::cout << "  Pricing date: " << pricingDate << ", time: " << res.tn << ", atm: " << res.atm << std::endl;
         if (res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
             auto [volatility, volType, displacement] =
                 convertInputVolatility(modelType_, displacement_, vol, res.atm, res.atm, res.tn);
-            std::cout << "Derived volatility: " << volatility << ", type: " << volType << ", displacement: " << displacement
-                      << " for pricing date " << pricingDate << " (tn=" << res.tn << ")" << std::endl;
             res.sigma = volatility;
             res.volType = volType;
             res.displacement = displacement;

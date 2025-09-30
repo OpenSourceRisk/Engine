@@ -331,13 +331,9 @@ protected:
             gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
         auto volTS = gbsp->blackVolatility();
-        auto [volType, displacement] = getVolTypeAndDisplacement(assetNameLocal, assetClass);
-
-        QL_REQUIRE((volType == QuantLib::DiffusionModelType::Black ||
-                    volType == QuantLib::DiffusionModelType::AsInputVolatilityType) &&
-                       volTS->volType() == VolatilityType::ShiftedLognormal &&
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
                        QuantLib::close_enough(volTS->shift(), 0.0),
-                   "AmericanOptionFDEngineBuilder: only ShiftedLognormal (Black) vol type supported for FD engine");
+                   "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
 
         return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
                                                                                   scheme);
@@ -371,12 +367,9 @@ protected:
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetNameLocal, ccy, assetClass);
         auto volTS = gbsp->blackVolatility();
-        auto [volType, displacement] = getVolTypeAndDisplacement(assetNameLocal, assetClass);
-        QL_REQUIRE((volType == QuantLib::DiffusionModelType::Black ||
-                    volType == QuantLib::DiffusionModelType::AsInputVolatilityType) &&
-                       volTS->volType() == VolatilityType::ShiftedLognormal &&
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
                        QuantLib::close_enough(volTS->shift(), 0.0),
-                   "AmericanOptionFDEngineBuilder: only ShiftedLognormal (Black) vol type supported for FD engine");
+                   "AmericanOptionBAWEngineBuilder: currently only lognormal vols are supported");
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
 };
