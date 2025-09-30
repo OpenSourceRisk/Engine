@@ -296,6 +296,19 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
     return market->defaultCurve(p.first, config);
 }
 
+Handle<QuantExt::BaseCorrelationTermStructure>
+indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                 const std::string& baseCorrelationCurveId, const std::string& configuration) {
+    Handle<QuantExt::BaseCorrelationTermStructure> curve;
+    try {
+        curve = market->baseCorrelation(baseCorrelationCurveId, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find base correlation curve " << baseCorrelationCurveId << " so returning null handle.");
+    }
+    auto p = splitCurveIdWithTenor(baseCorrelationCurveId);
+    return market->baseCorrelation(p.first, configuration);
+}
+
 // will have to split the date into month and year in caller.  are there any utilities to do this?
 // Is the FutureConvention rule available from caller?
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
