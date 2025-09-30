@@ -1196,7 +1196,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-Product type="BondRepo">
+<Product type="BondRepo">
     <Model>Accrual</Model>
     <ModelParameters>
         <Parameter name="IncludeSecurityLeg">true</Parameter>
@@ -2049,7 +2049,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Prooduct type="CMS">
+<Product type="CMS">
     <Model>LinearTSR</Model>
     <ModelParameters/>
     <Engine>LinearTSRPricer</Engine>
@@ -2096,7 +2096,7 @@ The parameters have the following meaning:
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
 \item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
-\item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
+\item recoveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
 \item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
@@ -2321,7 +2321,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2425,7 +2425,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2506,7 +2506,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2636,7 +2636,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2811,7 +2811,7 @@ Model Parameters
 You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
 \begin{itemize}
     \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
-    \item \testtt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
 \end{itemize}
 
 Engine description:
@@ -2863,7 +2863,7 @@ Model Parameters
 You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
 \begin{itemize}
     \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
-    \item \testtt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
 \end{itemize}
 
 Engine description:
@@ -2915,7 +2915,7 @@ Model Parameters
 You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
 \begin{itemize}
     \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
-    \item \testtt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
 \end{itemize}
 
 Engine description:
@@ -3157,7 +3157,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3261,7 +3261,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3342,7 +3342,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3472,7 +3472,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3763,7 +3763,7 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
+\caption{Configuration for Product EquityForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
 \label{lst:peconfig_EquityForward_DiscountedCashflows_DiscountingEquityForwardEngine}
 \end{longlisting}
 
@@ -3797,7 +3797,7 @@ The parameters have the following meaning:
   </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
+\caption{Configuration for Product EquityFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
 \label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
 \end{longlisting}
 
@@ -4305,7 +4305,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4409,7 +4409,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4490,7 +4490,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4620,7 +4620,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
