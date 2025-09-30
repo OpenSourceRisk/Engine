@@ -253,6 +253,12 @@ void CallableBondTrsUnderlyingBuilder::updateUnderlying(
 void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("CallableBond::build() called for trade " << id());
 
+    // ISDA taxonomy: same as for Bond applies here too
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     auto builder = boost::dynamic_pointer_cast<CallableBondEngineBuilder>(engineFactory->builder("CallableBond"));
     QL_REQUIRE(builder, "CallableBond::build(): could not cast to CallableBondBuilder, this is unexpected");
 
