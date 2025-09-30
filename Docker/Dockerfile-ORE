@@ -54,6 +54,11 @@ RUN mkdir -p html \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
   && rm -rf ore
 
+WORKDIR /usr/bin
+RUN mv ./ld ./ld.backup
+RUN ln -s ./ld.lld ./ld
+
+
 ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
@@ -65,6 +70,9 @@ COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-
 COPY --from=orebuild /usr/include/boost/ /usr/include/boost
 COPY --from=orebuild /usr/include/CL /usr/include/CL
 COPY --from=orebuild /oreswig /oreswig
+
+
+COPY --from=orebuild /usr/bin/ /usr/bin/
 
 RUN ldconfig
 
