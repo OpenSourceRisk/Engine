@@ -266,7 +266,8 @@ void OREApp::analytics() {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -542,7 +543,8 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -931,6 +933,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
     if (tmp != "")
         setOutputTodaysMarketCalibration(parseBool(tmp));
+
+    tmp = params_->get("curves", "todaysMarketCalibrationPrecision", false);
+    if (tmp != "")
+        setTodaysMarketCalibrationPrecision(parseInteger(tmp));
 
     /*************
      * SENSITIVITY
