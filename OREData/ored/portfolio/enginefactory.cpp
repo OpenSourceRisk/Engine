@@ -61,6 +61,8 @@ std::string EngineBuilder::modelParameter(const std::string& p, const std::vecto
     return getParameter(modelParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
+EngineFactory* EngineBuilder::engineFactory() const { return engineFactory_; }
+
 void EngineBuilderFactory::addEngineBuilder(const std::function<QuantLib::ext::shared_ptr<EngineBuilder>()>& builder,
                                             const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
@@ -247,7 +249,7 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
         }
     }
 
-    builder->init(market_, configurations_, modelParams, engineParams, engineData_->globalParameters());
+    builder->init(this, market_, configurations_, modelParams, engineParams, engineData_->globalParameters());
 
     return builder;
 }
@@ -262,12 +264,8 @@ QuantLib::ext::shared_ptr<LegBuilder> EngineFactory::legBuilder(const LegType& l
     return it->second;
 }
 
-set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> EngineFactory::modelBuilders() const {
-    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> res;
-    for (auto const& b : builders_) {
-        res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
-    }
-    return res;
+set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& EngineFactory::modelBuilders() {
+    return modelBuilders_;
 }
 
 void EngineFactory::setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides) {
