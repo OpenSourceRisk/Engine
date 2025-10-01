@@ -51,6 +51,8 @@ public:
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                    map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves, const bool buildCalibrationInfo);
 
+    
+
     //! getters
     const InflationCurveSpec& spec() const { return spec_; }
 
@@ -61,6 +63,39 @@ public:
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
 private:
+    struct CurveBuildResults {
+        QuantLib::ext::shared_ptr<InflationTermStructure> curve;
+        std::vector<Period> pillarDates;
+        QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
+    };
+
+    CurveBuildResults
+    buildZeroInflationCurve(Date asof, const Loader& loader, const QuantLib::ext::shared_ptr<Conventions>& conventions,
+                            const QuantLib::ext::shared_ptr<InflationCurveConfig>& config,
+                            const Handle<YieldTermStructure>& nominalTs,
+                            const QuantLib::ext::shared_ptr<Seasonality>& seasonality) const;
+
+    CurveBuildResults
+    buildYoYInflationCurve(Date asof, const Loader& loader, const QuantLib::ext::shared_ptr<Conventions>& conventions,
+                           const QuantLib::ext::shared_ptr<InflationCurveConfig>& config,
+                           const Handle<YieldTermStructure>& nominalTs,
+                           const QuantLib::ext::shared_ptr<Seasonality>& seasonality, bool deriveFromZC = false,
+                           const QuantLib::ext::shared_ptr<InflationTermStructure>& zcCurve = nullptr) const;
+
+    QuantLib::ext::shared_ptr<Seasonality> buildSeasonality(Date asof, const Loader& loader,
+                                                            const QuantLib::ext::shared_ptr<InflationCurveConfig>& config) const;
+
+    bool deriveYYfromZC(const boost::shared_ptr<ore::data::InflationCurveConfig>& config,
+                        ore::data::InflationCurveSpec& spec, const ore::data::Loader& loader, QuantLib::Date& asof) const;
+
+    QuantLib::Handle<QuantLib::Quote>
+    computeFairYoYQuote(const QuantLib::Date& swapStart, const QuantLib::Date& maturity,
+                        const QuantLib::ext::shared_ptr<InflationSwapConvention>& conv,
+                        const QuantLib::ext::shared_ptr<ZeroInflationIndex>& ziIndex,
+                        const QuantLib::ext::shared_ptr<InflationTermStructure>& zcCurve,
+                        const Handle<YieldTermStructure>& nominalTs, const QuantLib::Period term,
+                        const double zcQuote) const;
+
     InflationCurveSpec spec_;
     QuantLib::ext::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
