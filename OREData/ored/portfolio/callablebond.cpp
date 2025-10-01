@@ -317,7 +317,7 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstr, multiplier);
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
-    notional_ = qlUnderlyingBond->notional();
+    notional_ = qlUnderlyingBond->notional() * data_.bondData().bondNotional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
