@@ -228,6 +228,7 @@ the list above.
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
     <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
+    <Parameter name="todaysMarketCalibrationPrecision">8</Parameter>
   </Analytic>
   <Analytic type="...">
     <!-- ... -->
@@ -277,6 +278,12 @@ section).  Key {\tt grid} defines the time grid on which the yield curves are ev
 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on
 this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
 a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
+
+The {\tt outputTodaysMarketCalibration} parameter controls whether calibration information for the built market objects
+is written to a report. When set to Y, a detailed calibration report is generated. The {\tt todaysMarketCalibrationPrecision}
+parameter specifies the number of decimal places to use when formatting floating-point values in the market calibration
+report (default: 8). This allows users to control the precision of numerical output in the calibration report, similar to
+the {\tt additionalResultsReportPrecision} parameter for the NPV analytic.
 
 The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricing engine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
 
@@ -426,6 +433,11 @@ InitialMargin, Performance), e.g. for
 % - xvaCgDynamicIM
 % - xvaCgDynamicIMStepSize
 % - xvaCgRegressionOrder
+% - xvaCgRegressionOrderDynamicIm
+% - xvaCgRegressionVarianceCutoff
+% - xvaCgRegressionVarianceCutoffDynamicIm
+% - xvaCgPythonIntegration
+% - xvaCgPythonIntegrationDynamicIm
 % - xvaCgTradeLevelBreakDown
 % - xvaCgUseRedBlocks
 

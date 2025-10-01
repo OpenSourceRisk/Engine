@@ -59,7 +59,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
     notionalCurrency_ = legData_[0].currency();
-    npvCurrency_ = legData_[0].currency();
+    npvCurrency_ = envelope().additionalField("TradePnLCurrency", false, legData_[0].currency());
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
@@ -181,8 +181,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
-    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_),
-        envelope().additionalField("discount_curve", false, std::string()));
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        engineBuilder->engine(parseCurrency(legData_[0].currency()), parseCurrency(npvCurrency_),
+                              envelope().additionalField("discount_curve", false, std::string()));
     swap->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
     addProductModelEngine(*engineBuilder);
@@ -523,14 +524,6 @@ QuantLib::Leg CommoditySwap::fxSettledLeg(const QuantLib::Leg& leg, const ore::d
         foreignCcy = ld->foreignCurrency();
     else if (auto ld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData.concreteLegData()))
         foreignCcy = ld->foreignCurrency();
-
-    std::string tradePnLCurrency = envelope().additionalField("TradePnLCurrency", false, std::string());
-    if (!tradePnLCurrency.empty())
-        QL_REQUIRE(
-            foreignCcy == tradePnLCurrency,
-            "If TradePnLCurrency is given in the envelope, it must be the same as underlying index currency, got "
-                << tradePnLCurrency << " in TradePnLCurrency, and " << foreignCcy
-                << " as underlying index currency");
 
     fxIndex = buildFxIndex(legData.settlementFxIndex(), legData.currency(), foreignCcy,
                           engineFactory->market(), configuration);

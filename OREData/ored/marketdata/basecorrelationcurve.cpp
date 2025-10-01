@@ -512,7 +512,14 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             Handle<DefaultProbabilityTermStructure> indexCurve;
             Handle<Quote> indexRecovery;
             Handle<YieldTermStructure> discountCurve;
-            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
+            // check if curveID has term suffix already (e.g. "RED:ABCDEFGH_5Y"), if so use that, otherwise use term from config
+            auto p = ore::data::splitCurveIdWithTenor(config.curveID());
+            QL_REQUIRE(p.second == 0 * QuantLib::Days || p.second == term,
+                       "CurveID " << config.curveID()
+                                  << " has a tenor suffix which does not match the term from the quotes (" << term
+                                  << ")");
+            std::string indexNameWithTerm =
+                p.second == 0 * QuantLib::Days ? config.curveID() + "_" + to_string(term) : config.curveID();
             auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
             auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
             QL_REQUIRE(indexCreditCurve != nullptr,
