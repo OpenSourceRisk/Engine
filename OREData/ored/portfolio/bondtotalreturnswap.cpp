@@ -64,13 +64,16 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
     overrides.push_back(EngineFactory::ParameterOverride{
+        "BondTRS",
         isBond,
         {{"TreatSecuritySpreadAsCreditSpread",
           builder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")}}});
     overrides.push_back(EngineFactory::ParameterOverride{
-        isBond, {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
+        "BondTRS",
+        isBond,
+        {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
     overrides.push_back(EngineFactory::ParameterOverride{
-        isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
+        "BondTRS", isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
     engineFactory->setEngineParameterOverrides(overrides);
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
