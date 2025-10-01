@@ -30,6 +30,7 @@ namespace data {
 
 class BondIndexBuilder {
 public:
+    BondIndexBuilder() = default;
     //! uses BondFactory, works for all bond types
     BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative, 
                      const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
@@ -51,7 +52,7 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond_;
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     RequiredFixings fixings_;
-    const bool dirty_;
+    bool dirty_ = false;
 
     void buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
         const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, 

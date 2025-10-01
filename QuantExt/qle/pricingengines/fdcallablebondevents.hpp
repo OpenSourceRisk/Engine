@@ -65,12 +65,13 @@ public:
     bool hasPut(const Size i) const;
 
     std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondCashflow(const Size i) const;
-    std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo> getBondFinalRedemption(const Size i) const;
     const CallData& getCallData(const Size i) const;
     const CallData& getPutData(const Size i) const;
 
     Date getAssociatedDate(const Size i) const; // null if no date is associated
     bool hasAmericanExercise() const; // at least on "from this date on" call data
+
+    Date latestRelevantDate() const;  // the latest event date after finalise
 
 private:
     Date nextExerciseDate(const Date& d, const std::vector<CallableBond::CallabilityData>& data) const;
@@ -98,7 +99,7 @@ private:
     std::vector<bool> hasBondCashflow_, hasCall_, hasPut_;
 
     // per time index the data associated to events
-    std::vector<std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_, bondFinalRedemption_;
+    std::vector<std::vector<NumericLgmMultiLegOptionEngineBase::CashflowInfo>> bondCashflow_;
     std::vector<CallData> callData_, putData_;
 
     std::vector<Date> associatedDate_;

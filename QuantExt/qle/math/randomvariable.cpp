@@ -177,13 +177,13 @@ void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     resumeCalcStats();
-    for (Size i = 0; i < n_; ++i) {
-        if (data_[i] != constantData_) {
-            stopCalcStats(i);
+    for (Size i = 1; i < n_; ++i) {
+        if (data_[i] != data_[0]) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 
@@ -466,14 +466,14 @@ void RandomVariable::clear() {
 void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
-    for (Size i = 0; i < n_; ++i) {
+    for (Size i = 1; i < n_; ++i) {
         resumeCalcStats();
-        if (!QuantLib::close_enough(data_[i], constantData_)) {
-            stopCalcStats(i);
+        if (!QuantLib::close_enough(data_[i], data_[0])) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 

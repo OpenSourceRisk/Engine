@@ -24,21 +24,16 @@
 #ifndef quantext_commodity_apo_engine_hpp
 #define quantext_commodity_apo_engine_hpp
 
+#include <ql/pricingengines/diffusioncalculator.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/blackscholesmodelwrapper.hpp>
 
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-
 namespace QuantExt {
 
 namespace CommodityAveragePriceOptionMomementMatching {
-
-//! Take a Black (lognormal) Termstructure and return the lognormal or normal vol depending on the flag
-// useBachelierModel = true. If the useBachelierModel flag is set, the lognormal vol is converted to a normal vol.
-double getBlackOrBachelierVol(const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol, const Date& volDate,
-                              double forward, double strike, double ttm, bool useBachelierModel);
 
 // Return the atm forward - accruals and the volatility of
 struct MomentMatchingResults {
@@ -59,7 +54,9 @@ struct MomentMatchingResults {
     Real firstMoment();
     Real secondMoment();
     Real stdDev();
-    Time timeToExpriy();
+    Time timeToExpiry();
+    QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal;
+    QuantLib::Real displacement = 0.0;
 };
 
 // Matches the first two moments of a lognormal distribution
@@ -70,7 +67,8 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
     QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date(),
-    bool useBachelierModel = false);
+    QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+    const Real displacement = 0.0);
 
 } // namespace CommodityAveragePriceOptionMomementMatching
 
@@ -82,12 +80,16 @@ class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption
 public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-                                          QuantLib::Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          QuantLib::Real displacement = 0.0);
 
     // if you want speed-optimized observability, use the other constructor
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                          QuantLib::Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          QuantLib::Real displacement = 0.0);
 
 protected:
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
@@ -110,6 +112,8 @@ protected:
     QuantLib::Real beta_;
     // used in checkBarrier() for efficiency, must be set by methods calling checkBarrier(p, true)
     mutable QuantLib::Real logBarrier_;
+    QuantLib::DiffusionModelType modelType_;
+    QuantLib::Real displacement_;
 };
 
 /*! Commodity APO Analytical Engine

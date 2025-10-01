@@ -178,6 +178,7 @@ public:
     // Setters for curves/markets
     void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
+    void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
     void setCalendarAdjustment(const std::string& xml);
@@ -271,6 +272,8 @@ public:
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
     void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
+    void setXvaCgRegressionOrderDynamicIm(Size r) { xvaCgRegressionOrderDynamicIm_ = r; }
+    void setXvaCgRegressionVarianceCutoffDynamicIm(double c) { xvaCgRegressionVarianceCutoffDynamicIm_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) {
         xvaCgRegressionReportTimeStepsDynamicIM_ = s;
@@ -281,6 +284,7 @@ public:
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
     void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
     void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
+    void setXvaCgUsePythonIntegrationDynamicIm(bool b) { xvaCgUsePythonIntegrationDynamicIm_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -633,6 +637,7 @@ public:
      ****************************/
     bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
 
@@ -726,6 +731,8 @@ public:
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
     double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
+    Size xvaCgRegressionOrderDynamicIm() const { return xvaCgRegressionOrderDynamicIm_; }
+    double xvaCgRegressionVarianceCutoffDynamicIm() const { return xvaCgRegressionVarianceCutoffDynamicIm_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     const std::vector<Size>& xvaCgRegressionReportTimeStepsDynamicIM() const {
         return xvaCgRegressionReportTimeStepsDynamicIM_;
@@ -738,6 +745,7 @@ public:
     }
     const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
     bool xvaCgUsePythonIntegration() const { return xvaCgUsePythonIntegration_; }
+    bool xvaCgUsePythonIntegrationDynamicIm() const { return xvaCgUsePythonIntegrationDynamicIm_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
@@ -1081,6 +1089,7 @@ protected:
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;
+    std::size_t todaysMarketCalibrationPrecision_ = 8;
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic
@@ -1169,6 +1178,8 @@ protected:
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
     double xvaCgRegressionVarianceCutoff_ = Null<Real>();
+    Size xvaCgRegressionOrderDynamicIm_ = 4;
+    double xvaCgRegressionVarianceCutoffDynamicIm_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     std::vector<Size> xvaCgRegressionReportTimeStepsDynamicIM_;
     bool xvaCgUseRedBlocks_ = true;
@@ -1178,6 +1189,7 @@ protected:
     bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
     string xvaCgExternalComputeDevice_;
     bool xvaCgUsePythonIntegration_ = false;
+    bool xvaCgUsePythonIntegrationDynamicIm_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;

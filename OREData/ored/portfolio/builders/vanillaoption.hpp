@@ -40,7 +40,7 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 namespace ore {
 namespace data {
 
@@ -152,6 +152,26 @@ protected:
         return assetName + "/" + ccy.code() + "/" + discountCurveName + "/" + to_string(expiryDate) + "/" + (useFxSpot ? "1" : "0") + "/" + settlementCurrency;
     }
 
+    std::pair<QuantLib::DiffusionModelType, Real> getVolTypeAndDisplacement(const string& assetName, const AssetClass& assetClassUnderlying) {
+        QuantLib::DiffusionModelType volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        Real displacement = 0.0;
+        if (assetClassUnderlying == AssetClass::COM) {
+            auto volTypeStr = this->modelParameter("Volatility", {assetName}, false, "AsInputVolatilityType");
+            boost::to_lower(volTypeStr);
+            auto displacementStr = this->modelParameter("Displacement", {assetName}, false, "0.0");
+            if (volTypeStr == "lognormal") {
+                volType = QuantLib::DiffusionModelType::Black;
+            } else if (volTypeStr == "shiftedlognormal") {
+                volType = QuantLib::DiffusionModelType::Black;
+                displacement = parseReal(displacementStr);
+            } else if (volTypeStr == "normal")
+                volType = QuantLib::DiffusionModelType::Bachelier;
+            else
+                volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        }
+        return {volType, displacement};
+    }
+
     Date expiryDate_;
 };
 
@@ -184,8 +204,11 @@ protected:
             spotDays = fixingDays;
             spotCalendar = calendar;
         }
+
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+
         return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanEngine>(gbsp, discountCurve, false, spotDays,
-                                                                            spotCalendar);
+                                                                            spotCalendar, volType, displacement);
     }
 };
 
@@ -209,7 +232,8 @@ protected:
         Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve);
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+        return QuantLib::ext::make_shared<QuantExt::AnalyticEuropeanForwardEngine>(gbsp, discountCurve, volType, displacement);
     }
 };
 
@@ -232,7 +256,9 @@ protected:
         Handle<YieldTermStructure> discountCurve = discountCurveName.empty()
             ? market_->discountCurve(discountingCurrency, configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve);
+        auto [volType, displacement] = getVolTypeAndDisplacement(assetName, assetClassUnderlying);
+        bool flipResults = false;
+        return QuantLib::ext::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve, flipResults, volType, displacement);
     }
 };
 
@@ -304,6 +330,11 @@ protected:
         } else {
             gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass, {}, true, forwardDate);
         }
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionFDEngineBuilder: currently only lognormal vols are supported");
+
         return QuantLib::ext::make_shared<QuantExt::FdBlackScholesVanillaEngine2>(gbsp, tGrid, xGrid, dampingSteps,
                                                                                   scheme);
     }
@@ -327,13 +358,18 @@ protected:
         std::string delimiter = "#";
         std::string assetNameLocal = assetName;
         QuantLib::Date forwardDate = QuantLib::Date();
-        if (assetName.find(delimiter) != std::string::npos){
+        if (assetName.find(delimiter) != std::string::npos) {
             std::string forwardDateString = splitByLastDelimiter(assetName, delimiter);
             bool validDate = tryParse<Date>(forwardDateString, forwardDate, parseDate);
             if (validDate)
-                assetNameLocal= removeAfterLastDelimiter(assetName, delimiter);
+                assetNameLocal = removeAfterLastDelimiter(assetName, delimiter);
         }
-        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetNameLocal, ccy, assetClass);
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetNameLocal, ccy, assetClass);
+        auto volTS = gbsp->blackVolatility();
+        QL_REQUIRE(volTS->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(volTS->shift(), 0.0),
+                   "AmericanOptionBAWEngineBuilder: currently only lognormal vols are supported");
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
 };
