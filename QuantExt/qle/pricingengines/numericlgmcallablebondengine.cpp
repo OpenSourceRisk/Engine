@@ -294,7 +294,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     if (expectedCashflows_) {
         std::map<Date, Real> cf;
         Date currentDate = events.latestRelevantDate();
-        for (Size i = grid.size() - 1; i > 0; ++i) {
+        for (Size i = grid.size() - 1; i > 0; --i) {
             if (Date tmp = events.getAssociatedDate(i); tmp != Date())
                 currentDate = tmp;
             if (Real tmp = rvCashflows[i - 1].at(0); !QuantLib::close_enough(tmp, 0.0)) {
