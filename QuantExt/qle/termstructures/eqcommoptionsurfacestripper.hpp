@@ -70,7 +70,11 @@ public:
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
         QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
-        bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
+        bool preferOutOfTheMoney = false,
+        Solver1DOptions solverOptions = {},
+        QuantLib::VolatilityType volType =
+            QuantLib::VolatilityType::ShiftedLognormal,
+        Real displacement = 0.0);
 
     //! \name LazyObject interface
     //@{
@@ -97,6 +101,9 @@ protected:
     bool upperStrikeConstExtrap_;
     QuantLib::BlackVolTimeExtrapolation timeExtrapolation_;
     bool preferOutOfTheMoney_;
+    QuantLib::VolatilityType volType_;
+    Real displacement_;
+
 
 private:
     //! Function object used in solving.
@@ -180,7 +187,8 @@ public:
         const QuantLib::DayCounter& dayCounter, QuantLib::Exercise::Type type = QuantLib::Exercise::European,
         bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
         QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility,
-        bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {});
+        bool preferOutOfTheMoney = false, Solver1DOptions solverOptions = {},
+        QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal, Real displacement = 0.0);
 
 protected:
     //! \name OptionSurfaceStripper interface

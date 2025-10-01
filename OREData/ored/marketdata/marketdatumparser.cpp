@@ -837,11 +837,20 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // Expects one of the following forms:
         // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
         // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>/<OT>
-        // where QT = RATE_LNVOL or PRICE and OT = C (for Call) or P (for Put)
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/DEL/<DELTA_TYPE>/<PUT/CALL>/<DELTA>
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/ATM/<ATM_TYPE>/DEL/<DELTA_TYPE>
+        // COMMODITY_OPTION/SHIFT/<COMDTY_NAME>
+        // where QT = RATE_NVOL, RATE_LNVOL, RATE_SLNVOL or PRICE and OT = C (for Call) or P (for Put)
         using QT = MarketDatum::QuoteType;
-        QL_REQUIRE(tokens.size() >= 6, "At least 6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == QT::RATE_LNVOL || quoteType == QT::PRICE,
-                   "Quote type for " << datumName << " should be 'RATE_LNVOL' or 'PRICE'");
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() >= 6, "3 or at least 6 tokens are expected in " << datumName);
+        QL_REQUIRE(((quoteType == QT::RATE_LNVOL || quoteType == QT::PRICE || quoteType == QT::RATE_NVOL ||
+                     quoteType == QT::RATE_SLNVOL) && tokens.size() >= 6) ||
+                       (quoteType == QT::SHIFT && tokens.size() == 3),
+                   "Quote type for " << datumName << " should be 'RATE_LNVOL', 'RATE_NVOL', 'RATE_SLNVOL', 'PRICE' or 'SHIFT'");
+
+        if (quoteType == QT::SHIFT) {
+            return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(value, asof, datumName, quoteType, tokens[2]);
+        }
 
         QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[4]);
 

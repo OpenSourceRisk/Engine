@@ -1205,7 +1205,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-Product type="BondRepo">
+<Product type="BondRepo">
     <Model>Accrual</Model>
     <ModelParameters>
         <Parameter name="IncludeSecurityLeg">true</Parameter>
@@ -1521,8 +1521,21 @@ Available Model/Engine pairs:
 
 Engine description:
 
-Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future
-contracts is parametrized as
+Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. 
+
+Model Parameters:
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = moment-matching approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed convert vols in shifted lognormal vols with a given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+The correlation between two future contracts is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -1534,6 +1547,12 @@ The parameters have the following meaning:
 \begin{itemize}
 \item beta: parameter in correlation parametrization
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{beta\_NYMEX:CL} sets beta for Average Price Options with NYMEX:CL underlying.
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price Average Price Options with NYMEX:CL underlying.
 \end{itemize}
 
 \begin{longlisting}
@@ -1579,6 +1598,8 @@ The parameters have the following meaning:
 \caption{Configuration for Product CommodityAveragePriceOption, Model Black, Engine MonteCarlo}
 \label{lst:peconfig_CommodityAveragePriceOption_Black_MonteCarlo}
 \end{longlisting}
+
+Only Lognormal input volatilities are supported in the MonteCarlo pricer.
 
 %--------------------------------------------------------
 \subsection{Product Type: CommodityAveragePriceBarrierOption}
@@ -2042,7 +2063,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Prooduct type="CMS">
+<Product type="CMS">
     <Model>LinearTSR</Model>
     <ModelParameters/>
     <Engine>LinearTSRPricer</Engine>
@@ -2089,7 +2110,7 @@ The parameters have the following meaning:
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
 \item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
-\item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
+\item recoveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
 \item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
@@ -2314,7 +2335,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2418,7 +2439,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2499,7 +2520,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2629,7 +2650,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2717,11 +2738,14 @@ Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
 
 Model Parameters:
 \begin{itemize}
-    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to Kirk approximation.
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
     \begin{itemize}
-        \item \textbf{normal}: Use Bachelier model
-        \item \textbf{lognormal}: Use Kirk approximation
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings following a shifted lognormal process, if needed and possible input vols are converted into a shifted lognormal vols with a given displacement.
     \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
 
 Engine description:
@@ -2743,7 +2767,7 @@ The parameters have the following meaning:
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
-You can set \texttt{beta} and \texttt{volatility} for each underlying or spread pair individually:
+You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying or spread pair individually:
 \begin{itemize}
     \item \texttt{beta\_NYMEX:CL} sets beta for WTI calendar spreads.
     \item For spreads between two different underlyings, use \texttt{volatility\_underlying1\_underlying2} as the parameter name.
@@ -2786,6 +2810,24 @@ Used by trade type: CommodityOption
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample configuration is shown in listing
@@ -2820,6 +2862,24 @@ Used by trade type: CommodityOption if a future is referenced
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanForwardEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
@@ -2853,6 +2913,24 @@ The parameters have the following meaning:
 Used by trade type: CommodityOption if cash settled
 
 Available Model/Engine pairs: BlackScholes/AnalyticCashSettledEuropeanEngine
+
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
 
 Engine description:
 
@@ -3093,7 +3171,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3197,7 +3275,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3278,7 +3356,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3408,7 +3486,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3699,7 +3777,7 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
+\caption{Configuration for Product EquityForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
 \label{lst:peconfig_EquityForward_DiscountedCashflows_DiscountingEquityForwardEngine}
 \end{longlisting}
 
@@ -3733,7 +3811,7 @@ The parameters have the following meaning:
   </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
+\caption{Configuration for Product EquityFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
 \label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
 \end{longlisting}
 
@@ -4243,7 +4321,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4347,7 +4425,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4428,7 +4506,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4558,7 +4636,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
