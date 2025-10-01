@@ -989,6 +989,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
         if (!settlementFxFixingDate_.empty())
             XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFxFixingDate_);
+        XMLUtils::appendNode(node, settlementDataNode);
     }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
